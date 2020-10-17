@@ -13,6 +13,12 @@ public:
     LiveDanmaku()
     {}
 
+    LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time)
+        : nickname(nickname), text(text), uid(uid), timeline(time)
+    {
+
+    }
+
     static LiveDanmaku fromJson(QJsonObject object)
     {
         LiveDanmaku danmaku;

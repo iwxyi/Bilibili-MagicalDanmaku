@@ -44,6 +44,20 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="showLiveDanmakuButton">
+            <property name="text">
+             <string> 显示实时弹幕</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -68,7 +82,7 @@
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>刷新间隔</string>
+             <string>弹幕获取间隔</string>
             </property>
            </widget>
           </item>
@@ -98,6 +112,20 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="DiangeAutoCopyCheck">
+            <property name="text">
+             <string>点歌自动复制</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -109,6 +137,26 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="testDanmakuEdit"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="testDanmakuButton">
+            <property name="text">
+             <string> 测试弹幕</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

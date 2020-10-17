@@ -7,18 +7,41 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // 刷新间隔
     danmakuTimer = new QTimer(this);
     int interval = settings.value("danmaku/interval", 500).toInt();
     ui->refreshDanmakuIntervalSpin->setValue(interval);
     danmakuTimer->setInterval(interval);
     connect(danmakuTimer, SIGNAL(timeout()), this, SLOT(pullLiveDanmaku()));
-
     ui->refreshDanmakuCheck->setChecked(true);
+
+    // 点歌自动复制
+    diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
+    ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+       if (!diangeAutoCopy)
+           return ;
+       QString text = danmaku.getText();
+       if (!text.startsWith("点歌"))
+           return ;
+       text = text.replace(0, 2, "");
+       if (QString(" :：，。").contains(text.left(1)))
+           text.replace(0, 1, "");
+       QClipboard* clip = QApplication::clipboard();
+       clip->setText(text);
+       qDebug() << "【点歌自动复制】" << text;
+    });
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (danmakuWindow)
+        danmakuWindow->deleteLater();
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -41,7 +64,7 @@ void MainWindow::pullLiveDanmaku()
         QList<LiveDanmaku> lds;
         for (int i = 0; i < danmakus.size(); i++)
             lds.append(LiveDanmaku::fromJson(danmakus.at(i).toObject()));
-        addNewLiveDanmaku(lds);
+        appendNewLiveDanmaku(lds);
     });
 }
 
@@ -60,7 +83,7 @@ void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
         danmakuTimer->stop();
 }
 
-void MainWindow::addNewLiveDanmaku(QList<LiveDanmaku> danmakus)
+void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
 {
     // 去掉已经存在的弹幕
     QDateTime prevLastTime = roomDanmakus.size()
@@ -79,13 +102,55 @@ void MainWindow::addNewLiveDanmaku(QList<LiveDanmaku> danmakus)
     // 发送信号给其他插件
     for (int i = 0; i < danmakus.size(); i++)
     {
-        LiveDanmaku danmaku = danmakus.at(i);
-        qDebug() << "+++++新弹幕：" <<danmaku.toString();
-        emit signalNewDanmaku(danmaku);
+        newLiveDanmakuAdded(danmakus.at(i));
     }
 
     /*QStringList texts;
     for (int i = 0; i < roomDanmakus.size(); i++)
         texts.append(roomDanmakus.at(i).toString());
     qDebug() << "当前弹幕" << texts;*/
+}
+
+void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
+{
+    qDebug() << "+++++新弹幕：" <<danmaku.toString();
+    emit signalNewDanmaku(danmaku);
+}
+
+void MainWindow::on_showLiveDanmakuButton_clicked()
+{
+    bool hidding = (danmakuWindow == nullptr || danmakuWindow->isHidden());
+    if (danmakuWindow == nullptr)
+    {
+        danmakuWindow = new LiveDanmakuWindow(this);
+        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+    }
+
+    if (hidding)
+    {
+        danmakuWindow->show();
+        settings.setValue("danmaku/liveWindow", true);
+    }
+    else
+    {
+        danmakuWindow->hide();
+        settings.setValue("danmaku/liveWindow", false);
+    }
+}
+
+void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
+{
+    settings.setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
+}
+
+void MainWindow::on_testDanmakuButton_clicked()
+{
+    QString text = ui->testDanmakuEdit->text();
+    if (text.isEmpty())
+        text = "测试弹幕";
+    newLiveDanmakuAdded(
+                LiveDanmaku("测试用户", text,
+                            qrand() % 89999999 + 10000000,
+                            QDateTime::currentDateTime()));
+
 }

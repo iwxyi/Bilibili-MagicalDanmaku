@@ -16,17 +16,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += \
-    utils/
-    danmaku/
+    utils/ \
+    live_danmaku/
 
 SOURCES += \
+    live_danmaku/livedanmakuwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp
 
 HEADERS += \
-    livedanmaku.h \
+    live_danmaku/livedanmakuwindow.h \
+    live_danmaku/livedanmaku.h \
     mainwindow.h \
     utils/fileutil.h \
     utils/netutil.h \
