@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
        if (!text.startsWith("点歌"))
            return ;
        text = text.replace(0, 2, "");
-       if (QString(" :：，。").contains(text.left(1)))
+       if (QString(" :：，。,.").contains(text.left(1)))
            text.replace(0, 1, "");
        text = text.trimmed();
        QClipboard* clip = QApplication::clipboard();
@@ -42,6 +42,10 @@ MainWindow::MainWindow(QWidget *parent)
        qDebug() << "【点歌自动复制】" << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
     });
+
+    // 自动翻译
+    bool trans = settings.value("danmaku/autoTrans", true).toBool();
+    ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
@@ -170,6 +174,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         danmakuWindow = new LiveDanmakuWindow(this);
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
     }
 
     if (hidding)
@@ -216,4 +221,12 @@ void MainWindow::on_roomIdEdit_editingFinished()
     settings.setValue("danmaku/roomId", room);
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
+}
+
+void MainWindow::on_languageAutoTranslateCheck_stateChanged(int arg1)
+{
+    auto trans = ui->languageAutoTranslateCheck->isChecked();
+    settings.setValue("danmaku/autoTrans", trans);
+    if (danmakuWindow)
+        danmakuWindow->setAutoTranslate(trans);
 }

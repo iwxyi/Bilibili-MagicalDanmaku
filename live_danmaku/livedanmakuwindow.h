@@ -50,6 +50,8 @@ public slots:
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void appendItemText(QListWidgetItem* item, QString text);
     void showMenu();
+    void setAutoTranslate(bool trans);
+    void startTranslate(QListWidgetItem* item);
 
 private:
     QSettings settings;
@@ -57,6 +59,7 @@ private:
 
     QColor fgColor;
     QColor bgColor;
+    bool autoTrans = true;
 
     int fontHeight;
     int lineSpacing;

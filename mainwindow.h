@@ -52,6 +52,8 @@ private slots:
 
     void on_roomIdEdit_editingFinished();
 
+    void on_languageAutoTranslateCheck_stateChanged(int arg1);
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);

@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -176,6 +176,20 @@
            <widget class="QCheckBox" name="DiangeAutoCopyCheck">
             <property name="text">
              <string>点歌自动复制</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="languageAutoTranslateCheck">
+            <property name="text">
+             <string>外语自动翻译</string>
             </property>
            </widget>
           </item>

@@ -122,6 +122,17 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
+
+    // 自动翻译
+    if (autoTrans)
+    {
+        QRegExp re("[\u0800-\u4e00]+");
+        if (danmaku.getText().indexOf(re) != -1)
+        {
+            qDebug() << "检测到外语，自动翻译";
+            startTranslate(item);
+        }
+    }
 }
 
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
@@ -216,33 +227,7 @@ void LiveDanmakuWindow::showMenu()
         QDesktopServices::openUrl(QUrl("https://www.baidu.com/s?wd="+msg));
     });
     connect(actionTranslate, &QAction::triggered, this, [=]{
-        QString url = "http://translate.google.cn/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
-        connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
-            QJsonParseError error;
-            QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-            if (error.error != QJsonParseError::NoError)
-            {
-                qDebug() << error.errorString();
-                return ;
-            }
-
-            QJsonObject json = document.object();
-            auto sentences = json.value("sentences").toArray();
-            if (!sentences.size())
-                return ;
-            auto trans = sentences.first().toObject().value("trans").toString();
-            if (trans.isEmpty())
-                return ;
-            if (listWidget->currentItem() != item) // 已经不是当前item，或许已经删除了
-                return ;
-
-            qDebug() << "翻译：" << msg << " => " << trans;
-            try {
-                appendItemText(item, trans);
-            } catch (...) {
-
-            }
-        });
+        startTranslate(item);
     });
     connect(actionFreeCopy, &QAction::triggered, this, [=]{
 
@@ -257,4 +242,54 @@ void LiveDanmakuWindow::showMenu()
     actionSearch->deleteLater();
     actionTranslate->deleteLater();
     actionFreeCopy->deleteLater();
+}
+
+void LiveDanmakuWindow::setAutoTranslate(bool trans)
+{
+    this->autoTrans = trans;
+}
+
+void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
+{
+    auto danmaku = LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+    QString msg = danmaku.getText();
+    QString url = "http://translate.google.cn/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
+    connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+
+        QJsonObject json = document.object();
+        auto sentences = json.value("sentences").toArray();
+        if (!sentences.size())
+            return ;
+        auto trans = sentences.first().toObject().value("trans").toString();
+        if (trans.isEmpty())
+            return ;
+        if (listWidget->currentItem() != item) // 已经不是当前item，或许已经删除了
+        {
+            // 判断item存不存在
+            int size = listWidget->count();
+            bool find = false;
+            for (int i = 0; i < size; i++)
+                if (listWidget->item(i) == item)
+                {
+                    find = true;
+                    break;
+                }
+            if (!find) // 已经不存在了
+                return ;
+        }
+
+        qDebug() << "翻译：" << msg << " => " << trans;
+        try {
+            appendItemText(item, trans);
+        } catch (...) {
+
+        }
+    });
 }
