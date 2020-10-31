@@ -10,6 +10,11 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QNetworkCookie>
+#include <QMessageBox>
+#include <QInputDialog>
+#include <QTextCodec>
+#include <stdio.h>
+#include <iostream>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -57,9 +62,19 @@ private slots:
 
     void on_tabWidget_tabBarClicked(int index);
 
-    void on_testSendMsgButton_clicked();
-
     void on_refreshDanmakuCheck_clicked();
+
+    void on_SetBrowserCookieButton_clicked();
+
+    void on_SetBrowserDataButton_clicked();
+
+    void on_SetBrowserHelpButton_clicked();
+
+    void on_SendMsgIntervalSpin_valueChanged(int arg1);
+
+    void on_SendMsgIntervalCheck_stateChanged(int arg1);
+
+    void on_SendMsgButton_clicked();
 
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
@@ -68,15 +83,18 @@ private:
 
 private:
     Ui::MainWindow *ui;
+    QSettings settings;
 
     QTimer* danmakuTimer;
-    QSettings settings;
     qint64 removeDanmakuInterval = 20000;
-
     QList<LiveDanmaku> roomDanmakus;
     qint64 prevLastDanmakuTimestamp = 0;
     bool firstPullDanmaku = false; // 是否不加载以前的弹幕
     LiveDanmakuWindow* danmakuWindow = nullptr;
     bool diangeAutoCopy = false;
+
+    QString browserCookie;
+    QString browserData;
+    QTimer* sendMsgTimer;
 };
 #endif // MAINWINDOW_H

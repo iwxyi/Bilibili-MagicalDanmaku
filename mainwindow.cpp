@@ -61,6 +61,19 @@ MainWindow::MainWindow(QWidget *parent)
     {
         on_showLiveDanmakuButton_clicked();
     }
+
+    // 发送弹幕
+    browserCookie = settings.value("danmaku/browserCookie", "").toString();
+    browserData = settings.value("danmaku/browserData", "").toString();
+    sendMsgTimer = new QTimer(this);
+    connect(sendMsgTimer, SIGNAL(timeout()), this, SLOT(on_SendMsgButton_clicked()));
+
+    // 定时弹幕
+    interval = settings.value("danmaku/sendInterval", 1800).toInt();
+    ui->SendMsgIntervalSpin->setValue(interval);
+    sendMsgTimer->setInterval(interval*1000);
+    bool autoSend = settings.value("danmaku/autoSend", false).toBool();
+    ui->SendMsgIntervalCheck->setChecked(autoSend);
 }
 
 MainWindow::~MainWindow()
@@ -247,8 +260,65 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
     settings.setValue("mainwindow/tabIndex", index);
 }
 
-void MainWindow::on_testSendMsgButton_clicked()
+void MainWindow::on_refreshDanmakuCheck_clicked()
 {
+    settings.setValue("danmaku/autoRefresh", ui->refreshDanmakuCheck->isChecked());
+}
+
+void MainWindow::on_SetBrowserCookieButton_clicked()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, browserCookie, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("danmaku/browserCookie", browserCookie = s);
+}
+
+void MainWindow::on_SetBrowserDataButton_clicked()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "设置Data", "设置用户登录的data", QLineEdit::Normal, browserData, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("danmaku/browserData", browserData = s);
+}
+
+void MainWindow::on_SetBrowserHelpButton_clicked()
+{
+
+}
+
+void MainWindow::on_SendMsgIntervalSpin_valueChanged(int arg1)
+{
+    sendMsgTimer->setInterval(arg1 * 1000);
+    settings.setValue("danmaku/sendInterval", arg1);
+}
+
+void MainWindow::on_SendMsgIntervalCheck_stateChanged(int arg1)
+{
+    bool enable = ui->SendMsgIntervalCheck->isChecked();
+    if (enable)
+        sendMsgTimer->start();
+    else
+        sendMsgTimer->stop();
+    settings.setValue("danmaku/autoSend", enable);
+}
+
+void MainWindow::on_SendMsgButton_clicked()
+{
+    if (browserCookie.isEmpty() || browserData.isEmpty())
+    {
+        QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
+        ui->SendMsgIntervalCheck->setChecked(false);
+        return ;
+    }
+    QString msg = ui->SendMsgEdit->text();
+    QString roomId = ui->roomIdEdit->text();
+    if (msg.isEmpty() || roomId.isEmpty())
+        return ;
+
     QUrl url("https://api.live.bilibili.com/msg/send");
 
     // 建立对象
@@ -257,8 +327,8 @@ void MainWindow::on_testSendMsgButton_clicked()
     QList<QNetworkCookie> cookies;
 
     // 设置cookie
-    QString text = "LIVE_BUVID=AUTO1316039464667414; sid=jejs8mje; DedeUserID=20285041; DedeUserID__ckMd5=5d2f301ce6469def; SESSDATA=7097728b%2C1619534171%2Ced5dd*a1; bili_jct=13ddba7f6f0ad582fecef801d40b3abf; bp_t_offset_20285041=452062006739485390; LIVE_PLAYER_TYPE=2; buvid3=53AC7045-200D-7C11-9312-603BC78B179B57577infoc; CURRENT_FNVAL=80; blackside_state=1; rpdid=|(u)YkJumYY|0J'uY|Ruklmlm; _dfcaptcha=f6f7d4a055983112f952e57e676d5637";
-    QStringList sl = text.split(";");
+    QString cookieText = browserCookie;
+    QStringList sl = cookieText.split(";");
     foreach (auto s, sl)
     {
         s = s.trimmed();
@@ -276,31 +346,29 @@ void MainWindow::on_testSendMsgButton_clicked()
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
     // 设置数据（JSON的ByteArray）
-    QJsonObject data;
-    data.insert("color", "16777215");
-    data.insert("fontsize", "25");
-    data.insert("mode", "1");
-    data.insert("msg", "[test]"+ui->testSendMsgEdit->text());
-    data.insert("rnd", "1604144057");
-    data.insert("roomid", "11584296");
-    data.insert("csrf_token", "13ddba7f6f0ad582fecef801d40b3abf");
-    data.insert("csrf", "13ddba7f6f0ad582fecef801d40b3abf");
-    data.insert("bubble", "0");
-    //QByteArray ba = QJsonDocument(data).toJson();
-    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=ttestt&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
+    QString s = browserData;
+    int posl = s.indexOf("msg=")+4;
+    int posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, msg);
+
+    posl = s.indexOf("roomid=")+7;
+    posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, roomId);
+
+    QByteArray ba(s.toStdString().data());
+//    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
+    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        qDebug() << "数据接收完毕";
         QByteArray data = reply->readAll();
         qDebug() << data;
 
     });
 
     manager->post(*request, ba);
-}
-
-void MainWindow::on_refreshDanmakuCheck_clicked()
-{
-    settings.setValue("danmaku/autoRefresh", ui->refreshDanmakuCheck->isChecked());
 }
