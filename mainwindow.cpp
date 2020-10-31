@@ -7,6 +7,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // 房间号
+    QString roomId = settings.value("danmaku/roomId", "").toString();
+    if (!roomId.isEmpty())
+        ui->roomIdEdit->setText(roomId);
+
     // 刷新间隔
     danmakuTimer = new QTimer(this);
     int interval = settings.value("danmaku/interval", 500).toInt();
@@ -14,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent)
     danmakuTimer->setInterval(interval);
     connect(danmakuTimer, SIGNAL(timeout()), this, SLOT(pullLiveDanmaku()));
     ui->refreshDanmakuCheck->setChecked(true);
+
+    // 移除间隔
+    this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20000).toInt();
+    ui->removeDanmakuIntervalSpin->setValue(removeDanmakuInterval/1000);
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -100,19 +109,30 @@ void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
 
 void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
 {
+    // 移除过期队列
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    if (roomDanmakus.size()) // 每次最多移除一个；用while的话则会全部移除
+    {
+        QDateTime dateTime = roomDanmakus.first().getTimeline();
+        if (dateTime.toMSecsSinceEpoch() + removeDanmakuInterval < timestamp)
+        {
+            auto danmaku = roomDanmakus.takeFirst();
+            oldLiveDanmakuRemoved(danmaku);
+        }
+    }
+
     // 去掉已经存在的弹幕
-    QDateTime prevLastTime = roomDanmakus.size()
+    /*QDateTime prevLastTime = roomDanmakus.size()
             ? roomDanmakus.last().getTimeline()
-            : QDateTime::fromMSecsSinceEpoch(0);
-    while (danmakus.size() && danmakus.first().getTimeline() < prevLastTime)
-        danmakus.removeFirst();
-    while (danmakus.size() && danmakus.first().isIn(roomDanmakus))
+            : QDateTime::fromMSecsSinceEpoch(0);*/
+    while (danmakus.size() && danmakus.first().getTimeline().toMSecsSinceEpoch() <= prevLastDanmakuTimestamp)
         danmakus.removeFirst();
     if (!danmakus.size())
         return ;
+    prevLastDanmakuTimestamp = danmakus.last().getTimeline().toMSecsSinceEpoch();
 
     // 不是第一次加载
-//    if (roomDanmakus.size())
+    if (!firstPullDanmaku) // 用作测试就不需要该条件
     {
         // 发送信号给其他插件
         for (int i = 0; i < danmakus.size(); i++)
@@ -120,20 +140,23 @@ void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
             newLiveDanmakuAdded(danmakus.at(i));
         }
     }
+    else
+        firstPullDanmaku = false;
 
     // 添加到队列
     roomDanmakus.append(danmakus);
-
-    /*QStringList texts;
-    for (int i = 0; i < roomDanmakus.size(); i++)
-        texts.append(roomDanmakus.at(i).toString());
-    qDebug() << "当前弹幕" << texts;*/
 }
 
 void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 {
     qDebug() << "+++++新弹幕：" <<danmaku.toString();
     emit signalNewDanmaku(danmaku);
+}
+
+void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
+{
+    qDebug() << "-----旧弹幕：" << danmaku.toString();
+    emit signalRemoveDanmaku(danmaku);
 }
 
 /**
@@ -146,6 +169,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
     {
         danmakuWindow = new LiveDanmakuWindow(this);
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
     }
 
     if (hidding)
@@ -175,4 +199,17 @@ void MainWindow::on_testDanmakuButton_clicked()
                             qrand() % 89999999 + 10000000,
                             QDateTime::currentDateTime()));
 
+}
+
+void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
+{
+    this->removeDanmakuInterval = arg1 * 1000;
+    settings.setValue("danmaku/removeInterval", removeDanmakuInterval);
+}
+
+void MainWindow::on_roomIdEdit_editingFinished()
+{
+    settings.setValue("danmaku/roomId", ui->roomIdEdit->text());
+    firstPullDanmaku = true;
+    prevLastDanmakuTimestamp = 0;
 }

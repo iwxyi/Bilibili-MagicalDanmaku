@@ -19,6 +19,8 @@
 #include <QLabel>
 #include "livedanmaku.h"
 
+#define DANMAKU_STRING_ROLE Qt::UserRole+3
+
 class LiveDanmakuWindow : public QWidget
 {
     Q_OBJECT
@@ -38,6 +40,7 @@ signals:
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
+    void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void showMenu();
 
 private:

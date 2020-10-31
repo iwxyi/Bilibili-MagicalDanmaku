@@ -31,6 +31,7 @@ protected:
 
 signals:
     void signalNewDanmaku(LiveDanmaku danmaku);
+    void signalRemoveDanmaku(LiveDanmaku danmaku);
 
 public slots:
     void pullLiveDanmaku();
@@ -47,17 +48,25 @@ private slots:
 
     void on_testDanmakuButton_clicked();
 
+    void on_removeDanmakuIntervalSpin_valueChanged(int arg1);
+
+    void on_roomIdEdit_editingFinished();
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
+    void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
 
 private:
     Ui::MainWindow *ui;
 
     QTimer* danmakuTimer;
     QSettings settings;
+    qint64 removeDanmakuInterval = 20000;
 
     QList<LiveDanmaku> roomDanmakus;
+    qint64 prevLastDanmakuTimestamp = 0;
+    bool firstPullDanmaku = true;
     LiveDanmakuWindow* danmakuWindow = nullptr;
     bool diangeAutoCopy = false;
 };

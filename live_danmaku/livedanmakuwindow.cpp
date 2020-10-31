@@ -101,10 +101,16 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
-    QString text = "<font color='"+QVariant(danmaku.getUnameColor().isEmpty()
-                                            ? fgColor : danmaku.getUnameColor()).toString()+"'>"
-                   + danmaku.getNickname() + "</font> " + danmaku.getText();
+    QString nameColor = danmaku.getUnameColor().isEmpty()
+            ? QVariant(fgColor).toString()
+            : danmaku.getUnameColor();
+    QString nameText = "<font color='" + nameColor + "'>"
+                       + danmaku.getNickname() + "</font> ";
+    QString text = nameText + danmaku.getText();
     QLabel* label = new QLabel(text, listWidget);
+    QPalette pa(label->palette());
+    pa.setColor(QPalette::Text, fgColor);
+    label->setPalette(pa);
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
     label->adjustSize();
@@ -113,6 +119,25 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     listWidget->setItemWidget(item, label);
     item->setSizeHint(label->sizeHint());
     listWidget->scrollToBottom();
+
+    item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
+}
+
+void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
+{
+    QString s = danmaku.toString();
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        if (listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() == s)
+        {
+            auto item = listWidget->item(i);
+            auto widget = listWidget->itemWidget(item);
+            listWidget->removeItemWidget(item);
+            listWidget->takeItem(i);
+            widget->deleteLater();
+            break;
+        }
+    }
 }
 
 void LiveDanmakuWindow::showMenu()
