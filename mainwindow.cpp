@@ -287,7 +287,15 @@ void MainWindow::on_SetBrowserDataButton_clicked()
 
 void MainWindow::on_SetBrowserHelpButton_clicked()
 {
-
+    QString steps;
+    steps += "步骤一：\n浏览器登录bilibili账号，并进入对应直播间\n\n";
+    steps += "步骤二：\n按下F12（开发者调试工具），找到右边顶部的“Network”项\n\n";
+    steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
+    steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
+    steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
+    steps += "设置好直播ID、要发送的内容，即可发送弹幕！\n\n";
+    steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
+    QMessageBox::information(this, "定时弹幕", steps);
 }
 
 void MainWindow::on_SendMsgIntervalSpin_valueChanged(int arg1)
@@ -367,7 +375,19 @@ void MainWindow::on_SendMsgButton_clicked()
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         qDebug() << data;
-
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QString msg = object.value("message").toString();
+        if (!msg.isEmpty())
+        {
+            QMessageBox::information(this, "发送弹幕", msg);
+        }
     });
 
     manager->post(*request, ba);
