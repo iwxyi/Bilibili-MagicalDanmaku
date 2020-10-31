@@ -209,7 +209,11 @@ void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_roomIdEdit_editingFinished()
 {
-    settings.setValue("danmaku/roomId", ui->roomIdEdit->text());
+    QString room = ui->roomIdEdit->text();
+    QString old = settings.value("danmaku/roomId", "").toString();
+    if (room.isEmpty()||& old == room)
+        return ;
+    settings.setValue("danmaku/roomId", room);
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
 }

@@ -120,6 +120,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setSizeHint(label->sizeHint());
     listWidget->scrollToBottom();
 
+    item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
 }
 
@@ -140,13 +141,58 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
     }
 }
 
+void LiveDanmakuWindow::appendItemText(QListWidgetItem *item, QString text)
+{
+    auto widget = listWidget->itemWidget(item);
+    if (!widget)
+        return ;
+    auto label = qobject_cast<QLabel*>(widget);
+    if (!label)
+        return ;
+
+    auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    QString nameColor = danmaku.getUnameColor().isEmpty()
+            ? QVariant(fgColor).toString()
+            : danmaku.getUnameColor();
+    QString nameText = "<font color='" + nameColor + "'>"
+                       + danmaku.getNickname() + "</font> ";
+    text = nameText + danmaku.getText() + "（" +text + "）";
+    label->setText(text);
+    label->adjustSize();
+    item->setSizeHint(label->sizeHint());
+}
+
 void LiveDanmakuWindow::showMenu()
 {
+    auto item = listWidget->currentItem();
+    auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    qDebug() << danmaku.toString();
+    QString msg = danmaku.getText();
+
     QMenu* menu = new QMenu(this);
     QAction* actionFgColor = new QAction("文字颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
+    QAction* actionCopy = new QAction("复制弹幕", this);
+    QAction* actionSearch = new QAction("百度搜索", this);
+    QAction* actionTranslate = new QAction("翻译", this);
+    QAction* actionFreeCopy = new QAction("自由复制", this);
+
     menu->addAction(actionFgColor);
     menu->addAction(actionBgColor);
+    menu->addSeparator();
+    menu->addAction(actionCopy);
+    menu->addAction(actionSearch);
+    menu->addAction(actionTranslate);
+    menu->addAction(actionFreeCopy);
+
+    if (!item)
+    {
+        actionCopy->setEnabled(false);
+        actionSearch->setEnabled(false);
+        actionTranslate->setEnabled(false);
+        actionFreeCopy->setEnabled(false);
+    }
+
     connect(actionFgColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(fgColor, this, "选择文字颜色", QColorDialog::ShowAlphaChannel);
         if (c != fgColor)
@@ -163,5 +209,52 @@ void LiveDanmakuWindow::showMenu()
             update();
         }
     });
+    connect(actionCopy, &QAction::triggered, this, [=]{
+        QApplication::clipboard()->setText(msg);
+    });
+    connect(actionSearch, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl("https://www.baidu.com/s?wd="+msg));
+    });
+    connect(actionTranslate, &QAction::triggered, this, [=]{
+        QString url = "http://translate.google.cn/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
+        connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
+            QJsonParseError error;
+            QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+            if (error.error != QJsonParseError::NoError)
+            {
+                qDebug() << error.errorString();
+                return ;
+            }
+
+            QJsonObject json = document.object();
+            auto sentences = json.value("sentences").toArray();
+            if (!sentences.size())
+                return ;
+            auto trans = sentences.first().toObject().value("trans").toString();
+            if (trans.isEmpty())
+                return ;
+            if (listWidget->currentItem() != item) // 已经不是当前item，或许已经删除了
+                return ;
+
+            qDebug() << "翻译：" << msg << " => " << trans;
+            try {
+                appendItemText(item, trans);
+            } catch (...) {
+
+            }
+        });
+    });
+    connect(actionFreeCopy, &QAction::triggered, this, [=]{
+
+    });
+
     menu->exec(QCursor::pos());
+
+    menu->deleteLater();
+    actionFgColor->deleteLater();
+    actionBgColor->deleteLater();
+    actionCopy->deleteLater();
+    actionSearch->deleteLater();
+    actionTranslate->deleteLater();
+    actionFreeCopy->deleteLater();
 }

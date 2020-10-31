@@ -66,7 +66,7 @@ private:
 
     QList<LiveDanmaku> roomDanmakus;
     qint64 prevLastDanmakuTimestamp = 0;
-    bool firstPullDanmaku = true;
+    bool firstPullDanmaku = false; // 是否不加载以前的弹幕
     LiveDanmakuWindow* danmakuWindow = nullptr;
     bool diangeAutoCopy = false;
 };

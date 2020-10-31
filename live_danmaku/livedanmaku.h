@@ -42,6 +42,20 @@ public:
         return danmaku;
     }
 
+    QJsonObject toJson()
+    {
+        QJsonObject object;
+        object.insert("text", text);
+        object.insert("uid", uid);
+        object.insert("nickname", nickname);
+        object.insert("uname_color", uname_color);
+        object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
+        object.insert("isadmin", isadmin);
+        object.insert("vip", vip);
+        object.insert("svip", svip);
+        return object;
+    }
+
     QString toString() const
     {
         return QString("%1(%3):“%2” %4")

@@ -17,8 +17,15 @@
 #include <QAction>
 #include <QColorDialog>
 #include <QLabel>
+#include <QApplication>
+#include <QClipboard>
+#include <QDesktopServices>
+#include <QJsonParseError>
+#include <QJsonDocument>
 #include "livedanmaku.h"
+#include "netutil.h"
 
+#define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+3
 
 class LiveDanmakuWindow : public QWidget
@@ -41,6 +48,7 @@ signals:
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
+    void appendItemText(QListWidgetItem* item, QString text);
     void showMenu();
 
 private:
