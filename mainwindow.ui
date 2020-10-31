@@ -88,6 +88,9 @@
           </item>
           <item>
            <widget class="QSpinBox" name="refreshDanmakuIntervalSpin">
+            <property name="suffix">
+             <string>毫秒</string>
+            </property>
             <property name="minimum">
              <number>500</number>
             </property>
@@ -98,7 +101,7 @@
              <number>100</number>
             </property>
             <property name="value">
-             <number>1000</number>
+             <number>2000</number>
             </property>
            </widget>
           </item>

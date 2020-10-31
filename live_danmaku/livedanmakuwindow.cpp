@@ -10,6 +10,12 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
     lineSpacing = fm.lineSpacing();
+
+    listWidget = new QListWidget(this);
+    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout->addWidget(listWidget);
+
+    listWidget->setStyleSheet("QListWidget{ background: transparent; }");
 }
 
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -78,5 +84,7 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
-
+    QListWidgetItem* item = new QListWidgetItem(danmaku.getNickname() + ": " + danmaku.getText());
+    listWidget->addItem(item);
+    listWidget->scrollToBottom();
 }

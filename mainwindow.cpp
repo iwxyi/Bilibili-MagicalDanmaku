@@ -27,9 +27,11 @@ MainWindow::MainWindow(QWidget *parent)
        text = text.replace(0, 2, "");
        if (QString(" :：，。").contains(text.left(1)))
            text.replace(0, 1, "");
+       text = text.trimmed();
        QClipboard* clip = QApplication::clipboard();
        clip->setText(text);
        qDebug() << "【点歌自动复制】" << text;
+       ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
     });
 }
 
@@ -96,14 +98,18 @@ void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
     if (!danmakus.size())
         return ;
 
+    // 不是第一次加载
+    if (roomDanmakus.size())
+    {
+        // 发送信号给其他插件
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            newLiveDanmakuAdded(danmakus.at(i));
+        }
+    }
+
     // 添加到队列
     roomDanmakus.append(danmakus);
-
-    // 发送信号给其他插件
-    for (int i = 0; i < danmakus.size(); i++)
-    {
-        newLiveDanmakuAdded(danmakus.at(i));
-    }
 
     /*QStringList texts;
     for (int i = 0; i < roomDanmakus.size(); i++)
@@ -117,6 +123,9 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
     emit signalNewDanmaku(danmaku);
 }
 
+/**
+ * 显示实时弹幕
+ */
 void MainWindow::on_showLiveDanmakuButton_clicked()
 {
     bool hidding = (danmakuWindow == nullptr || danmakuWindow->isHidden());

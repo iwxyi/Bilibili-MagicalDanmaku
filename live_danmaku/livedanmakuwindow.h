@@ -10,6 +10,8 @@
 #include <QDebug>
 #include <QFontMetrics>
 #include <QTimer>
+#include <QListWidget>
+#include <QVBoxLayout>
 #include "livedanmaku.h"
 
 class LiveDanmakuWindow : public QWidget
@@ -31,6 +33,8 @@ public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
 
 private:
+    QListWidget* listWidget;
+
     int fontHeight;
     int lineSpacing;
     int boundaryWidth = 8;
