@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QClipboard>
+#include <QNetworkCookie>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -55,6 +56,10 @@ private slots:
     void on_languageAutoTranslateCheck_stateChanged(int arg1);
 
     void on_tabWidget_tabBarClicked(int index);
+
+    void on_testSendMsgButton_clicked();
+
+    void on_refreshDanmakuCheck_clicked();
 
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);

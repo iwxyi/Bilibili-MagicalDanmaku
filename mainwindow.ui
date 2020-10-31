@@ -228,6 +228,23 @@
           </item>
          </layout>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="testSendMsgEdit"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="testSendMsgButton">
+            <property name="text">
+             <string>发送弹幕</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
      </widget>
