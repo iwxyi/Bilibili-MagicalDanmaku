@@ -180,6 +180,20 @@ void LiveDanmakuWindow::appendItemText(QListWidgetItem *item, QString text)
     item->setSizeHint(label->sizeHint());
 }
 
+void LiveDanmakuWindow::resetItemTextColor()
+{
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        auto widget = listWidget->itemWidget(listWidget->item(i));
+        auto label = qobject_cast<QLabel*>(widget);
+        if (!label)
+            return ;
+        QPalette pa(label->palette());
+        pa.setColor(QPalette::Text, fgColor);
+        label->setPalette(pa);
+    }
+}
+
 void LiveDanmakuWindow::showMenu()
 {
     auto item = listWidget->currentItem();
@@ -218,7 +232,7 @@ void LiveDanmakuWindow::showMenu()
         if (c != fgColor)
         {
             settings.setValue("livedanmakuwindow/fgColor", fgColor = c);
-            update();
+            resetItemTextColor();
         }
     });
     connect(actionBgColor, &QAction::triggered, this, [=]{

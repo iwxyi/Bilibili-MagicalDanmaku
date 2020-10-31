@@ -51,6 +51,7 @@ public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void appendItemText(QListWidgetItem* item, QString text);
+    void resetItemTextColor();
     void showMenu();
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
