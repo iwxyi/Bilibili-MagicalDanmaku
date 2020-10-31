@@ -7,6 +7,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // 页面
+    int tabIndex = settings.value("mainwindow/tabIndex", 0).toInt();
+    if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
+        ui->tabWidget->setCurrentIndex(tabIndex);
+
     // 房间号
     QString roomId = settings.value("danmaku/roomId", "").toString();
     if (!roomId.isEmpty())
@@ -204,6 +209,8 @@ void MainWindow::on_testDanmakuButton_clicked()
                             qrand() % 89999999 + 10000000,
                             QDateTime::currentDateTime()));
 
+    ui->testDanmakuEdit->setText("");
+    ui->testDanmakuEdit->setFocus();
 }
 
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
@@ -229,4 +236,9 @@ void MainWindow::on_languageAutoTranslateCheck_stateChanged(int arg1)
     settings.setValue("danmaku/autoTrans", trans);
     if (danmakuWindow)
         danmakuWindow->setAutoTranslate(trans);
+}
+
+void MainWindow::on_tabWidget_tabBarClicked(int index)
+{
+    settings.setValue("mainwindow/tabIndex", index);
 }

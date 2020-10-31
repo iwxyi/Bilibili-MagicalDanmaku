@@ -54,6 +54,8 @@ private slots:
 
     void on_languageAutoTranslateCheck_stateChanged(int arg1);
 
+    void on_tabWidget_tabBarClicked(int index);
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);

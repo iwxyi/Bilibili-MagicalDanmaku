@@ -22,8 +22,10 @@
 #include <QDesktopServices>
 #include <QJsonParseError>
 #include <QJsonDocument>
+#include <QLineEdit>
 #include "livedanmaku.h"
 #include "netutil.h"
+#include "freecopyedit.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+3

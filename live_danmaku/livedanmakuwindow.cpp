@@ -213,6 +213,8 @@ void LiveDanmakuWindow::showMenu()
 
     connect(actionFgColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(fgColor, this, "选择文字颜色", QColorDialog::ShowAlphaChannel);
+        if (!c.isValid())
+            return ;
         if (c != fgColor)
         {
             settings.setValue("livedanmakuwindow/fgColor", fgColor = c);
@@ -221,6 +223,8 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionBgColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(bgColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
+        if (!c.isValid())
+            return ;
         if (c != bgColor)
         {
             settings.setValue("livedanmakuwindow/bgColor", bgColor = c);
@@ -228,16 +232,33 @@ void LiveDanmakuWindow::showMenu()
         }
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 复制
         QApplication::clipboard()->setText(msg);
     });
     connect(actionSearch, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 百度搜索
         QDesktopServices::openUrl(QUrl("https://www.baidu.com/s?wd="+msg));
     });
     connect(actionTranslate, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 翻译
         startTranslate(item);
     });
     connect(actionFreeCopy, &QAction::triggered, this, [=]{
-
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 自由复制
+        FreeCopyEdit* edit = new FreeCopyEdit(listWidget);
+        QRect rect = listWidget->visualItemRect(item);
+        edit->setGeometry(rect);
+        edit->setText(msg);
+        edit->show();
+        edit->setFocus();
     });
 
     menu->exec(QCursor::pos());
