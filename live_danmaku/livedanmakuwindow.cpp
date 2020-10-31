@@ -126,8 +126,13 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 自动翻译
     if (autoTrans)
     {
-        QRegExp re("[\u0800-\u4e00]+");
-        if (danmaku.getText().indexOf(re) != -1)
+        QString msg = danmaku.getText();
+        QRegExp riyu("[\u0800-\u4e00]+");
+        QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
+        QRegExp eeyu("[А-Яа-яЁё]+");
+        if (msg.indexOf(riyu) != -1
+                || msg.indexOf(hanyu) != -1
+                || msg.indexOf(eeyu) != -1)
         {
             qDebug() << "检测到外语，自动翻译";
             startTranslate(item);
@@ -162,6 +167,8 @@ void LiveDanmakuWindow::appendItemText(QListWidgetItem *item, QString text)
         return ;
 
     auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    if (text.isEmpty() || danmaku.getText().trimmed() == text.trimmed()) // 翻译没有变化
+        return ;
     QString nameColor = danmaku.getUnameColor().isEmpty()
             ? QVariant(fgColor).toString()
             : danmaku.getUnameColor();
