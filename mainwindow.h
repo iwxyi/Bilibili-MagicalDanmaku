@@ -26,6 +26,7 @@ public:
     ~MainWindow();
 
 protected:
+    void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
 
 signals:

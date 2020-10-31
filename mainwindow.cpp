@@ -33,6 +33,12 @@ MainWindow::MainWindow(QWidget *parent)
        qDebug() << "【点歌自动复制】" << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
     });
+
+    // 实时弹幕
+    if (settings.value("danmaku/liveWindow", false).toBool())
+    {
+        on_showLiveDanmakuButton_clicked();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -40,8 +46,15 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::showEvent(QShowEvent *event)
+{
+    restoreGeometry(settings.value("mainwindow/geometry").toByteArray());
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    settings.setValue("mainwindow/geometry", this->saveGeometry());
+
     if (danmakuWindow)
         danmakuWindow->deleteLater();
 }
@@ -99,7 +112,7 @@ void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
         return ;
 
     // 不是第一次加载
-    if (roomDanmakus.size())
+//    if (roomDanmakus.size())
     {
         // 发送信号给其他插件
         for (int i = 0; i < danmakus.size(); i++)

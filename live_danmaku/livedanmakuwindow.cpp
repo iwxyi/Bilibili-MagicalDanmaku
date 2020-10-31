@@ -15,7 +15,24 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(listWidget);
 
-    listWidget->setStyleSheet("QListWidget{ background: transparent; }");
+    listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu()));
+    listWidget->setStyleSheet("QListWidget{ background: transparent; border: none; }");
+    listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    listWidget->setWordWrap(true);
+
+    fgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/fgColor", QColor(Qt::white)));
+    bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
+}
+
+void LiveDanmakuWindow::showEvent(QShowEvent *event)
+{
+    restoreGeometry(settings.value("livedanmakuwindow/geometry").toByteArray());
+}
+
+void LiveDanmakuWindow::hideEvent(QHideEvent *event)
+{
+    settings.setValue("livedanmakuwindow/geometry", this->saveGeometry());
 }
 
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -40,8 +57,8 @@ bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, 
             *result =  HTLEFT;
         else if(xPos>=width()-boundaryWidth)                              //右边
             *result = HTRIGHT;
-        else if(yPos<boundaryWidth)                                       //上边
-            *result = HTTOP;
+        /*else if(yPos<boundaryWidth)                                       //上边
+            *result = HTTOP;*/
         else if(yPos>=height()-boundaryWidth)                             //下边
             *result = HTBOTTOM;
         else              //其他部分不做处理，返回false，留给其他事件处理器处理
@@ -79,12 +96,47 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 
     // 绘制用来看的边框
     painter.setPen(QPen(c, penW/2, Qt::PenStyle::DashDotLine));
-    painter.fillRect(rect(), QColor(0x88, 0x88, 0x88, 0x32));
+    painter.fillRect(rect(), bgColor);
 }
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
-    QListWidgetItem* item = new QListWidgetItem(danmaku.getNickname() + ": " + danmaku.getText());
+    QString text = "<font color='"+QVariant(danmaku.getUnameColor().isEmpty()
+                                            ? fgColor : danmaku.getUnameColor()).toString()+"'>"
+                   + danmaku.getNickname() + "</font> " + danmaku.getText();
+    QLabel* label = new QLabel(text, listWidget);
+    label->setWordWrap(true);
+    label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
+    label->adjustSize();
+    QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
+    listWidget->setItemWidget(item, label);
+    item->setSizeHint(label->sizeHint());
     listWidget->scrollToBottom();
+}
+
+void LiveDanmakuWindow::showMenu()
+{
+    QMenu* menu = new QMenu(this);
+    QAction* actionFgColor = new QAction("文字颜色", this);
+    QAction* actionBgColor = new QAction("背景颜色", this);
+    menu->addAction(actionFgColor);
+    menu->addAction(actionBgColor);
+    connect(actionFgColor, &QAction::triggered, this, [=]{
+        QColor c = QColorDialog::getColor(fgColor, this, "选择文字颜色", QColorDialog::ShowAlphaChannel);
+        if (c != fgColor)
+        {
+            settings.setValue("livedanmakuwindow/fgColor", fgColor = c);
+            update();
+        }
+    });
+    connect(actionBgColor, &QAction::triggered, this, [=]{
+        QColor c = QColorDialog::getColor(bgColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
+        if (c != bgColor)
+        {
+            settings.setValue("livedanmakuwindow/bgColor", bgColor = c);
+            update();
+        }
+    });
+    menu->exec(QCursor::pos());
 }

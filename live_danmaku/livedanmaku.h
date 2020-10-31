@@ -72,7 +72,7 @@ public:
         return nickname;
     }
 
-    QString getUnameColoc() const
+    QString getUnameColor() const
     {
         return uname_color;
     }
