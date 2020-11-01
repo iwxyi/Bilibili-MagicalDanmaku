@@ -109,5 +109,7 @@ private:
     QString browserCookie;
     QString browserData;
     QTimer* sendMsgTimer;
+
+    QLabel* statusLabel;
 };
 #endif // MAINWINDOW_H

@@ -70,6 +70,10 @@ MainWindow::MainWindow(QWidget *parent)
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
 
+    // 状态栏
+    statusLabel = new QLabel(this);
+    this->statusBar()->addWidget(statusLabel);
+
     // 定时任务
     srand((unsigned)time(0));
     restoreTaskList();
@@ -251,9 +255,8 @@ void MainWindow::sendMsg(QString msg)
         QString msg = object.value("message").toString();
         if (!msg.isEmpty())
         {
-            setStatusTip(msg);
+            statusLabel->setText(msg);
         }
-        setStatusTip("tiptiptip");
     });
 
     manager->post(*request, ba);
