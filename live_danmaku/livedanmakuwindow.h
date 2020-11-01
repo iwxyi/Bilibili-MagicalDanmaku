@@ -28,7 +28,9 @@
 #include "freecopyedit.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
-#define DANMAKU_STRING_ROLE Qt::UserRole+3
+#define DANMAKU_STRING_ROLE Qt::UserRole+1
+#define DANMAKU_TRANS_ROLE Qt::UserRole+2
+#define DANMAKU_REPLY_ROLE Qt::UserRole+3
 
 class LiveDanmakuWindow : public QWidget
 {
@@ -50,11 +52,16 @@ signals:
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
-    void appendItemText(QListWidgetItem* item, QString text);
+    void setItemWidgetText(QListWidgetItem* item);
     void resetItemTextColor();
     void showMenu();
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
+    void setAIReply(bool reply);
+    void startReply(QListWidgetItem* item);
+
+private:
+    bool isItemExist(QListWidgetItem *item);
 
 private:
     QSettings settings;
@@ -63,6 +70,7 @@ private:
     QColor fgColor;
     QColor bgColor;
     bool autoTrans = true;
+    bool aiReply = false;
 
     int fontHeight;
     int lineSpacing;

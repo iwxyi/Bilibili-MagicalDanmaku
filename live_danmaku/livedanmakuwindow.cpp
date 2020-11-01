@@ -107,21 +107,20 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QString nameText = "<font color='" + nameColor + "'>"
                        + danmaku.getNickname() + "</font> ";
     QString text = nameText + danmaku.getText();
-    QLabel* label = new QLabel(text, listWidget);
+    QLabel* label = new QLabel(listWidget);
     QPalette pa(label->palette());
     pa.setColor(QPalette::Text, fgColor);
     label->setPalette(pa);
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
-    label->adjustSize();
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
     listWidget->setItemWidget(item, label);
-    item->setSizeHint(label->sizeHint());
     listWidget->scrollToBottom();
 
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
+    setItemWidgetText(item);
 
     // 自动翻译
     if (autoTrans)
@@ -138,10 +137,17 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             startTranslate(item);
         }
     }
+
+    // AI回复
+    if (aiReply)
+    {
+        startReply(item);
+    }
 }
 
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
+    auto currentItem = listWidget->currentItem();
     QString s = danmaku.toString();
     for (int i = 0; i < listWidget->count(); i++)
     {
@@ -152,12 +158,14 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             listWidget->removeItemWidget(item);
             listWidget->takeItem(i);
             widget->deleteLater();
+            if (item == currentItem)
+                listWidget->clearSelection();
             break;
         }
     }
 }
 
-void LiveDanmakuWindow::appendItemText(QListWidgetItem *item, QString text)
+void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 {
     auto widget = listWidget->itemWidget(item);
     if (!widget)
@@ -167,14 +175,29 @@ void LiveDanmakuWindow::appendItemText(QListWidgetItem *item, QString text)
         return ;
 
     auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
-    if (text.isEmpty() || danmaku.getText().trimmed() == text.trimmed()) // 翻译没有变化
+    QString msg = danmaku.getText();
+    QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
+    QString reply = item->data(DANMAKU_REPLY_ROLE).toString();
+    if (msg.isEmpty()) // 翻译没有变化
         return ;
+
     QString nameColor = danmaku.getUnameColor().isEmpty()
             ? QVariant(fgColor).toString()
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColor + "'>"
                        + danmaku.getNickname() + "</font> ";
-    text = nameText + danmaku.getText() + "（" +text + "）";
+    QString text = nameText + danmaku.getText();
+
+    if (!trans.isEmpty() && trans != msg)
+    {
+        text = text + "（" + trans + "）";
+    }
+
+    if (!reply.isEmpty())
+    {
+        text = text + "\n" + "回复：" + trans;
+    }
+
     label->setText(text);
     label->adjustSize();
     item->setSizeHint(label->sizeHint());
@@ -295,6 +318,8 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
 {
     auto danmaku = LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     QString msg = danmaku.getText();
+    if (msg.isEmpty())
+        return ;
     QString url = "http://translate.google.cn/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -312,26 +337,65 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
         auto trans = sentences.first().toObject().value("trans").toString();
         if (trans.isEmpty())
             return ;
-        if (listWidget->currentItem() != item) // 已经不是当前item，或许已经删除了
-        {
-            // 判断item存不存在
-            int size = listWidget->count();
-            bool find = false;
-            for (int i = 0; i < size; i++)
-                if (listWidget->item(i) == item)
-                {
-                    find = true;
-                    break;
-                }
-            if (!find) // 已经不存在了
-                return ;
-        }
+
+        if (!isItemExist(item))
+            return ;
 
         qDebug() << "翻译：" << msg << " => " << trans;
-        try {
-            appendItemText(item, trans);
-        } catch (...) {
-
-        }
+        item->setData(DANMAKU_TRANS_ROLE, trans);
+        setItemWidgetText(item);
     });
+}
+
+void LiveDanmakuWindow::setAIReply(bool reply)
+{
+    this->aiReply = reply;
+}
+
+void LiveDanmakuWindow::startReply(QListWidgetItem *item)
+{
+    auto danmaku = LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+    QString msg = danmaku.getText();
+    if (msg.isEmpty())
+        return ;
+    QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
+    QStringList params{"app_id", "2159207490",
+                       "time_stamp", QString::number(QDateTime::currentSecsSinceEpoch()),
+                "nonce_str", "fa577ce340859f9fe",
+                "sign", "",
+                "session", QString::number(danmaku.getUid()),
+                "question", msg
+                      };
+    connect(new NetUtil(url, params), &NetUtil::finished, this, [=](QString result){
+        qDebug() << result;
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+
+        QJsonObject json = document.object();
+        QString reply;
+
+        if (!isItemExist(item))
+            return ;
+
+        qDebug() << "回复：" << msg << " => " << reply;
+        item->setData(DANMAKU_REPLY_ROLE, reply);
+        setItemWidgetText(item);
+    });
+}
+
+bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
+{
+    if (listWidget->currentItem() == item)
+        return true;
+    // 已经不是当前item，或许已经删除了
+    int size = listWidget->count();
+    for (int i = 0; i < size; i++)
+        if (listWidget->item(i) == item)
+            return true;
+    return false;
 }
