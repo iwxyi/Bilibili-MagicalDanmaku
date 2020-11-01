@@ -76,6 +76,8 @@ private slots:
 
     void on_SendMsgButton_clicked();
 
+    void on_AIReplyCheck_stateChanged(int arg1);
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
@@ -89,7 +91,7 @@ private:
     qint64 removeDanmakuInterval = 20000;
     QList<LiveDanmaku> roomDanmakus;
     qint64 prevLastDanmakuTimestamp = 0;
-    bool firstPullDanmaku = false; // 是否不加载以前的弹幕
+    bool firstPullDanmaku = true; // 是否不加载以前的弹幕
     LiveDanmakuWindow* danmakuWindow = nullptr;
     bool diangeAutoCopy = false;
 

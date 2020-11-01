@@ -30,8 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->refreshDanmakuCheck->setChecked(autoRefresh);
 
     // 移除间隔
-    this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20000).toInt();
-    ui->removeDanmakuIntervalSpin->setValue(removeDanmakuInterval/1000);
+    this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20).toLongLong();
+    ui->removeDanmakuIntervalSpin->setValue(removeDanmakuInterval);
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -55,6 +55,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
     ui->languageAutoTranslateCheck->setChecked(trans);
+
+    // 自动回复
+    bool reply = settings.value("danmaku/aiReply", true).toBool();
+    ui->AIReplyCheck->setChecked(reply);
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
@@ -148,9 +152,6 @@ void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
     }
 
     // 去掉已经存在的弹幕
-    /*QDateTime prevLastTime = roomDanmakus.size()
-            ? roomDanmakus.last().getTimeline()
-            : QDateTime::fromMSecsSinceEpoch(0);*/
     while (danmakus.size() && danmakus.first().getTimeline().toMSecsSinceEpoch() <= prevLastDanmakuTimestamp)
         danmakus.removeFirst();
     if (!danmakus.size())
@@ -197,6 +198,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
     }
 
     if (hidding)
@@ -221,10 +223,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
-    newLiveDanmakuAdded(
+    appendNewLiveDanmaku(QList<LiveDanmaku>{
                 LiveDanmaku("测试用户", text,
                             qrand() % 89999999 + 10000000,
-                            QDateTime::currentDateTime()));
+                             QDateTime::currentDateTime())});
 
     ui->testDanmakuEdit->setText("");
     ui->testDanmakuEdit->setFocus();
@@ -233,7 +235,7 @@ void MainWindow::on_testDanmakuButton_clicked()
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuInterval = arg1 * 1000;
-    settings.setValue("danmaku/removeInterval", removeDanmakuInterval);
+    settings.setValue("danmaku/removeInterval", arg1);
 }
 
 void MainWindow::on_roomIdEdit_editingFinished()
@@ -391,4 +393,12 @@ void MainWindow::on_SendMsgButton_clicked()
     });
 
     manager->post(*request, ba);
+}
+
+void MainWindow::on_AIReplyCheck_stateChanged(int arg1)
+{
+    bool reply = ui->AIReplyCheck->isChecked();
+    settings.setValue("danamku/aiReply", reply);
+    if (danmakuWindow)
+        danmakuWindow->setAIReply(reply);
 }
