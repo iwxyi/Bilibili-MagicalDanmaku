@@ -20,9 +20,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     listWidget->setStyleSheet("QListWidget{ background: transparent; border: none; }");
     listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setWordWrap(true);
-    listWidget->setSpacing(6);
+    listWidget->setSpacing(4);
 
-    fgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/fgColor", QColor(Qt::white)));
+    nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
+    msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
 }
 
@@ -103,14 +104,14 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
     QString nameColor = danmaku.getUnameColor().isEmpty()
-            ? QVariant(fgColor).toString()
+            ? QVariant(msgColor).toString()
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColor + "'>"
                        + danmaku.getNickname() + "</font> ";
     QString text = nameText + danmaku.getText();
     QLabel* label = new QLabel(listWidget);
     QPalette pa(label->palette());
-    pa.setColor(QPalette::Text, fgColor);
+    pa.setColor(QPalette::Text, msgColor);
     label->setPalette(pa);
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
@@ -177,7 +178,6 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum();
-    qDebug() << "crollEnd:" << scrollEnd;
 
     auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     QString msg = danmaku.getText();
@@ -186,10 +186,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (msg.isEmpty()) // 翻译没有变化
         return ;
 
-    QString nameColor = danmaku.getUnameColor().isEmpty()
-            ? QVariant(fgColor).toString()
+    QString nameColorStr = danmaku.getUnameColor().isEmpty()
+            ? QVariant(this->nameColor).toString()
             : danmaku.getUnameColor();
-    QString nameText = "<font color='" + nameColor + "'>"
+    QString nameText = "<font color='" + nameColorStr + "'>"
                        + danmaku.getNickname() + "</font> ";
     QString text = nameText + danmaku.getText();
 
@@ -200,7 +200,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     if (!reply.isEmpty())
     {
-        text = text + "<br/>" + "<DD> => " + reply;
+        text = text + "<br/>" + "&nbsp;&nbsp;=> " + reply;
     }
 
     label->setText(text);
@@ -211,7 +211,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         listWidget->scrollToBottom();
 }
 
-void LiveDanmakuWindow::resetItemTextColor()
+void LiveDanmakuWindow::resetItemsTextColor()
 {
     for (int i = 0; i < listWidget->count(); i++)
     {
@@ -220,8 +220,16 @@ void LiveDanmakuWindow::resetItemTextColor()
         if (!label)
             return ;
         QPalette pa(label->palette());
-        pa.setColor(QPalette::Text, fgColor);
+        pa.setColor(QPalette::Text, msgColor);
         label->setPalette(pa);
+    }
+}
+
+void LiveDanmakuWindow::resetItemsText()
+{
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        setItemWidgetText(listWidget->item(i));
     }
 }
 
@@ -233,7 +241,8 @@ void LiveDanmakuWindow::showMenu()
     QString msg = danmaku.getText();
 
     QMenu* menu = new QMenu(this);
-    QAction* actionFgColor = new QAction("文字颜色", this);
+    QAction* actionNameColor = new QAction("昵称颜色", this);
+    QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionCopy = new QAction("复制", this);
     QAction* actionSearch = new QAction("百度", this);
@@ -241,7 +250,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionReply = new QAction("AI回复", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
 
-    menu->addAction(actionFgColor);
+    menu->addAction(actionNameColor);
+    menu->addAction(actionMsgColor);
     menu->addAction(actionBgColor);
     menu->addSeparator();
     menu->addAction(actionSearch);
@@ -260,14 +270,24 @@ void LiveDanmakuWindow::showMenu()
         actionFreeCopy->setEnabled(false);
     }
 
-    connect(actionFgColor, &QAction::triggered, this, [=]{
-        QColor c = QColorDialog::getColor(fgColor, this, "选择文字颜色", QColorDialog::ShowAlphaChannel);
+    connect(actionNameColor, &QAction::triggered, this, [=]{
+        QColor c = QColorDialog::getColor(nameColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);
         if (!c.isValid())
             return ;
-        if (c != fgColor)
+        if (c != nameColor)
         {
-            settings.setValue("livedanmakuwindow/fgColor", fgColor = c);
-            resetItemTextColor();
+            settings.setValue("livedanmakuwindow/nmaeColor", nameColor = c);
+            resetItemsText();
+        }
+    });
+    connect(actionMsgColor, &QAction::triggered, this, [=]{
+        QColor c = QColorDialog::getColor(msgColor, this, "选择文字颜色", QColorDialog::ShowAlphaChannel);
+        if (!c.isValid())
+            return ;
+        if (c != msgColor)
+        {
+            settings.setValue("livedanmakuwindow/msgColor", msgColor = c);
+            resetItemsTextColor();
         }
     });
     connect(actionBgColor, &QAction::triggered, this, [=]{
@@ -319,7 +339,7 @@ void LiveDanmakuWindow::showMenu()
     menu->exec(QCursor::pos());
 
     menu->deleteLater();
-    actionFgColor->deleteLater();
+    actionMsgColor->deleteLater();
     actionBgColor->deleteLater();
     actionCopy->deleteLater();
     actionSearch->deleteLater();

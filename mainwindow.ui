@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -98,7 +98,7 @@
              <number>60000</number>
             </property>
             <property name="singleStep">
-             <number>100</number>
+             <number>500</number>
             </property>
             <property name="value">
              <number>2000</number>
@@ -146,6 +146,9 @@
             </property>
             <property name="maximum">
              <number>3600</number>
+            </property>
+            <property name="singleStep">
+             <number>10</number>
             </property>
             <property name="value">
              <number>20</number>
@@ -299,6 +302,9 @@
             </property>
             <property name="maximum">
              <number>100000</number>
+            </property>
+            <property name="singleStep">
+             <number>10</number>
             </property>
            </widget>
           </item>

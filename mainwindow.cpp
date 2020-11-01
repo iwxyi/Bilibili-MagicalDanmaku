@@ -70,7 +70,9 @@ MainWindow::MainWindow(QWidget *parent)
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
     sendMsgTimer = new QTimer(this);
-    connect(sendMsgTimer, SIGNAL(timeout()), this, SLOT(on_SendMsgButton_clicked()));
+    connect(sendMsgTimer, &QTimer::timeout, this, [=]{
+        sendMsg(ui->SendMsgEdit->text());
+    });
 
     // 定时弹幕
     interval = settings.value("danmaku/sendInterval", 1800).toInt();
@@ -184,6 +186,84 @@ void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
     qDebug() << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
+}
+
+void MainWindow::sendMsg(QString msg)
+{
+    if (browserCookie.isEmpty() || browserData.isEmpty())
+    {
+        QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
+        ui->SendMsgIntervalCheck->setChecked(false);
+        return ;
+    }
+    QString roomId = ui->roomIdEdit->text();
+    if (msg.isEmpty() || roomId.isEmpty())
+        return ;
+
+    QUrl url("https://api.live.bilibili.com/msg/send");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    QList<QNetworkCookie> cookies;
+
+    // 设置cookie
+    QString cookieText = browserCookie;
+    QStringList sl = cookieText.split(";");
+    foreach (auto s, sl)
+    {
+        s = s.trimmed();
+        int pos = s.indexOf("=");
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
+    }
+
+    // 请求头里面加入cookies
+    QVariant var;
+    var.setValue(cookies);
+    request->setHeader(QNetworkRequest::CookieHeader, var);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QString s = browserData;
+    int posl = s.indexOf("msg=")+4;
+    int posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, msg);
+
+    posl = s.indexOf("roomid=")+7;
+    posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, roomId);
+
+    QByteArray ba(s.toStdString().data());
+//    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
+    qDebug() << ba;
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << data;
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QString msg = object.value("message").toString();
+        if (!msg.isEmpty())
+        {
+            QMessageBox::information(this, "发送弹幕", msg);
+        }
+    });
+
+    manager->post(*request, ba);
 }
 
 /**
@@ -318,83 +398,8 @@ void MainWindow::on_SendMsgIntervalCheck_stateChanged(int arg1)
 
 void MainWindow::on_SendMsgButton_clicked()
 {
-    if (browserCookie.isEmpty() || browserData.isEmpty())
-    {
-        QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
-        ui->SendMsgIntervalCheck->setChecked(false);
-        return ;
-    }
     QString msg = ui->SendMsgEdit->text();
-    QString roomId = ui->roomIdEdit->text();
-    if (msg.isEmpty() || roomId.isEmpty())
-        return ;
-    ui->SendMsgEdit->clear();
-    ui->SendMsgEdit->setFocus();
-
-    QUrl url("https://api.live.bilibili.com/msg/send");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    QList<QNetworkCookie> cookies;
-
-    // 设置cookie
-    QString cookieText = browserCookie;
-    QStringList sl = cookieText.split(";");
-    foreach (auto s, sl)
-    {
-        s = s.trimmed();
-        int pos = s.indexOf("=");
-        QString key = s.left(pos);
-        QString val = s.right(s.length() - pos - 1);
-        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
-    }
-
-    // 请求头里面加入cookies
-    QVariant var;
-    var.setValue(cookies);
-    request->setHeader(QNetworkRequest::CookieHeader, var);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    // 设置数据（JSON的ByteArray）
-    QString s = browserData;
-    int posl = s.indexOf("msg=")+4;
-    int posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, msg);
-
-    posl = s.indexOf("roomid=")+7;
-    posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, roomId);
-
-    QByteArray ba(s.toStdString().data());
-//    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
-    qDebug() << ba;
-
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        qDebug() << data;
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QString msg = object.value("message").toString();
-        if (!msg.isEmpty())
-        {
-            QMessageBox::information(this, "发送弹幕", msg);
-        }
-    });
-
-    manager->post(*request, ba);
+    sendMsg(msg);
 }
 
 void MainWindow::on_AIReplyCheck_stateChanged(int arg1)
@@ -412,5 +417,5 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
-    on_SendMsgButton_clicked();
+    sendMsg(ui->SendMsgEdit->text());
 }

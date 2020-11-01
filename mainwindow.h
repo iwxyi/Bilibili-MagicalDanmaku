@@ -87,6 +87,8 @@ private:
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
 
+    void sendMsg(QString msg);
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;

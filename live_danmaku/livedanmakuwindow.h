@@ -55,7 +55,8 @@ public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void setItemWidgetText(QListWidgetItem* item);
-    void resetItemTextColor();
+    void resetItemsTextColor();
+    void resetItemsText();
     void showMenu();
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
@@ -69,7 +70,8 @@ private:
     QSettings settings;
     QListWidget* listWidget;
 
-    QColor fgColor;
+    QColor nameColor;
+    QColor msgColor;
     QColor bgColor;
     bool autoTrans = true;
     bool aiReply = false;
