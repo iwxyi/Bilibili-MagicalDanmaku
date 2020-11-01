@@ -78,6 +78,10 @@ private slots:
 
     void on_AIReplyCheck_stateChanged(int arg1);
 
+    void on_testDanmakuEdit_returnPressed();
+
+    void on_SendMsgEdit_returnPressed();
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);

@@ -159,7 +159,7 @@ void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
     prevLastDanmakuTimestamp = danmakus.last().getTimeline().toMSecsSinceEpoch();
 
     // 不是第一次加载
-    if (!firstPullDanmaku) // 用作测试就不需要该条件
+    if (!firstPullDanmaku || danmakus.size() == 1) // 用作测试就不需要该条件；1条很可能是测试弹幕
     {
         // 发送信号给其他插件
         for (int i = 0; i < danmakus.size(); i++)
@@ -401,4 +401,14 @@ void MainWindow::on_AIReplyCheck_stateChanged(int arg1)
     settings.setValue("danamku/aiReply", reply);
     if (danmakuWindow)
         danmakuWindow->setAIReply(reply);
+}
+
+void MainWindow::on_testDanmakuEdit_returnPressed()
+{
+    on_testDanmakuButton_clicked();
+}
+
+void MainWindow::on_SendMsgEdit_returnPressed()
+{
+    on_SendMsgButton_clicked();
 }

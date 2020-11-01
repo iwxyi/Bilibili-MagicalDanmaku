@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>403</width>
-    <height>426</height>
+    <width>347</width>
+    <height>305</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -135,7 +135,7 @@
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>弹幕过期间隔</string>
+             <string>弹幕超时间隔</string>
             </property>
            </widget>
           </item>
@@ -365,7 +365,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>403</width>
+     <width>347</width>
      <height>26</height>
     </rect>
    </property>

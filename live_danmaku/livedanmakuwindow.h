@@ -23,6 +23,7 @@
 #include <QJsonParseError>
 #include <QJsonDocument>
 #include <QLineEdit>
+#include <QCryptographicHash>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
