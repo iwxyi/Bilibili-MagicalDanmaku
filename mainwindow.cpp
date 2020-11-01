@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     browserData = settings.value("danmaku/browserData", "").toString();
 
     // 定时任务
+    srand((unsigned)time(0));
     restoreTaskList();
 }
 
@@ -250,8 +251,9 @@ void MainWindow::sendMsg(QString msg)
         QString msg = object.value("message").toString();
         if (!msg.isEmpty())
         {
-            QMessageBox::information(this, "发送弹幕", msg);
+            setStatusTip(msg);
         }
+        setStatusTip("tiptiptip");
     });
 
     manager->post(*request, ba);
@@ -393,6 +395,7 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
     sendMsg(ui->SendMsgEdit->text());
+    ui->SendMsgEdit->clear();
 }
 
 void MainWindow::addTimerTask(bool enable, int second, QString text)
@@ -413,14 +416,21 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
 
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = tw->check->isChecked();
+        int row = ui->taskListWidget->row(item);
+        settings.setValue("task/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(tw, &TaskWidget::spinChanged, this, [=](int val){
-
+        int row = ui->taskListWidget->row(item);
+        settings.setValue("task/r"+QString::number(row)+"Interval", val);
     });
 
     connect(tw->edit, &QPlainTextEdit::textChanged, this, [=]{
         item->setSizeHint(tw->sizeHint());
+
+        QString content = tw->edit->toPlainText();
+        int row = ui->taskListWidget->row(item);
+        settings.setValue("task/r"+QString::number(row)+"Msg", content);
     });
 
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
@@ -434,20 +444,65 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
 
 void MainWindow::saveTaskList()
 {
-
+    settings.setValue("task/count", ui->taskListWidget->count());
+    for (int row = 0; row < ui->taskListWidget->count(); row++)
+    {
+        auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(row));
+        auto tw = static_cast<TaskWidget*>(widget);
+        settings.setValue("task/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings.setValue("task/r"+QString::number(row)+"Interval", tw->spin->value());
+        settings.setValue("task/r"+QString::number(row)+"Msg", tw->edit->toPlainText());
+    }
 }
 
 void MainWindow::restoreTaskList()
 {
-
+    int count = settings.value("task/count", 0).toInt();
+    for (int row = 0; row < count; row++)
+    {
+        bool enable = settings.value("task/r"+QString::number(row)+"Enable", true).toBool();
+        int interval = settings.value("task/r"+QString::number(row)+"Interval", 1800).toInt();
+        QString msg = settings.value("task/r"+QString::number(row)+"Msg", "").toString();
+        addTimerTask(enable, interval, msg);
+    }
 }
 
 void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &pos)
 {
+    QListWidgetItem* item = ui->taskListWidget->currentItem();
 
+    QMenu* menu = new QMenu(this);
+    QAction* actionDelete = new QAction("删除", this);
+
+    if (!item)
+    {
+        actionDelete->setEnabled(false);
+    }
+
+    menu->addAction(actionDelete);
+
+    connect(actionDelete, &QAction::triggered, this, [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+
+        ui->taskListWidget->removeItemWidget(item);
+        ui->taskListWidget->takeItem(ui->taskListWidget->currentRow());
+
+        saveTaskList();
+
+        tw->deleteLater();
+    });
+
+    menu->exec(QCursor::pos());
+
+    actionDelete->deleteLater();
 }
 
 void MainWindow::on_addTaskButton_clicked()
 {
     addTimerTask(true, 1800, "");
+    saveTaskList();
+    auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
+    auto tw = static_cast<TaskWidget*>(widget);
+    tw->edit->setFocus();
 }
