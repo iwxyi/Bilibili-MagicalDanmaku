@@ -253,10 +253,9 @@ void MainWindow::sendMsg(QString msg)
         }
         QJsonObject object = document.object();
         QString msg = object.value("message").toString();
+        statusLabel->setText("");
         if (!msg.isEmpty())
-        {
             statusLabel->setText(msg);
-        }
     });
 
     manager->post(*request, ba);
@@ -404,19 +403,14 @@ void MainWindow::on_SendMsgEdit_returnPressed()
 void MainWindow::addTimerTask(bool enable, int second, QString text)
 {
     TaskWidget* tw = new TaskWidget(this);
-    tw->check->setChecked(enable);
-    tw->spin->setValue(second);
-    tw->edit->setPlainText(text);
-    tw->adjustSize();
-
     QListWidgetItem* item = new QListWidgetItem(ui->taskListWidget);
-    item->setSizeHint(tw->sizeHint());
 
     ui->taskListWidget->addItem(item);
     ui->taskListWidget->setItemWidget(item, tw);
     ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
     ui->taskListWidget->scrollToBottom();
 
+    // 连接信号
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = tw->check->isChecked();
         int row = ui->taskListWidget->row(item);
@@ -443,6 +437,13 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     connect(tw, &TaskWidget::signalResized, tw, [=]{
         item->setSizeHint(tw->size());
     });
+
+    // 设置属性
+    tw->check->setChecked(enable);
+    tw->spin->setValue(second);
+    tw->edit->setPlainText(text);
+    tw->adjustSize();
+    item->setSizeHint(tw->sizeHint());
 }
 
 void MainWindow::saveTaskList()
