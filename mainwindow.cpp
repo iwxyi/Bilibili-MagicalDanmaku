@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->tabWidget->setCurrentIndex(tabIndex);
 
     // 房间号
-    QString roomId = settings.value("danmaku/roomId", "").toString();
+    roomId = settings.value("danmaku/roomId", "").toString();
     if (!roomId.isEmpty())
         ui->roomIdEdit->setText(roomId);
 
@@ -77,6 +77,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 定时任务
     srand((unsigned)time(0));
     restoreTaskList();
+
+    // WS连接
+    initWS();
+    startConnectWS();
 }
 
 MainWindow::~MainWindow()
@@ -99,11 +103,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::pullLiveDanmaku()
 {
-    QString roomid = ui->roomIdEdit->text();
-    if (roomid.isEmpty())
+    if (roomId.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/ajax/msg";
-    QStringList param{"roomid", roomid};
+    QStringList param{"roomid", roomId};
     connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
@@ -192,7 +195,6 @@ void MainWindow::sendMsg(QString msg)
         QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
         return ;
     }
-    QString roomId = ui->roomIdEdit->text();
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
 
@@ -315,11 +317,11 @@ void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_roomIdEdit_editingFinished()
 {
-    QString room = ui->roomIdEdit->text();
+    roomId = ui->roomIdEdit->text();
     QString old = settings.value("danmaku/roomId", "").toString();
-    if (room.isEmpty()||& old == room)
+    if (roomId.isEmpty()||& old == roomId)
         return ;
-    settings.setValue("danmaku/roomId", room);
+    settings.setValue("danmaku/roomId", roomId);
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
 }
@@ -509,4 +511,72 @@ void MainWindow::on_addTaskButton_clicked()
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto tw = static_cast<TaskWidget*>(widget);
     tw->edit->setFocus();
+}
+
+void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
+{
+    qDebug() << "error" << socket->errorString();
+}
+
+void MainWindow::initWS()
+{
+    socket = new QTcpSocket();
+
+    connect(socket, &QTcpSocket::connected, this, [=]{
+        qDebug() << "socket connected";
+        // 5秒内发送心跳包
+
+    });
+
+    connect(socket, &QTcpSocket::disconnected, this, [=]{
+        qDebug() << "disconnected";
+    });
+
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
+
+    connect(socket, &QTcpSocket::hostFound, this, [=]{
+        qDebug() << "hostFound";
+    });
+
+    connect(socket, &QTcpSocket::proxyAuthenticationRequired, this, [=](const QNetworkProxy&, QAuthenticator*){
+        qDebug() << "proxyAuthenticationRequired";
+    });
+
+    connect(socket, &QTcpSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        qDebug() << "stateChanged";
+    });
+
+    heartTimer = new QTimer(this);
+    connect(heartTimer, &QTimer::timeout, this, [=]{
+        qDebug() << "发送心跳包";
+    });
+}
+
+void MainWindow::startConnectWS()
+{
+    if (roomId.isEmpty())
+        return ;
+
+    QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
+    connect(new NetUtil(roomInitUrl), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            return ;
+        }
+
+        int realRoom = json.value("data").toObject().value("room_id").toInt();
+        qDebug() << "真实房间号：" << realRoom;
+
+        socket->connectToHost("broadcastlv.chat.bilibili.com", 2245);
+        // 连接后5秒内发送心跳包
+    });
 }

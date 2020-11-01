@@ -15,6 +15,9 @@
 #include <QTextCodec>
 #include <stdio.h>
 #include <iostream>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QAuthenticator>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -83,6 +86,8 @@ private slots:
 
     void on_addTaskButton_clicked();
 
+    void slotSocketError(QAbstractSocket::SocketError error);
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
@@ -94,9 +99,13 @@ private:
     void saveTaskList();
     void restoreTaskList();
 
+    void initWS();
+    void startConnectWS();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
+    QString roomId;
 
     QTimer* danmakuTimer;
     qint64 removeDanmakuInterval = 20000;
@@ -111,5 +120,8 @@ private:
     QTimer* sendMsgTimer;
 
     QLabel* statusLabel;
+
+    QTcpSocket* socket;
+    QTimer* heartTimer;
 };
 #endif // MAINWINDOW_H
