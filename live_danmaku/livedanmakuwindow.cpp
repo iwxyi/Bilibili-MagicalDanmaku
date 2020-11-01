@@ -103,6 +103,8 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
+    bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+            >= listWidget->verticalScrollBar()->maximum();
     QString nameColor = danmaku.getUnameColor().isEmpty()
             ? QVariant(msgColor).toString()
             : danmaku.getUnameColor();
@@ -145,6 +147,9 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         startReply(item);
     }
+
+    if (scrollEnd)
+        listWidget->scrollToBottom();
 }
 
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
@@ -186,6 +191,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (msg.isEmpty()) // 翻译没有变化
         return ;
 
+    // 设置文字
     QString nameColorStr = danmaku.getUnameColor().isEmpty()
             ? QVariant(this->nameColor).toString()
             : danmaku.getUnameColor();
@@ -397,6 +403,9 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
+    // 优化消息文本
+    msg.replace(QRegularExpression("\\s+"), "，");
+
     // 参数信息
     QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
     QString nonce_str = "fa577ce340859f9fe";

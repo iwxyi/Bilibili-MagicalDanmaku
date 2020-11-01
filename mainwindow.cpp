@@ -69,17 +69,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
-    sendMsgTimer = new QTimer(this);
-    connect(sendMsgTimer, &QTimer::timeout, this, [=]{
-        sendMsg(ui->SendMsgEdit->text());
-    });
 
-    // 定时弹幕
-    interval = settings.value("danmaku/sendInterval", 1800).toInt();
-    ui->SendMsgIntervalSpin->setValue(interval);
-    sendMsgTimer->setInterval(interval*1000);
-    bool autoSend = settings.value("danmaku/autoSend", false).toBool();
-    ui->SendMsgIntervalCheck->setChecked(autoSend);
+    // 定时任务
+    restoreTaskList();
 }
 
 MainWindow::~MainWindow()
@@ -193,7 +185,6 @@ void MainWindow::sendMsg(QString msg)
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
         QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
-        ui->SendMsgIntervalCheck->setChecked(false);
         return ;
     }
     QString roomId = ui->roomIdEdit->text();
@@ -380,22 +371,6 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
     QMessageBox::information(this, "定时弹幕", steps);
 }
 
-void MainWindow::on_SendMsgIntervalSpin_valueChanged(int arg1)
-{
-    sendMsgTimer->setInterval(arg1 * 1000);
-    settings.setValue("danmaku/sendInterval", arg1);
-}
-
-void MainWindow::on_SendMsgIntervalCheck_stateChanged(int arg1)
-{
-    bool enable = ui->SendMsgIntervalCheck->isChecked();
-    if (enable)
-        sendMsgTimer->start();
-    else
-        sendMsgTimer->stop();
-    settings.setValue("danmaku/autoSend", enable);
-}
-
 void MainWindow::on_SendMsgButton_clicked()
 {
     QString msg = ui->SendMsgEdit->text();
@@ -418,4 +393,61 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
     sendMsg(ui->SendMsgEdit->text());
+}
+
+void MainWindow::addTimerTask(bool enable, int second, QString text)
+{
+    TaskWidget* tw = new TaskWidget(this);
+    tw->check->setChecked(enable);
+    tw->spin->setValue(second);
+    tw->edit->setPlainText(text);
+    tw->adjustSize();
+
+    QListWidgetItem* item = new QListWidgetItem(ui->taskListWidget);
+    item->setSizeHint(tw->sizeHint());
+
+    ui->taskListWidget->addItem(item);
+    ui->taskListWidget->setItemWidget(item, tw);
+    ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
+    ui->taskListWidget->scrollToBottom();
+
+    connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
+        bool enable = tw->check->isChecked();
+    });
+
+    connect(tw, &TaskWidget::spinChanged, this, [=](int val){
+
+    });
+
+    connect(tw->edit, &QPlainTextEdit::textChanged, this, [=]{
+        item->setSizeHint(tw->sizeHint());
+    });
+
+    connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
+        sendMsg(msg);
+    });
+
+    connect(tw, &TaskWidget::signalResized, tw, [=]{
+        item->setSizeHint(tw->size());
+    });
+}
+
+void MainWindow::saveTaskList()
+{
+
+}
+
+void MainWindow::restoreTaskList()
+{
+
+}
+
+void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &pos)
+{
+
+}
+
+void MainWindow::on_addTaskButton_clicked()
+{
+    addTimerTask(true, 1800, "");
 }

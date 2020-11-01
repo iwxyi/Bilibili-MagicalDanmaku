@@ -23,6 +23,7 @@ SOURCES += \
     live_danmaku/livedanmakuwindow.cpp \
     main.cpp \
     mainwindow.cpp \
+    taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp
 
@@ -31,6 +32,7 @@ HEADERS += \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
     mainwindow.h \
+    taskwidget.h \
     utils/fileutil.h \
     utils/netutil.h \
     utils/pinyinutil.h \

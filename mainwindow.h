@@ -18,6 +18,7 @@
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
+#include "taskwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,10 +71,6 @@ private slots:
 
     void on_SetBrowserHelpButton_clicked();
 
-    void on_SendMsgIntervalSpin_valueChanged(int arg1);
-
-    void on_SendMsgIntervalCheck_stateChanged(int arg1);
-
     void on_SendMsgButton_clicked();
 
     void on_AIReplyCheck_stateChanged(int arg1);
@@ -82,12 +79,20 @@ private slots:
 
     void on_SendMsgEdit_returnPressed();
 
+    void on_taskListWidget_customContextMenuRequested(const QPoint &pos);
+
+    void on_addTaskButton_clicked();
+
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
 
     void sendMsg(QString msg);
+
+    void addTimerTask(bool enable, int second, QString text);
+    void saveTaskList();
+    void restoreTaskList();
 
 private:
     Ui::MainWindow *ui;
