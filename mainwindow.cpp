@@ -328,6 +328,8 @@ void MainWindow::on_SendMsgButton_clicked()
     QString roomId = ui->roomIdEdit->text();
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
+    ui->SendMsgEdit->clear();
+    ui->SendMsgEdit->setFocus();
 
     QUrl url("https://api.live.bilibili.com/msg/send");
 

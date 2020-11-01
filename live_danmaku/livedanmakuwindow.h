@@ -24,6 +24,7 @@
 #include <QJsonDocument>
 #include <QLineEdit>
 #include <QCryptographicHash>
+#include <QScrollBar>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"

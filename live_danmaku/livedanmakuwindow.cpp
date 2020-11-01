@@ -175,6 +175,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (!label)
         return ;
 
+    bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+            >= listWidget->verticalScrollBar()->maximum();
+    qDebug() << "crollEnd:" << scrollEnd;
+
     auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     QString msg = danmaku.getText();
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
@@ -202,6 +206,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     label->setText(text);
     label->adjustSize();
     item->setSizeHint(label->sizeHint());
+
+    if (scrollEnd)
+        listWidget->scrollToBottom();
 }
 
 void LiveDanmakuWindow::resetItemTextColor()
@@ -228,17 +235,20 @@ void LiveDanmakuWindow::showMenu()
     QMenu* menu = new QMenu(this);
     QAction* actionFgColor = new QAction("文字颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
-    QAction* actionCopy = new QAction("复制弹幕", this);
-    QAction* actionSearch = new QAction("百度搜索", this);
+    QAction* actionCopy = new QAction("复制", this);
+    QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
+    QAction* actionReply = new QAction("AI回复", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
 
     menu->addAction(actionFgColor);
     menu->addAction(actionBgColor);
     menu->addSeparator();
-    menu->addAction(actionCopy);
     menu->addAction(actionSearch);
     menu->addAction(actionTranslate);
+    menu->addAction(actionReply);
+    menu->addSeparator();
+    menu->addAction(actionCopy);
     menu->addAction(actionFreeCopy);
 
     if (!item)
@@ -246,6 +256,7 @@ void LiveDanmakuWindow::showMenu()
         actionCopy->setEnabled(false);
         actionSearch->setEnabled(false);
         actionTranslate->setEnabled(false);
+        actionReply->setEnabled(false);
         actionFreeCopy->setEnabled(false);
     }
 
@@ -287,6 +298,12 @@ void LiveDanmakuWindow::showMenu()
         // 翻译
         startTranslate(item);
     });
+    connect(actionReply, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 翻译
+        startReply(item);
+    });
     connect(actionFreeCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
@@ -307,6 +324,7 @@ void LiveDanmakuWindow::showMenu()
     actionCopy->deleteLater();
     actionSearch->deleteLater();
     actionTranslate->deleteLater();
+    actionReply->deleteLater();
     actionFreeCopy->deleteLater();
 }
 
