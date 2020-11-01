@@ -520,29 +520,39 @@ void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 
 void MainWindow::initWS()
 {
-    socket = new QTcpSocket();
+    socket = new QWebSocket();
 
-    connect(socket, &QTcpSocket::connected, this, [=]{
+    connect(socket, &QWebSocket::connected, this, [=]{
         qDebug() << "socket connected";
         // 5秒内发送心跳包
 
     });
 
-    connect(socket, &QTcpSocket::disconnected, this, [=]{
+    connect(socket, &QWebSocket::disconnected, this, [=]{
         qDebug() << "disconnected";
     });
 
-    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
-
-    connect(socket, &QTcpSocket::hostFound, this, [=]{
-        qDebug() << "hostFound";
+    connect(socket, &QWebSocket::binaryFrameReceived, this, [=](const QByteArray &frame, bool isLastFrame){
+        qDebug() << "binaryFrameReceived";
     });
 
-    connect(socket, &QTcpSocket::proxyAuthenticationRequired, this, [=](const QNetworkProxy&, QAuthenticator*){
+    connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+        qDebug() << "binaryMessageReceived";
+    });
+
+    connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
+        qDebug() << "textFrameReceived";
+    });
+
+    connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+        qDebug() << "textMessageReceived";
+    });
+
+    connect(socket, &QWebSocket::proxyAuthenticationRequired, this, [=](const QNetworkProxy&, QAuthenticator*){
         qDebug() << "proxyAuthenticationRequired";
     });
 
-    connect(socket, &QTcpSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+    connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
         qDebug() << "stateChanged";
     });
 
@@ -557,6 +567,11 @@ void MainWindow::startConnectWS()
     if (roomId.isEmpty())
         return ;
 
+    getRoomInfo();
+}
+
+void MainWindow::getRoomInit()
+{
     QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
     connect(new NetUtil(roomInitUrl), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -575,8 +590,89 @@ void MainWindow::startConnectWS()
 
         int realRoom = json.value("data").toObject().value("room_id").toInt();
         qDebug() << "真实房间号：" << realRoom;
-
-        socket->connectToHost("broadcastlv.chat.bilibili.com", 2245);
-        // 连接后5秒内发送心跳包
     });
+}
+
+void MainWindow::getRoomInfo()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=" + roomId;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject roomInfo = json.value("data").toObject().value("room_info").toObject();
+        // roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
+        shortId = QString::number(roomInfo.value("short_id").toInt());
+        uid = QString::number(roomInfo.value("uid").toInt());
+        qDebug() << "getRoomInfo:" << roomId << shortId << uid;
+
+        getDanmuInfo();
+    });
+    manager->get(*request);
+}
+
+void MainWindow::getDanmuInfo()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
+    url += "?id="+roomId+"&type=0";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray dataBa = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        token = data.value("token").toString();
+        QJsonArray hostArray = data.value("host_list").toArray();
+        hostList.clear();
+        foreach (auto val, hostArray)
+        {
+            QJsonObject o = val.toObject();
+            hostList.append(HostInfo{
+                                o.value("host").toString(),
+                                o.value("port").toInt(),
+                                o.value("wss_port").toInt(),
+                                o.value("ws_port").toInt(),
+                            });
+        }
+        qDebug() << "host数量：" << hostList.size(); //<< "  token:" << token;
+
+        startMsgLoop();
+    });
+    manager->get(*request);
+}
+
+void MainWindow::startMsgLoop()
+{
+    int hostRetry = 0;
+    HostInfo hostServer = hostList.at(hostRetry);
+    QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
+    qDebug() << "hostServer:" << host;
+    socket->open(host);
 }

@@ -15,8 +15,7 @@
 #include <QTextCodec>
 #include <stdio.h>
 #include <iostream>
-#include <QTcpServer>
-#include <QTcpSocket>
+#include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
 #include "netutil.h"
 #include "livedanmaku.h"
@@ -34,6 +33,14 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    struct HostInfo
+    {
+        QString host;
+        int port;
+        int wss_port;
+        int ws_port;
+    };
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -101,6 +108,10 @@ private:
 
     void initWS();
     void startConnectWS();
+    void getRoomInit();
+    void getRoomInfo();
+    void getDanmuInfo();
+    void startMsgLoop();
 
 private:
     Ui::MainWindow *ui;
@@ -121,7 +132,12 @@ private:
 
     QLabel* statusLabel;
 
-    QTcpSocket* socket;
+    QString shortId;
+    QString uid;
+    QList<HostInfo> hostList;
+    QString token;
+
+    QWebSocket* socket;
     QTimer* heartTimer;
 };
 #endif // MAINWINDOW_H
