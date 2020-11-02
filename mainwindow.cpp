@@ -83,17 +83,21 @@ MainWindow::MainWindow(QWidget *parent)
     initWS();
     startConnectWS();
 
-    /*QFile file("receive.txt");
-    file.open(QIODevice::ReadWrite);
-    auto ba = file.readAll();
-    ba = ba.right(ba.size()-16);
+//    for (int i = 0; i < 3; i++)
+    /*{
+        QFile file("receive.txt");
+        file.open(QIODevice::ReadWrite);
+        auto ba = file.readAll();
+        ba = ba.right(ba.size()-16);
 
-    unsigned long si;
-    BYTE* target = new BYTE[ba.size()*2+100]{};
-    uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    QByteArray unc = QByteArray::fromRawData((char*)target, si);
-    qDebug() << "解压后的：" << unc;
-    qDebug() << "直接解压：" << zlibUncompress(ba);*/
+        unsigned long si;
+        BYTE* target = new BYTE[ba.size()*5+100]{};
+        uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+        QByteArray unc = QByteArray::fromRawData((char*)target, si);
+        qDebug() << "解压后的：" << unc;
+        qDebug() << "直接解压：" << zlibUncompress(ba);
+    }*/
+
 }
 
 MainWindow::~MainWindow()
@@ -793,9 +797,9 @@ void MainWindow::sendHeartPacket()
 QByteArray MainWindow::zlibUncompress(QByteArray ba)
 {
     unsigned long si;
-    BYTE* target = new BYTE[500]{};
+    BYTE* target = new BYTE[ba.size()*5+10000]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    qDebug() << "解压后数据大小：" << si; // 这句话不能删！
+    qDebug() << "解压后数据大小：" << si << ba.size(); // 这句话不能删！
     return QByteArray::fromRawData((char*)target, si);
 }
 
@@ -844,18 +848,35 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             qDebug() << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
-                body = zlibUncompress(body); // 解压后再次带个头部，和原先的一样
-                QByteArray jsonBa = body.right(body.length() - 16);
-                QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
-                if (error.error != QJsonParseError::NoError)
+                QFile writeFile("receive.txt");
+                writeFile.open(QIODevice::WriteOnly);
+                writeFile.write(body, body.size());
+                writeFile.close();
+
+                QFile readFile("receive.txt");
+                readFile.open(QIODevice::ReadWrite);
+                auto ba = readFile.readAll();
+                qDebug() << "解压后的数据：" << zlibUncompress(ba);
+
+                // 循环遍历
+                int offset = 0;
+                // TODO: 使用offset提取包
+                /*if (0)
                 {
-                    qDebug() << "解析解压后的JSON出错：" << error.errorString();
-                    qDebug() << jsonBa;
-                    return ;
+                    QByteArray jsonBa = unc.right(unc.length() - 16);
+                    QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+                    if (error.error != QJsonParseError::NoError)
+                    {
+                        qDebug() << "解析解压后的JSON出错：" << error.errorString();
+                        qDebug() << jsonBa;
+                        return ;
+                    }
+                    QJsonObject json = document.object();
+                    handleMessage(json);
                 }
-                qDebug() << "解压后的JSON数据：" << jsonBa;
-                QJsonObject json = document.object();
-                handleMessage(json);
+                delete[] uncmpBuffer;*/
+
+                delete[] ba.data();
             }
             else
             {
