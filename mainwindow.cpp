@@ -856,14 +856,20 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
                 auto ba = readFile.readAll();
-                qDebug() << "解压后的数据：" << zlibUncompress(ba);
+                QByteArray unc = zlibUncompress(ba);
+                qDebug() << "解压后的数据：" << unc;
 
                 // 循环遍历
                 int offset = 0;
-                // TODO: 使用offset提取包
-                /*if (0)
+                short headerSize = 16;
+                while (offset < unc.size() - headerSize)
                 {
-                    QByteArray jsonBa = unc.right(unc.length() - 16);
+                    int packSize = (unc[0] << 24)
+                            + (unc[1] << 16)
+                            + (unc[2] << 8)
+                            + unc[3];
+                    QByteArray jsonBa = unc.mid(offset + headerSize, packSize - offset - headerSize);
+                    qDebug() << "单个JSON消息：" << jsonBa;
                     QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
                     if (error.error != QJsonParseError::NoError)
                     {
@@ -873,10 +879,11 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     }
                     QJsonObject json = document.object();
                     handleMessage(json);
+                    offset += packSize;
                 }
-                delete[] uncmpBuffer;*/
 
                 delete[] ba.data();
+                delete[] unc.data();
             }
             else
             {
