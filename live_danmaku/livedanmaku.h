@@ -114,7 +114,7 @@ public:
 
 private:
     QString text;
-    qint64 uid; // 用户ID
+    qint64 uid = 0; // 用户ID
     QString nickname;
     QString uname_color; // 没有的话是空的
     QDateTime timeline;

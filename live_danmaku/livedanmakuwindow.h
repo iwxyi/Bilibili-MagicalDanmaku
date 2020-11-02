@@ -30,6 +30,10 @@
 #include "freecopyedit.h"
 #include "qxtglobalshortcut.h"
 
+#ifdef Q_OS_WIN32
+#include <windows.h>
+#endif
+
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
 #define DANMAKU_TRANS_ROLE Qt::UserRole+2
@@ -73,6 +77,9 @@ private:
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
     QxtGlobalShortcut* editShortcut;
+#ifdef Q_OS_WIN32
+    HWND prevWindow = nullptr;
+#endif
 
     QColor nameColor;
     QColor msgColor;

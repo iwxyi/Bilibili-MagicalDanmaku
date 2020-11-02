@@ -51,7 +51,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override
     {
         if (event->key() == Qt::Key_Escape)
-            this->deleteLater();
+            emit signalESC();
         return QLineEdit::keyPressEvent(event);
     }
 };

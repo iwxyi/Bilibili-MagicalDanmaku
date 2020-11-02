@@ -40,8 +40,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     if (!editShortcut->setShortcut(QKeySequence("shift+alt+d")))
         qDebug() << "设置快捷键失败";
     auto returnPrevWindow = [=]{
-        qDebug() << "返回上一个焦点";
-
+#ifdef Q_OS_WIN32
+        if (this->prevWindow)
+            SwitchToThisWindow(prevWindow, true);
+#endif
     };
     connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
@@ -53,6 +55,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
         }
         else // 激活并聚焦
         {
+#ifdef Q_OS_WIN32
+            prevWindow = GetForegroundWindow();
+#endif
+
             this->activateWindow();
             lineEdit->setFocus();
         }
@@ -298,9 +304,13 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionCopy = new QAction("复制", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
     QAction* actionSendMsg = new QAction("发送框", this);
+    QAction* actionDialogSend = new QAction("快速触发", this);
 
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
+    actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
+    actionDialogSend->setCheckable(true);
+    actionDialogSend->setChecked(settings.value("livedanmakuwindow/sendEditShortcut", true).toBool());
 
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
@@ -312,7 +322,9 @@ void LiveDanmakuWindow::showMenu()
     menu->addSeparator();
     menu->addAction(actionCopy);
     menu->addAction(actionFreeCopy);
+    menu->addSeparator();
     menu->addAction(actionSendMsg);
+    menu->addAction(actionDialogSend);
 
     if (!item)
     {
@@ -329,7 +341,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         if (c != nameColor)
         {
-            settings.setValue("livedanmakuwindow/nmaeColor", nameColor = c);
+            settings.setValue("livedanmakuwindow/nameColor", nameColor = c);
             resetItemsText();
         }
     });
@@ -394,6 +406,11 @@ void LiveDanmakuWindow::showMenu()
         else
             lineEdit->hide();
         settings.setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
+    });
+    connect(actionDialogSend, &QAction::triggered, this, [=]{
+        bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", true).toBool();
+        settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
+        editShortcut->setEnabled(enable);
     });
 
     menu->exec(QCursor::pos());
