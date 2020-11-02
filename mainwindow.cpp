@@ -83,17 +83,20 @@ MainWindow::MainWindow(QWidget *parent)
     initWS();
     startConnectWS();
 
-    /*QFile file("receive.txt");
+    // 解压测试
+    QFile file("receive.txt");
     file.open(QIODevice::ReadWrite);
     auto ba = file.readAll();
     ba = ba.right(ba.size()-16);
+    qDebug() << "解压前的：" << ba;
 
     unsigned long si;
-    BYTE* target = new BYTE[ba.size()*2+100]{};
-    uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    QByteArray unc = QByteArray::fromRawData((char*)target, si);
+    BYTE* uncompressBuffer = new BYTE[ba.size()*5+100]{};
+    uncompress(uncompressBuffer, &si, (unsigned char*)ba.data(), ba.size());
+    QByteArray unc = QByteArray::fromRawData((char*)uncompressBuffer, si);
     qDebug() << "解压后的：" << unc;
-    qDebug() << "直接解压：" << zlibUncompress(ba);*/
+    delete[] uncompressBuffer;
+//    qDebug() << "直接解压：" << zlibUncompress(ba);
 }
 
 MainWindow::~MainWindow()
@@ -793,7 +796,7 @@ void MainWindow::sendHeartPacket()
 QByteArray MainWindow::zlibUncompress(QByteArray ba)
 {
     unsigned long si;
-    BYTE* target = new BYTE[500]{};
+    BYTE* target = new BYTE[ba.size()*5+100]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
     qDebug() << "解压后数据大小：" << si; // 这句话不能删！
     return QByteArray::fromRawData((char*)target, si);
@@ -844,23 +847,60 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             qDebug() << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
-                body = zlibUncompress(body); // 解压后再次带个头部，和原先的一样
-                QByteArray jsonBa = body.right(body.length() - 16);
-                QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
-                if (error.error != QJsonParseError::NoError)
+                qDebug() << "解压前BODY" << body.size() << body;
+                unsigned long si;
+                BYTE* uncompressBuffer = new BYTE[body.size()*5+100]{};
+                uncompress(uncompressBuffer, &si, (unsigned char*)body.data(), body.size());
+                QByteArray unc = QByteArray::fromRawData((char*)uncompressBuffer, si);
+                qDebug() << "解压后JSON" << si << unc;
+                if (si == 0)
                 {
-                    qDebug() << "解析解压后的JSON出错：" << error.errorString();
-                    qDebug() << jsonBa;
+                    QFile file("receive.txt");
+                    file.open(QIODevice::WriteOnly);
+                    file.write(message, message.size());
+                    file.close();
+                    qDebug() << "==========已保存无法提取的数据==========";
                     return ;
                 }
-                qDebug() << "解压后的JSON数据：" << jsonBa;
-                QJsonObject json = document.object();
-                handleMessage(json);
+                body = unc;
+                body = body.right(body.length() - 6);
+
+                // 可能有多条数据，通过某一类字节来分割
+                // \x00\x00\x02\xF4\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
+                // \x00\x00\x04\x60\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
+                // \x00\x00\x04\x9F\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
+                /*char sp[13] = "\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00";
+                QByteArray spl(sp, 13);
+                int pos = body.indexOf(spl, pos);
+                if (pos == -1)
+                    pos = body.length();
+                int prevPos = 0;
+                while (pos > -1)
+                {
+                    QByteArray jsonBa = body.mid(prevPos, pos - prevPos - 4);
+                    SOCKET_DEB << "提取单条JSON消息：" << jsonBa;
+
+                    QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+                    if (error.error != QJsonParseError::NoError)
+                    {
+                        qDebug() << "解析解压后的JSON出错：" << error.errorString();
+                        qDebug() << jsonBa;
+                        return ;
+                    }
+                    QJsonObject json = document.object();
+                    handleMessage(json);
+
+                    pos += 12;
+                    prevPos = pos;
+                    pos = body.indexOf(spl, pos);
+                }*/
+
+                delete[] uncompressBuffer;
             }
             else
             {
                 qDebug() << "未知协议：" << protover << "，若有必要请处理";
-                qDebug() << body;
+                qDebug() << "未知正文：" << body;
             }
 
             /*QFile file("receive.txt");
@@ -873,6 +913,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
 
     }
+    SOCKET_DEB << "消息处理结束";
 }
 
 void MainWindow::handleMessage(QJsonObject json)
