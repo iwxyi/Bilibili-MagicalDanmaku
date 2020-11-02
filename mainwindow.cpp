@@ -18,12 +18,18 @@ MainWindow::MainWindow(QWidget *parent)
         ui->roomIdEdit->setText(roomId);
 
     // 刷新间隔
+#ifndef SOCKET_MODE
     danmakuTimer = new QTimer(this);
     int interval = settings.value("danmaku/interval", 500).toInt();
     ui->refreshDanmakuIntervalSpin->setValue(interval);
     danmakuTimer->setInterval(interval);
     connect(danmakuTimer, SIGNAL(timeout()), this, SLOT(pullLiveDanmaku()));
     ui->refreshDanmakuCheck->setChecked(true);
+#endif
+
+    removeTimer = new QTimer(this);
+    removeTimer->setInterval(1000);
+    connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
 
     // 自动刷新是否启用
     bool autoRefresh = settings.value("danmaku/autoRefresh", true).toBool();
@@ -79,26 +85,17 @@ MainWindow::MainWindow(QWidget *parent)
     srand((unsigned)time(0));
     restoreTaskList();
 
+#ifndef SOCKET_MODE
+
+#else
+    ui->refreshDanmakuCheck->setEnabled(false);
+    ui->refreshDanmakuIntervalSpin->setEnabled(false);
+
     // WS连接
     initWS();
     startConnectWS();
+#endif
 
-<<<<<<< HEAD
-    // 解压测试
-    QFile file("receive.txt");
-    file.open(QIODevice::ReadWrite);
-    auto ba = file.readAll();
-    ba = ba.right(ba.size()-16);
-    qDebug() << "解压前的：" << ba;
-
-    unsigned long si;
-    BYTE* uncompressBuffer = new BYTE[ba.size()*5+100]{};
-    uncompress(uncompressBuffer, &si, (unsigned char*)ba.data(), ba.size());
-    QByteArray unc = QByteArray::fromRawData((char*)uncompressBuffer, si);
-    qDebug() << "解压后的：" << unc;
-    delete[] uncompressBuffer;
-//    qDebug() << "直接解压：" << zlibUncompress(ba);
-=======
 //    for (int i = 0; i < 3; i++)
     /*{
         QFile file("receive.txt");
@@ -114,7 +111,6 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "直接解压：" << zlibUncompress(ba);
     }*/
 
->>>>>>> HandleMessage
 }
 
 MainWindow::~MainWindow()
@@ -159,22 +155,7 @@ void MainWindow::pullLiveDanmaku()
     });
 }
 
-
-void MainWindow::on_refreshDanmakuIntervalSpin_valueChanged(int arg1)
-{
-    settings.setValue("danmaku/interval", arg1);
-    danmakuTimer->setInterval(arg1);
-}
-
-void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
-{
-    if (arg1)
-        danmakuTimer->start();
-    else
-        danmakuTimer->stop();
-}
-
-void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
+void MainWindow::removeTimeoutDanmaku()
 {
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -187,7 +168,30 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
             oldLiveDanmakuRemoved(danmaku);
         }
     }
+}
 
+
+void MainWindow::on_refreshDanmakuIntervalSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/interval", arg1);
+#ifndef SOCKET_MODE
+    danmakuTimer->setInterval(arg1);
+#endif
+}
+
+void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
+{
+#ifndef SOCKET_MODE
+    if (arg1)
+        danmakuTimer->start();
+    else
+        danmakuTimer->stop();
+#endif
+}
+
+void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
+{
+#ifndef SOCKET_MODE
     // 去掉已经存在的弹幕
     while (danmakus.size() && danmakus.first().getTimeline().toMSecsSinceEpoch() <= prevLastDanmakuTimestamp)
         danmakus.removeFirst();
@@ -206,9 +210,16 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
     }
     else
         firstPullDanmaku = false;
+#endif
 
     // 添加到队列
     roomDanmakus.append(danmakus);
+}
+
+void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
+{
+    roomDanmakus.append(danmaku);
+    newLiveDanmakuAdded(danmaku);
 }
 
 void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
@@ -343,14 +354,17 @@ void MainWindow::on_roomIdEdit_editingFinished()
     if (roomId.isEmpty()||& old == roomId)
         return ;
     settings.setValue("danmaku/roomId", roomId);
+#ifndef SOCKET_MODE
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
-
+#else
     if (socket)
     {
-        socket->abort();
+        if (socket->state() != QAbstractSocket::UnconnectedState)
+            socket->abort();
         startConnectWS();
     }
+#endif
 }
 
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
@@ -874,57 +888,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             qDebug() << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
-<<<<<<< HEAD
-                qDebug() << "解压前BODY" << body.size() << body;
-                unsigned long si;
-                BYTE* uncompressBuffer = new BYTE[body.size()*5+100]{};
-                uncompress(uncompressBuffer, &si, (unsigned char*)body.data(), body.size());
-                QByteArray unc = QByteArray::fromRawData((char*)uncompressBuffer, si);
-                qDebug() << "解压后JSON" << si << unc;
-                if (si == 0)
-                {
-                    QFile file("receive.txt");
-                    file.open(QIODevice::WriteOnly);
-                    file.write(message, message.size());
-                    file.close();
-                    qDebug() << "==========已保存无法提取的数据==========";
-                    return ;
-                }
-                body = unc;
-                body = body.right(body.length() - 6);
-
-                // 可能有多条数据，通过某一类字节来分割
-                // \x00\x00\x02\xF4\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
-                // \x00\x00\x04\x60\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
-                // \x00\x00\x04\x9F\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00
-                /*char sp[13] = "\x00\x10\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00";
-                QByteArray spl(sp, 13);
-                int pos = body.indexOf(spl, pos);
-                if (pos == -1)
-                    pos = body.length();
-                int prevPos = 0;
-                while (pos > -1)
-                {
-                    QByteArray jsonBa = body.mid(prevPos, pos - prevPos - 4);
-                    SOCKET_DEB << "提取单条JSON消息：" << jsonBa;
-
-                    QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
-                    if (error.error != QJsonParseError::NoError)
-                    {
-                        qDebug() << "解析解压后的JSON出错：" << error.errorString();
-                        qDebug() << jsonBa;
-                        return ;
-                    }
-                    QJsonObject json = document.object();
-                    handleMessage(json);
-
-                    pos += 12;
-                    prevPos = pos;
-                    pos = body.indexOf(spl, pos);
-                }*/
-
-                delete[] uncompressBuffer;
-=======
                 QFile writeFile("receive.txt");
                 writeFile.open(QIODevice::WriteOnly);
                 writeFile.write(body, body.size());
@@ -963,7 +926,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
                 delete[] ba.data();
                 delete[] unc.data();
->>>>>>> HandleMessage
             }
             else
             {
@@ -999,9 +961,11 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(array[4].toDouble());
         QString msg = info[1].toString();
         QJsonArray user = info[2].toArray();
-        QString name = user[1].toString();
+        qint64 uid = static_cast<qint64>(user[0].toDouble());
+        QString username = user[1].toString();
 
-        qDebug() << "接收到弹幕：" << name << msg << QDateTime::fromSecsSinceEpoch(timestamp);
+        qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromSecsSinceEpoch(timestamp);
+        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {

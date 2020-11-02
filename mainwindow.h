@@ -28,6 +28,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug()
+#define SOCKET_MODE
 
 class MainWindow : public QMainWindow
 {
@@ -86,7 +87,7 @@ signals:
 
 public slots:
     void pullLiveDanmaku();
-
+    void removeTimeoutDanmaku();
 
 private slots:
     void on_refreshDanmakuIntervalSpin_valueChanged(int arg1);
@@ -135,6 +136,7 @@ private slots:
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
+    void appendNewLiveDanmaku(LiveDanmaku danmaku);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
 
@@ -161,12 +163,16 @@ private:
     QSettings settings;
     QString roomId;
 
-    QTimer* danmakuTimer;
-    qint64 removeDanmakuInterval = 20000;
     QList<LiveDanmaku> roomDanmakus;
+    LiveDanmakuWindow* danmakuWindow = nullptr;
+#ifndef SOCKET_MODE
+    QTimer* danmakuTimer;
     qint64 prevLastDanmakuTimestamp = 0;
     bool firstPullDanmaku = true; // 是否不加载以前的弹幕
-    LiveDanmakuWindow* danmakuWindow = nullptr;
+#endif
+    QTimer* removeTimer;
+    qint64 removeDanmakuInterval = 20000;
+
     bool diangeAutoCopy = false;
 
     QString browserCookie;
