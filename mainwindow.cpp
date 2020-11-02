@@ -31,7 +31,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 移除间隔
     this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20).toLongLong();
-    ui->removeDanmakuIntervalSpin->setValue(removeDanmakuInterval);
+    ui->removeDanmakuIntervalSpin->setValue(static_cast<int>(removeDanmakuInterval));
+    this->removeDanmakuInterval *= 1000;
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -121,7 +122,7 @@ void MainWindow::pullLiveDanmaku()
         QList<LiveDanmaku> lds;
         for (int i = 0; i < danmakus.size(); i++)
             lds.append(LiveDanmaku::fromJson(danmakus.at(i).toObject()));
-        appendNewLiveDanmaku(lds);
+        appendNewLiveDanmakus(lds);
     });
 }
 
@@ -140,7 +141,7 @@ void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
         danmakuTimer->stop();
 }
 
-void MainWindow::appendNewLiveDanmaku(QList<LiveDanmaku> danmakus)
+void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 {
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -185,7 +186,7 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
-    qDebug() << "-----旧弹幕：" << danmaku.toString();
+//    qDebug() << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
@@ -241,12 +242,12 @@ void MainWindow::sendMsg(QString msg)
 
     QByteArray ba(s.toStdString().data());
 //    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
-    qDebug() << ba;
+//    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
-        qDebug() << data;
+//        qDebug() << data;
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -302,7 +303,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
-    appendNewLiveDanmaku(QList<LiveDanmaku>{
+    appendNewLiveDanmakus(QList<LiveDanmaku>{
                 LiveDanmaku("测试用户", text,
                             qrand() % 89999999 + 10000000,
                              QDateTime::currentDateTime())});
@@ -328,7 +329,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     prevLastDanmakuTimestamp = 0;
 }
 
-void MainWindow::on_languageAutoTranslateCheck_stateChanged(int arg1)
+void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
 {
     auto trans = ui->languageAutoTranslateCheck->isChecked();
     settings.setValue("danmaku/autoTrans", trans);
@@ -385,10 +386,10 @@ void MainWindow::on_SendMsgButton_clicked()
     sendMsg(msg);
 }
 
-void MainWindow::on_AIReplyCheck_stateChanged(int arg1)
+void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
     bool reply = ui->AIReplyCheck->isChecked();
-    settings.setValue("danamku/aiReply", reply);
+    settings.setValue("danmaku/aiReply", reply);
     if (danmakuWindow)
         danmakuWindow->setAIReply(reply);
 }
@@ -475,7 +476,7 @@ void MainWindow::restoreTaskList()
     }
 }
 
-void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &pos)
+void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
 {
     QListWidgetItem* item = ui->taskListWidget->currentItem();
 

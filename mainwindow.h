@@ -69,7 +69,7 @@ private slots:
 
     void on_roomIdEdit_editingFinished();
 
-    void on_languageAutoTranslateCheck_stateChanged(int arg1);
+    void on_languageAutoTranslateCheck_stateChanged(int);
 
     void on_tabWidget_tabBarClicked(int index);
 
@@ -83,13 +83,13 @@ private slots:
 
     void on_SendMsgButton_clicked();
 
-    void on_AIReplyCheck_stateChanged(int arg1);
+    void on_AIReplyCheck_stateChanged(int);
 
     void on_testDanmakuEdit_returnPressed();
 
     void on_SendMsgEdit_returnPressed();
 
-    void on_taskListWidget_customContextMenuRequested(const QPoint &pos);
+    void on_taskListWidget_customContextMenuRequested(const QPoint &);
 
     void on_addTaskButton_clicked();
 
@@ -98,7 +98,7 @@ private slots:
     void slotSocketError(QAbstractSocket::SocketError error);
 
 private:
-    void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
+    void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
 
