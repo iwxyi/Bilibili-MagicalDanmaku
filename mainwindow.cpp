@@ -83,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
     initWS();
     startConnectWS();
 
+<<<<<<< HEAD
     // 解压测试
     QFile file("receive.txt");
     file.open(QIODevice::ReadWrite);
@@ -97,6 +98,23 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "解压后的：" << unc;
     delete[] uncompressBuffer;
 //    qDebug() << "直接解压：" << zlibUncompress(ba);
+=======
+//    for (int i = 0; i < 3; i++)
+    /*{
+        QFile file("receive.txt");
+        file.open(QIODevice::ReadWrite);
+        auto ba = file.readAll();
+        ba = ba.right(ba.size()-16);
+
+        unsigned long si;
+        BYTE* target = new BYTE[ba.size()*5+100]{};
+        uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+        QByteArray unc = QByteArray::fromRawData((char*)target, si);
+        qDebug() << "解压后的：" << unc;
+        qDebug() << "直接解压：" << zlibUncompress(ba);
+    }*/
+
+>>>>>>> HandleMessage
 }
 
 MainWindow::~MainWindow()
@@ -318,6 +336,8 @@ void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_roomIdEdit_editingFinished()
 {
+    if (roomId == ui->roomIdEdit->text())
+        return ;
     roomId = ui->roomIdEdit->text();
     QString old = settings.value("danmaku/roomId", "").toString();
     if (roomId.isEmpty()||& old == roomId)
@@ -325,6 +345,12 @@ void MainWindow::on_roomIdEdit_editingFinished()
     settings.setValue("danmaku/roomId", roomId);
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
+
+    if (socket)
+    {
+        socket->abort();
+        startConnectWS();
+    }
 }
 
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
@@ -641,7 +667,8 @@ void MainWindow::getRoomInfo()
         }
 
         QJsonObject roomInfo = json.value("data").toObject().value("room_info").toObject();
-        // roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
+        roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
+        ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
         uid = QString::number(roomInfo.value("uid").toInt());
         qDebug() << "getRoomInfo: roomid=" << roomId
@@ -796,9 +823,9 @@ void MainWindow::sendHeartPacket()
 QByteArray MainWindow::zlibUncompress(QByteArray ba)
 {
     unsigned long si;
-    BYTE* target = new BYTE[ba.size()*5+100]{};
+    BYTE* target = new BYTE[ba.size()*5+10000]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    qDebug() << "解压后数据大小：" << si; // 这句话不能删！
+    SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！
     return QByteArray::fromRawData((char*)target, si);
 }
 
@@ -847,6 +874,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             qDebug() << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
+<<<<<<< HEAD
                 qDebug() << "解压前BODY" << body.size() << body;
                 unsigned long si;
                 BYTE* uncompressBuffer = new BYTE[body.size()*5+100]{};
@@ -896,6 +924,46 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }*/
 
                 delete[] uncompressBuffer;
+=======
+                QFile writeFile("receive.txt");
+                writeFile.open(QIODevice::WriteOnly);
+                writeFile.write(body, body.size());
+                writeFile.close();
+
+                QFile readFile("receive.txt");
+                readFile.open(QIODevice::ReadWrite);
+                auto ba = readFile.readAll();
+                QByteArray unc = zlibUncompress(ba);
+                SOCKET_DEB << "解压后的数据：" << unc;
+
+                // 循环遍历
+                int offset = 0;
+                short headerSize = 16;
+                while (offset < unc.size() - headerSize)
+                {
+                    int packSize = ((uchar)unc[offset+0] << 24)
+                            + ((uchar)unc[offset+1] << 16)
+                            + ((uchar)unc[offset+2] << 8)
+                            + (uchar)unc[offset+3];
+                    QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
+                    SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
+                    QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+                    if (error.error != QJsonParseError::NoError)
+                    {
+                        qDebug() << "解析解压后的JSON出错：" << error.errorString();
+                        qDebug() << "包数值：" << offset << packSize << (unsigned int)unc[0] << (unsigned int)unc[1] << (unsigned int)unc[2] << (unsigned int)unc[3];
+                        qDebug() << ">>当前JSON" << jsonBa;
+                        qDebug() << ">>解压正文" << unc;
+                        return ;
+                    }
+                    QJsonObject json = document.object();
+                    handleMessage(json);
+                    offset += packSize;
+                }
+
+                delete[] ba.data();
+                delete[] unc.data();
+>>>>>>> HandleMessage
             }
             else
             {
@@ -916,17 +984,33 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     SOCKET_DEB << "消息处理结束";
 }
 
+/**
+ * 数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest#tagDataPackage
+ */
 void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
-    qDebug() << "消息命令：" << cmd;
+    qDebug() << ">消息命令：" << cmd;
     if (cmd == "DANMU_MSG") // 受到弹幕
     {
+        QJsonArray info = json.value("info").toArray();
+        QJsonArray array = info[0].toArray();
+        qint64 color = array[3].toInt();
+        qint64 timestamp = static_cast<qint64>(array[4].toDouble());
+        QString msg = info[1].toString();
+        QJsonArray user = info[2].toArray();
+        QString name = user[1].toString();
 
+        qDebug() << "接收到弹幕：" << name << msg << QDateTime::fromSecsSinceEpoch(timestamp);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
-
+        QJsonObject data = json.value("data").toObject();
+        QString giftName = data.value("giftName").toString();
+        QString username = data.value("uname").toString();
+        int num = data.value("num").toInt();
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qDebug() << "接收到送礼：" << username << giftName << num;
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -939,5 +1023,31 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
 
+    }
+    else if (cmd == "WELCOME_GUARD") // 舰长进入
+    {
+        QJsonObject data = json.value("data").toObject();
+        int uid = data.value("uid").toInt();
+        QString username = data.value("username").toString();
+        qDebug() << "舰长进入：" << username;
+    }
+    else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
+    {
+
+    }
+    else if (cmd == "WELCOME") // 进入（不知道有没有包括舰长）
+    {
+        QJsonObject data = json.value("data").toObject();
+        int uid = data.value("uid").toInt();
+        QString username = data.value("uname").toString();
+        bool isAdmin = data.value("isAdmin").toBool();
+        qDebug() << "观众进入：" << username << isAdmin;
+    }
+    else if (cmd == "INTERACT_WORD")
+    {
+        QJsonObject data = json.value("data").toObject();
+        int uid = data.value("uid").toInt();
+        QString username = data.value("uname").toString();
+        qDebug() << "观众进入：" << username;
     }
 }
