@@ -17,6 +17,7 @@
 #include <iostream>
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
+#include <zlib.h>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"

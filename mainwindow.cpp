@@ -546,10 +546,6 @@ void MainWindow::initWS()
         heartTimer->stop();
     });
 
-    connect(socket, &QWebSocket::binaryFrameReceived, this, [=](const QByteArray &frame, bool isLastFrame){
-//        qDebug() << "binaryFrameReceived" << frame << isLastFrame;
-    });
-
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
 //        qDebug() << "binaryMessageReceived" << message;
         slotBinaryMessageReceived(message);
@@ -561,10 +557,6 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
         qDebug() << "textMessageReceived";
-    });
-
-    connect(socket, &QWebSocket::proxyAuthenticationRequired, this, [=](const QNetworkProxy&, QAuthenticator*){
-        qDebug() << "proxyAuthenticationRequired";
     });
 
     connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
@@ -813,7 +805,49 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
     {
+        QString cmd = json.value("cmd").toString();
+        if (cmd == "NOTICE_MSG") // 全站广播（不用管）
+        {
 
+        }
+        else
+        {
+            QFile file("receive.txt");
+            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+            file.open(QIODevice::WriteOnly);
+            file.write(message, message.size());
+            file.close();
+
+            {
+                FILE* File_src;
+                FILE* File_compress;
+                FILE* File_uncompress;
+                unsigned long len_src;
+                unsigned long len_compress;
+                const int MaxBufferSize = 999999;
+                unsigned long len_uncompress = MaxBufferSize;
+                unsigned char *buffer_src  = new unsigned char[MaxBufferSize];
+                unsigned char *buffer_compress  = new unsigned char[MaxBufferSize];
+                unsigned char *buffer_uncompress = new unsigned char[MaxBufferSize];
+                File_src = fopen("src.txt","r");
+                File_compress = fopen("compress.txt","w");
+                File_uncompress = fopen("uncompress.txt","w");
+                //compress
+                len_src = fread(buffer_src,sizeof(char),MaxBufferSize-1,File_src);
+                compress(buffer_compress,&len_compress,buffer_src,len_src);
+                fwrite(buffer_compress,sizeof(char),len_compress,File_compress);
+                qDebug() << "normal zlib:" ;
+                qDebug() << "src:\n" << buffer_src << ",length:" << len_src ;
+                qDebug() << "compress:\n" << buffer_compress << ",length:" << len_compress ;
+                //uncompress
+                uncompress(buffer_uncompress,&len_uncompress,buffer_compress,len_compress);
+                fwrite(buffer_uncompress,sizeof(char),len_uncompress,File_uncompress);
+                qDebug() << "uncompress:\n" << buffer_uncompress << ",length:" << len_uncompress;
+                fclose(File_src);
+                fclose(File_compress);
+                fclose(File_uncompress);
+            }
+        }
     }
     else
     {
