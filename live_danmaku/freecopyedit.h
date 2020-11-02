@@ -25,5 +25,25 @@ protected:
     }
 };
 
+class TransparentEdit : public QLineEdit
+{
+public:
+    TransparentEdit(QWidget* parent = nullptr) : QLineEdit(parent)
+    {
+        focusOutEvent(nullptr);
+    }
+
+protected:
+    void focusInEvent(QFocusEvent *) override
+    {
+        this->setStyleSheet("");
+    }
+
+    void focusOutEvent(QFocusEvent *) override
+    {
+        this->setStyleSheet("QLineEdit{background: transparent;}");
+    }
+};
+
 #endif // FREECOPYEDIT_H
 

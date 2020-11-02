@@ -79,8 +79,8 @@ MainWindow::MainWindow(QWidget *parent)
     restoreTaskList();
 
     // WS连接
-    initWS();
-    startConnectWS();
+    // initWS();
+    // startConnectWS();
 }
 
 MainWindow::~MainWindow()
@@ -112,7 +112,8 @@ void MainWindow::pullLiveDanmaku()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qDebug() << result;
             return ;
         }
         QJsonObject json = document.object();
@@ -274,6 +275,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         danmakuWindow = new LiveDanmakuWindow(this);
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
     }

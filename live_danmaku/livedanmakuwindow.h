@@ -50,6 +50,7 @@ protected:
     void paintEvent(QPaintEvent *) override;
 
 signals:
+    void signalSendMsg(QString msg);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -69,6 +70,7 @@ private:
 private:
     QSettings settings;
     QListWidget* listWidget;
+    TransparentEdit* lineEdit;
 
     QColor nameColor;
     QColor msgColor;

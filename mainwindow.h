@@ -93,14 +93,14 @@ private slots:
 
     void on_addTaskButton_clicked();
 
+    void sendMsg(QString msg);
+
     void slotSocketError(QAbstractSocket::SocketError error);
 
 private:
     void appendNewLiveDanmaku(QList<LiveDanmaku> roomDanmakus);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
-
-    void sendMsg(QString msg);
 
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();

@@ -12,8 +12,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     lineSpacing = fm.lineSpacing();
 
     listWidget = new QListWidget(this);
+    lineEdit = new TransparentEdit(this);
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(listWidget);
+    layout->addWidget(lineEdit);
 
     listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu()));
@@ -21,6 +23,18 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setWordWrap(true);
     listWidget->setSpacing(4);
+
+    lineEdit->setPlaceholderText("回车发送消息");
+    connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
+        QString text = lineEdit->text();
+        if (!text.trimmed().isEmpty())
+        {
+            emit signalSendMsg(text.trimmed());
+            lineEdit->clear();
+        }
+    });
+    if (!settings.value("livedanmakuwindow/sendEdit", true).toBool())
+        lineEdit->hide();
 
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
@@ -250,11 +264,15 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionNameColor = new QAction("昵称颜色", this);
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
-    QAction* actionCopy = new QAction("复制", this);
     QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
     QAction* actionReply = new QAction("AI回复", this);
+    QAction* actionCopy = new QAction("复制", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
+    QAction* actionSendMsg = new QAction("发送框", this);
+
+    actionSendMsg->setCheckable(true);
+    actionSendMsg->setChecked(!lineEdit->isHidden());
 
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
@@ -266,6 +284,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addSeparator();
     menu->addAction(actionCopy);
     menu->addAction(actionFreeCopy);
+    menu->addAction(actionSendMsg);
 
     if (!item)
     {
@@ -341,6 +360,13 @@ void LiveDanmakuWindow::showMenu()
         edit->show();
         edit->setFocus();
     });
+    connect(actionSendMsg, &QAction::triggered, this, [=]{
+        if (lineEdit->isHidden())
+            lineEdit->show();
+        else
+            lineEdit->hide();
+        settings.setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
+    });
 
     menu->exec(QCursor::pos());
 
@@ -352,6 +378,7 @@ void LiveDanmakuWindow::showMenu()
     actionTranslate->deleteLater();
     actionReply->deleteLater();
     actionFreeCopy->deleteLater();
+    actionSendMsg->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)
