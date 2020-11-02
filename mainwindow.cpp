@@ -375,7 +375,7 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
     steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
     steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
     steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
-    steps += "设置好直播ID、要发送的内容，即可发送弹幕！\n\n";
+    steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n\n";
     steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
     QMessageBox::information(this, "定时弹幕", steps);
 }

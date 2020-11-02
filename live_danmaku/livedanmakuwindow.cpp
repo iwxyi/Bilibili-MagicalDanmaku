@@ -3,7 +3,7 @@
 LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
 {
     this->setWindowTitle("实时弹幕");
-    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
     this->setMinimumSize(45,45);                        //设置最小尺寸
     this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
 
@@ -42,12 +42,11 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
                 returnPrevWindow();
         }
     });
-    if (!settings.value("livedanmakuwindow/sendEdit", true).toBool())
+    if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 
     editShortcut = new QxtGlobalShortcut(this);
-    if (!editShortcut->setShortcut(QKeySequence("shift+alt+d")))
-        qDebug() << "设置快捷键失败";
+    editShortcut->setShortcut(QKeySequence("shift+alt+d"));
     connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
     });
@@ -66,7 +65,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
             lineEdit->setFocus();
         }
     });
-    if (!settings.value("livedanmakuwindow/sendEditShortcut", true).toBool())
+    if (!settings.value("livedanmakuwindow/sendEditShortcut", false).toBool())
         editShortcut->setEnabled(false);
 
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
@@ -314,7 +313,7 @@ void LiveDanmakuWindow::showMenu()
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
     actionDialogSend->setCheckable(true);
-    actionDialogSend->setChecked(settings.value("livedanmakuwindow/sendEditShortcut", true).toBool());
+    actionDialogSend->setChecked(settings.value("livedanmakuwindow/sendEditShortcut", false).toBool());
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
     actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
@@ -416,7 +415,7 @@ void LiveDanmakuWindow::showMenu()
         settings.setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
     });
     connect(actionDialogSend, &QAction::triggered, this, [=]{
-        bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", true).toBool();
+        bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", false).toBool();
         settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
         editShortcut->setEnabled(enable);
     });
