@@ -17,15 +17,17 @@
 #include <iostream>
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
-#include <zlib.h>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
+#include "zlib.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+#define SOCKET_DEB if (0) qDebug()
 
 class MainWindow : public QMainWindow
 {
@@ -150,6 +152,9 @@ private:
     QByteArray makePack(QByteArray body, qint32 operation);
     void sendVeriPacket();
     void sendHeartPacket();
+    void handleMessage(QJsonObject json);
+
+    QByteArray zlibUncompress(QByteArray ba);
 
 private:
     Ui::MainWindow *ui;

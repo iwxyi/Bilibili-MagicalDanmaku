@@ -82,6 +82,18 @@ MainWindow::MainWindow(QWidget *parent)
     // WS连接
     initWS();
     startConnectWS();
+
+    /*QFile file("receive.txt");
+    file.open(QIODevice::ReadWrite);
+    auto ba = file.readAll();
+    ba = ba.right(ba.size()-16);
+
+    unsigned long si;
+    BYTE* target = new BYTE[ba.size()*2+100]{};
+    uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+    QByteArray unc = QByteArray::fromRawData((char*)target, si);
+    qDebug() << "解压后的：" << unc;
+    qDebug() << "直接解压：" << zlibUncompress(ba);*/
 }
 
 MainWindow::~MainWindow()
@@ -757,7 +769,7 @@ void MainWindow::sendVeriPacket()
     QByteArray ba;
     ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
     ba = makePack(ba, AUTH);
-    qDebug() << "发送认证包：" << ba;
+    SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);
 }
 
@@ -769,8 +781,22 @@ void MainWindow::sendHeartPacket()
     QByteArray ba;
     ba.append("[object Object]");
     ba = makePack(ba, HEARTBEAT);
-    qDebug() << "发送心跳包：" << ba;
+    SOCKET_DEB << "发送心跳包：" << ba;
     socket->sendBinaryMessage(ba);
+}
+
+/**
+ * 解压数据
+ * 这个方法必须要qDebug输出一个东西才能用
+ * 否则只能拆开放到要用的地方
+ */
+QByteArray MainWindow::zlibUncompress(QByteArray ba)
+{
+    unsigned long si;
+    BYTE* target = new BYTE[500]{};
+    uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+    qDebug() << "解压后数据大小：" << si; // 这句话不能删！
+    return QByteArray::fromRawData((char*)target, si);
 }
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
@@ -780,7 +806,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             + (message[10] << 8)
             + (message[11]);
     QByteArray body = message.right(message.length() - 16);
-    qDebug() << "Operation=" << operation << "  body=" << body;
+    SOCKET_DEB << "操作码=" << operation << "  正文=" << body;
 
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
@@ -801,55 +827,75 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + (body[1] << 16)
                 + (body[2] << 8)
                 + body[3];
-        qDebug() << "人气值：" << popularity;
+        SOCKET_DEB << "人气值=" << popularity;
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
     {
-        QString cmd = json.value("cmd").toString();
+        QString cmd;
+        if (!json.isEmpty())
+            cmd = json.value("cmd").toString();
         if (cmd == "NOTICE_MSG") // 全站广播（不用管）
         {
 
         }
         else
         {
-            QFile file("receive.txt");
-            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+            short protover = (message[6]<<8) + message[7];
+            qDebug() << "协议版本=" << protover;
+            if (protover == 2) // 默认协议版本，zlib解压
+            {
+                body = zlibUncompress(body); // 解压后再次带个头部，和原先的一样
+                QByteArray jsonBa = body.right(body.length() - 16);
+                QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+                if (error.error != QJsonParseError::NoError)
+                {
+                    qDebug() << "解析解压后的JSON出错：" << error.errorString();
+                    qDebug() << jsonBa;
+                    return ;
+                }
+                qDebug() << "解压后的JSON数据：" << jsonBa;
+                QJsonObject json = document.object();
+                handleMessage(json);
+            }
+            else
+            {
+                qDebug() << "未知协议：" << protover << "，若有必要请处理";
+                qDebug() << body;
+            }
+
+            /*QFile file("receive.txt");
             file.open(QIODevice::WriteOnly);
             file.write(message, message.size());
-            file.close();
-
-            {
-                FILE* File_src;
-                FILE* File_compress;
-                FILE* File_uncompress;
-                unsigned long len_src;
-                unsigned long len_compress;
-                const int MaxBufferSize = 999999;
-                unsigned long len_uncompress = MaxBufferSize;
-                unsigned char *buffer_src  = new unsigned char[MaxBufferSize];
-                unsigned char *buffer_compress  = new unsigned char[MaxBufferSize];
-                unsigned char *buffer_uncompress = new unsigned char[MaxBufferSize];
-                File_src = fopen("src.txt","r");
-                File_compress = fopen("compress.txt","w");
-                File_uncompress = fopen("uncompress.txt","w");
-                //compress
-                len_src = fread(buffer_src,sizeof(char),MaxBufferSize-1,File_src);
-                compress(buffer_compress,&len_compress,buffer_src,len_src);
-                fwrite(buffer_compress,sizeof(char),len_compress,File_compress);
-                qDebug() << "normal zlib:" ;
-                qDebug() << "src:\n" << buffer_src << ",length:" << len_src ;
-                qDebug() << "compress:\n" << buffer_compress << ",length:" << len_compress ;
-                //uncompress
-                uncompress(buffer_uncompress,&len_uncompress,buffer_compress,len_compress);
-                fwrite(buffer_uncompress,sizeof(char),len_uncompress,File_uncompress);
-                qDebug() << "uncompress:\n" << buffer_uncompress << ",length:" << len_uncompress;
-                fclose(File_src);
-                fclose(File_compress);
-                fclose(File_uncompress);
-            }
+            file.close();*/
         }
     }
     else
+    {
+
+    }
+}
+
+void MainWindow::handleMessage(QJsonObject json)
+{
+    QString cmd = json.value("cmd").toString();
+    qDebug() << "消息命令：" << cmd;
+    if (cmd == "DANMU_MSG") // 受到弹幕
+    {
+
+    }
+    else if (cmd == "SEND_GIFT") // 有人送礼
+    {
+
+    }
+    else if (cmd == "GUARD_BUY") // 有人上舰
+    {
+
+    }
+    else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
+    {
+
+    }
+    else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
 
     }
