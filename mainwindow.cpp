@@ -808,7 +808,7 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba)
     unsigned long si;
     BYTE* target = new BYTE[ba.size()*5+10000]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    qDebug() << "解压后数据大小：" << si << ba.size(); // 这句话不能删！
+    SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！
     return QByteArray::fromRawData((char*)target, si);
 }
 
@@ -877,8 +877,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             + ((uchar)unc[offset+1] << 16)
                             + ((uchar)unc[offset+2] << 8)
                             + (uchar)unc[offset+3];
-                    QByteArray jsonBa = unc.mid(offset + headerSize, packSize - offset - headerSize);
-                    qDebug() << "单个JSON消息：" << offset << packSize << jsonBa;
+                    QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
+                    SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
                     QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
                     if (error.error != QJsonParseError::NoError)
                     {
@@ -920,7 +920,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
-    qDebug() << "消息命令：" << cmd;
+    qDebug() << ">消息命令：" << cmd;
     if (cmd == "DANMU_MSG") // 受到弹幕
     {
         QJsonArray info = json.value("info").toArray();
@@ -972,5 +972,12 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
         qDebug() << "观众进入：" << username << isAdmin;
+    }
+    else if (cmd == "INTERACT_WORD")
+    {
+        QJsonObject data = json.value("data").toObject();
+        int uid = data.value("uid").toInt();
+        QString username = data.value("uname").toString();
+        qDebug() << "观众进入：" << username;
     }
 }
