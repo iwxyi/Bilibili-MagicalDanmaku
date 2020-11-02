@@ -24,6 +24,13 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     listWidget->setWordWrap(true);
     listWidget->setSpacing(4);
 
+    auto returnPrevWindow = [=]{
+#ifdef Q_OS_WIN32
+        if (this->prevWindow)
+            SwitchToThisWindow(prevWindow, true);
+        prevWindow = nullptr;
+#endif
+    };
     lineEdit->setPlaceholderText("回车发送消息");
     connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
         QString text = lineEdit->text();
@@ -31,6 +38,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
         {
             emit signalSendMsg(text.trimmed());
             lineEdit->clear();
+            if (settings.value("livedanmakuwindow/sendOnce", false).toBool())
+                returnPrevWindow();
         }
     });
     if (!settings.value("livedanmakuwindow/sendEdit", true).toBool())
@@ -39,12 +48,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     editShortcut = new QxtGlobalShortcut(this);
     if (!editShortcut->setShortcut(QKeySequence("shift+alt+d")))
         qDebug() << "设置快捷键失败";
-    auto returnPrevWindow = [=]{
-#ifdef Q_OS_WIN32
-        if (this->prevWindow)
-            SwitchToThisWindow(prevWindow, true);
-#endif
-    };
     connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
     });
@@ -305,12 +308,16 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionFreeCopy = new QAction("自由复制", this);
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
+    QAction* actionSendOnce = new QAction("单次发送", this);
 
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
     actionDialogSend->setCheckable(true);
     actionDialogSend->setChecked(settings.value("livedanmakuwindow/sendEditShortcut", true).toBool());
+    actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
+    actionSendOnce->setCheckable(true);
+    actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
 
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
@@ -325,6 +332,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addSeparator();
     menu->addAction(actionSendMsg);
     menu->addAction(actionDialogSend);
+    menu->addAction(actionSendOnce);
 
     if (!item)
     {
@@ -411,6 +419,10 @@ void LiveDanmakuWindow::showMenu()
         bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", true).toBool();
         settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
         editShortcut->setEnabled(enable);
+    });
+    connect(actionSendOnce, &QAction::triggered, this, [=]{
+        bool enable = !settings.value("livedanmakuwindow/sendOnce", false).toBool();
+        settings.setValue("livedanmakuwindow/sendOnce", enable);
     });
 
     menu->exec(QCursor::pos());
