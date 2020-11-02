@@ -27,11 +27,15 @@ protected:
 
 class TransparentEdit : public QLineEdit
 {
+    Q_OBJECT
 public:
     TransparentEdit(QWidget* parent = nullptr) : QLineEdit(parent)
     {
         focusOutEvent(nullptr);
     }
+
+signals:
+    void signalESC();
 
 protected:
     void focusInEvent(QFocusEvent *) override
@@ -42,6 +46,13 @@ protected:
     void focusOutEvent(QFocusEvent *) override
     {
         this->setStyleSheet("QLineEdit{background: transparent;}");
+    }
+
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        if (event->key() == Qt::Key_Escape)
+            this->deleteLater();
+        return QLineEdit::keyPressEvent(event);
     }
 };
 

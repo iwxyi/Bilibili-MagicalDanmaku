@@ -28,6 +28,7 @@
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
+#include "qxtglobalshortcut.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -71,6 +72,7 @@ private:
     QSettings settings;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
+    QxtGlobalShortcut* editShortcut;
 
     QColor nameColor;
     QColor msgColor;

@@ -36,6 +36,30 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
     if (!settings.value("livedanmakuwindow/sendEdit", true).toBool())
         lineEdit->hide();
 
+    editShortcut = new QxtGlobalShortcut(this);
+    if (!editShortcut->setShortcut(QKeySequence("shift+alt+d")))
+        qDebug() << "设置快捷键失败";
+    auto returnPrevWindow = [=]{
+        qDebug() << "返回上一个焦点";
+
+    };
+    connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
+        returnPrevWindow();
+    });
+    connect(editShortcut, &QxtGlobalShortcut::activated, this, [=]() {
+        if (this->isActiveWindow() && lineEdit->hasFocus())
+        {
+            returnPrevWindow();
+        }
+        else // 激活并聚焦
+        {
+            this->activateWindow();
+            lineEdit->setFocus();
+        }
+    });
+    if (!settings.value("livedanmakuwindow/sendEditShortcut", true).toBool())
+        editShortcut->setEnabled(false);
+
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
@@ -140,6 +164,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     setItemWidgetText(item);
 
+    QRegExp hei("（）\\(\\)"); // 带有特殊字符的黑名单
     // 自动翻译
     if (autoTrans)
     {
@@ -147,12 +172,15 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         QRegExp riyu("[\u0800-\u4e00]+");
         QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
         QRegExp eeyu("[А-Яа-яЁё]+");
-        if (msg.indexOf(riyu) != -1
-                || msg.indexOf(hanyu) != -1
-                || msg.indexOf(eeyu) != -1)
+        if (msg.indexOf(hei) == -1)
         {
-            qDebug() << "检测到外语，自动翻译";
-            startTranslate(item);
+            if (msg.indexOf(riyu) != -1
+                    || msg.indexOf(hanyu) != -1
+                    || msg.indexOf(eeyu) != -1)
+            {
+                qDebug() << "检测到外语，自动翻译";
+                startTranslate(item);
+            }
         }
     }
 
