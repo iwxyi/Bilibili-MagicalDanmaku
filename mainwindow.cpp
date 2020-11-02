@@ -709,6 +709,7 @@ void MainWindow::startMsgLoop()
  */
 QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
 {
+    // 因为是大端，所以要一个个复制
     qint32 totalSize = 16 + body.size();
     short headerSize = 16;
     short protover = 1;
@@ -740,7 +741,8 @@ QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
     return header + body;
 
 
-    /*int totalSize = 16 + body.size();
+    /* // 小端算法，直接上结构体
+    int totalSize = 16 + body.size();
     short headerSize = 16;
     short protover = 1;
     int seqId = 1;
@@ -753,50 +755,11 @@ QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
 
 void MainWindow::sendVeriPacket()
 {
-    QJsonObject json;
-    json.insert("uid", uid == "0" ? 1 : uid.toLongLong());
-    json.insert("roomid", roomId.toLongLong());
-    json.insert("protover", 2);
-    json.insert("platform", "web");
-    json.insert("clientver", "1.14.3");
-    json.insert("type", 2);
-    json.insert("key", token);
-    QByteArray ba = QJsonDocument(json).toJson(QJsonDocument::JsonFormat::Compact);
+    QByteArray ba;
+    ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
     ba = makePack(ba, 7);
-    /*ba.append(1, 0);
-    ba.append(1, 0);
-    ba.append(1, 1);
-    ba.append(1, 1);
-    ba.append(1, 0);
-    ba.append(1, 0x10);
-    ba.append(1, 0x00);
-    ba.append(1, 0x01);
-    ba.append(1, 0x00);
-    ba.append(1, 0x00);
-    ba.append(1, 0x00);
-    ba.append(1, 0x07);
-    ba.append(1, 0x00);
-    ba.append(1, 0x00);
-    ba.append(1, 0x00);
-    ba.append(1, 0x01);
-    ba.append("{\"uid\": 1, \"roomid\": 11422661, \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \"y8Qm7oo95wCIJxqYDx48wI9gDlOmPYt99-CBVPaGOTmt-wFd4f4t2_vSuw_MGykSv7excwG8Fqm2efWhs_xt35GG-uyZAoJL5O7XFa2i8nI1ZIwkuaX-wubOSRDw5d7_PA==\"}");*/
-
-    QFile file("C:/f.txt");
-    file.open(QIODevice::ReadOnly);
-    uchar t;
-    QByteArray ca;
-    for(int i=0;i<2000;i++)  //读取2000个数据
-    {
-        file.read((char *)&t, sizeof(t));
-        ca[i]=t;
-        if (t == '}')
-        {
-            break;
-        }
-    }
-    qDebug() << "发送认证包：" << ca;
-
-    socket->sendBinaryMessage(ca);
+    qDebug() << "发送认证包：" << ba;
+    socket->sendBinaryMessage(ba);
 }
 
 /**
