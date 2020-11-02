@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>娇娇子专属直播套件</string>
+   <string>神奇弹幕套件</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -329,7 +329,7 @@
      <x>0</x>
      <y>0</y>
      <width>347</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

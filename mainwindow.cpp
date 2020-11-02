@@ -80,8 +80,8 @@ MainWindow::MainWindow(QWidget *parent)
     restoreTaskList();
 
     // WS连接
-    // initWS();
-    // startConnectWS();
+    initWS();
+    startConnectWS();
 }
 
 MainWindow::~MainWindow()
@@ -205,24 +205,7 @@ void MainWindow::sendMsg(QString msg)
     // 建立对象
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-    QList<QNetworkCookie> cookies;
-
-    // 设置cookie
-    QString cookieText = browserCookie;
-    QStringList sl = cookieText.split(";");
-    foreach (auto s, sl)
-    {
-        s = s.trimmed();
-        int pos = s.indexOf("=");
-        QString key = s.left(pos);
-        QString val = s.right(s.length() - pos - 1);
-        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
-    }
-
-    // 请求头里面加入cookies
-    QVariant var;
-    var.setValue(cookies);
-    request->setHeader(QNetworkRequest::CookieHeader, var);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
@@ -476,6 +459,28 @@ void MainWindow::restoreTaskList()
     }
 }
 
+QVariant MainWindow::getCookies()
+{
+    QList<QNetworkCookie> cookies;
+
+    // 设置cookie
+    QString cookieText = browserCookie;
+    QStringList sl = cookieText.split(";");
+    foreach (auto s, sl)
+    {
+        s = s.trimmed();
+        int pos = s.indexOf("=");
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
+    }
+
+    // 请求头里面加入cookies
+    QVariant var;
+    var.setValue(cookies);
+    return var;
+}
+
 void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
 {
     QListWidgetItem* item = ui->taskListWidget->currentItem();
@@ -527,8 +532,9 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::connected, this, [=]{
         qDebug() << "socket connected";
-        // 5秒内发送心跳包
 
+        // 5秒内发送心跳包
+        sendVeriPacket();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -556,7 +562,7 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        qDebug() << "stateChanged";
+        qDebug() << "stateChanged" << state;
     });
 
     heartTimer = new QTimer(this);
@@ -598,9 +604,12 @@ void MainWindow::getRoomInit()
 
 void MainWindow::getRoomInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=" + roomId;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
+//    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         QJsonParseError error;
@@ -621,7 +630,9 @@ void MainWindow::getRoomInfo()
         // roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
         shortId = QString::number(roomInfo.value("short_id").toInt());
         uid = QString::number(roomInfo.value("uid").toInt());
-        qDebug() << "getRoomInfo:" << roomId << shortId << uid;
+        qDebug() << "getRoomInfo: roomid=" << roomId
+                 << "  shortid=" << shortId
+                 << "  uid=" << uid;
 
         getDanmuInfo();
     });
@@ -664,7 +675,7 @@ void MainWindow::getDanmuInfo()
                                 o.value("ws_port").toInt(),
                             });
         }
-        qDebug() << "host数量：" << hostList.size(); //<< "  token:" << token;
+        qDebug() << "getDanmuInfo: host数量=" << hostList.size() << "  token=" << token;
 
         startMsgLoop();
     });
@@ -677,5 +688,121 @@ void MainWindow::startMsgLoop()
     HostInfo hostServer = hostList.at(hostRetry);
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
     qDebug() << "hostServer:" << host;
+
+    // 设置安全套接字连接模式（不知道有啥用）
+    QSslConfiguration config = socket->sslConfiguration();
+    config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    config.setProtocol(QSsl::TlsV1SslV3);
+    socket->setSslConfiguration(config);
+
     socket->open(host);
+}
+
+/**
+ * 给body加上头部信息
+偏移量	长度	类型	含义
+0	4	uint32	封包总大小（头部大小+正文大小）
+4	2	uint16	头部大小（一般为0x0010，16字节）
+6	2	uint16	协议版本:0普通包正文不使用压缩，1心跳及认证包正文不使用压缩，2普通包正文使用zlib压缩
+8	4	uint32	操作码（封包类型）
+12	4	uint32	sequence，可以取常数1
+ */
+QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
+{
+    qint32 totalSize = 16 + body.size();
+    short headerSize = 16;
+    short protover = 1;
+    qint32 seqId = 1;
+
+    auto byte4 = [=](qint32 i) -> QByteArray{
+        QByteArray ba(4, 0);
+        ba[3] = (uchar)(0x000000ff & i);
+        ba[2] = (uchar)((0x0000ff00 & i) >> 8);
+        ba[1] = (uchar)((0x00ff0000 & i) >> 16);
+        ba[0] = (uchar)((0xff000000 & i) >> 24);
+        return ba;
+    };
+
+    auto byte2 = [=](short i) -> QByteArray{
+        QByteArray ba(2, 0);
+        ba[1] = (uchar)(0x00ff & i);
+        ba[0] = (uchar)((0xff00 & i) >> 8);
+        return ba;
+    };
+
+    QByteArray header;
+    header += byte4(totalSize);
+    header += byte2(headerSize);
+    header += byte2(protover);
+    header += byte4(operation);
+    header += byte4(seqId);
+
+    return header + body;
+
+
+    /*int totalSize = 16 + body.size();
+    short headerSize = 16;
+    short protover = 1;
+    int seqId = 1;
+
+    HeaderStruct header{totalSize, headerSize, protover, operation, seqId};
+
+    QByteArray ba((char*)&header, sizeof(header));
+    return ba + body;*/
+}
+
+void MainWindow::sendVeriPacket()
+{
+    QJsonObject json;
+    json.insert("uid", uid == "0" ? 1 : uid.toLongLong());
+    json.insert("roomid", roomId.toLongLong());
+    json.insert("protover", 2);
+    json.insert("platform", "web");
+    json.insert("clientver", "1.14.3");
+    json.insert("type", 2);
+    json.insert("key", token);
+    QByteArray ba = QJsonDocument(json).toJson(QJsonDocument::JsonFormat::Compact);
+    ba = makePack(ba, 7);
+    /*ba.append(1, 0);
+    ba.append(1, 0);
+    ba.append(1, 1);
+    ba.append(1, 1);
+    ba.append(1, 0);
+    ba.append(1, 0x10);
+    ba.append(1, 0x00);
+    ba.append(1, 0x01);
+    ba.append(1, 0x00);
+    ba.append(1, 0x00);
+    ba.append(1, 0x00);
+    ba.append(1, 0x07);
+    ba.append(1, 0x00);
+    ba.append(1, 0x00);
+    ba.append(1, 0x00);
+    ba.append(1, 0x01);
+    ba.append("{\"uid\": 1, \"roomid\": 11422661, \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \"y8Qm7oo95wCIJxqYDx48wI9gDlOmPYt99-CBVPaGOTmt-wFd4f4t2_vSuw_MGykSv7excwG8Fqm2efWhs_xt35GG-uyZAoJL5O7XFa2i8nI1ZIwkuaX-wubOSRDw5d7_PA==\"}");*/
+
+    QFile file("C:/f.txt");
+    file.open(QIODevice::ReadOnly);
+    uchar t;
+    QByteArray ca;
+    for(int i=0;i<2000;i++)  //读取2000个数据
+    {
+        file.read((char *)&t, sizeof(t));
+        ca[i]=t;
+        if (t == '}')
+        {
+            break;
+        }
+    }
+    qDebug() << "发送认证包：" << ca;
+
+    socket->sendBinaryMessage(ca);
+}
+
+/**
+ * 每隔半分钟发送一次心跳包
+ */
+void MainWindow::sendHeartPacket()
+{
+
 }

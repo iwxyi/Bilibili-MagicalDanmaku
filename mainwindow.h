@@ -42,6 +42,15 @@ public:
         int ws_port;
     };
 
+    struct HeaderStruct
+    {
+        int totalSize;
+        short headerSize;
+        short ver;
+        int operation;
+        int seqId;
+    };
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -106,12 +115,16 @@ private:
     void saveTaskList();
     void restoreTaskList();
 
+    QVariant getCookies();
     void initWS();
     void startConnectWS();
     void getRoomInit();
     void getRoomInfo();
     void getDanmuInfo();
     void startMsgLoop();
+    QByteArray makePack(QByteArray body, qint32 operation);
+    void sendVeriPacket();
+    void sendHeartPacket();
 
 private:
     Ui::MainWindow *ui;
