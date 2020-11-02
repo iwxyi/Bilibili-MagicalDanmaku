@@ -51,6 +51,28 @@ public:
         int seqId;
     };
 
+    enum Operation
+    {
+        HANDSHAKE = 0,
+        HANDSHAKE_REPLY = 1,
+        HEARTBEAT = 2, // 心跳包
+        HEARTBEAT_REPLY = 3, // 心跳包回复（人气值）
+        SEND_MSG = 4,
+        SEND_MSG_REPLY = 5, // 普通包（命令）
+        DISCONNECT_REPLY = 6,
+        AUTH = 7, // 认证包
+        AUTH_REPLY = 8, // 认证包（回复）
+        RAW = 9,
+        PROTO_READY = 10,
+        PROTO_FINISH = 11,
+        CHANGE_ROOM = 12,
+        CHANGE_ROOM_REPLY = 13,
+        REGISTER = 14,
+        REGISTER_REPLY = 15,
+        UNREGISTER = 16,
+        UNREGISTER_REPLY = 17
+    };
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -105,6 +127,8 @@ private slots:
     void sendMsg(QString msg);
 
     void slotSocketError(QAbstractSocket::SocketError error);
+
+    void slotBinaryMessageReceived(const QByteArray &message);
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);

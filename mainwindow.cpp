@@ -533,20 +533,26 @@ void MainWindow::initWS()
     connect(socket, &QWebSocket::connected, this, [=]{
         qDebug() << "socket connected";
 
-        // 5秒内发送心跳包
+        // 5秒内发送认证包
         sendVeriPacket();
+
+        // 定时发送心跳包
+        heartTimer->start();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
         qDebug() << "disconnected";
+
+        heartTimer->stop();
     });
 
     connect(socket, &QWebSocket::binaryFrameReceived, this, [=](const QByteArray &frame, bool isLastFrame){
-        qDebug() << "binaryFrameReceived";
+//        qDebug() << "binaryFrameReceived" << frame << isLastFrame;
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-        qDebug() << "binaryMessageReceived";
+//        qDebug() << "binaryMessageReceived" << message;
+        slotBinaryMessageReceived(message);
     });
 
     connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
@@ -566,8 +572,9 @@ void MainWindow::initWS()
     });
 
     heartTimer = new QTimer(this);
+    heartTimer->setInterval(30000);
     connect(heartTimer, &QTimer::timeout, this, [=]{
-        qDebug() << "发送心跳包";
+        sendHeartPacket();
     });
 }
 
@@ -757,7 +764,7 @@ void MainWindow::sendVeriPacket()
 {
     QByteArray ba;
     ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    ba = makePack(ba, 7);
+    ba = makePack(ba, AUTH);
     qDebug() << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);
 }
@@ -767,5 +774,49 @@ void MainWindow::sendVeriPacket()
  */
 void MainWindow::sendHeartPacket()
 {
+    QByteArray ba;
+    ba.append("[object Object]");
+    ba = makePack(ba, HEARTBEAT);
+    qDebug() << "发送心跳包：" << ba;
+    socket->sendBinaryMessage(ba);
+}
 
+void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
+{
+    int operation = (message[8] << 24)
+            + (message[9] << 16)
+            + (message[10] << 8)
+            + (message[11]);
+    QByteArray body = message.right(message.length() - 16);
+    qDebug() << "Operation=" << operation << "  body=" << body;
+
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(body, &error);
+    QJsonObject json;
+    if (error.error == QJsonParseError::NoError)
+        json = document.object();
+
+    if (operation == AUTH_REPLY) // 认证包回复
+    {
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "认证出错";
+        }
+    }
+    else if (operation == HEARTBEAT_REPLY) // 心跳包回复（人气值）
+    {
+        qint32 popularity = (body[0] << 24)
+                + (body[1] << 16)
+                + (body[2] << 8)
+                + body[3];
+        qDebug() << "人气值：" << popularity;
+    }
+    else if (operation == SEND_MSG_REPLY) // 普通包
+    {
+
+    }
+    else
+    {
+
+    }
 }
