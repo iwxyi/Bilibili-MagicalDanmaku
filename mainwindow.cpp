@@ -894,19 +894,19 @@ void MainWindow::sendHeartPacket()
  * 这个方法必须要qDebug输出一个东西才能用
  * 否则只能拆开放到要用的地方
  */
-QByteArray MainWindow::zlibUncompress(QByteArray ba)
+QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 {
     unsigned long si;
     BYTE* target = new BYTE[ba.size()*5+10000]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！
+    // SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
     return QByteArray::fromRawData((char*)target, si);
 }
 
 /**
  * 一个智能的用户昵称转简单称呼
  */
-QString MainWindow::nicknameSimplify(QString nickname)
+QString MainWindow::nicknameSimplify(QString nickname) const
 {
     QString simp = nickname;
 
@@ -1016,7 +1016,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 readFile.open(QIODevice::ReadWrite);
                 auto ba = readFile.readAll();
                 QByteArray unc = zlibUncompress(ba);
-                SOCKET_DEB << "解压后的数据：" << unc;
+                SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
 
                 // 循环遍历
                 int offset = 0;
@@ -1160,13 +1160,15 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("username").toString();
         qint64 startTime = static_cast<qint64>(data.value("start_time").toDouble());
         qint64 endTime = static_cast<qint64>(data.value("end_time").toDouble());
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << "舰长进入：" << username;
+        // appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), true));
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
     {
 
     }
-    else if (cmd == "WELCOME") // 进入（不知道有没有包括舰长）
+    else if (cmd == "WELCOME") // 进入（似乎已经废弃）
     {
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());

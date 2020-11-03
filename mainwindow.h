@@ -178,8 +178,8 @@ private:
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
 
-    QByteArray zlibUncompress(QByteArray ba);
-    QString nicknameSimplify(QString nickname);
+    QByteArray zlibUncompress(QByteArray ba) const;
+    QString nicknameSimplify(QString nickname) const;
 
 private:
     Ui::MainWindow *ui;
