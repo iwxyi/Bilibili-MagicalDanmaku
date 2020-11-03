@@ -143,6 +143,10 @@ private slots:
 
     void on_sendCDSpin_valueChanged(int arg1);
 
+    void on_autoWelcomeWordsEdit_textChanged();
+
+    void on_autoThankWordsEdit_textChanged();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -198,5 +202,7 @@ private:
 
     QWebSocket* socket;
     QTimer* heartTimer;
+
+    QHash<qint64, qint64> userComeTimes; // 用户进来的时间（客户端时间戳为准）
 };
 #endif // MAINWINDOW_H

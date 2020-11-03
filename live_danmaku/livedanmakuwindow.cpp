@@ -267,14 +267,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GIFT)
     {
-        text = QString("感谢 %1 赠送 %2 × %3")
+        text = QString("[送礼] %1 赠送 %2 × %3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
     }
     else if (msgType == MSG_WELCOME)
     {
-        text = QString("欢迎 %1 进入直播间")
+        text = QString("[进入] %1 进入直播间")
                 .arg(nameText);
     }
 

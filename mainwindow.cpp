@@ -90,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendThankCheck->setChecked(settings.value("danmaku/sendThank", false).toBool());
     ui->sendCDSpin->setValue(settings.value("danmaku/sendCD", 5).toInt());
+    ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
+    ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
 
 #ifndef SOCKET_MODE
 
@@ -976,7 +978,7 @@ void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
     qDebug() << ">消息命令：" << cmd;
-    if (cmd == "DANMU_MSG") // 受到弹幕
+    if (cmd == "DANMU_MSG") // 收到弹幕
     {
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
@@ -1003,21 +1005,26 @@ void MainWindow::handleMessage(QJsonObject json)
 
         qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
-        QString msg = "感谢" + username + "赠送的" + giftName + "~~~";
+
+        QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+        if (!words.size())
+            return ;
+        int r = qrand() % words.size();
+        QString msg = words.at(r);
         if (coinType == "gold")
         {
             int yuan = totalCoin / 1000;
             if (yuan >= 9)
             {
-                msg = "哇，感谢" + username + "赠送的" + giftName + "！";
+                msg = "哇，感谢 %1 赠送的%2！";
             }
             else if (yuan >= 70)
             {
-                msg = "哇，感谢" + username + "赠送的" + giftName + "！！！";
+                msg = "哇，感谢 %1 赠送的%2！！！";
             }
         }
         if (!justStart && ui->autoSendThankCheck->isChecked())
-            sendAutoMsg(msg);
+            sendAutoMsg(msg.arg(username).arg(giftName));
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -1059,7 +1066,20 @@ void MainWindow::handleMessage(QJsonObject json)
         qDebug() << "观众进入：" << username;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
-            sendAutoMsg("欢迎 " + username + " ~~~");
+        {
+            qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+            int cd = ui->sendCDSpin->value() * 1000 * 10; // 10倍冷却时间
+            if (userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
+                return ; // 避免同一个人连续欢迎多次（好像B自动的？）
+            userComeTimes[uid] = currentTime;
+
+            QStringList words = ui->autoWelcomeWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+            if (!words.size())
+                return ;
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
+            sendAutoMsg(msg.arg(username));
+        }
     }
 }
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -1075,4 +1095,14 @@ void MainWindow::on_autoSendThankCheck_stateChanged(int arg1)
 void MainWindow::on_sendCDSpin_valueChanged(int arg1)
 {
     settings.setValue("danmaku/sendCD", ui->sendCDSpin->value());
+}
+
+void MainWindow::on_autoWelcomeWordsEdit_textChanged()
+{
+    settings.setValue("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText());
+}
+
+void MainWindow::on_autoThankWordsEdit_textChanged()
+{
+    settings.setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
 }

@@ -369,6 +369,26 @@
          </layout>
         </item>
         <item>
+         <widget class="QPlainTextEdit" name="autoWelcomeWordsEdit">
+          <property name="plainText">
+           <string>欢迎 %1 ~~~</string>
+          </property>
+          <property name="placeholderText">
+           <string>欢迎语，多行随机发送一行</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="autoThankWordsEdit">
+          <property name="plainText">
+           <string>感谢 %1 赠送的 %2 ~~~</string>
+          </property>
+          <property name="placeholderText">
+           <string>欢迎语，多行随机发送一行</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_3">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
