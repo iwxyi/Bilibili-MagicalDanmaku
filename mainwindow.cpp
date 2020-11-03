@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
        qDebug() << "【点歌自动复制】" << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
 
+       addNoReplyDanmakuText(danmaku.getText());
        QTimer::singleShot(100, [=]{
            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
        });
@@ -251,6 +252,12 @@ void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
     emit signalRemoveDanmaku(danmaku);
 }
 
+void MainWindow::addNoReplyDanmakuText(QString text)
+{
+    if (danmakuWindow)
+        danmakuWindow->addNoReply(text);
+}
+
 void MainWindow::sendMsg(QString msg)
 {
     if (browserCookie.isEmpty() || browserData.isEmpty())
@@ -320,6 +327,7 @@ void MainWindow::sendAutoMsg(QString msg)
     int cd = ui->sendCDSpin->value() * 1000;
     if (timestamp - prevTimestamp < cd)
         return ;
+    addNoReplyDanmakuText(msg);
     sendMsg(msg);
 }
 

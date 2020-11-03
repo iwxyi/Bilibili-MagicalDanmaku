@@ -160,6 +160,7 @@ private:
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
+    void addNoReplyDanmakuText(QString text);
 
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();

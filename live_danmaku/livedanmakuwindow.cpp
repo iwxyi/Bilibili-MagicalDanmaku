@@ -71,6 +71,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
+    hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -158,9 +159,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                        + danmaku.getNickname() + "</font> ";
     QString text = nameText + danmaku.getText();
     QLabel* label = new QLabel(listWidget);
-    QPalette pa(label->palette());
-    pa.setColor(QPalette::Text, msgColor);
-    label->setPalette(pa);
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
     QListWidgetItem* item = new QListWidgetItem(listWidget);
@@ -172,9 +170,12 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     setItemWidgetText(item);
 
-    if (danmaku.getMsgType() == MSG_DANMAKU)
+    QRegExp replyRe("点歌|谢|欢迎");
+    if (danmaku.getMsgType() == MSG_DANMAKU
+            && !noReplyStrings.contains(danmaku.getText()))
     {
-        QRegExp hei("（）\\(\\)~"); // 带有特殊字符的黑名单
+        QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
+
         // 自动翻译
         if (autoTrans)
         {
@@ -200,6 +201,11 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             startReply(item);
         }
     }
+    else if (danmaku.getMsgType() == MSG_DIANGE)
+    {
+        highlightItemText(item, true);
+    }
+    noReplyStrings.clear();
 
     if (scrollEnd)
         listWidget->scrollToBottom();
@@ -233,6 +239,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     auto label = qobject_cast<QLabel*>(widget);
     if (!label)
         return ;
+    QPalette pa(label->palette());
+    pa.setColor(QPalette::Text, msgColor);
+    label->setPalette(pa);
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum();
@@ -292,6 +301,34 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         listWidget->scrollToBottom();
 }
 
+void LiveDanmakuWindow::highlightItemText(QListWidgetItem *item, bool recover)
+{
+    auto widget = listWidget->itemWidget(item);
+    auto label = qobject_cast<QLabel*>(widget);
+    if (!label)
+        return ;
+    QPalette pa(label->palette());
+    pa.setColor(QPalette::Text, hlColor);
+    label->setPalette(pa);
+    item->setData(DANMAKU_HIGHLIGHT_ROLE, true);
+
+    // 定时恢复原样
+    if (!recover)
+        return ;
+    QTimer::singleShot(3000, [=]{
+        // 怕到时候没了
+       if (!isItemExist(item))
+       {
+           qDebug() << "高亮项已经没了";
+           return ;
+       }
+
+        // 重新设置内容
+        item->setData(DANMAKU_HIGHLIGHT_ROLE, false);
+        setItemWidgetText(item);
+    });
+}
+
 void LiveDanmakuWindow::resetItemsTextColor()
 {
     for (int i = 0; i < listWidget->count(); i++)
@@ -325,6 +362,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionNameColor = new QAction("昵称颜色", this);
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
+    QAction* actionHlColor = new QAction("高亮颜色", this);
     QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
     QAction* actionReply = new QAction("AI回复", this);
@@ -346,6 +384,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
     menu->addAction(actionBgColor);
+    menu->addAction(actionHlColor);
     menu->addSeparator();
     menu->addAction(actionSearch);
     menu->addAction(actionTranslate);
@@ -395,6 +434,16 @@ void LiveDanmakuWindow::showMenu()
         {
             settings.setValue("livedanmakuwindow/bgColor", bgColor = c);
             update();
+        }
+    });
+    connect(actionHlColor, &QAction::triggered, this, [=]{
+        QColor c = QColorDialog::getColor(hlColor, this, "选择高亮颜色（实时提示、特别关心）", QColorDialog::ShowAlphaChannel);
+        if (!c.isValid())
+            return ;
+        if (c != hlColor)
+        {
+            settings.setValue("livedanmakuwindow/hlColor", hlColor = c);
+            resetItemsTextColor();
         }
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
@@ -562,6 +611,11 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         item->setData(DANMAKU_REPLY_ROLE, answer);
         setItemWidgetText(item);
     });
+}
+
+void LiveDanmakuWindow::addNoReply(QString text)
+{
+    noReplyStrings.append(text);
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

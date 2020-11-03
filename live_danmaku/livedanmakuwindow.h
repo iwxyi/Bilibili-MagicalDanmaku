@@ -38,6 +38,7 @@
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
 #define DANMAKU_TRANS_ROLE Qt::UserRole+2
 #define DANMAKU_REPLY_ROLE Qt::UserRole+3
+#define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+4
 
 class LiveDanmakuWindow : public QWidget
 {
@@ -61,6 +62,7 @@ public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
     void slotOldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void setItemWidgetText(QListWidgetItem* item);
+    void highlightItemText(QListWidgetItem* item, bool recover = false);
     void resetItemsTextColor();
     void resetItemsText();
     void showMenu();
@@ -68,6 +70,7 @@ public slots:
     void startTranslate(QListWidgetItem* item);
     void setAIReply(bool reply);
     void startReply(QListWidgetItem* item);
+    void addNoReply(QString text);
 
 private:
     bool isItemExist(QListWidgetItem *item);
@@ -84,8 +87,10 @@ private:
     QColor nameColor;
     QColor msgColor;
     QColor bgColor;
+    QColor hlColor;
     bool autoTrans = true;
     bool aiReply = false;
+    QStringList noReplyStrings;
 
     int fontHeight;
     int lineSpacing;
