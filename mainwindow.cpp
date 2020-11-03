@@ -27,15 +27,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->refreshDanmakuCheck->setChecked(true);
 #endif
 
-    removeTimer = new QTimer(this);
-    removeTimer->setInterval(1000);
-    connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
 
     // 自动刷新是否启用
     bool autoRefresh = settings.value("danmaku/autoRefresh", true).toBool();
     ui->refreshDanmakuCheck->setChecked(autoRefresh);
 
     // 移除间隔
+    removeTimer = new QTimer(this);
+    removeTimer->setInterval(1000);
+    connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
+    removeTimer->start();
+
     this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20).toLongLong();
     ui->removeDanmakuIntervalSpin->setValue(static_cast<int>(removeDanmakuInterval));
     this->removeDanmakuInterval *= 1000;
@@ -150,7 +152,7 @@ void MainWindow::pullLiveDanmaku()
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
         QList<LiveDanmaku> lds;
         for (int i = 0; i < danmakus.size(); i++)
-            lds.append(LiveDanmaku::fromJson(danmakus.at(i).toObject()));
+            lds.append(LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject()));
         appendNewLiveDanmakus(lds);
     });
 }
@@ -230,7 +232,7 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
-//    qDebug() << "-----旧弹幕：" << danmaku.toString();
+    qDebug() << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
@@ -972,9 +974,13 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+
         qDebug() << "接收到送礼：" << username << giftName << num;
+        appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
+
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -991,7 +997,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "WELCOME_GUARD") // 舰长进入
     {
         QJsonObject data = json.value("data").toObject();
-        int uid = data.value("uid").toInt();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
         qDebug() << "舰长进入：" << username;
     }
@@ -1002,7 +1008,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "WELCOME") // 进入（不知道有没有包括舰长）
     {
         QJsonObject data = json.value("data").toObject();
-        int uid = data.value("uid").toInt();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
         qDebug() << "观众进入：" << username << isAdmin;
@@ -1010,8 +1016,11 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "INTERACT_WORD")
     {
         QJsonObject data = json.value("data").toObject();
-        int uid = data.value("uid").toInt();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << "观众进入：" << username;
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
+
     }
 }

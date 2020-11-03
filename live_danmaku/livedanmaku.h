@@ -7,6 +7,13 @@
 #include <QJsonValue>
 #include <QJsonObject>
 
+enum MessageType
+{
+    MSG_DANMAKU,
+    MSG_GIFT,
+    MSG_WELCOME
+};
+
 class LiveDanmaku
 {
 public:
@@ -14,12 +21,24 @@ public:
     {}
 
     LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time)
-        : nickname(nickname), text(text), uid(uid), timeline(time)
+        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time)
     {
 
     }
 
-    static LiveDanmaku fromJson(QJsonObject object)
+    LiveDanmaku(QString nickname, QString gift, int num, qint64 uid, QDateTime time)
+        : msgType(MSG_GIFT), nickname(nickname), giftName(gift), number(num), uid(uid), timeline(time)
+    {
+
+    }
+
+    LiveDanmaku(QString nickname, qint64 uid, QDateTime time)
+        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time)
+    {
+
+    }
+
+    static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
         danmaku.text = object.value("text").toString();
@@ -39,30 +58,71 @@ public:
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
         }
+        danmaku.giftName = object.value("giftName").toString();
+        danmaku.number = object.value("number").toInt();
+        danmaku.msgType = (MessageType)object.value("msgType").toInt();
         return danmaku;
     }
 
     QJsonObject toJson()
     {
         QJsonObject object;
-        object.insert("text", text);
-        object.insert("uid", uid);
-        object.insert("nickname", nickname);
-        object.insert("uname_color", uname_color);
-        object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
-        object.insert("isadmin", isadmin);
-        object.insert("vip", vip);
-        object.insert("svip", svip);
+        if (msgType == MSG_DANMAKU)
+        {
+            object.insert("text", text);
+            object.insert("uid", uid);
+            object.insert("nickname", nickname);
+            object.insert("uname_color", uname_color);
+            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
+            object.insert("isadmin", isadmin);
+            object.insert("vip", vip);
+            object.insert("svip", svip);
+        }
+        else if (msgType == MSG_GIFT)
+        {
+            object.insert("nickname", nickname);
+            object.insert("uid", uid);
+            object.insert("giftName", giftName);
+            object.insert("number", number);
+            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
+        }
+        else if (msgType == MSG_WELCOME)
+        {
+            object.insert("nickname", nickname);
+            object.insert("uid", uid);
+            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
+        }
+        object.insert("msgType", (int)msgType);
+
         return object;
     }
 
     QString toString() const
     {
-        return QString("%1(%3):“%2” %4")
-                .arg(nickname)
-                .arg(text)
-                .arg(uid)
-                .arg(timeline.toString("hh:mm:ss"));
+        if (msgType == MSG_DANMAKU)
+        {
+            return QString("%1(%3):“%2” %4")
+                    .arg(nickname)
+                    .arg(text)
+                    .arg(uid)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_GIFT)
+        {
+            return QString("%1(%3) => %2 × %4")
+                    .arg(nickname)
+                    .arg(giftName)
+                    .arg(uid)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_WELCOME)
+        {
+            return QString("%1(%2) come %3")
+                    .arg(nickname)
+                    .arg(uid)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        return "未知消息类型";
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -112,7 +172,24 @@ public:
         return false;
     }
 
+    MessageType getMsgType() const
+    {
+        return msgType;
+    }
+
+    QString getGiftName() const
+    {
+        return giftName;
+    }
+
+    int getNumber() const
+    {
+        return number;
+    }
+
 private:
+    MessageType msgType = MSG_DANMAKU;
+
     QString text;
     qint64 uid = 0; // 用户ID
     QString nickname;
@@ -136,6 +213,9 @@ private:
     qint64 check_info_ts;
     QString check_info_ct;
     int lpl = 0;
+
+    QString giftName;
+    int number = 0;
 };
 
 #endif // LIVEDANMAKU_H

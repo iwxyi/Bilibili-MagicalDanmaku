@@ -172,30 +172,33 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     setItemWidgetText(item);
 
-    QRegExp hei("（）\\(\\)"); // 带有特殊字符的黑名单
-    // 自动翻译
-    if (autoTrans)
+    if (danmaku.getMsgType() == MSG_DANMAKU)
     {
-        QString msg = danmaku.getText();
-        QRegExp riyu("[\u0800-\u4e00]+");
-        QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
-        QRegExp eeyu("[А-Яа-яЁё]+");
-        if (msg.indexOf(hei) == -1)
+        QRegExp hei("（）\\(\\)"); // 带有特殊字符的黑名单
+        // 自动翻译
+        if (autoTrans)
         {
-            if (msg.indexOf(riyu) != -1
-                    || msg.indexOf(hanyu) != -1
-                    || msg.indexOf(eeyu) != -1)
+            QString msg = danmaku.getText();
+            QRegExp riyu("[\u0800-\u4e00]+");
+            QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
+            QRegExp eeyu("[А-Яа-яЁё]+");
+            if (msg.indexOf(hei) == -1)
             {
-                qDebug() << "检测到外语，自动翻译";
-                startTranslate(item);
+                if (msg.indexOf(riyu) != -1
+                        || msg.indexOf(hanyu) != -1
+                        || msg.indexOf(eeyu) != -1)
+                {
+                    qDebug() << "检测到外语，自动翻译";
+                    startTranslate(item);
+                }
             }
         }
-    }
 
-    // AI回复
-    if (aiReply)
-    {
-        startReply(item);
+        // AI回复
+        if (aiReply)
+        {
+            startReply(item);
+        }
     }
 
     if (scrollEnd)
@@ -234,12 +237,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum();
 
-    auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     QString msg = danmaku.getText();
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
     QString reply = item->data(DANMAKU_REPLY_ROLE).toString();
-    if (msg.isEmpty()) // 翻译没有变化
-        return ;
 
     // 设置文字
     QString nameColorStr = danmaku.getUnameColor().isEmpty()
@@ -247,16 +248,34 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColorStr + "'>"
                        + danmaku.getNickname() + "</font> ";
-    QString text = nameText + danmaku.getText();
 
-    if (!trans.isEmpty() && trans != msg)
+    QString text;
+    MessageType msgType = danmaku.getMsgType();
+    if (msgType == MSG_DANMAKU)
     {
-        text = text + "（" + trans + "）";
+        text = nameText + danmaku.getText();
+
+        if (!trans.isEmpty() && trans != msg)
+        {
+            text = text + "（" + trans + "）";
+        }
+
+        if (!reply.isEmpty())
+        {
+            text = text + "<br/>" + "&nbsp;&nbsp;=> " + reply;
+        }
     }
-
-    if (!reply.isEmpty())
+    else if (msgType == MSG_GIFT)
     {
-        text = text + "<br/>" + "&nbsp;&nbsp;=> " + reply;
+        text = QString("感谢 %1 赠送 %2 × %3")
+                .arg(nameText)
+                .arg(danmaku.getGiftName())
+                .arg(danmaku.getNumber());
+    }
+    else if (msgType == MSG_WELCOME)
+    {
+        text = QString("欢迎 %1 进入直播间")
+                .arg(nameText);
     }
 
     label->setText(text);
@@ -292,8 +311,8 @@ void LiveDanmakuWindow::resetItemsText()
 void LiveDanmakuWindow::showMenu()
 {
     auto item = listWidget->currentItem();
-    auto danmaku = item ? LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
-    qDebug() << danmaku.toString();
+    auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    qDebug() << "菜单信息：" << danmaku.toString();
     QString msg = danmaku.getText();
 
     QMenu* menu = new QMenu(this);
@@ -444,7 +463,7 @@ void LiveDanmakuWindow::setAutoTranslate(bool trans)
 
 void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
 {
-    auto danmaku = LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+    auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
@@ -482,7 +501,7 @@ void LiveDanmakuWindow::setAIReply(bool reply)
 
 void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 {
-    auto danmaku = LiveDanmaku::fromJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+    auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
