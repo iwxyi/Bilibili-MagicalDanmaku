@@ -277,6 +277,12 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = QString("<font color='gray'>[进入]</font> %1 进入直播间")
                 .arg(nameText);
     }
+    else if (msgType == MSG_DIANGE)
+    {
+        text = QString("<font color='gray'>[点歌]</font> %1")
+                .arg(danmaku.getText());
+    }
+
 
     label->setText(text);
     label->adjustSize();

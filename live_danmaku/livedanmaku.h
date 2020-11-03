@@ -11,7 +11,8 @@ enum MessageType
 {
     MSG_DANMAKU,
     MSG_GIFT,
-    MSG_WELCOME
+    MSG_WELCOME,
+    MSG_DIANGE
 };
 
 class LiveDanmaku
@@ -34,6 +35,12 @@ public:
 
     LiveDanmaku(QString nickname, qint64 uid, QDateTime time)
         : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time)
+    {
+
+    }
+
+    LiveDanmaku(QString nickname, qint64 uid, QString song, QDateTime time)
+        : msgType(MSG_DIANGE), nickname(nickname), uid(uid), text(song), timeline(time)
     {
 
     }
@@ -73,7 +80,6 @@ public:
             object.insert("uid", uid);
             object.insert("nickname", nickname);
             object.insert("uname_color", uname_color);
-            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
             object.insert("isadmin", isadmin);
             object.insert("vip", vip);
             object.insert("svip", svip);
@@ -84,14 +90,19 @@ public:
             object.insert("uid", uid);
             object.insert("giftName", giftName);
             object.insert("number", number);
-            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         }
         else if (msgType == MSG_WELCOME)
         {
             object.insert("nickname", nickname);
             object.insert("uid", uid);
-            object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         }
+        else if (msgType == MSG_DIANGE)
+        {
+            object.insert("nickname", nickname);
+            object.insert("uid", uid);
+            object.insert("text", text);
+        }
+        object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
 
         return object;
@@ -121,6 +132,13 @@ public:
                     .arg(nickname)
                     .arg(uid)
                     .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_DIANGE)
+        {
+            return QString("[点歌]%1(%2) come %3")
+                                .arg(nickname)
+                                .arg(text)
+                                .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";
     }

@@ -59,6 +59,10 @@ MainWindow::MainWindow(QWidget *parent)
        clip->setText(text);
        qDebug() << "【点歌自动复制】" << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
+
+       QTimer::singleShot(100, [=]{
+           appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
+       });
     });
 
     // 自动翻译
@@ -356,10 +360,9 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
-    appendNewLiveDanmakus(QList<LiveDanmaku>{
-                LiveDanmaku("测试用户", text,
+    appendNewLiveDanmaku(LiveDanmaku("测试用户", text,
                             qrand() % 89999999 + 10000000,
-                             QDateTime::currentDateTime())});
+                             QDateTime::currentDateTime()));
 
     ui->testDanmakuEdit->setText("");
     ui->testDanmakuEdit->setFocus();
