@@ -386,8 +386,13 @@ void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_roomIdEdit_editingFinished()
 {
-    if (roomId == ui->roomIdEdit->text())
+    if (roomId == ui->roomIdEdit->text() || shortId == ui->roomIdEdit->text())
         return ;
+    if (socket)
+    {
+        if (socket->state() != QAbstractSocket::UnconnectedState)
+            socket->abort();
+    }
     roomId = ui->roomIdEdit->text();
     QString old = settings.value("danmaku/roomId", "").toString();
     if (roomId.isEmpty()||& old == roomId)
@@ -399,8 +404,6 @@ void MainWindow::on_roomIdEdit_editingFinished()
 #else
     if (socket)
     {
-        if (socket->state() != QAbstractSocket::UnconnectedState)
-            socket->abort();
         startConnectWS();
     }
 #endif
@@ -446,7 +449,7 @@ void MainWindow::on_SetBrowserDataButton_clicked()
 
 void MainWindow::on_SetBrowserHelpButton_clicked()
 {
-    QString steps;
+    QString steps = "发送弹幕前需按以下步骤注入登录信息：\n\n";
     steps += "步骤一：\n浏览器登录bilibili账号，并进入对应直播间\n\n";
     steps += "步骤二：\n按下F12（开发者调试工具），找到右边顶部的“Network”项\n\n";
     steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
@@ -627,6 +630,7 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::connected, this, [=]{
         qDebug() << "socket connected";
+        ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
         sendVeriPacket();
@@ -637,6 +641,8 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
         qDebug() << "disconnected";
+        ui->connectStateLabel->setText("状态：未连接");
+        ui->popularityLabel->setText("人气值：0");
 
         heartTimer->stop();
     });
@@ -656,6 +662,20 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
         qDebug() << "stateChanged" << state;
+        QString str = "未知";
+        if (state == QAbstractSocket::UnconnectedState)
+            str = "未连接";
+        else if (state == QAbstractSocket::ConnectingState)
+            str = "连接中";
+        else if (state == QAbstractSocket::ConnectedState)
+            str = "已连接";
+        else if (state == QAbstractSocket::BoundState)
+            str = "已绑定";
+        else if (state == QAbstractSocket::ClosingState)
+            str = "断开中";
+        else if (state == QAbstractSocket::ListeningState)
+            str = "监听中";
+        ui->connectStateLabel->setText(str);
     });
 
     heartTimer = new QTimer(this);
@@ -943,10 +963,10 @@ QString MainWindow::nicknameSimplify(QString nickname)
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
-    int operation = (message[8] << 24)
-            + (message[9] << 16)
-            + (message[10] << 8)
-            + (message[11]);
+    int operation = ((uchar)message[8] << 24)
+            + ((uchar)message[9] << 16)
+            + ((uchar)message[10] << 8)
+            + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
     SOCKET_DEB << "操作码=" << operation << "  正文=" << body;
 
@@ -965,11 +985,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     }
     else if (operation == HEARTBEAT_REPLY) // 心跳包回复（人气值）
     {
-        qint32 popularity = (body[0] << 24)
-                + (body[1] << 16)
-                + (body[2] << 8)
-                + body[3];
+        qint32 popularity = ((uchar)body[0] << 24)
+                + ((uchar)body[1] << 16)
+                + ((uchar)body[2] << 8)
+                + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
+        ui->popularityLabel->setText("人气值：" + QString::number(popularity));
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
     {
@@ -1118,6 +1139,10 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
+        QJsonObject data = json.value("data").toObject();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        QString username = data.value("username").toString();
+        qDebug() << username << "购买舰长";
 
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
@@ -1133,6 +1158,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
+        qint64 startTime = static_cast<qint64>(data.value("start_time").toDouble());
+        qint64 endTime = static_cast<qint64>(data.value("end_time").toDouble());
         qDebug() << "舰长进入：" << username;
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
@@ -1153,8 +1180,9 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        bool isadmin = data.value("isadmin").toBool();
         qDebug() << "观众进入：" << username;
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();

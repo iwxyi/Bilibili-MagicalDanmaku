@@ -47,6 +47,27 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_12">
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="connectStateLabel">
+            <property name="text">
+             <string>状态：未连接</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="popularityLabel">
+            <property name="text">
+             <string>人气值：0</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <property name="topMargin">
            <number>0</number>
@@ -84,6 +105,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QLabel" name="label_2">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔多久获取一次弹幕&lt;/p&gt;&lt;p&gt;现已废弃，改用WebSocket方案&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>弹幕获取间隔</string>
             </property>
@@ -137,6 +161,9 @@
           </property>
           <item>
            <widget class="QLabel" name="label_3">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;弹幕显示的时间，超时自动移除&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>弹幕超时间隔</string>
             </property>
@@ -180,6 +207,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="DiangeAutoCopyCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>点歌自动复制</string>
             </property>
@@ -194,6 +224,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="languageAutoTranslateCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动翻译常用外语弹幕&lt;/p&gt;&lt;p&gt;目前支持：英语、日语、俄语、韩语&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>外语自动翻译</string>
             </property>
@@ -208,6 +241,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="AIReplyCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;调用图灵机器人来进行AI回复&lt;/p&gt;&lt;p&gt;可作为对弹幕评论的参考内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>AI智能回复</string>
             </property>
@@ -237,7 +273,11 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLineEdit" name="testDanmakuEdit"/>
+           <widget class="QLineEdit" name="testDanmakuEdit">
+            <property name="placeholderText">
+             <string>任意内容，不会真正发送</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="testDanmakuButton">
@@ -309,7 +349,11 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLineEdit" name="SendMsgEdit"/>
+           <widget class="QLineEdit" name="SendMsgEdit">
+            <property name="placeholderText">
+             <string>请输入消息内容</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="SendMsgButton">
@@ -331,6 +375,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
            <widget class="QCheckBox" name="autoSendWelcomeCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送欢迎观众进入直播间的弹幕（除非在冷却）&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>欢迎进入</string>
             </property>
@@ -338,6 +385,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="autoSendThankCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送感谢送礼的弹幕&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>感谢送礼</string>
             </property>
@@ -358,6 +408,9 @@
           </item>
           <item>
            <widget class="QSpinBox" name="sendCDSpin">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连续两次自动发送弹幕的冷却时间&lt;/p&gt;&lt;p&gt;在此期间会无视进入直播间、送礼等&lt;/p&gt;&lt;p&gt;建议调高，避免被B站冻结发言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="suffix">
              <string>秒</string>
             </property>

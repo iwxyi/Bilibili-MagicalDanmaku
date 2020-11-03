@@ -17,10 +17,14 @@
 
 - 自动沙雕回复
 
-- 定时发送弹幕
+- 定时随机发送
+
+- 特别关心高亮
 
 
 
 > 参考资料：
 
-- 哔哩哔哩API：https://github.com/SocialSisterYi/bilibili-API-collect
+- socket连接：https://github.com/SocialSisterYi/bilibili-API-collect
+
+- COMMAND包：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95

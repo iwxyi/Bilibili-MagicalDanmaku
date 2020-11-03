@@ -12,7 +12,9 @@ enum MessageType
     MSG_DANMAKU,
     MSG_GIFT,
     MSG_WELCOME,
-    MSG_DIANGE
+    MSG_DIANGE,
+    MSG_GUARD_BUY,
+    MSG_WELCOME_GUARD,
 };
 
 class LiveDanmaku
@@ -33,14 +35,20 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QDateTime time)
-        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time)
+    LiveDanmaku(QString nickname, qint64 uid, QDateTime time, bool isAdmin)
+        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time), isadmin(isAdmin)
     {
 
     }
 
     LiveDanmaku(QString nickname, qint64 uid, QString song, QDateTime time)
         : msgType(MSG_DIANGE), nickname(nickname), uid(uid), text(song), timeline(time)
+    {
+
+    }
+
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num)
+        : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime())
     {
 
     }
@@ -74,32 +82,27 @@ public:
     QJsonObject toJson()
     {
         QJsonObject object;
+        object.insert("nickname", nickname);
+        object.insert("uid", uid);
         if (msgType == MSG_DANMAKU)
         {
             object.insert("text", text);
-            object.insert("uid", uid);
-            object.insert("nickname", nickname);
             object.insert("uname_color", uname_color);
             object.insert("isadmin", isadmin);
             object.insert("vip", vip);
             object.insert("svip", svip);
         }
-        else if (msgType == MSG_GIFT)
+        else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
-            object.insert("nickname", nickname);
-            object.insert("uid", uid);
             object.insert("giftName", giftName);
             object.insert("number", number);
         }
         else if (msgType == MSG_WELCOME)
         {
-            object.insert("nickname", nickname);
-            object.insert("uid", uid);
+            object.insert("isadmin", isadmin);
         }
         else if (msgType == MSG_DIANGE)
         {
-            object.insert("nickname", nickname);
-            object.insert("uid", uid);
             object.insert("text", text);
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
@@ -118,7 +121,7 @@ public:
                     .arg(uid)
                     .arg(timeline.toString("hh:mm:ss"));
         }
-        else if (msgType == MSG_GIFT)
+        else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
             return QString("%1(%3) => %2 × %4")
                     .arg(nickname)

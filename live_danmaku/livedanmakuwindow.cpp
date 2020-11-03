@@ -295,10 +295,18 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
     }
+    else if (msgType == MSG_GUARD_BUY)
+    {
+        text = QString("<font color='gray'>[上船]</font> %1 购买 %2 × %3")
+                .arg(nameText)
+                .arg(danmaku.getGiftName())
+                .arg(danmaku.getNumber());
+    }
     else if (msgType == MSG_WELCOME)
     {
-        text = QString("<font color='gray'>[进入]</font> %1 进入直播间")
-                .arg(nameText);
+        text = QString("<font color='gray'>[进入]%2</font> %1 进入直播间")
+                .arg(nameText)
+                .arg(danmaku.isAdmin() ? " 舰长" : "");
     }
     else if (msgType == MSG_DIANGE)
     {
