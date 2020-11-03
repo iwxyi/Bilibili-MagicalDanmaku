@@ -3,7 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , ui(new Ui::MainWindow), settings("settings.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
 
@@ -605,6 +605,7 @@ void MainWindow::on_addTaskButton_clicked()
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 {
     qDebug() << "error" << socket->errorString();
+    statusLabel->setText(socket->errorString());
 }
 
 void MainWindow::initWS()
@@ -901,13 +902,21 @@ QString MainWindow::nicknameSimplify(QString nickname)
     }
 
     // xxx的xxx
-    QRegularExpression re("^(.+)[的之](.{2,})$");
+    QRegularExpression deRe("^(.+)[的之の](.{2,})$");
     QRegularExpressionMatch match;
-    if (simp.indexOf(re, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2))
+    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length())
     {
         simp = match.capturedTexts().at(2);
     }
 
+    // 一大串中文en
+    QRegularExpression ceRe("^([\u4e00-\u9fa5]{2,})(\\w+)$");
+    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
+    {
+        simp = match.capturedTexts().at(1);
+    }
+
+    // 没有取名字的，就不需要欢迎了
     QRegularExpression defaultRe("^bili_\\d+$");
     if (simp.indexOf(defaultRe) > -1)
     {
@@ -1002,6 +1011,18 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
                 delete[] ba.data();
                 delete[] unc.data();
+            }
+            else if (protover == 0)
+            {
+                QJsonDocument document = QJsonDocument::fromJson(body, &error);
+                if (error.error != QJsonParseError::NoError)
+                {
+                    qDebug() << "body转json出错：" << error.errorString();
+                    return ;
+                }
+                QJsonObject json = document.object();
+                QString cmd = json.value("cmd").toString();
+                SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
             }
             else
             {

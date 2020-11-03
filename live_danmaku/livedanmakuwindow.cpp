@@ -1,6 +1,6 @@
 #include "livedanmakuwindow.h"
 
-LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr)
+LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("实时弹幕");
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
