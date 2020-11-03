@@ -284,10 +284,13 @@ void MainWindow::sendMsg(QString msg)
             return ;
         }
         QJsonObject object = document.object();
-        QString msg = object.value("message").toString();
+        QString errorMsg = object.value("message").toString();
         statusLabel->setText("");
-        if (!msg.isEmpty())
-            statusLabel->setText(msg);
+        if (!errorMsg.isEmpty())
+        {
+            statusLabel->setText(errorMsg);
+            qDebug() << errorMsg << msg;
+        }
     });
 
     manager->post(*request, ba);
@@ -965,7 +968,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 }
 
 /**
- * 数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest#tagDataPackage
+ * 数据包解析： https://segmentfault.com/a/1190000017328813?utm_source=tag-newest#tagDataPackage
  */
 void MainWindow::handleMessage(QJsonObject json)
 {
@@ -993,10 +996,25 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        QString coinType = data.value("coin_type").toString();
+        int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << "接收到送礼：" << username << giftName << num;
+        qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
-        sendMsg("感谢" + username + "赠送的" + giftName + "~~~", true);
+        QString msg = "感谢" + username + "赠送的" + giftName + "~~~";
+        if (coinType == "gold")
+        {
+            int yuan = totalCoin / 1000;
+            if (yuan >= 9)
+            {
+                msg = "哇，感谢" + username + "赠送的" + giftName + "！";
+            }
+            else if (yuan >= 70)
+            {
+                msg = "哇，感谢" + username + "赠送的" + giftName + "！！！";
+            }
+        }
+        sendMsg(msg, true);
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
