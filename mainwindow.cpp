@@ -869,6 +869,56 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba)
     return QByteArray::fromRawData((char*)target, si);
 }
 
+/**
+ * 一个智能的用户昵称转简单称呼
+ */
+QString MainWindow::nicknameSimplify(QString nickname)
+{
+    QString simp = nickname;
+
+    QStringList special{"~", "丶", "°", "゛", "-", "_"};
+    QStringList starts{"我叫", "叫我", "一只", "是个", "是"};
+    QStringList ends{"er", "啊", "呢", "哦", "呐"};
+    starts += special;
+    ends += special;
+
+    foreach (auto start, starts)
+    {
+        if (simp.startsWith(start))
+        {
+            simp.remove(0, start.length());
+            break;
+        }
+    }
+
+    foreach (auto end, ends)
+    {
+        if (simp.endsWith(end))
+        {
+            simp.remove(simp.length() - ends.length(), ends.length());
+            break;
+        }
+    }
+
+    // xxx的xxx
+    QRegularExpression re("^(.+)[的之](.{2,})$");
+    QRegularExpressionMatch match;
+    if (simp.indexOf(re, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2))
+    {
+        simp = match.capturedTexts().at(2);
+    }
+
+    QRegularExpression defaultRe("^bili_\\d+$");
+    if (simp.indexOf(defaultRe) > -1)
+    {
+        return "";
+    }
+
+    if (simp.isEmpty())
+        return nickname;
+    return simp;
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = (message[8] << 24)
@@ -991,7 +1041,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = user[1].toString();
 
         // !弹幕的时间戳是13位，其他的是10位！
-        qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp) << "  时间：" << timestamp;
+        qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -1005,7 +1055,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType << "  时间：" << timestamp;
+        qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1026,7 +1076,11 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }
         if (!justStart && ui->autoSendThankCheck->isChecked())
-            sendAutoMsg(msg.arg(username).arg(giftName));
+        {
+            QString nick = nicknameSimplify(username);
+            if (!nick.isEmpty())
+                sendAutoMsg(msg.arg(nick).arg(giftName));
+        }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -1065,7 +1119,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
-        qDebug() << "观众进入：" << username << "  时间：" << timestamp;
+        qDebug() << "观众进入：" << username;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
@@ -1080,7 +1134,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ;
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            sendAutoMsg(msg.arg(username));
+            QString nick = nicknameSimplify(username);
+            if (!nick.isEmpty())
+                sendAutoMsg(msg.arg(nick));
         }
     }
 }

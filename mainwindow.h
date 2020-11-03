@@ -170,6 +170,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba);
+    QString nicknameSimplify(QString nickname);
 
 private:
     Ui::MainWindow *ui;
