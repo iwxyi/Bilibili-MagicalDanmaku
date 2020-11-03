@@ -91,6 +91,7 @@ private:
     bool autoTrans = true;
     bool aiReply = false;
     QStringList noReplyStrings;
+    QList<qint64> careUsers;
 
     int fontHeight;
     int lineSpacing;

@@ -22,8 +22,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     listWidget->setStyleSheet("QListWidget{ background: transparent; border: none; }");
     listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setWordWrap(true);
-    listWidget->setSpacing(4);
+    listWidget->setSpacing(1);
+    listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
+    // 发送消息
     auto returnPrevWindow = [=]{
 #ifdef Q_OS_WIN32
         if (this->prevWindow)
@@ -68,10 +70,18 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     if (!settings.value("livedanmakuwindow/sendEditShortcut", false).toBool())
         editShortcut->setEnabled(false);
 
+    // 颜色
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
     hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
+
+    // 特别关心
+    QStringList usersS = settings.value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersS)
+    {
+        careUsers.append(s.toLongLong());
+    }
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -151,7 +161,7 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-            >= listWidget->verticalScrollBar()->maximum();
+            >= listWidget->verticalScrollBar()->maximum()-5;
     QString nameColor = danmaku.getUnameColor().isEmpty()
             ? QVariant(msgColor).toString()
             : danmaku.getUnameColor();
@@ -164,7 +174,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
     listWidget->setItemWidget(item, label);
-    listWidget->scrollToBottom();
 
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
@@ -208,7 +217,9 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     noReplyStrings.clear();
 
     if (scrollEnd)
+    {
         listWidget->scrollToBottom();
+    }
 }
 
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
@@ -239,14 +250,17 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     auto label = qobject_cast<QLabel*>(widget);
     if (!label)
         return ;
+    auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     QPalette pa(label->palette());
-    pa.setColor(QPalette::Text, msgColor);
+    QColor c = msgColor;
+    if (careUsers.contains(danmaku.getUid()))
+        c = hlColor;
+    pa.setColor(QPalette::Text, c);
     label->setPalette(pa);
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-            >= listWidget->verticalScrollBar()->maximum();
+            >= listWidget->verticalScrollBar()->maximum() - 5;
 
-    auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     QString msg = danmaku.getText();
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
     QString reply = item->data(DANMAKU_REPLY_ROLE).toString();
@@ -291,7 +305,6 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = QString("<font color='gray'>[点歌]</font> %1")
                 .arg(danmaku.getText());
     }
-
 
     label->setText(text);
     label->adjustSize();
@@ -363,6 +376,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
+    QAction* actionAddCare = new QAction("添加特别关心", this);
     QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
     QAction* actionReply = new QAction("AI回复", this);
@@ -380,11 +394,15 @@ void LiveDanmakuWindow::showMenu()
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
     actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
+    if (danmaku.getUid() != 0 && careUsers.contains(danmaku.getUid()))
+        actionAddCare->setText("移除特别关心");
 
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
     menu->addAction(actionBgColor);
     menu->addAction(actionHlColor);
+    menu->addSeparator();
+    menu->addAction(actionAddCare);
     menu->addSeparator();
     menu->addAction(actionSearch);
     menu->addAction(actionTranslate);
@@ -399,6 +417,7 @@ void LiveDanmakuWindow::showMenu()
 
     if (!item)
     {
+        actionAddCare->setEnabled(false);
         actionCopy->setEnabled(false);
         actionSearch->setEnabled(false);
         actionTranslate->setEnabled(false);
@@ -445,6 +464,26 @@ void LiveDanmakuWindow::showMenu()
             settings.setValue("livedanmakuwindow/hlColor", hlColor = c);
             resetItemsTextColor();
         }
+    });
+    connect(actionAddCare, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 复制
+        if (careUsers.contains(danmaku.getUid()))
+        {
+            careUsers.removeOne(danmaku.getUid());
+            setItemWidgetText(item);
+        }
+        else
+        {
+            careUsers.append(danmaku.getUid());
+            highlightItemText(item);
+        }
+        qDebug() << "当前特别关心：" << careUsers;
+        QStringList ress;
+        foreach (qint64 uid, careUsers)
+            ress << QString::number(uid);
+        settings.setValue("danmaku/careUsers", ress.join(";"));
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

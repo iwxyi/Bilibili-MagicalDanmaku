@@ -369,8 +369,9 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
-    appendNewLiveDanmaku(LiveDanmaku("测试用户", text,
-                            qrand() % 89999999 + 10000000,
+    int r = qrand() % 7 + 1;
+    appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
+                            10000+r,
                              QDateTime::currentDateTime()));
 
     ui->testDanmakuEdit->setText("");
