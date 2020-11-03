@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
        QTimer::singleShot(100, [=]{
            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
        });
+       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
     });
 
     // 自动翻译

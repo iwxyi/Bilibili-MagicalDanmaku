@@ -38,6 +38,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    struct Diange
+    {
+        QString nickname;
+        qint64 uid;
+        QString name;
+        QDateTime time;
+    };
+
     struct HostInfo
     {
         QString host;
@@ -189,6 +197,7 @@ private:
     qint64 removeDanmakuInterval = 20000;
 
     bool diangeAutoCopy = false;
+    QList<Diange> diangeHistory;
 
     QString browserCookie;
     QString browserData;
