@@ -911,7 +911,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QString simp = nickname;
 
     QStringList special{"~", "丶", "°", "゛", "-", "_"};
-    QStringList starts{"我叫", "叫我", "一只", "是个", "是"};
+    QStringList starts{"我叫", "叫我", "一只", "是个", "是", "原来是"};
     QStringList ends{"er", "啊", "呢", "哦", "呐"};
     starts += special;
     ends += special;
@@ -944,7 +944,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 一大串中文en
     QRegularExpression ceRe("^([\u4e00-\u9fa5]{2,})(\\w+)$");
-    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
+    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
     {
         simp = match.capturedTexts().at(1);
     }
