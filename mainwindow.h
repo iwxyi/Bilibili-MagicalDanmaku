@@ -130,11 +130,18 @@ private slots:
 
     void sendMsg(QString msg);
 
-    void sendMsg(QString msg, bool blockTooFast);
+    void sendAutoMsg(QString msg);
 
     void slotSocketError(QAbstractSocket::SocketError error);
 
     void slotBinaryMessageReceived(const QByteArray &message);
+
+
+    void on_autoSendWelcomeCheck_stateChanged(int arg1);
+
+    void on_autoSendThankCheck_stateChanged(int arg1);
+
+    void on_sendCDSpin_valueChanged(int arg1);
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
@@ -164,6 +171,7 @@ private:
     Ui::MainWindow *ui;
     QSettings settings;
     QString roomId;
+    bool justStart = true; // 启动10秒内不进行发送，避免一些误会
 
     QList<LiveDanmaku> roomDanmakus;
     LiveDanmakuWindow* danmakuWindow = nullptr;

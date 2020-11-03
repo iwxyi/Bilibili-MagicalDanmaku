@@ -86,6 +86,11 @@ MainWindow::MainWindow(QWidget *parent)
     srand((unsigned)time(0));
     restoreTaskList();
 
+    // 自动发送
+    ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
+    ui->autoSendThankCheck->setChecked(settings.value("danmaku/sendThank", false).toBool());
+    ui->sendCDSpin->setValue(settings.value("danmaku/sendCD", 5).toInt());
+
 #ifndef SOCKET_MODE
 
 #else
@@ -112,6 +117,9 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "直接解压：" << zlibUncompress(ba);
     }*/
 
+    QTimer::singleShot(10000, [=]{
+        justStart = false;
+    });
 }
 
 MainWindow::~MainWindow()
@@ -296,21 +304,15 @@ void MainWindow::sendMsg(QString msg)
     manager->post(*request, ba);
 }
 
-void MainWindow::sendMsg(QString msg, bool blockTooFast)
+void MainWindow::sendAutoMsg(QString msg)
 {
+    // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
-    if (!blockTooFast)
-    {
-        sendMsg(msg);
-    }
-    else
-    {
-        // 避免太频繁发消息
-        qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-        if (timestamp - prevTimestamp < 5000)
-            return ;
-        sendMsg(msg);
-    }
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = ui->sendCDSpin->value() * 1000;
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    sendMsg(msg);
 }
 
 /**
@@ -1014,7 +1016,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 msg = "哇，感谢" + username + "赠送的" + giftName + "！！！";
             }
         }
-        sendMsg(msg, true);
+        if (!justStart && ui->autoSendThankCheck->isChecked())
+            sendAutoMsg(msg);
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -1052,9 +1055,24 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qint64 timestamp = static_cast<qint64>(data.value("Ftimestamp").toDouble());
         qDebug() << "观众进入：" << username;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
-        sendMsg("欢迎 " + username + " ~~~", true);
+        if (!justStart && ui->autoSendWelcomeCheck->isChecked())
+            sendAutoMsg("欢迎 " + username + " ~~~");
     }
+}
+void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
+{
+    settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
+}
+
+void MainWindow::on_autoSendThankCheck_stateChanged(int arg1)
+{
+    settings.setValue("danmaku/sendThank", ui->autoSendThankCheck->isChecked());
+}
+
+void MainWindow::on_sendCDSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/sendCD", ui->sendCDSpin->value());
 }
