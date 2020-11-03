@@ -10,6 +10,8 @@ CONFIG += c++11
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
+RC_FILE += resource.rc
+
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
@@ -49,6 +51,7 @@ HEADERS += \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
     mainwindow.h \
+    resource.rc \
     taskwidget.h \
     utils/fileutil.h \
     utils/netutil.h \
@@ -75,4 +78,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-	README.md \
+	README.md \ \
+    appicon.ico
