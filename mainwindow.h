@@ -130,6 +130,8 @@ private slots:
 
     void sendMsg(QString msg);
 
+    void sendMsg(QString msg, bool blockTooFast);
+
     void slotSocketError(QAbstractSocket::SocketError error);
 
     void slotBinaryMessageReceived(const QByteArray &message);

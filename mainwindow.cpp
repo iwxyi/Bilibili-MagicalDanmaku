@@ -39,8 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
     removeTimer->start();
 
     this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20).toLongLong();
-    ui->removeDanmakuIntervalSpin->setValue(static_cast<int>(removeDanmakuInterval));
-    this->removeDanmakuInterval *= 1000;
+    ui->removeDanmakuIntervalSpin->setValue(static_cast<int>(removeDanmakuInterval)); // 自动引发改变事件
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -240,7 +239,7 @@ void MainWindow::sendMsg(QString msg)
 {
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
-        QMessageBox::warning(this, "无法发送弹幕", "未设置用户信息，请点击【弹幕-帮助】查看操作");
+        statusLabel->setText("未设置Cookie信息");
         return ;
     }
     if (msg.isEmpty() || roomId.isEmpty())
@@ -292,6 +291,23 @@ void MainWindow::sendMsg(QString msg)
     });
 
     manager->post(*request, ba);
+}
+
+void MainWindow::sendMsg(QString msg, bool blockTooFast)
+{
+    static qint64 prevTimestamp = 0;
+    if (!blockTooFast)
+    {
+        sendMsg(msg);
+    }
+    else
+    {
+        // 避免太频繁发消息
+        qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+        if (timestamp - prevTimestamp < 5000)
+            return ;
+        sendMsg(msg);
+    }
 }
 
 /**
@@ -980,7 +996,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         qDebug() << "接收到送礼：" << username << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
-
+        sendMsg("感谢" + username + "赠送的" + giftName + "~~~", true);
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -1021,6 +1037,6 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << "观众进入：" << username;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
-
+        sendMsg("欢迎 " + username + " ~~~", true);
     }
 }
