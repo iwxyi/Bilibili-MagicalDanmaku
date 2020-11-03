@@ -38,8 +38,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    this->removeDanmakuInterval = settings.value("danmaku/removeInterval", 20).toLongLong();
-    ui->removeDanmakuIntervalSpin->setValue(static_cast<int>(removeDanmakuInterval)); // 自动引发改变事件
+    int removeIv = settings.value("danmaku/removeInterval", 20).toLongLong();
+    ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
+    this->removeDanmakuInterval = removeIv * 1000;
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -235,13 +236,13 @@ void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 
 void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 {
-    qDebug() << "+++++新弹幕：" <<danmaku.toString();
+//    qDebug() << "+++++新弹幕：" <<danmaku.toString();
     emit signalNewDanmaku(danmaku);
 }
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
-    qDebug() << "-----旧弹幕：" << danmaku.toString();
+//    qDebug() << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
@@ -910,7 +911,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         else
         {
             short protover = (message[6]<<8) + message[7];
-            qDebug() << "协议版本=" << protover;
+            SOCKET_DEB << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
                 QFile writeFile("receive.txt");
@@ -989,8 +990,9 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
 
-        qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromSecsSinceEpoch(timestamp);
-        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
+        // !弹幕的时间戳是13位，其他的是10位！
+        qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp) << "  时间：" << timestamp;
+        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1003,7 +1005,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
+        qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType << "  时间：" << timestamp;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1062,8 +1064,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
-        qint64 timestamp = static_cast<qint64>(data.value("Ftimestamp").toDouble());
-        qDebug() << "观众进入：" << username;
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qDebug() << "观众进入：" << username << "  时间：" << timestamp;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {

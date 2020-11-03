@@ -174,7 +174,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     if (danmaku.getMsgType() == MSG_DANMAKU)
     {
-        QRegExp hei("（）\\(\\)"); // 带有特殊字符的黑名单
+        QRegExp hei("（）\\(\\)~"); // 带有特殊字符的黑名单
         // 自动翻译
         if (autoTrans)
         {
@@ -267,14 +267,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GIFT)
     {
-        text = QString("[送礼] %1 赠送 %2 × %3")
+        text = QString("<font color='gray'>[送礼]</font> %1 赠送 %2 × %3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
     }
     else if (msgType == MSG_WELCOME)
     {
-        text = QString("[进入] %1 进入直播间")
+        text = QString("<font color='gray'>[进入]</font> %1 进入直播间")
                 .arg(nameText);
     }
 
