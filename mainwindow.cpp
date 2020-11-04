@@ -1061,7 +1061,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
-                SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
+                if (cmd != "ROOM_RANK")
+                    SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
             }
             else
             {
@@ -1089,7 +1090,12 @@ void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
     qDebug() << ">消息命令：" << cmd;
-    if (cmd == "DANMU_MSG") // 收到弹幕
+    if (cmd == "PREPARING") // 下播
+    {
+        QString roomId = json.value("roomid").toString();
+
+    }
+    else if (cmd == "DANMU_MSG") // 收到弹幕
     {
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
