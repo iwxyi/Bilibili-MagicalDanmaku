@@ -23,7 +23,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setWordWrap(true);
-    listWidget->setSpacing(4);
+    listWidget->setSpacing(0);
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
     // 发送消息后返回原窗口
@@ -160,6 +160,7 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
             continue;
         widget->setFixedWidth(w);
         widget->adjustSize();
+        widget->resize(widget->width(), widget->height() + listItemSpacing);
         item->setSizeHint(widget->size());
     }
 }
@@ -254,17 +255,39 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
         {
             auto item = listWidget->item(i);
             auto widget = listWidget->itemWidget(item);
-            listWidget->removeItemWidget(item);
+
+            QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
+            ani->setStartValue(widget->size());
+            ani->setEndValue(QSize(widget->width(), 0));
+            ani->setDuration(300);
+            ani->setEasingCurve(QEasingCurve::InOutQuad);
+            connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
+                item->setSizeHint(val.toSize());
+            });
+            connect(ani, &QPropertyAnimation::finished, widget, [=]{
+                bool same = (item == listWidget->currentItem());
+                bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+                        >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+                listWidget->removeItemWidget(item);
+                listWidget->takeItem(i);
+                widget->deleteLater();
+                if (same)
+                    listWidget->clearSelection();
+                if (scrollEnd)
+                    listWidget->scrollToBottom();
+            });
+            ani->start();
+            /*listWidget->removeItemWidget(item);
             listWidget->takeItem(i);
-            widget->deleteLater();
+            widget->deleteLater();*/
             if (item == currentItem)
                 listWidget->clearSelection();
             break;
         }
     }
 
-    if (scrollEnd)
-        listWidget->scrollToBottom();
+//    if (scrollEnd)
+//        listWidget->scrollToBottom();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
@@ -341,6 +364,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     label->setText(text);
     label->adjustSize();
+    label->resize(label->width(), label->height() + listItemSpacing);
     item->setSizeHint(label->size());
 
     if (scrollEnd)

@@ -25,6 +25,7 @@
 #include <QLineEdit>
 #include <QCryptographicHash>
 #include <QScrollBar>
+#include <QPropertyAnimation>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -99,6 +100,7 @@ private:
     int boundaryWidth = 8;
     int boundaryShowed = 2;
     QPoint pressPos;
+    int listItemSpacing = 4;
 };
 
 #endif // LIVEDANMAKUWINDOW_H
