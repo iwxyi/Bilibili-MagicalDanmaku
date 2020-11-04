@@ -419,6 +419,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     {
         if (socket->state() != QAbstractSocket::UnconnectedState)
             socket->abort();
+        liveStatus = false;
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
@@ -1151,6 +1152,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
                 sendMsg(text);
             ui->popularityLabel->setText("已开播");
+            liveStatus = true;
         }
     }
     else if (cmd == "PREPARING") // 下播
@@ -1162,6 +1164,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
                 sendMsg(text);
             ui->popularityLabel->setText("已下播");
+            liveStatus = false;
         }
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
