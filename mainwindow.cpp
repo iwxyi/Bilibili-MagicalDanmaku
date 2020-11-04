@@ -100,6 +100,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
     ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
 
+    // 开播
+    ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
+    ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
+
 #ifndef SOCKET_MODE
 
 #else
@@ -324,6 +328,9 @@ void MainWindow::sendMsg(QString msg)
 
 void MainWindow::sendAutoMsg(QString msg)
 {
+    if (!living) // 不在直播中
+        return ;
+
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -519,6 +526,8 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
+        if (!living) // 没有开播，不进行定时任务
+            return ;
         sendMsg(msg);
     });
 
@@ -1090,10 +1099,25 @@ void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
     qDebug() << ">消息命令：" << cmd;
-    if (cmd == "PREPARING") // 下播
+    if (cmd == "LIVE") // 开播？
     {
         QString roomId = json.value("roomid").toString();
-
+//        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
+        {
+            QString text = ui->startLiveWordsEdit->text();
+            if (!text.trimmed().isEmpty())
+                sendMsg(text);
+        }
+    }
+    else if (cmd == "PREPARING") // 下播
+    {
+        QString roomId = json.value("roomid").toString();
+        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
+        {
+            QString text = ui->endLiveWordsEdit->text();
+            if (!text.trimmed().isEmpty())
+                sendMsg(text);
+        }
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
@@ -1238,4 +1262,14 @@ void MainWindow::on_autoWelcomeWordsEdit_textChanged()
 void MainWindow::on_autoThankWordsEdit_textChanged()
 {
     settings.setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
+}
+
+void MainWindow::on_startLiveWordsEdit_editingFinished()
+{
+    settings.setValue("live/startWords", ui->startLiveWordsEdit->text());
+}
+
+void MainWindow::on_endLiveWordsEdit_editingFinished()
+{
+    settings.setValue("live/endWords", ui->endLiveWordsEdit->text());
 }

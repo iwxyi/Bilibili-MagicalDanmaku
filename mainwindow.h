@@ -155,6 +155,10 @@ private slots:
 
     void on_autoThankWordsEdit_textChanged();
 
+    void on_startLiveWordsEdit_editingFinished();
+
+    void on_endLiveWordsEdit_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -185,6 +189,7 @@ private:
     Ui::MainWindow *ui;
     QSettings settings;
     QString roomId;
+    bool living = true; // 是否正在直播
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
 
     QList<LiveDanmaku> roomDanmakus;
