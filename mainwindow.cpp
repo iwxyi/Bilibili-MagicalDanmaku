@@ -103,6 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
+    ui->startLiveSendCheck->setChecked(settings.value("live/startSend").toBool());
 
 #ifndef SOCKET_MODE
 
@@ -154,6 +155,22 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     if (danmakuWindow)
         danmakuWindow->deleteLater();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+
+    if (!coverPixmap.isNull())
+    {
+        QPixmap pixmap = coverPixmap;
+        int w = ui->roomCoverLabel->width();
+        if (w > ui->tabWidget->contentsRect().width())
+            w = ui->tabWidget->contentsRect().width();
+        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+        ui->roomCoverLabel->setPixmap(pixmap);
+        ui->roomCoverLabel->setMinimumSize(1, 1);
+    }
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -328,7 +345,7 @@ void MainWindow::sendMsg(QString msg)
 
 void MainWindow::sendAutoMsg(QString msg)
 {
-    if (!living) // 不在直播中
+    if (!liveStatus) // 不在直播中
         return ;
 
     // 避免太频繁发消息
@@ -404,9 +421,6 @@ void MainWindow::on_roomIdEdit_editingFinished()
             socket->abort();
     }
     roomId = ui->roomIdEdit->text();
-    QString old = settings.value("danmaku/roomId", "").toString();
-    if (roomId.isEmpty()||& old == roomId)
-        return ;
     settings.setValue("danmaku/roomId", roomId);
 #ifndef SOCKET_MODE
     firstPullDanmaku = true;
@@ -526,7 +540,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
-        if (!living) // 没有开播，不进行定时任务
+        if (!liveStatus) // 没有开播，不进行定时任务
             return ;
         sendMsg(msg);
     });
@@ -733,11 +747,11 @@ void MainWindow::getRoomInfo()
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-//    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -757,11 +771,39 @@ void MainWindow::getRoomInfo()
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
         uid = QString::number(roomInfo.value("uid").toInt());
+        liveStatus = roomInfo.value("live_status").toInt();
         qDebug() << "getRoomInfo: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << uid;
-
+        if (!liveStatus)
+            ui->popularityLabel->setText("未开播");
+        else
+            ui->popularityLabel->setText("已开播");
         getDanmuInfo();
+
+        roomName = roomInfo.value("title").toString();
+        setWindowTitle(QApplication::applicationName() + " - " + roomName);
+        ui->roomNameLabel->setText(roomName);
+        QString coverUrl = roomInfo.value("cover").toString();
+
+        QNetworkAccessManager manager;
+        QEventLoop loop;
+        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(coverUrl)));
+        //请求结束并下载完成后，退出子事件循环
+        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        //开启子事件循环
+        loop.exec();
+        QByteArray jpegData = reply1->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        coverPixmap = pixmap;
+        int w = ui->roomCoverLabel->width();
+        if (w > ui->tabWidget->contentsRect().width())
+            w = ui->tabWidget->contentsRect().width();
+        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+        qDebug() << "当前大小：" << pixmap.size();
+        ui->roomCoverLabel->setPixmap(pixmap);
+        ui->roomCoverLabel->setMinimumSize(1, 1);
     });
     manager->get(*request);
 }
@@ -1002,7 +1044,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
-        ui->popularityLabel->setText("人气值：" + QString::number(popularity));
+        if (liveStatus)
+            ui->popularityLabel->setText("人气值：" + QString::number(popularity));
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
     {
@@ -1105,8 +1148,9 @@ void MainWindow::handleMessage(QJsonObject json)
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->startLiveWordsEdit->text();
-            if (!text.trimmed().isEmpty())
+            if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
                 sendMsg(text);
+            ui->popularityLabel->setText("已开播");
         }
     }
     else if (cmd == "PREPARING") // 下播
@@ -1115,8 +1159,9 @@ void MainWindow::handleMessage(QJsonObject json)
         if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->endLiveWordsEdit->text();
-            if (!text.trimmed().isEmpty())
+            if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
                 sendMsg(text);
+            ui->popularityLabel->setText("已下播");
         }
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
@@ -1272,4 +1317,9 @@ void MainWindow::on_startLiveWordsEdit_editingFinished()
 void MainWindow::on_endLiveWordsEdit_editingFinished()
 {
     settings.setValue("live/endWords", ui->endLiveWordsEdit->text());
+}
+
+void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
+{
+    settings.setValue("live/startSend", ui->startLiveSendCheck->isChecked());
 }

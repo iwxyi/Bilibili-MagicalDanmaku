@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("LanYiXi");
     QCoreApplication::setOrganizationDomain("iwxyi.com");
-    QCoreApplication::setApplicationName("BilibiliLiveDanmaku");
+    QCoreApplication::setApplicationName("神奇弹幕");
 
     MainWindow w;
     w.show();

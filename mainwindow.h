@@ -88,6 +88,7 @@ public:
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 signals:
     void signalNewDanmaku(LiveDanmaku danmaku);
@@ -159,6 +160,8 @@ private slots:
 
     void on_endLiveWordsEdit_editingFinished();
 
+    void on_startLiveSendCheck_stateChanged(int arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -189,7 +192,9 @@ private:
     Ui::MainWindow *ui;
     QSettings settings;
     QString roomId;
-    bool living = true; // 是否正在直播
+    bool liveStatus = true; // 是否正在直播
+    QString roomName;
+    QPixmap coverPixmap;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
 
     QList<LiveDanmaku> roomDanmakus;
