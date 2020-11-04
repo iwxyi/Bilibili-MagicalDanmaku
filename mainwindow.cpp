@@ -76,10 +76,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->AIReplyCheck->setChecked(reply);
 
     // 实时弹幕
+    danmakuWindow = new LiveDanmakuWindow(this);
+    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+    connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+    connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
+    danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+    danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+
     if (settings.value("danmaku/liveWindow", false).toBool())
-    {
-        on_showLiveDanmakuButton_clicked();
-    }
+        danmakuWindow->show();
+    else
+        danmakuWindow->hide();
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -363,27 +370,17 @@ void MainWindow::sendAutoMsg(QString msg)
  */
 void MainWindow::on_showLiveDanmakuButton_clicked()
 {
-    bool hidding = (danmakuWindow == nullptr || danmakuWindow->isHidden());
-    if (danmakuWindow == nullptr)
-    {
-        danmakuWindow = new LiveDanmakuWindow(this);
-        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
-        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
-        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
-        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-    }
+    bool hidding = danmakuWindow->isHidden();
 
     if (hidding)
     {
         danmakuWindow->show();
-        settings.setValue("danmaku/liveWindow", true);
     }
     else
     {
         danmakuWindow->hide();
-        settings.setValue("danmaku/liveWindow", false);
     }
+    settings.setValue("danmaku/liveWindow", hidding);
 }
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
@@ -802,7 +799,6 @@ void MainWindow::getRoomInfo()
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        qDebug() << "当前大小：" << pixmap.size();
         ui->roomCoverLabel->setPixmap(pixmap);
         ui->roomCoverLabel->setMinimumSize(1, 1);
     });
@@ -961,7 +957,7 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 /**
  * 一个智能的用户昵称转简单称呼
  */
-QString MainWindow::nicknameSimplify(QString nickname) const
+QString MainWindow::nicknameSimplify(QString nickname, qint64 uid) const
 {
     QString simp = nickname;
 
@@ -1180,6 +1176,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
+        QString localName = danmakuWindow->getLocalNickname(uid);
+        if (!localName.isEmpty())
+            username = localName;
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -1194,6 +1193,9 @@ void MainWindow::handleMessage(QJsonObject json)
         int totalCoin = data.value("total_coin").toInt();
 
         qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
+        QString localName = danmakuWindow->getLocalNickname(uid);
+        if (!localName.isEmpty())
+            username = localName;
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1215,7 +1217,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (!justStart && ui->autoSendThankCheck->isChecked())
         {
-            QString nick = nicknameSimplify(username);
+            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick).arg(giftName));
         }
@@ -1267,6 +1269,9 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
         qDebug() << "观众进入：" << username;
+        QString localName = danmakuWindow->getLocalNickname(uid);
+        if (!localName.isEmpty())
+            username = localName;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
@@ -1281,7 +1286,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ;
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            QString nick = nicknameSimplify(username);
+            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick));
         }

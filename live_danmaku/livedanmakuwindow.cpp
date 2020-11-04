@@ -89,6 +89,24 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     {
         careUsers.append(s.toLongLong());
     }
+
+    // 本地昵称
+    QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString pare, namePares)
+    {
+        QStringList sl = pare.split("=>");
+        if (sl.size() < 2)
+            continue;
+
+        localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+    }
+}
+
+QString LiveDanmakuWindow::getLocalNickname(qint64 uid)
+{
+    if (localNicknames.contains(uid))
+        return localNicknames.value(uid);
+    return "";
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -465,6 +483,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
     QAction* actionAddCare = new QAction("添加特别关心", this);
+    QAction* actionSetName = new QAction("设置专属昵称", this);
     QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
     QAction* actionReply = new QAction("AI回复", this);
@@ -482,8 +501,15 @@ void LiveDanmakuWindow::showMenu()
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
     actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
-    if (danmaku.getUid() != 0 && careUsers.contains(danmaku.getUid()))
-        actionAddCare->setText("移除特别关心");
+
+    qint64 uid = danmaku.getUid();
+    if (uid != 0)
+    {
+        if (careUsers.contains(uid))
+            actionAddCare->setText("移除特别关心");
+        if (localNicknames.contains(uid))
+            actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+    }
 
     menu->addAction(actionNameColor);
     menu->addAction(actionMsgColor);
@@ -491,6 +517,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionHlColor);
     menu->addSeparator();
     menu->addAction(actionAddCare);
+    menu->addAction(actionSetName);
     menu->addSeparator();
     menu->addAction(actionSearch);
     menu->addAction(actionTranslate);
@@ -506,6 +533,7 @@ void LiveDanmakuWindow::showMenu()
     if (!item)
     {
         actionAddCare->setEnabled(false);
+        actionSetName->setEnabled(false);
         actionCopy->setEnabled(false);
         actionSearch->setEnabled(false);
         actionTranslate->setEnabled(false);
@@ -556,22 +584,58 @@ void LiveDanmakuWindow::showMenu()
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
-        // 复制
-        if (careUsers.contains(danmaku.getUid()))
+
+        if (careUsers.contains(danmaku.getUid())) // 已存在，移除
         {
             careUsers.removeOne(danmaku.getUid());
             setItemWidgetText(item);
         }
-        else
+        else // 添加特别关心
         {
             careUsers.append(danmaku.getUid());
             highlightItemText(item);
         }
-        qDebug() << "当前特别关心：" << careUsers;
+
+        // 保存特别关心
         QStringList ress;
         foreach (qint64 uid, careUsers)
             ress << QString::number(uid);
         settings.setValue("danmaku/careUsers", ress.join(";"));
+    });
+    connect(actionSetName, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+
+        // 设置昵称
+        bool ok = false;
+        QString name;
+        if (localNicknames.contains(uid))
+            name = localNicknames.value(uid);
+        else
+            name = danmaku.getNickname();
+        name = QInputDialog::getText(this, "专属昵称", "设置 " + danmaku.getNickname() + " 的专属昵称，影响对应弹幕\n清空则取消专属，还原账号昵称",
+                                     QLineEdit::Normal, name, &ok);
+        if (!ok)
+            return ;
+        if (name.isEmpty())
+        {
+            if (localNicknames.contains(uid))
+                localNicknames.remove(uid);
+        }
+        else
+        {
+            localNicknames[uid] = name;
+        }
+
+        // 保存本地昵称
+        QStringList ress;
+        auto it = localNicknames.begin();
+        while (it != localNicknames.end())
+        {
+            ress << QString("%1=>%2").arg(it.key()).arg(it.value());
+            it++;
+        }
+        settings.setValue("danmaku/localNicknames", ress.join(";"));
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -630,6 +694,9 @@ void LiveDanmakuWindow::showMenu()
     menu->deleteLater();
     actionMsgColor->deleteLater();
     actionBgColor->deleteLater();
+    actionHlColor->deleteLater();
+    actionAddCare->deleteLater();
+    actionSetName->deleteLater();
     actionCopy->deleteLater();
     actionSearch->deleteLater();
     actionTranslate->deleteLater();

@@ -186,7 +186,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba) const;
-    QString nicknameSimplify(QString nickname) const;
+    QString nicknameSimplify(QString nickname, qint64 uid = 0) const;
 
 private:
     Ui::MainWindow *ui;

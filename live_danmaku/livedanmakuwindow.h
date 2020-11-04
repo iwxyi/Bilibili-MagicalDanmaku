@@ -26,6 +26,7 @@
 #include <QCryptographicHash>
 #include <QScrollBar>
 #include <QPropertyAnimation>
+#include <QInputDialog>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -46,6 +47,8 @@ class LiveDanmakuWindow : public QWidget
     Q_OBJECT
 public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
+
+    QString getLocalNickname(qint64 uid);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -96,6 +99,8 @@ private:
     bool aiReply = false;
     QStringList noReplyStrings;
     QList<qint64> careUsers;
+
+    QHash<qint64, QString> localNicknames;
 
     int fontHeight;
     int lineSpacing;
