@@ -161,7 +161,8 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-            >= listWidget->verticalScrollBar()->maximum()-5;
+            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+
     QString nameColor = danmaku.getUnameColor().isEmpty()
             ? QVariant(msgColor).toString()
             : danmaku.getUnameColor();
@@ -224,6 +225,9 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
+    bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+
     auto currentItem = listWidget->currentItem();
     QString s = danmaku.toString();
     for (int i = 0; i < listWidget->count(); i++)
@@ -240,6 +244,9 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             break;
         }
     }
+
+    if (scrollEnd)
+        listWidget->scrollToBottom();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
@@ -259,7 +266,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     label->setPalette(pa);
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-            >= listWidget->verticalScrollBar()->maximum() - 5;
+            >= listWidget->verticalScrollBar()->maximum() -lineEdit->height()*2;
 
     QString msg = danmaku.getText();
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();

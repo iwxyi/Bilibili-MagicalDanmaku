@@ -885,7 +885,7 @@ void MainWindow::sendHeartPacket()
     QByteArray ba;
     ba.append("[object Object]");
     ba = makePack(ba, HEARTBEAT);
-    SOCKET_DEB << "发送心跳包：" << ba;
+//    SOCKET_DEB << "发送心跳包：" << ba;
     socket->sendBinaryMessage(ba);
 }
 
@@ -968,7 +968,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
-    SOCKET_DEB << "操作码=" << operation << "  正文=" << body;
+    SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(20)) << "...";
 
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
@@ -1004,7 +1004,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         else
         {
             short protover = (message[6]<<8) + message[7];
-            SOCKET_DEB << "协议版本=" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
                 QFile writeFile("receive.txt");
@@ -1016,7 +1015,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 readFile.open(QIODevice::ReadWrite);
                 auto ba = readFile.readAll();
                 QByteArray unc = zlibUncompress(ba);
-                SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
+                SOCKET_DEB << "解压后的数据：" << unc.size();// << unc;
 
                 // 循环遍历
                 int offset = 0;
@@ -1028,7 +1027,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             + ((uchar)unc[offset+2] << 8)
                             + (uchar)unc[offset+3];
                     QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
-                    SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
                     QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
                     if (error.error != QJsonParseError::NoError)
                     {
@@ -1039,6 +1037,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                         return ;
                     }
                     QJsonObject json = document.object();
+                    QString cmd = json.value("cmd").toString();
+                    if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
+                            && cmd != "ONLINERANK")
+                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
                     handleMessage(json);
                     offset += packSize;
                 }
