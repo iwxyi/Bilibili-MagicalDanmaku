@@ -26,8 +26,12 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     listWidget->setSpacing(4);
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-    // 发送消息
+    // 发送消息后返回原窗口
     auto returnPrevWindow = [=]{
+        // 如果单次显示了输入框，则退出时隐藏
+        bool showEdit = settings.value("livedanmakuwindow/sendEdit", false).toBool();
+        if (!showEdit)
+            lineEdit->hide();
 #ifdef Q_OS_WIN32
         if (this->prevWindow)
             SwitchToThisWindow(prevWindow, true);
@@ -65,6 +69,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
 #endif
 
             this->activateWindow();
+            if (lineEdit->isHidden())
+                lineEdit->show();
             lineEdit->setFocus();
         }
     });
