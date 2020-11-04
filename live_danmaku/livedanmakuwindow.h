@@ -55,6 +55,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *e) override;
     void resizeEvent(QResizeEvent *) override;
     void paintEvent(QPaintEvent *) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 signals:
     void signalSendMsg(QString msg);
@@ -100,7 +101,7 @@ private:
     int boundaryWidth = 8;
     int boundaryShowed = 2;
     QPoint pressPos;
-    int listItemSpacing = 4;
+    int listItemSpacing = 6;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

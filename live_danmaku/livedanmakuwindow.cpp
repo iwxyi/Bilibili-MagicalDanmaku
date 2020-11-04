@@ -176,6 +176,16 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
     painter.fillRect(rect(), bgColor);
 }
 
+void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+    {
+        listWidget->clearSelection();
+    }
+
+    return QWidget::keyPressEvent(event);
+}
+
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
@@ -195,10 +205,31 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     listWidget->addItem(item);
     listWidget->setItemWidget(item, label);
 
+    // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     setItemWidgetText(item);
 
+    // 开启动画
+    QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
+    ani->setStartValue(QSize(label->width(), 0));
+    ani->setEndValue(label->size());
+    ani->setDuration(300);
+    ani->setEasingCurve(QEasingCurve::InOutQuad);
+    label->resize(label->width(), 1);
+    item->setSizeHint(label->size());
+    connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
+        item->setSizeHint(val.toSize());
+        if (scrollEnd)
+            listWidget->scrollToBottom();
+    });
+    connect(ani, &QPropertyAnimation::finished, label, [=]{
+        if (scrollEnd)
+            listWidget->scrollToBottom();
+    });
+    ani->start();
+
+    // 各种额外功能
     QRegExp replyRe("点歌|谢|欢迎");
     if (danmaku.getMsgType() == MSG_DANMAKU
             && !noReplyStrings.contains(danmaku.getText()))
