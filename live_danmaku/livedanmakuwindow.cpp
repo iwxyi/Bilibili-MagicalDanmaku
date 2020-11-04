@@ -672,7 +672,36 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
 
         qDebug() << "翻译：" << msg << " => " << trans;
         item->setData(DANMAKU_TRANS_ROLE, trans);
+
+        auto widget = listWidget->itemWidget(item);
+        if (!widget)
+            return ;
+        auto label = qobject_cast<QLabel*>(widget);
+        if (!label)
+            return ;
+        int ht = label->height();
+        bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+                >= listWidget->verticalScrollBar()->maximum() -lineEdit->height()*2;
+
         setItemWidgetText(item);
+
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
+        ani->setStartValue(QSize(label->width(), ht));
+        ani->setEndValue(label->size());
+        ani->setDuration(200);
+        ani->setEasingCurve(QEasingCurve::InOutQuad);
+        label->resize(label->width(), ht);
+        item->setSizeHint(label->size());
+        connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
+            item->setSizeHint(val.toSize());
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        connect(ani, &QPropertyAnimation::finished, label, [=]{
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        ani->start();
     });
 }
 
@@ -736,7 +765,36 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 
         qDebug() << "回复：" << msg << " => " << answer;
         item->setData(DANMAKU_REPLY_ROLE, answer);
+
+        auto widget = listWidget->itemWidget(item);
+        if (!widget)
+            return ;
+        auto label = qobject_cast<QLabel*>(widget);
+        if (!label)
+            return ;
+        int ht = label->height();
+        bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+                >= listWidget->verticalScrollBar()->maximum() -lineEdit->height()*2;
+
         setItemWidgetText(item);
+
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
+        ani->setStartValue(QSize(label->width(), ht));
+        ani->setEndValue(label->size());
+        ani->setDuration(200);
+        ani->setEasingCurve(QEasingCurve::InOutQuad);
+        label->resize(label->width(), ht);
+        item->setSizeHint(label->size());
+        connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
+            item->setSizeHint(val.toSize());
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        connect(ani, &QPropertyAnimation::finished, label, [=]{
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        ani->start();
     });
 }
 
