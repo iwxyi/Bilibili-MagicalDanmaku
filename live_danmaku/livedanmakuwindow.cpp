@@ -21,8 +21,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     connect(listWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu()));
     listWidget->setStyleSheet("QListWidget{ background: transparent; border: none; }");
     listWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     listWidget->setWordWrap(true);
-    listWidget->setSpacing(1);
+    listWidget->setSpacing(4);
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
     // 发送消息
@@ -144,7 +145,17 @@ void LiveDanmakuWindow::mouseMoveEvent(QMouseEvent *e)
 
 void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
 {
-
+    int w = listWidget->contentsRect().width();
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        auto item = listWidget->item(i);
+        auto widget = listWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        widget->setFixedWidth(w);
+        widget->adjustSize();
+        item->setSizeHint(widget->size());
+    }
 }
 
 void LiveDanmakuWindow::paintEvent(QPaintEvent *)
@@ -172,6 +183,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QLabel* label = new QLabel(listWidget);
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
+    label->setFixedWidth(listWidget->contentsRect().width());
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
     listWidget->setItemWidget(item, label);
@@ -323,7 +335,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     label->setText(text);
     label->adjustSize();
-    item->setSizeHint(label->sizeHint());
+    item->setSizeHint(label->size());
 
     if (scrollEnd)
         listWidget->scrollToBottom();
@@ -670,6 +682,11 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 void LiveDanmakuWindow::addNoReply(QString text)
 {
     noReplyStrings.append(text);
+}
+
+void LiveDanmakuWindow::setListWidgetItemSpacing(int x)
+{
+    listWidget->setSpacing(x);
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

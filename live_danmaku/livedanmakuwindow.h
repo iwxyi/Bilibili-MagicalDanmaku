@@ -71,6 +71,7 @@ public slots:
     void setAIReply(bool reply);
     void startReply(QListWidgetItem* item);
     void addNoReply(QString text);
+    void setListWidgetItemSpacing(int x);
 
 private:
     bool isItemExist(QListWidgetItem *item);
