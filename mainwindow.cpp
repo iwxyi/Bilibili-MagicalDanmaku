@@ -126,9 +126,12 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "直接解压：" << zlibUncompress(ba);
     }*/
 
+    // 10秒内不进行自动化操作
     QTimer::singleShot(10000, [=]{
         justStart = false;
     });
+
+
 }
 
 MainWindow::~MainWindow()
@@ -929,7 +932,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     {
         if (simp.endsWith(end))
         {
-            simp.remove(simp.length() - ends.length(), ends.length());
+            simp.remove(simp.length() - end.length(), end.length());
             break;
         }
     }

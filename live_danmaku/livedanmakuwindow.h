@@ -77,6 +77,7 @@ public slots:
 
 private:
     bool isItemExist(QListWidgetItem *item);
+    void adjustItemTextDynamic(QListWidgetItem* item);
 
 private:
     QSettings settings;
