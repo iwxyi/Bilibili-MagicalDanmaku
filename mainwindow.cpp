@@ -361,6 +361,8 @@ void MainWindow::sendAutoMsg(QString msg)
     int cd = ui->sendCDSpin->value() * 1000;
     if (timestamp - prevTimestamp < cd)
         return ;
+    prevTimestamp = timestamp;
+
     addNoReplyDanmakuText(msg);
     sendMsg(msg);
 }
