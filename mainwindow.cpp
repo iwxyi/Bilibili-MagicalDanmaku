@@ -1227,8 +1227,11 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
+        QString giftName = data.value("giftName").toString();
+        int num = data.value("num").toInt();
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << username << "购买舰长";
-
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
@@ -1247,7 +1250,10 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 endTime = static_cast<qint64>(data.value("end_time").toDouble());
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << "舰长进入：" << username;
-        // appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), true));
+        QString localName = danmakuWindow->getLocalNickname(uid);
+        if (!localName.isEmpty())
+            username = localName;
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), true));
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
     {

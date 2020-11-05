@@ -115,7 +115,7 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>弹幕功能</string>
+        <string>功能</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
@@ -309,7 +309,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>定时任务</string>
+        <string>定时</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -385,7 +385,7 @@
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>自动发送</string>
+        <string>欢迎</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
@@ -558,7 +558,7 @@
      <x>0</x>
      <y>0</y>
      <width>347</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

@@ -401,9 +401,12 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_WELCOME)
     {
-        text = QString("<font color='gray'>[进入]%2</font> %1 进入直播间")
-                .arg(nameText)
-                .arg(danmaku.isAdmin() ? " 舰长" : "");
+        if (danmaku.isAdmin())
+            text = QString("<font color='gray'>[欢迎]</font> 舰长 %1")
+                    .arg(nameText);
+        else
+            text = QString("<font color='gray'>[光临]</font> %1 进入直播间")
+                    .arg(nameText);
     }
     else if (msgType == MSG_DIANGE)
     {
