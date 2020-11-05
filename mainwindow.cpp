@@ -673,7 +673,8 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
 //        qDebug() << "binaryMessageReceived" << message;
-        slotBinaryMessageReceived(message);
+//        for (int i = 0; i < 100; i++) // 测试内存泄漏
+            slotBinaryMessageReceived(message);
     });
 
     connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
@@ -948,7 +949,7 @@ void MainWindow::sendHeartPacket()
 QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 {
     unsigned long si;
-    BYTE* target = new BYTE[ba.size()*5+10000]{};
+    BYTE* target = new BYTE[ba.size()*5+100]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
     // SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
     return QByteArray::fromRawData((char*)target, si);
@@ -1065,7 +1066,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
-                auto ba = readFile.readAll();
+                QByteArray ba = readFile.readAll();
                 QByteArray unc = zlibUncompress(ba);
                 SOCKET_DEB << "解压后的数据：" << unc.size();// << unc;
 
@@ -1129,6 +1130,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
 
     }
+    delete[] body.data();
+    delete[] message.data();
     SOCKET_DEB << "消息处理结束";
 }
 
