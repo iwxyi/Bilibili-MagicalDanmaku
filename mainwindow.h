@@ -171,6 +171,10 @@ private slots:
 
     void on_startLiveSendCheck_stateChanged(int arg1);
 
+    void on_autoSendAttentionCheck_stateChanged(int arg1);
+
+    void on_autoAttentionWordsEdit_textChanged();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -196,7 +200,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba) const;
-    QString nicknameSimplify(QString nickname, qint64 uid = 0) const;
+    QString nicknameSimplify(QString nickname) const;
 
 private:
     Ui::MainWindow *ui;

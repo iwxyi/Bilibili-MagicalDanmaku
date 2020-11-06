@@ -63,7 +63,7 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QDate time, bool attention)
+    LiveDanmaku(QString nickname, qint64 uid, bool attention, QDateTime time)
         : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), timeline(time), attention(attention)
     {
 
@@ -186,7 +186,7 @@ public:
         {
             return QString("[关注] %1 %2 %3")
                     .arg(nickname)
-                    .arg(attention ? "关注了你" : "取消了关注")
+                    .arg(attention ? "关注了主播" : "取消关注主播")
                     .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";

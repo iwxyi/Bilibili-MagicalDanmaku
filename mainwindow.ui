@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>347</width>
-    <height>401</height>
+    <width>353</width>
+    <height>450</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -385,7 +385,7 @@
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>欢迎</string>
+        <string>感谢</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
@@ -411,17 +411,11 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+           <widget class="QCheckBox" name="autoSendAttentionCheck">
+            <property name="text">
+             <string>感谢关注</string>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+           </widget>
           </item>
           <item>
            <widget class="QSpinBox" name="sendCDSpin">
@@ -458,6 +452,13 @@
           </property>
           <property name="placeholderText">
            <string>欢迎语，多行随机发送一行</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
+          <property name="plainText">
+           <string>感谢 %1 的关注~</string>
           </property>
          </widget>
         </item>
@@ -557,8 +558,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>347</width>
-     <height>26</height>
+     <width>353</width>
+     <height>23</height>
     </rect>
    </property>
   </widget>

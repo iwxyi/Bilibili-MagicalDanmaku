@@ -438,7 +438,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     {
         text = QString("[关注] %1 %2 %3")
                 .arg(nameText)
-                .arg(danmaku.isAttention() ? "关注了你" : "取消了关注")
+                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
                 .arg(danmaku.getTimeline().toString("hh:mm:ss"));
     }
 

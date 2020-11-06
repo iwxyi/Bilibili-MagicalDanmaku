@@ -103,9 +103,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendThankCheck->setChecked(settings.value("danmaku/sendThank", false).toBool());
+    ui->autoSendAttentionCheck->setChecked(settings.value("danmaku/sendAttention", false).toBool());
     ui->sendCDSpin->setValue(settings.value("danmaku/sendCD", 5).toInt());
     ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
     ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
+    ui->autoAttentionWordsEdit->setPlainText(settings.value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -905,7 +907,7 @@ void MainWindow::getFansAndUpdate()
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
-            // qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+             qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
         }
 
         SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
@@ -948,7 +950,7 @@ void MainWindow::getFansAndUpdate()
             {
                 FanBean fan = fansList.at(i);
                 qDebug() << "取消关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
-                appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, QDateTime::fromSecsSinceEpoch(fan.mtime), false));
+                appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, false, QDateTime::fromSecsSinceEpoch(fan.mtime)));
             }
             while (index--)
                 fansList.removeFirst();
@@ -956,9 +958,22 @@ void MainWindow::getFansAndUpdate()
 
         for (int i = find-1; i >= 0; i--)
         {
-            FanBean fan = fansList.at(i);
+            FanBean fan = newFans.at(i);
             qDebug() << "新增关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
-            appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, QDateTime::fromSecsSinceEpoch(fan.mtime), true));
+            appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime)));
+
+            QStringList words = ui->autoAttentionWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+            if (!words.size())
+                return ;
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
+            if (!justStart && ui->autoSendAttentionCheck->isChecked())
+            {
+                QString localName = danmakuWindow->getLocalNickname(fan.mid);
+                QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
+                if (!nick.isEmpty())
+                    sendAutoMsg(msg.arg(nick));
+            }
         }
 
     });
@@ -1074,7 +1089,7 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 /**
  * 一个智能的用户昵称转简单称呼
  */
-QString MainWindow::nicknameSimplify(QString nickname, qint64 uid) const
+QString MainWindow::nicknameSimplify(QString nickname) const
 {
     QString simp = nickname;
 
@@ -1383,7 +1398,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (!justStart && ui->autoSendThankCheck->isChecked())
         {
-            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick).arg(giftName));
         }
@@ -1458,7 +1473,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ;
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick));
         }
@@ -1503,4 +1518,14 @@ void MainWindow::on_endLiveWordsEdit_editingFinished()
 void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 {
     settings.setValue("live/startSend", ui->startLiveSendCheck->isChecked());
+}
+
+void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
+{
+    settings.setValue("danmaku/sendAttention", ui->autoAttentionWordsEdit->toPlainText());
+}
+
+void MainWindow::on_autoAttentionWordsEdit_textChanged()
+{
+    settings.setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
 }
