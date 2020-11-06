@@ -15,7 +15,8 @@ enum MessageType
     MSG_DIANGE,
     MSG_GUARD_BUY,
     MSG_WELCOME_GUARD,
-    MSG_FANS
+    MSG_FANS,
+    MSG_ATTENTION
 };
 
 class LiveDanmaku
@@ -62,6 +63,12 @@ public:
 
     }
 
+    LiveDanmaku(QString nickname, qint64 uid, QDate time, bool attention)
+        : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), timeline(time), attention(attention)
+    {
+
+    }
+
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
@@ -88,6 +95,7 @@ public:
         danmaku.fans_club = object.value("fans_club").toInt();
         danmaku.delta_fans = object.value("delta_fans").toInt();
         danmaku.delta_fans_club = object.value("delta_fans_club").toInt();
+        danmaku.attention = object.value("attention").toBool();
         danmaku.msgType = (MessageType)object.value("msgType").toInt();
         return danmaku;
     }
@@ -124,6 +132,10 @@ public:
             object.insert("fans_club", fans_club);
             object.insert("delta_fans", delta_fans);
             object.insert("delta_fans_club", delta_fans_club);
+        }
+        else if (msgType == MSG_ATTENTION)
+        {
+            object.insert("attention", attention);
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
@@ -165,9 +177,16 @@ public:
         }
         else if (msgType == MSG_FANS)
         {
-            return QString("[关注] 粉丝数：%1，粉丝团：%2 %3")
+            return QString("[粉丝] 粉丝数：%1，粉丝团：%2 %3")
                     .arg(fans)
                     .arg(fans_club)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_ATTENTION)
+        {
+            return QString("[关注] %1 %2 %3")
+                    .arg(nickname)
+                    .arg(attention ? "关注了你" : "取消了关注")
                     .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";
@@ -255,6 +274,11 @@ public:
         return delta_fans_club;
     }
 
+    bool isAttention() const
+    {
+        return attention;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -289,6 +313,7 @@ private:
     int fans_club = 0;
     int delta_fans = 0;
     int delta_fans_club = 0;
+    bool attention = false;
 };
 
 #endif // LIVEDANMAKU_H

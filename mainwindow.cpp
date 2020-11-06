@@ -273,13 +273,13 @@ void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 
 void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 {
-//    qDebug() << "+++++新弹幕：" <<danmaku.toString();
+    SOCKET_DEB << "+++++新弹幕：" <<danmaku.toString();
     emit signalNewDanmaku(danmaku);
 }
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
-//    qDebug() << "-----旧弹幕：" << danmaku.toString();
+    SOCKET_DEB << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
@@ -801,6 +801,7 @@ void MainWindow::getRoomInfo()
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
         qDebug() << "被关注：" << currentFans << "    粉丝团：" << currentFansClub;
+        getFansAndUpdate();
 
         // 获取弹幕信息
         getDanmuInfo();
@@ -867,6 +868,99 @@ void MainWindow::getDanmuInfo()
         qDebug() << "getDanmuInfo: host数量=" << hostList.size() << "  token=" << token;
 
         startMsgLoop();
+    });
+    manager->get(*request);
+}
+
+void MainWindow::getFansAndUpdate()
+{
+    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + uid;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        QJsonArray list = json.value("data").toObject().value("list").toArray();
+        QList<FanBean> newFans;
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject fan = val.toObject();
+            qint64 mid = static_cast<qint64>(fan.value("mid").toDouble());
+            int attribute = fan.value("attribute").toInt(); // 三位数：1-1-0 被关注-已关注-未知
+            if (attribute == 0) // 0是什么意思啊，不懂诶……应该是关注吧？
+                attribute = 2;
+            qint64 mtime = static_cast<qint64>(fan.value("mtime").toDouble());
+            QString uname = fan.value("uname").toString();
+
+            newFans.append(FanBean{mid, uname, attribute & 2, mtime});
+            // qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+        }
+
+        SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
+
+        // 第一次加载
+        if (!fansList.size())
+        {
+            fansList = newFans;
+            return ;
+        }
+
+        // 进行比较 新增关注 的 取消关注
+        // 先找到原先最后关注并且还在的，即：旧列.index == 新列.find
+        int index = -1; // 旧列索引
+        int find = -1;  // 新列索引
+        while (++index < fansList.size())
+        {
+            FanBean fan = fansList.at(index);
+            for (int j = 0; j < newFans.size(); j++)
+            {
+                FanBean nFan = newFans.at(j);
+                if (fan.mid == nFan.mid)
+                {
+                    find = j;
+                    break;
+                }
+            }
+            if (find >= 0)
+                break;
+        }
+        qDebug() << ">>>>>>>index:" << index << "   find:" << find;
+
+        if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
+        {
+            qDebug() << "没有被关注过，或之前关注的全部取关了？";
+        }
+        else // index==0没有人取关，index>0则有人取关
+        {
+            for (int i = 0; i < index; i++)
+            {
+                FanBean fan = fansList.at(i);
+                qDebug() << "取消关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+                appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, QDateTime::fromSecsSinceEpoch(fan.mtime), false));
+            }
+            while (index--)
+                fansList.removeFirst();
+        }
+
+        for (int i = find-1; i >= 0; i--)
+        {
+            FanBean fan = fansList.at(i);
+            qDebug() << "新增关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+            appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, QDateTime::fromSecsSinceEpoch(fan.mtime), true));
+        }
+
     });
     manager->get(*request);
 }
@@ -1091,7 +1185,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 writeFile.open(QIODevice::WriteOnly);
                 writeFile.write(body, body.size());
                 writeFile.close();
-
+SOCKET_INF << "写入文件结束";
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
                 QByteArray ba = readFile.readAll();
@@ -1105,7 +1199,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
                 SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
 #endif
-                SOCKET_INF << "写入文件结束";
+                SOCKET_INF << "从文件中读取结束";
 
                 // 循环遍历
                 int offset = 0;
@@ -1175,6 +1269,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     qDebug() << "粉丝数量：" << fans << "  粉丝团：" << fans_club;
                     appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
                                                      delta_fans, delta_club));
+
+                    getFansAndUpdate();
                 }
                 else
                 {
