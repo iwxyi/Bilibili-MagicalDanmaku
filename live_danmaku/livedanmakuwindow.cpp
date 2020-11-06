@@ -559,6 +559,11 @@ void LiveDanmakuWindow::showMenu()
         actionReply->setEnabled(false);
         actionFreeCopy->setEnabled(false);
     }
+    else if (!uid)
+    {
+        actionAddCare->setEnabled(false);
+        actionSetName->setEnabled(false);
+    }
 
     connect(actionNameColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(nameColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);

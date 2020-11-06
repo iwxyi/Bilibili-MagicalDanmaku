@@ -676,7 +676,12 @@ void MainWindow::initWS()
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
 //        qDebug() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
+//        try {
             slotBinaryMessageReceived(message);
+//        } catch (...) {
+//            qDebug() << "error:slotBinaryMessageReceived";
+//        }
+
     });
 
     connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
@@ -1039,7 +1044,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
-    SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(20)) << "...";
+    SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(35)) << "...";
 
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
@@ -1068,7 +1073,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
         QString cmd;
         if (!json.isEmpty())
+        {
             cmd = json.value("cmd").toString();
+            SOCKET_INF << "普通CMD：" << cmd;
+        }
         if (cmd == "NOTICE_MSG") // 全站广播（不用管）
         {
 
@@ -1076,6 +1084,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         else
         {
             short protover = (message[6]<<8) + message[7];
+            SOCKET_INF << "协议版本：" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
                 QFile writeFile("receive.txt");
@@ -1086,8 +1095,17 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
                 QByteArray ba = readFile.readAll();
+#ifdef QT_NO_DEBUG
                 QByteArray unc = zlibUncompress(ba);
-                SOCKET_DEB << "解压后的数据：" << unc.size();// << unc;
+#else
+                unsigned long si;
+                BYTE* target = new BYTE[ba.size()*5+100]{};
+                uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+                 SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
+                QByteArray unc = QByteArray::fromRawData((char*)target, si);
+                SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
+#endif
+                SOCKET_INF << "写入文件结束";
 
                 // 循环遍历
                 int offset = 0;
@@ -1110,6 +1128,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     }
                     QJsonObject json = document.object();
                     QString cmd = json.value("cmd").toString();
+                    SOCKET_INF << "解压后获取到CMD：" << cmd;
                     if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                             && cmd != "ONLINERANK")
                         SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
