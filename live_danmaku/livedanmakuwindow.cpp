@@ -419,7 +419,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getFans())
                 .arg(danmaku.getFansClub())
                 .arg(danmaku.getDeltaFans()
-                     ?QString("(%1)").arg(danmaku.getDeltaFans()) : "")
+                     ? QString("(%1)").arg(danmaku.getDeltaFans()) : "")
                 .arg(danmaku.getDeltaFansClub()
                      ?QString("(%1)").arg(danmaku.getDeltaFansClub()) : "");
     }

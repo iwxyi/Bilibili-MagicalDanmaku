@@ -1004,7 +1004,9 @@ QString MainWindow::nicknameSimplify(QString nickname, qint64 uid) const
     QRegularExpression ceRe("^([\u4e00-\u9fa5]{2,})(\\w+)$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
     {
-        simp = match.capturedTexts().at(1);
+        QString tmp = match.capturedTexts().at(1);
+        if (!tmp.endsWith("的") && !tmp.endsWith("之") && !tmp.endsWith("の"))
+            simp = tmp;
     }
 
     // 没有取名字的，就不需要欢迎了
@@ -1262,7 +1264,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("username").toString();
         QString giftName = data.value("giftName").toString();
         int num = data.value("num").toInt();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << "购买舰长";
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
     }
