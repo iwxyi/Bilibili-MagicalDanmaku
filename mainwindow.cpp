@@ -676,11 +676,11 @@ void MainWindow::initWS()
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
 //        qDebug() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
-//        try {
+        try {
             slotBinaryMessageReceived(message);
-//        } catch (...) {
-//            qDebug() << "error:slotBinaryMessageReceived";
-//        }
+        } catch (...) {
+            qDebug() << "!!!!!!!error:slotBinaryMessageReceived";
+        }
 
     });
 
@@ -1091,6 +1091,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 writeFile.open(QIODevice::WriteOnly);
                 writeFile.write(body, body.size());
                 writeFile.close();
+                SOCKET_INF << "写入文件结束";
 
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
@@ -1105,7 +1106,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
                 SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
 #endif
-                SOCKET_INF << "写入文件结束";
+                SOCKET_INF << "读取文件结束";
 
                 // 循环遍历
                 int offset = 0;
