@@ -964,18 +964,22 @@ void MainWindow::getFansAndUpdate()
             qDebug() << "新增关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
             appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime)));
 
-            QStringList words = ui->autoAttentionWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
-            if (!words.size())
-                return ;
-            int r = qrand() % words.size();
-            QString msg = words.at(r);
-            if (!justStart && ui->autoSendAttentionCheck->isChecked())
+            if (i == 0) // 只发送第一个（其他几位，对不起了……）
             {
-                QString localName = danmakuWindow->getLocalNickname(fan.mid);
-                QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
-                if (!nick.isEmpty())
-                    sendAutoMsg(msg.arg(nick));
+                QStringList words = ui->autoAttentionWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                if (!words.size())
+                    return ;
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (!justStart && ui->autoSendAttentionCheck->isChecked())
+                {
+                    QString localName = danmakuWindow->getLocalNickname(fan.mid);
+                    QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
+                    if (!nick.isEmpty())
+                        sendAutoMsg(msg.arg(nick));
+                }
             }
+
             fansList.insert(0, fan);
         }
 
