@@ -771,7 +771,9 @@ void MainWindow::getRoomInfo()
             return ;
         }
 
-        QJsonObject roomInfo = json.value("data").toObject().value("room_info").toObject();
+        // 获取房间信息
+        QJsonObject dataObj = json.value("data").toObject();
+        QJsonObject roomInfo = dataObj.value("room_info").toObject();
         roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
@@ -780,17 +782,26 @@ void MainWindow::getRoomInfo()
         qDebug() << "getRoomInfo: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << uid;
-        if (!liveStatus)
-            ui->popularityLabel->setText("未开播");
-        else
-            ui->popularityLabel->setText("已开播");
-        getDanmuInfo();
 
         roomName = roomInfo.value("title").toString();
         setWindowTitle(QApplication::applicationName() + " - " + roomName);
         ui->roomNameLabel->setText(roomName);
-        QString coverUrl = roomInfo.value("cover").toString();
+        if (!liveStatus)
+            ui->popularityLabel->setText("未开播");
+        else
+            ui->popularityLabel->setText("已开播");
 
+        // 获取主播信息
+        QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
+        currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
+        currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
+        qDebug() << "被关注：" << currentFans << "    粉丝团：" << currentFansClub;
+
+        // 获取弹幕信息
+        getDanmuInfo();
+
+        // 异步获取房间封面
+        QString coverUrl = roomInfo.value("cover").toString();
         QNetworkAccessManager manager;
         QEventLoop loop;
         QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(coverUrl)));
