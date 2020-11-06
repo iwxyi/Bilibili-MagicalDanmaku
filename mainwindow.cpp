@@ -1102,7 +1102,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                             && cmd != "ONLINERANK")
                         SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
-                    handleMessage(json);
+                    try {
+                        handleMessage(json);
+                    } catch (...) {
+                        qDebug() << "出错啦" << jsonBa;
+                    }
+
                     offset += packSize;
                 }
 

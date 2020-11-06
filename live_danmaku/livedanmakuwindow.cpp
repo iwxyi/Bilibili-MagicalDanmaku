@@ -419,13 +419,15 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getFans())
                 .arg(danmaku.getFansClub())
                 .arg(danmaku.getDeltaFans()
-                     ? QString("(%2%1)").arg(danmaku.getDeltaFans())
+                     ? QString("(%1%2)")
                        .arg(danmaku.getDeltaFans() > 0 ? "+" : "")
+                       .arg(danmaku.getDeltaFans())
                      : "")
                 .arg(danmaku.getDeltaFansClub()
-                     ?QString("(%2%1)").arg(danmaku.getDeltaFansClub())
-                      .arg(danmaku.getDeltaFansClub() > 0 ? "+" : "")
-                    : "");
+                     ? QString("(%1%2)")
+                       .arg(danmaku.getDeltaFansClub() > 0 ? "+" : "")
+                       .arg(danmaku.getDeltaFansClub())
+                     : "");
     }
 
     label->setText(text);
