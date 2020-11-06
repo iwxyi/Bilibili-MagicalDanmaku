@@ -64,6 +64,14 @@ public:
         int seqId;
     };
 
+    struct FanBean
+    {
+        qint64 mid;
+        QString uname;
+        int attribute; // 0：未关注,2：已关注,6：已互粉
+        qint64 mtime;
+    };
+
     enum Operation
     {
         HANDSHAKE = 0,
@@ -163,6 +171,10 @@ private slots:
 
     void on_startLiveSendCheck_stateChanged(int arg1);
 
+    void on_autoSendAttentionCheck_stateChanged(int arg1);
+
+    void on_autoAttentionWordsEdit_textChanged();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -180,6 +192,7 @@ private:
     void getRoomInit();
     void getRoomInfo();
     void getDanmuInfo();
+    void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
     void sendVeriPacket();
@@ -187,7 +200,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba) const;
-    QString nicknameSimplify(QString nickname, qint64 uid = 0) const;
+    QString nicknameSimplify(QString nickname) const;
 
 private:
     Ui::MainWindow *ui;
@@ -199,6 +212,7 @@ private:
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
     int currentFans = 0;
     int currentFansClub = 0;
+    QList<FanBean> fansList; // 最近的关注，按时间排序
 
     QList<LiveDanmaku> roomDanmakus;
     LiveDanmakuWindow* danmakuWindow = nullptr;

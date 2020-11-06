@@ -283,6 +283,11 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         highlightItemText(item, true);
     }
+    else if (danmaku.getMsgType() == MSG_ATTENTION)
+    {
+        if (danmaku.isAttention())
+            highlightItemText(item, true);
+    }
     noReplyStrings.clear();
 
     if (scrollEnd)
@@ -362,8 +367,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
     QString reply = item->data(DANMAKU_REPLY_ROLE).toString();
 
+    auto isBlankColor = [=](QString c) -> bool {
+        c = c.toLower();
+        return c.isEmpty() || c == "#ffffff" || c == "#000000"
+                || c == "#ffffffff" || c == "#00000000";
+    };
+
     // 设置文字
-    QString nameColorStr = danmaku.getUnameColor().isEmpty()
+    QString nameColorStr = isBlankColor(danmaku.getUnameColor())
             ? QVariant(this->nameColor).toString()
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColorStr + "'>"
@@ -373,7 +384,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     MessageType msgType = danmaku.getMsgType();
     if (msgType == MSG_DANMAKU)
     {
-        text = nameText + danmaku.getText();
+        QString colorfulMsg = msg;
+        if (!isBlankColor(danmaku.getTextColor()))
+            colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
+                    + danmaku.getText() + "</font> ";
+        text = nameText + colorfulMsg;
 
         if (!trans.isEmpty() && trans != msg)
         {
@@ -402,10 +417,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_WELCOME)
     {
         if (danmaku.isAdmin())
-            text = QString("<font color='gray'>[欢迎]</font> 舰长 %1")
+            text = QString("<font color='gray'>[光临]</font> 舰长 %1")
                     .arg(nameText);
         else
-            text = QString("<font color='gray'>[光临]</font> %1 进入直播间")
+            text = QString("<font color='gray'>[欢迎]</font> %1 进入直播间")
                     .arg(nameText);
     }
     else if (msgType == MSG_DIANGE)
@@ -415,7 +430,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_FANS)
     {
-        text = QString("<font color='gray'>[关注]</font> 粉丝数：%1%3, 粉丝团：%2%4")
+        text = QString("<font color='gray'>[粉丝]</font> 粉丝数：%1%3, 粉丝团：%2%4")
                 .arg(danmaku.getFans())
                 .arg(danmaku.getFansClub())
                 .arg(danmaku.getDeltaFans()
@@ -428,6 +443,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                        .arg(danmaku.getDeltaFansClub() > 0 ? "+" : "")
                        .arg(danmaku.getDeltaFansClub())
                      : "");
+    }
+    else if (msgType == MSG_ATTENTION)
+    {
+        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch();
+        text = QString("<font color='gray'>[关注]</font> %1 %2 (%3秒前)")
+                .arg(nameText)
+                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
+                .arg(second);
     }
 
     label->setText(text);
@@ -453,7 +476,7 @@ void LiveDanmakuWindow::highlightItemText(QListWidgetItem *item, bool recover)
     // 定时恢复原样
     if (!recover)
         return ;
-    QTimer::singleShot(3000, [=]{
+    QTimer::singleShot(5000, [=]{
         // 怕到时候没了
        if (!isItemExist(item))
        {

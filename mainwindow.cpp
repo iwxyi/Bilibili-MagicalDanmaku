@@ -103,9 +103,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendThankCheck->setChecked(settings.value("danmaku/sendThank", false).toBool());
+    ui->autoSendAttentionCheck->setChecked(settings.value("danmaku/sendAttention", false).toBool());
     ui->sendCDSpin->setValue(settings.value("danmaku/sendCD", 5).toInt());
     ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
     ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
+    ui->autoAttentionWordsEdit->setPlainText(settings.value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -273,13 +275,13 @@ void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 
 void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 {
-//    qDebug() << "+++++新弹幕：" <<danmaku.toString();
+    SOCKET_DEB << "+++++新弹幕：" << danmaku.toString();
     emit signalNewDanmaku(danmaku);
 }
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
-//    qDebug() << "-----旧弹幕：" << danmaku.toString();
+    SOCKET_DEB << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
@@ -801,6 +803,7 @@ void MainWindow::getRoomInfo()
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
         qDebug() << "被关注：" << currentFans << "    粉丝团：" << currentFansClub;
+        getFansAndUpdate();
 
         // 获取弹幕信息
         getDanmuInfo();
@@ -867,6 +870,119 @@ void MainWindow::getDanmuInfo()
         qDebug() << "getDanmuInfo: host数量=" << hostList.size() << "  token=" << token;
 
         startMsgLoop();
+    });
+    manager->get(*request);
+}
+
+void MainWindow::getFansAndUpdate()
+{
+    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + uid;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        QJsonArray list = json.value("data").toObject().value("list").toArray();
+        QList<FanBean> newFans;
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject fan = val.toObject();
+            qint64 mid = static_cast<qint64>(fan.value("mid").toDouble());
+            int attribute = fan.value("attribute").toInt(); // 三位数：1-1-0 被关注-已关注-未知
+            if (attribute == 0) // 0是什么意思啊，不懂诶……应该是关注吧？
+                attribute = 2;
+            qint64 mtime = static_cast<qint64>(fan.value("mtime").toDouble());
+            QString uname = fan.value("uname").toString();
+
+            newFans.append(FanBean{mid, uname, attribute & 2, mtime});
+//            qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+        }
+
+        SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
+
+        // 第一次加载
+        if (!fansList.size())
+        {
+            fansList = newFans;
+            return ;
+        }
+
+        // 进行比较 新增关注 的 取消关注
+        // 先找到原先最后关注并且还在的，即：旧列.index == 新列.find
+        int index = -1; // 旧列索引
+        int find = -1;  // 新列索引
+        while (++index < fansList.size())
+        {
+            FanBean fan = fansList.at(index);
+            for (int j = 0; j < newFans.size(); j++)
+            {
+                FanBean nFan = newFans.at(j);
+                if (fan.mid == nFan.mid)
+                {
+                    find = j;
+                    break;
+                }
+            }
+            if (find >= 0)
+                break;
+        }
+//qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
+
+        // 取消关注（只支持第一页）
+        if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
+        {
+            qDebug() << "没有被关注过，或之前关注的全部取关了？";
+        }
+        else // index==0没有人取关，index>0则有人取关
+        {
+            for (int i = 0; i < index; i++)
+            {
+                FanBean fan = fansList.at(i);
+                qDebug() << "取消关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+                appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, false, QDateTime::fromSecsSinceEpoch(fan.mtime)));
+            }
+            while (index--)
+                fansList.removeFirst();
+        }
+
+        // 新增关注
+        for (int i = find-1; i >= 0; i--)
+        {
+            FanBean fan = newFans.at(i);
+            qDebug() << "新增关注：" << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+            appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime)));
+
+            if (i == 0) // 只发送第一个（其他几位，对不起了……）
+            {
+                QStringList words = ui->autoAttentionWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                if (!words.size())
+                    return ;
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (!justStart && ui->autoSendAttentionCheck->isChecked())
+                {
+                    QString localName = danmakuWindow->getLocalNickname(fan.mid);
+                    QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
+                    if (!nick.isEmpty())
+                        sendAutoMsg(msg.arg(nick));
+                }
+            }
+
+            fansList.insert(0, fan);
+        }
+
     });
     manager->get(*request);
 }
@@ -980,7 +1096,7 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 /**
  * 一个智能的用户昵称转简单称呼
  */
-QString MainWindow::nicknameSimplify(QString nickname, qint64 uid) const
+QString MainWindow::nicknameSimplify(QString nickname) const
 {
     QString simp = nickname;
 
@@ -1096,8 +1212,16 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
                 QByteArray ba = readFile.readAll();
+                SOCKET_INF << "从文件中读取结束";
 #ifdef QT_NO_DEBUG
-                QByteArray unc = zlibUncompress(ba);
+                QByteArray unc;
+                try {
+                    unc = zlibUncompress(ba);
+                } catch (...) {
+                    qDebug() << "!!!!!!error: 日常解压出错";
+                    return ;
+                }
+                SOCKET_INF << "解压文件数据结束" << unc.size();
 #else
                 unsigned long si;
                 BYTE* target = new BYTE[ba.size()*5+100]{};
@@ -1106,7 +1230,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
                 SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
 #endif
-                SOCKET_INF << "读取文件结束";
+//                return ; // XXX
 
                 // 循环遍历
                 int offset = 0;
@@ -1132,7 +1256,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     SOCKET_INF << "解压后获取到CMD：" << cmd;
                     if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                             && cmd != "ONLINERANK")
-                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
+                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << QString(jsonBa);
                     try {
                         handleMessage(json);
                     } catch (...) {
@@ -1142,8 +1266,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     offset += packSize;
                 }
 
-                delete[] ba.data();
-                delete[] unc.data();
+//                delete[] ba.data();
+//                delete[] unc.data();
             }
             else if (protover == 0)
             {
@@ -1176,6 +1300,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     qDebug() << "粉丝数量：" << fans << "  粉丝团：" << fans_club;
                     appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
                                                      delta_fans, delta_club));
+
+                    getFansAndUpdate();
                 }
                 else
                 {
@@ -1213,6 +1339,8 @@ void MainWindow::handleMessage(QJsonObject json)
     if (cmd == "LIVE") // 开播？
     {
         QString roomId = json.value("roomid").toString();
+        if (roomId.isEmpty())
+            roomId = QString::number(static_cast<qint64>(json.value("roomid").toDouble()));
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->startLiveWordsEdit->text();
@@ -1225,7 +1353,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "PREPARING") // 下播
     {
         QString roomId = json.value("roomid").toString();
-        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
+//        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
@@ -1234,23 +1362,36 @@ void MainWindow::handleMessage(QJsonObject json)
             liveStatus = false;
         }
     }
+    else if (cmd == "ROOM_CHANGE")
+    {
+        QJsonObject data = json.value("data").toObject();
+
+    }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
         QJsonArray info = json.value("info").toArray();
+        if (info.size() <= 2)
+            QMessageBox::information(this, "弹幕数据 info", QString(QJsonDocument(info).toJson()));
         QJsonArray array = info[0].toArray();
-        qint64 color = array[3].toInt();
+        if (array.size() <= 3)
+            QMessageBox::information(this, "弹幕数据 array", QString(QJsonDocument(array).toJson()));
+        qint64 textColor = array[3].toInt(); // 弹幕颜色
         qint64 timestamp = static_cast<qint64>(array[4].toDouble());
         QString msg = info[1].toString();
         QJsonArray user = info[2].toArray();
+        if (user.size() <= 1)
+            QMessageBox::information(this, "弹幕数据 user", QString(QJsonDocument(user).toJson()));
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
+        QString unameColor = user[7].toString();
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
         QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;
-        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp)));
+        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp),
+                                         unameColor, "#"+QString::number(textColor, 16)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1288,7 +1429,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (!justStart && ui->autoSendThankCheck->isChecked())
         {
-            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick).arg(giftName));
         }
@@ -1363,7 +1504,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ;
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username, uid) : localName;
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
                 sendAutoMsg(msg.arg(nick));
         }
@@ -1408,4 +1549,14 @@ void MainWindow::on_endLiveWordsEdit_editingFinished()
 void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 {
     settings.setValue("live/startSend", ui->startLiveSendCheck->isChecked());
+}
+
+void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
+{
+    settings.setValue("danmaku/sendAttention", ui->autoAttentionWordsEdit->toPlainText());
+}
+
+void MainWindow::on_autoAttentionWordsEdit_textChanged()
+{
+    settings.setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
 }

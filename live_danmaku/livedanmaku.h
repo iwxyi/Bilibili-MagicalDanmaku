@@ -15,7 +15,8 @@ enum MessageType
     MSG_DIANGE,
     MSG_GUARD_BUY,
     MSG_WELCOME_GUARD,
-    MSG_FANS
+    MSG_FANS,
+    MSG_ATTENTION
 };
 
 class LiveDanmaku
@@ -26,6 +27,13 @@ public:
 
     LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time)
         : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time)
+    {
+
+    }
+
+    LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time, QString unameColor, QString textColor)
+        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time),
+          uname_color(unameColor), text_color(textColor)
     {
 
     }
@@ -62,6 +70,12 @@ public:
 
     }
 
+    LiveDanmaku(QString nickname, qint64 uid, bool attention, QDateTime time)
+        : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), timeline(time), attention(attention)
+    {
+
+    }
+
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
@@ -69,6 +83,7 @@ public:
         danmaku.uid = object.value("uid").toInt();
         danmaku.nickname = object.value("nickname").toString();
         danmaku.uname_color = object.value("uname_color").toString();
+        danmaku.text_color = object.value("text_color").toString();
         danmaku.timeline = QDateTime::fromString(
                     object.value("timeline").toString(),
                     "yyyy-MM-dd hh:mm:ss");
@@ -88,6 +103,7 @@ public:
         danmaku.fans_club = object.value("fans_club").toInt();
         danmaku.delta_fans = object.value("delta_fans").toInt();
         danmaku.delta_fans_club = object.value("delta_fans_club").toInt();
+        danmaku.attention = object.value("attention").toBool();
         danmaku.msgType = (MessageType)object.value("msgType").toInt();
         return danmaku;
     }
@@ -101,6 +117,7 @@ public:
         {
             object.insert("text", text);
             object.insert("uname_color", uname_color);
+            object.insert("text_color", text_color);
             object.insert("isadmin", isadmin);
             object.insert("vip", vip);
             object.insert("svip", svip);
@@ -124,6 +141,10 @@ public:
             object.insert("fans_club", fans_club);
             object.insert("delta_fans", delta_fans);
             object.insert("delta_fans_club", delta_fans_club);
+        }
+        else if (msgType == MSG_ATTENTION)
+        {
+            object.insert("attention", attention);
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
@@ -165,9 +186,16 @@ public:
         }
         else if (msgType == MSG_FANS)
         {
-            return QString("[关注] 粉丝数：%1，粉丝团：%2 %3")
+            return QString("[粉丝] 粉丝数：%1，粉丝团：%2 %3")
                     .arg(fans)
                     .arg(fans_club)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_ATTENTION)
+        {
+            return QString("[关注] %1 %2 %3")
+                    .arg(nickname)
+                    .arg(attention ? "关注了主播" : "取消关注主播")
                     .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";
@@ -197,6 +225,11 @@ public:
     QString getUnameColor() const
     {
         return uname_color;
+    }
+
+    QString getTextColor() const
+    {
+        return text_color;
     }
 
     QDateTime getTimeline() const
@@ -255,6 +288,11 @@ public:
         return delta_fans_club;
     }
 
+    bool isAttention() const
+    {
+        return attention;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -262,6 +300,7 @@ private:
     qint64 uid = 0; // 用户ID
     QString nickname;
     QString uname_color; // 没有的话是空的
+    QString text_color; // 没有的话是空的
     QDateTime timeline;
     int isadmin = 0; // 房管
     int vip = 0;
@@ -289,6 +328,7 @@ private:
     int fans_club = 0;
     int delta_fans = 0;
     int delta_fans_club = 0;
+    bool attention = false;
 };
 
 #endif // LIVEDANMAKU_H
