@@ -196,6 +196,8 @@ private:
     QString roomName;
     QPixmap coverPixmap;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+    int currentFans = 0;
+    int currentFansClub = 0;
 
     QList<LiveDanmaku> roomDanmakus;
     LiveDanmakuWindow* danmakuWindow = nullptr;

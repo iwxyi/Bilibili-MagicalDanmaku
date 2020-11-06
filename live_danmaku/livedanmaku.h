@@ -54,8 +54,10 @@ public:
 
     }
 
-    LiveDanmaku(int fans, int club)
-        : msgType(MSG_FANS), fans(fans), fans_club(club), timeline(QDateTime::currentDateTime())
+    LiveDanmaku(int fans, int club, int delta_fans, int delta_fans_club)
+        : msgType(MSG_FANS), fans(fans), fans_club(club),
+          delta_fans(delta_fans), delta_fans_club(delta_fans_club),
+          timeline(QDateTime::currentDateTime())
     {
 
     }
@@ -83,7 +85,9 @@ public:
         danmaku.giftName = object.value("giftName").toString();
         danmaku.number = object.value("number").toInt();
         danmaku.fans = object.value("fans").toInt();
-        danmaku.fans_club = object.value("dans_club").toInt();
+        danmaku.fans_club = object.value("fans_club").toInt();
+        danmaku.delta_fans = object.value("delta_fans").toInt();
+        danmaku.delta_fans_club = object.value("delta_fans_club").toInt();
         danmaku.msgType = (MessageType)object.value("msgType").toInt();
         return danmaku;
     }
@@ -118,6 +122,8 @@ public:
         {
             object.insert("fans", fans);
             object.insert("fans_club", fans_club);
+            object.insert("delta_fans", delta_fans);
+            object.insert("delta_fans_club", delta_fans_club);
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
@@ -239,6 +245,16 @@ public:
         return fans_club;
     }
 
+    int getDeltaFans() const
+    {
+        return delta_fans;
+    }
+
+    int getDeltaFansClub() const
+    {
+        return delta_fans_club;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -268,8 +284,11 @@ private:
 
     QString giftName;
     int number = 0;
+
     int fans = 0;
     int fans_club = 0;
+    int delta_fans = 0;
+    int delta_fans_club = 0;
 };
 
 #endif // LIVEDANMAKU_H

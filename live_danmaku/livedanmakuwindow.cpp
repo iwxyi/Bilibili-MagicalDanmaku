@@ -415,9 +415,13 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_FANS)
     {
-        text = QString("<font color='gray'>[关注]</font> 粉丝数：%1, 粉丝团：%2")
+        text = QString("<font color='gray'>[关注]</font> 粉丝数：%1%3, 粉丝团：%2%4")
                 .arg(danmaku.getFans())
-                .arg(danmaku.getFansClub());
+                .arg(danmaku.getFansClub())
+                .arg(danmaku.getDeltaFans()
+                     ?QString("(%1)").arg(danmaku.getDeltaFans()) : "")
+                .arg(danmaku.getDeltaFansClub()
+                     ?QString("(%1)").arg(danmaku.getDeltaFansClub()) : "");
     }
 
     label->setText(text);
