@@ -15,6 +15,7 @@ enum MessageType
     MSG_DIANGE,
     MSG_GUARD_BUY,
     MSG_WELCOME_GUARD,
+    MSG_FANS
 };
 
 class LiveDanmaku
@@ -53,6 +54,12 @@ public:
 
     }
 
+    LiveDanmaku(int fans, int club)
+        : msgType(MSG_FANS), fans(fans), fans_club(club), timeline(QDateTime::currentDateTime())
+    {
+
+    }
+
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
@@ -75,6 +82,8 @@ public:
         }
         danmaku.giftName = object.value("giftName").toString();
         danmaku.number = object.value("number").toInt();
+        danmaku.fans = object.value("fans").toInt();
+        danmaku.fans_club = object.value("dans_club").toInt();
         danmaku.msgType = (MessageType)object.value("msgType").toInt();
         return danmaku;
     }
@@ -104,6 +113,11 @@ public:
         else if (msgType == MSG_DIANGE)
         {
             object.insert("text", text);
+        }
+        else if (msgType == MSG_FANS)
+        {
+            object.insert("fans", fans);
+            object.insert("fans_club", fans_club);
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
@@ -142,6 +156,13 @@ public:
                                 .arg(nickname)
                                 .arg(text)
                                 .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_FANS)
+        {
+            return QString("[关注] 粉丝数：%1，粉丝团：%2 %3")
+                    .arg(fans)
+                    .arg(fans_club)
+                    .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";
     }
@@ -208,6 +229,16 @@ public:
         return number;
     }
 
+    int getFans() const
+    {
+        return fans;
+    }
+
+    int getFansClub() const
+    {
+        return fans_club;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -237,6 +268,8 @@ private:
 
     QString giftName;
     int number = 0;
+    int fans = 0;
+    int fans_club = 0;
 };
 
 #endif // LIVEDANMAKU_H

@@ -1113,8 +1113,23 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
-                if (cmd != "ROOM_RANK")
+
+                if (cmd == "ROOM_RANK")
+                {
+                }
+                else if (cmd == "ROOM_REAL_TIME_MESSAGE_UPDATE")
+                {
+                    // {"cmd":"ROOM_REAL_TIME_MESSAGE_UPDATE","data":{"roomid":22532956,"fans":1022,"red_notice":-1,"fans_club":50}}
+                    QJsonObject data = json.value("data").toObject();
+                    int fans = data.value("fans").toInt();
+                    int fans_club = data.value("fans_club").toInt();
+                    qDebug() << "粉丝数量：" << fans << "  粉丝团：" << fans_club;
+                    appendNewLiveDanmaku(LiveDanmaku(fans, fans_club));
+                }
+                else
+                {
                     SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
+                }
             }
             else
             {
@@ -1303,6 +1318,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
     }
 }
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());

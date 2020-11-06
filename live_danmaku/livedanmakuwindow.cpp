@@ -413,6 +413,12 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = QString("<font color='gray'>[点歌]</font> %1")
                 .arg(danmaku.getText());
     }
+    else if (msgType == MSG_FANS)
+    {
+        text = QString("<font color='gray'>[关注]</font> 粉丝数：%1, 粉丝团：%2")
+                .arg(danmaku.getFans())
+                .arg(danmaku.getFansClub());
+    }
 
     label->setText(text);
     label->adjustSize();
