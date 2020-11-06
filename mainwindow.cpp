@@ -1010,7 +1010,7 @@ QString MainWindow::nicknameSimplify(QString nickname, qint64 uid) const
     }
 
     // 没有取名字的，就不需要欢迎了
-    QRegularExpression defaultRe("^bili_\\d+$");
+    QRegularExpression defaultRe("^[bB]ili_\\d+$");
     if (simp.indexOf(defaultRe) > -1)
     {
         return "";
