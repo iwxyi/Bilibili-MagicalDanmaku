@@ -907,7 +907,7 @@ void MainWindow::getFansAndUpdate()
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
-             qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+//            qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
         }
 
         SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
@@ -938,8 +938,9 @@ void MainWindow::getFansAndUpdate()
             if (find >= 0)
                 break;
         }
-        qDebug() << ">>>>>>>index:" << index << "   find:" << find;
+//qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
+        // 取消关注（只支持第一页）
         if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
             qDebug() << "没有被关注过，或之前关注的全部取关了？";
@@ -956,6 +957,7 @@ void MainWindow::getFansAndUpdate()
                 fansList.removeFirst();
         }
 
+        // 新增关注
         for (int i = find-1; i >= 0; i--)
         {
             FanBean fan = newFans.at(i);
@@ -974,6 +976,7 @@ void MainWindow::getFansAndUpdate()
                 if (!nick.isEmpty())
                     sendAutoMsg(msg.arg(nick));
             }
+            fansList.insert(0, fan);
         }
 
     });
@@ -1200,12 +1203,14 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 writeFile.open(QIODevice::WriteOnly);
                 writeFile.write(body, body.size());
                 writeFile.close();
-SOCKET_INF << "写入文件结束";
+                SOCKET_INF << "写入文件结束";
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
                 QByteArray ba = readFile.readAll();
+                SOCKET_INF << "从文件中读取结束";
 #ifdef QT_NO_DEBUG
                 QByteArray unc = zlibUncompress(ba);
+                SOCKET_INF << "解压文件数据结束";
 #else
                 unsigned long si;
                 BYTE* target = new BYTE[ba.size()*5+100]{};
@@ -1214,7 +1219,6 @@ SOCKET_INF << "写入文件结束";
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
                 SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
 #endif
-                SOCKET_INF << "从文件中读取结束";
 
                 // 循环遍历
                 int offset = 0;
