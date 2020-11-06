@@ -170,6 +170,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
 
+    // 自动调整封面大小
     if (!coverPixmap.isNull())
     {
         QPixmap pixmap = coverPixmap;
@@ -180,6 +181,19 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         ui->roomCoverLabel->setPixmap(pixmap);
         ui->roomCoverLabel->setMinimumSize(1, 1);
     }
+
+    // 自动调整任务列表大小
+    /*for (int row = 0; row < ui->taskListWidget->count(); row++)
+    {
+        auto item = ui->taskListWidget->item(row);
+        auto widget = ui->taskListWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        widget->setMinimumWidth(ui->taskListWidget->contentsRect().width());
+        widget->resize(ui->taskListWidget->contentsRect().width(), widget->height());
+        widget->adjustSize();
+        item->setSizeHint(widget->size());
+    }*/
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -940,7 +954,7 @@ void MainWindow::getFansAndUpdate()
         }
 //qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
-        // 取消关注（只支持第一页）
+        // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
         if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
             qDebug() << "没有被关注过，或之前关注的全部取关了？";
@@ -1087,7 +1101,7 @@ void MainWindow::sendHeartPacket()
 QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 {
     unsigned long si;
-    BYTE* target = new BYTE[ba.size()*5+100]{};
+    BYTE* target = new BYTE[ba.size()*5+10000]{};
     uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
     // SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
     return QByteArray::fromRawData((char*)target, si);
@@ -1248,7 +1262,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     SOCKET_INF << "解压后获取到CMD：" << cmd;
                     if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                             && cmd != "ONLINERANK")
-                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << jsonBa;
+                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << QString(jsonBa);
                     try {
                         handleMessage(json);
                     } catch (...) {
@@ -1293,7 +1307,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
                                                      delta_fans, delta_club));
 
-                    getFansAndUpdate();
+                    if (delta_fans)
+                        getFansAndUpdate();
                 }
                 else
                 {
@@ -1365,9 +1380,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << "接收到弹幕：" << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
-        QString localName = danmakuWindow->getLocalNickname(uid);
+        /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
-            username = localName;
+            username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp)));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -1383,8 +1398,8 @@ void MainWindow::handleMessage(QJsonObject json)
 
         qDebug() << "接收到送礼：" << username << giftName << num << "  总价值：" << totalCoin << coinType;
         QString localName = danmakuWindow->getLocalNickname(uid);
-        if (!localName.isEmpty())
-            username = localName;
+        /*if (!localName.isEmpty())
+            username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1439,9 +1454,9 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 endTime = static_cast<qint64>(data.value("end_time").toDouble());
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         qDebug() << "舰长进入：" << username;
-        QString localName = danmakuWindow->getLocalNickname(uid);
+        /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
-            username = localName;
+            username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), true));
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
@@ -1465,8 +1480,8 @@ void MainWindow::handleMessage(QJsonObject json)
         bool isadmin = data.value("isadmin").toBool();
         qDebug() << "观众进入：" << username;
         QString localName = danmakuWindow->getLocalNickname(uid);
-        if (!localName.isEmpty())
-            username = localName;
+        /*if (!localName.isEmpty())
+            username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin));
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>353</width>
-    <height>450</height>
+    <width>281</width>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -417,6 +417,33 @@
             </property>
            </widget>
           </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_15">
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>以下为发送内容，随机一行</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <widget class="QSpinBox" name="sendCDSpin">
             <property name="toolTip">
@@ -558,7 +585,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>353</width>
+     <width>281</width>
      <height>23</height>
     </rect>
    </property>

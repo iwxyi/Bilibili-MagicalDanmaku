@@ -188,10 +188,12 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
     QColor c(30, 144, 255, 192);
     int penW = boundaryShowed;
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // 绘制用来看的边框
-    painter.setPen(QPen(c, penW/2, Qt::PenStyle::DashDotLine));
-    painter.fillRect(rect(), bgColor);
+    // 绘制背景
+    QPainterPath path;
+    path.addRoundedRect(rect(), 5, 5);
+    painter.fillPath(path, bgColor);
 }
 
 void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
@@ -249,34 +251,36 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     // 各种额外功能
     QRegExp replyRe("点歌|谢|欢迎");
-    if (danmaku.getMsgType() == MSG_DANMAKU
-            && !noReplyStrings.contains(danmaku.getText()))
+    if (danmaku.getMsgType() == MSG_DANMAKU)
     {
-        QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
-
-        // 自动翻译
-        if (autoTrans)
+        if (!noReplyStrings.contains(danmaku.getText()))
         {
-            QString msg = danmaku.getText();
-            QRegExp riyu("[\u0800-\u4e00]+");
-            QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
-            QRegExp eeyu("[А-Яа-яЁё]+");
-            if (msg.indexOf(hei) == -1)
+            QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
+
+            // 自动翻译
+            if (autoTrans)
             {
-                if (msg.indexOf(riyu) != -1
-                        || msg.indexOf(hanyu) != -1
-                        || msg.indexOf(eeyu) != -1)
+                QString msg = danmaku.getText();
+                QRegExp riyu("[\u0800-\u4e00]+");
+                QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
+                QRegExp eeyu("[А-Яа-яЁё]+");
+                if (msg.indexOf(hei) == -1)
                 {
-                    qDebug() << "检测到外语，自动翻译";
-                    startTranslate(item);
+                    if (msg.indexOf(riyu) != -1
+                            || msg.indexOf(hanyu) != -1
+                            || msg.indexOf(eeyu) != -1)
+                    {
+                        qDebug() << "检测到外语，自动翻译";
+                        startTranslate(item);
+                    }
                 }
             }
-        }
 
-        // AI回复
-        if (aiReply)
-        {
-            startReply(item);
+            // AI回复
+            if (aiReply)
+            {
+                startReply(item);
+            }
         }
     }
     else if (danmaku.getMsgType() == MSG_DIANGE)
@@ -287,6 +291,10 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         if (danmaku.isAttention())
             highlightItemText(item, true);
+    }
+    else if (danmaku.getMsgType() == MSG_WELCOME_GUARD)
+    {
+        highlightItemText(item, true);
     }
     noReplyStrings.clear();
 
@@ -392,14 +400,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GIFT)
     {
-        text = QString("<font color='gray'>[送礼]</font> %1 赠送 %2 × %3")
+        text = QString("<font color='gray'>[送礼]</font> %1 赠送 %2×%3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
     }
     else if (msgType == MSG_GUARD_BUY)
     {
-        text = QString("<font color='gray'>[上船]</font> %1 购买 %2 × %3")
+        text = QString("<font color='gray'>[上船]</font> %1 开通 %2×%3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
@@ -437,7 +445,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_ATTENTION)
     {
         qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch();
-        text = QString("<font color='gray'>[关注]</font> %1 %2 (%3秒前)")
+        text = QString("<font color='gray'>[关注]</font> %1 %2 <font color='gray'>%3s前</font>")
                 .arg(nameText)
                 .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
                 .arg(second);
