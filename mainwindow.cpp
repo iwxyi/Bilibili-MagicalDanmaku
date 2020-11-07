@@ -763,7 +763,7 @@ void MainWindow::getRoomInfo()
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
-
+        SOCKET_DEB << QString(data);
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -793,7 +793,7 @@ void MainWindow::getRoomInfo()
         roomName = roomInfo.value("title").toString();
         setWindowTitle(QApplication::applicationName() + " - " + roomName);
         ui->roomNameLabel->setText(roomName);
-        if (!liveStatus)
+        if (liveStatus != 1)
             ui->popularityLabel->setText("未开播");
         else
             ui->popularityLabel->setText("已开播");

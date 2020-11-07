@@ -188,10 +188,12 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
     QColor c(30, 144, 255, 192);
     int penW = boundaryShowed;
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
 
     // 绘制用来看的边框
-    painter.setPen(QPen(c, penW/2, Qt::PenStyle::DashDotLine));
-    painter.fillRect(rect(), bgColor);
+    QPainterPath path;
+    path.addRoundedRect(rect(), 5, 5);
+    painter.fillPath(path, bgColor);
 }
 
 void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
