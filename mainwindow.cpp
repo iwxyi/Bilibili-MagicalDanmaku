@@ -907,10 +907,10 @@ void MainWindow::getFansAndUpdate()
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
-//            qDebug() << "检测到粉丝：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+//            SOCKET_DEB << "    粉丝信息：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
         }
 
-        SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
+//        SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
 
         // 第一次加载
         if (!fansList.size())
@@ -938,7 +938,7 @@ void MainWindow::getFansAndUpdate()
             if (find >= 0)
                 break;
         }
-//qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
+//SOCKET_DEB << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
         // 取消关注（只支持第一页）
         if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
@@ -1217,6 +1217,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc;
                 try {
                     unc = zlibUncompress(ba);
+                    return ;
                 } catch (...) {
                     qDebug() << "!!!!!!error: 日常解压出错";
                     return ;
@@ -1324,8 +1325,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
 
     }
-    delete[] body.data();
-    delete[] message.data();
+//    delete[] body.data();
+//    delete[] message.data();
     SOCKET_DEB << "消息处理结束";
 }
 
@@ -1390,8 +1391,11 @@ void MainWindow::handleMessage(QJsonObject json)
         QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;
+        QString cs = QString::number(textColor, 16);
+        while (cs.size() < 6)
+            cs = "0" + cs;
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp),
-                                         unameColor, "#"+QString::number(textColor, 16)));
+                                         unameColor, "#"+cs));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
