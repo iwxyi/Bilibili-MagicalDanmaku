@@ -163,7 +163,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue("mainwindow/geometry", this->saveGeometry());
 
     if (danmakuWindow)
+    {
+        danmakuWindow->close();
         danmakuWindow->deleteLater();
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -345,7 +348,7 @@ void MainWindow::sendMsg(QString msg)
         if (!errorMsg.isEmpty())
         {
             statusLabel->setText(errorMsg);
-            qDebug() << errorMsg << msg;
+            qDebug() << "warning: 发送失败：" << errorMsg << msg;
         }
     });
 
@@ -361,6 +364,23 @@ void MainWindow::sendAutoMsg(QString msg)
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     int cd = ui->sendCDSpin->value() * 1000;
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    addNoReplyDanmakuText(msg);
+    sendMsg(msg);
+}
+
+void MainWindow::sendFrequencyAutoMsg(QString msg)
+{
+    if (!liveStatus) // 不在直播中
+        return ;
+
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = 1500; // 允许CD=1.5秒
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -976,7 +996,7 @@ void MainWindow::getFansAndUpdate()
                     QString localName = danmakuWindow->getLocalNickname(fan.mid);
                     QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
                     if (!nick.isEmpty())
-                        sendAutoMsg(msg.arg(nick));
+                        sendFrequencyAutoMsg(msg.arg(nick));
                 }
             }
 
@@ -1217,7 +1237,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc;
                 try {
                     unc = zlibUncompress(ba);
-                    return ;
                 } catch (...) {
                     qDebug() << "!!!!!!error: 日常解压出错";
                     return ;
