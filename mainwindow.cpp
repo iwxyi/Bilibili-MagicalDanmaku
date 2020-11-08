@@ -102,9 +102,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
-    ui->autoSendThankCheck->setChecked(settings.value("danmaku/sendThank", false).toBool());
+    ui->autoSendGiftCheck->setChecked(settings.value("danmaku/sendGift", false).toBool());
     ui->autoSendAttentionCheck->setChecked(settings.value("danmaku/sendAttention", false).toBool());
-    ui->sendCDSpin->setValue(settings.value("danmaku/sendCD", 5).toInt());
+    ui->sendWelcomeCDSpin->setValue(settings.value("danmaku/sendWelcomeCD", 10).toInt());
+    ui->sendGiftCDSpin->setValue(settings.value("danmaku/sendGiftCD", 5).toInt());
+    ui->sendAttentionCDSpin->setValue(settings.value("danmaku/sendAttentionCD", 5).toInt());
     ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
     ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
     ui->autoAttentionWordsEdit->setPlainText(settings.value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
@@ -141,7 +143,7 @@ MainWindow::MainWindow(QWidget *parent)
     }*/
 
     // 10秒内不进行自动化操作
-    QTimer::singleShot(10000, [=]{
+    QTimer::singleShot(3000, [=]{
         justStart = false;
     });
 
@@ -355,7 +357,7 @@ void MainWindow::sendMsg(QString msg)
     manager->post(*request, ba);
 }
 
-void MainWindow::sendAutoMsg(QString msg)
+void MainWindow::sendWelcomeMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
@@ -363,7 +365,7 @@ void MainWindow::sendAutoMsg(QString msg)
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendCDSpin->value() * 1000;
+    int cd = ui->sendWelcomeCDSpin->value() * 1000;
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -372,7 +374,7 @@ void MainWindow::sendAutoMsg(QString msg)
     sendMsg(msg);
 }
 
-void MainWindow::sendFrequencyAutoMsg(QString msg)
+void MainWindow::sendGiftMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
@@ -380,7 +382,24 @@ void MainWindow::sendFrequencyAutoMsg(QString msg)
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = 1500; // 允许CD=1.5秒
+    int cd = ui->sendGiftCDSpin->value() * 1000;
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    addNoReplyDanmakuText(msg);
+    sendMsg(msg);
+}
+
+void MainWindow::sendAttentionMsg(QString msg)
+{
+    if (!liveStatus) // 不在直播中
+        return ;
+
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = ui->sendAttentionCDSpin->value() * 1000;
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -996,7 +1015,7 @@ void MainWindow::getFansAndUpdate()
                     QString localName = danmakuWindow->getLocalNickname(fan.mid);
                     QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
                     if (!nick.isEmpty())
-                        sendFrequencyAutoMsg(msg.arg(nick));
+                        sendAttentionMsg(msg.arg(nick));
                 }
             }
 
@@ -1450,11 +1469,11 @@ void MainWindow::handleMessage(QJsonObject json)
                 msg = "哇，感谢 %1 赠送的%2！！！";
             }
         }
-        if (!justStart && ui->autoSendThankCheck->isChecked())
+        if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendAutoMsg(msg.arg(nick).arg(giftName));
+                sendWelcomeMsg(msg.arg(nick).arg(giftName));
         }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
@@ -1517,9 +1536,9 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-            int cd = ui->sendCDSpin->value() * 1000 * 10; // 10倍冷却时间
+            int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
             if (userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
-                return ; // 避免同一个人连续欢迎多次（好像B自动的？）
+                return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
             userComeTimes[uid] = currentTime;
 
             QStringList words = ui->autoWelcomeWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1529,7 +1548,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QString msg = words.at(r);
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendAutoMsg(msg.arg(nick));
+                sendWelcomeMsg(msg.arg(nick));
         }
     }
 }
@@ -1539,14 +1558,9 @@ void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
 }
 
-void MainWindow::on_autoSendThankCheck_stateChanged(int arg1)
+void MainWindow::on_autoSendGiftCheck_stateChanged(int arg1)
 {
-    settings.setValue("danmaku/sendThank", ui->autoSendThankCheck->isChecked());
-}
-
-void MainWindow::on_sendCDSpin_valueChanged(int arg1)
-{
-    settings.setValue("danmaku/sendCD", ui->sendCDSpin->value());
+    settings.setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
 }
 
 void MainWindow::on_autoWelcomeWordsEdit_textChanged()
@@ -1582,4 +1596,19 @@ void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
 void MainWindow::on_autoAttentionWordsEdit_textChanged()
 {
     settings.setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
+}
+
+void MainWindow::on_sendWelcomeCDSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/sendWelcomeCD", arg1);
+}
+
+void MainWindow::on_sendGiftCDSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/sendGiftCD", arg1);
+}
+
+void MainWindow::on_sendAttentionCDSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/sendAttentionCD", arg1);
 }

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>354</width>
-    <height>418</height>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -389,7 +389,10 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <layout class="QHBoxLayout" name="horizontalLayout_15">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="autoSendWelcomeCheck">
             <property name="toolTip">
@@ -397,37 +400,6 @@
             </property>
             <property name="text">
              <string>欢迎进入</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoSendThankCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送感谢送礼的弹幕&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>感谢送礼</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="autoSendAttentionCheck">
-            <property name="text">
-             <string>感谢关注</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_15">
-          <property name="topMargin">
-           <number>9</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>以下为发送内容，多行则随机</string>
             </property>
            </widget>
           </item>
@@ -445,7 +417,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QSpinBox" name="sendCDSpin">
+           <widget class="QSpinBox" name="sendWelcomeCDSpin">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连续两次自动发送弹幕的冷却时间&lt;/p&gt;&lt;p&gt;在此期间会无视进入直播间、送礼等&lt;/p&gt;&lt;p&gt;建议调高，避免被B站冻结发言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -455,8 +427,17 @@
             <property name="prefix">
              <string>冷却</string>
             </property>
-            <property name="value">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>3600</number>
+            </property>
+            <property name="singleStep">
              <number>5</number>
+            </property>
+            <property name="value">
+             <number>10</number>
             </property>
            </widget>
           </item>
@@ -473,6 +454,55 @@
          </widget>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_16">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="autoSendGiftCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送感谢送礼的弹幕&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>感谢送礼</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="sendGiftCDSpin">
+            <property name="suffix">
+             <string>秒</string>
+            </property>
+            <property name="prefix">
+             <string>冷却</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>3600</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QPlainTextEdit" name="autoThankWordsEdit">
           <property name="plainText">
            <string>感谢 %1 赠送的 %2 ~~~</string>
@@ -481,6 +511,55 @@
            <string>欢迎语，多行随机发送一行</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_17">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="autoSendAttentionCheck">
+            <property name="text">
+             <string>感谢关注</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="sendAttentionCDSpin">
+            <property name="suffix">
+             <string>秒</string>
+            </property>
+            <property name="prefix">
+             <string>冷却</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>3600</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
+            <property name="value">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
