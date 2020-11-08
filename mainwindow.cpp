@@ -370,6 +370,8 @@ void MainWindow::sendWelcomeMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
+    if (msg.length() > 20)
+        msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
     sendMsg(msg);
 }
@@ -387,6 +389,8 @@ void MainWindow::sendGiftMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
+    if (msg.length() > 20)
+        msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
     sendMsg(msg);
 }
@@ -404,6 +408,8 @@ void MainWindow::sendAttentionMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
+    if (msg.length() > 20)
+        msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
     sendMsg(msg);
 }
@@ -802,7 +808,7 @@ void MainWindow::getRoomInfo()
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
-        SOCKET_DEB << QString(data);
+        SOCKET_INF << QString(data);
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1176,8 +1182,10 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
-        if (!tmp.endsWith("的") && !tmp.endsWith("之") && !tmp.endsWith("の"))
+        if (!QString("的之の是叫有为奶在去着").contains(tmp.right(1)))
+        {
             simp = tmp;
+        }
     }
 
     // 没有取名字的，就不需要欢迎了
@@ -1611,4 +1619,17 @@ void MainWindow::on_sendGiftCDSpin_valueChanged(int arg1)
 void MainWindow::on_sendAttentionCDSpin_valueChanged(int arg1)
 {
     settings.setValue("danmaku/sendAttentionCD", arg1);
+}
+
+void MainWindow::on_diangeHistoryButton_clicked()
+{
+    QStringList list;
+    int first = qMax(0, diangeHistory.size() - 10);
+    for (int i = diangeHistory.size()-1; i >= first; i--)
+    {
+        Diange dg = diangeHistory.at(i);
+        list << dg.name + "  -  " + dg.nickname + "  " + dg.time.toString("hh:mm:ss");
+    }
+    QString text = list.size() ? list.join("\n") : "没有点歌记录";
+    QMessageBox::information(this, "点歌历史", text);
 }

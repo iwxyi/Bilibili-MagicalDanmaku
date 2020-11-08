@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>354</width>
+    <width>347</width>
     <height>467</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -218,7 +218,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -229,6 +229,17 @@
             </property>
             <property name="text">
              <string>点歌自动复制</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="diangeHistoryButton">
+            <property name="styleSheet">
+             <string notr="true">background: transparent;
+border: none;</string>
+            </property>
+            <property name="text">
+             <string> 历史</string>
             </property>
            </widget>
           </item>
@@ -667,7 +678,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>354</width>
+     <width>347</width>
      <height>26</height>
     </rect>
    </property>
