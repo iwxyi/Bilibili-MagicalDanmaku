@@ -21,7 +21,6 @@
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
-#include "zlib.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
