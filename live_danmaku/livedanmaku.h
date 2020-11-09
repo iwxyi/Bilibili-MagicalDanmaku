@@ -31,6 +31,13 @@ public:
 
     }
 
+    LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time, QString unameColor, QString textColor)
+        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time),
+          uname_color(unameColor), text_color(textColor)
+    {
+
+    }
+
     LiveDanmaku(QString nickname, QString gift, int num, qint64 uid, QDateTime time)
         : msgType(MSG_GIFT), nickname(nickname), giftName(gift), number(num), uid(uid), timeline(time)
     {
@@ -76,6 +83,7 @@ public:
         danmaku.uid = object.value("uid").toInt();
         danmaku.nickname = object.value("nickname").toString();
         danmaku.uname_color = object.value("uname_color").toString();
+        danmaku.text_color = object.value("text_color").toString();
         danmaku.timeline = QDateTime::fromString(
                     object.value("timeline").toString(),
                     "yyyy-MM-dd hh:mm:ss");
@@ -109,6 +117,7 @@ public:
         {
             object.insert("text", text);
             object.insert("uname_color", uname_color);
+            object.insert("text_color", text_color);
             object.insert("isadmin", isadmin);
             object.insert("vip", vip);
             object.insert("svip", svip);
@@ -218,6 +227,11 @@ public:
         return uname_color;
     }
 
+    QString getTextColor() const
+    {
+        return text_color;
+    }
+
     QDateTime getTimeline() const
     {
         return timeline;
@@ -286,6 +300,7 @@ private:
     qint64 uid = 0; // 用户ID
     QString nickname;
     QString uname_color; // 没有的话是空的
+    QString text_color; // 没有的话是空的
     QDateTime timeline;
     int isadmin = 0; // 房管
     int vip = 0;

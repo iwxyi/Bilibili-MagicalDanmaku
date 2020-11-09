@@ -148,18 +148,19 @@ private slots:
 
     void sendMsg(QString msg);
 
-    void sendAutoMsg(QString msg);
+    void sendWelcomeMsg(QString msg);
+
+    void sendGiftMsg(QString msg);
+
+    void sendAttentionMsg(QString msg);
 
     void slotSocketError(QAbstractSocket::SocketError error);
 
     void slotBinaryMessageReceived(const QByteArray &message);
 
-
     void on_autoSendWelcomeCheck_stateChanged(int arg1);
 
-    void on_autoSendThankCheck_stateChanged(int arg1);
-
-    void on_sendCDSpin_valueChanged(int arg1);
+    void on_autoSendGiftCheck_stateChanged(int arg1);
 
     void on_autoWelcomeWordsEdit_textChanged();
 
@@ -174,6 +175,14 @@ private slots:
     void on_autoSendAttentionCheck_stateChanged(int arg1);
 
     void on_autoAttentionWordsEdit_textChanged();
+
+    void on_sendWelcomeCDSpin_valueChanged(int arg1);
+
+    void on_sendGiftCDSpin_valueChanged(int arg1);
+
+    void on_sendAttentionCDSpin_valueChanged(int arg1);
+
+    void on_diangeHistoryButton_clicked();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);

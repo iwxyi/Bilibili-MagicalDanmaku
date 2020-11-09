@@ -375,8 +375,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     QString trans = item->data(DANMAKU_TRANS_ROLE).toString();
     QString reply = item->data(DANMAKU_REPLY_ROLE).toString();
 
+    auto isBlankColor = [=](QString c) -> bool {
+        c = c.toLower();
+        return c.isEmpty() || c == "#ffffff" || c == "#000000"
+                || c == "#ffffffff" || c == "#00000000";
+    };
+
     // 设置文字
-    QString nameColorStr = danmaku.getUnameColor().isEmpty()
+    QString nameColorStr = isBlankColor(danmaku.getUnameColor())
             ? QVariant(this->nameColor).toString()
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColorStr + "'>"
@@ -386,7 +392,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     MessageType msgType = danmaku.getMsgType();
     if (msgType == MSG_DANMAKU)
     {
-        text = nameText + danmaku.getText();
+        QString colorfulMsg = msg;
+        if (!isBlankColor(danmaku.getTextColor()))
+            colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
+                    + danmaku.getText() + "</font> ";
+        text = nameText + colorfulMsg;
 
         if (!trans.isEmpty() && trans != msg)
         {
@@ -474,7 +484,7 @@ void LiveDanmakuWindow::highlightItemText(QListWidgetItem *item, bool recover)
     // 定时恢复原样
     if (!recover)
         return ;
-    QTimer::singleShot(3000, [=]{
+    QTimer::singleShot(5000, [=]{
         // 怕到时候没了
        if (!isItemExist(item))
        {
