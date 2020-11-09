@@ -1216,11 +1216,14 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
+    qDebug() << (int)message.data() << message.size() << message;
     int operation = ((uchar)message[8] << 24)
             + ((uchar)message[9] << 16)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
+//    qDebug() << "------------------";
+//    qDebug() << (int)body.data() << body.size() << body;
     SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(35)) << "...";
 
     QJsonParseError error;
@@ -1266,14 +1269,16 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             {
                 QFile writeFile("receive.txt");
                 writeFile.open(QIODevice::WriteOnly);
-                writeFile.write(body, body.size());
+                writeFile.write(body, body.size()+1);
                 writeFile.close();
                 SOCKET_INF << "写入文件结束";
 
                 QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
-                QByteArray ba = readFile.readAll();
+                QByteArray ba;
+                ba.append(readFile.readAll());
                 SOCKET_INF << "从文件中读取结束";
+//                qDebug() << "1111111111" << ba;
 #ifdef QT_NO_DEBUG
                 QByteArray unc;
                 try {
@@ -1286,13 +1291,31 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 #else
                 unsigned long si;
                 BYTE* target = new BYTE[ba.size()*5+100]{};
-                uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-                 SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
+//                uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
+                FILE* File_compress;
+                File_compress = fopen("receive.txt", "r");
+                unsigned char* buffer_compress = new unsigned char[ba.size()*5+100];
+                int len = fread(buffer_compress, sizeof(char), 99999, File_compress);
+                fseek(File_compress, 0, SEEK_END);
+                len = ftell(File_compress);
+                qDebug() << "文件大小：" << len;
+                uncompress(target, &si, buffer_compress, len);
+                 SOCKET_DEB << "解压后数据大小：" << si << len; // 这句话不能删！ // 这句话不能加！
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
-                SOCKET_DEB << "解压后的数据：" << unc.size() << unc;
+                SOCKET_DEB << "解压后的数据：" << unc.size() << (int)(*unc.data()) << unc;
 #endif
+                fclose(File_compress);
+                if (unc.size() <= body.size()/2)
+                {
+                    qDebug() << "解压错误：";
+                    qDebug() << "---------message" << message;
+                    qDebug() << "---------body   " << body;
+                    qDebug() << "---------ba     " << ba;
+                    qDebug() << "---------target " << QByteArray::fromRawData((char*)target, ba.size());
+                    QApplication::quit();
+                }
 //                return ; // XXX
-
+//qDebug() << "2222222222" << ba;
                 // 循环遍历
                 int offset = 0;
                 short headerSize = 16;
