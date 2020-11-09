@@ -226,8 +226,10 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     listWidget->setItemWidget(item, label);
 
     // 设置数据
+    bool ignored = ignoredMsgs.contains(danmaku.getText());
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
+    item->setData(DANMAKU_IGNORE_ROLE, ignored);
     setItemWidgetText(item);
 
     // 开启动画
@@ -253,7 +255,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QRegExp replyRe("点歌|谢|欢迎");
     if (danmaku.getMsgType() == MSG_DANMAKU)
     {
-        if (!noReplyStrings.contains(danmaku.getText()))
+        if (!ignored)
         {
             QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
 
@@ -289,14 +291,14 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     }
     else if (danmaku.getMsgType() == MSG_ATTENTION)
     {
-        if (danmaku.isAttention())
+        if (danmaku.isAttention() && (QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch() < 15000)) // 15秒内
             highlightItemText(item, true);
     }
     else if (danmaku.getMsgType() == MSG_WELCOME_GUARD)
     {
         highlightItemText(item, true);
     }
-    noReplyStrings.clear();
+    ignoredMsgs.clear();
 
     if (scrollEnd)
     {
@@ -393,9 +395,16 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (msgType == MSG_DANMAKU)
     {
         QString colorfulMsg = msg;
-        if (!isBlankColor(danmaku.getTextColor()))
+        if (item->data(DANMAKU_IGNORE_ROLE).toBool()) // 灰色
+        {
+            colorfulMsg = "<font color='gray'>"
+                    + danmaku.getText() + "</font> ";
+        }
+        else if (!isBlankColor(danmaku.getTextColor()))
+        {
             colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
                     + danmaku.getText() + "</font> ";
+        }
         text = nameText + colorfulMsg;
 
         if (!trans.isEmpty() && trans != msg)
@@ -864,9 +873,9 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     });
 }
 
-void LiveDanmakuWindow::addNoReply(QString text)
+void LiveDanmakuWindow::addIgnoredMsg(QString text)
 {
-    noReplyStrings.append(text);
+    ignoredMsgs.append(text);
 }
 
 void LiveDanmakuWindow::setListWidgetItemSpacing(int x)

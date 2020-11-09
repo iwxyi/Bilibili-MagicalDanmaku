@@ -38,9 +38,10 @@
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
-#define DANMAKU_TRANS_ROLE Qt::UserRole+2
-#define DANMAKU_REPLY_ROLE Qt::UserRole+3
-#define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+4
+#define DANMAKU_IGNORE_ROLE Qt::UserRole+2
+#define DANMAKU_TRANS_ROLE Qt::UserRole+3
+#define DANMAKU_REPLY_ROLE Qt::UserRole+4
+#define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+5
 
 class LiveDanmakuWindow : public QWidget
 {
@@ -75,7 +76,7 @@ public slots:
     void startTranslate(QListWidgetItem* item);
     void setAIReply(bool reply);
     void startReply(QListWidgetItem* item);
-    void addNoReply(QString text);
+    void addIgnoredMsg(QString text);
     void setListWidgetItemSpacing(int x);
 
 private:
@@ -97,7 +98,7 @@ private:
     QColor hlColor;
     bool autoTrans = true;
     bool aiReply = false;
-    QStringList noReplyStrings;
+    QStringList ignoredMsgs;
     QList<qint64> careUsers;
 
     QHash<qint64, QString> localNicknames;
