@@ -7,6 +7,14 @@
 #include <QJsonValue>
 #include <QJsonObject>
 
+#if true
+#define s8(x) QString(x)
+#else
+#define s8(x) QString::fromLocal8Bit(x)
+#endif
+
+#define snum(x) QString::number(x)
+
 enum MessageType
 {
     MSG_DANMAKU,
