@@ -603,6 +603,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
         if (!liveStatus) // 没有开播，不进行定时任务
             return ;
+        addNoReplyDanmakuText(msg);
         sendMsg(msg);
     });
 
@@ -1504,10 +1505,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
-        QString giftName = data.value("giftName").toString();
+        QString giftName = data.value("gift_name").toString();
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
-        qDebug() << username << "购买舰长";
+        qDebug() << username << "购买" << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言

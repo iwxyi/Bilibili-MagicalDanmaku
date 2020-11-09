@@ -217,39 +217,65 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QString nameText = "<font color='" + nameColor + "'>"
                        + danmaku.getNickname() + "</font> ";
     QString text = nameText + danmaku.getText();
-    QLabel* label = new QLabel(listWidget);
+
+    QWidget* widget = new QWidget(listWidget);
+    PortraitLabel* portrait = new PortraitLabel(PORTRAIT_SIDE, widget);
+    QLabel* label = new QLabel(widget);
+    QHBoxLayout* layout = new QHBoxLayout(widget);
+    layout->addWidget(portrait);
+    layout->addWidget(label);
+    layout->setMargin(0);
+    widget->setLayout(layout);
+    layout->activate();
+
+    if (danmaku.getMsgType() != MSG_DANMAKU)
+    {
+        portrait->setFixedSize(0, 0);
+        portrait->hide();
+    }
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
     label->setFixedWidth(listWidget->contentsRect().width());
+    bool hasPortrait = headPortraits.contains(danmaku.getUid());
+    if (hasPortrait)
+        portrait->setPixmap(headPortraits.value(danmaku.getUid()));
+
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
-    listWidget->setItemWidget(item, label);
+    listWidget->setItemWidget(item, widget);
 
     // 设置数据
     bool ignored = ignoredMsgs.contains(danmaku.getText());
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     item->setData(DANMAKU_IGNORE_ROLE, ignored);
-    setItemWidgetText(item);
+    setItemWidgetText(item); // 会自动调整大小
+
+    // 网络数据
+    if (!hasPortrait)
+        getUserInfo(danmaku.getUid(), item);
 
     // 开启动画
-    QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
-    ani->setStartValue(QSize(label->width(), 0));
-    ani->setEndValue(label->size());
-    ani->setDuration(300);
-    ani->setEasingCurve(QEasingCurve::InOutQuad);
-    label->resize(label->width(), 1);
-    item->setSizeHint(label->size());
-    connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
-        item->setSizeHint(val.toSize());
-        if (scrollEnd)
-            listWidget->scrollToBottom();
-    });
-    connect(ani, &QPropertyAnimation::finished, label, [=]{
-        if (scrollEnd)
-            listWidget->scrollToBottom();
-    });
-    ani->start();
+    if (DANMAKU_ANIMATION_ENABLED)
+    {
+        QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
+        ani->setStartValue(QSize(widget->width(), 0));
+        ani->setEndValue(widget->size());
+        ani->setDuration(300);
+        ani->setEasingCurve(QEasingCurve::InOutQuad);
+        widget->resize(widget->width(), 1);
+        item->setSizeHint(widget->size());
+        connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
+            item->setSizeHint(val.toSize());
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        connect(ani, &QPropertyAnimation::finished, widget, [=]{
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        ani->start();
+    }
 
     // 各种额外功能
     QRegExp replyRe("点歌|谢|欢迎");
@@ -291,14 +317,20 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     }
     else if (danmaku.getMsgType() == MSG_ATTENTION)
     {
-        if (danmaku.isAttention() && (QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch() < 15000)) // 15秒内
+        if (danmaku.isAttention()
+                && (QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch() <= 20)) // 20秒内
             highlightItemText(item, true);
     }
     else if (danmaku.getMsgType() == MSG_WELCOME_GUARD)
     {
         highlightItemText(item, true);
     }
-    ignoredMsgs.clear();
+    else if (danmaku.getMsgType() == MSG_GUARD_BUY)
+    {
+        highlightItemText(item, false);
+    }
+    if (ignored)
+        ignoredMsgs.clear();
 
     if (scrollEnd)
     {
@@ -320,7 +352,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             auto item = listWidget->item(i);
             auto widget = listWidget->itemWidget(item);
 
-            QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
+            /*QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
             ani->setStartValue(widget->size());
             ani->setEndValue(QSize(widget->width(), 0));
             ani->setDuration(300);
@@ -340,26 +372,21 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
                 if (scrollEnd)
                     listWidget->scrollToBottom();
             });
-            ani->start();
-            /*listWidget->removeItemWidget(item);
+            ani->start();*/
+            listWidget->removeItemWidget(item);
             listWidget->takeItem(i);
-            widget->deleteLater();*/
+            widget->deleteLater();
             if (item == currentItem)
                 listWidget->clearSelection();
             break;
         }
     }
-
-//    if (scrollEnd)
-//        listWidget->scrollToBottom();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 {
     auto widget = listWidget->itemWidget(item);
-    if (!widget)
-        return ;
-    auto label = qobject_cast<QLabel*>(widget);
+    auto label = getItemWidgetLabel(item);
     if (!label)
         return ;
     auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
@@ -394,6 +421,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     MessageType msgType = danmaku.getMsgType();
     if (msgType == MSG_DANMAKU)
     {
+        // 彩色消息
         QString colorfulMsg = msg;
         if (item->data(DANMAKU_IGNORE_ROLE).toBool()) // 灰色
         {
@@ -405,13 +433,16 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
                     + danmaku.getText() + "</font> ";
         }
+
         text = nameText + colorfulMsg;
 
+        // 翻译
         if (!trans.isEmpty() && trans != msg)
         {
             text = text + "（" + trans + "）";
         }
 
+        // 回复
         if (!reply.isEmpty())
         {
             text = text + "<br/>" + "&nbsp;&nbsp;=> " + reply;
@@ -472,8 +503,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     label->setText(text);
     label->adjustSize();
+    widget->adjustSize();
     label->resize(label->width(), label->height() + listItemSpacing);
-    item->setSizeHint(label->size());
+    widget->layout()->activate();
+    item->setSizeHint(widget->size());
 
     if (scrollEnd)
         listWidget->scrollToBottom();
@@ -481,8 +514,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
 void LiveDanmakuWindow::highlightItemText(QListWidgetItem *item, bool recover)
 {
+    if (item->data(DANMAKU_IGNORE_ROLE).toBool())
+        return ;
     auto widget = listWidget->itemWidget(item);
-    auto label = qobject_cast<QLabel*>(widget);
+    auto label = reinterpret_cast<QLabel*>(widget->layout()->itemAt(DANMAKU_WIDGET_LABEL));
     if (!label)
         return ;
     QPalette pa(label->palette());
@@ -512,7 +547,7 @@ void LiveDanmakuWindow::resetItemsTextColor()
     for (int i = 0; i < listWidget->count(); i++)
     {
         auto widget = listWidget->itemWidget(listWidget->item(i));
-        auto label = qobject_cast<QLabel*>(widget);
+        auto label = reinterpret_cast<QLabel*>(widget->layout()->itemAt(DANMAKU_WIDGET_LABEL));
         if (!label)
             return ;
         QPalette pa(label->palette());
@@ -895,6 +930,17 @@ bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
     return false;
 }
 
+QLabel *LiveDanmakuWindow::getItemWidgetLabel(QListWidgetItem* item)
+{
+    auto widget = listWidget->itemWidget(item);
+    if (!widget)
+        return nullptr;
+    QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+    auto layoutItem = layout->itemAt(DANMAKU_WIDGET_LABEL);
+    auto label = layoutItem->widget();
+    return static_cast<QLabel*>(label);
+}
+
 /**
  * 外语翻译、AI回复等动态修改文字的，重新设置动画
  * 否则尺寸为没有修改之前的，导致显示不全
@@ -904,7 +950,7 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
     auto widget = listWidget->itemWidget(item);
     if (!widget)
         return ;
-    auto label = qobject_cast<QLabel*>(widget);
+    auto label = reinterpret_cast<QLabel*>(widget->layout()->itemAt(DANMAKU_WIDGET_LABEL));
     if (!label)
         return ;
     int ht = label->height();
@@ -930,4 +976,35 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
             listWidget->scrollToBottom();
     });
     ani->start();
+}
+
+void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
+{
+    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
+    connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        QString faceUrl = data.value("face").toString();
+
+        if (!isItemExist(item))
+            return ;
+    });
+}
+
+void LiveDanmakuWindow::getUserHeadPortrait(QString url)
+{
+
 }
