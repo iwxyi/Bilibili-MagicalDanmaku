@@ -1223,8 +1223,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
-//    qDebug() << "------------------";
-//    qDebug() << (int)body.data() << body.size() << body;
     SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(35)) << "...";
 
     QJsonParseError error;
@@ -1269,89 +1267,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             if (protover == 2) // 默认协议版本，zlib解压
             {
                 slotUncompressBytes(body);
-                return ;
-                /*QFile writeFile("receive.txt");
-                writeFile.open(QIODevice::WriteOnly);
-                writeFile.write(body, body.size()+1);
-                writeFile.close();
-                SOCKET_INF << "写入文件结束";*/
-
-                /*QFile readFile("receive.txt");
-                readFile.open(QIODevice::ReadWrite);
-                QByteArray ba;
-                ba.append(readFile.readAll());
-                SOCKET_INF << "从文件中读取结束";
-//                qDebug() << "1111111111" << ba;*/
-#ifdef QT_NO_DEBUG
-                QByteArray unc;
-                try {
-                    unc = zlibUncompress(ba);
-                } catch (...) {
-                    qDebug() << "!!!!!!error: 日常解压出错";
-                    return ;
-                }
-                SOCKET_INF << "解压文件数据结束" << unc.size();
-#else
-                unsigned long si;
-                BYTE* target = new BYTE[body.size()*5+100]{};
-//                uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-                unsigned char* buffer_compress = (unsigned char*)body.data();
-                int len = body.size()+1;
-                qDebug() << "文件大小：" << len;
-                uncompress(target, &si, buffer_compress, len);
-                SOCKET_DEB << "解压后数据大小：" << si << len; // 这句话不能删！ // 这句话不能加！
-                QByteArray unc = QByteArray::fromRawData((char*)target, si);
-                SOCKET_DEB << "解压后的数据：" << unc.size() << (int)(*unc.data()) << unc;
-#endif
-                /*if (unc.size() <= body.size()/2)
-                {
-                    qDebug() << "解压错误：";
-                    qDebug() << "---------body   " << body;
-//                    qDebug() << "---------ba     " << ba;
-                    qDebug() << "---------buffer " << QByteArray::fromRawData((char*)buffer_compress, body.size());
-                    qDebug() << "---------target " << QByteArray::fromRawData((char*)target, body.size());
-//                    QApplication::quit();
-                    return ;
-                }*/
-//                return ; // XXX
-//qDebug() << "2222222222" << ba;
-                // 循环遍历
-                int offset = 0;
-                short headerSize = 16;
-                while (offset < unc.size() - headerSize)
-                {
-                    int packSize = ((uchar)unc[offset+0] << 24)
-                            + ((uchar)unc[offset+1] << 16)
-                            + ((uchar)unc[offset+2] << 8)
-                            + (uchar)unc[offset+3];
-                    QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
-                    QJsonParseError error;
-                    QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
-                    if (error.error != QJsonParseError::NoError)
-                    {
-                        qDebug() << s8("解析解压后的JSON出错：") << error.errorString();
-                        qDebug() << s8("包数值：") << offset << packSize << (unsigned int)unc[0] << (unsigned int)unc[1] << (unsigned int)unc[2] << (unsigned int)unc[3];
-                        qDebug() << s8(">>当前JSON") << jsonBa;
-                        qDebug() << s8(">>解压正文") << unc;
-                        return ;
-                    }
-                    QJsonObject json = document.object();
-                    QString cmd = json.value("cmd").toString();
-                    SOCKET_INF << "解压后获取到CMD：" << cmd;
-                    if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
-                            && cmd != "ONLINERANK")
-                        SOCKET_DEB << "单个JSON消息：" << offset << packSize << QString(jsonBa);
-                    try {
-                        handleMessage(json);
-                    } catch (...) {
-                        qDebug() << s8("出错啦") << jsonBa;
-                    }
-
-                    offset += packSize;
-                }
-
-//                delete[] ba.data();
-//                delete[] unc.data();
             }
             else if (protover == 0)
             {
@@ -1398,11 +1313,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 qDebug() << s8("未知协议：") << protover << s8("，若有必要请处理");
                 qDebug() << s8("未知正文：") << body;
             }
-
-            /*QFile file("receive.txt");
-            file.open(QIODevice::WriteOnly);
-            file.write(message, message.size());
-            file.close();*/
         }
     }
     else
@@ -1416,13 +1326,15 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
 void MainWindow::slotUncompressBytes(const QByteArray &body)
 {
+    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
     unsigned long si;
     BYTE* target = new BYTE[body.size()*5+100]{};
     unsigned char* buffer_compress = (unsigned char*)body.data();
-    int len = body.size()+1;
+    unsigned long len = body.size()+1;
     uncompress(target, &si, buffer_compress, len);
-    SOCKET_DEB << "解压后数据大小：" << si << len;
+    SOCKET_DEB << "解压后数据大小：" << si << "    原来：" << len;
     QByteArray unc = QByteArray::fromRawData((char*)target, si);
+    qDebug() << "<<<<<<<<<<<<<<结果：" << unc.size() << unc;
     if (unc.size() < len)
         QApplication::quit();
     splitUncompressedBody(unc);
@@ -1430,7 +1342,6 @@ void MainWindow::slotUncompressBytes(const QByteArray &body)
 
 void MainWindow::splitUncompressedBody(const QByteArray &unc)
 {
-    qDebug() << ">>>>>>>>>>>>>>>>>>解析body" << unc;
     int offset = 0;
     short headerSize = 16;
     while (offset < unc.size() - headerSize)
@@ -1445,7 +1356,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         if (error.error != QJsonParseError::NoError)
         {
             qDebug() << s8("解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("包数值：") << offset << packSize << (unsigned int)unc[0] << (unsigned int)unc[1] << (unsigned int)unc[2] << (unsigned int)unc[3];
+            qDebug() << s8("包数值：") << offset << packSize << unc.size();
             qDebug() << s8(">>当前JSON") << jsonBa;
             qDebug() << s8(">>解压正文") << unc;
             return ;
