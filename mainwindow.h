@@ -159,6 +159,8 @@ private slots:
 
     void slotUncompressBytes(const QByteArray &body);
 
+    void splitUncompressedBody(const QByteArray &unc);
+
     void on_autoSendWelcomeCheck_stateChanged(int arg1);
 
     void on_autoSendGiftCheck_stateChanged(int arg1);
