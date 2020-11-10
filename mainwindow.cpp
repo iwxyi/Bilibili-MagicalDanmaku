@@ -1326,7 +1326,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
 void MainWindow::slotUncompressBytes(const QByteArray &body)
 {
-    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
+//    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
     unsigned long si;
     BYTE* target = new BYTE[body.size()*5+100]{};
     unsigned char* buffer_compress = (unsigned char*)body.data();
@@ -1334,10 +1334,11 @@ void MainWindow::slotUncompressBytes(const QByteArray &body)
     uncompress(target, &si, buffer_compress, len);
     SOCKET_DEB << "解压后数据大小：" << si << "    原来：" << len;
     QByteArray unc = QByteArray::fromRawData((char*)target, si);
-    qDebug() << "<<<<<<<<<<<<<<结果：" << unc.size() << unc;
+    qDebug() << "<<<<<<<<<<<<<<结果：" << unc.size() << unc; // 加上这句话似乎就能用了……
     if (unc.size() < len)
         QApplication::quit();
     splitUncompressedBody(unc);
+    delete[] target;
 }
 
 void MainWindow::splitUncompressedBody(const QByteArray &unc)
@@ -1356,7 +1357,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         if (error.error != QJsonParseError::NoError)
         {
             qDebug() << s8("解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("包数值：") << offset << packSize << unc.size();
+            qDebug() << s8("包数值：") << offset << packSize << "  解压后大小：" << unc.size();
             qDebug() << s8(">>当前JSON") << jsonBa;
             qDebug() << s8(">>解压正文") << unc;
             return ;
