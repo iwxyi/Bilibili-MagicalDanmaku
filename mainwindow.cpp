@@ -464,6 +464,8 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
+        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
+        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
@@ -1505,23 +1507,27 @@ void MainWindow::handleMessage(QJsonObject json)
         /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;*/
+
+        // 统计弹幕次数
+        int danmuCount = danmuCounts->value(snum(uid), 0).toInt()+1;
+        danmuCounts->setValue(snum(uid), danmuCount);
+
+        // 添加到列表
         QString cs = QString::number(textColor, 16);
         while (cs.size() < 6)
             cs = "0" + cs;
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                          unameColor, "#"+cs));
 
-        // 统计弹幕次数
-        int danmuCount = danmuCounts->value(snum(uid), 0).toInt()+1;
-        danmuCounts->setValue(snum(uid), danmuCount);
-
         // 新人发言
-        if (danmakuWindow && !blockReString.isEmpty()
-                && ((level == 0 && danmuCount <= 3) || danmuCount == 1) )
+        if (danmakuWindow && !blockReString.isEmpty())
         {
-            if (msg.indexOf(QRegularExpression(blockReString)) > -1)
+            if ((level == 0 && danmuCount <= 3) || danmuCount <= 1)
             {
-                danmakuWindow->showFastBlock(uid, msg);
+                if (msg.indexOf(QRegularExpression(blockReString)) > -1) // XXX
+                {
+                    danmakuWindow->showFastBlock(uid, msg);
+                }
             }
         }
     }
@@ -1720,14 +1726,24 @@ void MainWindow::on_diangeHistoryButton_clicked()
 
 void MainWindow::addBlockUser(qint64 uid, int hour)
 {
+    if(browserData.isEmpty())
+    {
+        statusLabel->setText("请先设置登录信息");
+        return ;
+    }
+
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    QString csrf = browserData.mid(posl, posr - posl);
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(token).arg(token);
+                    .arg(roomId).arg(uid).arg(hour).arg(csrf).arg(csrf);
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
@@ -1755,6 +1771,12 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
 
 void MainWindow::delBlockUser(qint64 uid)
 {
+    if(browserData.isEmpty())
+    {
+        statusLabel->setText("请先设置登录信息");
+        return ;
+    }
+
     if (userBlockIds.contains(uid))
     {
         delRoomBlockUser(userBlockIds.value(uid));
@@ -1809,8 +1831,12 @@ void MainWindow::delRoomBlockUser(qint64 id)
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    QString csrf = browserData.mid(posl, posr - posl);
     QString data = QString("id=%1&roomid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(roomId).arg(uid).arg(token).arg(token);
+                    .arg(id).arg(roomId).arg(uid).arg(csrf).arg(csrf);
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();

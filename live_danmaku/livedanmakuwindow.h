@@ -28,6 +28,7 @@
 #include <QPropertyAnimation>
 #include <QInputDialog>
 #include <QDir>
+#include <QPushButton>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"

@@ -1027,7 +1027,66 @@ void LiveDanmakuWindow::setNewbieTip(bool tip)
 
 void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
 {
+    auto moveAni = [=](QWidget* widget, QPoint start, QPoint end, int duration, QEasingCurve curve) {
+        QPropertyAnimation* ani = new QPropertyAnimation(widget, "pos");
+        ani->setStartValue(start);
+        ani->setEndValue(end);
+        ani->setDuration(duration);
+        ani->setEasingCurve(curve);
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        ani->start();
+    };
 
+    // 初始化控件
+    QLabel* label = new QLabel(this);
+    QPushButton* btn = new QPushButton("拉黑", this);
+    QTimer* timer = new QTimer(this);
+    timer->setInterval(5000);
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, timer, [=]{
+        moveAni(label, label->pos(),
+                QPoint(label->x(), -label->height()),
+                300, QEasingCurve::OutCubic);
+        moveAni(btn, btn->pos(),
+                QPoint(btn->x(), -btn->height()),
+                300, QEasingCurve::InOutCubic);
+
+        QTimer::singleShot(500, timer, [=]{
+            timer->deleteLater();
+            label->deleteLater();
+            btn->deleteLater();
+        });
+    });
+    connect(btn, &QPushButton::clicked, btn, [=]{
+        disconnect(btn, SIGNAL(clicked()));
+        emit signalAddBlockUser(uid, 720);
+        timer->setInterval(100);
+        timer->start();
+    });
+
+    label->setStyleSheet("QLabel { background: white; color: black; padding: 10px; "
+                       "border: none; border-radius: 10px; }");
+    btn->setStyleSheet("QPushButton { background: black; color:white;"
+                       "border: none; border-radius: 10px;}"
+                       "QPushButton:hover { background: #222222; }"
+                       "QPushButton:pressed { background: #868686; }");
+
+    label->setText(msg);
+    label->setFixedWidth(listWidget->width() * 0.9);
+    label->adjustSize();
+    label->move(this->width()/2 - label->width()/2, -label->height());
+
+    btn->setFixedWidth(label->height()*2);
+    btn->setCursor(Qt::PointingHandCursor);
+    btn->move(label->geometry().right() - (label->height() - btn->height())/2 - btn->width(), -label->height());
+
+    label->show();
+    btn->show();
+
+    int labelTop = label->height() / 10;
+    moveAni(label, label->pos(), QPoint(label->x(), labelTop), 300, QEasingCurve::OutBack);
+    moveAni(btn, btn->pos(), QPoint(btn->x(), labelTop + (label->height()-btn->height())/2), 800, QEasingCurve::OutBounce);
+    timer->start();
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
