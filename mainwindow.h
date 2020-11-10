@@ -26,8 +26,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (1) qDebug()
-#define SOCKET_INF if (1) qDebug()
+#define SOCKET_DEB if (0) qDebug()
+#define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
 class MainWindow : public QMainWindow

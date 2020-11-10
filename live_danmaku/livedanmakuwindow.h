@@ -31,10 +31,13 @@
 #include "netutil.h"
 #include "freecopyedit.h"
 #include "qxtglobalshortcut.h"
+#include "portraitlabel.h"
 
 #ifdef Q_OS_WIN32
 #include <windows.h>
 #endif
+
+#define DANMAKU_ANIMATION_ENABLED false
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -42,6 +45,10 @@
 #define DANMAKU_TRANS_ROLE Qt::UserRole+3
 #define DANMAKU_REPLY_ROLE Qt::UserRole+4
 #define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+5
+
+#define PORTRAIT_SIDE 16
+#define DANMAKU_WIDGET_PORTRAIT 0
+#define DANMAKU_WIDGET_LABEL 1
 
 class LiveDanmakuWindow : public QWidget
 {
@@ -81,7 +88,10 @@ public slots:
 
 private:
     bool isItemExist(QListWidgetItem *item);
+    QLabel* getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
+    void getUserInfo(qint64 uid, QListWidgetItem *item);
+    void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
 
 private:
     QSettings settings;
@@ -100,6 +110,7 @@ private:
     bool aiReply = false;
     QStringList ignoredMsgs;
     QList<qint64> careUsers;
+    QHash<qint64, QPixmap> headPortraits;
 
     QHash<qint64, QString> localNicknames;
 

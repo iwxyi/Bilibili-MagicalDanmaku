@@ -35,6 +35,7 @@ HEADERS += \
     live_danmaku/freecopyedit.h \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
+    live_danmaku/portraitlabel.h \
     mainwindow.h \
     resource.rc \
     taskwidget.h \
