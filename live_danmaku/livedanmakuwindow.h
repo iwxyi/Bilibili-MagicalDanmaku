@@ -89,6 +89,7 @@ public slots:
     void setEnableBlock(bool enable);
     void addIgnoredMsg(QString text);
     void setListWidgetItemSpacing(int x);
+    void setNewbieTip(bool tip);
 
 private:
     bool isItemExist(QListWidgetItem *item);
@@ -114,6 +115,7 @@ private:
     bool autoTrans = true;
     bool aiReply = false;
     bool enableBlock = false;
+    bool newbieTip = true;
     QStringList ignoredMsgs;
     QList<qint64> careUsers;
     QHash<qint64, QPixmap> headPortraits;

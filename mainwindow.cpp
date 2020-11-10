@@ -81,6 +81,12 @@ MainWindow::MainWindow(QWidget *parent)
     bool reply = settings.value("danmaku/aiReply", true).toBool();
     ui->AIReplyCheck->setChecked(reply);
 
+    // 黑名单管理
+    ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
+
+    // 新人提示
+    ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
+
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
@@ -90,9 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
-
-    // 黑名单管理
-    ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
 
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
@@ -460,6 +463,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
+        danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->hide();
     }
 
@@ -1822,4 +1826,13 @@ void MainWindow::on_enableBlockCheck_clicked()
     settings.setValue("permission/enableBlock", enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
+}
+
+
+void MainWindow::on_newbieTipCheck_clicked()
+{
+    bool enable = ui->newbieTipCheck->isChecked();
+    settings.setValue("permission/newbieTip", enable);
+    if (danmakuWindow)
+        danmakuWindow->setNewbieTip(enable);
 }

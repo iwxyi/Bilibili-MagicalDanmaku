@@ -419,10 +419,18 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     MessageType msgType = danmaku.getMsgType();
     if (msgType == MSG_DANMAKU)
     {
-        // 新人
-        if (danmaku.getLevel() == 0 && danmuCounts->value(snum(danmaku.getUid())).toInt() <= 3)
+        // 新人：0级，3次以内
+        if (newbieTip)
         {
-            nameText = "<font color='red'>[新]</font>" + nameText;
+            int count = danmuCounts->value(snum(danmaku.getUid())).toInt();
+            if (danmaku.getLevel() == 0 && count <= 3)
+            {
+                nameText = "<font color='red'>[新]</font>" + nameText;
+            }
+            else if (danmaku.getLevel() > 0 && count <= 1) // 10句话以内
+            {
+                nameText = "<font color='green'>[初]</font>" + nameText;
+            }
         }
 
         // 彩色消息
@@ -1010,6 +1018,11 @@ void LiveDanmakuWindow::addIgnoredMsg(QString text)
 void LiveDanmakuWindow::setListWidgetItemSpacing(int x)
 {
     listWidget->setSpacing(x);
+}
+
+void LiveDanmakuWindow::setNewbieTip(bool tip)
+{
+    this->newbieTip = tip;
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
