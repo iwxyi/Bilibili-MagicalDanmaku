@@ -223,6 +223,7 @@ private:
     void sendVeriPacket();
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
+    void refreshBlockList();
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;

@@ -83,6 +83,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
+    if (ui->enableBlockCheck->isChecked())
+    {
+        QTimer::singleShot(100, this, [=]{
+            refreshBlockList();
+        });
+    }
 
     // 新人提示
     ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
@@ -1484,7 +1490,6 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
-        qDebug() << json;
         QJsonArray info = json.value("info").toArray();
         if (info.size() <= 2)
             QMessageBox::information(this, "弹幕数据 info", QString(QJsonDocument(info).toJson()));
@@ -1651,6 +1656,57 @@ void MainWindow::handleMessage(QJsonObject json)
     }
 }
 
+void MainWindow::refreshBlockList()
+{
+    if (browserData.isEmpty())
+    {
+        statusLabel->setText("请先设置用户数据");
+        return ;
+    }
+
+    // 刷新被禁言的列表
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonArray list = json.value("data").toArray();
+        userBlockIds.clear();
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject obj = val.toObject();
+            qint64 id = static_cast<qint64>(obj.value("id").toDouble());
+            qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
+            QString uname = obj.value("uname").toString();
+            userBlockIds.insert(uid, id);
+//            qDebug() << "已屏蔽:" << id << uname << uid;
+        }
+
+    });
+    manager->get(*request);
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -1766,7 +1822,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         qint64 id = static_cast<qint64>(d.value("id").toDouble());
         userBlockIds[uid] = id;
     });
-    manager->post(*request, data.toUtf8());
+    manager->post(*request, data.toStdString().data());
 }
 
 void MainWindow::delBlockUser(qint64 uid)
@@ -1779,6 +1835,7 @@ void MainWindow::delBlockUser(qint64 uid)
 
     if (userBlockIds.contains(uid))
     {
+        qDebug() << "取消用户：" << uid << "  id =" << userBlockIds.value(uid);
         delRoomBlockUser(userBlockIds.value(uid));
         userBlockIds.remove(uid);
         return ;
@@ -1803,9 +1860,12 @@ void MainWindow::delBlockUser(qint64 uid)
         }
         QJsonObject json = document.object();
 
-        if (json.value("code").toInt() != 0)
+        int code = json.value("code").toInt();
+        if (code != 0)
         {
             statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
             return ;
         }
         QJsonArray list = json.value("data").toArray();
@@ -1825,7 +1885,7 @@ void MainWindow::delBlockUser(qint64 uid)
 
 void MainWindow::delRoomBlockUser(qint64 id)
 {
-    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
@@ -1835,8 +1895,8 @@ void MainWindow::delRoomBlockUser(qint64 id)
     int posr = browserData.indexOf("&", posl);
     if (posr == -1) posr = browserData.length();
     QString csrf = browserData.mid(posl, posr - posl);
-    QString data = QString("id=%1&roomid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(roomId).arg(uid).arg(csrf).arg(csrf);
+    QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(id).arg(roomId).arg(csrf).arg(csrf);
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
@@ -1859,7 +1919,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
         // if (userBlockIds.values().contains(id))
         //    userBlockIds.remove(userBlockIds.key(id));
     });
-    manager->post(*request, data.toUtf8());
+    manager->post(*request, data.toStdString().data());
 }
 
 void MainWindow::on_enableBlockCheck_clicked()
@@ -1868,6 +1928,9 @@ void MainWindow::on_enableBlockCheck_clicked()
     settings.setValue("permission/enableBlock", enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
+
+    if (enable)
+        refreshBlockList();
 }
 
 
@@ -1887,3 +1950,4 @@ void MainWindow::on_blockKeysButton_clicked()
         return ;
     blockReString = text;
 }
+

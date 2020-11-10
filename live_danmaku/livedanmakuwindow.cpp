@@ -662,6 +662,11 @@ void LiveDanmakuWindow::showMenu()
     else
     {
         userMenu->setEnabled(false);
+        actionUserInfo->setEnabled(false);
+        actionHistory->setEnabled(false);
+        actionAddBlock->setEnabled(false);
+        actionAddBlockTemp->setEnabled(false);
+        actionDelBlock->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
