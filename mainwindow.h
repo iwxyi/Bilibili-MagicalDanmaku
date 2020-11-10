@@ -212,6 +212,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba) const;
+    QString getLocalNickname(qint64 name) const;
     QString nicknameSimplify(QString nickname) const;
 
 private:

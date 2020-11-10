@@ -563,7 +563,7 @@ border: none;</string>
              <number>3600</number>
             </property>
             <property name="singleStep">
-             <number>5</number>
+             <number>1</number>
             </property>
             <property name="value">
              <number>5</number>
