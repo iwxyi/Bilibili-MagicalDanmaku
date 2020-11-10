@@ -1268,11 +1268,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             SOCKET_INF << "协议版本：" << protover;
             if (protover == 2) // 默认协议版本，zlib解压
             {
-                QFile writeFile("receive.txt");
+                slotUncompressBytes(body);
+                /*QFile writeFile("receive.txt");
                 writeFile.open(QIODevice::WriteOnly);
                 writeFile.write(body, body.size()+1);
                 writeFile.close();
-                SOCKET_INF << "写入文件结束";
+                SOCKET_INF << "写入文件结束";*/
 
                 /*QFile readFile("receive.txt");
                 readFile.open(QIODevice::ReadWrite);
@@ -1301,16 +1302,16 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QByteArray unc = QByteArray::fromRawData((char*)target, si);
                 SOCKET_DEB << "解压后的数据：" << unc.size() << (int)(*unc.data()) << unc;
 #endif
-                if (unc.size() <= body.size()/2)
+                /*if (unc.size() <= body.size()/2)
                 {
                     qDebug() << "解压错误：";
                     qDebug() << "---------body   " << body;
 //                    qDebug() << "---------ba     " << ba;
                     qDebug() << "---------buffer " << QByteArray::fromRawData((char*)buffer_compress, body.size());
                     qDebug() << "---------target " << QByteArray::fromRawData((char*)target, body.size());
-                    QApplication::quit();
+//                    QApplication::quit();
                     return ;
-                }
+                }*/
 //                return ; // XXX
 //qDebug() << "2222222222" << ba;
                 // 循环遍历
@@ -1409,6 +1410,23 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 //    delete[] body.data();
 //    delete[] message.data();
     SOCKET_DEB << "消息处理结束";
+}
+
+void MainWindow::slotUncompressBytes(const QByteArray &body)
+{
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>>";
+    unsigned long si;
+    BYTE* target = new BYTE[body.size()*5+100]{};
+    unsigned char* buffer_compress = (unsigned char*)body.data();
+    int len = body.size()+1;
+    qDebug() << "文件大小：" << len;
+    uncompress(target, &si, buffer_compress, len);
+    SOCKET_DEB << "解压后数据大小：" << si << len; // 这句话不能删！ // 这句话不能加！
+    QByteArray unc = QByteArray::fromRawData((char*)target, si);
+    SOCKET_DEB << "解压后的数据：" << unc.size() << (int)(*unc.data()) << unc;
+    qDebug() << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<";
+    if (unc.size() < len)
+        QApplication::quit();
 }
 
 /**

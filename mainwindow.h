@@ -157,6 +157,8 @@ private slots:
 
     void slotBinaryMessageReceived(const QByteArray &message);
 
+    void slotUncompressBytes(const QByteArray &body);
+
     void on_autoSendWelcomeCheck_stateChanged(int arg1);
 
     void on_autoSendGiftCheck_stateChanged(int arg1);
