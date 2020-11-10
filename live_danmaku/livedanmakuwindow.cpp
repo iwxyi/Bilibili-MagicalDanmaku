@@ -178,10 +178,10 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
         if (!widget || !label)
             continue;
         widget->setFixedWidth(w);
-        label->setFixedWidth(w - PORTRAIT_SIDE);
+        label->setFixedWidth(w - PORTRAIT_SIDE - widget->layout()->spacing() - widget->layout()->margin()*2);
         label->adjustSize();
         widget->adjustSize();
-        widget->resize(widget->width(), widget->height() + listItemSpacing);
+        widget->resize(widget->sizeHint());
         item->setSizeHint(widget->size());
     }
 }
@@ -227,22 +227,14 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QHBoxLayout* layout = new QHBoxLayout(widget);
     layout->addWidget(portrait);
     layout->addWidget(label);
-    layout->setMargin(0);
+    layout->setMargin(2);
     layout->setAlignment(Qt::AlignLeft);
     widget->setLayout(layout);
     layout->activate();
 
-    if (danmaku.getMsgType() != MSG_DANMAKU)
-    {
-        portrait->setFixedSize(0, 0);
-        portrait->hide();
-    }
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
-    label->setFixedWidth(listWidget->contentsRect().width() - PORTRAIT_SIDE);
-    bool hasPortrait = headPortraits.contains(danmaku.getUid());
-    if (hasPortrait)
-        portrait->setPixmap(headPortraits.value(danmaku.getUid()));
+    label->setFixedWidth(listWidget->contentsRect().width() - PORTRAIT_SIDE - widget->layout()->spacing() - widget->layout()->margin()*2);
 
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
@@ -253,11 +245,20 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     item->setData(DANMAKU_IGNORE_ROLE, ignored);
+    if (danmaku.getMsgType() == MSG_DANMAKU) // 只显示弹幕的数据
+    {
+        bool hasPortrait = headPortraits.contains(danmaku.getUid());
+        if (hasPortrait)
+            portrait->setPixmap(headPortraits.value(danmaku.getUid()));
+        else
+            getUserInfo(danmaku.getUid(), item);
+    }
+    else
+    {
+        portrait->setFixedSize(0, 0);
+        portrait->hide();
+    }
     setItemWidgetText(item); // 会自动调整大小
-
-    // 网络数据
-    if (!hasPortrait)
-        getUserInfo(danmaku.getUid(), item);
 
     // 开启动画
     if (DANMAKU_ANIMATION_ENABLED)
@@ -510,10 +511,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     label->adjustSize();
     widget->adjustSize();
     widget->layout()->activate();
-    qDebug() << label->size() << label->sizeHint() << widget->size() << widget->sizeHint();
 
     // item大小
-    widget->resize(widget->width(), widget->height() + listItemSpacing);
+    widget->resize(widget->sizeHint());
     item->setSizeHint(widget->sizeHint());
 
     if (scrollEnd)
@@ -936,6 +936,17 @@ bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
     return false;
 }
 
+PortraitLabel *LiveDanmakuWindow::getItemWidgetPortrait(QListWidgetItem *item)
+{
+    auto widget = listWidget->itemWidget(item);
+    if (!widget)
+        return nullptr;
+    QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+    auto layoutItem = layout->itemAt(DANMAKU_WIDGET_PORTRAIT);
+    auto label = layoutItem->widget();
+    return static_cast<PortraitLabel*>(label);
+}
+
 QLabel *LiveDanmakuWindow::getItemWidgetLabel(QListWidgetItem* item)
 {
     auto widget = listWidget->itemWidget(item);
@@ -1005,11 +1016,31 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QJsonObject data = json.value("data").toObject();
         QString faceUrl = data.value("face").toString();
 
-        getUserHeadPortrait(uid, url, item);
+        getUserHeadPortrait(uid, faceUrl, item);
     });
 }
 
 void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)
 {
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+    //请求结束并下载完成后，退出子事件循环
+    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //开启子事件循环
+    loop.exec();
+    QByteArray jpegData = reply1->readAll();
+    QPixmap pixmap;
+    pixmap.loadFromData(jpegData);
+    headPortraits[uid] = pixmap;
 
+    QDir dir;
+    dir.mkdir("headers");
+    pixmap.save("headers/" + QString::number(uid) + ".jpg");
+    qDebug() << "下载头像：" << uid << url;
+
+    if (!isItemExist(item))
+        return ;
+    PortraitLabel* label = getItemWidgetPortrait(item);
+    label->setPixmap(pixmap);
 }

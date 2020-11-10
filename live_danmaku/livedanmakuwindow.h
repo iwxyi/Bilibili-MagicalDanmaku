@@ -27,6 +27,7 @@
 #include <QScrollBar>
 #include <QPropertyAnimation>
 #include <QInputDialog>
+#include <QDir>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -46,7 +47,7 @@
 #define DANMAKU_REPLY_ROLE Qt::UserRole+4
 #define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+5
 
-#define PORTRAIT_SIDE 16
+#define PORTRAIT_SIDE 24
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
@@ -88,6 +89,7 @@ public slots:
 
 private:
     bool isItemExist(QListWidgetItem *item);
+    PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
     QLabel* getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(qint64 uid, QListWidgetItem *item);

@@ -19,28 +19,26 @@ public:
         : QLabel(parent), side(side)
     {
         setFixedSize(side, side);
-        setText("@@@@@@");
     }
 
     void setPixmap(QPixmap portrait)
     {
-        this->pixmap = portrait;
-
         setFixedSize(side, side);
         portrait = portrait.scaled(side, side);
         QPixmap pixmap(side, side);
+        pixmap.fill(Qt::transparent);
 
         QPainter painter(&pixmap);
         painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
         QPainterPath path;
-        path.addEllipse(0, 0, side/2, side/2);
+        path.addEllipse(0, 0, side, side);
         painter.setClipPath(path);
         painter.drawPixmap(0, 0, side, side, portrait);
+
         QLabel::setPixmap(pixmap);
     }
 
 private:
-    QPixmap pixmap;
     int side = 16;
 };
 
