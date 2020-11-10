@@ -1667,3 +1667,121 @@ void MainWindow::on_diangeHistoryButton_clicked()
     QString text = list.size() ? list.join("\n") : "没有点歌记录";
     QMessageBox::information(this, "点歌历史", text);
 }
+
+void MainWindow::addBlockUser(qint64 uid, int hour)
+{
+    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(roomId).arg(uid).arg(hour).arg(token).arg(token);
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << "拉黑用户：" << uid << hour << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+        QJsonObject d = json.value("data").toObject();
+        qint64 id = static_cast<qint64>(d.value("id").toDouble());
+        userBlockIds[uid] = id;
+    });
+    manager->post(*request, data.toUtf8());
+}
+
+void MainWindow::delBlockUser(qint64 uid)
+{
+    if (userBlockIds.contains(uid))
+    {
+        delRoomBlockUser(userBlockIds.value(uid));
+        userBlockIds.remove(uid);
+        return ;
+    }
+
+    // 获取直播间的网络ID，再取消屏蔽
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+        QJsonArray list = json.value("data").toArray();
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject obj = val.toObject();
+            if (static_cast<qint64>(obj.value("uid").toDouble()) == uid)
+            {
+                delRoomBlockUser(static_cast<qint64>(obj.value("id").toDouble())); // 获取房间ID
+                break;
+            }
+        }
+
+    });
+    manager->get(*request);
+}
+
+void MainWindow::delRoomBlockUser(qint64 id)
+{
+    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString data = QString("id=%1&roomid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(id).arg(roomId).arg(uid).arg(token).arg(token);
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << "取消用户：" << id << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+
+        // if (userBlockIds.values().contains(id))
+        //    userBlockIds.remove(userBlockIds.key(id));
+    });
+    manager->post(*request, data.toUtf8());
+}
