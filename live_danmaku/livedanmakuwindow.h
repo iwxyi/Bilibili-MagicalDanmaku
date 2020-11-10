@@ -90,6 +90,7 @@ public slots:
     void addIgnoredMsg(QString text);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
+    void showFastBlock(qint64 uid, QString msg);
 
 private:
     bool isItemExist(QListWidgetItem *item);

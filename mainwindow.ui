@@ -235,8 +235,7 @@
           <item>
            <widget class="QPushButton" name="diangeHistoryButton">
             <property name="styleSheet">
-             <string notr="true">background: transparent;
-border: none;</string>
+             <string notr="true">border: none;</string>
             </property>
             <property name="text">
              <string> 历史</string>
@@ -280,28 +279,48 @@ border: none;</string>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,0">
           <property name="topMargin">
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="enableBlockCheck">
+           <widget class="QCheckBox" name="newbieTipCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;第一次发弹幕时，昵称前显示[初]&lt;/p&gt;&lt;p&gt;若是0级小号，前三次显示红色的[新]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
-             <string>启用黑名单（房管/主播）</string>
+             <string>新人发言提示</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="blockKeysButton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;新人弹幕触发关键词的内容时，实时弹幕的顶部显示拉黑提示&lt;/p&gt;&lt;p&gt;新人弹幕：0级前三句话、&amp;gt;0级第一句话&lt;/p&gt;&lt;p&gt;附：B站会自动屏蔽大部分违禁词&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background: transparent;
+border: none;</string>
+            </property>
+            <property name="text">
+             <string>快速拉黑</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_18">
+         <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="1">
           <property name="topMargin">
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="newbieTipCheck">
+           <widget class="QCheckBox" name="enableBlockCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在实时弹幕的菜单中添加拉黑&lt;/p&gt;&lt;p&gt;只有房管/主播才有黑名单权限&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
-             <string>新人发言提示</string>
+             <string>启用黑名单（房管/主播）</string>
             </property>
            </widget>
           </item>

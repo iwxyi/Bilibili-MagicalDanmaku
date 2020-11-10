@@ -198,6 +198,8 @@ private slots:
 
     void on_newbieTipCheck_clicked();
 
+    void on_blockKeysButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -250,6 +252,7 @@ private:
 
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
+    QString blockReString;
 
     QString browserCookie;
     QString browserData;

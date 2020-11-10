@@ -87,6 +87,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 新人提示
     ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
 
+    // 新人拉黑关键词
+    QString defaultBlockRe = "丑|TM|阿姨";
+    this->blockReString = settings.value("permission/blockRe", defaultBlockRe).toString();
+
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
@@ -1507,7 +1511,19 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                          unameColor, "#"+cs));
 
-        danmuCounts->setValue(snum(uid), danmuCounts->value(snum(uid), 0).toInt()+1);
+        // 统计弹幕次数
+        int danmuCount = danmuCounts->value(snum(uid), 0).toInt()+1;
+        danmuCounts->setValue(snum(uid), danmuCount);
+
+        // 新人发言
+        if (danmakuWindow && !blockReString.isEmpty()
+                && ((level == 0 && danmuCount <= 3) || danmuCount == 1) )
+        {
+            if (msg.indexOf(QRegularExpression(blockReString)) > -1)
+            {
+                danmakuWindow->showFastBlock(uid, msg);
+            }
+        }
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1835,4 +1851,13 @@ void MainWindow::on_newbieTipCheck_clicked()
     settings.setValue("permission/newbieTip", enable);
     if (danmakuWindow)
         danmakuWindow->setNewbieTip(enable);
+}
+
+void MainWindow::on_blockKeysButton_clicked()
+{
+    bool ok = false;
+    QString text = QInputDialog::getText(this, "新人快速拉黑关键词", "触发以下关键词时屏蔽，多个用“|”分隔", QLineEdit::Normal, blockReString, &ok);
+    if (!ok)
+        return ;
+    blockReString = text;
 }

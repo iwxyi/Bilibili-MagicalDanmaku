@@ -469,7 +469,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GUARD_BUY)
     {
-        text = QString("<font color='gray'>[上船]</font> %1 开通 %2×%3")
+        text = QString("<font color='red'>[上船]</font> %1 开通 %2×%3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
@@ -1023,6 +1023,11 @@ void LiveDanmakuWindow::setListWidgetItemSpacing(int x)
 void LiveDanmakuWindow::setNewbieTip(bool tip)
 {
     this->newbieTip = tip;
+}
+
+void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
+{
+
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
