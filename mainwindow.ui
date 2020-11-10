@@ -235,7 +235,11 @@
           <item>
            <widget class="QPushButton" name="diangeHistoryButton">
             <property name="styleSheet">
-             <string notr="true">border: none;</string>
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
             </property>
             <property name="text">
              <string> 历史</string>
@@ -299,8 +303,11 @@
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;新人弹幕触发关键词的内容时，实时弹幕的顶部显示拉黑提示&lt;/p&gt;&lt;p&gt;新人弹幕：0级前三句话、&amp;gt;0级第一句话&lt;/p&gt;&lt;p&gt;附：B站会自动屏蔽大部分违禁词&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
-             <string notr="true">background: transparent;
-border: none;</string>
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
             </property>
             <property name="text">
              <string>快速拉黑</string>

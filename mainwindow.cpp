@@ -94,7 +94,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
 
     // 新人拉黑关键词
-    QString defaultBlockRe = "丑|TM|阿姨";
+    QString defaultBlockRe = "丑|TM";
     this->blockReString = settings.value("permission/blockRe", defaultBlockRe).toString();
 
     // 实时弹幕
