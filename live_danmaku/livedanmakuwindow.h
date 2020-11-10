@@ -86,6 +86,7 @@ public slots:
     void startTranslate(QListWidgetItem* item);
     void setAIReply(bool reply);
     void startReply(QListWidgetItem* item);
+    void setEnableBlock(bool enable);
     void addIgnoredMsg(QString text);
     void setListWidgetItemSpacing(int x);
 
@@ -112,6 +113,7 @@ private:
     QColor hlColor;
     bool autoTrans = true;
     bool aiReply = false;
+    bool enableBlock = false;
     QStringList ignoredMsgs;
     QList<qint64> careUsers;
     QHash<qint64, QPixmap> headPortraits;

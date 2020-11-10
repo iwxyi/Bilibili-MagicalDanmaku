@@ -413,12 +413,18 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             ? QVariant(this->nameColor).toString()
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColorStr + "'>"
-                       + danmaku.getNickname() + "</font> ";
+                       + danmaku.getNickname() + "</font>";
 
     QString text;
     MessageType msgType = danmaku.getMsgType();
     if (msgType == MSG_DANMAKU)
     {
+        // 新人
+        if (danmaku.getLevel() == 0 && danmuCounts->value(snum(danmaku.getUid())).toInt() <= 3)
+        {
+            nameText = "<font color='red'>[新]</font>" + nameText;
+        }
+
         // 彩色消息
         QString colorfulMsg = msg;
         if (item->data(DANMAKU_IGNORE_ROLE).toBool()) // 灰色
@@ -432,7 +438,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                     + danmaku.getText() + "</font> ";
         }
 
-        text = nameText + colorfulMsg;
+        text = nameText + " " + colorfulMsg;
 
         // 翻译
         if (!trans.isEmpty() && trans != msg)
@@ -600,8 +606,10 @@ void LiveDanmakuWindow::showMenu()
     QMenu* userMenu = new QMenu("用户", this);
     QAction* actionUserInfo = new QAction("用户主页", this);
     QAction* actionHistory = new QAction("消息记录", this);
-    QAction* actionBlock = new QAction("720小时黑名单", this);
-    QAction* actionBlockTemp = new QAction("1小时黑名单", this);
+
+    QAction* actionAddBlock = new QAction("720小时黑名单", this);
+    QAction* actionAddBlockTemp = new QAction("1小时黑名单", this);
+    QAction* actionDelBlock = new QAction("移出黑名单", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
@@ -635,24 +643,42 @@ void LiveDanmakuWindow::showMenu()
             actionAddCare->setText("移除特别关心");
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+
+        // 弹幕的数据多一点，包含牌子、等级等等
+        if (danmaku.getMsgType() == MSG_DANMAKU)
+        {
+            actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
+            actionHistory->setText("消息记录：" + snum(danmuCounts->value(snum(uid)).toInt()));
+        }
     }
     else
     {
         userMenu->setEnabled(false);
     }
 
+    menu->addAction(actionUserInfo);
+    menu->addAction(actionHistory);
+    if (enableBlock)
+    {
+        if (uid && !userBlockIds.contains(uid))
+        {
+            menu->addAction(actionAddBlock);
+            menu->addAction(actionAddBlockTemp);
+        }
+        else
+        {
+            menu->addAction(actionDelBlock);
+        }
+    }
+
+    menu->addSeparator();
     menu->addAction(actionAddCare);
     menu->addAction(actionSetName);
     menu->addSeparator();
-    menu->addMenu(userMenu);
-    menu->addSeparator();
+//    menu->addMenu(userMenu);
+//    menu->addSeparator();
     menu->addMenu(operMenu);
     menu->addMenu(settingMenu);
-
-    userMenu->addAction(actionUserInfo);
-    userMenu->addAction(actionHistory);
-    userMenu->addAction(actionBlock);
-    userMenu->addAction(actionBlockTemp);
 
     operMenu->addAction(actionCopy);
     operMenu->addAction(actionFreeCopy);
@@ -835,16 +861,19 @@ void LiveDanmakuWindow::showMenu()
         settings.setValue("livedanmakuwindow/sendOnce", enable);
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl());
+        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
     });
     connect(actionHistory, &QAction::triggered, this, [=]{
 
     });
-    connect(actionBlock, &QAction::triggered, this, [=]{
-
+    connect(actionAddBlock, &QAction::triggered, this, [=]{
+        emit signalAddBlockUser(uid, 720);
     });
-    connect(actionBlockTemp, &QAction::triggered, this, [=]{
-
+    connect(actionAddBlockTemp, &QAction::triggered, this, [=]{
+        emit signalAddBlockUser(uid, 1);
+    });
+    connect(actionDelBlock, &QAction::triggered, this, [=]{
+        emit signalDelBlockUser(uid);
     });
 
 
@@ -966,6 +995,11 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 
         adjustItemTextDynamic(item);
     });
+}
+
+void LiveDanmakuWindow::setEnableBlock(bool enable)
+{
+    enableBlock = enable;
 }
 
 void LiveDanmakuWindow::addIgnoredMsg(QString text)

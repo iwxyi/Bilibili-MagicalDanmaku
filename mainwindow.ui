@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -274,6 +274,20 @@ border: none;</string>
             </property>
             <property name="text">
              <string>AI智能回复</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="enableBlockCheck">
+            <property name="text">
+             <string>启用黑名单（房管/主播）</string>
             </property>
            </widget>
           </item>

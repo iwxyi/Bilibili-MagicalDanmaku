@@ -194,6 +194,8 @@ private slots:
 
     void delRoomBlockUser(qint64 id);
 
+    void on_enableBlockCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

@@ -4,8 +4,8 @@
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes; // 用户进来的时间（客户端时间戳为准）
-QHash<qint64, int> CommonValues::userDanmuCounts;  // 弹幕次数
 QHash<qint64, qint64> CommonValues::userBlockIds;  // 本次用户屏蔽的ID
+QSettings* CommonValues::danmuCounts;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -91,6 +91,9 @@ MainWindow::MainWindow(QWidget *parent)
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
 
+    // 黑名单管理
+    ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
+
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
@@ -101,6 +104,9 @@ MainWindow::MainWindow(QWidget *parent)
 
         localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
     }
+
+    // 弹幕次数
+    danmuCounts = new QSettings("danmu_count.ini", QSettings::Format::IniFormat);
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -453,6 +459,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+        danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->hide();
     }
 
@@ -481,8 +488,8 @@ void MainWindow::on_testDanmakuButton_clicked()
         text = "测试弹幕";
     int r = qrand() % 7 + 1;
     appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
-                            10000+r,
-                             QDateTime::currentDateTime()));
+                            10000+r, 12,
+                             QDateTime::currentDateTime(), "", ""));
 
     ui->testDanmakuEdit->setText("");
     ui->testDanmakuEdit->setFocus();
@@ -1467,6 +1474,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
+        qDebug() << json;
         QJsonArray info = json.value("info").toArray();
         if (info.size() <= 2)
             QMessageBox::information(this, "弹幕数据 info", QString(QJsonDocument(info).toJson()));
@@ -1482,6 +1490,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
         QString unameColor = user[7].toString();
+        int level = info[4].toArray()[0].toInt();
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
@@ -1491,8 +1500,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QString cs = QString::number(textColor, 16);
         while (cs.size() < 6)
             cs = "0" + cs;
-        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, QDateTime::fromMSecsSinceEpoch(timestamp),
+        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                          unameColor, "#"+cs));
+
+        danmuCounts->setValue(snum(uid), danmuCounts->value(snum(uid), 0).toInt()+1);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1587,6 +1598,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
+        int level = data.value("").toInt();
+        QString unameColor = data.value("uname_color").toString();
         qDebug() << s8("观众进入：") << username;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
@@ -1801,4 +1814,12 @@ void MainWindow::delRoomBlockUser(qint64 id)
         //    userBlockIds.remove(userBlockIds.key(id));
     });
     manager->post(*request, data.toUtf8());
+}
+
+void MainWindow::on_enableBlockCheck_clicked()
+{
+    bool enable = ui->enableBlockCheck->isChecked();
+    settings.setValue("permission/enableBlock", enable);
+    if (danmakuWindow)
+        danmakuWindow->setEnableBlock(enable);
 }

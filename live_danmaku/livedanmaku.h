@@ -25,14 +25,8 @@ public:
     LiveDanmaku()
     {}
 
-    LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time)
-        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time)
-    {
-
-    }
-
-    LiveDanmaku(QString nickname, QString text, qint64 uid, QDateTime time, QString unameColor, QString textColor)
-        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), timeline(time),
+    LiveDanmaku(QString nickname, QString text, qint64 uid, int level, QDateTime time, QString unameColor, QString textColor)
+        : msgType(MSG_DANMAKU), nickname(nickname), text(text), uid(uid), level(level), timeline(time),
           uname_color(unameColor), text_color(textColor)
     {
 
@@ -90,6 +84,7 @@ public:
         danmaku.isadmin = object.value("isadmin").toInt();
         danmaku.vip = object.value("vip").toInt();
         danmaku.svip = object.value("svip").toInt();
+        danmaku.level = object.value("level").toInt();
         QJsonArray medal = object.value("medal").toArray();
         if (medal.size() >= 3)
         {
@@ -121,6 +116,7 @@ public:
             object.insert("isadmin", isadmin);
             object.insert("vip", vip);
             object.insert("svip", svip);
+            object.insert("level", level);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
@@ -240,6 +236,11 @@ public:
     bool isAdmin() const
     {
         return isadmin;
+    }
+
+    int getLevel() const
+    {
+        return level;
     }
 
     bool isIn(const QList<LiveDanmaku>& danmakus) const
