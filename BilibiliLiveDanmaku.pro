@@ -32,6 +32,7 @@ SOURCES += \
     utils/stringutil.cpp \
 
 HEADERS += \
+    live_danmaku/commonvalues.h \
     live_danmaku/freecopyedit.h \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \

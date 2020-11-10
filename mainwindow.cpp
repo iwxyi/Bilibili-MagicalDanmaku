@@ -2,6 +2,11 @@
 #include "ui_mainwindow.h"
 #include "zlib.h"
 
+QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
+QHash<qint64, qint64> CommonValues::userComeTimes; // 用户进来的时间（客户端时间戳为准）
+QHash<qint64, int> CommonValues::userDanmuCounts;  // 弹幕次数
+QHash<qint64, qint64> CommonValues::userBlockIds;  // 本次用户屏蔽的ID
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow), settings("settings.ini", QSettings::Format::IniFormat)
@@ -85,6 +90,17 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
+
+    // 本地昵称
+    QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString pare, namePares)
+    {
+        QStringList sl = pare.split("=>");
+        if (sl.size() < 2)
+            continue;
+
+        localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+    }
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -431,6 +447,7 @@ void MainWindow::on_showLiveDanmakuButton_clicked()
     if (!danmakuWindow)
     {
         danmakuWindow = new LiveDanmakuWindow(this);
+
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
@@ -1161,8 +1178,8 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba) const
 
 QString MainWindow::getLocalNickname(qint64 uid) const
 {
-    if (danmakuWindow)
-        return danmakuWindow->getLocalNickname(uid);
+    if (localNicknames.contains(uid))
+        return localNicknames.value(uid);
     return "";
 }
 
@@ -1489,7 +1506,7 @@ void MainWindow::handleMessage(QJsonObject json)
         int totalCoin = data.value("total_coin").toInt();
 
         qDebug() << s8("接收到送礼：") << username << giftName << num << s8("  总价值：") << totalCoin << coinType;
-        QString localName = danmakuWindow->getLocalNickname(uid);
+        QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
@@ -1571,7 +1588,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
         qDebug() << s8("观众进入：") << username;
-        QString localName = danmakuWindow->getLocalNickname(uid);
+        QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin));

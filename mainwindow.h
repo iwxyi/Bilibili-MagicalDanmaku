@@ -21,6 +21,7 @@
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
+#include "commonvalues.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,7 +31,7 @@ QT_END_NAMESPACE
 #define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
 
@@ -259,9 +260,5 @@ private:
 
     QWebSocket* socket;
     QTimer* heartTimer;
-
-    QHash<qint64, qint64> userComeTimes; // 用户进来的时间（客户端时间戳为准）
-    QHash<qint64, int> userDanmuCounts;  // 弹幕次数
-    QHash<qint64, qint64> userBlockIds;  // 本次用户屏蔽的ID
 };
 #endif // MAINWINDOW_H

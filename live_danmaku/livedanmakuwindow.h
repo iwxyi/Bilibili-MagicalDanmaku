@@ -33,6 +33,7 @@
 #include "freecopyedit.h"
 #include "qxtglobalshortcut.h"
 #include "portraitlabel.h"
+#include "commonvalues.h"
 
 #ifdef Q_OS_WIN32
 #include <windows.h>
@@ -51,13 +52,12 @@
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
-class LiveDanmakuWindow : public QWidget
+class LiveDanmakuWindow : public QWidget, public CommonValues
 {
     Q_OBJECT
+    friend class MainWindow;
 public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
-
-    QString getLocalNickname(qint64 uid);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -115,8 +115,6 @@ private:
     QStringList ignoredMsgs;
     QList<qint64> careUsers;
     QHash<qint64, QPixmap> headPortraits;
-
-    QHash<qint64, QString> localNicknames;
 
     int fontHeight;
     int lineSpacing;

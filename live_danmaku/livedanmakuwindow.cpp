@@ -1,6 +1,7 @@
 #include "livedanmakuwindow.h"
 
-LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
+LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
+    : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("实时弹幕");
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
@@ -89,24 +90,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent) : QWidget(nullptr), settin
     {
         careUsers.append(s.toLongLong());
     }
-
-    // 本地昵称
-    QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
-    foreach (QString pare, namePares)
-    {
-        QStringList sl = pare.split("=>");
-        if (sl.size() < 2)
-            continue;
-
-        localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
-    }
-}
-
-QString LiveDanmakuWindow::getLocalNickname(qint64 uid)
-{
-    if (localNicknames.contains(uid))
-        return localNicknames.value(uid);
-    return "";
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -236,7 +219,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
-    label->setFixedWidth(listWidget->contentsRect().width() - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing())- widget->layout()->margin()*2);
 
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
@@ -260,6 +242,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         portrait->setFixedSize(0, 0);
         portrait->hide();
     }
+    label->setFixedWidth(listWidget->contentsRect().width() - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing())- widget->layout()->margin()*2);
     widget->resize(listWidget->contentsRect().width(), 1);
     setItemWidgetText(item); // 会自动调整大小
 
@@ -614,6 +597,12 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionAddCare = new QAction("添加特别关心", this);
     QAction* actionSetName = new QAction("设置专属昵称", this);
 
+    QMenu* userMenu = new QMenu("用户", this);
+    QAction* actionUserInfo = new QAction("用户主页", this);
+    QAction* actionHistory = new QAction("消息记录", this);
+    QAction* actionBlock = new QAction("720小时黑名单", this);
+    QAction* actionBlockTemp = new QAction("1小时黑名单", this);
+
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
@@ -647,13 +636,23 @@ void LiveDanmakuWindow::showMenu()
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
     }
+    else
+    {
+        userMenu->setEnabled(false);
+    }
 
     menu->addAction(actionAddCare);
     menu->addAction(actionSetName);
     menu->addSeparator();
+    menu->addMenu(userMenu);
     menu->addSeparator();
     menu->addMenu(operMenu);
     menu->addMenu(settingMenu);
+
+    userMenu->addAction(actionUserInfo);
+    userMenu->addAction(actionHistory);
+    userMenu->addAction(actionBlock);
+    userMenu->addAction(actionBlockTemp);
 
     operMenu->addAction(actionCopy);
     operMenu->addAction(actionFreeCopy);
@@ -673,6 +672,7 @@ void LiveDanmakuWindow::showMenu()
 
     if (!item)
     {
+        operMenu->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionSetName->setEnabled(false);
         actionCopy->setEnabled(false);
@@ -834,6 +834,19 @@ void LiveDanmakuWindow::showMenu()
         bool enable = !settings.value("livedanmakuwindow/sendOnce", false).toBool();
         settings.setValue("livedanmakuwindow/sendOnce", enable);
     });
+    connect(actionUserInfo, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl());
+    });
+    connect(actionHistory, &QAction::triggered, this, [=]{
+
+    });
+    connect(actionBlock, &QAction::triggered, this, [=]{
+
+    });
+    connect(actionBlockTemp, &QAction::triggered, this, [=]{
+
+    });
+
 
     menu->exec(QCursor::pos());
 
@@ -1017,23 +1030,26 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
     setItemWidgetText(item);
 
-    QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
-    ani->setStartValue(QSize(label->width(), ht));
-    ani->setEndValue(label->size());
-    ani->setDuration(200);
-    ani->setEasingCurve(QEasingCurve::InOutQuad);
-    label->resize(label->width(), ht);
-    item->setSizeHint(label->size());
-    connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
-        item->setSizeHint(val.toSize());
-        if (scrollEnd)
-            listWidget->scrollToBottom();
-    });
-    connect(ani, &QPropertyAnimation::finished, label, [=]{
-        if (scrollEnd)
-            listWidget->scrollToBottom();
-    });
-    ani->start();
+    if (false && DANMAKU_ANIMATION_ENABLED)
+    {
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
+        ani->setStartValue(QSize(label->width(), ht));
+        ani->setEndValue(label->size());
+        ani->setDuration(200);
+        ani->setEasingCurve(QEasingCurve::InOutQuad);
+        label->resize(label->width(), ht);
+        item->setSizeHint(label->size());
+        connect(ani, &QPropertyAnimation::valueChanged, label, [=](const QVariant &val){
+            item->setSizeHint(val.toSize());
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        connect(ani, &QPropertyAnimation::finished, label, [=]{
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        ani->start();
+    }
 }
 
 void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
@@ -1075,10 +1091,9 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     pixmap.loadFromData(jpegData);
     headPortraits[uid] = pixmap;
 
-    QDir dir;
-    dir.mkdir("headers");
-    pixmap.save("headers/" + QString::number(uid) + ".jpg");
-    qDebug() << "下载头像：" << uid << url;
+//    QDir dir;
+//    dir.mkdir("headers");
+//    pixmap.save("headers/" + QString::number(uid) + ".jpg");
 
     if (!isItemExist(item))
         return ;
