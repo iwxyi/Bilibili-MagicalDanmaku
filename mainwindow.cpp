@@ -1331,6 +1331,8 @@ void MainWindow::slotUncompressBytes(const QByteArray &body)
     BYTE* target = new BYTE[body.size()*5+100]{};
     unsigned char* buffer_compress = (unsigned char*)body.data();
     unsigned long len = body.size()+1;
+//    unsigned char* buffer_compress = new unsigned char[body.size()+1]{};
+//    memcpy(buffer_compress, body.constData(), len);
     uncompress(target, &si, buffer_compress, len);
     SOCKET_DEB << "解压后数据大小：" << si << "    原来：" << len;
     QByteArray unc = QByteArray::fromRawData((char*)target, si);
