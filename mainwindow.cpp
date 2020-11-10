@@ -1324,9 +1324,26 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     SOCKET_DEB << "消息处理结束";
 }
 
+/**
+ * 博客来源：https://blog.csdn.net/doujianyoutiao/article/details/106236207
+ */
+QByteArray zlibToQtUncompr(const char *pZLIBData, uLongf dataLen/*, uLongf srcDataLen = 0x100000*/)
+{
+    char *pQtData = new char[dataLen + 4];
+    char *pByte = (char *)(&dataLen);/*(char *)(&srcDataLen);*/
+    pQtData[3] = *pByte;
+    pQtData[2] = *(pByte + 1);
+    pQtData[1] = *(pByte + 2);
+    pQtData[0] = *(pByte + 3);
+    memcpy(pQtData + 4, pZLIBData, dataLen);
+    QByteArray qByteArray(pQtData, dataLen + 4);
+    delete []pQtData;
+    return qUncompress(qByteArray);
+}
+
 void MainWindow::slotUncompressBytes(const QByteArray &body)
 {
-//    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
+/*//    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
     unsigned long si;
     BYTE* target = new BYTE[body.size()*5+100]{};
     unsigned char* buffer_compress = (unsigned char*)body.data();
@@ -1340,7 +1357,8 @@ void MainWindow::slotUncompressBytes(const QByteArray &body)
     if (unc.size() < len)
         QApplication::quit();
     splitUncompressedBody(unc);
-    delete[] target;
+    delete[] target;*/
+    splitUncompressedBody(zlibToQtUncompr(body.data(), body.size()+1));
 }
 
 void MainWindow::splitUncompressedBody(const QByteArray &unc)
