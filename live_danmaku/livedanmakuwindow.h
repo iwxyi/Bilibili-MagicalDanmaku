@@ -38,7 +38,7 @@
 #include <windows.h>
 #endif
 
-#define DANMAKU_ANIMATION_ENABLED false
+#define DANMAKU_ANIMATION_ENABLED true
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -71,6 +71,8 @@ protected:
 
 signals:
     void signalSendMsg(QString msg);
+    void signalAddBlockUser(qint64 uid, int hour);
+    void signalDelBlockUser(qint64 uid);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);

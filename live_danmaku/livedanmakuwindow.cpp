@@ -174,11 +174,13 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
     {
         auto item = listWidget->item(i);
         auto widget = listWidget->itemWidget(item);
-        auto label = getItemWidgetLabel(item);
+        QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+        auto portrait = layout->itemAt(DANMAKU_WIDGET_PORTRAIT)->widget();
+        auto label = layout->itemAt(DANMAKU_WIDGET_LABEL)->widget();
         if (!widget || !label)
             continue;
         widget->setFixedWidth(w);
-        label->setFixedWidth(w - PORTRAIT_SIDE - widget->layout()->spacing() - widget->layout()->margin()*2);
+        label->setFixedWidth(w - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing()) - widget->layout()->margin()*2);
         label->adjustSize();
         widget->adjustSize();
         widget->resize(widget->sizeHint());
@@ -234,7 +236,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
-    label->setFixedWidth(listWidget->contentsRect().width() - PORTRAIT_SIDE - widget->layout()->spacing() - widget->layout()->margin()*2);
+    label->setFixedWidth(listWidget->contentsRect().width() - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing())- widget->layout()->margin()*2);
 
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
@@ -258,18 +260,19 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         portrait->setFixedSize(0, 0);
         portrait->hide();
     }
+    widget->resize(listWidget->contentsRect().width(), 1);
     setItemWidgetText(item); // 会自动调整大小
 
-    // 开启动画
-    if (DANMAKU_ANIMATION_ENABLED)
+    // 开启动画（这里的动画没啥用啊）
+    if (false && DANMAKU_ANIMATION_ENABLED)
     {
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
-        ani->setStartValue(QSize(widget->width(), 0));
+        ani->setStartValue(QSize(widget->width(), 1));
         ani->setEndValue(widget->size());
         ani->setDuration(300);
-        ani->setEasingCurve(QEasingCurve::InOutQuad);
+        ani->setEasingCurve(QEasingCurve::OutQuad);
         widget->resize(widget->width(), 1);
-        item->setSizeHint(widget->size());
+        item->setSizeHint(widget->sizeHint());
         connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
             item->setSizeHint(val.toSize());
             if (scrollEnd)
@@ -357,32 +360,38 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             auto item = listWidget->item(i);
             auto widget = listWidget->itemWidget(item);
 
-            /*QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
-            ani->setStartValue(widget->size());
-            ani->setEndValue(QSize(widget->width(), 0));
-            ani->setDuration(300);
-            ani->setEasingCurve(QEasingCurve::InOutQuad);
-            connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
-                item->setSizeHint(val.toSize());
-            });
-            connect(ani, &QPropertyAnimation::finished, widget, [=]{
-                bool same = (item == listWidget->currentItem());
-                bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-                        >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+            if (DANMAKU_ANIMATION_ENABLED)
+            {
+                QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
+                ani->setStartValue(widget->size());
+                ani->setEndValue(QSize(widget->width(), 0));
+                ani->setDuration(300);
+                ani->setEasingCurve(QEasingCurve::OutQuad);
+                connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
+                    item->setSizeHint(val.toSize());
+                });
+                connect(ani, &QPropertyAnimation::finished, widget, [=]{
+                    bool same = (item == listWidget->currentItem());
+                    bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
+                            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+                    listWidget->removeItemWidget(item);
+                    listWidget->takeItem(i);
+                    widget->deleteLater();
+                    if (same)
+                        listWidget->clearSelection();
+                    if (scrollEnd)
+                        listWidget->scrollToBottom();
+                });
+                ani->start();
+            }
+            else
+            {
                 listWidget->removeItemWidget(item);
                 listWidget->takeItem(i);
                 widget->deleteLater();
-                if (same)
+                if (item == currentItem)
                     listWidget->clearSelection();
-                if (scrollEnd)
-                    listWidget->scrollToBottom();
-            });
-            ani->start();*/
-            listWidget->removeItemWidget(item);
-            listWidget->takeItem(i);
-            widget->deleteLater();
-            if (item == currentItem)
-                listWidget->clearSelection();
+            }
             break;
         }
     }
@@ -401,6 +410,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         c = hlColor;
     pa.setColor(QPalette::Text, c);
     label->setPalette(pa);
+    int oldHeight = widget->height();
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum() -lineEdit->height()*2;
@@ -516,6 +526,29 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     widget->resize(widget->sizeHint());
     item->setSizeHint(widget->sizeHint());
 
+    // 动画
+    if (DANMAKU_ANIMATION_ENABLED)
+    {
+        QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
+        ani->setStartValue(QSize(widget->width(), oldHeight));
+        ani->setEndValue(widget->size());
+        ani->setDuration(300);
+        ani->setEasingCurve(QEasingCurve::OutQuad);
+        widget->resize(widget->width(), oldHeight);
+        item->setSizeHint(widget->size());
+        connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
+            item->setSizeHint(val.toSize());
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+        });
+        connect(ani, &QPropertyAnimation::finished, widget, [=]{
+            if (scrollEnd)
+                listWidget->scrollToBottom();
+            item->setSizeHint(widget->size());
+        });
+        ani->start();
+    }
+
     if (scrollEnd)
         listWidget->scrollToBottom();
 }
@@ -578,17 +611,21 @@ void LiveDanmakuWindow::showMenu()
     QString msg = danmaku.getText();
 
     QMenu* menu = new QMenu(this);
+    QAction* actionAddCare = new QAction("添加特别关心", this);
+    QAction* actionSetName = new QAction("设置专属昵称", this);
+
+    QMenu* operMenu = new QMenu("文字", this);
+    QAction* actionCopy = new QAction("复制", this);
+    QAction* actionFreeCopy = new QAction("自由复制", this);
+    QAction* actionSearch = new QAction("百度", this);
+    QAction* actionTranslate = new QAction("翻译", this);
+    QAction* actionReply = new QAction("AI回复", this);
+
+    QMenu* settingMenu = new QMenu("设置", this);
     QAction* actionNameColor = new QAction("昵称颜色", this);
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
-    QAction* actionAddCare = new QAction("添加特别关心", this);
-    QAction* actionSetName = new QAction("设置专属昵称", this);
-    QAction* actionSearch = new QAction("百度", this);
-    QAction* actionTranslate = new QAction("翻译", this);
-    QAction* actionReply = new QAction("AI回复", this);
-    QAction* actionCopy = new QAction("复制", this);
-    QAction* actionFreeCopy = new QAction("自由复制", this);
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
@@ -611,24 +648,28 @@ void LiveDanmakuWindow::showMenu()
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
     }
 
-    menu->addAction(actionNameColor);
-    menu->addAction(actionMsgColor);
-    menu->addAction(actionBgColor);
-    menu->addAction(actionHlColor);
-    menu->addSeparator();
     menu->addAction(actionAddCare);
     menu->addAction(actionSetName);
     menu->addSeparator();
-    menu->addAction(actionSearch);
-    menu->addAction(actionTranslate);
-    menu->addAction(actionReply);
     menu->addSeparator();
-    menu->addAction(actionCopy);
-    menu->addAction(actionFreeCopy);
-    menu->addSeparator();
-    menu->addAction(actionSendMsg);
-    menu->addAction(actionDialogSend);
-    menu->addAction(actionSendOnce);
+    menu->addMenu(operMenu);
+    menu->addMenu(settingMenu);
+
+    operMenu->addAction(actionCopy);
+    operMenu->addAction(actionFreeCopy);
+    operMenu->addSeparator();
+    operMenu->addAction(actionSearch);
+    operMenu->addAction(actionTranslate);
+    operMenu->addAction(actionReply);
+
+    settingMenu->addAction(actionNameColor);
+    settingMenu->addAction(actionMsgColor);
+    settingMenu->addAction(actionBgColor);
+    settingMenu->addAction(actionHlColor);
+    settingMenu->addSeparator();
+    settingMenu->addAction(actionSendMsg);
+    settingMenu->addAction(actionDialogSend);
+    settingMenu->addAction(actionSendOnce);
 
     if (!item)
     {
