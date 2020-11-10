@@ -187,6 +187,12 @@ private slots:
 
     void on_diangeHistoryButton_clicked();
 
+    void addBlockUser(qint64 uid, int hour);
+
+    void delBlockUser(qint64 uid);
+
+    void delRoomBlockUser(qint64 id);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -212,6 +218,7 @@ private:
     void handleMessage(QJsonObject json);
 
     QByteArray zlibUncompress(QByteArray ba) const;
+    QString getLocalNickname(qint64 name) const;
     QString nicknameSimplify(QString nickname) const;
 
 private:
@@ -254,5 +261,7 @@ private:
     QTimer* heartTimer;
 
     QHash<qint64, qint64> userComeTimes; // 用户进来的时间（客户端时间戳为准）
+    QHash<qint64, int> userDanmuCounts;  // 弹幕次数
+    QHash<qint64, qint64> userBlockIds;  // 本次用户屏蔽的ID
 };
 #endif // MAINWINDOW_H

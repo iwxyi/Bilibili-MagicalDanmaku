@@ -77,17 +77,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->AIReplyCheck->setChecked(reply);
 
     // 实时弹幕
-    danmakuWindow = new LiveDanmakuWindow(this);
-    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
-    connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
-    connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
-    danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-    danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-
     if (settings.value("danmaku/liveWindow", false).toBool())
-        danmakuWindow->show();
-    else
-        danmakuWindow->hide();
+    {
+        on_showLiveDanmakuButton_clicked();
+    }
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -228,6 +221,7 @@ void MainWindow::pullLiveDanmaku()
 
 void MainWindow::removeTimeoutDanmaku()
 {
+    return ; // XXX
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     if (roomDanmakus.size()) // 每次最多移除一个；用while的话则会全部移除
@@ -434,6 +428,17 @@ void MainWindow::sendAttentionMsg(QString msg)
  */
 void MainWindow::on_showLiveDanmakuButton_clicked()
 {
+    if (!danmakuWindow)
+    {
+        danmakuWindow = new LiveDanmakuWindow(this);
+        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
+        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+        danmakuWindow->hide();
+    }
+
     bool hidding = danmakuWindow->isHidden();
 
     if (hidding)
@@ -1034,7 +1039,7 @@ void MainWindow::getFansAndUpdate()
                 QString msg = words.at(r);
                 if (!justStart && ui->autoSendAttentionCheck->isChecked())
                 {
-                    QString localName = danmakuWindow->getLocalNickname(fan.mid);
+                    QString localName = getLocalNickname(fan.mid);
                     QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
                     if (!nick.isEmpty())
                         sendAttentionMsg(msg.arg(nick));
@@ -1154,6 +1159,13 @@ QByteArray MainWindow::zlibUncompress(QByteArray ba) const
     return QByteArray::fromRawData((char*)target, si);
 }
 
+QString MainWindow::getLocalNickname(qint64 uid) const
+{
+    if (danmakuWindow)
+        return danmakuWindow->getLocalNickname(uid);
+    return "";
+}
+
 /**
  * 一个智能的用户昵称转简单称呼
  */
@@ -1198,14 +1210,14 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
-        if (!QString("的之の是叫有为奶在去着").contains(tmp.right(1)))
+        if (!QString("的之の是叫有为奶在去着最").contains(tmp.right(1)))
         {
             simp = tmp;
         }
     }
 
     // 没有取名字的，就不需要欢迎了
-    QRegularExpression defaultRe("^[bB]ili_\\d+$");
+    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
     if (simp.indexOf(defaultRe) > -1)
     {
         return "";
@@ -1620,7 +1632,7 @@ void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 
 void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
 {
-    settings.setValue("danmaku/sendAttention", ui->startLiveSendCheck->isChecked());
+    settings.setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
 }
 
 void MainWindow::on_autoAttentionWordsEdit_textChanged()
@@ -1654,4 +1666,122 @@ void MainWindow::on_diangeHistoryButton_clicked()
     }
     QString text = list.size() ? list.join("\n") : "没有点歌记录";
     QMessageBox::information(this, "点歌历史", text);
+}
+
+void MainWindow::addBlockUser(qint64 uid, int hour)
+{
+    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(roomId).arg(uid).arg(hour).arg(token).arg(token);
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << "拉黑用户：" << uid << hour << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+        QJsonObject d = json.value("data").toObject();
+        qint64 id = static_cast<qint64>(d.value("id").toDouble());
+        userBlockIds[uid] = id;
+    });
+    manager->post(*request, data.toUtf8());
+}
+
+void MainWindow::delBlockUser(qint64 uid)
+{
+    if (userBlockIds.contains(uid))
+    {
+        delRoomBlockUser(userBlockIds.value(uid));
+        userBlockIds.remove(uid);
+        return ;
+    }
+
+    // 获取直播间的网络ID，再取消屏蔽
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+        QJsonArray list = json.value("data").toArray();
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject obj = val.toObject();
+            if (static_cast<qint64>(obj.value("uid").toDouble()) == uid)
+            {
+                delRoomBlockUser(static_cast<qint64>(obj.value("id").toDouble())); // 获取房间ID
+                break;
+            }
+        }
+
+    });
+    manager->get(*request);
+}
+
+void MainWindow::delRoomBlockUser(qint64 id)
+{
+    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString data = QString("id=%1&roomid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(id).arg(roomId).arg(uid).arg(token).arg(token);
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << "取消用户：" << id << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        if (json.value("code").toInt() != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            return ;
+        }
+
+        // if (userBlockIds.values().contains(id))
+        //    userBlockIds.remove(userBlockIds.key(id));
+    });
+    manager->post(*request, data.toUtf8());
 }
