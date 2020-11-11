@@ -52,15 +52,21 @@ MainWindow::MainWindow(QWidget *parent)
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
+    QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
+    diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (!diangeAutoCopy)
+       if (!diangeAutoCopy || danmaku.getMsgType() != MSG_DANMAKU)
            return ;
-       QString text = danmaku.getText();
-       if (!text.startsWith("点歌"))
+       QRegularExpression re(diangeFormatString);
+       QRegularExpressionMatch match;
+       if (danmaku.getText().indexOf(re, 0, &match) == -1)
            return ;
-       text = text.replace(0, 2, "");
-       if (QString(" :：，。,.").contains(text.left(1)))
-           text.replace(0, 1, "");
+       if (match.capturedTexts().size() < 2)
+       {
+           statusLabel->setText("无法获取点歌内容，请检测点歌格式");
+           return ;
+       }
+       QString text = match.capturedTexts().at(1);
        text = text.trimmed();
        QClipboard* clip = QApplication::clipboard();
        clip->setText(text);
@@ -1954,5 +1960,16 @@ void MainWindow::on_blockKeysButton_clicked()
     if (!ok)
         return ;
     blockReString = text;
+    settings.setValue("permission/blockRe", blockReString);
 }
 
+
+void MainWindow::on_diangeFormatButton_clicked()
+{
+    bool ok = false;
+    QString text = QInputDialog::getText(this, "点歌格式", "触发点歌弹幕的正则表达式", QLineEdit::Normal, diangeFormatString, &ok);
+    if (!ok)
+        return ;
+    diangeFormatString = text;
+    settings.setValue("danmaku/diangeFormat", diangeFormatString);
+}

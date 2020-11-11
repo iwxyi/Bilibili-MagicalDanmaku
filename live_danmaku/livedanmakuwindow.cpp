@@ -1207,10 +1207,6 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     pixmap.loadFromData(jpegData);
     headPortraits[uid] = pixmap;
 
-//    QDir dir;
-//    dir.mkdir("headers");
-//    pixmap.save("headers/" + QString::number(uid) + ".jpg");
-
     if (!isItemExist(item))
         return ;
     PortraitLabel* label = getItemWidgetPortrait(item);
@@ -1225,7 +1221,7 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
         const LiveDanmaku& danmaku = allDanmakus.at(i);
         if (danmaku.getMsgType() == MSG_DANMAKU && danmaku.getUid() == uid)
         {
-            sl.append(danmaku.getText());
+            sl.append(danmaku.getTimeline().toString("hh:mm:ss") + "  " + danmaku.getText());
         }
     }
 
@@ -1234,5 +1230,6 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
     view->setAttribute(Qt::WA_ShowModal, true);
     view->setAttribute(Qt::WA_DeleteOnClose, true);
     view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+    view->setGeometry(this->geometry());
     view->show();
 }

@@ -200,6 +200,8 @@ private slots:
 
     void on_blockKeysButton_clicked();
 
+    void on_diangeFormatButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -253,6 +255,7 @@ private:
 
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
+    QString diangeFormatString;
     QString blockReString;
 
     QString browserCookie;
