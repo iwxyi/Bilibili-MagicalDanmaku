@@ -1624,7 +1624,8 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
                 QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
-                if (msg.indexOf(re) > -1) // 自动拉黑
+                if (msg.indexOf(re) > -1 // 自动拉黑
+                        && danmaku.getAnchorRoomid() != roomId) // 若带有本房间粉丝牌，免自动拉黑
                 {
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
