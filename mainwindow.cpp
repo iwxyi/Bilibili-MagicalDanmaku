@@ -98,6 +98,12 @@ MainWindow::MainWindow(QWidget *parent)
     QString defaultBlockRe = "丑|TM";
     this->blockReString = settings.value("block/blockRe", defaultBlockRe).toString();
 
+    // 自动禁言
+    ui->autoBlockNewbieCheck->setChecked(settings.value("block/autoBlockNewbie", false).toBool());
+    ui->autoBlockNewbieKeysEdit->setText(settings.value("block/autoBlockNewbieKeys").toString());
+    ui->autoBlockNewbieNotifyCheck->setChecked(settings.value("block/autoBlockNewbieNotify", false).toBool());
+    ui->autoBlockNewbieNotifyWordsEdit->setText(settings.value("block/autoBlockNewbieNotifyWords").toString());
+
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
@@ -856,7 +862,9 @@ void MainWindow::startConnectRoom()
     // 准备房间数据
     if (danmuCounts)
         danmuCounts->deleteLater();
-    danmuCounts = new QSettings("danmucounts_" + roomId + ".ini", QSettings::Format::IniFormat);
+    QDir dir;
+    dir.mkdir("danma_counts");
+    danmuCounts = new QSettings("danmucounts/" + roomId + ".ini", QSettings::Format::IniFormat);
 
     // 开始获取房间信息
     getRoomInfo();
@@ -1575,14 +1583,20 @@ void MainWindow::handleMessage(QJsonObject json)
                     // 通知
                     if (ui->autoBlockNewbieNotifyCheck->isChecked())
                     {
-                        QStringList words = ui->autoBlockNewbieNotifyWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
-                        if (words.size())
+                        static int prevNotifyInCount = -20; // 上次发送通知时的弹幕数量
+                        if (allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
                         {
-                            int r = qrand() % words.size();
-                            QString msg = words.at(r);
-                            if (!msg.trimmed().isEmpty())
+                            prevNotifyInCount = allDanmakus.size();
+
+                            QStringList words = ui->autoBlockNewbieNotifyWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                            if (words.size())
                             {
-                                sendNotifyMsg(msg);
+                                int r = qrand() % words.size();
+                                QString msg = words.at(r);
+                                if (!msg.trimmed().isEmpty())
+                                {
+                                    sendNotifyMsg(msg);
+                                }
                             }
                         }
                     }
@@ -2018,7 +2032,7 @@ void MainWindow::on_newbieTipCheck_clicked()
 void MainWindow::on_blockKeysButton_clicked()
 {
     bool ok = false;
-    QString text = QInputDialog::getText(this, "新人快速拉黑关键词", "触发以下关键词时屏蔽，多个用“|”分隔", QLineEdit::Normal, blockReString, &ok);
+    QString text = QInputDialog::getText(this, "新人快速禁言关键词", "触发以下关键词时弹出快速禁言按钮，多个用“|”分隔", QLineEdit::Normal, blockReString, &ok);
     if (!ok)
         return ;
     blockReString = text;

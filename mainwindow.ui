@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -324,7 +324,7 @@
 }</string>
             </property>
             <property name="text">
-             <string>快速拉黑</string>
+             <string>快速禁言</string>
             </property>
            </widget>
           </item>
