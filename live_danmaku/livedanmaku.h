@@ -16,7 +16,8 @@ enum MessageType
     MSG_GUARD_BUY,
     MSG_WELCOME_GUARD,
     MSG_FANS,
-    MSG_ATTENTION
+    MSG_ATTENTION,
+    MSG_BLOCK
 };
 
 class LiveDanmaku
@@ -66,6 +67,12 @@ public:
 
     LiveDanmaku(QString nickname, qint64 uid, bool attention, QDateTime time)
         : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), timeline(time), attention(attention)
+    {
+
+    }
+
+    LiveDanmaku(QString nickname, qint64 uid)
+        : msgType(MSG_BLOCK), nickname(nickname), uid(uid)
     {
 
     }
@@ -186,9 +193,8 @@ public:
         }
         else if (msgType == MSG_DIANGE)
         {
-            return QString("[点歌]%1(%2) come %3")
-                                .arg(nickname)
-                                .arg(text)
+            return QString("[点歌] %1 (%2) %3")
+                                .arg(text).arg(nickname)
                                 .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_FANS)
@@ -204,6 +210,11 @@ public:
                     .arg(nickname)
                     .arg(attention ? "关注了主播" : "取消关注主播")
                     .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_BLOCK)
+        {
+            return QString("[拉黑] %1(%2)")
+                                .arg(nickname).arg(uid);
         }
         return "未知消息类型";
     }

@@ -1676,6 +1676,12 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendWelcomeMsg(msg.arg(nick));
         }
     }
+    else if (cmd == "ROOM_BLOCK_MSG")
+    {
+        QString nickname = json.value("uname").toString();
+        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
+        appendNewLiveDanmaku(LiveDanmaku(nickname, uid));
+    }
 }
 
 void MainWindow::refreshBlockList()

@@ -269,8 +269,9 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     }
 
     // 各种额外功能
+    MessageType msgType = danmaku.getMsgType();
     QRegExp replyRe("点歌|谢|欢迎");
-    if (danmaku.getMsgType() == MSG_DANMAKU)
+    if (msgType == MSG_DANMAKU)
     {
         if (!ignored)
         {
@@ -302,21 +303,19 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             }
         }
     }
-    else if (danmaku.getMsgType() == MSG_DIANGE)
+    else if (msgType == MSG_DIANGE
+             || msgType == MSG_WELCOME_GUARD
+             || msgType == MSG_BLOCK)
     {
         highlightItemText(item, true);
     }
-    else if (danmaku.getMsgType() == MSG_ATTENTION)
+    else if (msgType == MSG_ATTENTION)
     {
         if (danmaku.isAttention()
                 && (QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch() <= 20)) // 20秒内
             highlightItemText(item, true);
     }
-    else if (danmaku.getMsgType() == MSG_WELCOME_GUARD)
-    {
-        highlightItemText(item, true);
-    }
-    else if (danmaku.getMsgType() == MSG_GUARD_BUY)
+    else if (msgType == MSG_GUARD_BUY)
     {
         highlightItemText(item, false);
     }
@@ -423,7 +422,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (newbieTip)
         {
             int count = danmuCounts->value(snum(danmaku.getUid())).toInt();
-            if (danmaku.getLevel() == 0 && count <= 3)
+            if (danmaku.getLevel() == 0 && count <= 1)
             {
                 nameText = "<font color='red'>[新]</font>" + nameText;
             }
@@ -511,6 +510,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(nameText)
                 .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
                 .arg(second);
+    }
+    else if (msgType == MSG_BLOCK)
+    {
+        text = QString("<font color='gray'>[拉黑]</font> %1")
+                .arg(danmaku.getText());
     }
 
     // 文字与大小
@@ -684,7 +688,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionHistory);
     if (enableBlock)
     {
-        if (uid && !userBlockIds.contains(uid))
+        if (uid && !userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
         {
             menu->addAction(actionAddBlock);
             menu->addAction(actionAddBlockTemp);
