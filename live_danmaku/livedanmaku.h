@@ -100,6 +100,10 @@ public:
         danmaku.delta_fans_club = object.value("delta_fans_club").toInt();
         danmaku.attention = object.value("attention").toBool();
         danmaku.msgType = (MessageType)object.value("msgType").toInt();
+        danmaku.anchor_roomid = object.value("anchor_roomid").toString();
+        danmaku.medal_name = object.value("medal_name").toString();
+        danmaku.medal_level = object.value("medal_level").toInt();
+        danmaku.medal_up = object.value("medal_up").toString();
         return danmaku;
     }
 
@@ -144,6 +148,13 @@ public:
         }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
+        if (!anchor_roomid.isEmpty())
+        {
+            object.insert("anchor_roomid", anchor_roomid);
+            object.insert("medal_name", medal_name);
+            object.insert("medal_level", medal_level);
+            object.insert("medal_up", medal_up);
+        }
 
         return object;
     }
@@ -195,6 +206,14 @@ public:
                     .arg(timeline.toString("hh:mm:ss"));
         }
         return "未知消息类型";
+    }
+
+    void setMedal(QString roomId, QString name, int level, QString up = "")
+    {
+        this->anchor_roomid = roomId;
+        this->medal_name = name;
+        this->medal_level = level;
+        this->medal_up = up;
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -294,6 +313,26 @@ public:
         return attention;
     }
 
+    QString getAnchorRoomid() const
+    {
+        return anchor_roomid;
+    }
+
+    QString getMedalName() const
+    {
+        return medal_name;
+    }
+
+    int getMedalLevel() const
+    {
+        return medal_level;
+    }
+
+    QString getMedalUp() const
+    {
+        return medal_up;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -307,6 +346,7 @@ private:
     int vip = 0;
     int svip = 0;
 
+    QString anchor_roomid;
     int medal_level = 0;
     QString medal_name;
     QString medal_up;

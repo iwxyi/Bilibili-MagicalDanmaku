@@ -613,6 +613,7 @@ void LiveDanmakuWindow::showMenu()
 
     QMenu* userMenu = new QMenu("用户", this);
     QAction* actionUserInfo = new QAction("用户主页", this);
+    QAction* actionMedal = new QAction("粉丝牌子", this);
     QAction* actionHistory = new QAction("消息记录", this);
 
     QAction* actionAddBlock = new QAction("720小时黑名单", this);
@@ -658,6 +659,14 @@ void LiveDanmakuWindow::showMenu()
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
             actionHistory->setText("消息记录：" + snum(danmuCounts->value(snum(uid)).toInt()));
         }
+        if (!danmaku.getAnchorRoomid().isEmpty())
+        {
+            actionMedal->setText(danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()));
+        }
+        else
+        {
+            actionMedal->setEnabled(false);
+        }
     }
     else
     {
@@ -667,9 +676,11 @@ void LiveDanmakuWindow::showMenu()
         actionAddBlock->setEnabled(false);
         actionAddBlockTemp->setEnabled(false);
         actionDelBlock->setEnabled(false);
+        actionMedal->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
+    menu->addAction(actionMedal);
     menu->addAction(actionHistory);
     if (enableBlock)
     {
@@ -875,6 +886,9 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
+    });
+    connect(actionMedal, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
     });
     connect(actionHistory, &QAction::triggered, this, [=]{
         showUserMsgHistory(uid);

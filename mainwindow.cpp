@@ -1517,6 +1517,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = user[1].toString();
         QString unameColor = user[7].toString();
         int level = info[4].toArray()[0].toInt();
+        QJsonArray medal = info[3].toArray();
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
@@ -1532,8 +1533,14 @@ void MainWindow::handleMessage(QJsonObject json)
         QString cs = QString::number(textColor, 16);
         while (cs.size() < 6)
             cs = "0" + cs;
-        appendNewLiveDanmaku(LiveDanmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
-                                         unameColor, "#"+cs));
+        LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
+                                                 unameColor, "#"+cs);
+        if (medal.size() >= 4)
+        {
+            danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
+                    medal[1].toString(), medal[0].toInt(), medal[2].toString());
+        }
+        appendNewLiveDanmaku(danmaku);
 
         // 新人发言
         if (danmakuWindow && !blockReString.isEmpty())
@@ -1640,13 +1647,17 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
-        int level = data.value("").toInt();
         QString unameColor = data.value("uname_color").toString();
+        QJsonObject fansMedal = data.value("fans_medal").toObject();
         qDebug() << s8("观众进入：") << username;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin));
+        LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin);
+        danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
+                         fansMedal.value("medal_name").toString(),
+                         fansMedal.value("medal_level").toInt(), "");
+        appendNewLiveDanmaku(danmaku);
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();
