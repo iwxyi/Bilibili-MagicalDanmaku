@@ -170,50 +170,52 @@ public:
     {
         if (msgType == MSG_DANMAKU)
         {
-            return QString("%1(%3):“%2” %4")
+            return QString("%1\t%2\t%3")
+                    .arg(timeline.toString("hh:mm:ss"))
                     .arg(nickname)
-                    .arg(text)
-                    .arg(uid)
-                    .arg(timeline.toString("hh:mm:ss"));
+                    .arg(text);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
-            return QString("%1(%3) => %2 × %4")
+            return QString("%1\t%2 => %3 × %4")
+                    .arg(timeline.toString("hh:mm:ss"))
                     .arg(nickname)
                     .arg(giftName)
-                    .arg(uid)
-                    .arg(timeline.toString("hh:mm:ss"));
+                    .arg(number);
         }
         else if (msgType == MSG_WELCOME)
         {
-            return QString("%1(%2) come %3")
-                    .arg(nickname)
-                    .arg(uid)
-                    .arg(timeline.toString("hh:mm:ss"));
+            if (isAdmin())
+                return QString("%1\t[光临] 舰长 %2")
+                        .arg(timeline.toString("hh:mm:ss"))
+                        .arg(nickname);
+            return QString("%1\t[欢迎] %2 进入直播间")
+                    .arg(timeline.toString("hh:mm:ss"))
+                    .arg(nickname);
         }
         else if (msgType == MSG_DIANGE)
         {
-            return QString("[点歌] %1 (%2) %3")
+            return QString("%3\t[点歌] %1 (%2)")
                                 .arg(text).arg(nickname)
                                 .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_FANS)
         {
-            return QString("[粉丝] 粉丝数：%1，粉丝团：%2 %3")
+            return QString("%3\t[粉丝] 粉丝数：%1，粉丝团：%2")
                     .arg(fans)
                     .arg(fans_club)
                     .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_ATTENTION)
         {
-            return QString("[关注] %1 %2 %3")
+            return QString("%3\t[关注] %1 %2")
                     .arg(nickname)
                     .arg(attention ? "关注了主播" : "取消关注主播")
                     .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_BLOCK)
         {
-            return QString("[拉黑] %1(%2)")
+            return QString("[禁言] %1 被房管禁言")
                                 .arg(nickname).arg(uid);
         }
         return "未知消息类型";

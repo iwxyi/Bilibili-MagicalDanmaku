@@ -347,6 +347,13 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
 {
     SOCKET_DEB << "+++++新弹幕：" << danmaku.toString();
     emit signalNewDanmaku(danmaku);
+
+    // 保存到文件
+    if (danmuLogStream)
+    {
+        (*danmuLogStream) << danmaku.toString() << "\n";
+        (*danmuLogStream).flush(); // 立刻刷新到文件里
+    }
 }
 
 void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
@@ -1654,15 +1661,6 @@ void MainWindow::handleMessage(QJsonObject json)
                     danmakuWindow->showFastBlock(uid, msg);
                 }
             }
-        }
-
-        // 保存到文件
-        if (danmuLogStream)
-        {
-            (*danmuLogStream) << QDateTime::fromMSecsSinceEpoch(timestamp).toString("hh:mm:ss")
-                           << "\t" << username
-                           << "\t\t" << msg << "\n";
-            (*danmuLogStream).flush(); // 立刻刷新到文件里
         }
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
