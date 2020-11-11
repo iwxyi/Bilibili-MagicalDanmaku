@@ -514,7 +514,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_BLOCK)
     {
         text = QString("<font color='gray'>[拉黑]</font> %1")
-                .arg(danmaku.getText());
+                .arg(danmaku.getNickname());
     }
 
     // 文字与大小
