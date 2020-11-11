@@ -27,8 +27,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (1) qDebug()
-#define SOCKET_INF if (1) qDebug()
+#define SOCKET_DEB if (0) qDebug()
+#define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
 class MainWindow : public QMainWindow, public CommonValues
@@ -154,6 +154,8 @@ private slots:
 
     void sendAttentionMsg(QString msg);
 
+    void sendNotifyMsg(QString msg);
+
     void slotSocketError(QAbstractSocket::SocketError error);
 
     void slotBinaryMessageReceived(const QByteArray &message);
@@ -201,6 +203,14 @@ private slots:
     void on_blockKeysButton_clicked();
 
     void on_diangeFormatButton_clicked();
+
+    void on_autoBlockNewbieCheck_clicked();
+
+    void on_autoBlockNewbieKeysEdit_textChanged();
+
+    void on_autoBlockNewbieNotifyCheck_clicked();
+
+    void on_autoBlockNewbieNotifyWordsEdit_textChanged();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);

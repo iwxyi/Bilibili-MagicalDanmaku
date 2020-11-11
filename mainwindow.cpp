@@ -89,14 +89,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->AIReplyCheck->setChecked(reply);
 
     // 黑名单管理
-    ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
+    ui->enableBlockCheck->setChecked(settings.value("block/enableBlock", false).toBool());
 
     // 新人提示
-    ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
+    ui->newbieTipCheck->setChecked(settings.value("block/newbieTip", true).toBool());
 
     // 新人拉黑关键词
     QString defaultBlockRe = "丑|TM";
-    this->blockReString = settings.value("permission/blockRe", defaultBlockRe).toString();
+    this->blockReString = settings.value("block/blockRe", defaultBlockRe).toString();
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
@@ -451,6 +451,22 @@ void MainWindow::sendAttentionMsg(QString msg)
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     int cd = ui->sendAttentionCDSpin->value() * 1000;
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    if (msg.length() > 20)
+        msg = msg.replace(" ", "");
+    addNoReplyDanmakuText(msg);
+    sendMsg(msg);
+}
+
+void MainWindow::sendNotifyMsg(QString msg)
+{
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = 2000; // 最快2秒
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -1543,11 +1559,40 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(danmaku);
 
         // 新人发言
-        if (danmakuWindow && !blockReString.isEmpty())
+        if ((level == 0 && danmuCount <= 3) || danmuCount <= 1)
         {
-            if ((level == 0 && danmuCount <= 3) || danmuCount <= 1)
+            bool blocked = false;
+            // 自动拉黑
+            if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
-                if (msg.indexOf(QRegularExpression(blockReString)) > -1) // XXX
+                QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
+                if (msg.indexOf(re) > -1) // 自动拉黑
+                {
+                    // 拉黑
+                    addBlockUser(uid, 720);
+                    blocked = true;
+
+                    // 通知
+                    if (ui->autoBlockNewbieNotifyCheck->isChecked())
+                    {
+                        QStringList words = ui->autoBlockNewbieNotifyWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                        if (words.size())
+                        {
+                            int r = qrand() % words.size();
+                            QString msg = words.at(r);
+                            if (!msg.trimmed().isEmpty())
+                            {
+                                sendNotifyMsg(msg);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 提示拉黑
+            if (!blocked && danmakuWindow && !blockReString.isEmpty())
+            {
+                if (msg.indexOf(QRegularExpression(blockReString)) > -1) // 提示拉黑
                 {
                     danmakuWindow->showFastBlock(uid, msg);
                 }
@@ -1953,7 +1998,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 void MainWindow::on_enableBlockCheck_clicked()
 {
     bool enable = ui->enableBlockCheck->isChecked();
-    settings.setValue("permission/enableBlock", enable);
+    settings.setValue("block/enableBlock", enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
 
@@ -1965,7 +2010,7 @@ void MainWindow::on_enableBlockCheck_clicked()
 void MainWindow::on_newbieTipCheck_clicked()
 {
     bool enable = ui->newbieTipCheck->isChecked();
-    settings.setValue("permission/newbieTip", enable);
+    settings.setValue("block/newbieTip", enable);
     if (danmakuWindow)
         danmakuWindow->setNewbieTip(enable);
 }
@@ -1977,7 +2022,7 @@ void MainWindow::on_blockKeysButton_clicked()
     if (!ok)
         return ;
     blockReString = text;
-    settings.setValue("permission/blockRe", blockReString);
+    settings.setValue("block/blockRe", blockReString);
 }
 
 
@@ -1989,4 +2034,24 @@ void MainWindow::on_diangeFormatButton_clicked()
         return ;
     diangeFormatString = text;
     settings.setValue("danmaku/diangeFormat", diangeFormatString);
+}
+
+void MainWindow::on_autoBlockNewbieCheck_clicked()
+{
+    settings.setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
+}
+
+void MainWindow::on_autoBlockNewbieKeysEdit_textChanged()
+{
+    settings.setValue("block/autoBlockNewbieKeys", ui->autoBlockNewbieKeysEdit->toPlainText());
+}
+
+void MainWindow::on_autoBlockNewbieNotifyCheck_clicked()
+{
+    settings.setValue("block/autoBlockNewbieNotify", ui->autoBlockNewbieNotifyCheck->isChecked());
+}
+
+void MainWindow::on_autoBlockNewbieNotifyWordsEdit_textChanged()
+{
+    settings.setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
 }
