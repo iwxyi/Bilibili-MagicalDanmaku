@@ -93,15 +93,15 @@ MainWindow::MainWindow(QWidget *parent)
     // 新人提示
     ui->newbieTipCheck->setChecked(settings.value("block/newbieTip", true).toBool());
 
-    // 新人拉黑关键词
-    QString defaultBlockRe = "丑|TM";
-    this->blockReString = settings.value("block/blockRe", defaultBlockRe).toString();
-
     // 自动禁言
     ui->autoBlockNewbieCheck->setChecked(settings.value("block/autoBlockNewbie", false).toBool());
-    ui->autoBlockNewbieKeysEdit->setText(settings.value("block/autoBlockNewbieKeys").toString());
+    ui->autoBlockNewbieKeysEdit->setPlainText(settings.value("block/autoBlockNewbieKeys").toString());
+
     ui->autoBlockNewbieNotifyCheck->setChecked(settings.value("block/autoBlockNewbieNotify", false).toBool());
-    ui->autoBlockNewbieNotifyWordsEdit->setText(settings.value("block/autoBlockNewbieNotifyWords").toString());
+    ui->autoBlockNewbieNotifyWordsEdit->setPlainText(settings.value("block/autoBlockNewbieNotifyWords").toString());
+
+    ui->promptBlockNewbieCheck->setChecked(settings.value("block/promptBlockNewbie", false).toBool());
+    ui->promptBlockNewbieKeysEdit->setPlainText(settings.value("block/promptBlockNewbieKeys").toString());
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
@@ -1626,6 +1626,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
                 if (msg.indexOf(re) > -1) // 自动拉黑
                 {
+                    qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
                     addBlockUser(uid, 720);
                     blocked = true;
@@ -1654,9 +1655,9 @@ void MainWindow::handleMessage(QJsonObject json)
             }
 
             // 提示拉黑
-            if (!blocked && danmakuWindow && !blockReString.isEmpty())
+            if (!blocked && danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
-                if (msg.indexOf(QRegularExpression(blockReString)) > -1) // 提示拉黑
+                if (msg.indexOf(QRegularExpression(ui->promptBlockNewbieKeysEdit->toPlainText())) > -1) // 提示拉黑
                 {
                     danmakuWindow->showFastBlock(uid, msg);
                 }
@@ -2079,17 +2080,6 @@ void MainWindow::on_newbieTipCheck_clicked()
         danmakuWindow->setNewbieTip(enable);
 }
 
-void MainWindow::on_blockKeysButton_clicked()
-{
-    bool ok = false;
-    QString text = QInputDialog::getText(this, "新人快速禁言关键词", "触发以下关键词时弹出快速禁言按钮，多个用“|”分隔", QLineEdit::Normal, blockReString, &ok);
-    if (!ok)
-        return ;
-    blockReString = text;
-    settings.setValue("block/blockRe", blockReString);
-}
-
-
 void MainWindow::on_diangeFormatButton_clicked()
 {
     bool ok = false;
@@ -2128,4 +2118,14 @@ void MainWindow::on_saveDanmakuToFileCheck_clicked()
         startSaveDanmakuToFile();
     else
         finishSaveDanmuToFile();
+}
+
+void MainWindow::on_promptBlockNewbieCheck_clicked()
+{
+    settings.setValue("block/promptBlockNewbie", ui->promptBlockNewbieCheck->isChecked());
+}
+
+void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
+{
+    settings.setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
 }

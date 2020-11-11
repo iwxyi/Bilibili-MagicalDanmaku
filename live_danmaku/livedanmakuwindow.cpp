@@ -513,7 +513,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_BLOCK)
     {
-        text = QString("<font color='gray'>[拉黑]</font> %1")
+        text = QString("<font color='gray'>[禁言]</font> %1 被房管禁言")
                 .arg(danmaku.getNickname());
     }
 

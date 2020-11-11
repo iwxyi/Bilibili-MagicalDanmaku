@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>290</width>
+    <width>307</width>
     <height>422</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -311,7 +311,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -322,23 +322,6 @@
             </property>
             <property name="text">
              <string>新人发言提示</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="blockKeysButton">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;新人弹幕触发关键词的内容时，实时弹幕的顶部显示拉黑提示&lt;/p&gt;&lt;p&gt;新人弹幕：0级前三句话、&amp;gt;0级第一句话&lt;/p&gt;&lt;p&gt;附：B站会自动屏蔽大部分违禁词&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>快速禁言</string>
             </property>
            </widget>
           </item>
@@ -771,7 +754,10 @@
          </layout>
         </item>
         <item>
-         <widget class="QTextEdit" name="autoBlockNewbieKeysEdit">
+         <widget class="QPlainTextEdit" name="autoBlockNewbieKeysEdit">
+          <property name="maximumBlockCount">
+           <number>1</number>
+          </property>
           <property name="placeholderText">
            <string>触发禁言关键字，多个用“|”分隔，支持正则表达式</string>
           </property>
@@ -795,9 +781,36 @@
          </layout>
         </item>
         <item>
-         <widget class="QTextEdit" name="autoBlockNewbieNotifyWordsEdit">
+         <widget class="QPlainTextEdit" name="autoBlockNewbieNotifyWordsEdit">
+          <property name="maximumBlockCount">
+           <number>1</number>
+          </property>
           <property name="placeholderText">
            <string>新人禁言后发送禁言通知/提示/规则等自定义内容，多行则随机发送一行</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_22">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="promptBlockNewbieCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;触发以下关键词时弹出快速禁言按钮，多个用“|”分隔&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;此功能不是自动禁言，两者关键词可不同&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>新人关键词快速禁言提示</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPlainTextEdit" name="promptBlockNewbieKeysEdit">
+          <property name="placeholderText">
+           <string>触发以下关键词时弹出快速禁言按钮，多个用“|”分隔</string>
           </property>
          </widget>
         </item>
@@ -812,7 +825,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>290</width>
+     <width>307</width>
      <height>23</height>
     </rect>
    </property>
