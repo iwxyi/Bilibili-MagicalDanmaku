@@ -878,6 +878,10 @@ void MainWindow::startConnectRoom()
     dir.mkdir("danmaku_counts");
     danmuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
 
+    // 保存房间弹幕
+    if (ui->saveDanmakuToFileCheck)
+        startSaveDanmakuToFile();
+
     // 开始获取房间信息
     getRoomInfo();
     if (ui->enableBlockCheck->isChecked())
@@ -1317,10 +1321,13 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
 void MainWindow::startSaveDanmakuToFile()
 {
+    if (danmuLogFile)
+        finishSaveDanmuToFile();
+
     QDir dir;
     dir.mkdir("danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    danmuLogFile = new QFile("danmaku_histories/" + date + ".log");
+    danmuLogFile = new QFile("danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
 }
@@ -1329,9 +1336,14 @@ void MainWindow::finishSaveDanmuToFile()
 {
     if (!danmuLogFile)
         return ;
+
     delete danmuLogStream;
+
     danmuLogFile->close();
     danmuLogFile->deleteLater();
+
+    danmuLogFile = nullptr;
+    danmuLogStream = nullptr;
 }
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
@@ -1649,7 +1661,8 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             (*danmuLogStream) << QDateTime::fromMSecsSinceEpoch(timestamp).toString("hh:mm:ss")
                            << "\t" << username
-                           << "\t" << msg << "\n";
+                           << "\t\t" << msg << "\n";
+            (*danmuLogStream).flush(); // 立刻刷新到文件里
         }
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
