@@ -1,6 +1,6 @@
+#include <zlib.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "zlib.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）

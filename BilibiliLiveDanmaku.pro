@@ -44,11 +44,6 @@ HEADERS += \
     utils/netutil.h \
     utils/pinyinutil.h \
     utils/stringutil.h \
-    ioapi.h \
-    unzip.h \
-    zconf.h \
-    zip.h \
-    zlib.h
 
 FORMS += \
     mainwindow.ui
@@ -61,5 +56,3 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
         README.md \
         appicon.ico
-
-LIBS += $$PWD/zlibstat.lib
