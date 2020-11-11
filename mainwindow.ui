@@ -218,6 +218,20 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_21">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="saveDanmakuToFileCheck">
+            <property name="text">
+             <string>保存弹幕到文件</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0,0">
           <property name="topMargin">
            <number>0</number>

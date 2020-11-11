@@ -212,6 +212,8 @@ private slots:
 
     void on_autoBlockNewbieNotifyWordsEdit_textChanged();
 
+    void on_saveDanmakuToFileCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -241,6 +243,9 @@ private:
     QString getLocalNickname(qint64 name) const;
     QString nicknameSimplify(QString nickname) const;
 
+    void startSaveDanmakuToFile();
+    void finishSaveDanmuToFile();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
@@ -262,6 +267,8 @@ private:
 #endif
     QTimer* removeTimer;
     qint64 removeDanmakuInterval = 20000;
+    QFile* danmuLogFile = nullptr;
+    QTextStream* danmuLogStream = nullptr;
 
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;

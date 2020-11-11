@@ -34,7 +34,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->refreshDanmakuCheck->setChecked(true);
 #endif
 
-
     // 自动刷新是否启用
     bool autoRefresh = settings.value("danmaku/autoRefresh", true).toBool();
     ui->refreshDanmakuCheck->setChecked(autoRefresh);
@@ -113,6 +112,14 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
+
+    // 保存弹幕
+    bool saveDanmuToFile = settings.value("danmaku/saveDanmakuToFile", false).toBool();
+    if (saveDanmuToFile)
+    {
+        ui->saveDanmakuToFileCheck->setChecked(true);
+        startSaveDanmakuToFile();
+    }
 
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
@@ -199,6 +206,11 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings.setValue("mainwindow/geometry", this->saveGeometry());
+
+    if (danmuLogFile)
+    {
+        finishSaveDanmuToFile();
+    }
 
     if (danmakuWindow)
     {
@@ -863,8 +875,8 @@ void MainWindow::startConnectRoom()
     if (danmuCounts)
         danmuCounts->deleteLater();
     QDir dir;
-    dir.mkdir("danma_counts");
-    danmuCounts = new QSettings("danmucounts/" + roomId + ".ini", QSettings::Format::IniFormat);
+    dir.mkdir("danmaku_counts");
+    danmuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
 
     // 开始获取房间信息
     getRoomInfo();
@@ -1303,6 +1315,25 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     return simp;
 }
 
+void MainWindow::startSaveDanmakuToFile()
+{
+    QDir dir;
+    dir.mkdir("danmaku_histories");
+    QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    danmuLogFile = new QFile("danmaku_histories/" + date + ".log");
+    danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
+    danmuLogStream = new QTextStream(danmuLogFile);
+}
+
+void MainWindow::finishSaveDanmuToFile()
+{
+    if (!danmuLogFile)
+        return ;
+    delete danmuLogStream;
+    danmuLogFile->close();
+    danmuLogFile->deleteLater();
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = ((uchar)message[8] << 24)
@@ -1592,10 +1623,10 @@ void MainWindow::handleMessage(QJsonObject json)
                             if (words.size())
                             {
                                 int r = qrand() % words.size();
-                                QString msg = words.at(r);
-                                if (!msg.trimmed().isEmpty())
+                                QString s = words.at(r);
+                                if (!s.trimmed().isEmpty())
                                 {
-                                    sendNotifyMsg(msg);
+                                    sendNotifyMsg(s);
                                 }
                             }
                         }
@@ -1611,6 +1642,14 @@ void MainWindow::handleMessage(QJsonObject json)
                     danmakuWindow->showFastBlock(uid, msg);
                 }
             }
+        }
+
+        // 保存到文件
+        if (danmuLogStream)
+        {
+            (*danmuLogStream) << QDateTime::fromMSecsSinceEpoch(timestamp).toString("hh:mm:ss")
+                           << "\t" << username
+                           << "\t" << msg << "\n";
         }
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -2068,4 +2107,14 @@ void MainWindow::on_autoBlockNewbieNotifyCheck_clicked()
 void MainWindow::on_autoBlockNewbieNotifyWordsEdit_textChanged()
 {
     settings.setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
+}
+
+void MainWindow::on_saveDanmakuToFileCheck_clicked()
+{
+    bool enabled = ui->saveDanmakuToFileCheck->isChecked();
+    settings.setValue("danmaku/saveDanmakuToFile", enabled);
+    if (enabled)
+        startSaveDanmakuToFile();
+    else
+        finishSaveDanmuToFile();
 }
