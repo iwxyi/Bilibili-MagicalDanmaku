@@ -213,7 +213,7 @@ private:
 
     QVariant getCookies();
     void initWS();
-    void startConnectWS();
+    void startConnectRoom();
     void getRoomInit();
     void getRoomInfo();
     void getDanmuInfo();

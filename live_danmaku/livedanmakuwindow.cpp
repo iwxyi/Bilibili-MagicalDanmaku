@@ -877,7 +877,7 @@ void LiveDanmakuWindow::showMenu()
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
     });
     connect(actionHistory, &QAction::triggered, this, [=]{
-
+        showUserMsgHistory(uid);
     });
     connect(actionAddBlock, &QAction::triggered, this, [=]{
         emit signalAddBlockUser(uid, 720);
@@ -1215,4 +1215,24 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
         return ;
     PortraitLabel* label = getItemWidgetPortrait(item);
     label->setPixmap(pixmap);
+}
+
+void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
+{
+    QStringList sl;
+    for (int i = allDanmakus.size()-1; i >= 0; i--)
+    {
+        const LiveDanmaku& danmaku = allDanmakus.at(i);
+        if (danmaku.getMsgType() == MSG_DANMAKU && danmaku.getUid() == uid)
+        {
+            sl.append(danmaku.getText());
+        }
+    }
+
+    QListView* view = new QListView(this);
+    view->setModel(new QStringListModel(sl));
+    view->setAttribute(Qt::WA_ShowModal, true);
+    view->setAttribute(Qt::WA_DeleteOnClose, true);
+    view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+    view->show();
 }

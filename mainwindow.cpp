@@ -3,9 +3,10 @@
 #include "zlib.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
-QHash<qint64, qint64> CommonValues::userComeTimes; // 用户进来的时间（客户端时间戳为准）
-QHash<qint64, qint64> CommonValues::userBlockIds;  // 本次用户屏蔽的ID
-QSettings* CommonValues::danmuCounts;
+QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
+QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
+QSettings* CommonValues::danmuCounts = nullptr;                // 每个用户的发言次数
+QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -83,12 +84,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings.value("permission/enableBlock", false).toBool());
-    if (ui->enableBlockCheck->isChecked())
-    {
-        QTimer::singleShot(100, this, [=]{
-            refreshBlockList();
-        });
-    }
 
     // 新人提示
     ui->newbieTipCheck->setChecked(settings.value("permission/newbieTip", true).toBool());
@@ -153,7 +148,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // WS连接
     initWS();
-    startConnectWS();
+    startConnectRoom();
 #endif
 
 //    for (int i = 0; i < 3; i++)
@@ -314,11 +309,13 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 
     // 添加到队列
     roomDanmakus.append(danmakus);
+    allDanmakus.append(danmakus);
 }
 
 void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 {
     roomDanmakus.append(danmaku);
+    allDanmakus.append(danmaku);
     newLiveDanmakuAdded(danmaku);
 }
 
@@ -535,7 +532,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
 #else
     if (socket)
     {
-        startConnectWS();
+        startConnectRoom();
     }
 #endif
 }
@@ -825,7 +822,7 @@ void MainWindow::initWS()
     });
 }
 
-void MainWindow::startConnectWS()
+void MainWindow::startConnectRoom()
 {
     if (roomId.isEmpty())
         return ;
@@ -834,7 +831,15 @@ void MainWindow::startConnectWS()
     currentFans = 0;
     currentFansClub = 0;
 
+    // 准备房间数据
+    if (danmuCounts)
+        danmuCounts->deleteLater();
+    danmuCounts = new QSettings("danmucounts_" + roomId + ".ini", QSettings::Format::IniFormat);
+
+    // 开始获取房间信息
     getRoomInfo();
+    if (ui->enableBlockCheck->isChecked())
+        refreshBlockList();
 }
 
 void MainWindow::getRoomInit()

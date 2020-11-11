@@ -29,6 +29,7 @@
 #include <QInputDialog>
 #include <QDir>
 #include <QPushButton>
+#include <QStringListModel>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -100,6 +101,7 @@ private:
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(qint64 uid, QListWidgetItem *item);
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
+    void showUserMsgHistory(qint64 uid);
 
 private:
     QSettings settings;
