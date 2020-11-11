@@ -1069,7 +1069,7 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     connect(timer, &QTimer::timeout, timer, [=]{
         moveAni(label, label->pos(),
                 QPoint(label->x(), -label->height()),
-                300, QEasingCurve::OutCubic);
+                300, QEasingCurve::InOutCubic);
         moveAni(btn, btn->pos(),
                 QPoint(btn->x(), -btn->height()),
                 300, QEasingCurve::InOutCubic);
@@ -1097,18 +1097,26 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     label->setText(msg);
     label->setFixedWidth(listWidget->width() * 0.9);
     label->adjustSize();
+    label->setMinimumHeight(24);
     label->move(this->width()/2 - label->width()/2, -label->height());
 
     btn->setFixedWidth(label->height()*2);
     btn->setCursor(Qt::PointingHandCursor);
     btn->move(label->geometry().right() - (label->height() - btn->height())/2 - btn->width(), -label->height());
 
+    /*QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(label);
+    effect->setColor(QColor(63, 63, 63, 30));
+    effect->setBlurRadius(5);
+    effect->setXOffset(0);
+    effect->setYOffset(2);
+    label->setGraphicsEffect(effect);*/
+
     label->show();
     btn->show();
 
     int labelTop = label->height() / 10;
     moveAni(label, label->pos(), QPoint(label->x(), labelTop), 300, QEasingCurve::OutBack);
-    moveAni(btn, btn->pos(), QPoint(btn->x(), labelTop + (label->height()-btn->height())/2), 800, QEasingCurve::OutBounce);
+    moveAni(btn, btn->pos(), QPoint(btn->x(), labelTop + (label->height()-btn->height())/2), 600, QEasingCurve::OutBounce);
     timer->start();
 }
 

@@ -30,6 +30,7 @@
 #include <QDir>
 #include <QPushButton>
 #include <QStringListModel>
+#include <QGraphicsDropShadowEffect>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
