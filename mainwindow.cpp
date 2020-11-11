@@ -1592,6 +1592,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString unameColor = user[7].toString();
         int level = info[4].toArray()[0].toInt();
         QJsonArray medal = info[3].toArray();
+        int medal_level = 0;
 
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
@@ -1611,13 +1612,14 @@ void MainWindow::handleMessage(QJsonObject json)
                                                  unameColor, "#"+cs);
         if (medal.size() >= 4)
         {
+            medal_level = medal[0].toInt();
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
-                    medal[1].toString(), medal[0].toInt(), medal[2].toString());
+                    medal[1].toString(), medal_level, medal[2].toString());
         }
         appendNewLiveDanmaku(danmaku);
 
         // 新人发言
-        if ((level == 0 && danmuCount <= 3) || danmuCount <= 1)
+        if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
             bool blocked = false;
             // 自动拉黑

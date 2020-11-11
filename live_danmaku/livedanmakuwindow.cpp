@@ -422,7 +422,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (newbieTip)
         {
             int count = danmuCounts->value(snum(danmaku.getUid())).toInt();
-            if (danmaku.getLevel() == 0 && count <= 1)
+            if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
                 nameText = "<font color='red'>[新]</font>" + nameText;
             }
