@@ -1694,6 +1694,8 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
+        if (coinType == "silver" && totalCoin < 1000) // 银瓜子，而且还是小于1000，就不感谢了
+            return ;
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
         if (!words.size())
             return ;
@@ -1708,7 +1710,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else if (yuan >= 70)
             {
-                msg = "哇，感谢 %1 赠送的%2！！！";
+                msg = "哇，感谢 %1 的%2！！！";
             }
         }
         if (!justStart && ui->autoSendGiftCheck->isChecked())
@@ -1813,6 +1815,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         appendNewLiveDanmaku(LiveDanmaku(nickname, uid));
+    }
+    else if (cmd == "PK_BATTLE_SETTLE")
+    {
+
     }
 }
 

@@ -216,7 +216,7 @@ public:
         else if (msgType == MSG_BLOCK)
         {
             return QString("[禁言] %1 被房管禁言")
-                                .arg(nickname).arg(uid);
+                                .arg(nickname);
         }
         return "未知消息类型";
     }
