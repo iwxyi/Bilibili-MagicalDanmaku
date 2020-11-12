@@ -31,6 +31,8 @@ QT_END_NAMESPACE
 #define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
+#define CONNECT_SERVER_INTERVAL 1800000
+
 class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
@@ -216,6 +218,12 @@ private slots:
 
     void on_promptBlockNewbieKeysEdit_textChanged();
 
+    void on_timerConnectServerCheck_clicked();
+
+    void on_startLiveHourSpin_valueChanged(int arg1);
+
+    void on_endLiveHourSpin_valueChanged(int arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -289,5 +297,6 @@ private:
 
     QWebSocket* socket;
     QTimer* heartTimer;
+    QTimer* connectServerTimer;
 };
 #endif // MAINWINDOW_H

@@ -159,6 +159,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
     ui->startLiveSendCheck->setChecked(settings.value("live/startSend").toBool());
 
+    // 定时连接
+    ui->timerConnectServerCheck->setChecked(settings.value("live/timerConnectServer", false).toBool());
+    ui->startLiveHourSpin->setValue(settings.value("live/startLiveHour", 0).toInt());
+    ui->endLiveHourSpin->setValue(settings.value("live/endLiveHour", 0).toInt());
+    connectServerTimer = new QTimer(this);
+    connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
+    connect(connectServerTimer, &QTimer::timeout, this, [=]{
+
+    });
+
 #ifndef SOCKET_MODE
 
 #else
@@ -1626,7 +1636,8 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
                 QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
-                if (msg.indexOf(re) > -1) // 自动拉黑
+                if (msg.indexOf(re) > -1 // 自动拉黑
+                        && danmaku.getAnchorRoomid() != roomId) // 若带有本房间粉丝牌，免自动拉黑
                 {
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
@@ -1704,7 +1715,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendWelcomeMsg(msg.arg(nick).arg(giftName));
+                sendGiftMsg(msg.arg(nick).arg(giftName));
         }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
@@ -1717,6 +1728,15 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+
+        if (!justStart && ui->autoSendGiftCheck->isChecked())
+        {
+            QString localName = getLocalNickname(uid);
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
+            if (nick.isEmpty())
+                nick = username;
+            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
+        }
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
@@ -2130,4 +2150,19 @@ void MainWindow::on_promptBlockNewbieCheck_clicked()
 void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 {
     settings.setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
+}
+
+void MainWindow::on_timerConnectServerCheck_clicked()
+{
+    settings.setValue("live/timerConnectServer", ui->timerConnectServerCheck->isChecked());
+}
+
+void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
+{
+    settings.setValue("live/startLiveHour", ui->startLiveHourSpin->value());
+}
+
+void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
+{
+    settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
 }

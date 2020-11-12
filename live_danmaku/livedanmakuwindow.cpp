@@ -1256,6 +1256,9 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
     view->setAttribute(Qt::WA_ShowModal, true);
     view->setAttribute(Qt::WA_DeleteOnClose, true);
     view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
-    view->setGeometry(this->geometry());
+    QRect rect = this->geometry();
+    int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    rect.setTop(rect.top()+titleHeight);
+    view->setGeometry(rect);
     view->show();
 }
