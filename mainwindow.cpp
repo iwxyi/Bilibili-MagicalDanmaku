@@ -318,7 +318,8 @@ void MainWindow::removeTimeoutDanmaku()
         auto danmaku = roomDanmakus.at(i);
         auto type = danmaku.getMsgType();
         if (type == MSG_ATTENTION || type == MSG_WELCOME || type == MSG_FANS
-                || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000)))
+                || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000))
+                || (type == MSG_DANMAKU && danmaku.isNoReply()))
         {
             QDateTime dateTime = danmaku.getTimeline();
             if (dateTime.toMSecsSinceEpoch() + removeDanmakuTipInterval < timestamp)
@@ -408,6 +409,7 @@ void MainWindow::addNoReplyDanmakuText(QString text)
 {
     if (danmakuWindow)
         danmakuWindow->addIgnoredMsg(text);
+    noReplyMsgs.append(text);
 }
 
 void MainWindow::sendMsg(QString msg)
@@ -1764,6 +1766,11 @@ void MainWindow::handleMessage(QJsonObject json)
             medal_level = medal[0].toInt();
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
+        }
+        if (noReplyMsgs.contains(msg))
+        {
+            danmaku.setNoReply();
+            noReplyMsgs.clear();
         }
         appendNewLiveDanmaku(danmaku);
 

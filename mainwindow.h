@@ -292,6 +292,7 @@ private:
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
     qint64 removeDanmakuTipInterval = 5000;
+    QStringList noReplyMsgs;
 
     // 点歌
     bool diangeAutoCopy = false;

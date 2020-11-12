@@ -117,6 +117,7 @@ public:
         danmaku.medal_name = object.value("medal_name").toString();
         danmaku.medal_level = object.value("medal_level").toInt();
         danmaku.medal_up = object.value("medal_up").toString();
+        danmaku.no_reply = object.value("no_reply").toBool();
         return danmaku;
     }
 
@@ -134,6 +135,7 @@ public:
             object.insert("vip", vip);
             object.insert("svip", svip);
             object.insert("level", level);
+            object.insert("no_reply", no_reply);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
@@ -238,6 +240,11 @@ public:
         this->medal_name = name;
         this->medal_level = level;
         this->medal_up = up;
+    }
+
+    void setNoReply()
+    {
+        no_reply = true;
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -377,6 +384,11 @@ public:
         return medal_up;
     }
 
+    bool isNoReply() const
+    {
+        return no_reply;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -389,6 +401,7 @@ private:
     int isadmin = 0; // 房管
     int vip = 0;
     int svip = 0;
+    bool no_reply = false;
 
     QString anchor_roomid;
     int medal_level = 0;
