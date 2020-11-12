@@ -52,7 +52,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
         QString text = lineEdit->text();
         if (!text.trimmed().isEmpty())
         {
-            emit signalSendMsg(text.trimmed());
+            myPrevSendMsg = text.trimmed();
+            emit signalSendMsg(myPrevSendMsg);
             lineEdit->clear();
             if (settings.value("livedanmakuwindow/sendOnce", false).toBool())
                 returnPrevWindow();
@@ -81,6 +82,12 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
             if (lineEdit->isHidden())
                 lineEdit->show();
             lineEdit->setFocus();
+            if (lineEdit->text().isEmpty() && !myPrevSendMsg.isEmpty())
+            {
+                lineEdit->setText(myPrevSendMsg);
+                lineEdit->selectAll();
+                myPrevSendMsg = "";
+            }
         }
     });
     if (!settings.value("livedanmakuwindow/sendEditShortcut", false).toBool())
@@ -281,6 +288,10 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QRegExp replyRe("点歌|谢|欢迎");
     if (msgType == MSG_DANMAKU)
     {
+        // 自己的，成功发送了
+        if (danmaku.getText() == myPrevSendMsg)
+            myPrevSendMsg = "";
+
         if (!ignored)
         {
             QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
@@ -1273,6 +1284,7 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
     view->setAttribute(Qt::WA_ShowModal, true);
     view->setAttribute(Qt::WA_DeleteOnClose, true);
     view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+    view->setWordWrap(true);
     QRect rect = this->geometry();
     int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
     rect.setTop(rect.top()+titleHeight);

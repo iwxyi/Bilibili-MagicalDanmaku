@@ -112,6 +112,7 @@ private:
 #ifdef Q_OS_WIN32
     HWND prevWindow = nullptr;
 #endif
+    QString myPrevSendMsg; // 上次发送的内容，没有发送成功的话自动填充
 
     QColor nameColor;
     QColor msgColor;
