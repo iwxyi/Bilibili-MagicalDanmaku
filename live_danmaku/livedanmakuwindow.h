@@ -46,7 +46,6 @@
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
-#define DANMAKU_IGNORE_ROLE Qt::UserRole+2
 #define DANMAKU_TRANS_ROLE Qt::UserRole+3
 #define DANMAKU_REPLY_ROLE Qt::UserRole+4
 #define DANMAKU_HIGHLIGHT_ROLE Qt::UserRole+5
@@ -90,7 +89,6 @@ public slots:
     void setAIReply(bool reply);
     void startReply(QListWidgetItem* item);
     void setEnableBlock(bool enable);
-    void addIgnoredMsg(QString text);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
     void showFastBlock(qint64 uid, QString msg);
@@ -122,7 +120,6 @@ private:
     bool aiReply = false;
     bool enableBlock = false;
     bool newbieTip = true;
-    QStringList ignoredMsgs;
     QList<qint64> careUsers;
     QHash<qint64, QPixmap> headPortraits;
 

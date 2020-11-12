@@ -407,8 +407,6 @@ void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 
 void MainWindow::addNoReplyDanmakuText(QString text)
 {
-    if (danmakuWindow)
-        danmakuWindow->addIgnoredMsg(text);
     noReplyMsgs.append(text);
 }
 

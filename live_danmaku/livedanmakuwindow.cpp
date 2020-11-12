@@ -240,10 +240,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     listWidget->setItemWidget(item, widget);
 
     // 设置数据
-    bool ignored = ignoredMsgs.contains(danmaku.getText());
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    item->setData(DANMAKU_IGNORE_ROLE, ignored);
     if (danmaku.getMsgType() == MSG_DANMAKU) // 只显示弹幕的数据
     {
         bool hasPortrait = headPortraits.contains(danmaku.getUid());
@@ -292,7 +290,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         if (danmaku.getText() == myPrevSendMsg)
             myPrevSendMsg = "";
 
-        if (!ignored)
+        if (!danmaku.isNoReply())
         {
             QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
 
@@ -338,8 +336,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         highlightItemText(item, false);
     }
-    if (ignored)
-        ignoredMsgs.clear();
 
     if (scrollEnd)
     {
@@ -453,7 +449,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
         // 彩色消息
         QString colorfulMsg = msg;
-        if (item->data(DANMAKU_IGNORE_ROLE).toBool()) // 灰色
+        if (danmaku.isNoReply()) // 灰色
         {
             colorfulMsg = "<font color='gray'>"
                     + danmaku.getText() + "</font> ";
@@ -583,7 +579,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
 void LiveDanmakuWindow::highlightItemText(QListWidgetItem *item, bool recover)
 {
-    if (item->data(DANMAKU_IGNORE_ROLE).toBool())
+    auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+    if (danmaku.isNoReply())
         return ;
     auto label = getItemWidgetLabel(item);
     if (!label)
@@ -697,6 +694,11 @@ void LiveDanmakuWindow::showMenu()
         else
         {
             actionMedal->setEnabled(false);
+        }
+
+        if (danmaku.getMsgType() == MSG_GIFT)
+        {
+            actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
         }
     }
     else
@@ -1059,11 +1061,6 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 void LiveDanmakuWindow::setEnableBlock(bool enable)
 {
     enableBlock = enable;
-}
-
-void LiveDanmakuWindow::addIgnoredMsg(QString text)
-{
-    ignoredMsgs.append(text);
 }
 
 void LiveDanmakuWindow::setListWidgetItemSpacing(int x)
