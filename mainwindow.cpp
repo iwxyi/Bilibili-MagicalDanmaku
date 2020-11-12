@@ -1640,7 +1640,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 QRegularExpression re(reStr);
                 if (msg.indexOf(re) > -1 // 自动拉黑
                         && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
-                        && !isInFans(uid)) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                        && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                        && medal_level <= 2 // 勋章不到3级
+                        )
                 {
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
