@@ -302,13 +302,31 @@ void MainWindow::removeTimeoutDanmaku()
 {
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    if (roomDanmakus.size()) // 每次最多移除一个；用while的话则会全部移除
+    if (roomDanmakus.size()) // 每次最多移除一个
     {
         QDateTime dateTime = roomDanmakus.first().getTimeline();
         if (dateTime.toMSecsSinceEpoch() + removeDanmakuInterval < timestamp)
         {
             auto danmaku = roomDanmakus.takeFirst();
             oldLiveDanmakuRemoved(danmaku);
+        }
+    }
+
+    // 移除多余的提示
+    for (int i = 0; i < roomDanmakus.size(); i++)
+    {
+        auto danmaku = roomDanmakus.at(i);
+        auto type = danmaku.getMsgType();
+        if (type == MSG_ATTENTION || type == MSG_WELCOME || type == MSG_FANS
+                || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000)))
+        {
+            QDateTime dateTime = danmaku.getTimeline();
+            if (dateTime.toMSecsSinceEpoch() + removeDanmakuTipInterval < timestamp)
+            {
+                roomDanmakus.removeAt(i--);
+                oldLiveDanmakuRemoved(danmaku);
+            }
+            break;
         }
     }
 }
@@ -908,6 +926,8 @@ void MainWindow::startConnectRoom()
     QDir dir;
     dir.mkdir("danmaku_counts");
     danmuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
+    if (ui->calculateDailyDataCheck->isChecked())
+        startCalculateDailyData();
 
     // 保存房间弹幕
     if (ui->saveDanmakuToFileCheck)
@@ -1432,7 +1452,10 @@ void MainWindow::finishSaveDanmuToFile()
 void MainWindow::startCalculateDailyData()
 {
     if (dailySettings)
+    {
+        saveCalculateDailyData();
         dailySettings->deleteLater();
+    }
 
     QDir dir;
     dir.mkdir("live_daily");
@@ -1823,7 +1846,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
-        appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
+        appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin));
 
         if (coinType == "silver")
         {
