@@ -1791,8 +1791,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         qDebug() << s8("观众进入：") << username;
-        if (!isSpread)
-            qDebug() << s8("来源：") << spreadDesc;
+        if (isSpread)
+            qDebug() << s8("    来源：") << spreadDesc;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
