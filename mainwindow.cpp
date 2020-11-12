@@ -285,7 +285,6 @@ void MainWindow::pullLiveDanmaku()
 
 void MainWindow::removeTimeoutDanmaku()
 {
-    return ; // XXX
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     if (roomDanmakus.size()) // 每次最多移除一个；用while的话则会全部移除
@@ -1635,7 +1634,10 @@ void MainWindow::handleMessage(QJsonObject json)
             // 自动拉黑
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
-                QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
+                QString reStr = ui->autoBlockNewbieKeysEdit->toPlainText();
+                if (reStr.endsWith("|"))
+                    reStr = reStr.left(reStr.length()-1);
+                QRegularExpression re(reStr);
                 if (msg.indexOf(re) > -1 // 自动拉黑
                         && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
                         && !isInFans(uid)) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
@@ -1671,7 +1673,10 @@ void MainWindow::handleMessage(QJsonObject json)
             // 提示拉黑
             if (!blocked && danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
-                if (msg.indexOf(QRegularExpression(ui->promptBlockNewbieKeysEdit->toPlainText())) > -1) // 提示拉黑
+                QString reStr = ui->promptBlockNewbieKeysEdit->toPlainText();
+                if (reStr.endsWith("|"))
+                    reStr = reStr.left(reStr.length()-1);
+                if (msg.indexOf(QRegularExpression(reStr)) > -1) // 提示拉黑
                 {
                     danmakuWindow->showFastBlock(uid, msg);
                 }

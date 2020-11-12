@@ -696,6 +696,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionHistory);
     if (enableBlock)
     {
+        menu->addSeparator();
         if (uid && !userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
         {
             menu->addAction(actionAddBlock);
