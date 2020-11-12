@@ -39,8 +39,9 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QDateTime time, bool isAdmin)
-        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time), isadmin(isAdmin)
+    LiveDanmaku(QString nickname, qint64 uid, QDateTime time, bool isAdmin, QString unameColor, QString spreadDesc, QString spreadInfo)
+        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time), isadmin(isAdmin),
+          uname_color(unameColor), spread_desc(spreadDesc), spread_info(spreadInfo)
     {
 
     }
@@ -101,6 +102,8 @@ public:
         }
         danmaku.giftName = object.value("giftName").toString();
         danmaku.number = object.value("number").toInt();
+        danmaku.spread_desc = object.value("spread_desc").toString();
+        danmaku.spread_info = object.value("spread_info").toString();
         danmaku.fans = object.value("fans").toInt();
         danmaku.fans_club = object.value("fans_club").toInt();
         danmaku.delta_fans = object.value("delta_fans").toInt();
@@ -137,6 +140,9 @@ public:
         else if (msgType == MSG_WELCOME)
         {
             object.insert("isadmin", isadmin);
+            object.insert("uname_color", uname_color);
+            object.insert("spread_desc", spread_desc);
+            object.insert("spread_info", spread_info);
         }
         else if (msgType == MSG_DIANGE)
         {
@@ -301,6 +307,16 @@ public:
         return number;
     }
 
+    QString getSpreadDesc() const
+    {
+        return spread_desc;
+    }
+
+    QString getSpreadInfo() const
+    {
+        return spread_info;
+    }
+
     int getFans() const
     {
         return fans;
@@ -377,6 +393,9 @@ private:
 
     QString giftName;
     int number = 0;
+
+    QString spread_desc;
+    QString spread_info;
 
     int fans = 0;
     int fans_club = 0;

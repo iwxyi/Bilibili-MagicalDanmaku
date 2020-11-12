@@ -481,6 +481,14 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         else
             text = QString("<font color='gray'>[欢迎]</font> %1 进入直播间")
                     .arg(nameText);
+        if (!danmaku.getSpreadDesc().isEmpty())
+        {
+            text += " ";
+            if (danmaku.getSpreadInfo().isEmpty())
+                text += danmaku.getSpreadDesc();
+            else
+                text += "<font color='"+danmaku.getSpreadInfo()+"'>"+danmaku.getSpreadDesc()+"</font>";
+        }
     }
     else if (msgType == MSG_DIANGE)
     {

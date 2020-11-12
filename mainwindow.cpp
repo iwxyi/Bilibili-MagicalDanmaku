@@ -1756,11 +1756,15 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 startTime = static_cast<qint64>(data.value("start_time").toDouble());
         qint64 endTime = static_cast<qint64>(data.value("end_time").toDouble());
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        QString unameColor = data.value("uname_color").toString();
+        QString spreadDesc = data.value("spread_desc").toString();
+        QString spreadInfo = data.value("spread_info").toString();
         qDebug() << s8("舰长进入：") << username;
         /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;*/
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), true));
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
+                                         , true, unameColor, spreadDesc, spreadInfo));
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
     {
@@ -1782,12 +1786,18 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
         bool isadmin = data.value("isadmin").toBool();
         QString unameColor = data.value("uname_color").toString();
+        bool isSpread = data.value("is_spread").toBool();
+        QString spreadDesc = data.value("spread_desc").toString();
+        QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         qDebug() << s8("观众进入：") << username;
+        if (!isSpread)
+            qDebug() << s8("来源：") << spreadDesc;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
-        LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin);
+        LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
+                            unameColor, spreadDesc, spreadInfo);
         danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
                          fansMedal.value("medal_name").toString(),
                          fansMedal.value("medal_level").toInt(), "");
