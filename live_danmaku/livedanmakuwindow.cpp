@@ -26,6 +26,14 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     listWidget->setWordWrap(true);
     listWidget->setSpacing(0);
     listWidget->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    connect(listWidget, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
+        auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+        qint64 uid = danmaku.getUid();
+        if (uid)
+        {
+            showUserMsgHistory(uid);
+        }
+    });
 
     // 发送消息后返回原窗口
     auto returnPrevWindow = [=]{
@@ -671,7 +679,7 @@ void LiveDanmakuWindow::showMenu()
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
             actionHistory->setText("消息记录：" + snum(danmuCounts->value(snum(uid)).toInt()));
         }
-        if (!danmaku.getAnchorRoomid().isEmpty())
+        if (!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
         {
             actionMedal->setText(danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()));
         }
