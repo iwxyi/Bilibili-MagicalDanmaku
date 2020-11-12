@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>307</width>
-    <height>422</height>
+    <width>347</width>
+    <height>437</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>5</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -720,6 +720,46 @@
          </layout>
         </item>
         <item>
+         <widget class="QCheckBox" name="timerConnectServerCheck">
+          <property name="text">
+           <string>定时连接B站服务器</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_23">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="startLiveHourSpin">
+            <property name="suffix">
+             <string>点</string>
+            </property>
+            <property name="prefix">
+             <string>开播</string>
+            </property>
+            <property name="maximum">
+             <number>23</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="endLiveHourSpin">
+            <property name="suffix">
+             <string>点</string>
+            </property>
+            <property name="prefix">
+             <string>下播</string>
+            </property>
+            <property name="maximum">
+             <number>23</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <spacer name="verticalSpacer_4">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -825,8 +865,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>307</width>
-     <height>23</height>
+     <width>347</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>

@@ -1703,7 +1703,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendWelcomeMsg(msg.arg(nick).arg(giftName));
+                sendGiftMsg(msg.arg(nick).arg(giftName));
         }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
@@ -1716,6 +1716,15 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+
+        if (!justStart && ui->autoSendGiftCheck->isChecked())
+        {
+            QString localName = getLocalNickname(uid);
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
+            if (nick.isEmpty())
+                nick = username;
+            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
+        }
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
@@ -2129,4 +2138,19 @@ void MainWindow::on_promptBlockNewbieCheck_clicked()
 void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 {
     settings.setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
+}
+
+void MainWindow::on_timerConnectServerCheck_clicked()
+{
+
+}
+
+void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
+{
+
 }
