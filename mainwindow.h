@@ -261,7 +261,7 @@ private:
     Ui::MainWindow *ui;
     QSettings settings;
     QString roomId;
-    bool liveStatus = false; // 是否正在直播
+    int liveStatus = 0; // 是否正在直播
     QString roomName;
     QPixmap coverPixmap;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会

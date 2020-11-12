@@ -166,7 +166,12 @@ MainWindow::MainWindow(QWidget *parent)
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
-
+        if (liveStatus)
+        {
+            connectServerTimer->stop();
+            return ;
+        }
+        startConnectRoom();
     });
 
 #ifndef SOCKET_MODE
@@ -971,6 +976,58 @@ void MainWindow::getRoomInfo()
         else
             ui->popularityLabel->setText("已开播");
 
+        // 判断房间，未开播则暂停链接，等待开播
+        if (ui->timerConnectServerCheck->isChecked())
+        {
+            if (!liveStatus) // 未开播，等待下一次的检测
+            {
+                // 如果是开播前一段时间，则继续保持着连接
+                int start = ui->startLiveHourSpin->value();
+                int end = ui->endLiveHourSpin->value();
+                int hour = QDateTime::currentDateTime().time().hour();
+                int minu = QDateTime::currentDateTime().time().minute();
+                bool abort = false;
+                qint64 currentVal = hour * 3600000 + minu * 60000;
+                if (start < end) // 白天档
+                {
+                    if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                            && currentVal <= end * 3600000)
+                    {
+                        // 即将开播，或者正在直播
+                    }
+                    else // 直播时间之外
+                    {
+                        abort = true;
+                    }
+                }
+                else if (start > end) // 熬夜档
+                {
+                    if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                            || currentVal <= end * 36000000)
+                    {
+                        // 即将开播，或者正在直播
+                    }
+                    else // 直播时间之外
+                    {
+                        abort = true;
+                    }
+                }
+
+                if (abort)
+                {
+                    if (!connectServerTimer->isActive())
+                        connectServerTimer->start();
+                    ui->connectStateLabel->setText("等待连接");
+                    return ;
+                }
+            }
+            else // 已开播，则停下
+            {
+                if (connectServerTimer->isActive())
+                    connectServerTimer->stop();
+            }
+        }
+
         // 获取主播信息
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -1563,6 +1620,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendMsg(text);
             ui->popularityLabel->setText("已开播");
             liveStatus = true;
+            if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
+                connectServerTimer->stop();
         }
     }
     else if (cmd == "PREPARING") // 下播
@@ -1575,6 +1634,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendMsg(text);
             ui->popularityLabel->setText("已下播");
             liveStatus = false;
+
+            if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
+                connectServerTimer->start();
         }
     }
     else if (cmd == "ROOM_CHANGE")
@@ -2186,7 +2248,10 @@ void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 
 void MainWindow::on_timerConnectServerCheck_clicked()
 {
-    settings.setValue("live/timerConnectServer", ui->timerConnectServerCheck->isChecked());
+    bool enable = ui->timerConnectServerCheck->isChecked();
+    settings.setValue("live/timerConnectServer", enable);
+    if (!liveStatus && enable)
+        startConnectRoom();
 }
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)

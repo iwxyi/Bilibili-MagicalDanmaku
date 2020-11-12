@@ -721,6 +721,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="timerConnectServerCheck">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于长期挂在服务器上，在开播前连接B站服务器，下播后暂停&lt;/p&gt;&lt;p&gt;注：长期连接直播间很容易被冻结&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>定时连接B站服务器</string>
           </property>
@@ -733,6 +736,9 @@
           </property>
           <item>
            <widget class="QSpinBox" name="startLiveHourSpin">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早的开播时间&lt;/p&gt;&lt;p&gt;将在开播前半小时内预先连接B站弹幕服务器&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="suffix">
              <string>点</string>
             </property>
@@ -742,10 +748,16 @@
             <property name="maximum">
              <number>23</number>
             </property>
+            <property name="value">
+             <number>7</number>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QSpinBox" name="endLiveHourSpin">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早下播时间&lt;/p&gt;&lt;p&gt;下播后自动断开与服务器的连接，直到下次开播前&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="suffix">
              <string>点</string>
             </property>
@@ -753,7 +765,7 @@
              <string>下播</string>
             </property>
             <property name="maximum">
-             <number>23</number>
+             <number>13</number>
             </property>
            </widget>
           </item>
@@ -866,7 +878,7 @@
      <x>0</x>
      <y>0</y>
      <width>347</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
