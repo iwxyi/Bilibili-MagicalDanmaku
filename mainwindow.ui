@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -226,6 +226,34 @@
            <widget class="QCheckBox" name="saveDanmakuToFileCheck">
             <property name="text">
              <string>保存弹幕到文件</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="calculateDailyDataCheck">
+            <property name="text">
+             <string>每日数据统计</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>今日</string>
             </property>
            </widget>
           </item>

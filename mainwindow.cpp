@@ -121,6 +121,12 @@ MainWindow::MainWindow(QWidget *parent)
         startSaveDanmakuToFile();
     }
 
+    // 每日数据
+    bool calcDaliy = settings.value("live/calculateDaliyData", true).toBool();
+    ui->calculateDailyDataCheck->setChecked(calcDaliy);
+    if (calcDaliy)
+        startCalculateDailyData();
+
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
@@ -225,6 +231,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (danmuLogFile)
     {
         finishSaveDanmuToFile();
+    }
+    if (ui->calculateDailyDataCheck->isChecked())
+    {
+        saveCalculateDailyData();
     }
 
     if (danmakuWindow)
@@ -1419,6 +1429,43 @@ void MainWindow::finishSaveDanmuToFile()
     danmuLogStream = nullptr;
 }
 
+void MainWindow::startCalculateDailyData()
+{
+    if (dailySettings)
+        dailySettings->deleteLater();
+
+    QDir dir;
+    dir.mkdir("live_daily");
+    QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+    dailySettings = new QSettings("live_daily/" + roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
+
+    dailyCome = dailySettings->value("come", 0).toInt();
+    dailyPeopleNum = dailySettings->value("people_num", 0).toInt();
+    dailyDanmaku = dailySettings->value("danmaku", 0).toInt();
+    dailyNewbieMsg = dailySettings->value("newbie_msg", 0).toInt();
+    dailyNewFans = dailySettings->value("new_fans", 0).toInt();
+    dailyTotalFans = dailySettings->value("total_fans", 0).toInt();
+    dailyGiftSilver = dailySettings->value("gift_silver", 0).toInt();
+    dailyGiftGold = dailySettings->value("gift_gold", 0).toInt();
+    dailyGuard = dailySettings->value("guard", 0).toInt();
+}
+
+void MainWindow::saveCalculateDailyData()
+{
+    if (dailySettings)
+    {
+        // dailySettings->setValue("come", dailyCome);
+        dailySettings->setValue("people_num", userComeTimes.size());
+        // dailySettings->setValue("danmaku", dailyDanmaku);
+        // dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+        // dailySettings->setValue("new_fans", dailyNewFans);
+        dailySettings->setValue("total_fans", currentFans);
+        // dailySettings->setValue("gift_silver", dailyGiftSilver);
+        // dailySettings->setValue("gift_gold", dailyGiftGold);
+        // dailySettings->setValue("guard", dailyGuard);
+    }
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = ((uchar)message[8] << 24)
@@ -1502,6 +1549,11 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     qDebug() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
                     appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
                                                      delta_fans, delta_club));
+
+                    dailyNewFans += delta_fans;
+                    if (dailySettings)
+                        dailySettings->setValue("new_fans", dailyNewFans);
+
 
                     if (delta_fans)
                         getFansAndUpdate();
@@ -1674,6 +1726,9 @@ void MainWindow::handleMessage(QJsonObject json)
         // 统计弹幕次数
         int danmuCount = danmuCounts->value(snum(uid), 0).toInt()+1;
         danmuCounts->setValue(snum(uid), danmuCount);
+        dailyDanmaku++;
+        if (dailySettings)
+            dailySettings->setValue("danmaku", dailyDanmaku);
 
         // 添加到列表
         QString cs = QString::number(textColor, 16);
@@ -1690,6 +1745,14 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(danmaku);
 
         // 新人发言
+        if (danmuCount == 1)
+        {
+            dailyNewbieMsg++;
+            if (dailySettings)
+                dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+        }
+
+        // 新人小号禁言
         if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
             bool blocked = false;
@@ -1762,6 +1825,19 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
         appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp)));
 
+        if (coinType == "silver")
+        {
+            dailyGiftSilver += totalCoin;
+            if (dailySettings)
+                dailySettings->setValue("gift_silver", dailyGiftSilver);
+        }
+        if (coinType == "gold")
+        {
+            dailyGiftGold += totalCoin;
+            if (dailySettings)
+                dailySettings->setValue("gift_gold", dailyGiftGold);
+        }
+
         if (coinType == "silver" && totalCoin < 1000) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
@@ -1798,6 +1874,9 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+        dailyGuard += num;
+        if (dailySettings)
+            dailySettings->setValue("guard", dailyGuard);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
@@ -1870,9 +1949,13 @@ void MainWindow::handleMessage(QJsonObject json)
                          fansMedal.value("medal_name").toString(),
                          fansMedal.value("medal_level").toInt(), "");
         appendNewLiveDanmaku(danmaku);
+        dailyCome++;
+        if (dailySettings)
+            dailySettings->setValue("come", dailyCome);
+
+        qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
-            qint64 currentTime = QDateTime::currentSecsSinceEpoch();
             int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
             if (userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
                 return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
@@ -1886,6 +1969,10 @@ void MainWindow::handleMessage(QJsonObject json)
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
                 sendWelcomeMsg(msg.arg(nick));
+        }
+        else
+        {
+            userComeTimes[uid] = currentTime;
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG")
@@ -2262,4 +2349,28 @@ void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
+}
+
+void MainWindow::on_calculateDailyDataCheck_clicked()
+{
+    bool enable = ui->calculateDailyDataCheck->isChecked();
+    settings.setValue("live/calculateDaliyData", enable);
+    if (enable)
+        startCalculateDailyData();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd\n");
+    text += "\n进来人次：" + snum(dailyCome);
+    text += "\n观众人数：" + snum(userComeTimes.count());
+    text += "\n弹幕数量：" + snum(dailyDanmaku);
+    text += "\n新人弹幕：" + snum(dailyNewbieMsg);
+    text += "\n新增关注：" + snum(dailyNewFans);
+    text += "\n银瓜子数：" + snum(dailyGiftSilver);
+    text += "\n金瓜子数：" + snum(dailyGiftGold);
+    text += "\n上船次数：" + snum(dailyGuard);
+
+    text += "\n\n累计粉丝：" + snum(currentFans);
+    QMessageBox::information(this, "今日数据", text);
 }

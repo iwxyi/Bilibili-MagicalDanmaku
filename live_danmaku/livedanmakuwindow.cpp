@@ -328,12 +328,12 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         highlightItemText(item, true);
     }
-    else if (msgType == MSG_ATTENTION)
+    /*else if (msgType == MSG_ATTENTION)
     {
         if (danmaku.isAttention()
                 && (QDateTime::currentSecsSinceEpoch() - danmaku.getTimeline().toSecsSinceEpoch() <= 20)) // 20秒内
             highlightItemText(item, true);
-    }
+    }*/
     else if (msgType == MSG_GUARD_BUY)
     {
         highlightItemText(item, false);
@@ -978,7 +978,7 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
         if (!sentences.size())
             return ;
         auto trans = sentences.first().toObject().value("trans").toString();
-        if (trans.isEmpty())
+        if (trans.isEmpty() || trans.trimmed() == msg.trimmed())
             return ;
 
         if (!isItemExist(item))
