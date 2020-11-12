@@ -248,6 +248,7 @@ private:
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
     void refreshBlockList();
+    bool isInFans(qint64 uid);
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;

@@ -1637,7 +1637,8 @@ void MainWindow::handleMessage(QJsonObject json)
             {
                 QRegularExpression re(ui->autoBlockNewbieKeysEdit->toPlainText());
                 if (msg.indexOf(re) > -1 // 自动拉黑
-                        && danmaku.getAnchorRoomid() != roomId) // 若带有本房间粉丝牌，免自动拉黑
+                        && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
+                        && !isInFans(uid)) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
                 {
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
@@ -1881,6 +1882,16 @@ void MainWindow::refreshBlockList()
 
     });
     manager->get(*request);
+}
+
+bool MainWindow::isInFans(qint64 uid)
+{
+    foreach (auto fan, fansList)
+    {
+        if (fan.mid == uid)
+            return true;
+    }
+    return false;
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)

@@ -195,9 +195,9 @@ public:
                 return QString("%1\t[光临] 舰长 %2")
                         .arg(timeline.toString("hh:mm:ss"))
                         .arg(nickname);
-            return QString("%1\t[欢迎] %2 进入直播间")
+            return QString("%1\t[欢迎] %2 进入直播间%3")
                     .arg(timeline.toString("hh:mm:ss"))
-                    .arg(nickname);
+                    .arg(nickname).arg(spread_desc.isEmpty() ? "" : (" "+spread_desc));
         }
         else if (msgType == MSG_DIANGE)
         {
