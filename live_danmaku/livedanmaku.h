@@ -33,8 +33,9 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, QString gift, int num, qint64 uid, QDateTime time)
-        : msgType(MSG_GIFT), nickname(nickname), giftName(gift), number(num), uid(uid), timeline(time)
+    LiveDanmaku(QString nickname, QString gift, int num, qint64 uid, QDateTime time, QString coinType, int totalCoin)
+        : msgType(MSG_GIFT), nickname(nickname), giftName(gift), number(num), uid(uid), timeline(time),
+          coin_type(coinType), total_coin(totalCoin)
     {
 
     }
@@ -100,8 +101,10 @@ public:
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
         }
-        danmaku.giftName = object.value("giftName").toString();
+        danmaku.giftName = object.value("gift_name").toString();
         danmaku.number = object.value("number").toInt();
+        danmaku.coin_type = object.value("coin_type").toString();
+        danmaku.total_coin = object.value("total_coin").toInt();
         danmaku.spread_desc = object.value("spread_desc").toString();
         danmaku.spread_info = object.value("spread_info").toString();
         danmaku.fans = object.value("fans").toInt();
@@ -114,6 +117,7 @@ public:
         danmaku.medal_name = object.value("medal_name").toString();
         danmaku.medal_level = object.value("medal_level").toInt();
         danmaku.medal_up = object.value("medal_up").toString();
+        danmaku.no_reply = object.value("no_reply").toBool();
         return danmaku;
     }
 
@@ -131,11 +135,14 @@ public:
             object.insert("vip", vip);
             object.insert("svip", svip);
             object.insert("level", level);
+            object.insert("no_reply", no_reply);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
-            object.insert("giftName", giftName);
+            object.insert("gift_name", giftName);
             object.insert("number", number);
+            object.insert("coin_type", coin_type);
+            object.insert("total_coin", total_coin);
         }
         else if (msgType == MSG_WELCOME)
         {
@@ -235,6 +242,11 @@ public:
         this->medal_up = up;
     }
 
+    void setNoReply()
+    {
+        no_reply = true;
+    }
+
     bool equal(const LiveDanmaku& another) const
     {
         return this->uid == another.uid
@@ -307,6 +319,16 @@ public:
         return number;
     }
 
+    bool isGoldCoin() const
+    {
+        return coin_type != "silver";
+    }
+
+    int getTotalCoin() const
+    {
+        return total_coin;
+    }
+
     QString getSpreadDesc() const
     {
         return spread_desc;
@@ -362,6 +384,11 @@ public:
         return medal_up;
     }
 
+    bool isNoReply() const
+    {
+        return no_reply;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -374,6 +401,7 @@ private:
     int isadmin = 0; // 房管
     int vip = 0;
     int svip = 0;
+    bool no_reply = false;
 
     QString anchor_roomid;
     int medal_level = 0;
@@ -393,6 +421,8 @@ private:
 
     QString giftName;
     int number = 0;
+    QString coin_type;
+    int total_coin = 0;
 
     QString spread_desc;
     QString spread_info;

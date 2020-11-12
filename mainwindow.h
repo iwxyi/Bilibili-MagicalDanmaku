@@ -224,6 +224,10 @@ private slots:
 
     void on_endLiveHourSpin_valueChanged(int arg1);
 
+    void on_calculateDailyDataCheck_clicked();
+
+    void on_pushButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -256,19 +260,26 @@ private:
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
+    void startCalculateDailyData();
+    void saveCalculateDailyData();
 
 private:
     Ui::MainWindow *ui;
     QSettings settings;
+
+    // 房间信息
     QString roomId;
-    bool liveStatus = false; // 是否正在直播
+    int liveStatus = 0; // 是否正在直播
     QString roomName;
     QPixmap coverPixmap;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+
+    // 粉丝数量
     int currentFans = 0;
     int currentFansClub = 0;
     QList<FanBean> fansList; // 最近的关注，按时间排序
 
+    // 弹幕信息
     QList<LiveDanmaku> roomDanmakus;
     LiveDanmakuWindow* danmakuWindow = nullptr;
 #ifndef SOCKET_MODE
@@ -280,24 +291,39 @@ private:
     qint64 removeDanmakuInterval = 20000;
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
+    qint64 removeDanmakuTipInterval = 5000;
+    QStringList noReplyMsgs;
 
+    // 点歌
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
     QString diangeFormatString;
 
+    // 登陆信息
     QString browserCookie;
     QString browserData;
     QTimer* sendMsgTimer;
-
     QLabel* statusLabel;
 
+    // 连接信息
     QString shortId;
     QString uid;
     QList<HostInfo> hostList;
     QString token;
-
     QWebSocket* socket;
     QTimer* heartTimer;
     QTimer* connectServerTimer;
+
+    // 每日数据
+    QSettings* dailySettings = nullptr;
+    int dailyCome = 0; // 进来数量
+    int dailyPeopleNum = 0; // 本次进来的人数（不是全程的话，不准确）
+    int dailyDanmaku = 0; // 弹幕数量
+    int dailyNewbieMsg = 0; // 新人发言数量（需要开启新人发言提示）
+    int dailyNewFans = 0; // 关注数量
+    int dailyTotalFans = 0; // 粉丝总数量（需要开启感谢关注）
+    int dailyGiftSilver = 0; // 银瓜子总价值
+    int dailyGiftGold = 0; // 金瓜子总价值
+    int dailyGuard = 0; // 上船/续船人次
 };
 #endif // MAINWINDOW_H
