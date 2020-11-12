@@ -159,6 +159,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
     ui->startLiveSendCheck->setChecked(settings.value("live/startSend").toBool());
 
+    // 定时连接
+    ui->timerConnectServerCheck->setChecked(settings.value("live/timerConnectServer", false).toBool());
+    ui->startLiveHourSpin->setValue(settings.value("live/startLiveHour", 0).toInt());
+    ui->endLiveHourSpin->setValue(settings.value("live/endLiveHour", 0).toInt());
+    connectServerTimer = new QTimer(this);
+    connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
+    connect(connectServerTimer, &QTimer::timeout, this, [=]{
+
+    });
+
 #ifndef SOCKET_MODE
 
 #else
@@ -2142,15 +2152,15 @@ void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 
 void MainWindow::on_timerConnectServerCheck_clicked()
 {
-
+    settings.setValue("live/timerConnectServer", ui->timerConnectServerCheck->isChecked());
 }
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("live/startLiveHour", ui->startLiveHourSpin->value());
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
 }

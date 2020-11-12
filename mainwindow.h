@@ -31,6 +31,8 @@ QT_END_NAMESPACE
 #define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
+#define CONNECT_SERVER_INTERVAL 1800000
+
 class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
@@ -295,5 +297,6 @@ private:
 
     QWebSocket* socket;
     QTimer* heartTimer;
+    QTimer* connectServerTimer;
 };
 #endif // MAINWINDOW_H
