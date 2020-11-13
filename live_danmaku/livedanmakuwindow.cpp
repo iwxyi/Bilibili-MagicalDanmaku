@@ -170,19 +170,27 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
     int w = listWidget->contentsRect().width();
     for (int i = 0; i < listWidget->count(); i++)
     {
-        auto item = listWidget->item(i);
-        auto widget = listWidget->itemWidget(item);
-        QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
-        auto portrait = layout->itemAt(DANMAKU_WIDGET_PORTRAIT)->widget();
-        auto label = layout->itemAt(DANMAKU_WIDGET_LABEL)->widget();
-        if (!widget || !label)
-            continue;
-        widget->setFixedWidth(w);
-        label->setFixedWidth(w - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing()) - widget->layout()->margin()*2);
-        label->adjustSize();
-        widget->adjustSize();
-        widget->resize(widget->sizeHint());
-        item->setSizeHint(widget->size());
+        try {
+            auto item = listWidget->item(i);
+            auto widget = listWidget->itemWidget(item);
+            if (!widget) // 正在动画之中，在这一瞬间突然就删除掉了
+                continue;
+            QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+            if (!layout)
+                continue;
+            auto portrait = layout->itemAt(DANMAKU_WIDGET_PORTRAIT)->widget();
+            auto label = layout->itemAt(DANMAKU_WIDGET_LABEL)->widget();
+            if (!widget || !label)
+                continue;
+            widget->setFixedWidth(w);
+            label->setFixedWidth(w - (portrait->isHidden() ? 0 : PORTRAIT_SIDE + widget->layout()->spacing()) - widget->layout()->margin()*2);
+            label->adjustSize();
+            widget->adjustSize();
+            widget->resize(widget->sizeHint());
+            item->setSizeHint(widget->size());
+        } catch (...) {
+
+        }
     }
 }
 
