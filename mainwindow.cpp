@@ -1903,6 +1903,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
         QJsonObject data = json.value("data").toObject();
+        qDebug() << data;
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
