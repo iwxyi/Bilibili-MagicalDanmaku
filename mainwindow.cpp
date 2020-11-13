@@ -907,7 +907,10 @@ void MainWindow::initWS()
     heartTimer = new QTimer(this);
     heartTimer->setInterval(30000);
     connect(heartTimer, &QTimer::timeout, this, [=]{
-        sendHeartPacket();
+        if (socket->state() == QAbstractSocket::ConnectedState)
+            sendHeartPacket();
+        else if (socket->state() == QAbstractSocket::UnconnectedState)
+            startConnectRoom();
     });
 }
 
