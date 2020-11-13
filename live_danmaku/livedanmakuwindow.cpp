@@ -189,7 +189,7 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
             widget->resize(widget->sizeHint());
             item->setSizeHint(widget->size());
         } catch (...) {
-
+            qDebug() << "resizeEvent错误";
         }
     }
 }
@@ -267,28 +267,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     widget->resize(listWidget->contentsRect().width(), 1);
     setItemWidgetText(item); // 会自动调整大小
 
-    // 开启动画（这里的动画没啥用啊）
-    if (false && DANMAKU_ANIMATION_ENABLED)
-    {
-        QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
-        ani->setStartValue(QSize(widget->width(), 1));
-        ani->setEndValue(widget->size());
-        ani->setDuration(300);
-        ani->setEasingCurve(QEasingCurve::OutQuad);
-        widget->resize(widget->width(), 1);
-        item->setSizeHint(widget->sizeHint());
-        connect(ani, &QPropertyAnimation::valueChanged, widget, [=](const QVariant &val){
-            item->setSizeHint(val.toSize());
-            if (scrollEnd)
-                listWidget->scrollToBottom();
-        });
-        connect(ani, &QPropertyAnimation::finished, widget, [=]{
-            if (scrollEnd)
-                listWidget->scrollToBottom();
-        });
-        ani->start();
-    }
-
     // 各种额外功能
     MessageType msgType = danmaku.getMsgType();
     QRegExp replyRe("点歌|谢|欢迎");
@@ -344,6 +322,16 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     {
         highlightItemText(item, false);
     }
+    else if (msgType == MSG_GIFT)
+    {
+        if (danmaku.isGoldCoin())
+        {
+            if (danmaku.getTotalCoin() >= 50000) // 50元以上的，长期高亮
+                highlightItemText(item, false);
+            else if (danmaku.getTotalCoin() >= 10000) // 10元以上，短暂高亮
+                highlightItemText(item, true);
+        }
+    }
 
     if (scrollEnd)
     {
@@ -354,7 +342,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
 {
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
+            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height();
 
     auto currentItem = listWidget->currentItem();
     QString s = danmaku.toString();
@@ -377,10 +365,8 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
                 });
                 connect(ani, &QPropertyAnimation::finished, widget, [=]{
                     bool same = (item == listWidget->currentItem());
-                    bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
-                            >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
                     listWidget->removeItemWidget(item);
-                    listWidget->takeItem(i);
+                    listWidget->takeItem(listWidget->row(item)); // 行数可能变化，需要重新判断
                     widget->deleteLater();
                     if (same)
                         listWidget->clearSelection();
