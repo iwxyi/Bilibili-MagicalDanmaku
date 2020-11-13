@@ -436,7 +436,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 新人：0级，3次以内
         if (newbieTip)
         {
-            int count = danmuCounts->value(snum(danmaku.getUid())).toInt();
+            int count = danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
                 nameText = "<font color='red'>[新]</font>" + nameText;
@@ -685,7 +685,7 @@ void LiveDanmakuWindow::showMenu()
         if (danmaku.getMsgType() == MSG_DANMAKU)
         {
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
-            actionHistory->setText("消息记录：" + snum(danmuCounts->value(snum(uid)).toInt()));
+            actionHistory->setText("消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()));
         }
         if (!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
         {

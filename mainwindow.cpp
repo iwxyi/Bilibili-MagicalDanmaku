@@ -5,7 +5,7 @@
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
 QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
-QSettings* CommonValues::danmuCounts = nullptr;                // 每个用户的发言次数
+QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户的发言次数
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
 
 MainWindow::MainWindow(QWidget *parent)
@@ -139,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // 弹幕次数
-    danmuCounts = new QSettings("danmu_count.ini", QSettings::Format::IniFormat);
+    danmakuCounts = new QSettings("danmu_count.ini", QSettings::Format::IniFormat);
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -921,11 +921,11 @@ void MainWindow::startConnectRoom()
     currentFansClub = 0;
 
     // 准备房间数据
-    if (danmuCounts)
-        danmuCounts->deleteLater();
+    if (danmakuCounts)
+        danmakuCounts->deleteLater();
     QDir dir;
     dir.mkdir("danmaku_counts");
-    danmuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
+    danmakuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
     if (ui->calculateDailyDataCheck->isChecked())
         startCalculateDailyData();
 
@@ -1747,8 +1747,8 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
 
         // 统计弹幕次数
-        int danmuCount = danmuCounts->value(snum(uid), 0).toInt()+1;
-        danmuCounts->setValue(snum(uid), danmuCount);
+        int danmuCount = danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+        danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
         dailyDanmaku++;
         if (dailySettings)
             dailySettings->setValue("danmaku", dailyDanmaku);
@@ -1855,12 +1855,20 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (coinType == "silver")
         {
+            int userSilver = danmakuCounts->value("silver/" + snum(uid)).toInt();
+            userSilver += totalCoin;
+            danmakuCounts->setValue("silver/"+snum(uid), userSilver);
+
             dailyGiftSilver += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_silver", dailyGiftSilver);
         }
         if (coinType == "gold")
         {
+            int userSilver = danmakuCounts->value("gold/" + snum(uid)).toInt();
+            userSilver += totalCoin;
+            danmakuCounts->setValue("gold/"+snum(uid), userSilver);
+
             dailyGiftGold += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
@@ -1977,6 +1985,11 @@ void MainWindow::handleMessage(QJsonObject json)
                          fansMedal.value("medal_name").toString(),
                          fansMedal.value("medal_level").toInt(), "");
         appendNewLiveDanmaku(danmaku);
+
+        int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
+        userCome++;
+        danmakuCounts->setValue("come/"+snum(uid), userCome);
+
         dailyCome++;
         if (dailySettings)
             dailySettings->setValue("come", dailyCome);
