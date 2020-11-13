@@ -1868,9 +1868,9 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (coinType == "gold")
         {
-            int userSilver = danmakuCounts->value("gold/" + snum(uid)).toInt();
-            userSilver += totalCoin;
-            danmakuCounts->setValue("gold/"+snum(uid), userSilver);
+            int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+            userGold += totalCoin;
+            danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
             dailyGiftGold += totalCoin;
             if (dailySettings)
@@ -1910,10 +1910,16 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
+        int price = data.value("price").toInt();
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
         appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+
+        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+        userGold += price;
+        danmakuCounts->setValue("gold/"+snum(uid), userGold);
+
         dailyGuard += num;
         if (dailySettings)
             dailySettings->setValue("guard", dailyGuard);
