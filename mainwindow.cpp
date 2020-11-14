@@ -423,6 +423,7 @@ void MainWindow::addNoReplyDanmakuText(QString text)
  */
 void MainWindow::sendMsg(QString msg)
 {
+    qDebug() << "准备发送弹幕：" << msg;
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
         statusLabel->setText("未设置Cookie信息");
@@ -493,7 +494,7 @@ void MainWindow::sendAutoMsg(QString msgs)
     int delay = 0;
     if (sl.size())
     {
-        for (int i = 0; i < msgs.size(); i++)
+        for (int i = 0; i < sl.size(); i++)
         {
             QTimer::singleShot(delay, [=]{
                 sendMsg(variantToString(sl.at(i)));
@@ -712,7 +713,7 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
 void MainWindow::on_SendMsgButton_clicked()
 {
     QString msg = ui->SendMsgEdit->text();
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::on_AIReplyCheck_stateChanged(int)
@@ -730,7 +731,7 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
-    sendMsg(ui->SendMsgEdit->text());
+    sendAutoMsg(ui->SendMsgEdit->text());
     ui->SendMsgEdit->clear();
 }
 
@@ -768,7 +769,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
         if (!liveStatus) // 没有开播，不进行定时任务
             return ;
         addNoReplyDanmakuText(msg);
-        sendMsg(msg);
+        sendAutoMsg(msg);
     });
 
     connect(tw, &TaskWidget::signalResized, tw, [=]{
@@ -1428,7 +1429,7 @@ QString MainWindow::variantToString(QString msg) const
     {
         int hour = QTime::currentTime().hour();
         QStringList rsts;
-        rsts << "您" << "你";
+        rsts << "您好" << "你好";
         if (hour <= 3)
             rsts << "晚上好";
         else if (hour <= 5)
@@ -1441,10 +1442,15 @@ QString MainWindow::variantToString(QString msg) const
             rsts << "下午好";
         else if (hour <= 24)
             rsts << "晚上好";
-        else
-            rsts << "你好";
         int r = qrand() % rsts.size();
         msg = msg.replace("%greet%", rsts.at(r));
+    }
+
+    if (msg.contains("%tone%"))
+    {
+        QStringList sl{"啊", "呀", "~"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%tone%", sl.at(r));
     }
 
     return msg;
@@ -1782,7 +1788,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
-                sendMsg(text);
+                sendAutoMsg(text);
             ui->popularityLabel->setText("已开播");
             liveStatus = true;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
@@ -1796,7 +1802,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
-                sendMsg(text);
+                sendAutoMsg(text);
             ui->popularityLabel->setText("已下播");
             liveStatus = false;
 
@@ -2478,14 +2484,14 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/startLiveHour", ui->startLiveHourSpin->value());
-    if (ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
-    if (ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
 
