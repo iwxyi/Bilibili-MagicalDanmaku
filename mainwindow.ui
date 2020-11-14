@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -413,7 +413,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>定时</string>
+        <string>发送</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -549,6 +549,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoWelcomeWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>欢迎 %1 ~~~</string>
           </property>
@@ -608,6 +611,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoThankWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;%2：礼物名称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>感谢 %1 赠送的 %2 ~~~</string>
           </property>
@@ -667,6 +673,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>感谢 %1 的关注~</string>
           </property>

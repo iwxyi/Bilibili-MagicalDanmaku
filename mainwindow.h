@@ -294,7 +294,7 @@ private:
     qint64 removeDanmakuInterval = 20000;
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
-    qint64 removeDanmakuTipInterval = 7000;
+    qint64 removeDanmakuTipInterval = 10000;
     QStringList noReplyMsgs;
 
     // 点歌
