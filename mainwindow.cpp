@@ -7,6 +7,7 @@ QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（
 QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
 QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户的发言次数
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
+QList<qint64> CommonValues::careUsers;        // 特别关心
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -44,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    int removeIv = settings.value("danmaku/removeInterval", 20).toLongLong();
+    int removeIv = settings.value("danmaku/removeInterval", 20).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
 
@@ -136,6 +137,13 @@ MainWindow::MainWindow(QWidget *parent)
             continue;
 
         localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+    }
+
+    // 特别关心
+    QStringList usersS = settings.value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersS)
+    {
+        careUsers.append(s.toLongLong());
     }
 
     // 弹幕次数
@@ -1115,6 +1123,7 @@ void MainWindow::getRoomInfo()
         ui->roomCoverLabel->setMinimumSize(1, 1);
     });
     manager->get(*request);
+    ui->connectStateLabel->setText("获取房间信息...");
 }
 
 void MainWindow::getDanmuInfo()
@@ -1158,6 +1167,7 @@ void MainWindow::getDanmuInfo()
         startMsgLoop();
     });
     manager->get(*request);
+    ui->connectStateLabel->setText("获取弹幕信息...");
 }
 
 void MainWindow::getFansAndUpdate()
@@ -2468,11 +2478,15 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/startLiveHour", ui->startLiveHourSpin->value());
+    if (ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+        connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
+    if (ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+        connectServerTimer->start();
 }
 
 void MainWindow::on_calculateDailyDataCheck_clicked()
