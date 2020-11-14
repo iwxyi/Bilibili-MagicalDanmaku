@@ -410,6 +410,9 @@ void MainWindow::addNoReplyDanmakuText(QString text)
     noReplyMsgs.append(text);
 }
 
+/**
+ * 发送单挑弹幕的原子操作
+ */
 void MainWindow::sendMsg(QString msg)
 {
     if (browserCookie.isEmpty() || browserData.isEmpty())
@@ -471,6 +474,27 @@ void MainWindow::sendMsg(QString msg)
     manager->post(*request, ba);
 }
 
+/**
+ * 发送多条消息
+ * 使用“\n”进行多行换行
+ */
+void MainWindow::sendAutoMsg(QString msgs)
+{
+    QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
+    const int cd = 1500;
+    int delay = 0;
+    if (sl.size())
+    {
+        for (int i = 0; i < msgs.size(); i++)
+        {
+            QTimer::singleShot(delay, [=]{
+                sendMsg(variantToString(sl.at(i)));
+            });
+            delay += cd;
+        }
+    }
+}
+
 void MainWindow::sendWelcomeMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
@@ -487,7 +511,7 @@ void MainWindow::sendWelcomeMsg(QString msg)
     if (msg.length() > 20)
         msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendGiftMsg(QString msg)
@@ -506,7 +530,7 @@ void MainWindow::sendGiftMsg(QString msg)
     if (msg.length() > 20)
         msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
@@ -525,7 +549,7 @@ void MainWindow::sendAttentionMsg(QString msg)
     if (msg.length() > 20)
         msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
@@ -541,7 +565,7 @@ void MainWindow::sendNotifyMsg(QString msg)
     if (msg.length() > 20)
         msg = msg.replace(" ", "");
     addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 /**
@@ -1360,6 +1384,60 @@ QString MainWindow::getLocalNickname(qint64 uid) const
     if (localNicknames.contains(uid))
         return localNicknames.value(uid);
     return "";
+}
+
+/**
+ * 支持变量名
+ */
+QString MainWindow::variantToString(QString msg) const
+{
+    // 早上/下午/晚上 - 好呀
+    if (msg.contains("%hour%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QString rst;
+        if (hour <= 3)
+            rst = "晚上";
+        else if (hour <= 5)
+            rst = "凌晨";
+        else if (hour < 11)
+            rst = "早上";
+        else if (hour <= 13)
+            rst = "中午";
+        else if (hour <= 16)
+            rst = "下午";
+        else if (hour <= 24)
+            rst = "晚上";
+        else
+            rst = "今天";
+        msg = msg.replace("%hour%", rst);
+    }
+
+    // 早上好、早、晚上好-
+    if (msg.contains("%greet%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QStringList rsts;
+        rsts << "您" << "你";
+        if (hour <= 3)
+            rsts << "晚上好";
+        else if (hour <= 5)
+            rsts << "凌晨好";
+        else if (hour < 11)
+            rsts << "早上好" << "早";
+        else if (hour <= 13)
+            rsts << "中午好";
+        else if (hour <= 16)
+            rsts << "下午好";
+        else if (hour <= 24)
+            rsts << "晚上好";
+        else
+            rsts << "你好";
+        int r = qrand() % rsts.size();
+        msg = msg.replace("%greet%", rsts.at(r));
+    }
+
+    return msg;
 }
 
 /**

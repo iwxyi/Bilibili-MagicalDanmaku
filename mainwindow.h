@@ -150,6 +150,8 @@ private slots:
 
     void sendMsg(QString msg);
 
+    void sendAutoMsg(QString msgs);
+
     void sendWelcomeMsg(QString msg);
 
     void sendGiftMsg(QString msg);
@@ -256,6 +258,7 @@ private:
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
+    QString variantToString(QString msg) const;
     QString nicknameSimplify(QString nickname) const;
 
     void startSaveDanmakuToFile();
