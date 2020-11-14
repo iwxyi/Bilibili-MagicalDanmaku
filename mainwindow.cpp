@@ -711,8 +711,11 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
     steps += "\n\n变量列表：\n";
     steps += "\\n：分成多条弹幕发送、间隔1.5秒";
     steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
+    steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
     steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
-    steps += "\n%tone%：随机替换为“啊”、“呀”、“~”";
+    steps += "\n%tone%：随机替换为“啊”、“呀”";
+    steps += "\n%punc%：随机替换为“~”、“！”";
+    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";
     QMessageBox::information(this, "定时弹幕", steps);
 }
 
@@ -1452,11 +1455,67 @@ QString MainWindow::variantToString(QString msg) const
         msg = msg.replace("%greet%", rsts.at(r));
     }
 
+    // 全部打招呼
+    if (msg.contains("%all_greet%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QStringList sl{"啊", "呀"};
+        int r = qrand() % sl.size();
+        QString tone = sl.at(r);
+        QStringList rsts;
+        rsts << "您好"+tone << "你好"+tone;
+        if (hour <= 3)
+            rsts << "晚上好"+tone;
+        else if (hour <= 5)
+            rsts << "凌晨好"+tone;
+        else if (hour < 11)
+            rsts << "早上好"+tone << "早"+tone;
+        else if (hour <= 13)
+            rsts << "中午好"+tone;
+        else if (hour <= 16)
+            rsts << "下午好"+tone;
+        else if (hour <= 24)
+            rsts << "晚上好"+tone;
+
+        if (hour >= 6 && hour <= 8)
+            rsts << "早饭吃了吗";
+        else if (hour >= 11 && hour <= 12)
+            rsts << "午饭吃了吗";
+        else if (hour >= 17 && hour <= 18)
+            rsts << "晚饭吃了吗";
+
+        if ((hour >= 23 && hour <= 24)
+                || (hour >= 0 && hour <= 3))
+            rsts << "还没睡"+tone << "怎么还没睡~";
+        else if (hour >= 3 && hour <= 5)
+            rsts << "通宵了吗";
+
+        r = qrand() % rsts.size();
+        msg = msg.replace("%all_greet%", rsts.at(r));
+    }
+
+    // 语气词
     if (msg.contains("%tone%"))
+    {
+        QStringList sl{"啊", "呀"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%tone%", sl.at(r));
+    }
+
+    // 标点
+    if (msg.contains("%punc%"))
+    {
+        QStringList sl{"~", "！"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%punc%", sl.at(r));
+    }
+
+    // 语气词或标点
+    if (msg.contains("%tone/punc%"))
     {
         QStringList sl{"啊", "呀", "~", "！"};
         int r = qrand() % sl.size();
-        msg = msg.replace("%tone%", sl.at(r));
+        msg = msg.replace("%tone/punc%", sl.at(r));
     }
 
     return msg;
