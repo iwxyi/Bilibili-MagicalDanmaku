@@ -1048,6 +1048,8 @@ void MainWindow::getRoomInfo()
                     if (!connectServerTimer->isActive())
                         connectServerTimer->start();
                     ui->connectStateLabel->setText("等待连接");
+                    if (socket->state() != QAbstractSocket::UnconnectedState) // 如果正在连接或打算连接，则断开
+                        socket->close();
                     return ;
                 }
             }
