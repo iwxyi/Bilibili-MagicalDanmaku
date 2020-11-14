@@ -39,7 +39,7 @@ class MainWindow : public QMainWindow, public CommonValues
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
 
     struct Diange
     {
@@ -291,7 +291,7 @@ private:
     qint64 removeDanmakuInterval = 20000;
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
-    qint64 removeDanmakuTipInterval = 5000;
+    qint64 removeDanmakuTipInterval = 7000;
     QStringList noReplyMsgs;
 
     // 点歌

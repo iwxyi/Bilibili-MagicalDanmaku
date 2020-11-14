@@ -31,7 +31,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
         qint64 uid = danmaku.getUid();
         if (uid)
         {
-            showUserMsgHistory(uid);
+            showUserMsgHistory(uid, danmaku.getNickname());
         }
     });
 
@@ -436,7 +436,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 新人：0级，3次以内
         if (newbieTip)
         {
-            int count = danmuCounts->value(snum(danmaku.getUid())).toInt();
+            int count = danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
                 nameText = "<font color='red'>[新]</font>" + nameText;
@@ -644,9 +644,9 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMedal = new QAction("粉丝牌子", this);
     QAction* actionHistory = new QAction("消息记录", this);
 
-    QAction* actionAddBlock = new QAction("720小时黑名单", this);
-    QAction* actionAddBlockTemp = new QAction("1小时黑名单", this);
-    QAction* actionDelBlock = new QAction("移出黑名单", this);
+    QAction* actionAddBlock = new QAction("禁言720小时", this);
+    QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
+    QAction* actionDelBlock = new QAction("取消禁言", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
@@ -685,7 +685,7 @@ void LiveDanmakuWindow::showMenu()
         if (danmaku.getMsgType() == MSG_DANMAKU)
         {
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
-            actionHistory->setText("消息记录：" + snum(danmuCounts->value(snum(uid)).toInt()));
+            actionHistory->setText("消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()));
         }
         if (!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
         {
@@ -925,7 +925,7 @@ void LiveDanmakuWindow::showMenu()
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
     });
     connect(actionHistory, &QAction::triggered, this, [=]{
-        showUserMsgHistory(uid);
+        showUserMsgHistory(uid, danmaku.getNickname());
     });
     connect(actionAddBlock, &QAction::triggered, this, [=]{
         emit signalAddBlockUser(uid, 720);
@@ -1264,9 +1264,25 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     label->setPixmap(pixmap);
 }
 
-void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
+void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
 {
+    QStringList sums;
+    int c = danmakuCounts->value("danmaku/"+snum(uid)).toInt();
+    if(c)
+        sums << snum(c)+" 条弹幕";
+    c = danmakuCounts->value("come/"+snum(uid)).toInt();
+    if (c)
+        sums << "进来 " + snum(c)+" 次";
+    c = danmakuCounts->value("gold/"+snum(uid)).toInt();
+    if (c)
+        sums << "赠送 " + snum(c)+" 金瓜子";
+    c = danmakuCounts->value("silver/"+snum(uid)).toInt();
+    if (c)
+        sums << snum(c)+" 银瓜子";
+
     QStringList sl;
+    if (sums.size())
+        sl.append("* 总计：" + sums.join("，"));
     for (int i = allDanmakus.size()-1; i >= 0; i--)
     {
         const LiveDanmaku& danmaku = allDanmakus.at(i);
@@ -1285,6 +1301,7 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid)
     QRect rect = this->geometry();
     int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
     rect.setTop(rect.top()+titleHeight);
+    view->setWindowTitle(title);
     view->setGeometry(rect);
     view->show();
 }
