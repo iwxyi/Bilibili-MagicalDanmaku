@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (!diangeAutoCopy || danmaku.getMsgType() != MSG_DANMAKU)
+       if (danmaku.getMsgType() != MSG_DANMAKU)
            return ;
        QRegularExpression re(diangeFormatString);
        QRegularExpressionMatch match;
@@ -70,18 +70,23 @@ MainWindow::MainWindow(QWidget *parent)
            statusLabel->setText("无法获取点歌内容，请检测点歌格式");
            return ;
        }
+
+       // 记录到历史（先不复制）
        QString text = match.capturedTexts().at(1);
        text = text.trimmed();
+       qDebug() << s8("【点歌自动复制】") << text;
+       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
+
+       if (!diangeAutoCopy) // 是否进行复制操作
+           return ;
        QClipboard* clip = QApplication::clipboard();
        clip->setText(text);
-       qDebug() << s8("【点歌自动复制】") << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
 
-       addNoReplyDanmakuText(danmaku.getText());
+       addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
        QTimer::singleShot(100, [=]{
            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
        });
-       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
     });
 
     // 自动翻译
@@ -339,7 +344,7 @@ void MainWindow::removeTimeoutDanmaku()
                 roomDanmakus.removeAt(i--);
                 oldLiveDanmakuRemoved(danmaku);
             }
-            break;
+            // break; // 不break，就是一次性删除多个
         }
     }
 }
@@ -501,7 +506,9 @@ void MainWindow::sendAutoMsg(QString msgs)
         for (int i = 0; i < sl.size(); i++)
         {
             QTimer::singleShot(delay, [=]{
-                sendMsg(variantToString(sl.at(i)));
+                QString msg = variantToString(sl.at(i));
+                addNoReplyDanmakuText(msg);
+                sendMsg(msg);
             });
             delay += cd;
         }
@@ -522,7 +529,6 @@ void MainWindow::sendWelcomeMsg(QString msg)
     prevTimestamp = timestamp;
 
     msg = msgToShort(msg);
-    addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
 
@@ -540,7 +546,6 @@ void MainWindow::sendGiftMsg(QString msg)
     prevTimestamp = timestamp;
 
     msg = msgToShort(msg);
-    addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
 
@@ -558,7 +563,6 @@ void MainWindow::sendAttentionMsg(QString msg)
     prevTimestamp = timestamp;
 
     msg = msgToShort(msg);
-    addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
 
@@ -573,7 +577,6 @@ void MainWindow::sendNotifyMsg(QString msg)
     prevTimestamp = timestamp;
 
     msg = msgToShort(msg);
-    addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
 
@@ -777,7 +780,6 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
         if (!liveStatus) // 没有开播，不进行定时任务
             return ;
-        addNoReplyDanmakuText(msg);
         sendAutoMsg(msg);
     });
 
@@ -1536,9 +1538,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // 去掉前缀后缀
-    QStringList special{"~", "丶", "°", "゛", "-", "_"};
-    QStringList starts{"我叫", "我是", "叫我", "一只", "是个", "是", "原来是"};
-    QStringList ends{"er", "啊", "呢", "哦", "呐"};
+    QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
+    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶"};
     starts += special;
     ends += special;
     foreach (auto start, starts)
