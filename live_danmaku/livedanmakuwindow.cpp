@@ -352,6 +352,11 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
 
             if (DANMAKU_ANIMATION_ENABLED)
             {
+                if (!widget)
+                {
+                    listWidget->removeItemWidget(item);
+                    break;
+                }
                 QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
                 ani->setStartValue(widget->size());
                 ani->setEndValue(QSize(widget->width(), 0));

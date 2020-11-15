@@ -49,6 +49,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
 
+    removeIv = settings.value("danmaku/removeTipInterval", 7).toInt();
+    ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
+    this->removeDanmakuTipInterval = removeIv * 1000;
+
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
@@ -423,7 +427,6 @@ void MainWindow::addNoReplyDanmakuText(QString text)
  */
 void MainWindow::sendMsg(QString msg)
 {
-    qDebug() << "准备发送弹幕：" << msg;
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
         statusLabel->setText("未设置Cookie信息");
@@ -489,6 +492,7 @@ void MainWindow::sendMsg(QString msg)
  */
 void MainWindow::sendAutoMsg(QString msgs)
 {
+    qDebug() << "->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     const int cd = 1500;
     int delay = 0;
@@ -517,8 +521,7 @@ void MainWindow::sendWelcomeMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
+    msg = msgToShort(msg);
     addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
@@ -536,8 +539,7 @@ void MainWindow::sendGiftMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
+    msg = msgToShort(msg);
     addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
@@ -555,8 +557,7 @@ void MainWindow::sendAttentionMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
+    msg = msgToShort(msg);
     addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
@@ -571,8 +572,7 @@ void MainWindow::sendNotifyMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
+    msg = msgToShort(msg);
     addNoReplyDanmakuText(msg);
     sendAutoMsg(msg);
 }
@@ -709,7 +709,7 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
     steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
 
     steps += "\n\n变量列表：\n";
-    steps += "\\n：分成多条弹幕发送、间隔1.5秒";
+    steps += "\\n：分成多条弹幕发送，间隔1.5秒";
     steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
     steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
     steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
@@ -1444,7 +1444,7 @@ QString MainWindow::variantToString(QString msg) const
         else if (hour <= 5)
             rsts << "凌晨好";
         else if (hour < 11)
-            rsts << "早上好" << "早";
+            rsts << "早上好" << "早" << "早安";
         else if (hour <= 13)
             rsts << "中午好";
         else if (hour <= 16)
@@ -1528,12 +1528,19 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 {
     QString simp = nickname;
 
+    // 没有取名字的，就不需要欢迎了
+    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
+    if (simp.indexOf(defaultRe) > -1)
+    {
+        return "";
+    }
+
+    // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_"};
-    QStringList starts{"我叫", "叫我", "一只", "是个", "是", "原来是"};
+    QStringList starts{"我叫", "我是", "叫我", "一只", "是个", "是", "原来是"};
     QStringList ends{"er", "啊", "呢", "哦", "呐"};
     starts += special;
     ends += special;
-
     foreach (auto start, starts)
     {
         if (simp.startsWith(start))
@@ -1542,7 +1549,6 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             break;
         }
     }
-
     foreach (auto end, ends)
     {
         if (simp.endsWith(end))
@@ -1571,16 +1577,62 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    // 没有取名字的，就不需要欢迎了
-    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
-    if (simp.indexOf(defaultRe) > -1)
+    // 这个xx不太x
+    QRegularExpression zhegeRe("^这个(.+)不太.+$");
+    if (simp.indexOf(zhegeRe, 0, &match) > -1)
     {
-        return "";
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // xxx今天...
+    QRegularExpression jintianRe("^(.+)今天.+$");
+    if (simp.indexOf(jintianRe, 0, &match) > -1)
+    {
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // xxx哥哥
+    QRegularExpression gegeRe("^(.+)(哥哥|爸爸|爷爷|奶奶|妈妈)$");
+    if (simp.indexOf(jintianRe, 0, &match) > -1)
+    {
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // AAAA
+    QRegularExpression dieRe("(.)\\1{1,}");
+    if (simp.indexOf(dieRe, 0, &match) > -1)
+    {
+        QString ch = match.capturedTexts().at(1);
+        QString all = match.capturedTexts().at(0);
+        simp = simp.replace(all, QString("%1%1").arg(ch));
     }
 
     if (simp.isEmpty())
         return nickname;
     return simp;
+}
+
+QString MainWindow::msgToShort(QString msg) const
+{
+    if (msg.length() <= 20)
+        return msg;
+    if (msg.contains(" "))
+    {
+        msg = msg.replace(" ", "");
+        if (msg.length() <= 20)
+            return msg;
+    }
+    if (msg.contains("“"))
+    {
+        msg = msg.replace("“", "");
+        msg = msg.replace("”", "");
+        if (msg.length() <= 20)
+            return msg;
+    }
+    return msg;
 }
 
 void MainWindow::startSaveDanmakuToFile()
@@ -2117,13 +2169,14 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
-    else if (cmd == "WELCOME") // 进入（似乎已经废弃）
+    else if (cmd == "WELCOME") // 进入（偶尔能触发？）
     {
         QJsonObject data = json.value("data").toObject();
+        qDebug() << data;
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
-        qDebug() << s8("观众进入：") << username << isAdmin;
+        qDebug() << s8("欢迎观众：") << username << isAdmin;
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -2582,4 +2635,10 @@ void MainWindow::on_pushButton_clicked()
 
     text += "\n\n累计粉丝：" + snum(currentFans);
     QMessageBox::information(this, "今日数据", text);
+}
+
+void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
+{
+    this->removeDanmakuTipInterval = arg1 * 1000;
+    settings.setValue("danmaku/removeTipInterval", arg1);
 }
