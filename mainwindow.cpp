@@ -1567,20 +1567,22 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶"};
     starts += special;
     ends += special;
-    foreach (auto start, starts)
+    for (int i = 0; i < starts.size(); i++)
     {
+        QString start = starts.at(i);
         if (simp.startsWith(start))
         {
             simp.remove(0, start.length());
-            break;
+            i = 0; // 从头开始
         }
     }
-    foreach (auto end, ends)
+    for (int i = 0; i < ends.size(); i++)
     {
+        QString end = ends.at(i);
         if (simp.endsWith(end))
         {
             simp.remove(simp.length() - end.length(), end.length());
-            break;
+            i = 0; // 从头开始
         }
     }
 
