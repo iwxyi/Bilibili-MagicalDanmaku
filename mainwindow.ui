@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -964,6 +964,29 @@
             </property>
             <property name="text">
              <string>新人关键词快速禁言提示</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="notOnlyNewbieCheck">
+            <property name="toolTip">
+             <string>不只是新人，所有触发敏感词的发言都提示禁言</string>
+            </property>
+            <property name="text">
+             <string>全部提示</string>
             </property>
            </widget>
           </item>

@@ -113,6 +113,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->promptBlockNewbieCheck->setChecked(settings.value("block/promptBlockNewbie", false).toBool());
     ui->promptBlockNewbieKeysEdit->setPlainText(settings.value("block/promptBlockNewbieKeys").toString());
 
+    ui->notOnlyNewbieCheck->setChecked(settings.value("block/notOnlyNewbie", false).toBool());
+
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
@@ -2010,6 +2012,18 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         // 新人小号禁言
+        auto testTipBlock = [=]{
+            if (danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
+            {
+                QString reStr = ui->promptBlockNewbieKeysEdit->toPlainText();
+                if (reStr.endsWith("|"))
+                    reStr = reStr.left(reStr.length()-1);
+                if (msg.indexOf(QRegularExpression(reStr)) > -1) // 提示拉黑
+                {
+                    danmakuWindow->showFastBlock(uid, msg);
+                }
+            }
+        };
         if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
             bool blocked = false;
@@ -2055,16 +2069,14 @@ void MainWindow::handleMessage(QJsonObject json)
             }
 
             // 提示拉黑
-            if (!blocked && danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
+            if (!blocked)
             {
-                QString reStr = ui->promptBlockNewbieKeysEdit->toPlainText();
-                if (reStr.endsWith("|"))
-                    reStr = reStr.left(reStr.length()-1);
-                if (msg.indexOf(QRegularExpression(reStr)) > -1) // 提示拉黑
-                {
-                    danmakuWindow->showFastBlock(uid, msg);
-                }
+                testTipBlock();
             }
+        }
+        else if (ui->notOnlyNewbieCheck->isChecked())
+        {
+            testTipBlock();
         }
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -2670,4 +2682,10 @@ void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 void MainWindow::on_doveCheck_clicked()
 {
 
+}
+
+void MainWindow::on_notOnlyNewbieCheck_clicked()
+{
+    bool enable = ui->notOnlyNewbieCheck->isChecked();
+    settings.setValue("block/notOnlyNewbie", enable);
 }

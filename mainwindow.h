@@ -234,6 +234,8 @@ private slots:
 
     void on_doveCheck_clicked();
 
+    void on_notOnlyNewbieCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
