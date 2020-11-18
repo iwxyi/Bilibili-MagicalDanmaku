@@ -2125,7 +2125,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
         }
 
-        if (coinType == "silver" && totalCoin < 1000) // 银瓜子，而且还是小于1000，就不感谢了
+        if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
         QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
         if (!words.size())
