@@ -1612,7 +1612,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx今天...
-    QRegularExpression jintianRe("^(.+)今天.+$");
+    QRegularExpression jintianRe("^(.{2,})今天.+$");
     if (simp.indexOf(jintianRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
