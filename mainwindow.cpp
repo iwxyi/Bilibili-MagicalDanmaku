@@ -516,7 +516,7 @@ void MainWindow::sendAutoMsg(QString msgs)
         for (int i = 0; i < sl.size(); i++)
         {
             QTimer::singleShot(delay, [=]{
-                QString msg = variantToString(sl.at(i));
+                QString msg = processTimeVariants(sl.at(i));
                 addNoReplyDanmakuText(msg);
                 sendMsg(msg);
             });
@@ -1435,7 +1435,7 @@ QString MainWindow::getLocalNickname(qint64 uid) const
 /**
  * 支持变量名
  */
-QString MainWindow::variantToString(QString msg) const
+QString MainWindow::processTimeVariants(QString msg) const
 {
     // 早上/下午/晚上 - 好呀
     if (msg.contains("%hour%"))
@@ -1543,6 +1543,62 @@ QString MainWindow::variantToString(QString msg) const
         int r = qrand() % sl.size();
         msg = msg.replace("%tone/punc%", sl.at(r));
     }
+
+    return msg;
+}
+
+QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
+{
+    QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
+    QStringList result;
+    for (int i = 0; i < lines.size(); i++)
+    {
+        QString line = lines.at(i);
+        line = processUserVariants(line, user);
+        line = processVariantConditions(line);
+        if (!line.isEmpty())
+            result.append(line);
+    }
+
+    return result;
+}
+
+/**
+ * 处理用户信息中蕴含的表达式
+ */
+QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
+{
+    // 用户昵称
+    if (msg.contains("%name%"))
+    {
+
+    }
+
+    // 用户等级
+
+
+    // 进来次数
+
+
+    // 上次进来
+
+
+    // 送礼总数
+
+
+    // 粉丝牌
+
+    return msg;
+}
+
+/**
+ * 处理条件变量
+ * if()...
+ * 要根据时间戳、字符串
+ */
+QString MainWindow::processVariantConditions(QString msg) const
+{
+
 
     return msg;
 }
