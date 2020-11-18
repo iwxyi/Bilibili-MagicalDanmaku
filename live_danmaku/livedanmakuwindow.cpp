@@ -690,7 +690,7 @@ void LiveDanmakuWindow::showMenu()
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
 
-        // 弹幕的数据多一点，包含牌子、等级等等
+        // 弹幕的数据多一点，包含牌子、等级等
         if (danmaku.getMsgType() == MSG_DANMAKU)
         {
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
@@ -719,6 +719,23 @@ void LiveDanmakuWindow::showMenu()
         actionAddBlockTemp->setEnabled(false);
         actionDelBlock->setEnabled(false);
         actionMedal->setEnabled(false);
+    }
+
+    if (!item)
+    {
+        operMenu->setEnabled(false);
+        actionAddCare->setEnabled(false);
+        actionSetName->setEnabled(false);
+        actionCopy->setEnabled(false);
+        actionSearch->setEnabled(false);
+        actionTranslate->setEnabled(false);
+        actionReply->setEnabled(false);
+        actionFreeCopy->setEnabled(false);
+    }
+    else if (!uid)
+    {
+        actionAddCare->setEnabled(false);
+        actionSetName->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
@@ -762,23 +779,6 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionSendOnce);
-
-    if (!item)
-    {
-        operMenu->setEnabled(false);
-        actionAddCare->setEnabled(false);
-        actionSetName->setEnabled(false);
-        actionCopy->setEnabled(false);
-        actionSearch->setEnabled(false);
-        actionTranslate->setEnabled(false);
-        actionReply->setEnabled(false);
-        actionFreeCopy->setEnabled(false);
-    }
-    else if (!uid)
-    {
-        actionAddCare->setEnabled(false);
-        actionSetName->setEnabled(false);
-    }
 
     connect(actionNameColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(nameColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);

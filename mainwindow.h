@@ -232,6 +232,8 @@ private slots:
 
     void on_removeDanmakuTipIntervalSpin_valueChanged(int arg1);
 
+    void on_doveCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

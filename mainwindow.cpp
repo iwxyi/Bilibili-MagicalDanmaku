@@ -1070,11 +1070,15 @@ void MainWindow::getRoomInfo()
                     if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
                             && currentVal <= end * 3600000)
                     {
-                        // 即将开播，或者正在直播
+                        if (ui->doveCheck->isChecked()) // 今天鸽了
+                            abort = true;
+                        // 即将开播
                     }
                     else // 直播时间之外
                     {
                         abort = true;
+                        if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
+                            ui->doveCheck->setChecked(false);
                     }
                 }
                 else if (start > end) // 熬夜档
@@ -1082,11 +1086,16 @@ void MainWindow::getRoomInfo()
                     if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
                             || currentVal <= end * 36000000)
                     {
-                        // 即将开播，或者正在直播
+                        if (ui->doveCheck->isChecked()) // 今晚鸽了
+                            abort = true;
+                        // 即将开播
                     }
                     else // 直播时间之外
                     {
                         abort = true;
+                        if (currentVal > end * 36000000 && currentVal < start * 36000000
+                                && ui->doveCheck->isChecked())
+                            ui->doveCheck->setChecked(false);
                     }
                 }
 
@@ -2654,4 +2663,9 @@ void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuTipInterval = arg1 * 1000;
     settings.setValue("danmaku/removeTipInterval", arg1);
+}
+
+void MainWindow::on_doveCheck_clicked()
+{
+
 }
