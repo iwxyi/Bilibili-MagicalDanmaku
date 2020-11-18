@@ -23,6 +23,7 @@ protected:
     static QSettings* danmakuCounts; // 保存弹幕次数的settings
     static QList<LiveDanmaku> allDanmakus;
     static QList<qint64> careUsers; // 特别关心
+    static QList<qint64> strongNotifyUsers; // 强提醒
 };
 
 #endif // COMMANDVALUES_H

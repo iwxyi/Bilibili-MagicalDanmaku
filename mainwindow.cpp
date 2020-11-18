@@ -8,6 +8,7 @@ QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
 QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户的发言次数
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
 QList<qint64> CommonValues::careUsers;        // 特别关心
+QList<qint64> CommonValues::strongNotifyUsers;        // 特别关心
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -155,6 +156,13 @@ MainWindow::MainWindow(QWidget *parent)
     foreach (QString s, usersS)
     {
         careUsers.append(s.toLongLong());
+    }
+
+    // 强提醒
+    QStringList usersSN = settings.value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersSN)
+    {
+        strongNotifyUsers.append(s.toLongLong());
     }
 
     // 弹幕次数
@@ -2140,7 +2148,12 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendGiftMsg(msg.arg(nick).arg(giftName));
+            {
+                if (strongNotifyUsers.contains(uid))
+                    sendAutoMsg(msg.arg(nick).arg(giftName));
+                else
+                    sendGiftMsg(msg.arg(nick).arg(giftName));
+            }
         }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
@@ -2262,7 +2275,12 @@ void MainWindow::handleMessage(QJsonObject json)
             QString msg = words.at(r);
             QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
             if (!nick.isEmpty())
-                sendWelcomeMsg(msg.arg(nick));
+            {
+                if (strongNotifyUsers.contains(uid))
+                    sendNotifyMsg(msg.arg(nick));
+                else
+                    sendWelcomeMsg(msg.arg(nick));
+            }
         }
         else
         {

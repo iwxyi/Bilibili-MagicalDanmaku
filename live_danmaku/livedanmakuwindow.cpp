@@ -488,7 +488,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         QString medalColorStr = isBlankColor(danmaku.getMedalColor())
                 ? QVariant(this->msgColor).toString()
                 : danmaku.getMedalColor();
-        if (!danmaku.getAnchorRoomid().isEmpty())
+        if (!danmaku.getAnchorRoomid().isEmpty()
+                && !danmaku.getMedalName().isEmpty())
         {
             text = QString("<font style=\"color:%1;\">%2%3</font> ")
                     .arg(medalColorStr)
@@ -646,6 +647,7 @@ void LiveDanmakuWindow::showMenu()
 
     QMenu* menu = new QMenu(this);
     QAction* actionAddCare = new QAction("添加特别关心", this);
+    QAction* actionStrongNotify = new QAction("添加强提醒", this);
     QAction* actionSetName = new QAction("设置专属昵称", this);
 
     QMenu* userMenu = new QMenu("用户", this);
@@ -687,6 +689,8 @@ void LiveDanmakuWindow::showMenu()
     {
         if (careUsers.contains(uid))
             actionAddCare->setText("移除特别关心");
+        if (strongNotifyUsers.contains(uid))
+            actionStrongNotify->setText("移除强提醒");
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
 
@@ -725,6 +729,7 @@ void LiveDanmakuWindow::showMenu()
     {
         operMenu->setEnabled(false);
         actionAddCare->setEnabled(false);
+        actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
         actionCopy->setEnabled(false);
         actionSearch->setEnabled(false);
@@ -735,6 +740,7 @@ void LiveDanmakuWindow::showMenu()
     else if (!uid)
     {
         actionAddCare->setEnabled(false);
+        actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
     }
 
@@ -757,6 +763,7 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addSeparator();
     menu->addAction(actionAddCare);
+    menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
     menu->addSeparator();
 //    menu->addMenu(userMenu);
@@ -840,6 +847,27 @@ void LiveDanmakuWindow::showMenu()
         foreach (qint64 uid, careUsers)
             ress << QString::number(uid);
         settings.setValue("danmaku/careUsers", ress.join(";"));
+    });
+    connect(actionStrongNotify, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+
+        if (strongNotifyUsers.contains(danmaku.getUid())) // 已存在，移除
+        {
+            strongNotifyUsers.removeOne(danmaku.getUid());
+            setItemWidgetText(item);
+        }
+        else // 添加强提醒
+        {
+            strongNotifyUsers.append(danmaku.getUid());
+            highlightItemText(item);
+        }
+
+        // 保存特别关心
+        QStringList ress;
+        foreach (qint64 uid, strongNotifyUsers)
+            ress << QString::number(uid);
+        settings.setValue("danmaku/strongNotifyUsers", ress.join(";"));
     });
     connect(actionSetName, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
