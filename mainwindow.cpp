@@ -1113,6 +1113,8 @@ void MainWindow::getRoomInfo()
             {
                 if (connectServerTimer->isActive())
                     connectServerTimer->stop();
+                if (ui->doveCheck->isChecked())
+                    ui->doveCheck->setChecked(false);
             }
         }
 

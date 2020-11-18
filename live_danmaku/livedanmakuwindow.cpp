@@ -490,7 +490,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 : danmaku.getMedalColor();
         if (!danmaku.getAnchorRoomid().isEmpty())
         {
-            text = QString("<font color='%1'>%2%3</font> ")
+            text = QString("<font style=\"color:%1;\">%2%3</font> ")
                     .arg(medalColorStr)
                     .arg(danmaku.getMedalName())
                     .arg(danmaku.getMedalLevel());
