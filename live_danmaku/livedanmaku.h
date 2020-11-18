@@ -116,6 +116,7 @@ public:
         danmaku.anchor_roomid = object.value("anchor_roomid").toString();
         danmaku.medal_name = object.value("medal_name").toString();
         danmaku.medal_level = object.value("medal_level").toInt();
+        danmaku.medal_color = object.value("medal_color").toString();
         danmaku.medal_up = object.value("medal_up").toString();
         danmaku.no_reply = object.value("no_reply").toBool();
         return danmaku;
@@ -173,6 +174,7 @@ public:
             object.insert("anchor_roomid", anchor_roomid);
             object.insert("medal_name", medal_name);
             object.insert("medal_level", medal_level);
+            object.insert("medal_color", medal_color);
             object.insert("medal_up", medal_up);
         }
 
@@ -234,11 +236,12 @@ public:
         return "未知消息类型";
     }
 
-    void setMedal(QString roomId, QString name, int level, QString up = "")
+    void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
     {
         this->anchor_roomid = roomId;
         this->medal_name = name;
         this->medal_level = level;
+        this->medal_color = color;
         this->medal_up = up;
     }
 
@@ -384,6 +387,11 @@ public:
         return medal_up;
     }
 
+    QString getMedalColor() const
+    {
+        return medal_color;
+    }
+
     bool isNoReply() const
     {
         return no_reply;
@@ -407,6 +415,7 @@ private:
     int medal_level = 0;
     QString medal_name;
     QString medal_up;
+    QString medal_color;
 
     int level = 10000;
     qint64 teamid;

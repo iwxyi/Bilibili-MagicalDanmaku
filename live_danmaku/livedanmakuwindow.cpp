@@ -280,11 +280,13 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                 QRegExp riyu("[\u0800-\u4e00]+");
                 QRegExp hanyu("([\u1100-\u11ff\uac00-\ud7af\u3130–bai\u318F\u3200–\u32FF\uA960–\uA97F\uD7B0–\uD7FF\uFF00–\uFFEF\\s]+)");
                 QRegExp eeyu("[А-Яа-яЁё]+");
+                QRegExp fanti("[\u3400-\u4db5]+");
                 if (msg.indexOf(hei) == -1)
                 {
                     if (msg.indexOf(riyu) != -1
                             || msg.indexOf(hanyu) != -1
-                            || msg.indexOf(eeyu) != -1)
+                            || msg.indexOf(eeyu) != -1
+                            || msg.indexOf(fanti) != -1)
                     {
                         qDebug() << "检测到外语，自动翻译";
                         startTranslate(item);
@@ -482,12 +484,27 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_WELCOME)
     {
+        // 粉丝牌
+        QString medalColorStr = isBlankColor(danmaku.getMedalColor())
+                ? QVariant(this->msgColor).toString()
+                : danmaku.getMedalColor();
+        if (!danmaku.getAnchorRoomid().isEmpty())
+        {
+            text = QString("<font color='%1'>%2%3</font> ")
+                    .arg(medalColorStr)
+                    .arg(danmaku.getMedalName())
+                    .arg(danmaku.getMedalLevel());
+        }
+
+        // 人名
         if (danmaku.isAdmin())
-            text = QString("<font color='gray'>[光临]</font> 舰长 %1")
+            text += QString("舰长 %1")
                     .arg(nameText);
         else
-            text = QString("<font color='gray'>[欢迎]</font> %1 进入直播间")
+            text += QString("%1 进入直播间")
                     .arg(nameText);
+
+        // 推广
         if (!danmaku.getSpreadDesc().isEmpty())
         {
             text += " ";

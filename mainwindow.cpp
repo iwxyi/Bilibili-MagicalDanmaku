@@ -1883,7 +1883,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         SOCKET_INF << "解压后获取到CMD：" << cmd;
         if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                 && cmd != "ONLINERANK")
-            SOCKET_DEB << "单个JSON消息：" << offset << packSize << QString(jsonBa);
+            SOCKET_INF << "单个JSON消息：" << offset << packSize << QString(jsonBa);
         try {
             handleMessage(json);
         } catch (...) {
@@ -2211,7 +2211,9 @@ void MainWindow::handleMessage(QJsonObject json)
                             unameColor, spreadDesc, spreadInfo);
         danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
                          fansMedal.value("medal_name").toString(),
-                         fansMedal.value("medal_level").toInt(), "");
+                         fansMedal.value("medal_level").toInt(),
+                         QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
+                         "");
         appendNewLiveDanmaku(danmaku);
 
         int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
