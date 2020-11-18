@@ -150,6 +150,8 @@ private slots:
 
     void sendMsg(QString msg);
 
+    void sendAutoMsg(QString msgs);
+
     void sendWelcomeMsg(QString msg);
 
     void sendGiftMsg(QString msg);
@@ -228,6 +230,8 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_removeDanmakuTipIntervalSpin_valueChanged(int arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -256,7 +260,9 @@ private:
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
+    QString variantToString(QString msg) const;
     QString nicknameSimplify(QString nickname) const;
+    QString msgToShort(QString msg) const;
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
@@ -291,7 +297,7 @@ private:
     qint64 removeDanmakuInterval = 20000;
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
-    qint64 removeDanmakuTipInterval = 7000;
+    qint64 removeDanmakuTipInterval = 10000;
     QStringList noReplyMsgs;
 
     // 点歌

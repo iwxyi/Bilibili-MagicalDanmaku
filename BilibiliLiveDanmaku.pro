@@ -55,4 +55,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
         README.md \
-        appicon.ico
+        appicon.ico \
+        resource.rc \

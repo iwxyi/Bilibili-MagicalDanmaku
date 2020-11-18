@@ -7,6 +7,7 @@ QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（
 QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
 QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户的发言次数
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
+QList<qint64> CommonValues::careUsers;        // 特别关心
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -44,9 +45,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    int removeIv = settings.value("danmaku/removeInterval", 20).toLongLong();
+    int removeIv = settings.value("danmaku/removeInterval", 20).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
+
+    removeIv = settings.value("danmaku/removeTipInterval", 7).toInt();
+    ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
+    this->removeDanmakuTipInterval = removeIv * 1000;
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -54,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (!diangeAutoCopy || danmaku.getMsgType() != MSG_DANMAKU)
+       if (danmaku.getMsgType() != MSG_DANMAKU)
            return ;
        QRegularExpression re(diangeFormatString);
        QRegularExpressionMatch match;
@@ -65,18 +70,23 @@ MainWindow::MainWindow(QWidget *parent)
            statusLabel->setText("无法获取点歌内容，请检测点歌格式");
            return ;
        }
+
+       // 记录到历史（先不复制）
        QString text = match.capturedTexts().at(1);
        text = text.trimmed();
+       qDebug() << s8("【点歌自动复制】") << text;
+       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
+
+       if (!diangeAutoCopy) // 是否进行复制操作
+           return ;
        QClipboard* clip = QApplication::clipboard();
        clip->setText(text);
-       qDebug() << s8("【点歌自动复制】") << text;
        ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
 
-       addNoReplyDanmakuText(danmaku.getText());
+       addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
        QTimer::singleShot(100, [=]{
            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
        });
-       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
     });
 
     // 自动翻译
@@ -136,6 +146,13 @@ MainWindow::MainWindow(QWidget *parent)
             continue;
 
         localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+    }
+
+    // 特别关心
+    QStringList usersS = settings.value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersS)
+    {
+        careUsers.append(s.toLongLong());
     }
 
     // 弹幕次数
@@ -327,7 +344,7 @@ void MainWindow::removeTimeoutDanmaku()
                 roomDanmakus.removeAt(i--);
                 oldLiveDanmakuRemoved(danmaku);
             }
-            break;
+            // break; // 不break，就是一次性删除多个
         }
     }
 }
@@ -410,6 +427,9 @@ void MainWindow::addNoReplyDanmakuText(QString text)
     noReplyMsgs.append(text);
 }
 
+/**
+ * 发送单挑弹幕的原子操作
+ */
 void MainWindow::sendMsg(QString msg)
 {
     if (browserCookie.isEmpty() || browserData.isEmpty())
@@ -471,6 +491,30 @@ void MainWindow::sendMsg(QString msg)
     manager->post(*request, ba);
 }
 
+/**
+ * 发送多条消息
+ * 使用“\n”进行多行换行
+ */
+void MainWindow::sendAutoMsg(QString msgs)
+{
+    qDebug() << "->准备发送弹幕：" << msgs;
+    QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
+    const int cd = 1500;
+    int delay = 0;
+    if (sl.size())
+    {
+        for (int i = 0; i < sl.size(); i++)
+        {
+            QTimer::singleShot(delay, [=]{
+                QString msg = variantToString(sl.at(i));
+                addNoReplyDanmakuText(msg);
+                sendMsg(msg);
+            });
+            delay += cd;
+        }
+    }
+}
+
 void MainWindow::sendWelcomeMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
@@ -484,10 +528,8 @@ void MainWindow::sendWelcomeMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
-    addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendGiftMsg(QString msg)
@@ -503,10 +545,8 @@ void MainWindow::sendGiftMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
-    addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
@@ -522,10 +562,8 @@ void MainWindow::sendAttentionMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
-    addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
@@ -538,10 +576,8 @@ void MainWindow::sendNotifyMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    if (msg.length() > 20)
-        msg = msg.replace(" ", "");
-    addNoReplyDanmakuText(msg);
-    sendMsg(msg);
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
 }
 
 /**
@@ -672,15 +708,24 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
     steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
     steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
     steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
-    steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n\n";
+    steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n";
     steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
+
+    steps += "\n\n变量列表：\n";
+    steps += "\\n：分成多条弹幕发送，间隔1.5秒";
+    steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
+    steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
+    steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
+    steps += "\n%tone%：随机替换为“啊”、“呀”";
+    steps += "\n%punc%：随机替换为“~”、“！”";
+    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";
     QMessageBox::information(this, "定时弹幕", steps);
 }
 
 void MainWindow::on_SendMsgButton_clicked()
 {
     QString msg = ui->SendMsgEdit->text();
-    sendMsg(msg);
+    sendAutoMsg(msg);
 }
 
 void MainWindow::on_AIReplyCheck_stateChanged(int)
@@ -698,7 +743,7 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
-    sendMsg(ui->SendMsgEdit->text());
+    sendAutoMsg(ui->SendMsgEdit->text());
     ui->SendMsgEdit->clear();
 }
 
@@ -735,8 +780,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
         if (!liveStatus) // 没有开播，不进行定时任务
             return ;
-        addNoReplyDanmakuText(msg);
-        sendMsg(msg);
+        sendAutoMsg(msg);
     });
 
     connect(tw, &TaskWidget::signalResized, tw, [=]{
@@ -1051,6 +1095,8 @@ void MainWindow::getRoomInfo()
                     if (!connectServerTimer->isActive())
                         connectServerTimer->start();
                     ui->connectStateLabel->setText("等待连接");
+                    if (socket->state() != QAbstractSocket::UnconnectedState) // 如果正在连接或打算连接，则断开
+                        socket->close();
                     return ;
                 }
             }
@@ -1092,6 +1138,7 @@ void MainWindow::getRoomInfo()
         ui->roomCoverLabel->setMinimumSize(1, 1);
     });
     manager->get(*request);
+    ui->connectStateLabel->setText("获取房间信息...");
 }
 
 void MainWindow::getDanmuInfo()
@@ -1135,6 +1182,7 @@ void MainWindow::getDanmuInfo()
         startMsgLoop();
     });
     manager->get(*request);
+    ui->connectStateLabel->setText("获取弹幕信息...");
 }
 
 void MainWindow::getFansAndUpdate()
@@ -1364,18 +1412,140 @@ QString MainWindow::getLocalNickname(qint64 uid) const
 }
 
 /**
+ * 支持变量名
+ */
+QString MainWindow::variantToString(QString msg) const
+{
+    // 早上/下午/晚上 - 好呀
+    if (msg.contains("%hour%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QString rst;
+        if (hour <= 3)
+            rst = "晚上";
+        else if (hour <= 5)
+            rst = "凌晨";
+        else if (hour < 11)
+            rst = "早上";
+        else if (hour <= 13)
+            rst = "中午";
+        else if (hour <= 16)
+            rst = "下午";
+        else if (hour <= 24)
+            rst = "晚上";
+        else
+            rst = "今天";
+        msg = msg.replace("%hour%", rst);
+    }
+
+    // 早上好、早、晚上好-
+    if (msg.contains("%greet%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QStringList rsts;
+        rsts << "您好" << "你好";
+        if (hour <= 3)
+            rsts << "晚上好";
+        else if (hour <= 5)
+            rsts << "凌晨好";
+        else if (hour < 11)
+            rsts << "早上好" << "早" << "早安";
+        else if (hour <= 13)
+            rsts << "中午好";
+        else if (hour <= 16)
+            rsts << "下午好";
+        else if (hour <= 24)
+            rsts << "晚上好";
+        int r = qrand() % rsts.size();
+        msg = msg.replace("%greet%", rsts.at(r));
+    }
+
+    // 全部打招呼
+    if (msg.contains("%all_greet%"))
+    {
+        int hour = QTime::currentTime().hour();
+        QStringList sl{"啊", "呀"};
+        int r = qrand() % sl.size();
+        QString tone = sl.at(r);
+        QStringList rsts;
+        rsts << "您好"+tone << "你好"+tone;
+        if (hour <= 3)
+            rsts << "晚上好"+tone;
+        else if (hour <= 5)
+            rsts << "凌晨好"+tone;
+        else if (hour < 11)
+            rsts << "早上好"+tone << "早"+tone;
+        else if (hour <= 13)
+            rsts << "中午好"+tone;
+        else if (hour <= 16)
+            rsts << "下午好"+tone;
+        else if (hour <= 24)
+            rsts << "晚上好"+tone;
+
+        if (hour >= 6 && hour <= 8)
+            rsts << "早饭吃了吗";
+        else if (hour >= 11 && hour <= 12)
+            rsts << "午饭吃了吗";
+        else if (hour >= 17 && hour <= 18)
+            rsts << "晚饭吃了吗";
+
+        if ((hour >= 23 && hour <= 24)
+                || (hour >= 0 && hour <= 3))
+            rsts << "还没睡"+tone << "怎么还没睡~";
+        else if (hour >= 3 && hour <= 5)
+            rsts << "通宵了吗";
+
+        r = qrand() % rsts.size();
+        msg = msg.replace("%all_greet%", rsts.at(r));
+    }
+
+    // 语气词
+    if (msg.contains("%tone%"))
+    {
+        QStringList sl{"啊", "呀"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%tone%", sl.at(r));
+    }
+
+    // 标点
+    if (msg.contains("%punc%"))
+    {
+        QStringList sl{"~", "！"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%punc%", sl.at(r));
+    }
+
+    // 语气词或标点
+    if (msg.contains("%tone/punc%"))
+    {
+        QStringList sl{"啊", "呀", "~", "！"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%tone/punc%", sl.at(r));
+    }
+
+    return msg;
+}
+
+/**
  * 一个智能的用户昵称转简单称呼
  */
 QString MainWindow::nicknameSimplify(QString nickname) const
 {
     QString simp = nickname;
 
-    QStringList special{"~", "丶", "°", "゛", "-", "_"};
-    QStringList starts{"我叫", "叫我", "一只", "是个", "是", "原来是"};
-    QStringList ends{"er", "啊", "呢", "哦", "呐"};
+    // 没有取名字的，就不需要欢迎了
+    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
+    if (simp.indexOf(defaultRe) > -1)
+    {
+        return "";
+    }
+
+    // 去掉前缀后缀
+    QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
+    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶"};
     starts += special;
     ends += special;
-
     foreach (auto start, starts)
     {
         if (simp.startsWith(start))
@@ -1384,7 +1554,6 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             break;
         }
     }
-
     foreach (auto end, ends)
     {
         if (simp.endsWith(end))
@@ -1413,16 +1582,62 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    // 没有取名字的，就不需要欢迎了
-    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
-    if (simp.indexOf(defaultRe) > -1)
+    // 这个xx不太x
+    QRegularExpression zhegeRe("^这个(.+)不太.+$");
+    if (simp.indexOf(zhegeRe, 0, &match) > -1)
     {
-        return "";
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // xxx今天...
+    QRegularExpression jintianRe("^(.+)今天.+$");
+    if (simp.indexOf(jintianRe, 0, &match) > -1)
+    {
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // xxx哥哥
+    QRegularExpression gegeRe("^(.+)(哥哥|爸爸|爷爷|奶奶|妈妈)$");
+    if (simp.indexOf(jintianRe, 0, &match) > -1)
+    {
+        QString tmp = match.capturedTexts().at(1);
+        simp = tmp;
+    }
+
+    // AAAA
+    QRegularExpression dieRe("(.)\\1{1,}");
+    if (simp.indexOf(dieRe, 0, &match) > -1)
+    {
+        QString ch = match.capturedTexts().at(1);
+        QString all = match.capturedTexts().at(0);
+        simp = simp.replace(all, QString("%1%1").arg(ch));
     }
 
     if (simp.isEmpty())
         return nickname;
     return simp;
+}
+
+QString MainWindow::msgToShort(QString msg) const
+{
+    if (msg.length() <= 20)
+        return msg;
+    if (msg.contains(" "))
+    {
+        msg = msg.replace(" ", "");
+        if (msg.length() <= 20)
+            return msg;
+    }
+    if (msg.contains("“"))
+    {
+        msg = msg.replace("“", "");
+        msg = msg.replace("”", "");
+        if (msg.length() <= 20)
+            return msg;
+    }
+    return msg;
 }
 
 void MainWindow::startSaveDanmakuToFile()
@@ -1695,7 +1910,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
-                sendMsg(text);
+                sendAutoMsg(text);
             ui->popularityLabel->setText("已开播");
             liveStatus = true;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
@@ -1709,7 +1924,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
-                sendMsg(text);
+                sendAutoMsg(text);
             ui->popularityLabel->setText("已下播");
             liveStatus = false;
 
@@ -1796,7 +2011,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 QRegularExpression re(reStr);
                 if (msg.indexOf(re) > -1 // 自动拉黑
                         && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
-                        && !isInFans(uid)) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                        && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                        && medal_level <= 2 // 勋章不到3级
+                        )
                 {
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
                     // 拉黑
@@ -1963,13 +2180,14 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
-    else if (cmd == "WELCOME") // 进入（似乎已经废弃）
+    else if (cmd == "WELCOME") // 进入（偶尔能触发？）
     {
         QJsonObject data = json.value("data").toObject();
+        qDebug() << data;
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
-        qDebug() << s8("观众进入：") << username << isAdmin;
+        qDebug() << s8("欢迎观众：") << username << isAdmin;
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -2395,11 +2613,15 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/startLiveHour", ui->startLiveHourSpin->value());
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+        connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
     settings.setValue("live/endLiveHour", ui->endLiveHourSpin->value());
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
+        connectServerTimer->start();
 }
 
 void MainWindow::on_calculateDailyDataCheck_clicked()
@@ -2424,4 +2646,10 @@ void MainWindow::on_pushButton_clicked()
 
     text += "\n\n累计粉丝：" + snum(currentFans);
     QMessageBox::information(this, "今日数据", text);
+}
+
+void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
+{
+    this->removeDanmakuTipInterval = arg1 * 1000;
+    settings.setValue("danmaku/removeTipInterval", arg1);
 }

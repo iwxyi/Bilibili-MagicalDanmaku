@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>347</width>
-    <height>437</height>
+    <width>384</width>
+    <height>496</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -218,6 +218,49 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_25">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>提示超时间隔</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="removeDanmakuTipIntervalSpin">
+            <property name="suffix">
+             <string>秒</string>
+            </property>
+            <property name="maximum">
+             <number>3600</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
+            <property name="value">
+             <number>7</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_21">
           <property name="topMargin">
            <number>0</number>
@@ -413,7 +456,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>定时</string>
+        <string>发送</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -549,6 +592,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoWelcomeWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>欢迎 %1 ~~~</string>
           </property>
@@ -608,6 +654,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoThankWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;%2：礼物名称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>感谢 %1 赠送的 %2 ~~~</string>
           </property>
@@ -667,6 +716,9 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="plainText">
            <string>感谢 %1 的关注~</string>
           </property>
@@ -905,8 +957,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>347</width>
-     <height>23</height>
+     <width>384</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>

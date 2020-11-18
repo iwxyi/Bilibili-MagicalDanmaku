@@ -22,6 +22,7 @@ protected:
     static QHash<qint64, qint64> userBlockIds;    // 本次用户屏蔽的ID
     static QSettings* danmakuCounts; // 保存弹幕次数的settings
     static QList<LiveDanmaku> allDanmakus;
+    static QList<qint64> careUsers; // 特别关心
 };
 
 #endif // COMMANDVALUES_H

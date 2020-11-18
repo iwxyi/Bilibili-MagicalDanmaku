@@ -98,13 +98,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
     hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
-
-    // 特别关心
-    QStringList usersS = settings.value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
-    foreach (QString s, usersS)
-    {
-        careUsers.append(s.toLongLong());
-    }
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -355,6 +348,11 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
 
             if (DANMAKU_ANIMATION_ENABLED)
             {
+                if (!widget)
+                {
+                    listWidget->removeItemWidget(item);
+                    break;
+                }
                 QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
                 ani->setStartValue(widget->size());
                 ani->setEndValue(QSize(widget->width(), 0));

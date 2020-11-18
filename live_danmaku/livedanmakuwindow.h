@@ -120,7 +120,6 @@ private:
     bool aiReply = false;
     bool enableBlock = false;
     bool newbieTip = true;
-    QList<qint64> careUsers;
     QHash<qint64, QPixmap> headPortraits;
 
     int fontHeight;
