@@ -264,7 +264,10 @@ private:
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
-    QString variantToString(QString msg) const;
+    QString processTimeVariants(QString msg) const;
+    QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
+    QString processUserVariants(QString msg, LiveDanmaku user) const;
+    QString processVariantConditions(QString msg) const;
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
 

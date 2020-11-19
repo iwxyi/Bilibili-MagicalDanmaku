@@ -516,7 +516,7 @@ void MainWindow::sendAutoMsg(QString msgs)
         for (int i = 0; i < sl.size(); i++)
         {
             QTimer::singleShot(delay, [=]{
-                QString msg = variantToString(sl.at(i));
+                QString msg = processTimeVariants(sl.at(i));
                 addNoReplyDanmakuText(msg);
                 sendMsg(msg);
             });
@@ -1435,7 +1435,7 @@ QString MainWindow::getLocalNickname(qint64 uid) const
 /**
  * 支持变量名
  */
-QString MainWindow::variantToString(QString msg) const
+QString MainWindow::processTimeVariants(QString msg) const
 {
     // 早上/下午/晚上 - 好呀
     if (msg.contains("%hour%"))
@@ -1547,6 +1547,88 @@ QString MainWindow::variantToString(QString msg) const
     return msg;
 }
 
+QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
+{
+    QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
+    QStringList result;
+    for (int i = 0; i < lines.size(); i++)
+    {
+        QString line = lines.at(i);
+        line = processUserVariants(line, user);
+        line = processVariantConditions(line);
+        if (!line.isEmpty())
+            result.append(line);
+    }
+
+    return result;
+}
+
+/**
+ * 处理用户信息中蕴含的表达式
+ */
+QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
+{
+    // 用户昵称
+    if (msg.contains("%name%"))
+    {
+
+    }
+
+    // 用户等级
+
+
+    // 进来次数
+
+
+    // 上次进来
+
+
+    // 送礼总数
+
+
+    // 粉丝牌
+
+    return msg;
+}
+
+/**
+ * 处理条件变量
+ * if()...
+ * 要根据时间戳、字符串
+ */
+QString MainWindow::processVariantConditions(QString msg) const
+{
+    QRegularExpression re("if\\s*\\(\\s*(\\S{1,2}?)\\s*(\\S+?)\\s*(\\S+?)\\s*\\)\\s*");
+    QRegularExpression intRe("^-?\\d+$");
+    QRegularExpressionMatch match;
+    if (!msg.indexOf(re, 0, &match)) // 没有检测到表达式
+        return msg;
+
+    QStringList caps = match.capturedTexts();
+    QString s1 = caps.at(1);
+    QString op = caps.at(2);
+    QString s2 = caps.at(3);
+
+
+    if (s1.startsWith("\"") && s1.endsWith("\"")
+            && s2.startsWith("\"") && s2.startsWith("\"")) // 都是字符串
+    {
+
+    }
+    else if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+    {
+
+    }
+    else
+    {
+        qDebug() << "error:无法匹配的表达式";
+        qDebug() << msg;
+        qDebug() << match.capturedTexts().first();
+    }
+
+    return msg;
+}
+
 /**
  * 一个智能的用户昵称转简单称呼
  */
@@ -1614,7 +1696,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx今天...
-    QRegularExpression jintianRe("^(.+)今天.+$");
+    QRegularExpression jintianRe("^(.{2,})今天.+$");
     if (simp.indexOf(jintianRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
