@@ -1569,15 +1569,20 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
 {
     // 用户昵称
-    if (msg.contains("%name%"))
+    if (msg.contains("%uname%"))
     {
 
     }
 
     // 用户等级
+    if (msg.contains("level"))
+    {
+
+    }
 
 
     // 进来次数
+
 
 
     // 上次进来
@@ -1587,6 +1592,9 @@ QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
 
 
     // 粉丝牌
+
+
+    // 送礼价值
 
     return msg;
 }
@@ -1598,7 +1606,7 @@ QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
  */
 QString MainWindow::processVariantConditions(QString msg) const
 {
-    QRegularExpression re("if\\s*\\(\\s*(\\S{1,2}?)\\s*(\\S+?)\\s*(\\S+?)\\s*\\)\\s*");
+    QRegularExpression re("^\\s*\\[(.+?)(?:,\\s*)?\\]\\s*");
     QRegularExpression intRe("^-?\\d+$");
     QRegularExpressionMatch match;
     if (!msg.indexOf(re, 0, &match)) // 没有检测到表达式
@@ -1608,7 +1616,6 @@ QString MainWindow::processVariantConditions(QString msg) const
     QString s1 = caps.at(1);
     QString op = caps.at(2);
     QString s2 = caps.at(3);
-
 
     if (s1.startsWith("\"") && s1.endsWith("\"")
             && s2.startsWith("\"") && s2.startsWith("\"")) // 都是字符串
@@ -1851,12 +1858,32 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         {
             cmd = json.value("cmd").toString();
             SOCKET_INF << "普通CMD：" << cmd;
+            SOCKET_INF << json;
         }
+
         if (cmd == "NOTICE_MSG") // 全站广播（不用管）
         {
 
         }
-        else
+        else if (cmd == "ROOM_RANK")
+        {
+            /*{
+                "cmd": "ROOM_RANK",
+                "data": {
+                    "color": "#FB7299",
+                    "h5_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=688893202&rank_type=master_realtime_area_hour&area_hour=1&area_v2_id=145&area_v2_parent_id=1",
+                    "rank_desc": "娱乐小时榜 7",
+                    "roomid": 22532956,
+                    "timestamp": 1605749940,
+                    "web_url": "https://live.bilibili.com/blackboard/room-current-rank.html?rank_type=master_realtime_area_hour&area_hour=1&area_v2_id=145&area_v2_parent_id=1"
+                }
+            }*/
+        }
+        else if (handlePK(json))
+        {
+
+        }
+        else // 压缩弹幕消息
         {
             short protover = (message[6]<<8) + message[7];
             SOCKET_INF << "协议版本：" << protover;
@@ -2377,10 +2404,332 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         appendNewLiveDanmaku(LiveDanmaku(nickname, uid));
     }
-    else if (cmd == "PK_BATTLE_SETTLE")
+    else if (handlePK2(json)) // 太多了，换到单独一个方法里面
     {
 
     }
+}
+
+bool MainWindow::handlePK(QJsonObject json)
+{
+    QString cmd = json.value("cmd").toString();
+    if (cmd == "PK_BATTLE_START") // 开始大乱斗
+    {
+        /*{
+            "cmd": "PK_BATTLE_START",
+            "data": {
+                "battle_type": 1,
+                "final_hit_votes": 0,
+                "pk_end_time": 1605748342,
+                "pk_frozen_time": 1605748332,
+                "pk_start_time": 1605748032,
+                "pk_votes_add": 0,
+                "pk_votes_name": "乱斗值",
+                "pk_votes_type": 0
+            },
+            "pk_id": 100729281,
+            "pk_status": 201,
+            "timestamp": 1605748032
+        }*/
+        // 结束前5秒
+        QTimer::singleShot((3*60-5)*1000, [=]{
+
+        });
+    }
+    else if (cmd == "PK_BATTLE_END") // 结束信息
+    {
+        /*{
+            "cmd": "PK_BATTLE_END",
+            "data": {
+                "battle_type": 1,
+                "init_info": {
+                    "best_uname": "我今天超可爱0",
+                    "room_id": 22532956,
+                    "votes": 10,
+                    "winner_type": 2
+                },
+                "match_info": {
+                    "best_uname": "",
+                    "room_id": 22195813,
+                    "votes": 0,
+                    "winner_type": -1
+                },
+                "timer": 10
+            },
+            "pk_id": "100729259",
+            "pk_status": 401,
+            "timestamp": 1605748006
+        }*/
+    }
+    else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
+    {
+        /*{
+            "cmd": "PK_BATTLE_PROCESS",
+            "data": {
+                "battle_type": 1,
+                "init_info": {
+                    "best_uname": "我今天超可爱0",
+                    "room_id": 22532956,
+                    "votes": 132
+                },
+                "match_info": {
+                    "best_uname": "银河的偶尔限定女友粉",
+                    "room_id": 21398069,
+                    "votes": 156
+                }
+            },
+            "pk_id": 100729411,
+            "pk_status": 201,
+            "timestamp": 1605749908
+        }*/
+    }
+    else if (cmd == "PK_BATTLE_SETTLE_USER")
+    {
+        /*{
+            "cmd": "PK_BATTLE_SETTLE_USER",
+            "data": {
+                "battle_type": 0,
+                "level_info": {
+                    "first_rank_img": "https://i0.hdslb.com/bfs/live/078e242c4e2bb380554d55d0ac479410d75a0efc.png",
+                    "first_rank_name": "白银斗士",
+                    "second_rank_icon": "https://i0.hdslb.com/bfs/live/1f8c2a959f92592407514a1afeb705ddc55429cd.png",
+                    "second_rank_num": 1
+                },
+                "my_info": {
+                    "best_user": {
+                        "award_info": null,
+                        "award_info_list": [],
+                        "badge": {
+                            "desc": "",
+                            "position": 0,
+                            "url": ""
+                        },
+                        "end_win_award_info_list": {
+                            "list": []
+                        },
+                        "exp": {
+                            "color": 6406234,
+                            "level": 1
+                        },
+                        "face": "http://i2.hdslb.com/bfs/face/d3d6f8659be3e309d6e58dd77accb3bb300215d5.jpg",
+                        "face_frame": "http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png",
+                        "pk_votes": 10,
+                        "pk_votes_name": "乱斗值",
+                        "uid": 64494330,
+                        "uname": "我今天超可爱0"
+                    },
+                    "exp": {
+                        "color": 9868950,
+                        "master_level": {
+                            "color": 5805790,
+                            "level": 17
+                        },
+                        "user_level": 2
+                    },
+                    "face": "http://i2.hdslb.com/bfs/face/5b96b6ba5b078001e8159406710a8326d67cee5c.jpg",
+                    "face_frame": "https://i0.hdslb.com/bfs/vc/d186b7d67d39e0894ebcc7f3ca5b35b3b56d5192.png",
+                    "room_id": 22532956,
+                    "uid": 688893202,
+                    "uname": "娇娇子er"
+                },
+                "pk_id": "100729259",
+                "result_info": {
+                    "pk_crit_score": -1,
+                    "pk_done_times": 17,
+                    "pk_extra_score": 0,
+                    "pk_extra_score_slot": "",
+                    "pk_extra_value": 0,
+                    "pk_resist_crit_score": -1,
+                    "pk_task_score": 0,
+                    "pk_times_score": 0,
+                    "pk_total_times": -1,
+                    "pk_votes": 10,
+                    "pk_votes_name": "乱斗值",
+                    "result_type_score": 12,
+                    "task_score_list": [],
+                    "total_score": 12,
+                    "win_count": 2,
+                    "win_final_hit": -1,
+                    "winner_count_score": 0
+                },
+                "result_type": "2",
+                "season_id": 29,
+                "settle_status": 1,
+                "winner": {
+                    "best_user": {
+                        "award_info": null,
+                        "award_info_list": [],
+                        "badge": {
+                            "desc": "",
+                            "position": 0,
+                            "url": ""
+                        },
+                        "end_win_award_info_list": {
+                            "list": []
+                        },
+                        "exp": {
+                            "color": 6406234,
+                            "level": 1
+                        },
+                        "face": "http://i2.hdslb.com/bfs/face/d3d6f8659be3e309d6e58dd77accb3bb300215d5.jpg",
+                        "face_frame": "http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png",
+                        "pk_votes": 10,
+                        "pk_votes_name": "乱斗值",
+                        "uid": 64494330,
+                        "uname": "我今天超可爱0"
+                    },
+                    "exp": {
+                        "color": 9868950,
+                        "master_level": {
+                            "color": 5805790,
+                            "level": 17
+                        },
+                        "user_level": 2
+                    },
+                    "face": "http://i2.hdslb.com/bfs/face/5b96b6ba5b078001e8159406710a8326d67cee5c.jpg",
+                    "face_frame": "https://i0.hdslb.com/bfs/vc/d186b7d67d39e0894ebcc7f3ca5b35b3b56d5192.png",
+                    "room_id": 22532956,
+                    "uid": 688893202,
+                    "uname": "娇娇子er"
+                }
+            },
+            "pk_id": 100729259,
+            "pk_status": 401,
+            "settle_status": 1,
+            "timestamp": 1605748006
+        }*/
+    }
+    else if (cmd == "PK_BATTLE_SETTLE_V2")
+    {
+        /*{
+            "cmd": "PK_BATTLE_SETTLE_V2",
+            "data": {
+                "assist_list": [
+                    {
+                        "face": "http://i2.hdslb.com/bfs/face/d3d6f8659be3e309d6e58dd77accb3bb300215d5.jpg",
+                        "id": 64494330,
+                        "score": 10,
+                        "uname": "我今天超可爱0"
+                    }
+                ],
+                "level_info": {
+                    "first_rank_img": "https://i0.hdslb.com/bfs/live/078e242c4e2bb380554d55d0ac479410d75a0efc.png",
+                    "first_rank_name": "白银斗士",
+                    "second_rank_icon": "https://i0.hdslb.com/bfs/live/1f8c2a959f92592407514a1afeb705ddc55429cd.png",
+                    "second_rank_num": 1,
+                    "uid": "688893202"
+                },
+                "pk_id": "100729259",
+                "pk_type": "1",
+                "result_info": {
+                    "pk_extra_value": 0,
+                    "pk_votes": 10,
+                    "pk_votes_name": "乱斗值",
+                    "total_score": 12
+                },
+                "result_type": 2,
+                "season_id": 29
+            },
+            "pk_id": 100729259,
+            "pk_status": 401,
+            "settle_status": 1,
+            "timestamp": 1605748006
+        }*/
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool MainWindow::handlePK2(QJsonObject json)
+{
+    QString cmd = json.value("cmd").toString();
+    if (cmd == "PK_BATTLE_PRE") // 开始前的等待状态
+    {
+        /*{
+            "cmd": "PK_BATTLE_PRE",
+            "pk_status": 101,
+            "pk_id": 100729281,
+            "timestamp": 1605748022,
+            "data": {
+                "battle_type": 1,
+                "uname": "\\u6b27\\u6c14\\u6ee1\\u6ee1\\u7684\\u9e92\\u9e9f",
+                "face": "http:\\/\\/i1.hdslb.com\\/bfs\\/face\\/1ffaf0ab3f510a31fdf7d40a3a4bda94c3b94ea2.jpg",
+                "uid": 699980313,
+                "room_id": 22580754,
+                "season_id": 29,
+                "pre_timer": 10,
+                "pk_votes_name": "\\u4e71\\u6597\\u503c",
+                "end_win_task": null
+            },
+            "roomid": 22532956
+        }*/
+
+    }
+    else if (cmd == "PK_BATTLE_SETTLE")
+    {
+        /*{
+            "cmd": "PK_BATTLE_SETTLE",
+            "pk_id": 100729259,
+            "pk_status": 401,
+            "settle_status": 1,
+            "timestamp": 1605748006,
+            "data": {
+                "battle_type": 1,
+                "result_type": 2
+            },
+            "roomid": "22532956"
+        }*/
+    }
+    else if (cmd == "PK_BATTLE_PRE")
+    {
+        /*{
+            "cmd": "PK_BATTLE_PRE",
+            "pk_status": 101,
+            "pk_id": 100729281,
+            "timestamp": 1605748022,
+            "data": {
+                "battle_type": 1,
+                "uname": "\\u6b27\\u6c14\\u6ee1\\u6ee1\\u7684\\u9e92\\u9e9f",
+                "face": "http:\\/\\/i1.hdslb.com\\/bfs\\/face\\/1ffaf0ab3f510a31fdf7d40a3a4bda94c3b94ea2.jpg",
+                "uid": 699980313,
+                "room_id": 22580754,
+                "season_id": 29,
+                "pre_timer": 10,
+                "pk_votes_name": "\\u4e71\\u6597\\u503c",
+                "end_win_task": null
+            },
+            "roomid": 22532956
+        }*/
+    }
+    else if (cmd == "PK_BATTLE_START")
+    {
+        /*{
+            "cmd": "PK_BATTLE_START",
+            "data": {
+                "battle_type": 1,
+                "final_hit_votes": 0,
+                "pk_end_time": 1605748342,
+                "pk_frozen_time": 1605748332,
+                "pk_start_time": 1605748032,
+                "pk_votes_add": 0,
+                "pk_votes_name": "乱斗值",
+                "pk_votes_type": 0
+            },
+            "pk_id": 100729281,
+            "pk_status": 201,
+            "timestamp": 1605748032
+        }*/
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void MainWindow::refreshBlockList()

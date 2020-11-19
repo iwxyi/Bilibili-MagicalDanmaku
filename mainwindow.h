@@ -28,7 +28,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug()
-#define SOCKET_INF if (0) qDebug()
+#define SOCKET_INF if (1) qDebug()
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -259,6 +259,8 @@ private:
     void sendVeriPacket();
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
+    bool handlePK(QJsonObject json);
+    bool handlePK2(QJsonObject json);
     void refreshBlockList();
     bool isInFans(qint64 uid);
 
