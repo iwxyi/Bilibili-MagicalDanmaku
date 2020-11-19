@@ -57,3 +57,6 @@ DISTFILES += \
         README.md \
         appicon.ico \
         resource.rc \
+
+RESOURCES += \
+    resource.qrc

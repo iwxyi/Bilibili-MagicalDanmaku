@@ -9,6 +9,7 @@ QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
 QList<qint64> CommonValues::careUsers;        // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;        // 特别关心
+QHash<QString, QString> CommonValues::pinyinMap; // 拼音
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -271,7 +272,24 @@ MainWindow::MainWindow(QWidget *parent)
         justStart = false;
     });
 
-
+    // 读取拼音
+    QtConcurrent::run([=]{
+        QFile pinyinFile(":/document/pinyin");
+        pinyinFile.open(QIODevice::ReadOnly);
+        QTextStream pinyinIn(&pinyinFile);
+        pinyinIn.setCodec("UTF-8");
+        QString line = pinyinIn.readLine();
+        while (!line.isNull())
+        {
+            if (!line.isEmpty())
+            {
+                QString han = line.at(0);
+                QString pinyin = line.right(line.length()-1);
+                pinyinMap.insert(han, pinyin);
+            }
+            line = pinyinIn.readLine();
+        }
+    });
 }
 
 MainWindow::~MainWindow()

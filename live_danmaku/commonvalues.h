@@ -24,6 +24,7 @@ protected:
     static QList<LiveDanmaku> allDanmakus;
     static QList<qint64> careUsers; // 特别关心
     static QList<qint64> strongNotifyUsers; // 强提醒
+    static QHash<QString, QString> pinyinMap; // 拼音
 };
 
 #endif // COMMANDVALUES_H
