@@ -194,9 +194,9 @@ private slots:
 
     void on_diangeHistoryButton_clicked();
 
-    void addBlockUser(qint64 uid, int hour);
+    void addBlockUser(qint64 upUid, int hour);
 
-    void delBlockUser(qint64 uid);
+    void delBlockUser(qint64 upUid);
 
     void delRoomBlockUser(qint64 id);
 
@@ -250,6 +250,8 @@ private:
     void restoreTaskList();
 
     QVariant getCookies();
+    void getUserInfo();
+    void getRoomUserInfo();
     void initWS();
     void startConnectRoom();
     void getRoomInit();
@@ -264,7 +266,8 @@ private:
     bool handlePK(QJsonObject json);
     bool handlePK2(QJsonObject json);
     void refreshBlockList();
-    bool isInFans(qint64 uid);
+    bool isInFans(qint64 upUid);
+    void sendGify(int giftId, int giftNum);
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
@@ -319,12 +322,16 @@ private:
     // 登陆信息
     QString browserCookie;
     QString browserData;
+    QString csrf_token;
     QTimer* sendMsgTimer;
     QLabel* statusLabel;
 
     // 连接信息
-    QString shortId;
-    QString uid;
+    QString cookieUid; // 自己的UID
+    QString cookieUname; // 自己的昵称
+
+    QString shortId; // 房间短号（有些没有，也没什么用）
+    QString upUid; // 主播的UID
     QList<HostInfo> hostList;
     QString token;
     QWebSocket* socket;

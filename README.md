@@ -39,6 +39,7 @@
 - 查看粉丝牌子
 - 查看礼物价值
 - 用户累计数据
+- 一个吃瓜偷塔
 
 
 
@@ -63,3 +64,66 @@
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
 >
 
+
+
+## 弹幕CMD列表
+
+根据字节流中的`protocol`，等于 `2` 时body部分需要用`zlib.uncompress`解压
+
+```
+"ROOM_ADMINS" //房管列表
+"room_admin_entrance"
+"ONLINE_RANK_TOP3"
+"ONLINE_RANK_COUNT"
+"ONLINE_RANK_V2"
+"TRADING_SCORE" //每日任务
+"MATCH_ROOM_CONF" //赛事房间配置
+"HOT_ROOM_NOTIFY" //热点房间
+"MATCH_TEAM_GIFT_RANK" //赛事人气比拼
+"ACTIVITY_MATCH_GIFT" //赛事礼物
+"PK_BATTLE_PRE" //人气pk
+"PK_BATTLE_START" //人气pk
+"PK_BATTLE_PROCESS" //人气pk
+"PK_BATTLE_END" //人气pk
+"PK_BATTLE_RANK_CHANGE" //人气pk
+"PK_BATTLE_SETTLE_USER" //人气pk
+"PK_BATTLE_SETTLE_V2" //人气pk
+"PK_BATTLE_SETTLE" //人气pk
+"SYS_MSG" //系统消息
+"ROOM_SKIN_MSG"
+"GUARD_ACHIEVEMENT_ROOM"
+"ANCHOR_LOT_START" //天选之人开始
+"ANCHOR_LOT_CHECKSTATUS"
+"ANCHOR_LOT_END" //天选之人结束
+"ANCHOR_LOT_AWARD" //天选之人获奖
+"COMBO_SEND"
+"INTERACT_WORD"
+"ACTIVITY_BANNER_UPDATE_V2"
+"NOTICE_MSG"
+"ROOM_BANNER"
+"ONLINERANK"
+"WELCOME"
+"HOUR_RANK_AWARDS"
+"ROOM_RANK"
+"ROOM_SHIELD"
+"USER_TOAST_MSG" //大航海购买信息
+"WIN_ACTIVITY" //活动
+"SPECIAL_GIFT" //节奏风暴
+"GUARD_BUY" / //大航海购买
+"WELCOME_GUARD" //大航海进入
+"DANMU_MSG" //弹幕
+"ROOM_CHANGE" //房间信息分区改变
+"ROOM_SILENT_OFF" //禁言结束
+"ROOM_SILENT_ON" //禁言开始
+"SEND_GIFT" //礼物
+"ROOM_BLOCK_MSG" //封禁
+"PREPARING" //下播
+"LIVE" //开播
+"SUPER_CHAT_ENTRANCE" //SC入口
+"SUPER_CHAT_MESSAGE_DELETE" //SC删除
+"SUPER_CHAT_MESSAGE" //SC
+"SUPER_CHAT_MESSAGE_JPN" //SC
+"PANEL" //排行榜
+"ENTRY_EFFECT" / //进入特效
+"ROOM_REAL_TIME_MESSAGE_UPDATE" / //粉丝数
+```

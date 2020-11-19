@@ -125,6 +125,11 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    csrf_token = browserData.mid(posl, posr - posl);
+    getUserInfo();
 
     // 保存弹幕
     bool saveDanmuToFile = settings.value("danmaku/saveDanmakuToFile", false).toBool();
@@ -186,7 +191,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
         QString text = QString("%1:%2 %3/%4")
                 .arg(minute)
-                .arg((second < 10 ? "0" : "") + QString::number(second))
+                .arg((second > 0 && second < 10 ? "0" : "") + QString::number(second))
                 .arg(myVotes)
                 .arg(matchVotes);
         if (danmakuWindow)
@@ -733,6 +738,11 @@ void MainWindow::on_SetBrowserCookieButton_clicked()
         return ;
 
     settings.setValue("danmaku/browserCookie", browserCookie = s);
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    csrf_token = browserData.mid(posl, posr - posl);
+    getUserInfo();
 }
 
 void MainWindow::on_SetBrowserDataButton_clicked()
@@ -885,6 +895,86 @@ QVariant MainWindow::getCookies()
     QVariant var;
     var.setValue(cookies);
     return var;
+}
+
+/**
+ * 获取用户信息
+ */
+void MainWindow::getUserInfo()
+{
+    if (browserCookie.isEmpty())
+        return ;
+    QString url = "http://api.bilibili.com/x/member/web/account";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonObject dataObj = json.value("data").toObject();
+        cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        cookieUname = dataObj.value("uname").toString();
+        qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
+    });
+    manager->get(*request);
+}
+
+/**
+ * 获取用户在当前直播间的信息
+ * 会触发进入直播间，就不能偷看了……
+ */
+void MainWindow::getRoomUserInfo()
+{
+    if (browserCookie.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + roomId;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户在这个房间信息
+        QJsonObject info = json.value("data").toObject().value("info").toObject();
+        cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
+        cookieUname = info.value("uname").toString();
+        QString uface = info.value("uface").toString(); // 头像地址
+        qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
+    });
+    manager->get(*request);
 }
 
 void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
@@ -1084,11 +1174,11 @@ void MainWindow::getRoomInfo()
         roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
-        uid = QString::number(roomInfo.value("uid").toInt());
+        upUid = QString::number(roomInfo.value("uid").toInt());
         liveStatus = roomInfo.value("live_status").toInt();
         qDebug() << "getRoomInfo: roomid=" << roomId
                  << "  shortid=" << shortId
-                 << "  uid=" << uid;
+                 << "  uid=" << upUid;
 
         roomName = roomInfo.value("title").toString();
         setWindowTitle(QApplication::applicationName() + " - " + roomName);
@@ -1243,7 +1333,7 @@ void MainWindow::getDanmuInfo()
 
 void MainWindow::getFansAndUpdate()
 {
-    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + uid;
+    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + upUid;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
@@ -2475,17 +2565,20 @@ bool MainWindow::handlePK(QJsonObject json)
         }*/
 
         pking = true;
+        qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
         qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-        qint64 deltaEnd = endTime - currentTime;
+        qint64 deltaEnd = startTime + 300 - currentTime; // 因为endTime要延迟10秒，还是用startTime来判断吧
         QString roomId = this->roomId;
         pkEndTime = endTime;
 
         // 结束前3秒
         QTimer::singleShot((deltaEnd-3)*1000, [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
+            {
+                qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId << endTime << QDateTime::currentSecsSinceEpoch();
                 return ;
-
+            }
             qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes;
 
             // 一个吃瓜就能解决的……
@@ -2502,6 +2595,8 @@ bool MainWindow::handlePK(QJsonObject json)
         if (danmakuWindow)
             danmakuWindow->showStatusText();
         qDebug() << "开启大乱斗, id =" << static_cast<qint64>(json.value("pk_id").toDouble());
+        // 1605757123 1605757123 1605757433
+        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -2841,6 +2936,69 @@ bool MainWindow::isInFans(qint64 uid)
     return false;
 }
 
+void MainWindow::sendGify(int giftId, int giftNum)
+{
+    if (roomId.isEmpty() || browserCookie.isEmpty())
+    {
+        qDebug() << "房间为空，或未登录";
+        return ;
+    }
+
+    QUrl url("https://api.live.bilibili.com/gift/v2/Live/send");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "coin_type=gold";
+    datas << "bag_id=0";
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+//        qDebug() << data;
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QString errorMsg = object.value("message").toString();
+        statusLabel->setText("");
+        if (!errorMsg.isEmpty())
+        {
+            statusLabel->setText(errorMsg);
+            qDebug() << s8("warning: 发送失败：") << errorMsg << datas.join("&");
+        }
+    });
+
+    manager->post(*request, ba);
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -2928,12 +3086,9 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    int posl = browserData.indexOf("csrf_token=") + 11;
-    int posr = browserData.indexOf("&", posl);
-    if (posr == -1) posr = browserData.length();
-    QString csrf = browserData.mid(posl, posr - posl);
+
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(csrf).arg(csrf);
+                    .arg(roomId).arg(uid).arg(hour).arg(csrf_token).arg(csrf_token);
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();

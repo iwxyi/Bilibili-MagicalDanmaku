@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -920,6 +920,9 @@
              <string>下播</string>
             </property>
             <property name="maximum">
+             <number>23</number>
+            </property>
+            <property name="value">
              <number>13</number>
             </property>
            </widget>
