@@ -83,7 +83,9 @@ public slots:
     void highlightItemText(QListWidgetItem* item, bool recover = false);
     void resetItemsTextColor();
     void resetItemsText();
+
     void showMenu();
+
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
     void setAIReply(bool reply);
@@ -91,7 +93,12 @@ public slots:
     void setEnableBlock(bool enable);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
+
     void showFastBlock(qint64 uid, QString msg);
+
+    void showStatusText();
+    void setStatusText(QString text);
+    void hideStatusText();
 
 private:
     bool isItemExist(QListWidgetItem *item);
@@ -128,6 +135,8 @@ private:
     int boundaryShowed = 2;
     QPoint pressPos;
     int listItemSpacing = 6;
+
+    QLabel* statusLabel = nullptr;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

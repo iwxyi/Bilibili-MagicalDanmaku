@@ -98,6 +98,12 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
     hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
+
+    statusLabel = new QLabel(this);
+    statusLabel->hide();
+    QPalette pa;
+    pa.setColor(QPalette::Text, msgColor);
+    statusLabel->setPalette(pa);
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
@@ -185,6 +191,9 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
             qDebug() << "resizeEvent错误";
         }
     }
+
+    if (statusLabel && !statusLabel->isHidden())
+        statusLabel->move(0, width() - statusLabel->width());
 }
 
 void LiveDanmakuWindow::paintEvent(QPaintEvent *)
@@ -806,6 +815,12 @@ void LiveDanmakuWindow::showMenu()
             settings.setValue("livedanmakuwindow/msgColor", msgColor = c);
             resetItemsTextColor();
         }
+        if (statusLabel)
+        {
+            QPalette pa;
+            pa.setColor(QPalette::Text, c);
+            statusLabel->setPalette(pa);
+        }
     });
     connect(actionBgColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(bgColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
@@ -1180,6 +1195,24 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     moveAni(label, label->pos(), QPoint(label->x(), labelTop), 300, QEasingCurve::OutBack);
     moveAni(btn, btn->pos(), QPoint(btn->x(), labelTop + (label->height()-btn->height())/2), 600, QEasingCurve::OutBounce);
     timer->start();
+}
+
+void LiveDanmakuWindow::showStatusText()
+{
+    statusLabel->show();
+}
+
+void LiveDanmakuWindow::setStatusText(QString text)
+{
+    show();
+    statusLabel->setText(text);
+    statusLabel->adjustSize();
+    statusLabel->move(0, width() - statusLabel->width());
+}
+
+void LiveDanmakuWindow::hideStatusText()
+{
+    statusLabel->hide();
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

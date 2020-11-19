@@ -28,7 +28,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug()
-#define SOCKET_INF if (1) qDebug()
+#define SOCKET_INF if (0) qDebug()
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -342,8 +342,11 @@ private:
     int dailyGuard = 0; // 上船/续船人次
 
     // 大乱斗
-    int myVote = 0;
-    int matchVote = 0;
+    bool pking = false;
+    int myVotes = 0;
+    int matchVotes = 0;
+    qint64 pkEndTime = 0;
+    QTimer* pkTimer = nullptr;
 
 };
 #endif // MAINWINDOW_H

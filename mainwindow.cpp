@@ -663,6 +663,11 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
+    ui->roomRankLabel->setText("");
+    ui->roomRankLabel->setToolTip("");
+    pking = false;
+    if (danmakuWindow)
+        danmakuWindow->hideStatusText();
 
     // 开启新的
 #ifndef SOCKET_MODE
@@ -2423,6 +2428,7 @@ void MainWindow::handleMessage(QJsonObject json)
 bool MainWindow::handlePK(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
+    QJsonObject data = json.value("data").toObject();
     if (cmd == "PK_BATTLE_START") // 开始大乱斗
     {
         /*{
@@ -2441,10 +2447,46 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 201,
             "timestamp": 1605748032
         }*/
-        // 结束前5秒
-        QTimer::singleShot((3*60-5)*1000, [=]{
 
+        pking = true;
+        qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
+        qint64 finishTime = startTime + 5*60;
+        qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+        qint64 deltaEnd = finishTime - currentTime;
+        QString roomId = this->roomId;
+        pkEndTime = finishTime;
+
+        // 结束前3秒
+        QTimer::singleShot((deltaEnd-3)*1000, [=]{
+            if (!pking || roomId != this->roomId) // 比如换房间了
+                return ;
+
+            // 一个吃瓜就能解决的……
+            if (myVotes <= matchVotes && myVotes + 12 > matchVotes)
+            {
+                // 调用送礼
+                qDebug() << "大乱斗赠送吃瓜：" << myVotes << "vs" << matchVotes;
+            }
         });
+
+        if (!pkTimer)
+        {
+            pkTimer = new QTimer(this);
+            connect(pkTimer, &QTimer::timeout, this, [=]{
+                // 更新PK信息
+                QString text = QString("%1秒 %2/%3")
+                        .arg(pkEndTime - QDateTime::currentSecsSinceEpoch())
+                        .arg(myVotes)
+                        .arg(matchVotes);
+                if (danmakuWindow)
+                    danmakuWindow->setStatusText(text);
+            });
+            pkTimer->setInterval(300);
+        }
+        pkTimer->start();
+        if (danmakuWindow)
+            danmakuWindow->showStatusText();
+        qDebug() << "开启大乱斗, id =" << static_cast<qint64>(json.value("pk_id").toDouble());
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
@@ -2470,6 +2512,16 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 401,
             "timestamp": 1605748006
         }*/
+
+        pking = false;
+        pkEndTime = 0;
+        myVotes = 0;
+        matchVotes = 0;
+        if (pkTimer)
+            pkTimer->stop();
+        if (danmakuWindow)
+            danmakuWindow->hideStatusText();
+        qDebug() << "结束大乱斗" << data;
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -2492,6 +2544,9 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 201,
             "timestamp": 1605749908
         }*/
+
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
