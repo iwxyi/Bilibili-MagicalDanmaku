@@ -1598,7 +1598,33 @@ QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
  */
 QString MainWindow::processVariantConditions(QString msg) const
 {
+    QRegularExpression re("if\\s*\\(\\s*(\\S{1,2}?)\\s*(\\S+?)\\s*(\\S+?)\\s*\\)\\s*");
+    QRegularExpression intRe("^-?\\d+$");
+    QRegularExpressionMatch match;
+    if (!msg.indexOf(re, 0, &match)) // 没有检测到表达式
+        return msg;
 
+    QStringList caps = match.capturedTexts();
+    QString s1 = caps.at(1);
+    QString op = caps.at(2);
+    QString s2 = caps.at(3);
+
+
+    if (s1.startsWith("\"") && s1.endsWith("\"")
+            && s2.startsWith("\"") && s2.startsWith("\"")) // 都是字符串
+    {
+
+    }
+    else if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+    {
+
+    }
+    else
+    {
+        qDebug() << "error:无法匹配的表达式";
+        qDebug() << msg;
+        qDebug() << match.capturedTexts().first();
+    }
 
     return msg;
 }
