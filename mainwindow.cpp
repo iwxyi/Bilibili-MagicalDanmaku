@@ -2608,12 +2608,12 @@ bool MainWindow::handlePK(QJsonObject json)
             qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes
                      << QDateTime::currentSecsSinceEpoch() << pkEndTime;
 
-            // 一个吃瓜就能解决的……
+            // 几个吃瓜就能解决的……
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes <= matchVotes && myVotes + pkMaxGold*12/100 > matchVotes)
             {
                 // 调用送礼
-                int num = static_cast<int>((matchVotes-myVotes)/1.2/10+0.9);
+                int num = static_cast<int>((matchVotes-myVotes)/1.2/10 + 1);
                 sendGify(20004, num);
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
