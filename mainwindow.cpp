@@ -203,6 +203,7 @@ MainWindow::MainWindow(QWidget *parent)
     bool melon = settings.value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
     pkMaxGold = settings.value("pk/maxGold", 300).toInt();
+    pkJudgeEarly = settings.value("pk/judgeEarly", 2000).toInt();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -1263,7 +1264,7 @@ void MainWindow::getRoomInfo()
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-        qDebug() << s8("被关注：") << currentFans << s8("    粉丝团：") << currentFansClub;
+        qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
         getFansAndUpdate();
 
         // 获取弹幕信息
@@ -2578,21 +2579,22 @@ bool MainWindow::handlePK(QJsonObject json)
         qint64 deltaEnd = pkEndTime - currentTime;
         QString roomId = this->roomId;
 
-        // 结束前3秒
-        QTimer::singleShot((deltaEnd-3)*1000, [=]{
+        // 结束前2秒
+        QTimer::singleShot(deltaEnd*1000 - pkJudgeEarly, [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
             {
-                qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId << endTime << QDateTime::currentSecsSinceEpoch();
+                qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
+                         << QDateTime::currentSecsSinceEpoch() << endTime;
                 return ;
             }
-            qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes;
+            qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes
+                     << QDateTime::currentSecsSinceEpoch() << pkEndTime;
 
             // 一个吃瓜就能解决的……
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes <= matchVotes && myVotes + pkMaxGold*12/100 > matchVotes)
             {
                 // 调用送礼
-                // TODO: 调用送礼
                 int num = static_cast<int>((matchVotes-myVotes)/1.2/10+0.9);
                 sendGify(20004, num);
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
@@ -3362,9 +3364,19 @@ void MainWindow::on_pkMaxGoldButton_clicked()
 {
     bool ok = false;
     // 最大设置的是1000元，有钱人……
-    int v = QInputDialog::getInt(this, "自动偷塔上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100乱斗值", pkMaxGold, 0, 1000000, 100, &ok);
+    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100乱斗值", pkMaxGold, 0, 1000000, 100, &ok);
     if (!ok)
         return ;
 
     settings.setValue("pk/maxGold", pkMaxGold = v);
+}
+
+void MainWindow::on_pkJudgeEarlyButton_clicked()
+{
+    bool ok = false;
+    int v = QInputDialog::getInt(this, "自动偷塔提前判断", "每次偷塔结束前n毫秒判断，根据网速酌情设置\n1秒=1000毫秒，下次大乱斗生效", pkJudgeEarly, 0, 5000, 500, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("pk/judgeEarly", pkJudgeEarly = v);
 }

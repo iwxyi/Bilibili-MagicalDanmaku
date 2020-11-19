@@ -443,7 +443,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -469,6 +469,20 @@
             </property>
             <property name="text">
              <string>上限</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pkJudgeEarlyButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>提前</string>
             </property>
            </widget>
           </item>
