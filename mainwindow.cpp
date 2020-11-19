@@ -202,6 +202,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 大乱斗自动赠送吃瓜
     bool melon = settings.value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
+    pkMaxGold = settings.value("pk/maxGold", 300).toInt();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -672,6 +673,11 @@ void MainWindow::on_testDanmakuButton_clicked()
 
     ui->testDanmakuEdit->setText("");
     ui->testDanmakuEdit->setFocus();
+
+    if (text == "赠送吃瓜")
+    {
+        sendGify(20004, 1);
+    }
 }
 
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
@@ -2567,10 +2573,10 @@ bool MainWindow::handlePK(QJsonObject json)
         pking = true;
         qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
         qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
+        pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-        qint64 deltaEnd = startTime + 300 - currentTime; // 因为endTime要延迟10秒，还是用startTime来判断吧
+        qint64 deltaEnd = pkEndTime - currentTime;
         QString roomId = this->roomId;
-        pkEndTime = endTime;
 
         // 结束前3秒
         QTimer::singleShot((deltaEnd-3)*1000, [=]{
@@ -2583,11 +2589,13 @@ bool MainWindow::handlePK(QJsonObject json)
 
             // 一个吃瓜就能解决的……
             if (ui->pkAutoMelonCheck->isChecked()
-                    && myVotes <= matchVotes && myVotes + 12 > matchVotes)
+                    && myVotes <= matchVotes && myVotes + pkMaxGold*12/100 > matchVotes)
             {
                 // 调用送礼
                 // TODO: 调用送礼
-                qDebug() << "大乱斗赠送吃瓜：" << myVotes << "vs" << matchVotes;
+                int num = static_cast<int>((matchVotes-myVotes)/1.2/10+0.9);
+                sendGify(20004, num);
+                qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
         });
 
@@ -2987,12 +2995,12 @@ void MainWindow::sendGify(int giftId, int giftNum)
             return ;
         }
         QJsonObject object = document.object();
-        QString errorMsg = object.value("message").toString();
+        QString message = object.value("message").toString();
         statusLabel->setText("");
-        if (!errorMsg.isEmpty())
+        if (message != "success")
         {
-            statusLabel->setText(errorMsg);
-            qDebug() << s8("warning: 发送失败：") << errorMsg << datas.join("&");
+            statusLabel->setText(message);
+            qDebug() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
 
@@ -3348,4 +3356,15 @@ void MainWindow::on_pkAutoMelonCheck_clicked()
 {
     bool enable = ui->pkAutoMelonCheck->isChecked();
     settings.setValue("pk/autoMelon", enable);
+}
+
+void MainWindow::on_pkMaxGoldButton_clicked()
+{
+    bool ok = false;
+    // 最大设置的是1000元，有钱人……
+    int v = QInputDialog::getInt(this, "自动偷塔上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100乱斗值", pkMaxGold, 0, 1000000, 100, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("pk/maxGold", pkMaxGold = v);
 }
