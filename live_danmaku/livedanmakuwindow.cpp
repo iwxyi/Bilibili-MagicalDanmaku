@@ -897,8 +897,18 @@ void LiveDanmakuWindow::showMenu()
             name = localNicknames.value(uid);
         else
             name = danmaku.getNickname();
-        name = QInputDialog::getText(this, "专属昵称", "设置 " + danmaku.getNickname() + " 的专属昵称，影响对应弹幕\n清空则取消专属，还原账号昵称",
-                                     QLineEdit::Normal, name, &ok);
+        QString tip = "设置【" + danmaku.getNickname() + "】的专属昵称\n将影响机器人的欢迎/感谢弹幕";
+        if (localNicknames.contains(uid))
+        {
+            tip += "\n清空则取消专属，还原账号昵称";
+        }
+        else
+        {
+            QString pinyin = getPinyin(danmaku.getNickname());
+            if (!pinyin.isEmpty())
+                tip += "\n中文拼音：" + pinyin;
+        }
+        name = QInputDialog::getText(this, "专属昵称", tip, QLineEdit::Normal, name, &ok);
         if (!ok)
             return ;
         if (name.isEmpty())
@@ -1376,4 +1386,16 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
     view->setWindowTitle(title);
     view->setGeometry(rect);
     view->show();
+}
+
+QString LiveDanmakuWindow::getPinyin(QString text)
+{
+    QStringList chs = text.split("");
+    QStringList res;
+    foreach (QString ch, chs)
+    {
+        if (pinyinMap.contains(ch))
+            res << ch + pinyinMap.value(ch);
+    }
+    return res.join(" ");
 }

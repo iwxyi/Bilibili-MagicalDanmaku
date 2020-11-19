@@ -108,6 +108,7 @@ private:
     void getUserInfo(qint64 uid, QListWidgetItem *item);
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
     void showUserMsgHistory(qint64 uid, QString title);
+    QString getPinyin(QString text);
 
 private:
     QSettings settings;
