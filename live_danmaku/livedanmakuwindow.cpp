@@ -356,6 +356,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
         {
             auto item = listWidget->item(i);
             auto widget = listWidget->itemWidget(item);
+            item->setData(DANMAKU_STRING_ROLE, ""); // 清空，免得重复删除到头一个上面
 
             if (DANMAKU_ANIMATION_ENABLED)
             {
@@ -392,9 +393,10 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
                 if (item == currentItem)
                     listWidget->clearSelection();
             }
-            break;
+            return ;
         }
     }
+    qDebug() << "错误：找不到要删除的item" << danmaku.toString();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
