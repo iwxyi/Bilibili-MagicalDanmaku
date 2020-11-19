@@ -653,6 +653,8 @@ void MainWindow::on_roomIdEdit_editingFinished()
 {
     if (roomId == ui->roomIdEdit->text() || shortId == ui->roomIdEdit->text())
         return ;
+
+    // 关闭旧的
     if (socket)
     {
         if (socket->state() != QAbstractSocket::UnconnectedState)
@@ -661,6 +663,8 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
+
+    // 开启新的
 #ifndef SOCKET_MODE
     firstPullDanmaku = true;
     prevLastDanmakuTimestamp = 0;
@@ -1878,6 +1882,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     "web_url": "https://live.bilibili.com/blackboard/room-current-rank.html?rank_type=master_realtime_area_hour&area_hour=1&area_v2_id=145&area_v2_parent_id=1"
                 }
             }*/
+            QJsonObject data = json.value("data").toObject();
+            QString color = data.value("color").toString();
+            QString desc = data.value("rank_desc").toString();
+            ui->roomRankLabel->setStyleSheet("color: " + color + ";");
+            ui->roomRankLabel->setText(desc);
+            ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh::mm:ss"));
         }
         else if (handlePK(json))
         {
