@@ -172,6 +172,32 @@ MainWindow::MainWindow(QWidget *parent)
     statusLabel = new QLabel(this);
     this->statusBar()->addWidget(statusLabel);
 
+    // 大乱斗
+    pkTimer = new QTimer(this);
+    connect(pkTimer, &QTimer::timeout, this, [=]{
+        // 更新PK信息
+        int second = 0;
+        int minute = 0;
+        if (pkEndTime)
+        {
+            second = static_cast<int>(pkEndTime - QDateTime::currentSecsSinceEpoch());
+            minute = second / 60;
+            second = second % 60;
+        }
+        QString text = QString("%1:%2 %3/%4")
+                .arg(minute)
+                .arg((second < 10 ? "0" : "") + QString::number(second))
+                .arg(myVotes)
+                .arg(matchVotes);
+        if (danmakuWindow)
+            danmakuWindow->setStatusText(text);
+    });
+    pkTimer->setInterval(300);
+
+    // 大乱斗自动赠送吃瓜
+    bool melon = settings.value("pk/autoMelon", false).toBool();
+    ui->pkAutoMelonCheck->setChecked(melon);
+
     // 定时任务
     srand((unsigned)time(0));
     restoreTaskList();
@@ -1866,7 +1892,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         if (!json.isEmpty())
         {
             cmd = json.value("cmd").toString();
-            SOCKET_INF << "普通CMD：" << cmd;
+            qDebug() << "普通CMD：" << cmd;
             SOCKET_INF << json;
         }
 
@@ -1892,7 +1918,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             QString desc = data.value("rank_desc").toString();
             ui->roomRankLabel->setStyleSheet("color: " + color + ";");
             ui->roomRankLabel->setText(desc);
-            ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh::mm:ss"));
+            ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
         }
         else if (handlePK(json))
         {
@@ -2449,79 +2475,33 @@ bool MainWindow::handlePK(QJsonObject json)
         }*/
 
         pking = true;
-        qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
-        qint64 finishTime = startTime + 5*60;
+        qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-        qint64 deltaEnd = finishTime - currentTime;
+        qint64 deltaEnd = endTime - currentTime;
         QString roomId = this->roomId;
-        pkEndTime = finishTime;
+        pkEndTime = endTime;
 
         // 结束前3秒
         QTimer::singleShot((deltaEnd-3)*1000, [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
                 return ;
 
+            qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes;
+
             // 一个吃瓜就能解决的……
-            if (myVotes <= matchVotes && myVotes + 12 > matchVotes)
+            if (ui->pkAutoMelonCheck->isChecked()
+                    && myVotes <= matchVotes && myVotes + 12 > matchVotes)
             {
                 // 调用送礼
+                // TODO: 调用送礼
                 qDebug() << "大乱斗赠送吃瓜：" << myVotes << "vs" << matchVotes;
             }
         });
 
-        if (!pkTimer)
-        {
-            pkTimer = new QTimer(this);
-            connect(pkTimer, &QTimer::timeout, this, [=]{
-                // 更新PK信息
-                QString text = QString("%1秒 %2/%3")
-                        .arg(pkEndTime - QDateTime::currentSecsSinceEpoch())
-                        .arg(myVotes)
-                        .arg(matchVotes);
-                if (danmakuWindow)
-                    danmakuWindow->setStatusText(text);
-            });
-            pkTimer->setInterval(300);
-        }
         pkTimer->start();
         if (danmakuWindow)
             danmakuWindow->showStatusText();
         qDebug() << "开启大乱斗, id =" << static_cast<qint64>(json.value("pk_id").toDouble());
-    }
-    else if (cmd == "PK_BATTLE_END") // 结束信息
-    {
-        /*{
-            "cmd": "PK_BATTLE_END",
-            "data": {
-                "battle_type": 1,
-                "init_info": {
-                    "best_uname": "我今天超可爱0",
-                    "room_id": 22532956,
-                    "votes": 10,
-                    "winner_type": 2
-                },
-                "match_info": {
-                    "best_uname": "",
-                    "room_id": 22195813,
-                    "votes": 0,
-                    "winner_type": -1
-                },
-                "timer": 10
-            },
-            "pk_id": "100729259",
-            "pk_status": 401,
-            "timestamp": 1605748006
-        }*/
-
-        pking = false;
-        pkEndTime = 0;
-        myVotes = 0;
-        matchVotes = 0;
-        if (pkTimer)
-            pkTimer->stop();
-        if (danmakuWindow)
-            danmakuWindow->hideStatusText();
-        qDebug() << "结束大乱斗" << data;
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -2547,6 +2527,46 @@ bool MainWindow::handlePK(QJsonObject json)
 
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        if (!pkTimer->isActive())
+            pkTimer->start();
+        qDebug() << "大乱斗进度：" << myVotes << matchVotes;
+    }
+    else if (cmd == "PK_BATTLE_END") // 结束信息
+    {
+        /*{
+            "cmd": "PK_BATTLE_END",
+            "data": {
+                "battle_type": 1,
+                "init_info": {
+                    "best_uname": "我今天超可爱0",
+                    "room_id": 22532956,
+                    "votes": 10,
+                    "winner_type": 2
+                },
+                "match_info": {
+                    "best_uname": "",
+                    "room_id": 22195813,
+                    "votes": 0,
+                    "winner_type": -1
+                },
+                "timer": 10
+            },
+            "pk_id": "100729259",
+            "pk_status": 401,
+            "timestamp": 1605748006
+        }*/
+        // winner_type: 2赢，-1输
+
+        pking = false;
+        pkEndTime = 0;
+        myVotes = 0;
+        matchVotes = 0;
+        int winnerType = data.value("init_info").toObject().value("winner_type").toInt();
+        if (pkTimer)
+            pkTimer->stop();
+        if (danmakuWindow)
+            danmakuWindow->hideStatusText();
+        qDebug() << "大乱斗结束，结果：" << (winnerType > 0 ? "胜利" : "失败");
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
@@ -2732,9 +2752,11 @@ bool MainWindow::handlePK2(QJsonObject json)
             },
             "roomid": 22532956
         }*/
-
+        if (danmakuWindow)
+            danmakuWindow->setStatusText("大乱斗匹配中...");
+        qDebug() << "准备大乱斗，开启匹配...";
     }
-    else if (cmd == "PK_BATTLE_SETTLE")
+    else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
     {
         /*{
             "cmd": "PK_BATTLE_SETTLE",
@@ -2748,46 +2770,7 @@ bool MainWindow::handlePK2(QJsonObject json)
             },
             "roomid": "22532956"
         }*/
-    }
-    else if (cmd == "PK_BATTLE_PRE")
-    {
-        /*{
-            "cmd": "PK_BATTLE_PRE",
-            "pk_status": 101,
-            "pk_id": 100729281,
-            "timestamp": 1605748022,
-            "data": {
-                "battle_type": 1,
-                "uname": "\\u6b27\\u6c14\\u6ee1\\u6ee1\\u7684\\u9e92\\u9e9f",
-                "face": "http:\\/\\/i1.hdslb.com\\/bfs\\/face\\/1ffaf0ab3f510a31fdf7d40a3a4bda94c3b94ea2.jpg",
-                "uid": 699980313,
-                "room_id": 22580754,
-                "season_id": 29,
-                "pre_timer": 10,
-                "pk_votes_name": "\\u4e71\\u6597\\u503c",
-                "end_win_task": null
-            },
-            "roomid": 22532956
-        }*/
-    }
-    else if (cmd == "PK_BATTLE_START")
-    {
-        /*{
-            "cmd": "PK_BATTLE_START",
-            "data": {
-                "battle_type": 1,
-                "final_hit_votes": 0,
-                "pk_end_time": 1605748342,
-                "pk_frozen_time": 1605748332,
-                "pk_start_time": 1605748032,
-                "pk_votes_add": 0,
-                "pk_votes_name": "乱斗值",
-                "pk_votes_type": 0
-            },
-            "pk_id": 100729281,
-            "pk_status": 201,
-            "timestamp": 1605748032
-        }*/
+        // result_type: 2赢，-1输
     }
     else
     {
@@ -3204,4 +3187,10 @@ void MainWindow::on_notOnlyNewbieCheck_clicked()
 {
     bool enable = ui->notOnlyNewbieCheck->isChecked();
     settings.setValue("block/notOnlyNewbie", enable);
+}
+
+void MainWindow::on_pkAutoMelonCheck_clicked()
+{
+    bool enable = ui->pkAutoMelonCheck->isChecked();
+    settings.setValue("pk/autoMelon", enable);
 }

@@ -193,7 +193,7 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
     }
 
     if (statusLabel && !statusLabel->isHidden())
-        statusLabel->move(0, width() - statusLabel->width());
+        statusLabel->move(width() - statusLabel->width(), 0);
 }
 
 void LiveDanmakuWindow::paintEvent(QPaintEvent *)
@@ -1204,10 +1204,10 @@ void LiveDanmakuWindow::showStatusText()
 
 void LiveDanmakuWindow::setStatusText(QString text)
 {
-    show();
+    statusLabel->show();
     statusLabel->setText(text);
     statusLabel->adjustSize();
-    statusLabel->move(0, width() - statusLabel->width());
+    statusLabel->move(width() - statusLabel->width(), 0);
 }
 
 void LiveDanmakuWindow::hideStatusText()

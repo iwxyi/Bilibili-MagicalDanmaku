@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -437,6 +437,24 @@
             </property>
             <property name="text">
              <string>启用禁言（主播/房管）</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_28">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="pkAutoMelonCheck">
+            <property name="toolTip">
+             <string>大乱斗最后几秒如果有必要的话，自动赠送吃瓜
+注意自己的余额！！！（0.1元/吃瓜）</string>
+            </property>
+            <property name="text">
+             <string>大乱斗自动送吃瓜</string>
             </property>
            </widget>
           </item>

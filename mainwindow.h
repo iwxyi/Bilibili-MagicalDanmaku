@@ -236,6 +236,8 @@ private slots:
 
     void on_notOnlyNewbieCheck_clicked();
 
+    void on_pkAutoMelonCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
