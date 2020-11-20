@@ -1905,6 +1905,32 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%today_guard%"))
         msg.replace("%today_guard%", snum(dailyGuard));
 
+    // 当前时间
+    if (msg.contains("%time_hour%"))
+        msg.replace("%time_hour%", snum(QTime::currentTime().hour()));
+    if (msg.contains("%time_minute%"))
+        msg.replace("%time_minute%", snum(QTime::currentTime().minute()));
+    if (msg.contains("%time_second%"))
+        msg.replace("%time_second%", snum(QTime::currentTime().second()));
+    if (msg.contains("%time_day%"))
+        msg.replace("%time_day%", snum(QDate::currentDate().day()));
+    if (msg.contains("%time_month%"))
+        msg.replace("%time_month%", snum(QDate::currentDate().month()));
+    if (msg.contains("%time_year%"))
+        msg.replace("%time_year%", snum(QDate::currentDate().year()));
+    if (msg.contains("%time_day_week%"))
+        msg.replace("%time_day_week%", snum(QDate::currentDate().dayOfWeek()));
+    if (msg.contains("%time_day_year%"))
+        msg.replace("%time_day_year%", snum(QDate::currentDate().dayOfYear()));
+    if (msg.contains("%timestamp%"))
+        msg.replace("%timestamp%", snum(QDateTime::currentSecsSinceEpoch()));
+    if (msg.contains("%timestamp13%"))
+        msg.replace("%timestamp13%", snum(QDateTime::currentMSecsSinceEpoch()));
+
+    // 大乱斗
+    if (msg.contains("%pking%"))
+        msg.replace("%pking%", snum(pking ? 1 : 0));
+
     return msg;
 }
 
@@ -2770,10 +2796,14 @@ void MainWindow::handleMessage(QJsonObject json)
                          "");
         appendNewLiveDanmaku(danmaku);
 
+        // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
+        // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
         int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
         userCome++;
-        danmakuCounts->setValue("come/"+snum(uid), userCome);
-        danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
+        QTimer::singleShot(10, [=]{ // 延迟一下，等到下面代码执行结束
+            danmakuCounts->setValue("come/"+snum(uid), userCome);
+            danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
+        });
 
         dailyCome++;
         if (dailySettings)
