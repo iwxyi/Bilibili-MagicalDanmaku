@@ -417,7 +417,7 @@ private:
     QString medal_up;
     QString medal_color;
 
-    int level = 10000;
+    int level = 0;
     qint64 teamid;
     int rnd = 0;
     QString user_title;
