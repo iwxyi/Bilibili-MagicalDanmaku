@@ -279,8 +279,11 @@ private:
     QString getLocalNickname(qint64 name) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
-    QString processUserVariants(QString msg, LiveDanmaku user) const;
+    QString processDanmakuVariants(QString msg, LiveDanmaku danmaku) const;
     QString processVariantConditions(QString msg) const;
+    qint64 calcIntExpression(QString exp) const;
+    template<typename T>
+    bool isConditionTrue(T a, T b, QString op) const;
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
 

@@ -690,12 +690,29 @@ void MainWindow::on_testDanmakuButton_clicked()
                             10000+r, 12,
                              QDateTime::currentDateTime(), "", ""));
 
-    ui->testDanmakuEdit->setText("");
-    ui->testDanmakuEdit->setFocus();
-
     if (text == "赠送吃瓜")
     {
         sendGify(20004, 1);
+    }
+    else if (text == "测试送礼")
+    {
+        QString username = "测试用户";
+        QString giftName = "测试礼物";
+        int num = qrand() % 3;
+        qint64 uid = 123;
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString coinType = qrand()%2 ? "gold" : "silver";
+        int totalCoin = qrand() % 20 * 100;
+        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        appendNewLiveDanmaku(danmaku);
+
+        QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+        qDebug() << "条件替换结果：" << words;
+    }
+    else
+    {
+        ui->testDanmakuEdit->setText("");
+        ui->testDanmakuEdit->setFocus();
     }
 }
 
@@ -1704,8 +1721,11 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     for (int i = 0; i < lines.size(); i++)
     {
         QString line = lines.at(i);
-        line = processUserVariants(line, user);
+        qDebug() << "原始语句：" << line;
+        line = processDanmakuVariants(line, user);
+        qDebug() << "  替换后：" << line;
         line = processVariantConditions(line);
+        qDebug() << "  条件后：" << line;
         if (!line.isEmpty())
             result.append(line);
     }
@@ -1715,8 +1735,9 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 
 /**
  * 处理用户信息中蕴含的表达式
+ * 用户信息、弹幕、礼物等等
  */
-QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
+QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) const
 {
     // 用户昵称
     if (msg.contains("%uname%"))
@@ -1751,39 +1772,130 @@ QString MainWindow::processUserVariants(QString msg, LiveDanmaku user) const
 
 /**
  * 处理条件变量
- * if()...
+ * [exp1, exp2]...
  * 要根据时间戳、字符串
+ * @return 如果返回空字符串，则不符合；否则返回去掉表达式后的正文
  */
 QString MainWindow::processVariantConditions(QString msg) const
 {
-    QRegularExpression re("^\\s*\\[(.+?)(?:,\\s*)?\\]\\s*");
-    QRegularExpression intRe("^-?\\d+$");
+    QRegularExpression re("^\\s*\\[(.+?)\\]\\s*");
+    QRegularExpression compRe("^\\s*([^<>=!]+?)\\s*([<>=!]{1,2})\\s*([^<>=!]+?)\\s*$");
+    QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
     QRegularExpressionMatch match;
-    if (!msg.indexOf(re, 0, &match)) // 没有检测到表达式
+    if (msg.indexOf(re, 0, &match) == -1) // 没有检测到表达式
         return msg;
 
-    QStringList caps = match.capturedTexts();
-    QString s1 = caps.at(1);
-    QString op = caps.at(2);
-    QString s2 = caps.at(3);
-
-    if (s1.startsWith("\"") && s1.endsWith("\"")
-            && s2.startsWith("\"") && s2.startsWith("\"")) // 都是字符串
+    QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
+    QString exprs = match.capturedTexts().at(1);
+    QStringList exps = exprs.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+    foreach (QString exp, exps)
     {
+        if (exp.indexOf(compRe, 0, &match) == -1)
+        {
+            qDebug() << "无法解析表达式：" << exp;
+            qDebug() << "    原始语句：" << msg;
+            continue;
+        }
 
+        QStringList caps = match.capturedTexts();
+        QString s1 = caps.at(1);
+        QString op = caps.at(2);
+        QString s2 = caps.at(3);
+        if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+        {
+            qint64 i1 = calcIntExpression(s1);
+            qint64 i2 = calcIntExpression(s2);
+            qDebug() << "比较整数" << i1 << op << i2;
+            if (!isConditionTrue<qint64>(i1, i2, op))
+                return "";
+        }
+        else if (s1.startsWith("\"") || s1.endsWith("\"")
+                || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串
+        {
+            auto removeQuote = [=](QString s) -> QString{
+                if (s.startsWith("\"") && s.endsWith("\""))
+                    return s.mid(1, s.length()-2);
+                return s;
+            };
+            s1 = removeQuote(s1);
+            s2 = removeQuote(s2);
+            qDebug() << "比较字符串" << s1 << op << s2;
+            if (!isConditionTrue<QString>(s1, s2, op))
+                return "";
+        }
+        else
+        {
+            qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+            qDebug() << "    原始语句：" << msg;
+        }
     }
-    else if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+
+    return msg.right(msg.length() - totalExp.length());
+}
+
+/**
+ * 计算纯int、运算符组成的表达式
+ */
+qint64 MainWindow::calcIntExpression(QString exp) const
+{
+    exp = exp.replace(QRegularExpression("\\s*"), ""); // 去掉所有空白
+    QRegularExpression opRe("[\\+\\-\\*/%]");
+    // 获取所有整型数值
+    QStringList valss = exp.split(opRe); // 如果是-开头，那么会当做 0-x
+    if (valss.size() == 0)
+        return 0;
+    QList<qint64> vals;
+    foreach (QString val, valss)
+        vals << val.toLongLong();
+    // 获取所有运算符
+    QStringList ops;
+    QRegularExpressionMatchIterator i = opRe.globalMatch(exp);
+    while (i.hasNext())
     {
-
+        QRegularExpressionMatch match = i.next();
+        ops << match.captured(0);
     }
-    else
+    if (valss.size() != ops.size() + 1)
     {
-        qDebug() << "error:无法匹配的表达式";
-        qDebug() << msg;
-        qDebug() << match.capturedTexts().first();
+        qDebug() << "错误的表达式：" << valss << ops << exp;
+        return 0;
     }
 
-    return msg;
+    // 入栈：* / %
+    for (int i = 0; i < ops.size(); i++)
+    {
+        // op[i] 操作 vals[i] x vals[i+1]
+        if (ops[i] == "*")
+            vals[i] *= vals[i+1];
+        else if (ops[i] == "/")
+        {
+            if (vals[i+1] == 0)
+            {
+                qDebug() << "警告：被除数是0 ：" << exp;
+                vals[i+1] = 1;
+            }
+            vals[i] /= vals[i+1];
+        }
+        else if (ops[i] == "%")
+            vals[i] %= vals[i+1];
+        else
+            continue;
+        vals.removeAt(i+1);
+        ops.removeAt(i);
+        i--;
+    }
+
+    // 顺序计算：+ -
+    qint64 val = vals.first();
+    for (int i = 0; i < ops.size(); i++)
+    {
+        if (ops[i] == "-")
+            val -= vals[i+1];
+        else if (ops[i] == "+")
+            val += vals[i+1];
+    }
+
+    return val;
 }
 
 /**
@@ -2369,7 +2481,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
-        appendNewLiveDanmaku(LiveDanmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin));
+        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        appendNewLiveDanmaku(danmaku);
 
         if (coinType == "silver")
         {
@@ -3397,4 +3510,23 @@ void MainWindow::on_pkJudgeEarlyButton_clicked()
         return ;
 
     settings.setValue("pk/judgeEarly", pkJudgeEarly = v);
+}
+
+template<typename T>
+bool MainWindow::isConditionTrue(T a, T b, QString op) const
+{
+    if (op == "==" || op == "=")
+        return a == b;
+    if (op == "!=" || op == "<>")
+        return a != b;
+    if (op == ">")
+        return a > b;
+    if (op == ">=")
+        return a >= b;
+    if (op == "<")
+        return a < b;
+    if (op == "<=")
+        return a < b;
+    qDebug() << "无法识别的比较模板类型：" << a << op << b;
+    return false;
 }
