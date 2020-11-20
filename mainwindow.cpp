@@ -1718,16 +1718,37 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 {
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
+    // 替换变量，寻找条件
     for (int i = 0; i < lines.size(); i++)
     {
         QString line = lines.at(i);
-        qDebug() << "原始语句：" << line;
+//        qDebug() << "原始语句：" << line;
         line = processDanmakuVariants(line, user);
-        qDebug() << "  替换后：" << line;
+//        qDebug() << "  替换后：" << line;
         line = processVariantConditions(line);
-        qDebug() << "  条件后：" << line;
+//        qDebug() << "  条件后：" << line;
         if (!line.isEmpty())
-            result.append(line);
+            result.append(line.trimmed());
+    }
+
+    // 查看是否优先级
+    auto hasPriority = [=](QStringList sl){
+        for (int i = 0; i < sl.size(); i++)
+            if (sl.at(i).startsWith("*"))
+                return true;
+        return false;
+    };
+
+    // 去除优先级
+    while (hasPriority(result))
+    {
+        for (int i = 0; i < result.size(); i++)
+        {
+            if (!result.at(i).startsWith("*"))
+                result.removeAt(i--);
+            else
+                result[i] = result.at(i).right(result.at(i).length()-1);
+        }
     }
 
     return result;
@@ -1787,49 +1808,65 @@ QString MainWindow::processVariantConditions(QString msg) const
 
     QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
     QString exprs = match.capturedTexts().at(1);
-    QStringList exps = exprs.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
-    foreach (QString exp, exps)
+    QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
+    bool isTrue = false;
+    foreach (QString orExp, orExps)
     {
-        if (exp.indexOf(compRe, 0, &match) == -1)
+        isTrue = true;
+        QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+        foreach (QString exp, andExps)
         {
-            qDebug() << "无法解析表达式：" << exp;
-            qDebug() << "    原始语句：" << msg;
-            continue;
-        }
+            if (exp.indexOf(compRe, 0, &match) == -1)
+            {
+                qDebug() << "无法解析表达式：" << exp;
+                qDebug() << "    原始语句：" << msg;
+                continue;
+            }
 
-        QStringList caps = match.capturedTexts();
-        QString s1 = caps.at(1);
-        QString op = caps.at(2);
-        QString s2 = caps.at(3);
-        if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
-        {
-            qint64 i1 = calcIntExpression(s1);
-            qint64 i2 = calcIntExpression(s2);
-            qDebug() << "比较整数" << i1 << op << i2;
-            if (!isConditionTrue<qint64>(i1, i2, op))
-                return "";
+            QStringList caps = match.capturedTexts();
+            QString s1 = caps.at(1);
+            QString op = caps.at(2);
+            QString s2 = caps.at(3);
+            if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+            {
+                qint64 i1 = calcIntExpression(s1);
+                qint64 i2 = calcIntExpression(s2);
+//                qDebug() << "比较整数" << i1 << op << i2;
+                if (!isConditionTrue<qint64>(i1, i2, op))
+                {
+                    isTrue = false;
+                    break;
+                }
+            }
+            else if (s1.startsWith("\"") || s1.endsWith("\"")
+                    || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串
+            {
+                auto removeQuote = [=](QString s) -> QString{
+                    if (s.startsWith("\"") && s.endsWith("\""))
+                        return s.mid(1, s.length()-2);
+                    return s;
+                };
+                s1 = removeQuote(s1);
+                s2 = removeQuote(s2);
+//                qDebug() << "比较字符串" << s1 << op << s2;
+                if (!isConditionTrue<QString>(s1, s2, op))
+                {
+                    isTrue = false;
+                    break;
+                }
+            }
+            else
+            {
+                qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+                qDebug() << "    原始语句：" << msg;
+            }
         }
-        else if (s1.startsWith("\"") || s1.endsWith("\"")
-                || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串
-        {
-            auto removeQuote = [=](QString s) -> QString{
-                if (s.startsWith("\"") && s.endsWith("\""))
-                    return s.mid(1, s.length()-2);
-                return s;
-            };
-            s1 = removeQuote(s1);
-            s2 = removeQuote(s2);
-            qDebug() << "比较字符串" << s1 << op << s2;
-            if (!isConditionTrue<QString>(s1, s2, op))
-                return "";
-        }
-        else
-        {
-            qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
-            qDebug() << "    原始语句：" << msg;
-        }
+        if (isTrue)
+            break;
     }
 
+    if (!isTrue)
+        return "";
     return msg.right(msg.length() - totalExp.length());
 }
 
