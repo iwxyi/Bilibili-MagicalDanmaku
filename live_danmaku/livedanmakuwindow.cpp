@@ -1338,6 +1338,11 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     QByteArray jpegData = reply1->readAll();
     QPixmap pixmap;
     pixmap.loadFromData(jpegData);
+    if (pixmap.isNull())
+    {
+        qDebug() << "获取用户头像为空：" << uid;
+        return ;
+    }
     headPortraits[uid] = pixmap;
 
     if (!isItemExist(item))

@@ -1628,7 +1628,7 @@ QString MainWindow::processTimeVariants(QString msg) const
             rst = "早上";
         else if (hour <= 13)
             rst = "中午";
-        else if (hour <= 16)
+        else if (hour <= 17)
             rst = "下午";
         else if (hour <= 24)
             rst = "晚上";
@@ -1727,14 +1727,13 @@ QString MainWindow::processTimeVariants(QString msg) const
 
 QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
 {
+    plainText = processDanmakuVariants(plainText, user);
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
     // 替换变量，寻找条件
     for (int i = 0; i < lines.size(); i++)
     {
         QString line = lines.at(i);
-//        qDebug() << "原始语句：" << line;
-        line = processDanmakuVariants(line, user);
         line = processVariantConditions(line);
 //        qDebug() << "骚操作后：" << line;
         if (!line.isEmpty())
@@ -1777,6 +1776,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%username%", danmaku.getNickname());
     if (msg.contains("%nickname%"))
         msg.replace("%nickname%", danmaku.getNickname());
+
+    // 用户昵称
+    if (msg.contains("%uid%"))
+        msg.replace("%uid%", snum(danmaku.getUid()));
 
     // 本地昵称+简化
     if (msg.contains("%ai_name%"))
@@ -1875,7 +1878,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 本次进来人次
     if (msg.contains("%today_come%"))
-        msg.replace("%today_come%", snum(dailyGuard));
+        msg.replace("%today_come%", snum(dailyCome));
 
     // 新人发言数量
     if (msg.contains("%today_newbie_msg%"))
