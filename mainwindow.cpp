@@ -5,11 +5,11 @@
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
 QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
-QSettings* CommonValues::danmakuCounts = nullptr;                // 每个用户的发言次数
+QSettings* CommonValues::danmakuCounts = nullptr;    // 每个用户的统计
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
-QList<qint64> CommonValues::careUsers;        // 特别关心
-QList<qint64> CommonValues::strongNotifyUsers;        // 特别关心
-QHash<QString, QString> CommonValues::pinyinMap; // 拼音
+QList<qint64> CommonValues::careUsers;               // 特别关心
+QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
+QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -558,7 +558,8 @@ void MainWindow::sendMsg(QString msg)
  */
 void MainWindow::sendAutoMsg(QString msgs)
 {
-    qDebug() << "->准备发送弹幕：" << msgs;
+    msgs = processTimeVariants(msgs);
+    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     const int cd = 1500;
     int delay = 0;
@@ -567,9 +568,9 @@ void MainWindow::sendAutoMsg(QString msgs)
         for (int i = 0; i < sl.size(); i++)
         {
             QTimer::singleShot(delay, [=]{
-                QString msg = processTimeVariants(sl.at(i));
-                addNoReplyDanmakuText(msg);
-                sendMsg(msg);
+                QString msg = sl.at(i);
+//                addNoReplyDanmakuText(msg);
+//                sendMsg(msg);
             });
             delay += cd;
         }
@@ -1461,21 +1462,19 @@ void MainWindow::getFansAndUpdate()
         {
             FanBean fan = newFans.at(i);
             qDebug() << s8("新增关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
-            appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime)));
+            LiveDanmaku danmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime));
+            appendNewLiveDanmaku(danmaku);
 
             if (i == 0) // 只发送第一个（其他几位，对不起了……）
             {
-                QStringList words = ui->autoAttentionWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
                 if (!words.size())
                     return ;
                 int r = qrand() % words.size();
                 QString msg = words.at(r);
                 if (!justStart && ui->autoSendAttentionCheck->isChecked())
                 {
-                    QString localName = getLocalNickname(fan.mid);
-                    QString nick = localName.isEmpty() ? nicknameSimplify(fan.uname) : localName;
-                    if (!nick.isEmpty())
-                        sendAttentionMsg(msg.arg(nick));
+                    sendAttentionMsg(msg);
                 }
             }
 
@@ -1724,9 +1723,8 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         QString line = lines.at(i);
 //        qDebug() << "原始语句：" << line;
         line = processDanmakuVariants(line, user);
-//        qDebug() << "  替换后：" << line;
         line = processVariantConditions(line);
-//        qDebug() << "  条件后：" << line;
+//        qDebug() << "骚操作后：" << line;
         if (!line.isEmpty())
             result.append(line.trimmed());
     }
@@ -1750,7 +1748,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
                 result[i] = result.at(i).right(result.at(i).length()-1);
         }
     }
-
+//    qDebug() << "result" << result;
     return result;
 }
 
@@ -1762,31 +1760,123 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 {
     // 用户昵称
     if (msg.contains("%uname%"))
-    {
+        msg.replace("%uname%", danmaku.getNickname());
+    if (msg.contains("%username%"))
+        msg.replace("%username%", danmaku.getNickname());
+    if (msg.contains("%nickname%"))
+        msg.replace("%nickname%", danmaku.getNickname());
 
+    // 本地昵称
+    if (msg.contains("%local_name%"))
+    {
+        QString local = getLocalNickname(danmaku.getUid());
+        if (local.isEmpty())
+            local = nicknameSimplify(danmaku.getNickname());
+        if (local.isEmpty())
+            local = danmaku.getNickname();
+        msg.replace("%local_name%", danmaku.getNickname());
     }
 
     // 用户等级
-    if (msg.contains("level"))
-    {
+    if (msg.contains("%level%"))
+        msg.replace("%level%", snum(danmaku.getLevel()));
 
-    }
-
+    if (msg.contains("%text%"))
+        msg.replace("%text%", danmaku.getText());
 
     // 进来次数
-
-
+    if (msg.contains("%come_count%"))
+        msg.replace("%come_count%", snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt()));
 
     // 上次进来
+    if (msg.contains("%come_time%"))
+        msg.replace("%come_time%", snum(danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong()));
 
+    // 本次送礼金瓜子
+    if (msg.contains("%gift_gold%"))
+        msg.replace("%gift_gold%", snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0));
 
-    // 送礼总数
+    // 本次送礼银瓜子
+    if (msg.contains("%gift_silver%"))
+        msg.replace("%gift_silver%", snum(danmaku.isGoldCoin() ? 0 : danmaku.getTotalCoin()));
 
+    // 本次送礼名字
+    if (msg.contains("%gift_name%"))
+        msg.replace("%gift_name%", danmaku.getGiftName());
 
-    // 粉丝牌
+    // 本次送礼数量
+    if (msg.contains("%gift_num%"))
+        msg.replace("%gift_num%", snum(danmaku.getNumber()));
 
+    // 总共赠送金瓜子
+    if (msg.contains("%total_gold%"))
+        msg.replace("%total_gold%", snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toInt()));
 
-    // 送礼价值
+    // 总共赠送银瓜子
+    if (msg.contains("%total_silver%"))
+        msg.replace("%total_silver%", snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toInt()));
+
+    // 粉丝牌房间
+    if (msg.contains("%anchor_roomid%"))
+        msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
+
+    // 粉丝牌名字
+    if (msg.contains("%medal_name%"))
+        msg.replace("%medal_name%", danmaku.getMedalName());
+
+    // 粉丝牌等级
+    if (msg.contains("%medal_level%"))
+        msg.replace("%medal_level%", snum(danmaku.getMedalLevel()));
+
+    // 粉丝牌主播
+    if (msg.contains("%medal_up%"))
+        msg.replace("%medal_up%", danmaku.getMedalUp());
+
+    // 是否新关注
+    if (msg.contains("%new_attention%"))
+    {
+        bool isInFans = false;
+        qint64 uid = danmaku.getUid();
+        foreach (FanBean fan, fansList)
+            if (fan.mid == uid)
+            {
+                isInFans = true;
+                break;
+            }
+        msg.replace("%new_attention%", isInFans ? "1" : "0");
+    }
+
+    // 本次进来人次
+    if (msg.contains("%today_come%"))
+        msg.replace("%today_come%", snum(dailyGuard));
+
+    // 新人发言数量
+    if (msg.contains("%today_newbie_msg%"))
+        msg.replace("%today_newbie_msg%", snum(dailyNewbieMsg));
+
+    // 今天弹幕总数
+    if (msg.contains("%today_danmaku%"))
+        msg.replace("%today_danmaku%", snum(dailyDanmaku));
+
+    // 今天新增关注
+    if (msg.contains("%today_fans%"))
+        msg.replace("%today_fans%", snum(dailyNewFans));
+
+    // 当前粉丝数量
+    if (msg.contains("%fans_count%"))
+        msg.replace("%fans_count%", snum(dailyTotalFans));
+
+    // 今天金瓜子总数
+    if (msg.contains("%today_gold%"))
+        msg.replace("%today_gold%", snum(dailyGiftGold));
+
+    // 今天银瓜子总数
+    if (msg.contains("%today_silver%"))
+        msg.replace("%today_silver%", snum(dailyGiftSilver));
+
+    // 今天是否有新舰长
+    if (msg.contains("%today_guard%"))
+        msg.replace("%today_guard%", snum(dailyGuard));
 
     return msg;
 }
@@ -2477,7 +2567,7 @@ void MainWindow::handleMessage(QJsonObject json)
                         {
                             prevNotifyInCount = allDanmakus.size();
 
-                            QStringList words = ui->autoBlockNewbieNotifyWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+                            QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
                             if (words.size())
                             {
                                 int r = qrand() % words.size();
@@ -2544,7 +2634,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
-        QStringList words = ui->autoThankWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+        QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         if (!words.size())
             return ;
         int r = qrand() % words.size();
@@ -2563,14 +2653,10 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
-            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
-            if (!nick.isEmpty())
-            {
-                if (strongNotifyUsers.contains(uid))
-                    sendAutoMsg(msg.arg(nick).arg(giftName));
-                else
-                    sendGiftMsg(msg.arg(nick).arg(giftName));
-            }
+            if (strongNotifyUsers.contains(uid))
+                sendAutoMsg(msg);
+            else
+                sendGiftMsg(msg);
         }
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
@@ -2672,6 +2758,7 @@ void MainWindow::handleMessage(QJsonObject json)
         int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
         userCome++;
         danmakuCounts->setValue("come/"+snum(uid), userCome);
+        danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
 
         dailyCome++;
         if (dailySettings)
@@ -2685,19 +2772,15 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
             userComeTimes[uid] = currentTime;
 
-            QStringList words = ui->autoWelcomeWordsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
+            QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
             if (!words.size())
                 return ;
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
-            if (!nick.isEmpty())
-            {
-                if (strongNotifyUsers.contains(uid))
-                    sendNotifyMsg(msg.arg(nick));
-                else
-                    sendWelcomeMsg(msg.arg(nick));
-            }
+            if (strongNotifyUsers.contains(uid))
+                sendNotifyMsg(msg);
+            else
+                sendWelcomeMsg(msg);
         }
         else
         {
@@ -2774,7 +2857,7 @@ bool MainWindow::handlePK(QJsonObject json)
             danmakuWindow->showStatusText();
         qDebug() << "开启大乱斗, id =" << static_cast<qint64>(json.value("pk_id").toDouble());
         // 1605757123 1605757123 1605757433
-        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
+//        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
