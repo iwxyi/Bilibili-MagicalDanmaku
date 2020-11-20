@@ -559,7 +559,7 @@ void MainWindow::sendMsg(QString msg)
 void MainWindow::sendAutoMsg(QString msgs)
 {
     msgs = processTimeVariants(msgs);
-    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
+//    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     const int cd = 1500;
     int delay = 0;
@@ -569,8 +569,8 @@ void MainWindow::sendAutoMsg(QString msgs)
         {
             QTimer::singleShot(delay, [=]{
                 QString msg = sl.at(i);
-//                addNoReplyDanmakuText(msg);
-//                sendMsg(msg);
+                addNoReplyDanmakuText(msg);
+                sendMsg(msg);
             });
             delay += cd;
         }
@@ -823,6 +823,7 @@ void MainWindow::on_SetBrowserHelpButton_clicked()
 void MainWindow::on_SendMsgButton_clicked()
 {
     QString msg = ui->SendMsgEdit->text();
+    msg = processDanmakuVariants(msg, LiveDanmaku());
     sendAutoMsg(msg);
 }
 
@@ -841,7 +842,9 @@ void MainWindow::on_testDanmakuEdit_returnPressed()
 
 void MainWindow::on_SendMsgEdit_returnPressed()
 {
-    sendAutoMsg(ui->SendMsgEdit->text());
+    QString msg = ui->SendMsgEdit->text();
+    msg = processDanmakuVariants(msg, LiveDanmaku());
+    sendAutoMsg(msg);
     ui->SendMsgEdit->clear();
 }
 
@@ -875,10 +878,19 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
         settings.setValue("task/r"+QString::number(row)+"Msg", content);
     });
 
-    connect(tw, &TaskWidget::signalSendMsg, this, [=](QString msg){
+    connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl){
         if (!liveStatus) // 没有开播，不进行定时任务
             return ;
-        sendAutoMsg(msg);
+        QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
+        if (msgs.size())
+        {
+            int r = qrand() % msgs.size();
+            QString s = msgs.at(r);
+            if (!s.trimmed().isEmpty())
+            {
+                sendAutoMsg(s);
+            }
+        }
     });
 
     connect(tw, &TaskWidget::signalResized, tw, [=]{
@@ -1766,15 +1778,30 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%nickname%"))
         msg.replace("%nickname%", danmaku.getNickname());
 
-    // 本地昵称
-    if (msg.contains("%local_name%"))
+    // 本地昵称+简化
+    if (msg.contains("%ai_name%"))
     {
         QString local = getLocalNickname(danmaku.getUid());
         if (local.isEmpty())
             local = nicknameSimplify(danmaku.getNickname());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        msg.replace("%local_name%", danmaku.getNickname());
+        msg.replace("%ai_name%", local);
+    }
+
+    // 专属昵称
+    if (msg.contains("%local_name%"))
+    {
+        QString local = getLocalNickname(danmaku.getUid());
+        if (local.isEmpty())
+            local = danmaku.getNickname();
+        msg.replace("%local_name%", local);
+    }
+
+    // 昵称简化
+    if (msg.contains("%simple_name%"))
+    {
+        msg.replace("%simple_name%", nicknameSimplify(danmaku.getNickname()));
     }
 
     // 用户等级
@@ -2639,18 +2666,6 @@ void MainWindow::handleMessage(QJsonObject json)
             return ;
         int r = qrand() % words.size();
         QString msg = words.at(r);
-        if (coinType == "gold")
-        {
-            int yuan = totalCoin / 1000;
-            if (yuan >= 9)
-            {
-                msg = "哇，感谢 %1 赠送的%2！";
-            }
-            else if (yuan >= 70)
-            {
-                msg = "哇，感谢 %1 的%2！！！";
-            }
-        }
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             if (strongNotifyUsers.contains(uid))
@@ -2843,10 +2858,10 @@ bool MainWindow::handlePK(QJsonObject json)
 
             // 几个吃瓜就能解决的……
             if (ui->pkAutoMelonCheck->isChecked()
-                    && myVotes <= matchVotes && myVotes + pkMaxGold*12/100 > matchVotes)
+                    && myVotes <= matchVotes && myVotes + pkMaxGold/10 > matchVotes)
             {
                 // 调用送礼
-                int num = static_cast<int>((matchVotes-myVotes)/1.2/10 + 1);
+                int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
                 sendGify(20004, num);
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }

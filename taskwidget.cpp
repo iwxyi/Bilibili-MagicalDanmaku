@@ -30,13 +30,8 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     edit->setMaximumHeight(h*5);
     edit->setFixedHeight(h);
 
-    auto sendMsg = [=]{
-        QStringList sl = edit->toPlainText().split("\n", QString::SkipEmptyParts);
-        if (!sl.size())
-            return ;
-        int r = qrand() % sl.size();
-        qDebug() << "发送弹幕信号：" << sl.at(r);
-        emit signalSendMsg(sl.at(r));
+    auto sendMsgs = [=]{
+        emit signalSendMsgs(edit->toPlainText());
     };
 
     connect(check, &QCheckBox::stateChanged, this, [=](int){
@@ -49,9 +44,9 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 
     connect(spin, SIGNAL(valueChanged(int)), this, SLOT(slotSpinChanged(int)));
 
-    connect(timer, &QTimer::timeout, this, sendMsg);
+    connect(timer, &QTimer::timeout, this, sendMsgs);
 
-    connect(btn, &QPushButton::clicked, this, sendMsg);
+    connect(btn, &QPushButton::clicked, this, sendMsgs);
 
     connect(edit, &QPlainTextEdit::textChanged, this, [=]{
         int hh = edit->document()->size().height(); // 应当是高度，但为什么是1？

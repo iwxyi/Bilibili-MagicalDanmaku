@@ -21,7 +21,7 @@ public:
     TaskWidget(QWidget *parent = nullptr);
 
 signals:
-    void signalSendMsg(QString msg);
+    void signalSendMsgs(QString msgs);
     void spinChanged(int val);
     void signalResized();
 
