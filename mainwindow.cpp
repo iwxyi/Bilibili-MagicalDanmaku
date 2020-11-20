@@ -2963,11 +2963,14 @@ bool MainWindow::handlePK(QJsonObject json)
         myVotes = 0;
         matchVotes = 0;
         int winnerType = data.value("init_info").toObject().value("winner_type").toInt();
+        qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
         if (pkTimer)
             pkTimer->stop();
         if (danmakuWindow)
             danmakuWindow->hideStatusText();
-        qDebug() << "大乱斗结束，结果：" << (winnerType > 0 ? "胜利" : "失败");
+        bool result = (winnerType > 0 && snum(thisRoomId) == roomId)
+                || (winnerType < 0 && snum(thisRoomId) != roomId);
+        qDebug() << "大乱斗结束，结果：" << (result ? "胜利" : "失败");
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {

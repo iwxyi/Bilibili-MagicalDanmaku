@@ -40,6 +40,8 @@
 - 查看礼物价值
 - 用户累计数据
 - 一个吃瓜偷塔
+- 可编程变量集
+- 变量四则运算
 
 
 
@@ -49,20 +51,50 @@
 
 
 
+## 可编程变量列表
 
-
-> 参考资料：
->
-> - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
->
-> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
->
-> - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
->
-> - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
->
-> - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
->
+| 变量             | 描述             | 注意事项                                     |
+| ---------------- | ---------------- | -------------------------------------------- |
+| uname            | 用户名           | 需要用户值，例如定时消息，则只是空字符串     |
+| username         | 用户名           |                                              |
+| nickname         | 用户名           |                                              |
+| ai_name          | 用户智能昵称     | 优先专属昵称，其次简写昵称，无简写则用原昵称 |
+| local_name       | 用户专属昵称     |                                              |
+| simple_name      | 用户简写昵称     |                                              |
+| level            | 用户等级         | 进入直播间没有level                          |
+| text             | 当前弹幕消息     | 几乎用不到                                   |
+| come_count       | 用户进来次数     |                                              |
+| come_time        | 用户上次进来时间 | 第一次进来是0                                |
+| gift_gold        | 当前礼物金瓜子   | 非送礼答谢则没有                             |
+| gift_silver      | 当前礼物银瓜子   |                                              |
+| gift_name        | 当前礼物名字     |                                              |
+| gift_num         | 当前礼物数量     |                                              |
+| total_gold       | 用户总共金瓜子   | 该用户一直以来赠送的所有金瓜子数量           |
+| total_silver     | 用户总共银瓜子   | 同上                                         |
+| anchor_roomid    | 粉丝牌房间ID     | 进入、弹幕才有粉丝牌                         |
+| medal_name       | 粉丝牌名称       |                                              |
+| medal_level      | 粉丝牌等级       |                                              |
+| medal_up         | 粉丝牌UP主名称   | 只有弹幕消息有                               |
+| new_attention    |                  |                                              |
+| today_come       |                  |                                              |
+| today_come       |                  |                                              |
+| today_newbie_msg |                  |                                              |
+| today_danmaku    |                  |                                              |
+| today_fans       |                  |                                              |
+| fans_count       |                  |                                              |
+| today_gold       |                  |                                              |
+| today_silver     |                  |                                              |
+| today_guard      |                  |                                              |
+| time_hour        |                  |                                              |
+| time_minute      |                  |                                              |
+| time_second      |                  |                                              |
+| time_day         |                  |                                              |
+| time_month       |                  |                                              |
+| time_year        |                  |                                              |
+| time_day_week    |                  |                                              |
+| time_day_year    |                  |                                              |
+| timestamp13      |                  |                                              |
+| pking            |                  |                                              |
 
 
 
@@ -127,3 +159,18 @@
 "ENTRY_EFFECT" / //进入特效
 "ROOM_REAL_TIME_MESSAGE_UPDATE" / //粉丝数
 ```
+
+
+
+> 参考资料：
+>
+> - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
+>
+> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
+>
+> - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
+>
+> - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
+>
+> - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
+>
