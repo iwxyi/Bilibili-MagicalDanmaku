@@ -292,6 +292,8 @@ private:
     void startCalculateDailyData();
     void saveCalculateDailyData();
 
+    void processDanmakuCmd(QString msg);
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;

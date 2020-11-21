@@ -2264,6 +2264,52 @@ void MainWindow::saveCalculateDailyData()
     }
 }
 
+void MainWindow::processDanmakuCmd(QString msg)
+{
+    if (msg == "关闭欢迎")
+    {
+        ui->autoSendWelcomeCheck->setChecked(false);
+        sendNotifyMsg(">已暂停自动欢迎");
+    }
+    else if (msg == "开启欢迎")
+    {
+        ui->autoSendWelcomeCheck->setChecked(true);
+        sendNotifyMsg(">已开启自动欢迎");
+    }
+    else if (msg == "关闭关注答谢")
+    {
+        ui->autoSendAttentionCheck->setChecked(false);
+        sendNotifyMsg(">已暂停自动答谢关注");
+    }
+    else if (msg == "开启关注答谢")
+    {
+        ui->autoSendAttentionCheck->setChecked(true);
+        sendNotifyMsg(">已开启自动答谢关注");
+    }
+    else if (msg == "关闭送礼答谢")
+    {
+        ui->autoSendGiftCheck->setChecked(false);
+        sendNotifyMsg(">已暂停自动答谢送礼");
+    }
+    else if (msg == "开启送礼答谢")
+    {
+        ui->autoSendGiftCheck->setChecked(true);
+        sendNotifyMsg(">已开启自动答谢送礼");
+    }
+    else if (msg == "关闭禁言")
+    {
+        ui->autoBlockNewbieCheck->setChecked(false);
+        on_autoBlockNewbieCheck_clicked();
+        sendNotifyMsg(">已暂停新人关键词自动禁言");
+    }
+    else if (msg == "开启禁言")
+    {
+        ui->autoBlockNewbieCheck->setChecked(true);
+        on_autoBlockNewbieCheck_clicked();
+        sendNotifyMsg(">已开启新人关键词自动禁言");
+    }
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = ((uchar)message[8] << 24)
@@ -2594,7 +2640,12 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
+        if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
+        {
+            // 不仅不屏蔽，反而支线主播特权
+            processDanmakuCmd(msg);
+        }
+        else if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
             bool blocked = false;
             // 自动拉黑
