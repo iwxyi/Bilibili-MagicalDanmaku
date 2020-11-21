@@ -187,12 +187,14 @@ MainWindow::MainWindow(QWidget *parent)
         if (pkEndTime)
         {
             second = static_cast<int>(pkEndTime - QDateTime::currentSecsSinceEpoch());
+            if (second < 0) // 结束后会继续等待一段时间，这时候会变成负数
+                second = 0;
             minute = second / 60;
             second = second % 60;
         }
         QString text = QString("%1:%2 %3/%4")
                 .arg(minute)
-                .arg((second > 0 && second < 10 ? "0" : "") + QString::number(second))
+                .arg((second < 10 ? "0" : "") + QString::number(second))
                 .arg(myVotes)
                 .arg(matchVotes);
         if (danmakuWindow)
@@ -762,6 +764,8 @@ void MainWindow::on_roomIdEdit_editingFinished()
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
     pking = false;
+    pkEnding = false;
+    pkVoting = 0;
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
@@ -2450,7 +2454,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             ui->roomRankLabel->setStyleSheet("color: " + color + ";");
             ui->roomRankLabel->setText(desc);
             ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
-            showLocalNotify("当前排名：" + desc);
+            if (desc != ui->roomRankLabel->text()) // 排名有更新
+                showLocalNotify("当前排名：" + desc);
         }
         else if (handlePK(json))
         {
@@ -2822,6 +2827,12 @@ void MainWindow::handleMessage(QJsonObject json)
             dailyGiftGold += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
+
+            // 正在偷塔阶段
+            if (pkEnding)
+            {
+                pkVoting -= totalCoin;
+            }
         }
 
         if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
@@ -3014,6 +3025,11 @@ bool MainWindow::handlePK(QJsonObject json)
         qint64 deltaEnd = pkEndTime - currentTime;
         QString roomId = this->roomId;
 
+        // 结束后
+        QTimer::singleShot(deltaEnd, [=]{
+            pkEnding = false;
+            pkVoting = 0;
+        });
         // 结束前2秒
         QTimer::singleShot(deltaEnd*1000 - pkJudgeEarly, [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
@@ -3025,6 +3041,8 @@ bool MainWindow::handlePK(QJsonObject json)
             qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes
                      << QDateTime::currentSecsSinceEpoch() << pkEndTime;
 
+            pkEnding = true;
+            pkVoting = 0;
             // 几个吃瓜就能解决的……
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes <= matchVotes && myVotes + pkMaxGold/10 > matchVotes)
@@ -3033,6 +3051,7 @@ bool MainWindow::handlePK(QJsonObject json)
                 int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
                 sendGify(20004, num);
                 showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
+                pkVoting += 10 * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
             else
@@ -3086,7 +3105,21 @@ bool MainWindow::handlePK(QJsonObject json)
 
         if (!pkTimer->isActive())
             pkTimer->start();
-        qDebug() << "大乱斗进度：" << myVotes << matchVotes;
+        qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        if (pkEnding)
+        {
+            // 反偷塔，防止对方也在最后几秒刷礼物
+            if (ui->pkAutoMelonCheck->isChecked()
+                    && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes)
+            {
+                // 调用送礼
+                int num = static_cast<int>((matchVotes-myVotes-pkVoting+1)/10 + 1);
+                sendGify(20004, num);
+                showLocalNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
+                pkVoting += 10 * num;
+                qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+            }
+        }
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
@@ -3115,6 +3148,8 @@ bool MainWindow::handlePK(QJsonObject json)
         // winner_type: 2赢，-1输
 
         pking = false;
+        pkEnding = false;
+        pkVoting = 0;
         pkEndTime = 0;
         int winnerType = data.value("init_info").toObject().value("winner_type").toInt();
         qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());

@@ -372,6 +372,8 @@ private:
     QTimer* pkTimer = nullptr;
     int pkJudgeEarly = 2000;
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
+    bool pkEnding = false;
+    int pkVoting = 0;
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;
