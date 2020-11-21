@@ -1321,7 +1321,6 @@ void MainWindow::getRoomInfo()
         }
 
         // 获取主播信息
-        QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
         qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
@@ -3006,8 +3005,13 @@ bool MainWindow::handlePK(QJsonObject json)
                 // 调用送礼
                 int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
                 sendGify(20004, num);
-                showLocalNotify("自动偷塔，赠送 " + snum(num) + " 个吃瓜");
+                showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+            }
+            else
+            {
+                showLocalNotify(QString("大乱斗比分：%1 vs %2")
+                                .arg(myVotes).arg(matchVotes));
             }
         });
 
@@ -3042,8 +3046,17 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605749908
         }*/
 
-        myVotes = data.value("init_info").toObject().value("votes").toInt();
-        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == roomId)
+        {
+            myVotes = data.value("init_info").toObject().value("votes").toInt();
+            matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        }
+        else
+        {
+            myVotes = data.value("match_info").toObject().value("votes").toInt();
+            matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        }
+
         if (!pkTimer->isActive())
             pkTimer->start();
         qDebug() << "大乱斗进度：" << myVotes << matchVotes;
