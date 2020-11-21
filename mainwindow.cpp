@@ -1236,6 +1236,7 @@ void MainWindow::getRoomInfo()
         // 获取房间信息
         QJsonObject dataObj = json.value("data").toObject();
         QJsonObject roomInfo = dataObj.value("room_info").toObject();
+        QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
@@ -1248,6 +1249,7 @@ void MainWindow::getRoomInfo()
         roomName = roomInfo.value("title").toString();
         setWindowTitle(QApplication::applicationName() + " - " + roomName);
         ui->roomNameLabel->setText(roomName);
+        upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         if (liveStatus != 1)
             ui->popularityLabel->setText("未开播");
         else
@@ -1944,6 +1946,23 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%pking%"))
         msg.replace("%pking%", snum(pking ? 1 : 0));
 
+    // 房间属性
+    if (msg.contains("%living%"))
+        msg.replace("%living%", snum(liveStatus ? 1 : 0));
+    if (msg.contains("%room_id%"))
+        msg.replace("%room_id%", roomId);
+    if (msg.contains("%room_name%"))
+        msg.replace("%room_name%", roomName);
+    if (msg.contains("%up_name%"))
+        msg.replace("%up_name%", upName);
+    if (msg.contains("%up_uid%"))
+        msg.replace("%up_uid%", upUid);
+    if (msg.contains("%my_uid%"))
+        msg.replace("%my_uid%", cookieUid);
+    if (msg.contains("%my_uname%"))
+        msg.replace("%my_uname%", cookieUname);
+
+
     return msg;
 }
 
@@ -1972,10 +1991,32 @@ QString MainWindow::processVariantConditions(QString msg) const
         QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
         foreach (QString exp, andExps)
         {
-            if (exp.indexOf(compRe, 0, &match) == -1)
+            if (exp.indexOf(compRe, 0, &match) == -1) // 非比较
             {
-                qDebug() << "无法解析表达式：" << exp;
-                qDebug() << "    原始语句：" << msg;
+                exp = exp.trimmed();
+                bool notTrue = exp.startsWith("!");
+                if (notTrue) // 取反……
+                {
+                    exp = exp.right(exp.length() - 1);
+                }
+                if (exp.isEmpty() || exp == "0" || exp.toLower() == "false") // false
+                {
+                    if (!notTrue)
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                else // true
+                {
+                    if (notTrue)
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                // qDebug() << "无法解析表达式：" << exp;
+                // qDebug() << "    原始语句：" << msg;
                 continue;
             }
 
