@@ -373,5 +373,11 @@ private:
     int pkJudgeEarly = 2000;
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
 
+    // 弹幕人气判断
+    QTimer* danmuPopularTimer;
+    int minuteDanmuPopular = 0;
+    QList<int> danmuPopularQueue;
+    int danmuPopularValue = 0;
+
 };
 #endif // MAINWINDOW_H

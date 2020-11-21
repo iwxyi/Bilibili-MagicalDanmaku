@@ -226,6 +226,18 @@ MainWindow::MainWindow(QWidget *parent)
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
     ui->startLiveSendCheck->setChecked(settings.value("live/startSend").toBool());
 
+    // 弹幕人气
+    danmuPopularTimer = new QTimer(this);
+    danmuPopularTimer->setInterval(30000);
+    connect(danmuPopularTimer, &QTimer::timeout, this, [=]{
+        danmuPopularValue += minuteDanmuPopular;
+        danmuPopularQueue.append(minuteDanmuPopular);
+        minuteDanmuPopular = 0;
+        if (danmuPopularQueue.size() > 10)
+            danmuPopularValue -= danmuPopularQueue.takeFirst();
+        ui->popularityLabel->setToolTip("弹幕人气：" + snum(danmuPopularValue));
+    });
+
     // 定时连接
     ui->timerConnectServerCheck->setChecked(settings.value("live/timerConnectServer", false).toBool());
     ui->startLiveHourSpin->setValue(settings.value("live/startLiveHour", 0).toInt());
@@ -750,6 +762,11 @@ void MainWindow::on_roomIdEdit_editingFinished()
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
     pking = false;
+
+    danmuPopularQueue.clear();
+    minuteDanmuPopular = 0;
+    danmuPopularValue = 0;
+
     if (danmakuWindow)
         danmakuWindow->hideStatusText();
 
@@ -1101,6 +1118,7 @@ void MainWindow::initWS()
 
         // 定时发送心跳包
         heartTimer->start();
+        danmuPopularTimer->start();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -1109,6 +1127,7 @@ void MainWindow::initWS()
         ui->popularityLabel->setText("人气值：0");
 
         heartTimer->stop();
+        danmuPopularTimer->stop();
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
@@ -1715,6 +1734,12 @@ QString MainWindow::processTimeVariants(QString msg) const
         QStringList sl{"啊", "呀"};
         int r = qrand() % sl.size();
         msg = msg.replace("%tone%", sl.at(r));
+    }
+    if (msg.contains("%lela%"))
+    {
+        QStringList sl{"了", "啦"};
+        int r = qrand() % sl.size();
+        msg = msg.replace("%lela%", sl.at(r));
     }
 
     // 标点
@@ -2668,6 +2693,8 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku.setNoReply();
             noReplyMsgs.clear();
         }
+        else
+            minuteDanmuPopular++;
         appendNewLiveDanmaku(danmaku);
 
         // 新人发言
