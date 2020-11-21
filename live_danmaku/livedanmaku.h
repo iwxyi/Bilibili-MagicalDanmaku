@@ -17,7 +17,8 @@ enum MessageType
     MSG_WELCOME_GUARD,
     MSG_FANS,
     MSG_ATTENTION,
-    MSG_BLOCK
+    MSG_BLOCK,
+    MSG_MSG
 };
 
 class LiveDanmaku
@@ -74,7 +75,13 @@ public:
     }
 
     LiveDanmaku(QString nickname, qint64 uid)
-        : msgType(MSG_BLOCK), nickname(nickname), uid(uid)
+        : msgType(MSG_BLOCK), nickname(nickname), uid(uid), timeline(QDateTime::currentDateTime())
+    {
+
+    }
+
+    LiveDanmaku(QString msg)
+        : msgType(MSG_MSG), text(msg), timeline(QDateTime::currentDateTime())
     {
 
     }
@@ -167,6 +174,10 @@ public:
         {
             object.insert("attention", attention);
         }
+        else if (msgType == MSG_MSG)
+        {
+            object.insert("text", text);
+        }
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
         if (!anchor_roomid.isEmpty())
@@ -230,8 +241,15 @@ public:
         }
         else if (msgType == MSG_BLOCK)
         {
-            return QString("[禁言] %1 被房管禁言")
-                                .arg(nickname);
+            return QString("%2\t[禁言] %1 被房管禁言")
+                    .arg(nickname)
+                    .arg(timeline.toString("hh:mm:ss"));
+        }
+        else if (msgType == MSG_MSG)
+        {
+            return QString("%1\t%2")
+                    .arg(timeline.toString("hh:mm:ss"))
+                    .arg(nickname);
         }
         return "未知消息类型";
     }

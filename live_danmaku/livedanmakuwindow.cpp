@@ -560,6 +560,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = QString("<font color='gray'>[禁言]</font> %1 被房管禁言")
                 .arg(danmaku.getNickname());
     }
+    else if (msgType == MSG_MSG)
+    {
+        text = QString("<font color='gray'>%1</font>")
+                .arg(danmaku.getText());
+    }
 
     // 文字与大小
     label->setText(text);

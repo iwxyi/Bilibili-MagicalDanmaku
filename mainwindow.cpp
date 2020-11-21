@@ -397,7 +397,8 @@ void MainWindow::removeTimeoutDanmaku()
         auto type = danmaku.getMsgType();
         if (type == MSG_ATTENTION || type == MSG_WELCOME || type == MSG_FANS
                 || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000))
-                || (type == MSG_DANMAKU && danmaku.isNoReply()))
+                || (type == MSG_DANMAKU && danmaku.isNoReply())
+                || type == MSG_MSG)
         {
             QDateTime dateTime = danmaku.getTimeline();
             if (dateTime.toMSecsSinceEpoch() + removeDanmakuTipInterval < timestamp)
@@ -709,6 +710,10 @@ void MainWindow::on_testDanmakuButton_clicked()
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         qDebug() << "条件替换结果：" << words;
+    }
+    else if (text == "测试消息")
+    {
+        appendNewLiveDanmaku(LiveDanmaku("测试通知消息"));
     }
     else
     {
@@ -2947,6 +2952,7 @@ bool MainWindow::handlePK(QJsonObject json)
                 // 调用送礼
                 int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
                 sendGify(20004, num);
+                appendNewLiveDanmaku(LiveDanmaku("自动偷塔，赠送 " + snum(num) + " 个吃瓜"));
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
         });
@@ -2954,7 +2960,9 @@ bool MainWindow::handlePK(QJsonObject json)
         pkTimer->start();
         if (danmakuWindow)
             danmakuWindow->showStatusText();
-        qDebug() << "开启大乱斗, id =" << static_cast<qint64>(json.value("pk_id").toDouble());
+        qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
+        qDebug() << "开启大乱斗, id =" << pkid;
+        appendNewLiveDanmaku(LiveDanmaku("开启大乱斗：" + snum(pkid)));
         // 1605757123 1605757123 1605757433
 //        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
     }
@@ -3014,8 +3022,6 @@ bool MainWindow::handlePK(QJsonObject json)
 
         pking = false;
         pkEndTime = 0;
-        myVotes = 0;
-        matchVotes = 0;
         int winnerType = data.value("init_info").toObject().value("winner_type").toInt();
         qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
         if (pkTimer)
@@ -3024,6 +3030,12 @@ bool MainWindow::handlePK(QJsonObject json)
             danmakuWindow->hideStatusText();
         bool result = (winnerType > 0 && snum(thisRoomId) == roomId)
                 || (winnerType < 0 && snum(thisRoomId) != roomId);
+        appendNewLiveDanmaku(LiveDanmaku(QString("大乱斗结果：%1，积分：%2 vs %3")
+                                         .arg(result ? "胜利" : "失败")
+                                         .arg(myVotes)
+                                         .arg(matchVotes)));
+        myVotes = 0;
+        matchVotes = 0;
         qDebug() << "大乱斗结束，结果：" << (result ? "胜利" : "失败");
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
