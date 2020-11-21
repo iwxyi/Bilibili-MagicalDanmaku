@@ -239,10 +239,11 @@ private slots:
 
     void on_pkAutoMelonCheck_clicked();
 
-
     void on_pkMaxGoldButton_clicked();
 
     void on_pkJudgeEarlyButton_clicked();
+
+    void on_roomIdEdit_returnPressed();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
@@ -250,6 +251,7 @@ private:
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void addNoReplyDanmakuText(QString text);
+    void showLocalNotify(QString text);
 
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();

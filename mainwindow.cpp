@@ -489,6 +489,11 @@ void MainWindow::addNoReplyDanmakuText(QString text)
     noReplyMsgs.append(text);
 }
 
+void MainWindow::showLocalNotify(QString text)
+{
+    appendNewLiveDanmaku(LiveDanmaku(text));
+}
+
 /**
  * 发送单挑弹幕的原子操作
  */
@@ -713,7 +718,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试消息")
     {
-        appendNewLiveDanmaku(LiveDanmaku("测试通知消息"));
+        showLocalNotify("测试通知消息");
     }
     else
     {
@@ -2380,6 +2385,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             ui->roomRankLabel->setStyleSheet("color: " + color + ";");
             ui->roomRankLabel->setText(desc);
             ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
+            showLocalNotify("当前排名：" + desc);
         }
         else if (handlePK(json))
         {
@@ -2647,7 +2653,7 @@ void MainWindow::handleMessage(QJsonObject json)
         };
         if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
         {
-            // 不仅不屏蔽，反而支线主播特权
+            // 不仅不屏蔽，反而支持主播特权
             processDanmakuCmd(msg);
         }
         else if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
@@ -2660,13 +2666,20 @@ void MainWindow::handleMessage(QJsonObject json)
                 if (reStr.endsWith("|"))
                     reStr = reStr.left(reStr.length()-1);
                 QRegularExpression re(reStr);
-                if (msg.indexOf(re) > -1 // 自动拉黑
+                QRegularExpressionMatch match;
+                if (msg.indexOf(re, 0, &match) > -1 // 自动拉黑
                         && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
                         && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
                         && medal_level <= 2 // 勋章不到3级
                         )
                 {
+                    if (match.capturedTexts().size() > 1)
+                    {
+                        QString blockKey = match.captured(1); // 第一个括号的
+                        showLocalNotify("检测到新人说【" + blockKey + "】，自动禁言");
+                    }
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
+
                     // 拉黑
                     addBlockUser(uid, 720);
                     blocked = true;
@@ -2952,7 +2965,7 @@ bool MainWindow::handlePK(QJsonObject json)
                 // 调用送礼
                 int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
                 sendGify(20004, num);
-                appendNewLiveDanmaku(LiveDanmaku("自动偷塔，赠送 " + snum(num) + " 个吃瓜"));
+                showLocalNotify("自动偷塔，赠送 " + snum(num) + " 个吃瓜");
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
         });
@@ -2962,7 +2975,7 @@ bool MainWindow::handlePK(QJsonObject json)
             danmakuWindow->showStatusText();
         qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
         qDebug() << "开启大乱斗, id =" << pkid;
-        appendNewLiveDanmaku(LiveDanmaku("开启大乱斗：" + snum(pkid)));
+        showLocalNotify("开启大乱斗：" + snum(pkid));
         // 1605757123 1605757123 1605757433
 //        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
     }
@@ -3030,10 +3043,10 @@ bool MainWindow::handlePK(QJsonObject json)
             danmakuWindow->hideStatusText();
         bool result = (winnerType > 0 && snum(thisRoomId) == roomId)
                 || (winnerType < 0 && snum(thisRoomId) != roomId);
-        appendNewLiveDanmaku(LiveDanmaku(QString("大乱斗结果：%1，积分：%2 vs %3")
+        showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                          .arg(result ? "胜利" : "失败")
                                          .arg(myVotes)
-                                         .arg(matchVotes)));
+                                         .arg(matchVotes));
         myVotes = 0;
         matchVotes = 0;
         qDebug() << "大乱斗结束，结果：" << (result ? "胜利" : "失败");
@@ -3763,4 +3776,12 @@ bool MainWindow::isConditionTrue(T a, T b, QString op) const
         return a < b;
     qDebug() << "无法识别的比较模板类型：" << a << op << b;
     return false;
+}
+
+void MainWindow::on_roomIdEdit_returnPressed()
+{
+    if (socket->state() == QAbstractSocket::UnconnectedState)
+    {
+        startConnectRoom();
+    }
 }
