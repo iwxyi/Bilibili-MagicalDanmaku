@@ -105,7 +105,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QLabel" name="lyricsLabel">
           <property name="text">
            <string>歌词字幕</string>
           </property>

@@ -8,6 +8,7 @@
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QNetworkCookie>
 #include <QStringListModel>
 #include <QTimer>
 #include <QScrollBar>
@@ -22,8 +23,8 @@ VideoLyricsCreator::VideoLyricsCreator(QWidget *parent) :
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose, true);
 
-    userCookie = settings.value("danmaku/browserCookie", "").toString();
-    lyricsSample = settings.value("danmaku/browserData", "").toString();
+    userCookie = settings.value("lyrics/userCookie", "").toString();
+    lyricsSample = settings.value("lyrics/danmakuSample", "").toString();
 
     ui->lyricsEdit->setPlaceholderText("[00:23.13]飘泊的雪 摇曳回风\n[00:26.77]诗意灵魂 更迭情人"
                                           "\n[00:30.40]总惯用轻浮的茂盛 掩抹深沉\n[00:36.98]......");
@@ -46,7 +47,7 @@ void VideoLyricsCreator::on_sendButton_clicked()
         return ;
     }
 
-    lyricList = ui->lyricsEdit->toPlainText().split("\n");
+    lyricList = ui->lyricsEdit->toPlainText().split("\n", QString::SkipEmptyParts);
 
     // 判断歌词格式
     QRegularExpression re("^\\[\\d+[:\\.]\\d+\\.\\d+\\].*$");
@@ -59,9 +60,15 @@ void VideoLyricsCreator::on_sendButton_clicked()
         }
     }
 
+    if (userCookie.isEmpty() || lyricsSample.isEmpty())
+    {
+        QMessageBox::information(this, "账号", "请在菜单中设置账号数据");
+        return ;
+    }
+
     if (videoId.isEmpty() || videoAVorBV.isEmpty() || videoCid.isEmpty())
     {
-        QMessageBox::information(this, "数据", "未设置全部数据");
+        QMessageBox::information(this, "数据", "未设置全部数据:"+videoAVorBV+" "+videoId+"\n"+videoCid);
         return ;
     }
 
@@ -70,6 +77,13 @@ void VideoLyricsCreator::on_sendButton_clicked()
     totalSending = 0;
     offsetMSecond = ui->offsetSpin->value();
     ui->lyricsEdit->verticalScrollBar()->setSliderPosition(0);
+    sendSample = lyricsSample;
+    qDebug() << "原始：" << sendSample;
+    sendSample.replace(QRegularExpression("(^|&)(aid|bvid)=.*?(&|$)"),
+                       "\\1"+videoAVorBV+"="+videoId+"\\3");
+    sendSample.replace(QRegularExpression("((?:^|&)oid=).*?(&|$)"),
+                       "\\1"+videoCid+"\\2");
+    qDebug() << "新的：" << sendSample;
 
     // 开始挨个发送
     setSendingState(true);
@@ -85,11 +99,11 @@ void VideoLyricsCreator::on_actionSet_Lyrics_Danmaku_Sample_triggered()
     // &bvid=BV1Mk4y11732&progress=31505&color=16777215&fontsize=25&pool=1&mode=4
     // &rnd=1606031544129302&plat=1&csrf=2570b86da5d84cac811d9645edb94956
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置字幕样例", "先前发送弹幕", QLineEdit::Normal, userCookie, &ok);
+    QString s = QInputDialog::getText(this, "设置字幕样例", "先前发送弹幕", QLineEdit::Normal, lyricsSample, &ok);
     if (!ok)
         return ;
 
-    settings.setValue("danmaku/browserCookie", userCookie = s);
+    settings.setValue("lyrics/danmakuSample", lyricsSample = s);
 }
 
 void VideoLyricsCreator::on_actionSet_Sample_Help_triggered()
@@ -107,11 +121,11 @@ void VideoLyricsCreator::on_actionSet_Sample_Help_triggered()
 void VideoLyricsCreator::on_actionSet_Cookie_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, lyricsSample, &ok);
+    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, userCookie, &ok);
     if (!ok)
         return ;
 
-    settings.setValue("lyrics/lyricsSample", lyricsSample = s);
+    settings.setValue("lyrics/userCookie", userCookie = s);
 }
 
 // https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/video/info.md
@@ -147,8 +161,9 @@ void VideoLyricsCreator::getVideoInfo(QString key, QString id)
         }
         ui->listView->setModel(new QStringListModel(sl));
 
-        videoCid = videoPages.first().toObject().value("part").toString();
-        ui->cidLabel->setText(videoCid);
+        videoCid = QString::number(static_cast<qint64>(videoPages.at(pageIndex).toObject().value("cid").toDouble()));
+        ui->cidLabel->setText(videoPages.at(pageIndex).toObject().value("part").toString());
+        qDebug() << pageIndex << "cid" << videoCid;
     });
     manager->get(*request);
 }
@@ -196,17 +211,50 @@ void VideoLyricsCreator::sendNextLyric()
 
 void VideoLyricsCreator::sendLyrics(qint64 time, QString text)
 {
-    qDebug() << "发送歌词：" << time << text;
+    qDebug() << ">>>>>>>>>>发送歌词：" << time << text;
     text = text.trimmed();
     if (text.isEmpty()) // 空歌词不需要发送
         return ;
 
-    // 设置Data
+    QUrl url("http://api.bilibili.com/x/v2/dm/post");
 
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
+    // 设置数据
+    QString datas = sendSample;
+    datas.replace(QRegularExpression("((?:^|&)msg=).*?(&|$)"), "\\1"+text.toUtf8().toPercentEncoding()+"\\2");
+    datas.replace(QRegularExpression("((?:^|&)progress=).*?(&|$)"), "\\1"+QString::number(time)+"\\2");
+    QByteArray ba(datas.toStdString().data());
 
-    // 开始Post
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        if (object.value("code").toInt() != 0)
+        {
+            qDebug() << ("warning: 发送失败：") << object.value("message").toString() << datas;
+            return ;
+        }
 
+        // 进度
+        totalSending++;
+        ui->lyricsLabel->setText(QString("已发送：%1/%2").arg(totalSending)
+                                .arg(totalSending + lyricList.size()+ failedList.size()));
+    });
+
+    manager->post(*request, ba);
 }
 
 void VideoLyricsCreator::setSendingState(bool state)
@@ -226,24 +274,63 @@ void VideoLyricsCreator::setSendingState(bool state)
     {
         sendTimer->stop();
         ui->sendButton->setText("开始发送");
+        ui->lyricsLabel->setText("歌词字幕");
     }
+}
+
+QVariant VideoLyricsCreator::getCookies()
+{
+    QList<QNetworkCookie> cookies;
+
+    // 设置cookie
+    QString cookieText = userCookie;
+    QStringList sl = cookieText.split(";");
+    foreach (auto s, sl)
+    {
+        s = s.trimmed();
+        int pos = s.indexOf("=");
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
+    }
+
+    // 请求头里面加入cookies
+    QVariant var;
+    var.setValue(cookies);
+    return var;
 }
 
 void VideoLyricsCreator::on_urlEdit_editingFinished()
 {
     QString url = ui->urlEdit->text();
-    int pos = url.lastIndexOf("/");
-    if (pos == 0)
-        videoId = url;
-    else
-        videoId = url.right(url.length() - pos - 1);
-    videoAVorBV = videoId.toLower().startsWith("bv") ? "bvid" : "aid"; // 是AV还是BV
-    qDebug() << "视频：" << videoAVorBV << videoId;
-    getVideoInfo(videoAVorBV, videoId);
+    if (!url.isEmpty())
+    {
+        int pos = url.lastIndexOf("/");
+        if (pos == 0)
+            videoId = url;
+        else
+            videoId = url.right(url.length() - pos - 1);
+        videoAVorBV = videoId.toLower().startsWith("bv") ? "bvid" : "aid"; // 是AV还是BV
+        pageIndex = 0;
+
+        QRegularExpression re("^(.+)\\?p=(\\d+)$");
+        QRegularExpressionMatch match;
+        if (videoId.indexOf(re, 0, &match) > -1)
+        {
+            videoId = match.captured(1);
+            pageIndex = match.captured(2).toInt() - 1;
+            qDebug() << "当前页：" << pageIndex;
+        }
+
+        qDebug() << "视频：" << videoAVorBV << videoId;
+        getVideoInfo(videoAVorBV, videoId);
+    }
 }
 
 void VideoLyricsCreator::on_listView_clicked(const QModelIndex &index)
 {
-    videoCid = videoPages.at(index.row()).toObject().value("part").toString();
-    ui->cidLabel->setText(videoCid);
+    pageIndex = index.row();
+    videoCid = QString::number(static_cast<qint64>(videoPages.at(pageIndex).toObject().value("cid").toDouble()));
+    qDebug() << pageIndex << "cid" << videoCid;
+    ui->cidLabel->setText(videoPages.at(pageIndex).toObject().value("part").toString());
 }

@@ -35,6 +35,7 @@ private:
     void getVideoInfo(QString key, QString id);
     void sendLyrics(qint64 time, QString text);
     void setSendingState(bool state);
+    QVariant getCookies();
 
 private:
     Ui::VideoLyricsCreator *ui;
@@ -54,6 +55,7 @@ private:
     QString videoAVorBV;
     QString videoId;
     QString videoCid;
+    int pageIndex = 0;
     QStringList lyricList;
     QStringList failedList;
     qint64 offsetMSecond = 0;

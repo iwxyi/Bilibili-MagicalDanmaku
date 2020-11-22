@@ -3011,9 +3011,10 @@ bool MainWindow::handlePK(QJsonObject json)
 
         if (!pkTimer->isActive())
             pkTimer->start();
-        qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+
         if (pkEnding)
         {
+            qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
             // 反偷塔，防止对方也在最后几秒刷礼物
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes)
@@ -3025,6 +3026,10 @@ bool MainWindow::handlePK(QJsonObject json)
                 pkVoting += 10 * num;
                 qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             }
+        }
+        else
+        {
+            qDebug() << "大乱斗进度：" << myVotes << matchVotes;
         }
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
