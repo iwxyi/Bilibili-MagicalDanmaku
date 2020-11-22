@@ -37,10 +37,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->refreshDanmakuCheck->setChecked(true);
 #endif
 
-    // 自动刷新是否启用
-    bool autoRefresh = settings.value("danmaku/autoRefresh", true).toBool();
-    ui->refreshDanmakuCheck->setChecked(autoRefresh);
-
     // 移除间隔
     removeTimer = new QTimer(this);
     removeTimer->setInterval(1000);
@@ -120,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
-        on_showLiveDanmakuButton_clicked();
+         on_actionShow_Live_Danmaku_triggered();
     }
 
     // 发送弹幕
@@ -255,16 +251,9 @@ MainWindow::MainWindow(QWidget *parent)
         startConnectRoom();
     });
 
-#ifndef SOCKET_MODE
-
-#else
-    ui->refreshDanmakuCheck->setEnabled(false);
-    ui->refreshDanmakuIntervalSpin->setEnabled(false);
-
     // WS连接
     initWS();
     startConnectRoom();
-#endif
 
 //    for (int i = 0; i < 3; i++)
     /*{
@@ -423,25 +412,6 @@ void MainWindow::removeTimeoutDanmaku()
             // break; // 不break，就是一次性删除多个
         }
     }
-}
-
-
-void MainWindow::on_refreshDanmakuIntervalSpin_valueChanged(int arg1)
-{
-    settings.setValue("danmaku/interval", arg1);
-#ifndef SOCKET_MODE
-    danmakuTimer->setInterval(arg1);
-#endif
-}
-
-void MainWindow::on_refreshDanmakuCheck_stateChanged(int arg1)
-{
-#ifndef SOCKET_MODE
-    if (arg1)
-        danmakuTimer->start();
-    else
-        danmakuTimer->stop();
-#endif
 }
 
 void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
@@ -662,40 +632,6 @@ void MainWindow::sendNotifyMsg(QString msg)
     sendAutoMsg(msg);
 }
 
-/**
- * 显示实时弹幕
- */
-void MainWindow::on_showLiveDanmakuButton_clicked()
-{
-    if (!danmakuWindow)
-    {
-        danmakuWindow = new LiveDanmakuWindow(this);
-
-        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
-        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
-        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
-        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
-        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
-        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-        danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
-        danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
-        danmakuWindow->hide();
-    }
-
-    bool hidding = danmakuWindow->isHidden();
-
-    if (hidding)
-    {
-        danmakuWindow->show();
-    }
-    else
-    {
-        danmakuWindow->hide();
-    }
-    settings.setValue("danmaku/liveWindow", hidding);
-}
-
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
 {
     settings.setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
@@ -797,58 +733,6 @@ void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
     settings.setValue("mainwindow/tabIndex", index);
-}
-
-void MainWindow::on_refreshDanmakuCheck_clicked()
-{
-    settings.setValue("danmaku/autoRefresh", ui->refreshDanmakuCheck->isChecked());
-}
-
-void MainWindow::on_SetBrowserCookieButton_clicked()
-{
-    bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, browserCookie, &ok);
-    if (!ok)
-        return ;
-
-    settings.setValue("danmaku/browserCookie", browserCookie = s);
-    int posl = browserData.indexOf("csrf_token=") + 11;
-    int posr = browserData.indexOf("&", posl);
-    if (posr == -1) posr = browserData.length();
-    csrf_token = browserData.mid(posl, posr - posl);
-    getUserInfo();
-}
-
-void MainWindow::on_SetBrowserDataButton_clicked()
-{
-    bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Data", "设置用户登录的data", QLineEdit::Normal, browserData, &ok);
-    if (!ok)
-        return ;
-
-    settings.setValue("danmaku/browserData", browserData = s);
-}
-
-void MainWindow::on_SetBrowserHelpButton_clicked()
-{
-    QString steps = "发送弹幕前需按以下步骤注入登录信息：\n\n";
-    steps += "步骤一：\n浏览器登录bilibili账号，并进入对应直播间\n\n";
-    steps += "步骤二：\n按下F12（开发者调试工具），找到右边顶部的“Network”项\n\n";
-    steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
-    steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
-    steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
-    steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n";
-    steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
-
-    steps += "\n\n变量列表：\n";
-    steps += "\\n：分成多条弹幕发送，间隔1.5秒";
-    steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
-    steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
-    steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
-    steps += "\n%tone%：随机替换为“啊”、“呀”";
-    steps += "\n%punc%：随机替换为“~”、“！”";
-    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";
-    QMessageBox::information(this, "定时弹幕", steps);
 }
 
 void MainWindow::on_SendMsgButton_clicked()
@@ -2345,7 +2229,28 @@ void MainWindow::saveCalculateDailyData()
 
 void MainWindow::processDanmakuCmd(QString msg)
 {
-    if (msg == "关闭欢迎")
+    if (msg == "关闭功能")
+    {
+        sendNotifyMsg(">已暂停自动弹幕");
+        processDanmakuCmd("关闭欢迎");
+        processDanmakuCmd("关闭关注答谢");
+        processDanmakuCmd("关闭送礼答谢");
+        processDanmakuCmd("关闭禁言");
+    }
+    else if (msg == "开启功能")
+    {
+        sendNotifyMsg(">已开启自动弹幕");
+        processDanmakuCmd("开启欢迎");
+        processDanmakuCmd("开启关注答谢");
+        processDanmakuCmd("开启送礼答谢");
+        processDanmakuCmd("开启禁言");
+    }
+    else if (msg == "关闭机器人")
+    {
+        socket->abort();
+        connectServerTimer->stop();
+    }
+    else if (msg == "关闭欢迎")
     {
         ui->autoSendWelcomeCheck->setChecked(false);
         sendNotifyMsg(">已暂停自动欢迎");
@@ -3900,4 +3805,95 @@ void MainWindow::on_roomIdEdit_returnPressed()
     {
         startConnectRoom();
     }
+}
+
+void MainWindow::on_actionData_Path_triggered()
+{
+
+}
+
+/**
+ * 显示实时弹幕
+ */
+void MainWindow::on_actionShow_Live_Danmaku_triggered()
+{
+    if (!danmakuWindow)
+    {
+        danmakuWindow = new LiveDanmakuWindow(this);
+
+        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
+        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
+        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
+        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+        danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
+        danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
+        danmakuWindow->hide();
+    }
+
+    bool hidding = danmakuWindow->isHidden();
+
+    if (hidding)
+    {
+        danmakuWindow->show();
+    }
+    else
+    {
+        danmakuWindow->hide();
+    }
+    settings.setValue("danmaku/liveWindow", hidding);
+}
+
+void MainWindow::on_actionSet_Cookie_triggered()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, browserCookie, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("danmaku/browserCookie", browserCookie = s);
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    csrf_token = browserData.mid(posl, posr - posl);
+    getUserInfo();
+}
+
+void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "设置Data", "设置用户登录的data", QLineEdit::Normal, browserData, &ok);
+    if (!ok)
+        return ;
+
+    settings.setValue("danmaku/browserData", browserData = s);
+}
+
+void MainWindow::on_actionCookie_Help_triggered()
+{
+    QString steps = "发送弹幕前需按以下步骤注入登录信息：\n\n";
+    steps += "步骤一：\n浏览器登录bilibili账号，并进入对应直播间\n\n";
+    steps += "步骤二：\n按下F12（开发者调试工具），找到右边顶部的“Network”项\n\n";
+    steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
+    steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
+    steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
+    steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n";
+    steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
+
+    steps += "\n\n变量列表：\n";
+    steps += "\\n：分成多条弹幕发送，间隔1.5秒";
+    steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
+    steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
+    steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
+    steps += "\n%tone%：随机替换为“啊”、“呀”";
+    steps += "\n%punc%：随机替换为“~”、“！”";
+    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";
+    QMessageBox::information(this, "定时弹幕", steps);
+}
+
+void MainWindow::on_actionCreate_Video_LRC_triggered()
+{
+
 }

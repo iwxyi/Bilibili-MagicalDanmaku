@@ -111,12 +111,6 @@ public slots:
     void removeTimeoutDanmaku();
 
 private slots:
-    void on_refreshDanmakuIntervalSpin_valueChanged(int arg1);
-
-    void on_refreshDanmakuCheck_stateChanged(int arg1);
-
-    void on_showLiveDanmakuButton_clicked();
-
     void on_DiangeAutoCopyCheck_stateChanged(int);
 
     void on_testDanmakuButton_clicked();
@@ -128,14 +122,6 @@ private slots:
     void on_languageAutoTranslateCheck_stateChanged(int);
 
     void on_tabWidget_tabBarClicked(int index);
-
-    void on_refreshDanmakuCheck_clicked();
-
-    void on_SetBrowserCookieButton_clicked();
-
-    void on_SetBrowserDataButton_clicked();
-
-    void on_SetBrowserHelpButton_clicked();
 
     void on_SendMsgButton_clicked();
 
@@ -244,6 +230,18 @@ private slots:
     void on_pkJudgeEarlyButton_clicked();
 
     void on_roomIdEdit_returnPressed();
+
+    void on_actionData_Path_triggered();
+
+    void on_actionShow_Live_Danmaku_triggered();
+
+    void on_actionSet_Cookie_triggered();
+
+    void on_actionSet_Danmaku_Data_Format_triggered();
+
+    void on_actionCookie_Help_triggered();
+
+    void on_actionCreate_Video_LRC_triggered();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
