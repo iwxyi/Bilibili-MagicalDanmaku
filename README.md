@@ -5,7 +5,7 @@
 
 一个Bilibili直播弹幕机器人。
 
-人性化交互，支持弹幕聊天、观众交互、数据统计、防喷禁言等等。
+人性化交互，支持弹幕聊天、观众互动、数据统计、防喷禁言、大乱斗偷塔等等。
 
 
 ## 功能
@@ -44,24 +44,41 @@
 - 大乱斗反偷塔
 - 可编程变量集
 - 动态条件运算
+- 投稿歌词字幕
 
 
 
-![截图1](pictures/screenshot1.png)
+![房间](pictures/screenshot1.png)
 
-![截图2](pictures/screenshot2.png)
+![功能](pictures/screenshot2.png)
 
-![截图1](pictures/screenshot3.png)
+![发送](pictures/screenshot3.png)
 
-![截图1](pictures/screenshot4.png)
+![感谢](pictures/screenshot4.png)
 
-![截图1](pictures/screenshot5.png)
+![开播](pictures/screenshot5.png)
 
-![截图1](pictures/screenshot6.png)
+![禁言](pictures/screenshot6.png)
+
+![弹幕](pictures/screenshot7.png)
+
+![偷塔](pictures/screenshot8.png)
+
+![歌词](pictures/screenshot9.png)
 
 
 
+## 使用
 
+绿色版，开箱即用，输入房间号自动连接。
+
+懒，所以没有做登录功能，如果要发送弹幕，直接使用浏览器Cookie进行登录。
+
+浏览器上在任一直播间打开【开发人员工具】，接着手动发送弹幕，Network-send-Headers，分别复制如下图的cookie和data至菜单“账号”中的两项设置，即可进行发送。
+
+![1606054818666](pictures/cookie.png)
+
+使用Cookie也是为了保证账号安全，当程序借给别人时，自己可以远程退出Bilibili账号，之后则需要重新cookie和data。
 
 ## 可编程变量与运算
 
@@ -279,3 +296,4 @@ tips：
 >
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
 >
+
