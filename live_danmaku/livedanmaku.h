@@ -249,7 +249,7 @@ public:
         {
             return QString("%1\t%2")
                     .arg(timeline.toString("hh:mm:ss"))
-                    .arg(nickname);
+                    .arg(text);
         }
         return "未知消息类型";
     }

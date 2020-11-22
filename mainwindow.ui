@@ -1049,7 +1049,7 @@
   </action>
   <action name="actionCreate_Video_LRC">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>视频歌词字幕</string>

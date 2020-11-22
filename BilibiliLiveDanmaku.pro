@@ -30,6 +30,7 @@ SOURCES += \
     taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
+    videolyricscreator.cpp
 
 HEADERS += \
     live_danmaku/commonvalues.h \
@@ -44,9 +45,11 @@ HEADERS += \
     utils/netutil.h \
     utils/pinyinutil.h \
     utils/stringutil.h \
+    videolyricscreator.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    videolyricscreator.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

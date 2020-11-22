@@ -1,6 +1,7 @@
 #include <zlib.h>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "videolyricscreator.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -1947,8 +1948,8 @@ QString MainWindow::processVariantConditions(QString msg) const
                     break;
                 }
             }
-            else if (s1.startsWith("\"") || s1.endsWith("\"")
-                    || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串
+            else/* if (s1.startsWith("\"") || s1.endsWith("\"")
+                    || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串*/
             {
                 auto removeQuote = [=](QString s) -> QString{
                     if (s.startsWith("\"") && s.endsWith("\""))
@@ -1964,11 +1965,11 @@ QString MainWindow::processVariantConditions(QString msg) const
                     break;
                 }
             }
-            else
+            /*else
             {
                 qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
                 qDebug() << "    原始语句：" << msg;
-            }
+            }*/
         }
         if (isTrue)
             break;
@@ -3854,10 +3855,6 @@ void MainWindow::on_actionSet_Cookie_triggered()
         return ;
 
     settings.setValue("danmaku/browserCookie", browserCookie = s);
-    int posl = browserData.indexOf("csrf_token=") + 11;
-    int posr = browserData.indexOf("&", posl);
-    if (posr == -1) posr = browserData.length();
-    csrf_token = browserData.mid(posl, posr - posl);
     getUserInfo();
 }
 
@@ -3869,6 +3866,10 @@ void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
         return ;
 
     settings.setValue("danmaku/browserData", browserData = s);
+    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    csrf_token = browserData.mid(posl, posr - posl);
 }
 
 void MainWindow::on_actionCookie_Help_triggered()
@@ -3882,18 +3883,19 @@ void MainWindow::on_actionCookie_Help_triggered()
     steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n";
     steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
 
-    steps += "\n\n变量列表：\n";
+    /*steps += "\n\n变量列表：\n";
     steps += "\\n：分成多条弹幕发送，间隔1.5秒";
     steps += "\n%hour%：根据时间替换为“早上”、“中午”、“晚上”等";
     steps += "\n%all_greet%：根据时间替换为“你好啊”、“早上好呀”、“晚饭吃了吗”、“还没睡呀”等";
     steps += "\n%greet%：根据时间替换为“你好”、“早上好”、“中午好”等";
     steps += "\n%tone%：随机替换为“啊”、“呀”";
     steps += "\n%punc%：随机替换为“~”、“！”";
-    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";
+    steps += "\n%tone/punc%：随机替换为“啊”、“呀”、“~”、“！”";*/
     QMessageBox::information(this, "定时弹幕", steps);
 }
 
 void MainWindow::on_actionCreate_Video_LRC_triggered()
 {
-
+    VideoLyricsCreator* vlc = new VideoLyricsCreator(nullptr);
+    vlc->show();
 }
