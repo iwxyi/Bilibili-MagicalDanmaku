@@ -4,10 +4,17 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("实时弹幕");
-//    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
-    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
     this->setMinimumSize(45,45);                        //设置最小尺寸
-    this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    if (settings.value("livedanmakuwindow/jiWindow", false).toBool())
+    {
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        this->setAttribute(Qt::WA_TranslucentBackground, false);
+    }
+    else
+    {
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
+        this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    }
 
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
@@ -692,6 +699,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
+    QAction* actionWindow = new QAction("直播姬模式", this);
 
     QAction* actionDelete = new QAction("删除", this);
 
@@ -703,6 +711,8 @@ void LiveDanmakuWindow::showMenu()
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
     actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
+    actionWindow->setCheckable(true);
+    actionWindow->setChecked(settings.value("livedanmakuwindow/jiWindow", false).toBool());
 
     qint64 uid = danmaku.getUid();
     if (uid != 0)
@@ -807,6 +817,8 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionSendOnce);
+    settingMenu->addSeparator();
+    settingMenu->addAction(actionWindow);
 
     menu->addAction(actionDelete);
 
@@ -994,6 +1006,24 @@ void LiveDanmakuWindow::showMenu()
         bool enable = !settings.value("livedanmakuwindow/sendOnce", false).toBool();
         settings.setValue("livedanmakuwindow/sendOnce", enable);
     });
+    connect(actionWindow, &QAction::triggered, this, [=]{
+        qDebug() << "~~~~~~~~~~~~~~~~~";
+        bool enable = !settings.value("livedanmakuwindow/jiWindow", false).toBool();
+        settings.setValue("livedanmakuwindow/jiWindow", enable);
+        if (enable)
+        {
+            qDebug() << "开启直播姬窗口模式";
+            this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+            this->setAttribute(Qt::WA_TranslucentBackground, false);
+        }
+        else
+        {
+            qDebug() << "关闭直播姬窗口模式";
+            this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
+            this->setAttribute(Qt::WA_TranslucentBackground, true);
+        }
+        emit signalChangeWindowMode();
+    });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
     });
@@ -1013,13 +1043,14 @@ void LiveDanmakuWindow::showMenu()
         emit signalDelBlockUser(uid);
     });
     connect(actionDelete, &QAction::triggered, this, [=]{
-        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())
+//        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())
         {
+            // 强制删除
             listWidget->removeItemWidget(item);
             listWidget->takeItem(listWidget->row(item));
             return ;
         }
-        slotOldLiveDanmakuRemoved(danmaku);
+//        slotOldLiveDanmakuRemoved(danmaku);
     });
 
     menu->exec(QCursor::pos());
@@ -1036,6 +1067,7 @@ void LiveDanmakuWindow::showMenu()
     actionReply->deleteLater();
     actionFreeCopy->deleteLater();
     actionSendMsg->deleteLater();
+    actionDelete->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)

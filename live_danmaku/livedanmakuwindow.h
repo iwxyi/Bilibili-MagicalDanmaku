@@ -75,6 +75,7 @@ signals:
     void signalSendMsg(QString msg);
     void signalAddBlockUser(qint64 uid, int hour);
     void signalDelBlockUser(qint64 uid);
+    void signalChangeWindowMode();
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
