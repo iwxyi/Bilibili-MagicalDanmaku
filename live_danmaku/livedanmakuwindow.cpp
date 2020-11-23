@@ -4,6 +4,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("实时弹幕");
+//    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
     this->setMinimumSize(45,45);                        //设置最小尺寸
     this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
@@ -352,6 +353,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
     QString s = danmaku.toString();
     for (int i = 0; i < listWidget->count(); i++)
     {
+        qDebug() << listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() << s;
         if (listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() == s)
         {
             auto item = listWidget->item(i);
@@ -691,6 +693,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
 
+    QAction* actionDelete = new QAction("删除", this);
+
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
@@ -752,6 +756,7 @@ void LiveDanmakuWindow::showMenu()
         actionTranslate->setEnabled(false);
         actionReply->setEnabled(false);
         actionFreeCopy->setEnabled(false);
+        actionDelete->setEnabled(false);
     }
     else if (!uid)
     {
@@ -802,6 +807,8 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionSendOnce);
+
+    menu->addAction(actionDelete);
 
     connect(actionNameColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(nameColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);
@@ -1005,7 +1012,15 @@ void LiveDanmakuWindow::showMenu()
     connect(actionDelBlock, &QAction::triggered, this, [=]{
         emit signalDelBlockUser(uid);
     });
-
+    connect(actionDelete, &QAction::triggered, this, [=]{
+        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())
+        {
+            listWidget->removeItemWidget(item);
+            listWidget->takeItem(listWidget->row(item));
+            return ;
+        }
+        slotOldLiveDanmakuRemoved(danmaku);
+    });
 
     menu->exec(QCursor::pos());
 
