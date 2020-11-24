@@ -323,10 +323,10 @@ private:
     bool firstPullDanmaku = true; // 是否不加载以前的弹幕
 #endif
     QTimer* removeTimer;
-    qint64 removeDanmakuInterval = 20000;
+    qint64 removeDanmakuInterval = 60000;
     QFile* danmuLogFile = nullptr;
     QTextStream* danmuLogStream = nullptr;
-    qint64 removeDanmakuTipInterval = 10000;
+    qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
 
     // 点歌

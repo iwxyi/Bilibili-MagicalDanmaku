@@ -51,6 +51,7 @@ HEADERS += \
     live_danmaku/portraitlabel.h \
     mainwindow.h \
     order_player/desktoplyricwidget.h \
+    order_player/lyricstreamwidget.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
     resource.rc \
