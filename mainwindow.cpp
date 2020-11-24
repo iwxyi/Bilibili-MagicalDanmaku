@@ -340,6 +340,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
     if (playerWindow)
     {
+        settings.setValue("danmaku/playerWindow", !playerWindow->isHidden());
         playerWindow->close();
         playerWindow->deleteLater();
     }

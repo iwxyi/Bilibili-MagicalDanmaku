@@ -6,6 +6,7 @@ DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
     this->setWindowTitle("桌面歌词");
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
     this->setMinimumSize(45, 25);                        //设置最小尺寸
+    this->setMaximumSize(400, 100);
     this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     this->setMouseTracking(true);
@@ -109,7 +110,20 @@ void DesktopLyricWidget::enterEvent(QEvent *event)
 
 void DesktopLyricWidget::leaveEvent(QEvent *event)
 {
-    hovering = false;
+    if (!this->geometry().contains(QCursor::pos()))
+    {
+        hovering = false;
+    }
+    else
+    {
+        QTimer::singleShot(300, [=]{
+            if (!this->geometry().contains(QCursor::pos()))
+            {
+                hovering = false;
+                update();
+            }
+        });
+    }
     update();
 }
 

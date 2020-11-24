@@ -414,6 +414,10 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
     settings.setValue("orderplayerwindow/geometry", this->saveGeometry());
     settings.setValue("orderplayerwindow/state", this->saveState());
     settings.setValue("music/playPosition", player->position());
+
+    // 保存位置
+    if (!desktopLyric->isHidden())
+        desktopLyric->close();
 }
 
 /**
@@ -655,6 +659,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     }
     else
     {
+        setCurrentLyric("");
         downloadSongLyric(song);
     }
 
@@ -664,6 +669,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     player->setPosition(0);
     player->play();
     emit signalSongPlayStarted(song);
+    setWindowTitle(song.name);
 
     // 添加到历史记录
     historySongs.removeOne(song);

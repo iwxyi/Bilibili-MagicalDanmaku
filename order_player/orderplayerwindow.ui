@@ -14,7 +14,7 @@
    <string>Lazy点歌姬</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset resource="../resource.qrc">
     <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
   </property>
   <property name="styleSheet">
@@ -39,7 +39,7 @@
          <string>Lazy点歌姬</string>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
         </property>
         <property name="flat">
@@ -90,7 +90,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
            </property>
            <property name="flat">
@@ -162,7 +162,7 @@ QTabBar::tab:selected
 }</string>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="styleSheet">
@@ -303,7 +303,7 @@ QTabBar::tab:selected
 </string>
               </property>
               <property name="editTriggers">
-               <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+               <set>QAbstractItemView::EditKeyPressed</set>
               </property>
               <property name="selectionMode">
                <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -586,7 +586,7 @@ QTableCornerButton::section
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/play</normaloff>:/icons/play</iconset>
         </property>
         <property name="flat">
@@ -628,7 +628,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/volume</normaloff>:/icons/volume</iconset>
         </property>
         <property name="flat">
@@ -671,7 +671,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/order_list</normaloff>:/icons/order_list</iconset>
         </property>
         <property name="autoDefault">
@@ -691,7 +691,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/lyric_hide</normaloff>:/icons/lyric_hide</iconset>
         </property>
         <property name="flat">
@@ -715,7 +715,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
   </widget>
  </widget>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resource.qrc"/>
  </resources>
  <connections/>
 </ui>
