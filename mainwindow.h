@@ -23,6 +23,7 @@
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
 #include "commonvalues.h"
+#include "orderplayerwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -243,6 +244,8 @@ private slots:
 
     void on_actionCreate_Video_LRC_triggered();
 
+    void on_actionShow_Order_Player_Window_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -330,6 +333,7 @@ private:
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
     QString diangeFormatString;
+    OrderPlayerWindow* playerWindow = nullptr;
 
     // 登陆信息
     QString browserCookie;

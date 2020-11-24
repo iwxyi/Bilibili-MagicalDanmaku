@@ -78,9 +78,17 @@ MainWindow::MainWindow(QWidget *parent)
 
        if (!diangeAutoCopy) // 是否进行复制操作
            return ;
-       QClipboard* clip = QApplication::clipboard();
-       clip->setText(text);
-       ui->DiangeAutoCopyCheck->setText("点歌自动复制（" + text + "）");
+
+       if (playerWindow && !playerWindow->isHidden())
+       {
+            playerWindow->slotSearchAndAutoAppend(text);
+       }
+       else
+       {
+           QClipboard* clip = QApplication::clipboard();
+           clip->setText(text);
+       }
+       ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
 
        addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
        QTimer::singleShot(100, [=]{
@@ -118,6 +126,12 @@ MainWindow::MainWindow(QWidget *parent)
     if (settings.value("danmaku/liveWindow", false).toBool())
     {
          on_actionShow_Live_Danmaku_triggered();
+    }
+
+    // 点歌姬
+    if (settings.value("danmaku/playerWindow", false).toBool())
+    {
+        on_actionShow_Order_Player_Window_triggered();
     }
 
     // 发送弹幕
@@ -323,6 +337,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         danmakuWindow->close();
         danmakuWindow->deleteLater();
+    }
+    if (playerWindow)
+    {
+        playerWindow->close();
+        playerWindow->deleteLater();
     }
 }
 
@@ -3908,4 +3927,24 @@ void MainWindow::on_actionCreate_Video_LRC_triggered()
 {
     VideoLyricsCreator* vlc = new VideoLyricsCreator(nullptr);
     vlc->show();
+}
+
+void MainWindow::on_actionShow_Order_Player_Window_triggered()
+{
+    if (!playerWindow)
+    {
+        playerWindow = new OrderPlayerWindow(nullptr);
+    }
+
+    bool hidding = playerWindow->isHidden();
+
+    if (hidding)
+    {
+        playerWindow->show();
+    }
+    else
+    {
+        playerWindow->hide();
+    }
+    settings.setValue("danmaku/playerWindow", hidding);
 }

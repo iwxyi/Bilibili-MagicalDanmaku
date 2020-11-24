@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -270,10 +270,10 @@
           <item>
            <widget class="QCheckBox" name="DiangeAutoCopyCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;如果已开启点歌姬，则自动点歌并播放&lt;/p&gt;&lt;p&gt;否则自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>点歌自动复制</string>
+             <string>点歌复制/播放</string>
             </property>
            </widget>
           </item>
@@ -992,7 +992,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -1006,6 +1006,7 @@
      <string>功能</string>
     </property>
     <addaction name="actionShow_Live_Danmaku"/>
+    <addaction name="actionShow_Order_Player_Window"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -1058,6 +1059,11 @@
   <action name="actionCookie_Help">
    <property name="text">
     <string>Cookie帮助</string>
+   </property>
+  </action>
+  <action name="actionShow_Order_Player_Window">
+   <property name="text">
+    <string>显示点歌姬</string>
    </property>
   </action>
  </widget>

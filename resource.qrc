@@ -2,4 +2,23 @@
     <qresource prefix="/document">
         <file alias="pinyin">document/pinyin.txt</file>
     </qresource>
+    <qresource prefix="/icons">
+        <file alias="volume">resources/icons/volume.png</file>
+        <file alias="list_circle">resources/icons/list_circle.png</file>
+        <file alias="random_circle">resources/icons/random_circle.png</file>
+        <file alias="single_circle">resources/icons/single_circle.png</file>
+        <file alias="pause">resources/icons/pause.png</file>
+        <file alias="play">resources/icons/play.png</file>
+        <file alias="search">resources/icons/search.png</file>
+        <file alias="egg">resources/icons/egg.png</file>
+        <file alias="heart">resources/icons/heart.png</file>
+        <file alias="moon">resources/icons/moon.png</file>
+        <file alias="heart2">resources/icons/heart2.png</file>
+        <file alias="candy">resources/icons/candy.png</file>
+        <file alias="mute">resources/icons/mute.png</file>
+        <file alias="order_list">resources/icons/order_list.png</file>
+        <file alias="lyric_hide">resources/icons/lyric_hide.png</file>
+        <file alias="lyric_show">resources/icons/lyric_show.png</file>
+        <file alias="sub_menu_arrow">resources/icons/sub_menu_arrow.png</file>
+    </qresource>
 </RCC>

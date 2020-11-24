@@ -1,4 +1,4 @@
-QT       += core gui network websockets
+QT       += core gui network websockets multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -21,24 +21,38 @@ include($$PWD/qxtglobalshortcut5/qxt.pri)
 
 INCLUDEPATH += \
     utils/ \
-    live_danmaku/
+    live_danmaku/ \
+    interactive_buttons/ \
+    facile_menu/ \
+    order_player/
 
 SOURCES += \
+    facile_menu/facilemenu.cpp \
+    facile_menu/facilemenuitem.cpp \
+    interactive_buttons/interactivebuttonbase.cpp \
     live_danmaku/livedanmakuwindow.cpp \
     main.cpp \
     mainwindow.cpp \
+    order_player/desktoplyricwidget.cpp \
+    order_player/orderplayerwindow.cpp \
     taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
     videolyricscreator.cpp
 
 HEADERS += \
+    facile_menu/facilemenu.h \
+    facile_menu/facilemenuitem.h \
+    interactive_buttons/interactivebuttonbase.h \
     live_danmaku/commonvalues.h \
     live_danmaku/freecopyedit.h \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
     live_danmaku/portraitlabel.h \
     mainwindow.h \
+    order_player/desktoplyricwidget.h \
+    order_player/orderplayerwindow.h \
+    order_player/songbeans.h \
     resource.rc \
     taskwidget.h \
     utils/fileutil.h \
@@ -49,6 +63,7 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui \
+    order_player/orderplayerwindow.ui \
     videolyricscreator.ui
 
 # Default rules for deployment.
