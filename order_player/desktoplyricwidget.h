@@ -80,6 +80,7 @@ protected:
 
 signals:
     void signalhide();
+    void signalSwitchTrans();
 
 public slots:
     void showMenu();
@@ -101,11 +102,14 @@ private:
     AlignMode alignMode = AlignLeft; // 0左 1中 2右 3分散
     QColor playingColor = QColor(155, 80, 255);
     QColor waitingColor = QColor(255, 155, 155);
+    QColor bgColor = QColor(0xf0, 0xf0, 0xf0);
 
     // 歌词显示
     LyricStream lyricStream;
     int currentRow = -1; // 当前播放或即将播放的歌词row（不一定有下一行）
     int pointSize = 20;
+
+    bool jiWindow = false;
 };
 
 #endif // DESKTOPLYRICWIDGET_H

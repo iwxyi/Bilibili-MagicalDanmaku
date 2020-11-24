@@ -7,7 +7,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       settings("musics.ini", QSettings::Format::IniFormat),
       musicsFileDir("musics"),
       player(new QMediaPlayer(this)),
-      desktopLyric(new DesktopLyricWidget(nullptr))
+      desktopLyric(new DesktopLyricWidget(nullptr)),
+      expandPlayingButton(new InteractiveButtonBase(this))
 {
     ui->setupUi(this);
 
@@ -136,10 +137,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     else
         ui->circleModeButton->setIcon(QIcon(":/icons/single_circle"));
 
-    connect(desktopLyric, &DesktopLyricWidget::signalhide, this, [=]{
-        ui->desktopLyricButton->setIcon(QIcon(":/icons/lyric_hide"));
-        settings.setValue("music/desktopLyric", false);
-    });
+    connectDesktopLyricSignals();
+
     bool showDesktopLyric = settings.value("music/desktopLyric", false).toBool();
     if (showDesktopLyric)
     {
@@ -168,6 +167,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         }
     }
     settings.setValue("music/playPosition", 0);
+
+    expandPlayingButton->show();
 
     // searchMusic("司夏"); // 测试用的
 }
@@ -407,6 +408,8 @@ void OrderPlayerWindow::showEvent(QShowEvent *)
 {
     restoreGeometry(settings.value("orderplayerwindow/geometry").toByteArray());
     restoreState(settings.value("orderplayerwindow/state").toByteArray());
+
+    adjustExpandPlayingButton();
 }
 
 void OrderPlayerWindow::closeEvent(QCloseEvent *)
@@ -418,6 +421,11 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
     // 保存位置
     if (!desktopLyric->isHidden())
         desktopLyric->close();
+}
+
+void OrderPlayerWindow::resizeEvent(QResizeEvent *)
+{
+    adjustExpandPlayingButton();
 }
 
 /**
@@ -930,6 +938,51 @@ void OrderPlayerWindow::downloadSongCover(Song song)
 void OrderPlayerWindow::setCurrentLyric(QString lyric)
 {
     desktopLyric->setLyric(lyric);
+}
+
+void OrderPlayerWindow::adjustExpandPlayingButton()
+{
+    QRect rect(ui->playingCoverLabel->mapTo(this, QPoint(0,0)), QSize(ui->listTabWidget->width(), ui->playingCoverLabel->height()));
+    expandPlayingButton->setGeometry(rect);
+    expandPlayingButton->raise();
+}
+
+void OrderPlayerWindow::connectDesktopLyricSignals()
+{
+    connect(desktopLyric, &DesktopLyricWidget::signalhide, this, [=]{
+        ui->desktopLyricButton->setIcon(QIcon(":/icons/lyric_hide"));
+        settings.setValue("music/desktopLyric", false);
+    });
+    connect(desktopLyric, &DesktopLyricWidget::signalSwitchTrans, this, [=]{
+        desktopLyric->close();
+        desktopLyric->deleteLater();
+
+        desktopLyric = new DesktopLyricWidget(nullptr);
+        connectDesktopLyricSignals();
+        desktopLyric->show();
+
+        if (playingSong.isValid())
+        {
+            Song song = playingSong;
+            if (QFileInfo(lyricPath(song)).exists())
+            {
+                QFile file(lyricPath(song));
+                file.open(QIODevice::ReadOnly | QIODevice::Text);
+                QTextStream stream(&file);
+                QString lyric;
+                QString line;
+                while (!stream.atEnd())
+                {
+                    line = stream.readLine();
+                    lyric.append(line+"\n");
+                }
+                file.close();
+
+                setCurrentLyric(lyric);
+                desktopLyric->setPosition(player->position());
+            }
+        }
+    });
 }
 
 /**

@@ -122,9 +122,13 @@ private:
     void downloadSongCover(Song song);
     void setCurrentLyric(QString lyric);
 
+    void adjustExpandPlayingButton();
+    void connectDesktopLyricSignals();
+
 protected:
     void showEvent(QShowEvent*) override;
     void closeEvent(QCloseEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
 
 signals:
     void signalSongDownloadFinished(Song song);
@@ -159,6 +163,7 @@ private:
     qint64 setPlayPositionAfterLoad = 0; // 加载后跳转到时间
 
     DesktopLyricWidget* desktopLyric;
+    InteractiveButtonBase* expandPlayingButton;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

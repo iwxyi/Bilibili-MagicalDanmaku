@@ -4,10 +4,17 @@ DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
     settings("musics.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("桌面歌词");
-    this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
     this->setMinimumSize(45, 25);                        //设置最小尺寸
     this->setMaximumSize(400, 100);
-    this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    if ((jiWindow = settings.value("music/desktopLyricTrans", false).toBool()))
+    {
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
+    }
+    else
+    {
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
+        this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    }
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     this->setMouseTracking(true);
 
@@ -21,6 +28,7 @@ DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
     alignMode = static_cast<AlignMode>(settings.value("music/alignMode", alignMode).toInt());
     playingColor = qvariant_cast<QColor>(settings.value("music/playingColor", playingColor));
     waitingColor = qvariant_cast<QColor>(settings.value("music/waitingColor", waitingColor));
+    bgColor = qvariant_cast<QColor>(settings.value("music/bgColor", bgColor));
     pointSize = settings.value("music/desktopLyricPointSize", pointSize).toInt();
 }
 
@@ -154,12 +162,26 @@ void DesktopLyricWidget::resizeEvent(QResizeEvent *)
 void DesktopLyricWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
+
+    // 绘制背景
+    if (jiWindow)
+    {
+        painter.fillRect(this->rect(), bgColor);
+    }
+    if (hovering)
+    {
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        QPainterPath path;
+        path.addRoundedRect(this->rect(), 5, 5);
+        painter.fillPath(path, QColor(64, 64, 64, 32));
+    }
+
+    // 绘制桌面歌词
     QFont font;
     font.setPointSize(pointSize);
     font.setBold(true);
     painter.setFont(font);
 
-    // 绘制桌面歌词
     // 文字区域
     QRect rect = this->rect();
     rect.setLeft(rect.left() + boundaryWidth);
@@ -204,15 +226,6 @@ void DesktopLyricWidget::paintEvent(QPaintEvent *)
             painter.drawText(rect, align, lyricStream.at(currentRow + (cross ? 0 : 1)).text);
         }
     }
-
-    // 绘制背景
-    if (hovering)
-    {
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        QPainterPath path;
-        path.addRoundedRect(this->rect(), 5, 5);
-        painter.fillPath(path, QColor(64, 64, 64, 32));
-    }
 }
 
 void DesktopLyricWidget::showMenu()
@@ -231,7 +244,7 @@ void DesktopLyricWidget::showMenu()
         update();
     });
     menu->addAction("已播放颜色", [=]{
-        QColor c = QColorDialog::getColor(playingColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
+        QColor c = QColorDialog::getColor(playingColor, this, "选择已播放颜色", QColorDialog::ShowAlphaChannel);
         if (!c.isValid())
             return ;
         if (c != playingColor)
@@ -241,7 +254,7 @@ void DesktopLyricWidget::showMenu()
         }
     })->fgColor(playingColor);
     menu->addAction("未播放颜色", [=]{
-        QColor c = QColorDialog::getColor(waitingColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
+        QColor c = QColorDialog::getColor(waitingColor, this, "选择未播放颜色", QColorDialog::ShowAlphaChannel);
         if (!c.isValid())
             return ;
         if (c != waitingColor)
@@ -250,6 +263,16 @@ void DesktopLyricWidget::showMenu()
             update();
         }
     })->fgColor(waitingColor);
+    menu->addAction("背景颜色", [=]{
+        QColor c = QColorDialog::getColor(bgColor, this, "选择背景颜色", QColorDialog::ShowAlphaChannel);
+        if (!c.isValid())
+            return ;
+        if (c != bgColor)
+        {
+            settings.setValue("music/bgColor", bgColor = c);
+            update();
+        }
+    })->bgColor(bgColor)->hide(!jiWindow);
     auto fontMenu = menu->addMenu("字体大小");
     QStringList sl;
     for (int i = 12; i < 30; i++)
@@ -264,7 +287,12 @@ void DesktopLyricWidget::showMenu()
         settings.setValue("music/desktopLyricPointSize", pointSize);
         update();
     });*/
-    menu->split()->addAction("隐藏", [=]{
+    menu->split()->addAction("透明模式", [=]{
+        bool trans = settings.value("music/desktopLyricTrans", false).toBool();
+        settings.setValue("music/desktopLyricTrans", !trans);
+        emit signalSwitchTrans();
+    })->ifer(jiWindow)->check();
+    menu->addAction("隐藏", [=]{
         this->hide();
         emit signalhide();
     });
