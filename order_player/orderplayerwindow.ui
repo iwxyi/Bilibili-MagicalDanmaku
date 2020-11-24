@@ -459,8 +459,15 @@ QTabBar::tab:selected
       </item>
       <item>
        <widget class="QStackedWidget" name="bodyStackWidget">
+        <property name="styleSheet">
+         <string notr="true">QStackWidget
+{
+	background: transparent;
+	border: none;
+}</string>
+        </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="searchResultPage">
          <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -570,7 +577,31 @@ QTableCornerButton::section
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="lyricsGraphic" native="true"/>
+           <widget class="QScrollArea" name="scrollArea">
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QScrollArea
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="LyricStreamWidget" name="lyricWidget">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>662</width>
+               <height>516</height>
+              </rect>
+             </property>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -709,11 +740,19 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LyricStreamWidget</class>
+   <extends>QWidget</extends>
+   <header>lyricstreamwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resource.qrc"/>
  </resources>

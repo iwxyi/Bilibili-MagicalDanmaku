@@ -92,6 +92,8 @@ private slots:
 
     void on_desktopLyricButton_clicked();
 
+    void slotExpandPlayingButtonClicked();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
@@ -157,6 +159,7 @@ private:
     QMediaPlayer* player;
     PlayCircleMode circleMode = OrderList;
     Song playingSong;
+    QTimer* playingPositionTimer;
 
     bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
     bool searchAndAppend = false;

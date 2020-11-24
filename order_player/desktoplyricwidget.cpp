@@ -5,7 +5,7 @@ DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
 {
     this->setWindowTitle("桌面歌词");
     this->setMinimumSize(45, 25);                        //设置最小尺寸
-    this->setMaximumSize(400, 100);
+    this->setMaximumSize(800, 100);
     if ((jiWindow = settings.value("music/desktopLyricTrans", false).toBool()))
     {
         this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
@@ -38,29 +38,54 @@ DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
  */
 void DesktopLyricWidget::setLyric(QString text)
 {
+    // 检测是不是全是毫秒还是10毫秒的
+    int ms10x = 10;
+    QRegularExpression re10("^\\[(\\d{2}):(\\d{2}).(\\d{2,3})\\]");
+    QRegularExpressionMatch match10;
+    if (text.lastIndexOf(re10, -1, &match10) != 0)
+    {
+        int val = match10.captured(3).toInt();
+        if (val > 0) // 存在不为0的三位数
+        {
+            qDebug() << "10毫秒位为毫秒";
+            ms10x = 1;
+        }
+    }
+
+    // 遍历每一行
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     LyricBean prevLyric(false);
+    qint64 currentTime = 0;
+    lyricStream.clear();
     foreach (QString line, sl)
     {
-        QRegularExpression re("^\\[(\\d{2}):(\\d{2}).(\\d{2})\\](\\[(\\d{2}):(\\d{2}).(\\d{2})\\])?(.*)$");
+        QRegularExpression re("^\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\](\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\])?(.*)$");
         QRegularExpressionMatch match;
         if (line.indexOf(re, 0, &match) == -1)
+        {
+            LyricBean lyric;
+            lyric.start = currentTime;
+            lyric.end = 0;
+            lyric.text = line;
+            lyricStream.append(lyric);
             continue;
+        }
         QStringList caps = match.capturedTexts();
         LyricBean lyric;
         int minute = caps.at(1).toInt();
         int second = caps.at(2).toInt();
         int ms10 = caps.at(3).toInt();
-        lyric.start = minute * 60000 + second*1000 + ms10 * 10;
+        lyric.start = minute * 60000 + second*1000 + ms10 * ms10x;
         if (!caps.at(4).isEmpty()) // 有终止时间
         {
             int minute = caps.at(5).toInt();
             int second = caps.at(6).toInt();
             int ms10 = caps.at(7).toInt();
-            lyric.end = minute * 60000 + second*1000 + ms10 * 10;
+            lyric.end = minute * 60000 + second*1000 + ms10 * ms10x;
         }
         lyric.text = caps.at(8);
         lyricStream.append(lyric);
+        currentTime = lyric.start;
     }
 
     currentRow = 0;
@@ -69,12 +94,12 @@ void DesktopLyricWidget::setLyric(QString text)
 
 void DesktopLyricWidget::showEvent(QShowEvent *event)
 {
-    restoreGeometry(settings.value("livedanmakuwindow/geometry").toByteArray());
+    restoreGeometry(settings.value("music/desktopLyricGeometry").toByteArray());
 }
 
 void DesktopLyricWidget::hideEvent(QHideEvent *event)
 {
-    settings.setValue("livedanmakuwindow/geometry", this->saveGeometry());
+    settings.setValue("music/desktopLyricGeometry", this->saveGeometry());
 }
 
 bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message, long *result)

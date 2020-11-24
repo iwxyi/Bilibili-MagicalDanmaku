@@ -2082,7 +2082,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
     QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是"};
-    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)

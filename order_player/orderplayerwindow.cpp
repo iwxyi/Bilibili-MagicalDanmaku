@@ -8,7 +8,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       musicsFileDir("musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(nullptr)),
-      expandPlayingButton(new InteractiveButtonBase(this))
+      expandPlayingButton(new InteractiveButtonBase(this)),
+      playingPositionTimer(new QTimer(this))
 {
     ui->setupUi(this);
 
@@ -96,10 +97,12 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
         if (state == QMediaPlayer::PlayingState)
         {
+            playingPositionTimer->start();
             ui->playButton->setIcon(QIcon(":/icons/pause"));
         }
         else
         {
+            playingPositionTimer->stop();
             ui->playButton->setIcon(QIcon(":/icons/play"));
         }
     });
@@ -168,9 +171,22 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     }
     settings.setValue("music/playPosition", 0);
 
+    connect(expandPlayingButton, SIGNAL(clicked()), this, SLOT(slotExpandPlayingButtonClicked()));
     expandPlayingButton->show();
 
     // searchMusic("司夏"); // 测试用的
+
+
+    playingPositionTimer->setInterval(100);
+    connect(playingPositionTimer, &QTimer::timeout, this, [=]{
+        if (player->state() == QMediaPlayer::PlayingState)
+        {
+            qint64 position = player->position();
+            if (desktopLyric && !desktopLyric->isHidden())
+                desktopLyric->setPosition(position);
+            ui->lyricWidget->setPosition(position);
+        }
+    });
 }
 
 OrderPlayerWindow::~OrderPlayerWindow()
@@ -183,6 +199,7 @@ void OrderPlayerWindow::on_searchEdit_returnPressed()
 {
     QString text = ui->searchEdit->text();
     searchMusic(text);
+    ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
 }
 
 void OrderPlayerWindow::on_searchButton_clicked()
@@ -410,6 +427,9 @@ void OrderPlayerWindow::showEvent(QShowEvent *)
     restoreState(settings.value("orderplayerwindow/state").toByteArray());
 
     adjustExpandPlayingButton();
+
+    if (settings.value("music/desktopLyric", false).toBool())
+        desktopLyric->show();
 }
 
 void OrderPlayerWindow::closeEvent(QCloseEvent *)
@@ -417,6 +437,9 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
     settings.setValue("orderplayerwindow/geometry", this->saveGeometry());
     settings.setValue("orderplayerwindow/state", this->saveState());
     settings.setValue("music/playPosition", player->position());
+
+    if (player->state() == QMediaPlayer::PlayingState)
+        player->pause();
 
     // 保存位置
     if (!desktopLyric->isHidden())
@@ -843,6 +866,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             file.flush();
             file.close();
 
+            qDebug() << "下载歌词完成：" << song.simpleString();
             if (playAfterDownloaded == song || playingSong == song)
             {
                 setCurrentLyric(lrc);
@@ -937,7 +961,9 @@ void OrderPlayerWindow::downloadSongCover(Song song)
  */
 void OrderPlayerWindow::setCurrentLyric(QString lyric)
 {
+    qDebug() << "设置歌词：" << lyric.size();
     desktopLyric->setLyric(lyric);
+    ui->lyricWidget->setLyric(lyric);
 }
 
 void OrderPlayerWindow::adjustExpandPlayingButton()
@@ -978,7 +1004,7 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
                 }
                 file.close();
 
-                setCurrentLyric(lyric);
+                desktopLyric->setLyric(lyric);
                 desktopLyric->setPosition(player->position());
             }
         }
@@ -1421,5 +1447,17 @@ void OrderPlayerWindow::on_desktopLyricButton_clicked()
     {
         desktopLyric->hide();
         ui->desktopLyricButton->setIcon(QIcon(":/icons/lyric_hide"));
+    }
+}
+
+void OrderPlayerWindow::slotExpandPlayingButtonClicked()
+{
+    if (ui->bodyStackWidget->currentWidget() == ui->lyricsPage) // 隐藏歌词
+    {
+        ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+    }
+    else // 显示歌词
+    {
+        ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
     }
 }
