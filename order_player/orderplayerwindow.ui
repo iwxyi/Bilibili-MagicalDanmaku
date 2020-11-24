@@ -563,6 +563,12 @@ QTableCornerButton::section
          </layout>
         </widget>
         <widget class="QWidget" name="lyricsPage">
+         <property name="styleSheet">
+          <string notr="true">#lyricsPage
+{
+	background: transparent;
+}</string>
+         </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <property name="leftMargin">
            <number>0</number>

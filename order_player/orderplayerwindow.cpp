@@ -1399,7 +1399,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
                 QFile(path).remove();
 
         }
-    });
+    })->disable(!currentSong.isValid());
 
     menu->addAction("删除记录", [=]{
         foreach (Song song, songs)
@@ -1458,11 +1458,47 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
 {
     if (ui->bodyStackWidget->currentWidget() == ui->lyricsPage) // 隐藏歌词
     {
+        QRect rect = ui->bodyStackWidget->geometry();
+        QPixmap pixmap(rect.size());
+        render(&pixmap, QPoint(0, 0), rect);
+        QLabel* label = new QLabel(this);
+        label->setGeometry(rect);
+        label->setPixmap(pixmap);
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");
+        ani->setStartValue(rect);
+        ani->setEndValue(QRect(ui->playingCoverLabel->geometry().center(), QSize(1,1)));
+        ani->setEasingCurve(QEasingCurve::InOutCubic);
+        ani->setDuration(300);
+        connect(ani, &QPropertyAnimation::finished, this, [=]{
+            ani->deleteLater();
+            label->deleteLater();
+        });
+        label->show();
+        ani->start();
         ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
     }
     else // 显示歌词
     {
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
+        QRect rect = ui->bodyStackWidget->geometry();
+        QPixmap pixmap(rect.size());
+        render(&pixmap, QPoint(0, 0), rect);
+        QLabel* label = new QLabel(this);
+        label->setGeometry(rect);
+        label->setPixmap(pixmap);
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");
+        ani->setStartValue(QRect(ui->playingCoverLabel->geometry().center(), QSize(1,1)));
+        ani->setEndValue(rect);
+        ani->setDuration(300);
+        ani->setEasingCurve(QEasingCurve::InOutCubic);
+        connect(ani, &QPropertyAnimation::finished, this, [=]{
+            ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
+            ani->deleteLater();
+            label->deleteLater();
+        });
+        label->show();
+        ani->start();
+        ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
     }
 }
 
@@ -1484,7 +1520,6 @@ void OrderPlayerWindow::slotPlayerPositionChanged()
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
-        qDebug() << "start animation";
     }
     ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
 }
