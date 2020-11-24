@@ -71,9 +71,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
-        ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
         ui->playingCurrentTimeLabel->setText(msecondToString(position));
-        desktopLyric->setPosition(position);
+        slotPlayerPositionChanged();
     });
     connect(player, &QMediaPlayer::durationChanged, this, [=](qint64 duration){
         ui->playProgressSlider->setMaximum(static_cast<int>(duration));
@@ -157,17 +156,17 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
     if (currentSong.isValid())
     {
-        startPlaySong(currentSong);
+        startPlaySong(currentSong);// 还原位置
 
-        // 不自动播放
-        player->stop();
-
-        // 还原位置
         qint64 playPosition = settings.value("music/playPosition", 0).toLongLong();
         if (playPosition)
         {
             setPlayPositionAfterLoad = playPosition;
+            slotPlayerPositionChanged();
         }
+
+        // 不自动播放
+        player->stop();
     }
     settings.setValue("music/playPosition", 0);
 
@@ -180,12 +179,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     playingPositionTimer->setInterval(100);
     connect(playingPositionTimer, &QTimer::timeout, this, [=]{
         if (player->state() == QMediaPlayer::PlayingState)
-        {
-            qint64 position = player->position();
-            if (desktopLyric && !desktopLyric->isHidden())
-                desktopLyric->setPosition(position);
-            ui->lyricWidget->setPosition(position);
-        }
+            slotPlayerPositionChanged();
     });
 }
 
@@ -449,6 +443,16 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
 void OrderPlayerWindow::resizeEvent(QResizeEvent *)
 {
     adjustExpandPlayingButton();
+}
+
+void OrderPlayerWindow::setLyricScroll(int x)
+{
+    this->lyricScroll = x;
+}
+
+int OrderPlayerWindow::getLyricScroll() const
+{
+    return this->lyricScroll;
 }
 
 /**
@@ -1460,4 +1464,27 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
     {
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
     }
+}
+
+void OrderPlayerWindow::slotPlayerPositionChanged()
+{
+    qint64 position = player->position();
+    if (desktopLyric && !desktopLyric->isHidden())
+        desktopLyric->setPosition(position);
+    if (ui->lyricWidget->setPosition(position))
+    {
+        // 开始滚动
+        QPropertyAnimation* ani = new QPropertyAnimation(this, "lyricScroll");
+        ani->setStartValue(ui->scrollArea->verticalScrollBar()->sliderPosition());
+        ani->setEndValue(qMax(0, ui->lyricWidget->getCurrentTop() - this->height()/2));
+        ani->setDuration(200);
+        connect(ani, &QPropertyAnimation::valueChanged, this, [=]{
+            // ui->lyricWidget->update();
+            ui->scrollArea->verticalScrollBar()->setSliderPosition(lyricScroll);
+        });
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        ani->start();
+        qDebug() << "start animation";
+    }
+    ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
 }

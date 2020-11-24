@@ -307,11 +307,6 @@ void DesktopLyricWidget::showMenu()
         settings.setValue("music/desktopLyricPointSize", pointSize);
         update();
     });
-    /*fontMenu->addNumberedActions("%1", 5, 30, [=](FacileMenuItem*){}, [=](int index){
-        pointSize = index + 10;
-        settings.setValue("music/desktopLyricPointSize", pointSize);
-        update();
-    });*/
     menu->split()->addAction("透明模式", [=]{
         bool trans = settings.value("music/desktopLyricTrans", false).toBool();
         settings.setValue("music/desktopLyricTrans", !trans);

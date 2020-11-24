@@ -338,12 +338,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
         danmakuWindow->close();
         danmakuWindow->deleteLater();
     }
-    if (playerWindow)
+    /*if (playerWindow)
     {
         settings.setValue("danmaku/playerWindow", !playerWindow->isHidden());
         playerWindow->close();
         playerWindow->deleteLater();
-    }
+    }*/
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

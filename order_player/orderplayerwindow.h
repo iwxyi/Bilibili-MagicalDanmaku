@@ -34,6 +34,7 @@ QT_END_NAMESPACE
 class OrderPlayerWindow : public QMainWindow
 {
     Q_OBJECT
+    Q_PROPERTY(int lyricScroll READ getLyricScroll WRITE setLyricScroll)
 public:
     OrderPlayerWindow(QWidget *parent = nullptr);
     ~OrderPlayerWindow() override;
@@ -94,6 +95,8 @@ private slots:
 
     void slotExpandPlayingButtonClicked();
 
+    void slotPlayerPositionChanged();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
@@ -132,6 +135,10 @@ protected:
     void closeEvent(QCloseEvent*) override;
     void resizeEvent(QResizeEvent*) override;
 
+private:
+    void setLyricScroll(int x);
+    int getLyricScroll() const;
+
 signals:
     void signalSongDownloadFinished(Song song);
     void signalLyricDownloadFinished(Song song);
@@ -160,6 +167,7 @@ private:
     PlayCircleMode circleMode = OrderList;
     Song playingSong;
     QTimer* playingPositionTimer;
+    int lyricScroll;
 
     bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
     bool searchAndAppend = false;
