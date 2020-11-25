@@ -13,6 +13,7 @@ public:
         : QWidget(parent), settings("musics.ini", QSettings::Format::IniFormat),
           updateTimer(new QTimer(this))
     {
+        setContextMenuPolicy(Qt::CustomContextMenu);
         connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu()));
         playingColor = qvariant_cast<QColor>(settings.value("lyric/playingColor", playingColor));
         waitingColor = qvariant_cast<QColor>(settings.value("lyric/waitingColor", waitingColor));
@@ -20,6 +21,15 @@ public:
 
         connect(updateTimer, SIGNAL(timeout()), this, SLOT(update()));
         updateTimer->setInterval(16);
+    }
+
+    void updateFixedHeight()
+    {
+        QFont font = this->font();
+        font.setPointSize(pointSize);
+        QFontMetrics fm(font);
+        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height())*2; // 双倍行间距
+        setFixedHeight((lyricStream.size()+verticalMargin*2) * lineSpacing);
     }
 
     void setLyric(QString text)
@@ -75,11 +85,6 @@ public:
 
         currentRow = 0;
 
-        QFont font = this->font();
-        font.setPointSize(pointSize);
-        QFontMetrics fm(font);
-        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height())*2; // 双倍行间距
-        setFixedHeight((lyricStream.size()+verticalMargin*2) * lineSpacing);
         update();
     }
 
@@ -192,7 +197,6 @@ private slots:
     void showMenu()
     {
         FacileMenu* menu = new FacileMenu(this);
-        auto lineMenu = menu->addMenu("行数");
         menu->addAction("已播放颜色", [=]{
             QColor c = QColorDialog::getColor(playingColor, this, "选择已播放颜色", QColorDialog::ShowAlphaChannel);
             if (!c.isValid())
@@ -215,11 +219,12 @@ private slots:
         })->fgColor(waitingColor);
         auto fontMenu = menu->addMenu("字体大小");
         QStringList sl;
-        for (int i = 12; i < 30; i++)
+        for (int i = 8; i < 30; i++)
             sl << QString::number(i);
-        fontMenu->addOptions(sl, pointSize-12, [=](int index){
-            pointSize = index + 12;
+        fontMenu->addOptions(sl, pointSize-8, [=](int index){
+            pointSize = index + 8;
             settings.setValue("lyric/pointSize", pointSize);
+            updateFixedHeight();
             update();
         });
         menu->exec(QCursor::pos());
