@@ -154,6 +154,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         }
     });
 
+    connect(ui->lyricWidget, SIGNAL(signalAdjustLyricTime(QString)), this, SLOT(adjustCurrentLyricTime(QString)));
+
     musicsFileDir.mkpath(musicsFileDir.absolutePath());
     QTime time;
     time= QTime::currentTime();
@@ -1099,7 +1101,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
  */
 void OrderPlayerWindow::setCurrentLyric(QString lyric)
 {
-    qDebug() << "设置歌词：" << lyric.size();
     desktopLyric->setLyric(lyric);
     ui->lyricWidget->setLyric(lyric);
 }
@@ -1787,4 +1788,23 @@ void OrderPlayerWindow::on_titleButton_clicked()
         return ;
     settings.setValue("music/title", rst);
     ui->titleButton->setText(rst);
+}
+
+/**
+ * 调整当前歌词的时间
+ */
+void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
+{
+    if (!playingSong.isValid())
+        return ;
+    QFile file(lyricPath(playingSong));
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+    stream << lyric;
+    file.flush();
+    file.close();
+
+    // 调整桌面歌词
+    desktopLyric->setLyric(lyric);
+    desktopLyric->setPosition(player->position());
 }

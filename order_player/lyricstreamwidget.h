@@ -36,13 +36,15 @@ public:
     {
         // 检测是不是全是毫秒还是10毫秒的
         int ms10x = 10;
-        QRegularExpression re10("^\\[(\\d{2}):(\\d{2}).(\\d{2,3})\\]");
+        QRegularExpression re10("\\[\\d{2}:\\d{2}\\.([1-9]\\d{2})\\]");
         QRegularExpressionMatch match10;
-        if (text.lastIndexOf(re10, -1, &match10) != 0)
+        if (text.lastIndexOf(re10, -1, &match10) != -1)
         {
-            int val = match10.captured(3).toInt();
+            int val = match10.captured(1).toInt();
+            qDebug() << " 匹配项：" << val;
             if (val > 0) // 存在不为0的三位数
             {
+                qDebug() << "检测到勉强受支持的歌词格式：第三位是毫秒";
                 ms10x = 1;
             }
         }
@@ -196,6 +198,66 @@ protected:
 
     }
 
+    void adjustLyricTime(int begin, int offset)
+    {
+        if (!lyricStream.size())
+            return ;
+
+        int ms10 = 10;
+        foreach (LyricBean lyric, lyricStream)
+        {
+            if (lyric.start % 10 != 0)
+            {
+                ms10 = 1;
+                qDebug() << "第三位使用毫秒" << lyric.start << lyric.text;
+                break;
+            }
+        }
+
+        QStringList sl;
+        for (int i = 0; i < lyricStream.size(); i++)
+        {
+            LyricBean line = lyricStream.at(i);
+            if (i >= begin && line.start != 0)
+            {
+                line.start += offset;
+                if (line.end)
+                    line.end += offset;
+                if (line.start < 0)
+                    line.start = 0;
+                if (line.end < 0)
+                    line.end = 0;
+                lyricStream[i] = line;
+            }
+
+            // 歌词转换回字符串
+            int minute = line.start / 60000;
+            int second = line.start % 60000 / 1000;
+            int msecond = line.start % 1000 / ms10;
+            QString s = QString("[%1:%2.%3]")
+                    .arg(minute, 2, 10, QLatin1Char('0'))
+                    .arg(second, 2, 10, QLatin1Char('0'))
+                    .arg(msecond, ms10 == 1 ? 3 : 2, 10, QLatin1Char('0'));
+            if (line.end)
+            {
+                int minute = line.end / 60000;
+                int second = line.end % 60000 / 1000;
+                int msecond = line.end % 1000 / ms10;
+                s += QString("[%1:%2.%3]")
+                        .arg(minute, 2, 10, QLatin1Char('0'))
+                        .arg(second, 2, 10, QLatin1Char('0'))
+                        .arg(msecond, ms10 == 1 ? 3 : 2, 10, QLatin1Char('0'));
+            }
+            s += line.text;
+            sl << s;
+        }
+        emit signalAdjustLyricTime(sl.join("\n"));
+    }
+
+signals:
+    void signalSwitchCoverBlur();
+    void signalAdjustLyricTime(QString);
+
 private slots:
     void showMenu()
     {
@@ -230,6 +292,19 @@ private slots:
             updateFixedHeight();
             update();
         });
+        auto timeMenu = menu->addMenu("时间微调");
+        timeMenu->addAction("加快5秒", [=]{adjustLyricTime(0, -5000);});
+        timeMenu->addAction("加快2秒", [=]{adjustLyricTime(0, -2000);});
+        timeMenu->addAction("加快1秒", [=]{adjustLyricTime(0, -1000);});
+        timeMenu->addAction("加快0.5秒", [=]{adjustLyricTime(0, -500);});
+        timeMenu->addAction("加快0.2秒", [=]{adjustLyricTime(0, -200);});
+        timeMenu->addAction("加快0.1秒", [=]{adjustLyricTime(0, -100);});
+        timeMenu->addAction("减慢0.1秒", [=]{adjustLyricTime(0, +100);});
+        timeMenu->addAction("减慢0.2秒", [=]{adjustLyricTime(0, +200);});
+        timeMenu->addAction("减慢0.5秒", [=]{adjustLyricTime(0, +500);});
+        timeMenu->addAction("减慢1秒", [=]{adjustLyricTime(0, +1000);});
+        timeMenu->addAction("减慢2秒", [=]{adjustLyricTime(0, +2000);});
+        timeMenu->addAction("减慢5秒", [=]{adjustLyricTime(0, +5000);});
         menu->exec(QCursor::pos());
     }
 

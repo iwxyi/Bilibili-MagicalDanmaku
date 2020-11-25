@@ -40,14 +40,13 @@ void DesktopLyricWidget::setLyric(QString text)
 {
     // 检测是不是全是毫秒还是10毫秒的
     int ms10x = 10;
-    QRegularExpression re10("^\\[(\\d{2}):(\\d{2}).(\\d{2,3})\\]");
+    QRegularExpression re10("\\[\\d{2}:\\d{2}\\.([1-9]\\d{2})\\]");
     QRegularExpressionMatch match10;
-    if (text.lastIndexOf(re10, -1, &match10) != 0)
+    if (text.lastIndexOf(re10, -1, &match10) != -1)
     {
-        int val = match10.captured(3).toInt();
+        int val = match10.captured(1).toInt();
         if (val > 0) // 存在不为0的三位数
         {
-            qDebug() << "10毫秒位为毫秒";
             ms10x = 1;
         }
     }
@@ -331,7 +330,7 @@ void DesktopLyricWidget::setPosition(qint64 position)
         return ;
 
     LyricBean nextLyric = currentRow == lyricStream.size()-1 ? LyricBean(false) : lyricStream.at(currentRow + 1);
-    if (lyric.start <= position && nextLyric.start > position) // 不需要改变
+    if (lyric.start <= position && nextLyric.start >= position) // 不需要改变
         return ;
 
     if (lyric.start > position) // 什么情况？从头强制重新开始！

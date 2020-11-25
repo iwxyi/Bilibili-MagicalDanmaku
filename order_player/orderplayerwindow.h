@@ -111,6 +111,8 @@ private slots:
 
     void on_titleButton_clicked();
 
+    void adjustCurrentLyricTime(QString lyric);
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
