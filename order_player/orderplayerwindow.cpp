@@ -326,6 +326,8 @@ void OrderPlayerWindow::searchMusic(QString key)
             qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
             for (int i = 0; i < orderSongs.size()-1; i++)
             {
+                if (orderSongs.at(i).id == song.id) // 同一首歌，如果全都不同，那就是下一首
+                    break;
                 sumLatency += orderSongs.at(i).duration;
             }
             emit signalOrderSongSucceed(song, sumLatency);

@@ -3966,6 +3966,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     {
         playerWindow = new OrderPlayerWindow(nullptr);
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency){
+            qDebug() << "点歌成功" << song.simpleString() << latency;
             if (latency < 180000)
             {
                 QString tip = "成功点歌：【" + song.simpleString() + "】";
