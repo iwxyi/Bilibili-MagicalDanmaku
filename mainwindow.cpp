@@ -3935,6 +3935,18 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     if (!playerWindow)
     {
         playerWindow = new OrderPlayerWindow(nullptr);
+        connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency){
+            QString tip = "点歌【" + song.simpleString() + "】";
+            if (latency > 180000) // 超过3分钟
+            {
+                int minute = (latency+20000) / 60000;
+                tip += "预计" + snum(minute) + "后播放";
+            }
+            showLocalNotify(tip);
+        });
+        connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
+            showLocalNotify("开始播放：" + song.simpleString());
+        });
     }
 
     bool hidding = playerWindow->isHidden();

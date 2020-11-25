@@ -496,7 +496,7 @@ QTabBar::tab:selected
 {
 	background: transparent;
 	border: none;
-	alternate-background-color: rgb(132, 136, 139, 20);
+	alternate-background-color: rgba(132, 136, 139, 20);
 }
 
 QHeaderView::section
@@ -605,8 +605,8 @@ QTableCornerButton::section
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>666</width>
-               <height>535</height>
+               <width>100</width>
+               <height>30</height>
               </rect>
              </property>
              <property name="styleSheet">

@@ -296,12 +296,23 @@ void OrderPlayerWindow::searchMusic(QString key)
 
         setSearchResultTable(searchResultSongs);
 
-        // 点歌自动添加
+        // 从点歌的槽进来的
         if (searchAndAppend)
         {
             searchAndAppend = false;
+            Song song = searchResultSongs.first();
+
+            // 添加到点歌列表
             if (searchResultSongs.size())
-                appendOrderSongs(SongList{searchResultSongs.first()});
+                appendOrderSongs(SongList{song});
+
+            // 发送点歌成功的信号
+            qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
+            for (int i = 0; i < orderSongs.size()-1; i++)
+            {
+                sumLatency += orderSongs.at(i).duration;
+            }
+            emit signalOrderSongSucceed(song, sumLatency);
         }
     });
     manager->get(*request);
@@ -679,6 +690,7 @@ void OrderPlayerWindow::playNext()
     setSongModelToView(orderSongs, ui->orderSongsListView);
 
     startPlaySong(song);
+    emit signalOrderSongPlayed(song);
 }
 
 /**
@@ -1150,7 +1162,7 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     currentBlurBg = clip;
     currentBgAlpha = 32 + addin;
 
-    // 切换动画
+    // 出现动画
     QPropertyAnimation* ani1 = new QPropertyAnimation(this, "appearBgProg");
     ani1->setStartValue(0);
     ani1->setEndValue(currentBgAlpha);
@@ -1165,6 +1177,7 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     currentBgAlpha = 0;
     ani1->start();
 
+    // 消失动画
     QPropertyAnimation* ani2 = new QPropertyAnimation(this, "disappearBgProg");
     ani2->setStartValue(prevBgAlpha);
     ani2->setEndValue(0);
@@ -1204,6 +1217,14 @@ void OrderPlayerWindow::sortSearchResult(int col)
 void OrderPlayerWindow::on_playProgressSlider_sliderReleased()
 {
     int position = ui->playProgressSlider->sliderPosition();
+    player->setPosition(position);
+}
+
+/**
+ * 播放进度条被拖动
+ */
+void OrderPlayerWindow::on_playProgressSlider_sliderMoved(int position)
+{
     player->setPosition(position);
 }
 
@@ -1629,6 +1650,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
         QPixmap pixmap(rect.size());
         render(&pixmap, QPoint(0, 0), rect);
         QLabel* label = new QLabel(this);
+        label->setScaledContents(true);
         label->setGeometry(rect);
         label->setPixmap(pixmap);
         QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");
@@ -1651,6 +1673,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
         QPixmap pixmap(rect.size());
         render(&pixmap, QPoint(0, 0), rect);
         QLabel* label = new QLabel(this);
+        label->setScaledContents(true);
         label->setGeometry(rect);
         label->setPixmap(pixmap);
         QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");

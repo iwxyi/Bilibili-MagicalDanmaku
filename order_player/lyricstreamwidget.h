@@ -93,6 +93,7 @@ public:
      */
     bool setPosition(qint64 position)
     {
+        int prevRow = currentRow;
         if (!lyricStream.size())
             return false;
         if (currentRow < 0 || currentRow >= lyricStream.size())
@@ -103,7 +104,7 @@ public:
             return false;
 
         LyricBean nextLyric = currentRow == lyricStream.size()-1 ? LyricBean(false) : lyricStream.at(currentRow + 1);
-        if (lyric.start <= position && nextLyric.start > position) // 不需要改变
+        if (lyric.start <= position && nextLyric.start >= position) // 不需要改变
             return false;
 
         if (lyric.start > position) // 什么情况？从头强制重新开始！
@@ -113,10 +114,12 @@ public:
         {
             currentRow++;
         }
+        if (currentRow == prevRow)
+            return false;
         switchRowTimestamp = QDateTime::currentMSecsSinceEpoch();
         updateTimer->start();
         update();
-        return true;
+        return false;
     }
 
     int getCurrentTop() const

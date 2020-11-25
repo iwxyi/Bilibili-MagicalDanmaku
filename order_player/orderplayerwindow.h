@@ -69,6 +69,8 @@ private slots:
 
     void on_playProgressSlider_sliderReleased();
 
+    void on_playProgressSlider_sliderMoved(int position);
+
     void on_volumeSlider_sliderMoved(int position);
 
     void on_playButton_clicked();
@@ -158,6 +160,8 @@ signals:
     void signalCoverDownloadFinished(Song song);
     void signalSongPlayStarted(Song song);
     void signalSongPlayFinished(Song song);
+    void signalOrderSongSucceed(Song song, qint64 msecond);
+    void signalOrderSongPlayed(Song song);
 
 private:
     Ui::OrderPlayerWindow *ui;
