@@ -9,8 +9,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this)),
-      playingPositionTimer(new QTimer(this)),
-      bgUpdateTimer(new QTimer(this))
+      playingPositionTimer(new QTimer(this))
 {
     ui->setupUi(this);
 
@@ -177,7 +176,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
 
     // searchMusic("司夏"); // 测试用的
 
-
+    prevBlurBg = QPixmap(32, 32);
+    prevBlurBg.fill(QColor(245, 245, 247));
     playingPositionTimer->setInterval(100);
     connect(playingPositionTimer, &QTimer::timeout, this, [=]{
         if (player->state() == QMediaPlayer::PlayingState)
@@ -455,8 +455,13 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
     QPainter painter(this);
     if (!currentBlurBg.isNull())
     {
-//        painter.fillRect(rect(), Qt::green);
+        painter.setOpacity((double)currentBgAlpha / 255);
         painter.drawPixmap(rect(), currentBlurBg);
+    }
+    if (!prevBlurBg.isNull())
+    {
+        painter.setOpacity((double)switchAlpha / 255);
+        painter.drawPixmap(rect(), prevBlurBg);
     }
 }
 
@@ -468,6 +473,26 @@ void OrderPlayerWindow::setLyricScroll(int x)
 int OrderPlayerWindow::getLyricScroll() const
 {
     return this->lyricScroll;
+}
+
+void OrderPlayerWindow::setAppearBgProg(int x)
+{
+    this->currentBgAlpha = x;
+}
+
+int OrderPlayerWindow::getAppearBgProg() const
+{
+    return this->currentBgAlpha;
+}
+
+void OrderPlayerWindow::setDisappearBgProg(int x)
+{
+    this->switchAlpha = x;
+}
+
+int OrderPlayerWindow::getDisappearBgProg() const
+{
+    return this->switchAlpha;
 }
 
 /**
@@ -1043,6 +1068,8 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     if (bg.isNull())
         return ;
 
+    // 当前图片变为上一张图
+    switchAlpha = currentBgAlpha;
     prevBlurBg = currentBlurBg;
 
     // 开始模糊
@@ -1059,7 +1086,7 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     QPixmap clip = pixmap.copy(c, c, pixmap.width()-c*2, pixmap.height()-c*2);
 
     // 抽样获取背景，设置之后的透明度
-    int rgbSum = 0;
+    qint64 rgbSum = 0;
     QImage image = clip.toImage();
     int w = image.width(), h = image.height();
     const int m = 16;
@@ -1071,19 +1098,42 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
             rgbSum += c.red() + c.green() + c.blue();
         }
     }
-    double prop = (double)rgbSum / 255*3*m*m;
+    int addin = rgbSum * 64 / (255*3*m*m);
 
     // 半透明
-    currentBlurBg = QPixmap(clip.size());
-    currentBlurBg.fill(Qt::transparent);
-    QPainter p2(&currentBlurBg);
-    p2.setCompositionMode(QPainter::CompositionMode_Source);
-    p2.drawPixmap(0, 0, clip);
-    p2.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-    p2.fillRect(currentBlurBg.rect(), QColor(255, 255, 255, 32 + 32*prop));
-    p2.end();
+    currentBlurBg = clip;
+    currentBgAlpha = 32 + addin;
 
-    update();
+    // 切换动画
+    QPropertyAnimation* ani1 = new QPropertyAnimation(this, "appearBgProg");
+    ani1->setStartValue(0);
+    ani1->setEndValue(currentBgAlpha);
+    ani1->setDuration(1000);
+    ani1->setEasingCurve(QEasingCurve::OutCubic);
+    connect(ani1, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        update();
+    });
+    connect(ani1, &QPropertyAnimation::finished, this, [=]{
+        ani1->deleteLater();
+    });
+    ani1->start();
+    currentBgAlpha = 0;
+
+    QPropertyAnimation* ani2 = new QPropertyAnimation(this, "disappearBgProg");
+    ani2->setStartValue(switchAlpha);
+    ani2->setEndValue(0);
+    ani2->setDuration(1000);
+    ani2->setEasingCurve(QEasingCurve::OutCubic);
+    connect(ani2, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        switchAlpha = val.toInt();
+        update();
+    });
+    connect(ani2, &QPropertyAnimation::finished, this, [=]{
+        prevBlurBg = QPixmap();
+        ani2->deleteLater();
+        update();
+    });
+    ani2->start();
 }
 
 /**

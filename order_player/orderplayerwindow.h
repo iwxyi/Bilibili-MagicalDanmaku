@@ -39,6 +39,8 @@ class OrderPlayerWindow : public QMainWindow
 {
     Q_OBJECT
     Q_PROPERTY(int lyricScroll READ getLyricScroll WRITE setLyricScroll)
+    Q_PROPERTY(int disappearBgProg READ getDisappearBgProg WRITE setDisappearBgProg)
+    Q_PROPERTY(int appearBgProg READ getAppearBgProg WRITE setAppearBgProg)
 public:
     OrderPlayerWindow(QWidget *parent = nullptr);
     ~OrderPlayerWindow() override;
@@ -145,6 +147,10 @@ protected:
 private:
     void setLyricScroll(int x);
     int getLyricScroll() const;
+    void setAppearBgProg(int x);
+    int getAppearBgProg() const;
+    void setDisappearBgProg(int x);
+    int getDisappearBgProg() const;
 
 signals:
     void signalSongDownloadFinished(Song song);
@@ -184,10 +190,10 @@ private:
     InteractiveButtonBase* expandPlayingButton;
 
     QPixmap currentCover;
+    int currentBgAlpha = 255;
     QPixmap currentBlurBg;
     QPixmap prevBlurBg;
-    QTimer* bgUpdateTimer;
-    qint64 switchBgTimestamp = 0;
+    int switchAlpha = 0;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate
