@@ -771,8 +771,13 @@ void OrderPlayerWindow::playLocalSong(Song song)
     }
 
     // 设置信息
-    ui->playingNameLabel->setText(song.name);
-    ui->playingArtistLabel->setText(song.artistNames);
+    auto max16 = [=](QString s){
+        if (s.length() > 16)
+            s = s.left(15) + "...";
+        return s;
+    };
+    ui->playingNameLabel->setText(max16(song.name));
+    ui->playingArtistLabel->setText(max16(song.artistNames));
     ui->playingAllTimeLabel->setText(msecondToString(song.duration));
     // 设置封面
     if (QFileInfo(coverPath(song)).exists())

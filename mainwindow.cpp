@@ -312,18 +312,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete ui;
-}
-
-void MainWindow::showEvent(QShowEvent *event)
-{
-    restoreGeometry(settings.value("mainwindow/geometry").toByteArray());
-}
-
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    settings.setValue("mainwindow/geometry", this->saveGeometry());
-
     if (danmuLogFile)
     {
         finishSaveDanmuToFile();
@@ -337,13 +325,27 @@ void MainWindow::closeEvent(QCloseEvent *event)
     {
         danmakuWindow->close();
         danmakuWindow->deleteLater();
+        danmakuWindow = nullptr;
     }
+
     /*if (playerWindow)
     {
         settings.setValue("danmaku/playerWindow", !playerWindow->isHidden());
         playerWindow->close();
         playerWindow->deleteLater();
     }*/
+
+    delete ui;
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    restoreGeometry(settings.value("mainwindow/geometry").toByteArray());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    settings.setValue("mainwindow/geometry", this->saveGeometry());
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

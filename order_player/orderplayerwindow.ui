@@ -49,6 +49,12 @@
       </item>
       <item>
        <widget class="QWidget" name="widget" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
           <width>20</width>
@@ -56,7 +62,7 @@
          </size>
         </property>
         <property name="styleSheet">
-         <string notr="true">QWidget
+         <string notr="true">#widget
 {
 	border: none;
 	border-radius: 12px;
@@ -614,7 +620,7 @@ QTableCornerButton::section
               <x>0</x>
               <y>0</y>
               <width>706</width>
-              <height>537</height>
+              <height>533</height>
              </rect>
             </property>
             <property name="styleSheet">
