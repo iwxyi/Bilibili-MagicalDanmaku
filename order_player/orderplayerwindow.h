@@ -31,6 +31,10 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class OrderPlayerWindow; }
 QT_END_NAMESPACE
 
+QT_BEGIN_NAMESPACE
+    extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
+QT_END_NAMESPACE
+
 class OrderPlayerWindow : public QMainWindow
 {
     Q_OBJECT
@@ -129,11 +133,14 @@ private:
 
     void adjustExpandPlayingButton();
     void connectDesktopLyricSignals();
+    void setCurrentCover(const QPixmap& pixmap);
+    void setBlurBackground(const QPixmap& bg);
 
 protected:
     void showEvent(QShowEvent*) override;
     void closeEvent(QCloseEvent*) override;
     void resizeEvent(QResizeEvent*) override;
+    void paintEvent(QPaintEvent* e) override;
 
 private:
     void setLyricScroll(int x);
@@ -175,6 +182,12 @@ private:
 
     DesktopLyricWidget* desktopLyric;
     InteractiveButtonBase* expandPlayingButton;
+
+    QPixmap currentCover;
+    QPixmap currentBlurBg;
+    QPixmap prevBlurBg;
+    QTimer* bgUpdateTimer;
+    qint64 switchBgTimestamp = 0;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

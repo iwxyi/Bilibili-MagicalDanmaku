@@ -84,7 +84,7 @@ public:
         }
 
         currentRow = 0;
-
+        updateFixedHeight();
         update();
     }
 

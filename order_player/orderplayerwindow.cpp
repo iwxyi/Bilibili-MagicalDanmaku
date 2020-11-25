@@ -9,7 +9,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this)),
-      playingPositionTimer(new QTimer(this))
+      playingPositionTimer(new QTimer(this)),
+      bgUpdateTimer(new QTimer(this))
 {
     ui->setupUi(this);
 
@@ -32,7 +33,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
                          "padding-bottom:0px;" //下预留位置（放置向下箭头）
                          "padding-left:3px;"    //左预留位置（美观）
                          "padding-right:3px;"   //右预留位置（美观）
-                         "border-left:1px solid #d7d7d7;}"//左分割线
+                         "border-left:0px solid #d7d7d7;}"//左分割线
                          "QScrollBar::handle:vertical{"//滑块样式
                          "background:#dbdbdb;"  //滑块颜色
                          "border-radius:4px;"   //边角圆润
@@ -67,6 +68,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->normalSongsListView->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->historySongsListView->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->historySongsListView->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
+    ui->scrollArea->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->listTabWidget->removeTab(3); // TOOD: 歌单部分没做好，先隐藏
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
@@ -443,6 +445,19 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
 void OrderPlayerWindow::resizeEvent(QResizeEvent *)
 {
     adjustExpandPlayingButton();
+    // setBlurBackground(currentCover); // 太消耗性能了
+}
+
+void OrderPlayerWindow::paintEvent(QPaintEvent *e)
+{
+    QMainWindow::paintEvent(e);
+
+    QPainter painter(this);
+    if (!currentBlurBg.isNull())
+    {
+//        painter.fillRect(rect(), Qt::green);
+        painter.drawPixmap(rect(), currentBlurBg);
+    }
 }
 
 void OrderPlayerWindow::setLyricScroll(int x)
@@ -670,6 +685,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
             qDebug() << "warning: 本地封面是空的" << song.simpleString() << coverPath(song);
         pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
         ui->playingCoverLabel->setPixmap(pixmap);
+        setCurrentCover(pixmap);
     }
     else
     {
@@ -946,10 +962,12 @@ void OrderPlayerWindow::downloadSongCover(Song song)
 
             emit signalCoverDownloadFinished(song);
 
+            // 正是当前要播放的歌曲
             if (playAfterDownloaded == song || playingSong == song)
             {
                 pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
                 ui->playingCoverLabel->setPixmap(pixmap);
+                setCurrentCover(pixmap);
             }
         }
         else
@@ -1013,6 +1031,59 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
             }
         }
     });
+}
+
+void OrderPlayerWindow::setCurrentCover(const QPixmap &pixmap)
+{
+    setBlurBackground(currentCover = pixmap);
+}
+
+void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
+{
+    if (bg.isNull())
+        return ;
+
+    prevBlurBg = currentBlurBg;
+
+    // 开始模糊
+    const int radius = qMax(20, qMin(width(), height())/5);
+    QPixmap pixmap = bg;
+    pixmap = pixmap.scaled(this->width()+radius*2, this->height() + radius*2, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    QImage img = pixmap.toImage(); // img -blur-> painter(pixmap)
+    QPainter painter( &pixmap );
+    qt_blurImage( &painter, img, radius, true, false );
+
+    // 裁剪掉边缘（模糊后会有黑边）
+    int c = qMin(bg.width(), bg.height());
+    c = qMin(c/2, radius);
+    QPixmap clip = pixmap.copy(c, c, pixmap.width()-c*2, pixmap.height()-c*2);
+
+    // 抽样获取背景，设置之后的透明度
+    int rgbSum = 0;
+    QImage image = clip.toImage();
+    int w = image.width(), h = image.height();
+    const int m = 16;
+    for (int y = 0; y < m; y++)
+    {
+        for (int x = 0; x < m; x++)
+        {
+            QColor c = image.pixelColor(w*x/m, h*x/m);
+            rgbSum += c.red() + c.green() + c.blue();
+        }
+    }
+    double prop = (double)rgbSum / 255*3*m*m;
+
+    // 半透明
+    currentBlurBg = QPixmap(clip.size());
+    currentBlurBg.fill(Qt::transparent);
+    QPainter p2(&currentBlurBg);
+    p2.setCompositionMode(QPainter::CompositionMode_Source);
+    p2.drawPixmap(0, 0, clip);
+    p2.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+    p2.fillRect(currentBlurBg.rect(), QColor(255, 255, 255, 32 + 32*prop));
+    p2.end();
+
+    update();
 }
 
 /**
