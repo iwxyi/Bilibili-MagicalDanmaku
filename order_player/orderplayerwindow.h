@@ -51,8 +51,10 @@ public:
         SingleCircle
     };
 
+    bool hasSongInOrder(QString by);
+
 public slots:
-    void slotSearchAndAutoAppend(QString key);
+    void slotSearchAndAutoAppend(QString key, QString by = "");
 
 private slots:
     void on_searchEdit_returnPressed();
@@ -175,6 +177,8 @@ private:
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 
+    QStringList orderBys;
+
     SongList orderSongs;
     SongList favoriteSongs;
     SongList normalSongs;
@@ -191,7 +195,6 @@ private:
     int lyricScroll;
 
     bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
-    bool searchAndAppend = false;
     qint64 setPlayPositionAfterLoad = 0; // 加载后跳转到时间
 
     DesktopLyricWidget* desktopLyric;

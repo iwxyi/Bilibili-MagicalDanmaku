@@ -246,6 +246,8 @@ private slots:
 
     void on_actionShow_Order_Player_Window_triggered();
 
+    void on_diangeReplyCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -294,6 +296,7 @@ private:
     void finishSaveDanmuToFile();
     void startCalculateDailyData();
     void saveCalculateDailyData();
+    void saveTouta();
 
     void processDanmakuCmd(QString msg);
 
@@ -376,6 +379,8 @@ private:
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
     int pkVoting = 0;
+    int toutaCount = 0;
+    int chiguaCount = 0;
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

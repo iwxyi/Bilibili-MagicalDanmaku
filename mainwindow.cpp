@@ -81,7 +81,14 @@ MainWindow::MainWindow(QWidget *parent)
 
        if (playerWindow && !playerWindow->isHidden()) // 自动播放
        {
-            playerWindow->slotSearchAndAutoAppend(text);
+           if (playerWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
+           {
+               showLocalNotify("已阻止频繁点歌");
+           }
+           else
+           {
+               playerWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
+           }
        }
        else
        {
@@ -95,6 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
        }
        ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
     });
+    ui->diangeReplyCheck->setChecked(settings.value("danmaku/diangeReply", false).toBool());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -218,6 +226,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pkAutoMelonCheck->setChecked(melon);
     pkMaxGold = settings.value("pk/maxGold", 300).toInt();
     pkJudgeEarly = settings.value("pk/judgeEarly", 2000).toInt();
+    toutaCount = settings.value("pk/toutaCount", 0).toInt();
+    chiguaCount = settings.value("pk/chiguaCount", 0).toInt();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -346,6 +356,11 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings.setValue("mainwindow/geometry", this->saveGeometry());
+
+    if (danmakuWindow)
+    {
+        danmakuWindow->close();
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -2250,6 +2265,13 @@ void MainWindow::saveCalculateDailyData()
     }
 }
 
+void MainWindow::saveTouta()
+{
+    settings.setValue("pk/toutaCount", toutaCount);
+    settings.setValue("pk/chiguaCount", chiguaCount);
+    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2").arg(toutaCount).arg(chiguaCount));
+}
+
 void MainWindow::processDanmakuCmd(QString msg)
 {
     if (msg == "关闭功能")
@@ -2981,6 +3003,9 @@ bool MainWindow::handlePK(QJsonObject json)
                 showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
                 pkVoting += 10 * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
                 qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+                toutaCount++;
+                chiguaCount += num;
+                saveTouta();
             }
             else
             {
@@ -3047,6 +3072,9 @@ bool MainWindow::handlePK(QJsonObject json)
                 showLocalNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
                 pkVoting += 10 * num;
                 qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+                toutaCount++;
+                chiguaCount += num;
+                saveTouta();
             }
         }
         else
@@ -3940,13 +3968,17 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency){
             if (latency < 180000)
             {
-                QString tip = "点歌成功：【" + song.simpleString() + "】";
+                QString tip = "成功点歌：【" + song.simpleString() + "】";
                 showLocalNotify(tip);
+                if (ui->diangeReplyCheck->isChecked())
+                    sendNotifyMsg("成功点歌");
             }
             else // 超过3分钟
             {
                 int minute = (latency+20000) / 60000;
                 showLocalNotify(snum(minute) + "分钟后播放【" + song.simpleString() + "】");
+                if (ui->diangeReplyCheck->isChecked())
+                    sendNotifyMsg("成功点歌，预计" + snum(minute) + "分钟后播放");
             }
         });
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
@@ -3965,4 +3997,9 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         playerWindow->hide();
     }
     settings.setValue("danmaku/playerWindow", hidding);
+}
+
+void MainWindow::on_diangeReplyCheck_clicked()
+{
+    settings.setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
 }

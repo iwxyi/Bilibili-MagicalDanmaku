@@ -263,7 +263,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -274,6 +274,13 @@
             </property>
             <property name="text">
              <string>点歌复制/播放</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="diangeReplyCheck">
+            <property name="text">
+             <string>回复</string>
             </property>
            </widget>
           </item>
@@ -992,7 +999,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

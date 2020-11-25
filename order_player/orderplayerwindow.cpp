@@ -242,6 +242,16 @@ OrderPlayerWindow::~OrderPlayerWindow()
     desktopLyric->deleteLater();
 }
 
+bool OrderPlayerWindow::hasSongInOrder(QString by)
+{
+    foreach (Song song, orderSongs)
+    {
+        if (song.addBy == by)
+            return true;
+    }
+    return false;
+}
+
 void OrderPlayerWindow::on_searchEdit_returnPressed()
 {
     QString text = ui->searchEdit->text();
@@ -257,10 +267,10 @@ void OrderPlayerWindow::on_searchButton_clicked()
 /**
  * 点歌并且添加到末尾
  */
-void OrderPlayerWindow::slotSearchAndAutoAppend(QString key)
+void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 {
     ui->searchEdit->setText(key);
-    searchAndAppend = true;
+    orderBys.append(by);
     searchMusic(key);
 }
 
@@ -302,10 +312,11 @@ void OrderPlayerWindow::searchMusic(QString key)
         setSearchResultTable(searchResultSongs);
 
         // 从点歌的槽进来的
-        if (searchAndAppend)
+        if (orderBys.size())
         {
-            searchAndAppend = false;
+            QString by = orderBys.takeFirst();
             Song song = searchResultSongs.first();
+            song.setAddDesc(by);
 
             // 添加到点歌列表
             if (searchResultSongs.size())
