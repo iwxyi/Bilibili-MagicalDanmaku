@@ -470,7 +470,7 @@ QTabBar::tab:selected
 }</string>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="searchResultPage">
          <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -496,7 +496,7 @@ QTabBar::tab:selected
 {
 	background: transparent;
 	border: none;
-	alternate-background-color: rgb(232, 236, 239);
+	alternate-background-color: rgb(132, 136, 139, 20);
 }
 
 QHeaderView::section
@@ -567,7 +567,7 @@ QTableCornerButton::section
         </widget>
         <widget class="QWidget" name="lyricsPage">
          <property name="styleSheet">
-          <string notr="true">QWidget
+          <string notr="true">#lyricsPage
 {
 	background: transparent;
 }</string>
@@ -608,6 +608,12 @@ QTableCornerButton::section
                <width>666</width>
                <height>535</height>
               </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">#lyricWidget
+{
+	background: transparent;
+}</string>
              </property>
             </widget>
            </widget>

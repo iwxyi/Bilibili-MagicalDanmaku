@@ -193,7 +193,7 @@ private:
     int currentBgAlpha = 255;
     QPixmap currentBlurBg;
     QPixmap prevBlurBg;
-    int switchAlpha = 0;
+    int prevBgAlpha = 0;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

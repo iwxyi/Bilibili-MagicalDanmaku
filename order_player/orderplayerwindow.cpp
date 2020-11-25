@@ -26,39 +26,83 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->listSongsListView->setItemDelegate(new NoFocusDelegate());
     ui->historySongsListView->setItemDelegate(new NoFocusDelegate());
 
-    QString vScrollBarSS("QScrollBar:vertical{"        //垂直滑块整体
-                         "background: transparent;"  //背景色
-                         "padding-top:0px;"    //上预留位置（放置向上箭头）
-                         "padding-bottom:0px;" //下预留位置（放置向下箭头）
-                         "padding-left:3px;"    //左预留位置（美观）
-                         "padding-right:3px;"   //右预留位置（美观）
-                         "border-left:0px solid #d7d7d7;}"//左分割线
-                         "QScrollBar::handle:vertical{"//滑块样式
-                         "background:#dbdbdb;"  //滑块颜色
-                         "border-radius:4px;"   //边角圆润
-                         "min-height:40px;}"    //滑块最小高度
-                         "QScrollBar::handle:vertical:hover{"//鼠标触及滑块样式
-                         "background:#d0d0d0;}" //滑块颜色
-                         "QScrollBar::add-line:vertical{"//向下箭头样式
-                         "background:transparent;}"
-                         "QScrollBar::sub-line:vertical{"//向上箭头样式
-                         "background:transparent;}");
-    QString hScrollBarSS("QScrollBar:horizontal{"
-                          "background:transparent;"
-                          "padding-top:3px;"
-                          "padding-bottom:3px;"
-                          "padding-left:0px;"
-                          "padding-right:0px;}"
-                          "QScrollBar::handle:horizontal{"
-                          "background:#dbdbdb;"
-                          "border-radius:2px;"
-                          "min-width:40px;}"
-                          "QScrollBar::handle:horizontal:hover{"
-                          "background:#d0d0d0;}"
-                          "QScrollBar::add-line:horizontal{"
-                          "background: transparent;}"
-                          "QScrollBar::sub-line:horizontal{"
-                          "background:transparent;}");
+    QString vScrollBarSS("QScrollBar:vertical"
+                         "{"
+                         "    width:7px;"
+                         "    background:rgba(128,128,128,0%);"
+                         "    margin:0px,0px,0px,0px;"
+                         "    padding-top:0px;"
+                         "    padding-bottom:0px;"
+                         "}"
+                         "QScrollBar::handle:vertical"
+                         "{"
+                         "    width:7px;"
+                         "    background:rgba(128,128,128,32%);"
+                         "    border-radius:3px;"
+                         "    min-height:20;"
+                         "}"
+                         "QScrollBar::handle:vertical:hover"
+                         "{"
+                         "    width:7px;"
+                         "    background:rgba(128,128,128,50%);"
+                         "    min-height:20;"
+                         "}"
+                         "QScrollBar::sub-line:vertical"
+                         "{"
+                         "    height:9px;width:8px;"
+                         "    border-image:url(:/images/a/1.png);"
+                         "    subcontrol-position:top;"
+                         "}"
+                         "QScrollBar::add-line:vertical"
+                         "{"
+                         "    height:9px;width:8px;"
+                         "    border-image:url(:/images/a/3.png);"
+                         "    subcontrol-position:bottom;"
+                         "}"
+                         "QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical"
+                         "{"
+                         "    background:rgba(0,0,0,0%);"
+                         "    border-radius:3px;"
+                         "}");
+
+    QString hScrollBarSS("QScrollBar:horizontal"
+                         "{"
+                         "    height:7px;"
+                         "    background:rgba(128,128,128,0%);"
+                         "    margin:0px,0px,0px,0px;"
+                         "    padding-left:0px;"
+                         "    padding-right:0px;"
+                         "}"
+                         "QScrollBar::handle:horizontal"
+                         "{"
+                         "    height:7px;"
+                         "    background:rgba(128,128,128,32%);"
+                         "    border-radius:3px;"
+                         "    min-width:20;"
+                         "}"
+                         "QScrollBar::handle:horizontal:hover"
+                         "{"
+                         "    height:7px;"
+                         "    background:rgba(128,128,128,50%);"
+                         "    min-width:20;"
+                         "}"
+                         "QScrollBar::sub-line:horizontal"
+                         "{"
+                         "    width:9px;height:8px;"
+                         "    border-image:url(:/images/a/1.png);"
+                         "    subcontrol-position:top;"
+                         "}"
+                         "QScrollBar::add-line:horizontal"
+                         "{"
+                         "    width:9px;height:8px;"
+                         "    border-image:url(:/images/a/3.png);"
+                         "    subcontrol-position:bottom;"
+                         "}"
+                         "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal"
+                         "{"
+                         "    background:rgba(0,0,0,0%);"
+                         "    border-radius:3px;"
+                         "}");
     ui->orderSongsListView->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->orderSongsListView->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->favoriteSongsListView->verticalScrollBar()->setStyleSheet(vScrollBarSS);
@@ -68,6 +112,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->historySongsListView->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->historySongsListView->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->scrollArea->verticalScrollBar()->setStyleSheet(vScrollBarSS);
+    ui->searchResultTable->verticalScrollBar()->setStyleSheet(vScrollBarSS);
+    ui->searchResultTable->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->listTabWidget->removeTab(3); // TOOD: 歌单部分没做好，先隐藏
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
@@ -460,7 +506,7 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
     }
     if (!prevBlurBg.isNull())
     {
-        painter.setOpacity((double)switchAlpha / 255);
+        painter.setOpacity((double)prevBgAlpha / 255);
         painter.drawPixmap(rect(), prevBlurBg);
     }
 }
@@ -487,12 +533,12 @@ int OrderPlayerWindow::getAppearBgProg() const
 
 void OrderPlayerWindow::setDisappearBgProg(int x)
 {
-    this->switchAlpha = x;
+    this->prevBgAlpha = x;
 }
 
 int OrderPlayerWindow::getDisappearBgProg() const
 {
-    return this->switchAlpha;
+    return this->prevBgAlpha;
 }
 
 /**
@@ -1069,7 +1115,7 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
         return ;
 
     // 当前图片变为上一张图
-    switchAlpha = currentBgAlpha;
+    prevBgAlpha = currentBgAlpha;
     prevBlurBg = currentBlurBg;
 
     // 开始模糊
@@ -1116,16 +1162,16 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     connect(ani1, &QPropertyAnimation::finished, this, [=]{
         ani1->deleteLater();
     });
-    ani1->start();
     currentBgAlpha = 0;
+    ani1->start();
 
     QPropertyAnimation* ani2 = new QPropertyAnimation(this, "disappearBgProg");
-    ani2->setStartValue(switchAlpha);
+    ani2->setStartValue(prevBgAlpha);
     ani2->setEndValue(0);
     ani2->setDuration(1000);
     ani2->setEasingCurve(QEasingCurve::OutCubic);
     connect(ani2, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
-        switchAlpha = val.toInt();
+        prevBgAlpha = val.toInt();
         update();
     });
     connect(ani2, &QPropertyAnimation::finished, this, [=]{
