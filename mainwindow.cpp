@@ -4004,3 +4004,15 @@ void MainWindow::on_diangeReplyCheck_clicked()
 {
     settings.setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
 }
+
+void MainWindow::on_actionAbout_triggered()
+{
+    QString text;
+    text += "由小乂独立开发。\n此程序仅供个人学习、研究之用，禁止用于商业用途。\n请在下载后24小时内删除！";
+    QMessageBox::information(this, "关于", text);
+}
+
+void MainWindow::on_actionGitHub_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/MRXY001/BilibiliLiveDanmaku"));
+}

@@ -248,6 +248,10 @@ private slots:
 
     void on_diangeReplyCheck_clicked();
 
+    void on_actionAbout_triggered();
+
+    void on_actionGitHub_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

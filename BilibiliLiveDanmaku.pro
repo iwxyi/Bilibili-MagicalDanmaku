@@ -54,7 +54,6 @@ HEADERS += \
     order_player/lyricstreamwidget.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
-    resource.rc \
     taskwidget.h \
     utils/fileutil.h \
     utils/netutil.h \

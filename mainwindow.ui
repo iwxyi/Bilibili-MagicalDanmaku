@@ -1002,12 +1002,6 @@
      <height>26</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
-    <property name="title">
-     <string>文件</string>
-    </property>
-    <addaction name="actionData_Path"/>
-   </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
      <string>功能</string>
@@ -1028,10 +1022,12 @@
      <string>工具</string>
     </property>
     <addaction name="actionCreate_Video_LRC"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+    <addaction name="actionGitHub"/>
    </widget>
-   <addaction name="menu"/>
-   <addaction name="menu_2"/>
    <addaction name="menu_3"/>
+   <addaction name="menu_2"/>
    <addaction name="menu_4"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -1071,6 +1067,16 @@
   <action name="actionShow_Order_Player_Window">
    <property name="text">
     <string>显示点歌姬</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>关于</string>
+   </property>
+  </action>
+  <action name="actionGitHub">
+   <property name="text">
+    <string>GitHub</string>
    </property>
   </action>
  </widget>
