@@ -482,6 +482,14 @@ void OrderPlayerWindow::showEvent(QShowEvent *)
 {
     restoreGeometry(settings.value("orderplayerwindow/geometry").toByteArray());
     restoreState(settings.value("orderplayerwindow/state").toByteArray());
+    ui->splitter->restoreState(settings.value("orderplayerwindow/splitterState").toByteArray());
+    auto sizes = ui->splitter->sizes();
+    if (sizes.at(0)+1 >= sizes.at(1))
+    {
+        int sum = sizes.at(0) + sizes.at(1);
+        int w = sum / 3;
+        ui->splitter->setSizes(QList<int>{w, sum - w});
+    }
 
     adjustExpandPlayingButton();
 
@@ -493,6 +501,7 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
 {
     settings.setValue("orderplayerwindow/geometry", this->saveGeometry());
     settings.setValue("orderplayerwindow/state", this->saveState());
+    settings.setValue("orderplayerwindow/splitterState", ui->splitter->saveState());
     settings.setValue("music/playPosition", player->position());
 
     if (player->state() == QMediaPlayer::PlayingState)
@@ -1674,7 +1683,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
 {
     if (ui->bodyStackWidget->currentWidget() == ui->lyricsPage) // 隐藏歌词
     {
-        QRect rect = ui->bodyStackWidget->geometry();
+        QRect rect(ui->bodyStackWidget->mapTo(this, QPoint(5, 0)), ui->bodyStackWidget->size()-QSize(5, 0));
         QPixmap pixmap(rect.size());
         render(&pixmap, QPoint(0, 0), rect);
         QLabel* label = new QLabel(this);
@@ -1698,7 +1707,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
     else // 显示歌词
     {
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
-        QRect rect = ui->bodyStackWidget->geometry();
+        QRect rect(ui->bodyStackWidget->mapTo(this, QPoint(5, 0)), ui->bodyStackWidget->size()-QSize(5, 0));
         QPixmap pixmap(rect.size());
         render(&pixmap, QPoint(0, 0), rect);
         QLabel* label = new QLabel(this);
@@ -1742,4 +1751,9 @@ void OrderPlayerWindow::slotPlayerPositionChanged()
         ani->start();
     }
     ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
+}
+
+void OrderPlayerWindow::on_splitter_splitterMoved(int pos, int index)
+{
+    adjustExpandPlayingButton();
 }

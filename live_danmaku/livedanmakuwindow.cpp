@@ -360,7 +360,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
     QString s = danmaku.toString();
     for (int i = 0; i < listWidget->count(); i++)
     {
-        qDebug() << listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() << s;
+        // qDebug() << listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() << s;
         if (listWidget->item(i)->data(DANMAKU_STRING_ROLE).toString() == s)
         {
             auto item = listWidget->item(i);

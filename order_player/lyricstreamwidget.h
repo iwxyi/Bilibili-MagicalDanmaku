@@ -243,7 +243,7 @@ private:
     int lineSpacing = 30;
     int verticalMargin = 5; // 上下间距5行
 
-    int pointSize = 14;
+    int pointSize = 12;
     QColor playingColor = QColor(155, 80, 255);
     QColor waitingColor = Qt::black;
 };

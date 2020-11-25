@@ -24,7 +24,7 @@
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1,0">
     <item>
      <layout class="QHBoxLayout" name="searchEditLayout" stretch="1,1,1">
       <property name="leftMargin">
@@ -110,17 +110,23 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
-      <property name="spacing">
-       <number>6</number>
+     <widget class="QSplitter" name="splitter">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
-      <property name="leftMargin">
-       <number>0</number>
+      <property name="styleSheet">
+       <string notr="true">QWidget
+{
+	background: transparent;
+}</string>
       </property>
-      <property name="rightMargin">
-       <number>0</number>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <item>
+      <widget class="QWidget" name="">
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="leftMargin">
          <number>0</number>
@@ -165,7 +171,7 @@ QTabBar::tab:selected
 }</string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="styleSheet">
@@ -459,40 +465,42 @@ QTabBar::tab:selected
          </layout>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QStackedWidget" name="bodyStackWidget">
-        <property name="styleSheet">
-         <string notr="true">QStackWidget
+      </widget>
+      <widget class="QStackedWidget" name="bodyStackWidget">
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QStackWidget
 {
 	background: transparent;
 	border: none;
 }</string>
-        </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="searchResultPage">
-         <layout class="QVBoxLayout" name="verticalLayout_7">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QTableWidget" name="searchResultTable">
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QTableWidget
+       </property>
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="searchResultPage">
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QTableWidget" name="searchResultTable">
+           <property name="contextMenuPolicy">
+            <enum>Qt::CustomContextMenu</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QTableWidget
 {
 	background: transparent;
 	border: none;
@@ -508,121 +516,120 @@ QTableCornerButton::section
 {
 	background:transparent;
 }</string>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditKeyPressed</set>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::ExtendedSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="verticalScrollMode">
+            <enum>QAbstractItemView::ScrollPerPixel</enum>
+           </property>
+           <property name="horizontalScrollMode">
+            <enum>QAbstractItemView::ScrollPerPixel</enum>
+           </property>
+           <property name="showGrid">
+            <bool>false</bool>
+           </property>
+           <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>标题</string>
             </property>
-            <property name="editTriggers">
-             <set>QAbstractItemView::EditKeyPressed</set>
+           </column>
+           <column>
+            <property name="text">
+             <string>歌手</string>
             </property>
-            <property name="alternatingRowColors">
-             <bool>true</bool>
+           </column>
+           <column>
+            <property name="text">
+             <string>专辑</string>
             </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
+           </column>
+           <column>
+            <property name="text">
+             <string>时长</string>
             </property>
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
+           </column>
+           <column>
+            <property name="text">
+             <string>热度</string>
             </property>
-            <property name="verticalScrollMode">
-             <enum>QAbstractItemView::ScrollPerPixel</enum>
-            </property>
-            <property name="horizontalScrollMode">
-             <enum>QAbstractItemView::ScrollPerPixel</enum>
-            </property>
-            <property name="showGrid">
-             <bool>false</bool>
-            </property>
-            <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-             <bool>true</bool>
-            </attribute>
-            <attribute name="verticalHeaderVisible">
-             <bool>false</bool>
-            </attribute>
-            <column>
-             <property name="text">
-              <string>标题</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>歌手</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>专辑</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>时长</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>热度</string>
-             </property>
-            </column>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="lyricsPage">
-         <property name="styleSheet">
-          <string notr="true">#lyricsPage
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="lyricsPage">
+        <property name="styleSheet">
+         <string notr="true">#lyricsPage
 {
 	background: transparent;
 }</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <property name="leftMargin">
+          <number>5</number>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QScrollArea" name="scrollArea">
-            <property name="contextMenuPolicy">
-             <enum>Qt::CustomContextMenu</enum>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QScrollArea
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QScrollArea" name="scrollArea">
+           <property name="contextMenuPolicy">
+            <enum>Qt::CustomContextMenu</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QScrollArea
 {
 	background: transparent;
 	border: none;
 }</string>
+           </property>
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="LyricStreamWidget" name="lyricWidget">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>706</width>
+              <height>537</height>
+             </rect>
             </property>
-            <property name="widgetResizable">
-             <bool>true</bool>
-            </property>
-            <widget class="LyricStreamWidget" name="lyricWidget">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>100</width>
-               <height>30</height>
-              </rect>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">#lyricWidget
+            <property name="styleSheet">
+             <string notr="true">#lyricWidget
 {
 	background: transparent;
 }</string>
-             </property>
-            </widget>
+            </property>
            </widget>
-          </item>
-         </layout>
-        </widget>
+          </widget>
+         </item>
+        </layout>
        </widget>
-      </item>
-     </layout>
+      </widget>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
