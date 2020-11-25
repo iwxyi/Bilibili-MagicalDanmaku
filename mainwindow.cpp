@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
        if (!diangeAutoCopy) // 是否进行复制操作
            return ;
 
-       if (playerWindow && !playerWindow->isHidden())
+       if (playerWindow && !playerWindow->isHidden()) // 自动播放
        {
             playerWindow->slotSearchAndAutoAppend(text);
        }
@@ -87,13 +87,13 @@ MainWindow::MainWindow(QWidget *parent)
        {
            QClipboard* clip = QApplication::clipboard();
            clip->setText(text);
+
+           addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
+           QTimer::singleShot(10, [=]{
+               appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
+           });
        }
        ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
-
-       addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
-       QTimer::singleShot(100, [=]{
-           appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
-       });
     });
 
     // 自动翻译
@@ -3938,13 +3938,16 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     {
         playerWindow = new OrderPlayerWindow(nullptr);
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency){
-            QString tip = "点歌成功：【" + song.simpleString() + "】";
-            if (latency > 180000) // 超过3分钟
+            if (latency < 180000)
+            {
+                QString tip = "点歌成功：【" + song.simpleString() + "】";
+                showLocalNotify(tip);
+            }
+            else // 超过3分钟
             {
                 int minute = (latency+20000) / 60000;
-                tip += "，预计" + snum(minute) + "分钟后播放";
+                showLocalNotify(snum(minute) + "分钟后播放【" + song.simpleString() + "】");
             }
-            showLocalNotify(tip);
         });
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             showLocalNotify("开始播放：" + song.simpleString());

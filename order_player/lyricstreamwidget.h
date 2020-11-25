@@ -119,7 +119,7 @@ public:
         switchRowTimestamp = QDateTime::currentMSecsSinceEpoch();
         updateTimer->start();
         update();
-        return false;
+        return true;
     }
 
     int getCurrentTop() const

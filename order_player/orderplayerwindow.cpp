@@ -524,12 +524,13 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
     QMainWindow::paintEvent(e);
 
     QPainter painter(this);
+    painter.fillRect(rect(), QColor(245, 245, 247));
     if (!currentBlurBg.isNull())
     {
         painter.setOpacity((double)currentBgAlpha / 255);
         painter.drawPixmap(rect(), currentBlurBg);
     }
-    if (!prevBlurBg.isNull())
+    if (!prevBlurBg.isNull() && prevBgAlpha)
     {
         painter.setOpacity((double)prevBgAlpha / 255);
         painter.drawPixmap(rect(), prevBlurBg);
@@ -1750,13 +1751,13 @@ void OrderPlayerWindow::slotPlayerPositionChanged()
         ani->setEndValue(qMax(0, ui->lyricWidget->getCurrentTop() - this->height()/2));
         ani->setDuration(200);
         connect(ani, &QPropertyAnimation::valueChanged, this, [=]{
-            // ui->lyricWidget->update();
             ui->scrollArea->verticalScrollBar()->setSliderPosition(lyricScroll);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
     }
     ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
+    update();
 }
 
 void OrderPlayerWindow::on_splitter_splitterMoved(int pos, int index)
