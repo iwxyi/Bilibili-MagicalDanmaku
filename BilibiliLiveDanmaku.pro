@@ -34,6 +34,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
+    order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
     taskwidget.cpp \
     utils/fileutil.cpp \
@@ -52,6 +53,7 @@ HEADERS += \
     mainwindow.h \
     order_player/desktoplyricwidget.h \
     order_player/lyricstreamwidget.h \
+    order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
     taskwidget.h \

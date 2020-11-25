@@ -391,6 +391,7 @@ void OrderPlayerWindow::setSearchResultTable(PlayListList playLists)
 
 void OrderPlayerWindow::addFavorite(SongList songs)
 {
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_FAVORITE).center();
     foreach (auto song, songs)
     {
         if (favoriteSongs.contains(song))
@@ -399,6 +400,7 @@ void OrderPlayerWindow::addFavorite(SongList songs)
             continue;
         }
         favoriteSongs.append(song);
+        showTabAnimation(center, "+1");
         qDebug() << "添加收藏：" << song.simpleString();
     }
     saveSongList("music/favorite", favoriteSongs);
@@ -407,13 +409,57 @@ void OrderPlayerWindow::addFavorite(SongList songs)
 
 void OrderPlayerWindow::removeFavorite(SongList songs)
 {
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_FAVORITE).center();
     foreach (Song song, songs)
     {
-        favoriteSongs.removeOne(song);
-        qDebug() << "取消收藏：" << song.simpleString();
+        if (favoriteSongs.removeOne(song))
+        {
+            showTabAnimation(center, "-1");
+            qDebug() << "取消收藏：" << song.simpleString();
+        }
     }
     saveSongList("music/favorite", favoriteSongs);
     setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
+}
+
+void OrderPlayerWindow::addNormal(SongList songs)
+{
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_NORMAL).center();
+    foreach (Song song, songs)
+    {
+        normalSongs.removeOne(song);
+    }
+    for (int i = songs.size()-1; i >= 0; i--)
+    {
+        normalSongs.insert(0, songs.at(i));
+        showTabAnimation(center, "+1");
+    }
+    saveSongList("music/normal", normalSongs);
+    setSongModelToView(normalSongs, ui->normalSongsListView);
+}
+
+void OrderPlayerWindow::removeNormal(SongList songs)
+{
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_NORMAL).center();
+    foreach (Song song, songs)
+    {
+        if (normalSongs.removeOne(song))
+            showTabAnimation(center, "-1");
+    }
+    saveSongList("music/normal", normalSongs);
+    setSongModelToView(normalSongs, ui->normalSongsListView);
+}
+
+void OrderPlayerWindow::removeOrder(SongList songs)
+{
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_ORDER).center();
+    foreach (Song song, songs)
+    {
+        if (orderSongs.removeOne(song))
+            showTabAnimation(center, "-1");
+    }
+    saveSongList("music/order", orderSongs);
+    setSongModelToView(orderSongs, ui->orderSongsListView);
 }
 
 void OrderPlayerWindow::saveSongList(QString key, const SongList &songs)
@@ -582,6 +628,15 @@ int OrderPlayerWindow::getDisappearBgProg() const
     return this->prevBgAlpha;
 }
 
+void OrderPlayerWindow::showTabAnimation(QPoint center, QString text)
+{
+    center = ui->listTabWidget->mapTo(this, center);
+    QColor color = QColor::fromHsl(rand()%360,rand()%256,rand()%200); // 深色的颜色
+    NumberAnimation *animation = new NumberAnimation(text, color, this);
+    animation->setCenter(center + QPoint(rand() % 32 - 16, rand() % 32 - 16));
+    animation->startAnimation();
+}
+
 /**
  * 搜索结果双击
  * 还没想好怎么做……
@@ -637,16 +692,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         })->disable(!currentSong.isValid());
 
         menu->addAction("添加常时播放", [=]{
-            foreach (Song song, songs)
-            {
-                normalSongs.removeOne(song);
-            }
-            for (int i = songs.size()-1; i >= 0; i--)
-            {
-                normalSongs.insert(0, songs.at(i));
-            }
-            saveSongList("music/normal", normalSongs);
-            setSongModelToView(normalSongs, ui->normalSongsListView);
+            addNormal(songs);
         })->disable(!currentSong.isValid());
 
         menu->split()->addAction("收藏", [=]{
@@ -728,12 +774,14 @@ void OrderPlayerWindow::playNext()
  */
 void OrderPlayerWindow::appendOrderSongs(SongList songs)
 {
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_ORDER).center();
     foreach (Song song, songs)
     {
         if (orderSongs.contains(song))
             continue;
         orderSongs.append(song);
         addDownloadSong(song);
+        showTabAnimation(center, "+1");
     }
     saveSongList("music/order", orderSongs);
     setSongModelToView(orderSongs, ui->orderSongsListView);
@@ -753,12 +801,14 @@ void OrderPlayerWindow::appendOrderSongs(SongList songs)
  */
 void OrderPlayerWindow::appendNextSongs(SongList songs)
 {
+    QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_ORDER).center();
     foreach (Song song, songs)
     {
         if (orderSongs.contains(song))
             orderSongs.removeOne(song);
         orderSongs.insert(0, song);
         addDownloadSong(song);
+        showTabAnimation(center, "+1");
     }
     saveSongList("music/order", orderSongs);
     setSongModelToView(orderSongs, ui->orderSongsListView);
@@ -1427,12 +1477,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
     })->disable(songs.size() != 1 || row >= orderSongs.size()-1);
 
     menu->split()->addAction("删除", [=]{
-        foreach (Song song, songs)
-        {
-            orderSongs.removeOne(song);
-        }
-        saveSongList("music/order", orderSongs);
-        setSongModelToView(orderSongs, ui->orderSongsListView);
+        removeOrder(songs);
     })->disable(!songs.size());
 
     menu->exec();
@@ -1465,16 +1510,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
     })->disable(!songs.size());
 
     menu->addAction("添加常时播放", [=]{
-        foreach (Song song, songs)
-        {
-            normalSongs.removeOne(song);
-        }
-        for (int i = songs.size()-1; i >= 0; i--)
-        {
-            normalSongs.insert(0, songs.at(i));
-        }
-        saveSongList("music/normal", normalSongs);
-        setSongModelToView(normalSongs, ui->normalSongsListView);
+        addNormal(songs);
     })->disable(!currentSong.isValid());
 
     menu->split()->addAction("上移", [=]{
@@ -1490,12 +1526,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
     })->disable(songs.size() != 1 || row >= favoriteSongs.size()-1);
 
     menu->split()->addAction("移出收藏", [=]{
-        foreach (Song song, songs)
-        {
-            favoriteSongs.removeOne(song);
-        }
-        saveSongList("music/favorite", favoriteSongs);
-        setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
+        removeFavorite(songs);
     })->disable(!songs.size());
 
     menu->exec();
@@ -1573,12 +1604,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
     })->disable(songs.size() != 1 || row >= normalSongs.size()-1);
 
     menu->split()->addAction("移出常时播放", [=]{
-        foreach (Song song, songs)
-        {
-            normalSongs.removeOne(song);
-        }
-        saveSongList("music/normal", normalSongs);
-        setSongModelToView(normalSongs, ui->normalSongsListView);
+        removeNormal(songs);
     })->disable(!songs.size());
 
     menu->exec();
@@ -1611,16 +1637,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
     })->disable(!songs.size());
 
     menu->addAction("添加常时播放", [=]{
-        foreach (Song song, songs)
-        {
-            normalSongs.removeOne(song);
-        }
-        for (int i = songs.size()-1; i >= 0; i--)
-        {
-            normalSongs.insert(0, songs.at(i));
-        }
-        saveSongList("music/normal", normalSongs);
-        setSongModelToView(normalSongs, ui->normalSongsListView);
+        addNormal(songs);
     })->disable(!currentSong.isValid());
 
     menu->addAction("收藏", [=]{
@@ -1648,9 +1665,11 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
     })->disable(!currentSong.isValid());
 
     menu->addAction("删除记录", [=]{
+        QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_HISTORY).center();
         foreach (Song song, songs)
         {
-            historySongs.removeOne(song);
+            if (historySongs.removeOne(song))
+                showTabAnimation(center, "+1");
         }
         saveSongList("music/history", historySongs);
         setSongModelToView(historySongs, ui->historySongsListView);

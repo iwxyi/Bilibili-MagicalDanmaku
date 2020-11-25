@@ -310,7 +310,7 @@ void DesktopLyricWidget::showMenu()
         bool trans = settings.value("music/desktopLyricTrans", false).toBool();
         settings.setValue("music/desktopLyricTrans", !trans);
         emit signalSwitchTrans();
-    })->ifer(jiWindow)->check();
+    })->ifer(!jiWindow)->check();
     menu->addAction("隐藏", [=]{
         this->hide();
         emit signalhide();

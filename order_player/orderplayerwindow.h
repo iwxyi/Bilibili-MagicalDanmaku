@@ -26,6 +26,7 @@
 #include "facilemenu.h"
 #include "songbeans.h"
 #include "desktoplyricwidget.h"
+#include "numberanimation.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class OrderPlayerWindow; }
@@ -34,6 +35,12 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
 QT_END_NAMESPACE
+
+#define LISTTAB_ORDER 0
+#define LISTTAB_NORMAL 1
+#define LISTTAB_FAVORITE 2
+#define LISTTAB_PLAYLIST 3
+#define LISTTAB_HISTORY 3
 
 class OrderPlayerWindow : public QMainWindow
 {
@@ -119,6 +126,9 @@ private:
     void setSearchResultTable(PlayListList playLists);
     void addFavorite(SongList songs);
     void removeFavorite(SongList songs);
+    void addNormal(SongList songs);
+    void removeNormal(SongList songs);
+    void removeOrder(SongList songs);
     void saveSongList(QString key, const SongList &songs);
     void restoreSongList(QString key, SongList& songs);
     void setSongModelToView(const SongList& songs, QListView* listView);
@@ -161,6 +171,7 @@ private:
     int getAppearBgProg() const;
     void setDisappearBgProg(int x);
     int getDisappearBgProg() const;
+    void showTabAnimation(QPoint center, QString text);
 
 signals:
     void signalSongDownloadFinished(Song song);
