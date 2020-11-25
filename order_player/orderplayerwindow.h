@@ -107,6 +107,8 @@ private slots:
 
     void on_splitter_splitterMoved(int pos, int index);
 
+    void on_titleButton_clicked();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);

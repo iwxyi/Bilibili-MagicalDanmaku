@@ -1,7 +1,7 @@
 #include "desktoplyricwidget.h"
 
 DesktopLyricWidget::DesktopLyricWidget(QWidget *parent) : QWidget(parent),
-    settings("musics.ini", QSettings::Format::IniFormat)
+    settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("桌面歌词");
     this->setMinimumSize(45, 25);                        //设置最小尺寸

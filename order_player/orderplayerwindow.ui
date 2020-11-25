@@ -31,7 +31,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="titleButton">
         <property name="styleSheet">
          <string notr="true">text-align: left;</string>
         </property>

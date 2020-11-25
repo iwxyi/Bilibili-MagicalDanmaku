@@ -18,7 +18,7 @@
 VideoLyricsCreator::VideoLyricsCreator(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VideoLyricsCreator),
-    settings("settings.ini", QSettings::Format::IniFormat)
+    settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose, true);

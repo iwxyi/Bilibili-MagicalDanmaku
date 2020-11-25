@@ -4,8 +4,8 @@
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::OrderPlayerWindow),
-      settings("musics.ini", QSettings::Format::IniFormat),
-      musicsFileDir("musics"),
+      settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat),
+      musicsFileDir(QApplication::applicationDirPath()+"/musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this)),
@@ -115,6 +115,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->searchResultTable->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->searchResultTable->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->listTabWidget->removeTab(3); // TOOD: 歌单部分没做好，先隐藏
+    ui->titleButton->setText(settings.value("music/title", "Lazy点歌姬").toString());
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
@@ -1756,4 +1757,15 @@ void OrderPlayerWindow::slotPlayerPositionChanged()
 void OrderPlayerWindow::on_splitter_splitterMoved(int pos, int index)
 {
     adjustExpandPlayingButton();
+}
+
+void OrderPlayerWindow::on_titleButton_clicked()
+{
+    QString text = settings.value("music/title").toString();
+    bool ok;
+    QString rst = QInputDialog::getText(this, "请输入名称", "显示在左上角，不影响其他任何效果", QLineEdit::Normal, text, &ok);
+    if (!ok)
+        return ;
+    settings.setValue("music/title", rst);
+    ui->titleButton->setText(rst);
 }

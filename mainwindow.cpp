@@ -14,7 +14,7 @@ QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), settings("settings.ini", QSettings::Format::IniFormat)
+    , ui(new Ui::MainWindow), settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
 
@@ -183,7 +183,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // 弹幕次数
-    danmakuCounts = new QSettings("danmu_count.ini", QSettings::Format::IniFormat);
+    danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -1099,8 +1099,8 @@ void MainWindow::startConnectRoom()
     if (danmakuCounts)
         danmakuCounts->deleteLater();
     QDir dir;
-    dir.mkdir("danmaku_counts");
-    danmakuCounts = new QSettings("danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
+    dir.mkdir(QApplication::applicationDirPath()+"/danmaku_counts");
+    danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
     if (ui->calculateDailyDataCheck->isChecked())
         startCalculateDailyData();
 
@@ -2187,9 +2187,9 @@ void MainWindow::startSaveDanmakuToFile()
         finishSaveDanmuToFile();
 
     QDir dir;
-    dir.mkdir("danmaku_histories");
+    dir.mkdir(QApplication::applicationDirPath()+"/danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    danmuLogFile = new QFile("danmaku_histories/" + roomId + "_" + date + ".log");
+    danmuLogFile = new QFile(QApplication::applicationDirPath()+"/danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
 }
@@ -2217,9 +2217,9 @@ void MainWindow::startCalculateDailyData()
     }
 
     QDir dir;
-    dir.mkdir("live_daily");
+    dir.mkdir(QApplication::applicationDirPath()+"/live_daily");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    dailySettings = new QSettings("live_daily/" + roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
+    dailySettings = new QSettings(QApplication::applicationDirPath()+"/live_daily/" + roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
 
     dailyCome = dailySettings->value("come", 0).toInt();
     dailyPeopleNum = dailySettings->value("people_num", 0).toInt();

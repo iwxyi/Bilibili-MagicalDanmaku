@@ -10,7 +10,7 @@ class LyricStreamWidget : public QWidget
     Q_OBJECT
 public:
     LyricStreamWidget(QWidget* parent = nullptr)
-        : QWidget(parent), settings("musics.ini", QSettings::Format::IniFormat),
+        : QWidget(parent), settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat),
           updateTimer(new QTimer(this))
     {
         setContextMenuPolicy(Qt::CustomContextMenu);

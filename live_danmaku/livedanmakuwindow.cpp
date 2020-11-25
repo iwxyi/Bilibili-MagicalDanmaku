@@ -1,7 +1,7 @@
 #include "livedanmakuwindow.h"
 
 LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
-    : QWidget(nullptr), settings("settings.ini", QSettings::Format::IniFormat)
+    : QWidget(nullptr), settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
 {
     this->setWindowTitle("实时弹幕");
     this->setMinimumSize(45,45);                        //设置最小尺寸
