@@ -158,6 +158,10 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     time= QTime::currentTime();
     qsrand(time.msec()+time.second()*1000);
 
+    bool lyricStack = settings.value("music/lyricStream", false).toBool();
+    if (lyricStack)
+        ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
+
     // 读取数据
     ui->listTabWidget->setCurrentIndex(settings.value("orderplayerwindow/tabIndex").toInt());
     restoreSongList("music/order", orderSongs);
@@ -1359,7 +1363,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         setSongModelToView(orderSongs, ui->orderSongsListView);
     })->disable(!songs.size());
 
-    menu->addAction("添加常时播放", [=]{
+    menu->split()->addAction("添加常时播放", [=]{
         foreach (Song song, songs)
         {
             normalSongs.removeOne(song);
@@ -1371,6 +1375,14 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         saveSongList("music/normal", normalSongs);
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(!currentSong.isValid());
+
+    menu->addAction("收藏", [=]{
+        if (!favoriteSongs.contains(currentSong))
+            addFavorite(songs);
+        else
+            removeFavorite(songs);
+    })->disable(!currentSong.isValid())
+            ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
         orderSongs.swapItemsAt(row, row-1);
@@ -1414,7 +1426,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
-    menu->addAction("下一首播放", [=]{
+    menu->split()->addAction("下一首播放", [=]{
         appendNextSongs(songs);
     })->disable(!songs.size());
 
@@ -1502,13 +1514,21 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
-    menu->addAction("下一首播放", [=]{
+    menu->split()->addAction("下一首播放", [=]{
         appendNextSongs(songs);
     })->disable(!songs.size());
 
     menu->addAction("添加到播放列表", [=]{
         appendOrderSongs(songs);
     })->disable(!songs.size());
+
+    menu->addAction("收藏", [=]{
+        if (!favoriteSongs.contains(currentSong))
+            addFavorite(songs);
+        else
+            removeFavorite(songs);
+    })->disable(!currentSong.isValid())
+            ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
         normalSongs.swapItemsAt(row, row-1);
@@ -1552,7 +1572,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
-    menu->addAction("下一首播放", [=]{
+    menu->split()->addAction("下一首播放", [=]{
         appendNextSongs(songs);
     })->disable(!songs.size());
 
@@ -1573,7 +1593,15 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(!currentSong.isValid());
 
-    menu->addAction("清理下载文件", [=]{
+    menu->addAction("收藏", [=]{
+        if (!favoriteSongs.contains(currentSong))
+            addFavorite(songs);
+        else
+            removeFavorite(songs);
+    })->disable(!currentSong.isValid())
+            ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
+
+    menu->split()->addAction("清理下载文件", [=]{
         foreach (Song song, songs)
         {
             QString path = songPath(song);
@@ -1665,6 +1693,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
         label->show();
         ani->start();
         ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+        settings.setValue("music/lyricStream", false);
     }
     else // 显示歌词
     {
@@ -1689,6 +1718,7 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
         label->show();
         ani->start();
         ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+        settings.setValue("music/lyricStream", true);
     }
 }
 
