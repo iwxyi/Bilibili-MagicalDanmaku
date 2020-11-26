@@ -49,6 +49,7 @@ class OrderPlayerWindow : public QMainWindow
     Q_PROPERTY(int lyricScroll READ getLyricScroll WRITE setLyricScroll)
     Q_PROPERTY(int disappearBgProg READ getDisappearBgProg WRITE setDisappearBgProg)
     Q_PROPERTY(int appearBgProg READ getAppearBgProg WRITE setAppearBgProg)
+    Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
 public:
     OrderPlayerWindow(QWidget *parent = nullptr);
     ~OrderPlayerWindow() override;
@@ -57,6 +58,67 @@ public:
     {
         OrderList,
         SingleCircle
+    };
+
+    struct BFSColor
+    {
+        int v[12] = {0};
+
+        BFSColor()
+        {}
+
+        BFSColor(QList<QColor> cs)
+        {
+            Q_ASSERT(cs.size() == 4);
+            for (int i = 0; i < 4; i++)
+            {
+                QColor c = cs[i];
+                v[i*3+0] = c.red();
+                v[i*3+1] = c.green();
+                v[i*3+2] = c.blue();
+            }
+        }
+
+        BFSColor operator-(const BFSColor& ano)
+        {
+            BFSColor bfs;
+            for (int i = 0; i < 12; i++)
+                bfs.v[i] = this->v[i] - ano.v[i];
+            return bfs;
+        }
+
+        BFSColor operator+(const BFSColor& ano)
+        {
+            BFSColor bfs;
+            for (int i = 0; i < 12; i++)
+                bfs.v[i] = this->v[i] + ano.v[i];
+            return bfs;
+        }
+
+        BFSColor operator*(const double& prop)
+        {
+            BFSColor bfs;
+            for (int i = 0; i < 12; i++)
+                bfs.v[i] = this->v[i] * prop;
+            return bfs;
+        }
+
+        static BFSColor fromPalette(QPalette pa)
+        {
+            QColor bg = pa.color(QPalette::Window);
+            QColor fg = pa.color(QPalette::Text);
+            QColor sbg = pa.color(QPalette::Highlight);
+            QColor sfg = pa.color(QPalette::Text);
+            return BFSColor(QList<QColor>{bg, fg, sbg, sfg});
+        }
+
+        void toColors(QColor* bg, QColor* fg, QColor* sbg, QColor* sfg)
+        {
+            *bg = QColor(v[0], v[1], v[2]);
+            *fg = QColor(v[3], v[4], v[5]);
+            *sbg = QColor(v[6], v[7], v[8]);
+            *sfg = QColor(v[9], v[10], v[11]);
+        }
     };
 
     bool hasSongInOrder(QString by);
@@ -176,6 +238,8 @@ private:
     void setDisappearBgProg(int x);
     int getDisappearBgProg() const;
     void showTabAnimation(QPoint center, QString text);
+    void setPaletteBgProg(double x);
+    double getPaletteBgProg() const;
 
 signals:
     void signalSongDownloadFinished(Song song);
@@ -218,12 +282,17 @@ private:
     InteractiveButtonBase* expandPlayingButton;
 
     bool blurBg = true;
-    bool themeColor = false;
+    int blurAlpha = 32;
     QPixmap currentCover;
     int currentBgAlpha = 255;
     QPixmap currentBlurBg;
     QPixmap prevBlurBg;
     int prevBgAlpha = 0;
+
+    bool themeColor = false;
+    BFSColor prevPa;
+    BFSColor currentPa;
+    double paletteAlpha;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

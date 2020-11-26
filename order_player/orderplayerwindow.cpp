@@ -171,6 +171,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
 
     blurBg = settings.value("music/blurBg", blurBg).toBool();
+    blurAlpha = settings.value("music/blurAlpha", blurAlpha).toInt();
     themeColor = settings.value("music/themeColor", themeColor).toBool();
 
     // 读取数据
@@ -645,6 +646,16 @@ void OrderPlayerWindow::showTabAnimation(QPoint center, QString text)
     NumberAnimation *animation = new NumberAnimation(text, color, this);
     animation->setCenter(center + QPoint(rand() % 32 - 16, rand() % 32 - 16));
     animation->startAnimation();
+}
+
+void OrderPlayerWindow::setPaletteBgProg(double x)
+{
+    this->paletteAlpha = x;
+}
+
+double OrderPlayerWindow::getPaletteBgProg() const
+{
+    return paletteAlpha;
 }
 
 /**
@@ -1254,11 +1265,11 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
             rgbSum += c.red() + c.green() + c.blue();
         }
     }
-    int addin = rgbSum * 64 / (255*3*m*m);
+    int addin = rgbSum * blurAlpha / (255*3*m*m);
 
     // 半透明
     currentBlurBg = clip;
-    currentBgAlpha = 32 + addin;
+    currentBgAlpha = qMin(255, blurAlpha + addin);
 
     // 出现动画
     QPropertyAnimation* ani1 = new QPropertyAnimation(this, "appearBgProg");
@@ -1299,26 +1310,44 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
     auto colors = ImageUtil::extractImageThemeColors(cover.toImage(), 7);
     ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
 
-    QPalette pa;
-    pa.setColor(QPalette::Window, bg);
-    pa.setColor(QPalette::Background, bg);
-    pa.setColor(QPalette::Button, bg);
+    prevPa = BFSColor::fromPalette(palette());
+    currentPa = BFSColor(QList<QColor>{bg, fg,sbg, sfg});
 
-    pa.setColor(QPalette::Foreground, fg);
-    pa.setColor(QPalette::Text, fg);
-    pa.setColor(QPalette::ButtonText, fg);
-    pa.setColor(QPalette::WindowText, fg);
-    pa.setColor(QPalette::HighlightedText, fg);
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
+    ani->setStartValue(0);
+    ani->setEndValue(1.0);
+    ani->setDuration(500);
+    connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        double d = val.toDouble();
+        BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+        QColor bg, fg, sbg, sfg;
+        bfs.toColors(&bg, &fg, &sbg, &sfg);
 
-    pa.setColor(QPalette::Highlight, sbg);
+        QPalette pa;
+        pa.setColor(QPalette::Window, bg);
+        pa.setColor(QPalette::Background, bg);
+        pa.setColor(QPalette::Button, bg);
 
-    QApplication::setPalette(pa);
-    setPalette(pa);
+        pa.setColor(QPalette::Foreground, fg);
+        pa.setColor(QPalette::Text, fg);
+        pa.setColor(QPalette::ButtonText, fg);
+        pa.setColor(QPalette::WindowText, fg);
+        pa.setColor(QPalette::HighlightedText, fg);
 
-    ui->lyricWidget->setColors(sfg, fg);
-    desktopLyric->setColors(sfg, fg);
-    ui->playingNameLabel->setPalette(pa);
+        pa.setColor(QPalette::Highlight, sbg);
 
+        QApplication::setPalette(pa);
+        setPalette(pa);
+
+        ui->lyricWidget->setColors(sfg, fg);
+        desktopLyric->setColors(sfg, fg);
+        ui->playingNameLabel->setPalette(pa);
+        ui->titleButton->setPalette(pa);
+    });
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
+
+    // 菜单直接切换，不进行动画
     QColor halfSg = sfg;
     halfSg.setAlpha(halfSg.alpha() / 2);
     FacileMenu::normal_bg = bg;
@@ -1887,7 +1916,15 @@ void OrderPlayerWindow::on_settingsButton_clicked()
             setBlurBackground(currentCover);
         update();
     })->setChecked(blurBg);
-    menu->addAction("主题变色", [=]{
+    QStringList sl{"32", "64", "96", "128"/*, "160", "192", "224", "256"*/};
+    auto blurAlphaMenu = menu->addMenu("模糊透明度");
+    menu->lastAction()->hide(!blurBg);
+    blurAlphaMenu->addOptions(sl, blurAlpha / 32 - 1, [=](int index){
+        blurAlpha = (index+1) * 32;
+        settings.setValue("music/blurAlpha", blurAlpha);
+        setBlurBackground(currentCover);
+    });
+    menu->split()->addAction("主题变色", [=]{
         settings.setValue("music/themeColor", themeColor = !themeColor);
         if (themeColor)
             setThemeColor(currentCover);
