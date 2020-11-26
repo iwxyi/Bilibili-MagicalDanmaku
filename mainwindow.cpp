@@ -17,6 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow), settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
+    connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
+        ui->tabWidget->setPalette(pa);
+    });
 
     // 页面
     int tabIndex = settings.value("mainwindow/tabIndex", 0).toInt();

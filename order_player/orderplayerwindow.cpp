@@ -114,8 +114,13 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->scrollArea->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->searchResultTable->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->searchResultTable->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
-    ui->listTabWidget->removeTab(3); // TOOD: 歌单部分没做好，先隐藏
+    ui->listTabWidget->removeTab(LISTTAB_PLAYLIST); // TOOD: 歌单部分没做好，先隐藏
     ui->titleButton->setText(settings.value("music/title", "Lazy点歌姬").toString());
+
+    QPalette pa;
+    pa.setColor(QPalette::Highlight, QColor(100, 149, 237, 88));
+    QApplication::setPalette(pa);
+
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
@@ -166,6 +171,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
 
     blurBg = settings.value("music/blurBg", blurBg).toBool();
+    themeColor = settings.value("music/themeColor", themeColor).toBool();
 
     // 读取数据
     ui->listTabWidget->setCurrentIndex(settings.value("orderplayerwindow/tabIndex").toInt());
@@ -589,7 +595,6 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
     if (blurBg)
     {
         QPainter painter(this);
-        painter.fillRect(rect(), QColor(245, 245, 247));
         if (!currentBlurBg.isNull())
         {
             painter.setOpacity((double)currentBgAlpha / 255);
@@ -1208,6 +1213,8 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
 void OrderPlayerWindow::setCurrentCover(const QPixmap &pixmap)
 {
     currentCover = pixmap;
+    if (themeColor)
+        setThemeColor(currentCover);
     if (blurBg)
         setBlurBackground(currentCover);
 }
@@ -1284,6 +1291,42 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
         update();
     });
     ani2->start();
+}
+
+void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
+{
+    QColor bg, fg, sg;
+    auto colors = ImageUtil::extractImageThemeColors(cover.toImage(), 7);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sg);
+
+    QPalette pa;
+    pa.setColor(QPalette::Window, bg);
+    pa.setColor(QPalette::Background, bg);
+    pa.setColor(QPalette::Button, bg);
+
+    pa.setColor(QPalette::Foreground, fg);
+    pa.setColor(QPalette::Text, fg);
+    pa.setColor(QPalette::ButtonText, fg);
+    pa.setColor(QPalette::WindowText, fg);
+    pa.setColor(QPalette::HighlightedText, fg);
+
+    pa.setColor(QPalette::Highlight, sg);
+
+    QApplication::setPalette(pa);
+    setPalette(pa);
+
+    ui->lyricWidget->setColors(sg, fg);
+    desktopLyric->setColors(sg, fg);
+    ui->playingNameLabel->setPalette(pa);
+
+    QColor halfSg = sg;
+    halfSg.setAlpha(halfSg.alpha() / 2);
+    FacileMenu::normal_bg = bg;
+    FacileMenu::hover_bg = halfSg;
+    FacileMenu::press_bg = sg;
+    FacileMenu::text_fg = fg;
+
+    qDebug() << "当前颜色：" << bg << fg << sg;
 }
 
 /**
@@ -1838,12 +1881,18 @@ void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
 void OrderPlayerWindow::on_settingsButton_clicked()
 {
     FacileMenu* menu = new FacileMenu(this);
-    menu->addAction("自动变色", [=]{
+    menu->addAction("模糊背景", [=]{
         settings.setValue("music/blurBg", blurBg = !blurBg);
         if (blurBg)
             setBlurBackground(currentCover);
         update();
     })->setChecked(blurBg);
+    menu->addAction("主题变色", [=]{
+        settings.setValue("music/themeColor", themeColor = !themeColor);
+        if (themeColor)
+            setThemeColor(currentCover);
+        update();
+    })->setChecked(themeColor);
 
     menu->exec();
 }

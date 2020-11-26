@@ -67,6 +67,8 @@ public:
 
     void setLyric(QString text);
 
+    void setColors(QColor p, QColor w);
+
 protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;

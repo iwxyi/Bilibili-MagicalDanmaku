@@ -27,6 +27,7 @@
 #include "songbeans.h"
 #include "desktoplyricwidget.h"
 #include "numberanimation.h"
+#include "imageutil.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class OrderPlayerWindow; }
@@ -159,6 +160,7 @@ private:
     void connectDesktopLyricSignals();
     void setCurrentCover(const QPixmap& pixmap);
     void setBlurBackground(const QPixmap& bg);
+    void setThemeColor(const QPixmap& cover);
 
 protected:
     void showEvent(QShowEvent*) override;
@@ -216,6 +218,7 @@ private:
     InteractiveButtonBase* expandPlayingButton;
 
     bool blurBg = true;
+    bool themeColor = false;
     QPixmap currentCover;
     int currentBgAlpha = 255;
     QPixmap currentBlurBg;
@@ -236,7 +239,7 @@ public:
         QStyleOptionViewItem itemOption(option);
         if (itemOption.state & QStyle::State_Selected)
         {
-            painter->fillRect(option.rect, QColor(100, 149, 237, 88));
+            painter->fillRect(option.rect, QApplication::palette().color(QPalette::Highlight));
             /*int radius = option.rect.height() / 2;
             QPainterPath path;
             path.addRoundedRect(option.rect, radius, radius);
@@ -244,6 +247,7 @@ public:
         }
         QRect rect = option.rect;
         rect.setLeft(rect.left() + 4);
+        painter->setPen(QApplication::palette().color(QPalette::Text));
         painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, index.data(Qt::DisplayRole).toString());
     }
 };

@@ -129,6 +129,13 @@ public:
         return (currentRow + verticalMargin + 0.5) * lineSpacing;
     }
 
+    void setColors(QColor p, QColor w)
+    {
+        playingColor = p;
+        waitingColor = w;
+        update();
+    }
+
 protected:
     void paintEvent(QPaintEvent *event) override
     {

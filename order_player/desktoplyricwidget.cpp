@@ -91,6 +91,13 @@ void DesktopLyricWidget::setLyric(QString text)
     update();
 }
 
+void DesktopLyricWidget::setColors(QColor p, QColor w)
+{
+    playingColor = p;
+    waitingColor = w;
+    update();
+}
+
 void DesktopLyricWidget::showEvent(QShowEvent *event)
 {
     restoreGeometry(settings.value("music/desktopLyricGeometry").toByteArray());
