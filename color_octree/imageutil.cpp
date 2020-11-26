@@ -214,3 +214,57 @@ bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg
     *sg = colors.at(maxIndex).toColor();
     return true;
 }
+
+/**
+ * 同上
+ * 获取四种颜色：背景色、前景色（文字）、辅助背景色（与文字色差大）、辅助前景色（与背景色差大）
+ */
+bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sbg, QColor *sfg)
+{
+    // 调用上面先获取背景色、前景色
+    if (!getBgFgColor(colors, bg, fg))
+        return false;
+
+    // 再获取合适的辅助色
+    if (colors.size() == 2)
+    {
+        *sbg = getInvertColor(*fg); // 文字取反
+        *sfg = getInvertColor(*bg); // 背景取反
+        return false;
+    }
+
+    int maxBIndex = -1, maxFIndex = -1;
+    qint64 maxBVariance = 0, maxFVariance = 0;
+    for (int i = 0; i < colors.size(); i++)
+    {
+        ColorOctree::ColorCount c = colors.at(i);
+        if (c.toColor() == *bg || c.toColor() == *fg)
+            continue;
+
+        int r = c.red, g = c.green, b = c.blue, n = c.count;
+        qint64 variantBg = (r - bg->red()) * (r - bg->red())
+                + (g - bg->green()) * (g - bg->green())
+                + (b - bg->blue()) * (b - bg->blue());
+        qint64 variantFg = (r - fg->red()) * (r - fg->red())
+                + (g - fg->green()) * (g - fg->green())
+                + (b - fg->blue()) * (b - fg->blue());
+
+        qint64 sum = variantBg + variantFg * 2; // 文字占比比较大
+        if (sum > maxBVariance)
+        {
+            maxBVariance = sum;
+            maxBIndex = i;
+        }
+
+        sum = variantBg * 2 + variantFg; // 背景占比比较大
+        if (sum > maxFVariance)
+        {
+            maxFVariance = sum;
+            maxFIndex = i;
+        }
+    }
+
+    *sbg = colors.at(maxBIndex).toColor();
+    *sfg = colors.at(maxFIndex).toColor();
+    return true;
+}

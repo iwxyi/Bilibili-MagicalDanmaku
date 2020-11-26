@@ -1295,9 +1295,9 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
 
 void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
 {
-    QColor bg, fg, sg;
+    QColor bg, fg, sbg, sfg;
     auto colors = ImageUtil::extractImageThemeColors(cover.toImage(), 7);
-    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sg);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
 
     QPalette pa;
     pa.setColor(QPalette::Window, bg);
@@ -1310,23 +1310,23 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
     pa.setColor(QPalette::WindowText, fg);
     pa.setColor(QPalette::HighlightedText, fg);
 
-    pa.setColor(QPalette::Highlight, sg);
+    pa.setColor(QPalette::Highlight, sbg);
 
     QApplication::setPalette(pa);
     setPalette(pa);
 
-    ui->lyricWidget->setColors(sg, fg);
-    desktopLyric->setColors(sg, fg);
+    ui->lyricWidget->setColors(sfg, fg);
+    desktopLyric->setColors(sfg, fg);
     ui->playingNameLabel->setPalette(pa);
 
-    QColor halfSg = sg;
+    QColor halfSg = sfg;
     halfSg.setAlpha(halfSg.alpha() / 2);
     FacileMenu::normal_bg = bg;
     FacileMenu::hover_bg = halfSg;
-    FacileMenu::press_bg = sg;
+    FacileMenu::press_bg = sfg;
     FacileMenu::text_fg = fg;
 
-    qDebug() << "当前颜色：" << bg << fg << sg;
+    qDebug() << "当前颜色：" << bg << fg << sfg;
 }
 
 /**

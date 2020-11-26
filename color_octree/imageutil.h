@@ -21,6 +21,8 @@ public:
     static bool getBgFgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg);
 
     static bool getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sg);
+
+    static bool getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sbg, QColor *sfg);
 };
 
 #endif // PIXMAPUTIL_H
