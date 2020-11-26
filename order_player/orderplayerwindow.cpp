@@ -362,9 +362,9 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
         albumCol,
         durationCol
     };
+    table->setColumnCount(4);
     QStringList headers{"标题", "艺术家", "专辑", "时长"};
     table->setHorizontalHeaderLabels(headers);
-    table->setColumnCount(4);
 
     QFontMetrics fm(font());
     int fw = fm.horizontalAdvance("哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈");

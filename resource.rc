@@ -28,7 +28,7 @@ VS_VERSION_INFO VERSIONINFO
                 VALUE "LegalCopyright", "Copyright (C)2018-2020"
                 VALUE "OriginalFilename", "BilibiliLiveDanmaku.exe"
                 VALUE "ProductName", "ÉñÆæµ¯Ä»"
-                VALUE "ProductVersion", "2.1.2"
+                VALUE "ProductVersion", "2.2.0"
             END
         END
         BLOCK "VarFileInfo"
