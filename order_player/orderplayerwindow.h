@@ -120,6 +120,8 @@ private slots:
 
     void adjustCurrentLyricTime(QString lyric);
 
+    void on_settingsButton_clicked();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
@@ -213,6 +215,7 @@ private:
     DesktopLyricWidget* desktopLyric;
     InteractiveButtonBase* expandPlayingButton;
 
+    bool blurBg = true;
     QPixmap currentCover;
     int currentBgAlpha = 255;
     QPixmap currentBlurBg;

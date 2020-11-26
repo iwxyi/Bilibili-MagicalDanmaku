@@ -20,5 +20,11 @@
         <file alias="lyric_hide">resources/icons/lyric_hide.png</file>
         <file alias="lyric_show">resources/icons/lyric_show.png</file>
         <file alias="sub_menu_arrow">resources/icons/sub_menu_arrow.png</file>
+        <file alias="settings">resources/icons/settings.png</file>
+        <file alias="favorite">resources/icons/favorite.png</file>
+        <file alias="history">resources/icons/history.png</file>
+        <file alias="playlist">resources/icons/playlist.png</file>
+        <file alias="random">resources/icons/random.png</file>
+        <file alias="order">resources/icons/order.png</file>
     </qresource>
 </RCC>

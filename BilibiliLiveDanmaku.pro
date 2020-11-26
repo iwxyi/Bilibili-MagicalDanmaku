@@ -24,9 +24,12 @@ INCLUDEPATH += \
     live_danmaku/ \
     interactive_buttons/ \
     facile_menu/ \
-    order_player/
+    order_player/ \
+    color_octree/
 
 SOURCES += \
+    color_octree/coloroctree.cpp \
+    color_octree/imageutil.cpp \
     facile_menu/facilemenu.cpp \
     facile_menu/facilemenuitem.cpp \
     interactive_buttons/interactivebuttonbase.cpp \
@@ -42,6 +45,8 @@ SOURCES += \
     videolyricscreator.cpp
 
 HEADERS += \
+    color_octree/coloroctree.h \
+    color_octree/imageutil.h \
     facile_menu/facilemenu.h \
     facile_menu/facilemenuitem.h \
     interactive_buttons/interactivebuttonbase.h \

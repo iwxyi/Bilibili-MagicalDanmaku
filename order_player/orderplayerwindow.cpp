@@ -165,6 +165,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     if (lyricStack)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
 
+    blurBg = settings.value("music/blurBg", blurBg).toBool();
+
     // 读取数据
     ui->listTabWidget->setCurrentIndex(settings.value("orderplayerwindow/tabIndex").toInt());
     restoreSongList("music/order", orderSongs);
@@ -584,17 +586,20 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
 {
     QMainWindow::paintEvent(e);
 
-    QPainter painter(this);
-    painter.fillRect(rect(), QColor(245, 245, 247));
-    if (!currentBlurBg.isNull())
+    if (blurBg)
     {
-        painter.setOpacity((double)currentBgAlpha / 255);
-        painter.drawPixmap(rect(), currentBlurBg);
-    }
-    if (!prevBlurBg.isNull() && prevBgAlpha)
-    {
-        painter.setOpacity((double)prevBgAlpha / 255);
-        painter.drawPixmap(rect(), prevBlurBg);
+        QPainter painter(this);
+        painter.fillRect(rect(), QColor(245, 245, 247));
+        if (!currentBlurBg.isNull())
+        {
+            painter.setOpacity((double)currentBgAlpha / 255);
+            painter.drawPixmap(rect(), currentBlurBg);
+        }
+        if (!prevBlurBg.isNull() && prevBgAlpha)
+        {
+            painter.setOpacity((double)prevBgAlpha / 255);
+            painter.drawPixmap(rect(), prevBlurBg);
+        }
     }
 }
 
@@ -1202,7 +1207,9 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
 
 void OrderPlayerWindow::setCurrentCover(const QPixmap &pixmap)
 {
-    setBlurBackground(currentCover = pixmap);
+    currentCover = pixmap;
+    if (blurBg)
+        setBlurBackground(currentCover);
 }
 
 void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
@@ -1826,4 +1833,17 @@ void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
     // 调整桌面歌词
     desktopLyric->setLyric(lyric);
     desktopLyric->setPosition(player->position());
+}
+
+void OrderPlayerWindow::on_settingsButton_clicked()
+{
+    FacileMenu* menu = new FacileMenu(this);
+    menu->addAction("自动变色", [=]{
+        settings.setValue("music/blurBg", blurBg = !blurBg);
+        if (blurBg)
+            setBlurBackground(currentCover);
+        update();
+    })->setChecked(blurBg);
+
+    menu->exec();
 }
