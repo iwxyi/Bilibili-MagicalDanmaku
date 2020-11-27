@@ -3216,11 +3216,11 @@ bool MainWindow::handlePK(QJsonObject json)
             {
                 if (prevMyVotes < myVotes)
                 {
-                    showLocalNotify("[己方偷塔] +" + snum(myVotes - prevMyVotes));
+                    showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
                 }
                 if (prevMatchVotes < matchVotes)
                 {
-                    showLocalNotify("[对方偷塔] +" + snum(matchVotes - prevMatchVotes));
+                    showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
                 }
             }
         }
@@ -3259,21 +3259,23 @@ bool MainWindow::handlePK(QJsonObject json)
         pkEnding = false;
         pkVoting = 0;
         pkEndTime = 0;
-        int winnerType = data.value("init_info").toObject().value("winner_type").toInt();
+        int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
+        int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
         qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
         if (pkTimer)
             pkTimer->stop();
         if (danmakuWindow)
             danmakuWindow->hideStatusText();
-        bool result = (winnerType > 0 && snum(thisRoomId) == roomId)
-                || (winnerType < 0 && snum(thisRoomId) != roomId);
+        bool ping = winnerType1 == winnerType2;
+        bool result = (winnerType1 > 0 && snum(thisRoomId) == roomId)
+                || (winnerType1 < 0 && snum(thisRoomId) != roomId);
         showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
-                                         .arg(result ? "胜利" : "失败")
+                                         .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                          .arg(myVotes)
                                          .arg(matchVotes));
         myVotes = 0;
         matchVotes = 0;
-        qDebug() << "大乱斗结束，结果：" << (result ? "胜利" : "失败");
+        qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
@@ -4171,6 +4173,7 @@ void MainWindow::on_actionCustom_Variant_triggered()
     text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量：\n示例格式：%var%=val", text, &ok);
     if (!ok)
         return ;
+    settings.setValue("danmaku/customVariant", text);
 
     restoreCustomVariant(text);
 }
