@@ -225,7 +225,7 @@ private:
     void setThemeColor(const QPixmap& cover);
 
 protected:
-    void showEvent(QShowEvent*) override;
+    void showEvent(QShowEvent*e) override;
     void closeEvent(QCloseEvent*) override;
     void resizeEvent(QResizeEvent*) override;
     void paintEvent(QPaintEvent* e) override;

@@ -20,7 +20,7 @@ InteractiveButtonBase::InteractiveButtonBase(QWidget *parent)
       normal_bg(0xF2, 0xF2, 0xF2, 0), hover_bg(128, 128, 128, 32), press_bg(128, 128, 128, 64), border_bg(0,0,0,0),
       focus_bg(0,0,0,0), focus_border(0,0,0,0),
       hover_speed(5), press_start(40), press_speed(5),
-      hover_progress(0), press_progress(0), icon_padding_proper(0.25), icon_text_padding(4), icon_text_size(16),
+      hover_progress(0), press_progress(0), icon_padding_proper(0.2), icon_text_padding(4), icon_text_size(16),
       border_width(1), radius_x(0), radius_y(0),
       font_size(0), fixed_fore_pos(false), fixed_fore_size(false), text_dynamic_size(false), auto_text_color(true), focusing(false),
       click_ani_appearing(false), click_ani_disappearing(false), click_ani_progress(0),
@@ -95,7 +95,10 @@ void InteractiveButtonBase::setText(QString text)
 {
     this->text = text;
     if (model == PaintModel::None)
+    {
         model = PaintModel::Text;
+        setAlign(Qt::AlignCenter);
+    }
     else if (model == PaintModel::PixmapMask)
     {
         if (pixmap.isNull())
@@ -108,13 +111,21 @@ void InteractiveButtonBase::setText(QString text)
     }
     else if (model == PaintModel::Icon)
     {
-        if (icon.isNull())
-            model = PaintModel::Text;
+        if (text.isEmpty())
+        {
+            model = PaintModel::Icon;
+            setAlign(Qt::AlignCenter);
+        }
         else
-            model = PaintModel::IconText;
-        setAlign(Qt::AlignLeft | Qt::AlignVCenter);
-        QFontMetrics fm(this->font());
-        icon_text_size = fm.lineSpacing();
+        {
+            if (icon.isNull())
+                model = PaintModel::Text;
+            else
+                model = PaintModel::IconText;
+            setAlign(Qt::AlignLeft | Qt::AlignVCenter);
+            QFontMetrics fm(this->font());
+            icon_text_size = fm.lineSpacing();
+        }
     }
 
     if (parent_enabled)
@@ -164,7 +175,10 @@ void InteractiveButtonBase::setPixmapPath(QString path)
 void InteractiveButtonBase::setIcon(QIcon icon)
 {
     if (model == PaintModel::None)
+    {
         model = PaintModel::Icon;
+        setAlign(Qt::AlignCenter);
+    }
     else if (model == PaintModel::Text)
     {
         if (text.isEmpty())
@@ -190,6 +204,11 @@ void InteractiveButtonBase::setIcon(QIcon icon)
         setAlign(Qt::AlignLeft | Qt::AlignVCenter);
         QFontMetrics fm(this->font());
         icon_text_size = fm.lineSpacing();
+    }
+    else if (model == PaintModel::IconText && text.isEmpty())
+    {
+        model = PaintModel::Icon;
+        setAlign(Qt::AlignCenter);
     }
     this->icon = icon;
     if (parent_enabled)

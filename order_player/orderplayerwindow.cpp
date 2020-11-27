@@ -117,6 +117,9 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->listTabWidget->removeTab(LISTTAB_PLAYLIST); // TOOD: 歌单部分没做好，先隐藏
     ui->titleButton->setText(settings.value("music/title", "Lazy点歌姬").toString());
 
+    if (settings.value("music/hideTab", false).toBool())
+        ui->listTabWidget->tabBar()->hide();
+
     QPalette pa;
     pa.setColor(QPalette::Highlight, QColor(100, 149, 237, 88));
     QApplication::setPalette(pa);
@@ -549,8 +552,16 @@ bool OrderPlayerWindow::isNotPlaying() const
             && (!playingSong.isValid() || player->position() == 0);
 }
 
-void OrderPlayerWindow::showEvent(QShowEvent *)
+void OrderPlayerWindow::showEvent(QShowEvent *e)
 {
+    QMainWindow::showEvent(e);
+
+    static bool firstShow = true;
+    if (firstShow)
+    {
+        firstShow = false;
+    }
+
     restoreGeometry(settings.value("orderplayerwindow/geometry").toByteArray());
     restoreState(settings.value("orderplayerwindow/state").toByteArray());
     ui->splitter->restoreState(settings.value("orderplayerwindow/splitterState").toByteArray());
@@ -1910,12 +1921,22 @@ void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
 void OrderPlayerWindow::on_settingsButton_clicked()
 {
     FacileMenu* menu = new FacileMenu(this);
-    menu->addAction("模糊背景", [=]{
+    bool h = settings.value("music/hideTab", false).toBool();
+    menu->addAction("隐藏Tab", [=]{
+        settings.setValue("music/hideTab", !h);
+        if (h)
+            ui->listTabWidget->tabBar()->show();
+        else
+            ui->listTabWidget->tabBar()->hide();
+    })->check(h);
+
+    menu->split()->addAction("模糊背景", [=]{
         settings.setValue("music/blurBg", blurBg = !blurBg);
         if (blurBg)
             setBlurBackground(currentCover);
         update();
     })->setChecked(blurBg);
+
     QStringList sl{"32", "64", "96", "128"/*, "160", "192", "224", "256"*/};
     auto blurAlphaMenu = menu->addMenu("模糊透明度");
     menu->lastAction()->hide(!blurBg);
@@ -1924,6 +1945,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/blurAlpha", blurAlpha);
         setBlurBackground(currentCover);
     });
+
     menu->split()->addAction("主题变色", [=]{
         settings.setValue("music/themeColor", themeColor = !themeColor);
         if (themeColor)

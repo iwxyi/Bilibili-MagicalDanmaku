@@ -28,7 +28,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QPushButton" name="titleButton">
+       <widget class="InteractiveButtonBase" name="titleButton">
         <property name="styleSheet">
          <string notr="true">text-align: left;</string>
         </property>
@@ -139,7 +139,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="settingsButton">
+          <widget class="InteractiveButtonBase" name="settingsButton">
            <property name="text">
             <string/>
            </property>
@@ -546,6 +546,12 @@ QTabBar::tab:disabled
             <property name="spacing">
              <number>0</number>
             </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
             <item>
              <widget class="QLabel" name="playingNameLabel">
               <property name="text">
@@ -693,8 +699,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>95</width>
-              <height>30</height>
+              <width>98</width>
+              <height>28</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -714,7 +720,7 @@ QTableCornerButton::section
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
-       <widget class="QPushButton" name="playButton">
+       <widget class="InteractiveButtonBase" name="playButton">
         <property name="text">
          <string/>
         </property>
@@ -756,7 +762,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="volumeButton">
+       <widget class="InteractiveButtonBase" name="volumeButton">
         <property name="text">
          <string/>
         </property>
@@ -799,7 +805,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="circleModeButton">
+       <widget class="InteractiveButtonBase" name="circleModeButton">
         <property name="text">
          <string/>
         </property>
@@ -819,7 +825,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="desktopLyricButton">
+       <widget class="InteractiveButtonBase" name="desktopLyricButton">
         <property name="text">
          <string/>
         </property>
@@ -853,6 +859,11 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
    <extends>QWidget</extends>
    <header>lyricstreamwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>InteractiveButtonBase</class>
+   <extends>QPushButton</extends>
+   <header>interactivebuttonbase.h</header>
   </customwidget>
  </customwidgets>
  <resources>
