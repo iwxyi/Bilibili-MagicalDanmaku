@@ -42,6 +42,7 @@ SOURCES += \
     taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
+    utils/textinputdialog.cpp \
     videolyricscreator.cpp
 
 HEADERS += \
@@ -66,11 +67,13 @@ HEADERS += \
     utils/netutil.h \
     utils/pinyinutil.h \
     utils/stringutil.h \
+    utils/textinputdialog.h \
     videolyricscreator.h
 
 FORMS += \
     mainwindow.ui \
     order_player/orderplayerwindow.ui \
+    utils/textinputdialog.ui \
     videolyricscreator.ui
 
 # Default rules for deployment.

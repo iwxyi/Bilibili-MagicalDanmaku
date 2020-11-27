@@ -1014,6 +1014,8 @@
     </property>
     <addaction name="actionShow_Live_Danmaku"/>
     <addaction name="actionShow_Order_Player_Window"/>
+    <addaction name="separator"/>
+    <addaction name="actionCustom_Variant"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -1083,6 +1085,11 @@
   <action name="actionGitHub">
    <property name="text">
     <string>GitHub</string>
+   </property>
+  </action>
+  <action name="actionCustom_Variant">
+   <property name="text">
+    <string>自定义变量</string>
    </property>
   </action>
  </widget>

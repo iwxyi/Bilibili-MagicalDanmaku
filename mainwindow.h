@@ -24,6 +24,7 @@
 #include "taskwidget.h"
 #include "commonvalues.h"
 #include "orderplayerwindow.h"
+#include "textinputdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -252,6 +253,8 @@ private slots:
 
     void on_actionGitHub_triggered();
 
+    void on_actionCustom_Variant_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -303,6 +306,9 @@ private:
     void saveTouta();
 
     void processDanmakuCmd(QString msg);
+
+    void restoreCustomVariant(QString text);
+    QString saveCustomVariant();
 
 private:
     Ui::MainWindow *ui;

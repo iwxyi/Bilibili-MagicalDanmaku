@@ -25,6 +25,7 @@ protected:
     static QList<qint64> careUsers; // 特别关心
     static QList<qint64> strongNotifyUsers; // 强提醒
     static QHash<QString, QString> pinyinMap; // 拼音
+    static QHash<QString, QString> customVariant; // 自定义变量
 };
 
 #endif // COMMANDVALUES_H

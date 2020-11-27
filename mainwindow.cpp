@@ -11,6 +11,7 @@ QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹
 QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
+QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -231,6 +232,9 @@ MainWindow::MainWindow(QWidget *parent)
     pkJudgeEarly = settings.value("pk/judgeEarly", 2000).toInt();
     toutaCount = settings.value("pk/toutaCount", 0).toInt();
     chiguaCount = settings.value("pk/chiguaCount", 0).toInt();
+
+    // 自定义变量
+    restoreCustomVariant(settings.value("danmaku/customVariant", "").toString());
 
     // 定时任务
     srand((unsigned)time(0));
@@ -1753,6 +1757,12 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
  */
 QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) const
 {
+    // 自定义变量
+    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    {
+        msg.replace(it.key(), it.value());
+    }
+
     // 用户昵称
     if (msg.contains("%uname%"))
         msg.replace("%uname%", danmaku.getNickname());
@@ -2432,7 +2442,35 @@ void MainWindow::processDanmakuCmd(QString msg)
         saveTaskList();
         sendNotifyMsg(">已开启定时任务");
     }
+}
 
+void MainWindow::restoreCustomVariant(QString text)
+{
+    customVariant.clear();
+    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    foreach (QString s, sl)
+    {
+        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+        QRegularExpressionMatch match;
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            customVariant.insert(key, val);
+        }
+        else
+            qDebug() << "自定义变量读取失败：" << s;
+    }
+}
+
+QString MainWindow::saveCustomVariant()
+{
+    QStringList sl;
+    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    {
+        sl << it.key() + " = " + it.value();
+    }
+    return sl.join("\n");
 }
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
@@ -3105,7 +3143,7 @@ bool MainWindow::handlePK(QJsonObject json)
             }
             else
             {
-                showLocalNotify(QString("大乱斗比分：%1 vs %2")
+                showLocalNotify(QString("大乱斗尾声：%1 vs %2")
                                 .arg(myVotes).arg(matchVotes));
             }
         });
@@ -4124,4 +4162,15 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionGitHub_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/MRXY001/BilibiliLiveDanmaku"));
+}
+
+void MainWindow::on_actionCustom_Variant_triggered()
+{
+    QString text = saveCustomVariant();
+    bool ok;
+    text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量：\n示例格式：%var%=val", text, &ok);
+    if (!ok)
+        return ;
+
+    restoreCustomVariant(text);
 }
