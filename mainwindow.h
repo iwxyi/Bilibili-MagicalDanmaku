@@ -360,6 +360,7 @@ private:
     QWebSocket* socket;
     QTimer* heartTimer;
     QTimer* connectServerTimer;
+    bool remoteControl = true;
 
     // 每日数据
     QSettings* dailySettings = nullptr;

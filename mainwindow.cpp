@@ -854,6 +854,8 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
         item->setSizeHint(tw->size());
     });
 
+    remoteControl = settings.value("danmaku/remoteControl", remoteControl).toBool();
+
     // 设置属性
     tw->check->setChecked(enable);
     tw->spin->setValue(second);
@@ -2294,6 +2296,9 @@ void MainWindow::saveTouta()
 
 void MainWindow::processDanmakuCmd(QString msg)
 {
+    if (!remoteControl)
+        return ;
+
     if (msg == "关闭功能")
     {
         sendNotifyMsg(">已暂停自动弹幕");
@@ -2357,6 +2362,77 @@ void MainWindow::processDanmakuCmd(QString msg)
         on_autoBlockNewbieCheck_clicked();
         sendNotifyMsg(">已开启新人关键词自动禁言");
     }
+    else if (msg == "关闭偷塔")
+    {
+        ui->pkAutoMelonCheck->setChecked(false);
+        on_pkAutoMelonCheck_clicked();
+        sendNotifyMsg(">已暂停自动偷塔");
+    }
+    else if (msg == "开启偷塔")
+    {
+        ui->pkAutoMelonCheck->setChecked(true);
+        on_pkAutoMelonCheck_clicked();
+        sendNotifyMsg(">已开启自动偷塔");
+    }
+    else if (msg == "关闭点歌")
+    {
+        ui->DiangeAutoCopyCheck->setChecked(false);
+        sendNotifyMsg(">已暂停自动点歌");
+    }
+    else if (msg == "开启点歌")
+    {
+        ui->DiangeAutoCopyCheck->setChecked(true);
+        sendNotifyMsg(">已开启自动点歌");
+    }
+    else if (msg == "关闭点歌回复")
+    {
+        ui->diangeReplyCheck->setChecked(false);
+        on_diangeReplyCheck_clicked();
+        sendNotifyMsg(">已暂停自动点歌回复");
+    }
+    else if (msg == "开启点歌回复")
+    {
+        ui->diangeReplyCheck->setChecked(true);
+        on_diangeReplyCheck_clicked();
+        sendNotifyMsg(">已开启自动点歌回复");
+    }
+    else if (msg == "关闭自动连接")
+    {
+        ui->timerConnectServerCheck->setChecked(false);
+        on_timerConnectServerCheck_clicked();
+        sendNotifyMsg(">已暂停自动连接");
+    }
+    else if (msg == "开启自动连接")
+    {
+        ui->timerConnectServerCheck->setChecked(true);
+        on_timerConnectServerCheck_clicked();
+        sendNotifyMsg(">已开启自动连接");
+    }
+    else if (msg == "关闭定时任务")
+    {
+        for (int i = 0; i < ui->taskListWidget->count(); i++)
+        {
+            QListWidgetItem* item = ui->taskListWidget->item(i);
+            auto widget = ui->taskListWidget->itemWidget(item);
+            auto tw = static_cast<TaskWidget*>(widget);
+            tw->check->setChecked(false);
+        }
+        saveTaskList();
+        sendNotifyMsg(">已关闭定时任务");
+    }
+    else if (msg == "开启定时任务")
+    {
+        for (int i = 0; i < ui->taskListWidget->count(); i++)
+        {
+            QListWidgetItem* item = ui->taskListWidget->item(i);
+            auto widget = ui->taskListWidget->itemWidget(item);
+            auto tw = static_cast<TaskWidget*>(widget);
+            tw->check->setChecked(true);
+        }
+        saveTaskList();
+        sendNotifyMsg(">已开启定时任务");
+    }
+
 }
 
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
@@ -3064,7 +3140,8 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 201,
             "timestamp": 1605749908
         }*/
-
+        int prevMyVotes = myVotes;
+        int prevMatchVotes = matchVotes;
         if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == roomId)
         {
             myVotes = data.value("init_info").toObject().value("votes").toInt();
@@ -3082,6 +3159,7 @@ bool MainWindow::handlePK(QJsonObject json)
         if (pkEnding)
         {
             qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+
             // 反偷塔，防止对方也在最后几秒刷礼物
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes)
@@ -3095,6 +3173,17 @@ bool MainWindow::handlePK(QJsonObject json)
                 toutaCount++;
                 chiguaCount += num;
                 saveTouta();
+            }
+            else
+            {
+                if (prevMyVotes < myVotes)
+                {
+                    showLocalNotify("[己方偷塔] +" + snum(myVotes - prevMyVotes));
+                }
+                if (prevMatchVotes < matchVotes)
+                {
+                    showLocalNotify("[对方偷塔] +" + snum(matchVotes - prevMatchVotes));
+                }
             }
         }
         else
