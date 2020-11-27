@@ -271,7 +271,8 @@ MainWindow::MainWindow(QWidget *parent)
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
-        if (liveStatus)
+        connectServerTimer->setInterval(180000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        if (liveStatus && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
         {
             connectServerTimer->stop();
             return ;
@@ -1051,12 +1052,25 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
+        // 正在直播的时候突然断开了
+        if (liveStatus)
+        {
+            liveStatus = false;
+            // 尝试10秒钟后重连
+            connectServerTimer->setInterval(10000);
+            connectServerTimer->start();
+        }
+
         qDebug() << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
         ui->popularityLabel->setText("人气值：0");
 
         heartTimer->stop();
         danmuPopularTimer->stop();
+
+        // 如果不是主动连接的话，这个会断开
+        if (!connectServerTimer->isActive())
+            connectServerTimer->start();
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
