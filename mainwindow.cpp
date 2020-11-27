@@ -1229,9 +1229,10 @@ void MainWindow::getRoomInfo()
                 int minu = QDateTime::currentDateTime().time().minute();
                 bool abort = false;
                 qint64 currentVal = hour * 3600000 + minu * 60000;
+                qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
                 if (start < end) // 白天档
                 {
-                    if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                    if (nextVal >= start * 3600000
                             && currentVal <= end * 3600000)
                     {
                         if (ui->doveCheck->isChecked()) // 今天鸽了
@@ -1248,7 +1249,7 @@ void MainWindow::getRoomInfo()
                 else if (start > end) // 熬夜档
                 {
                     if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
-                            || currentVal <= end * 36000000)
+                            || currentVal <= end * 3600000)
                     {
                         if (ui->doveCheck->isChecked()) // 今晚鸽了
                             abort = true;
@@ -1257,7 +1258,7 @@ void MainWindow::getRoomInfo()
                     else // 直播时间之外
                     {
                         abort = true;
-                        if (currentVal > end * 36000000 && currentVal < start * 36000000
+                        if (currentVal > end * 3600000 && currentVal < start * 3600000
                                 && ui->doveCheck->isChecked())
                             ui->doveCheck->setChecked(false);
                     }
@@ -1268,7 +1269,9 @@ void MainWindow::getRoomInfo()
                     if (!connectServerTimer->isActive())
                         connectServerTimer->start();
                     ui->connectStateLabel->setText("等待连接");
-                    if (socket->state() != QAbstractSocket::UnconnectedState) // 如果正在连接或打算连接，则断开
+
+                    // 如果正在连接或打算连接，却未开播，则断开
+                    if (socket->state() != QAbstractSocket::UnconnectedState)
                         socket->close();
                     return ;
                 }
