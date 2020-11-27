@@ -107,6 +107,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
     hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
 
+    // 忽略的颜色
+    ignoreDanmakuColors = settings.value("livedanmakuwindow/ignoreColor").toString().split(";");
+
     statusLabel = new QLabel(this);
     statusLabel->hide();
     QPalette pa;
@@ -468,7 +471,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             colorfulMsg = "<font color='gray'>"
                     + danmaku.getText() + "</font> ";
         }
-        else if (!isBlankColor(danmaku.getTextColor()))
+        else if (!isBlankColor(danmaku.getTextColor())
+                 && !ignoreDanmakuColors.contains(danmaku.getTextColor()))
         {
             colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
                     + danmaku.getText() + "</font> ";
@@ -690,6 +694,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSearch = new QAction("百度", this);
     QAction* actionTranslate = new QAction("翻译", this);
     QAction* actionReply = new QAction("AI回复", this);
+    QAction* actionIgnoreColor = new QAction("忽视颜色", this);
 
     QMenu* settingMenu = new QMenu("设置", this);
     QAction* actionNameColor = new QAction("昵称颜色", this);
@@ -743,6 +748,12 @@ void LiveDanmakuWindow::showMenu()
         {
             actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
         }
+
+        if (!danmaku.getTextColor().isEmpty())
+        {
+            if (ignoreDanmakuColors.contains(danmaku.getTextColor()))
+                actionIgnoreColor->setText("恢复颜色");
+        }
     }
     else
     {
@@ -767,6 +778,7 @@ void LiveDanmakuWindow::showMenu()
         actionReply->setEnabled(false);
         actionFreeCopy->setEnabled(false);
         actionDelete->setEnabled(false);
+        actionIgnoreColor->setEnabled(false);
     }
     else if (!uid)
     {
@@ -808,6 +820,8 @@ void LiveDanmakuWindow::showMenu()
     operMenu->addAction(actionSearch);
     operMenu->addAction(actionTranslate);
     operMenu->addAction(actionReply);
+    operMenu->addSeparator();
+    operMenu->addAction(actionIgnoreColor);
 
     settingMenu->addAction(actionNameColor);
     settingMenu->addAction(actionMsgColor);
@@ -990,6 +1004,22 @@ void LiveDanmakuWindow::showMenu()
         edit->show();
         edit->setFocus();
     });
+    connect(actionIgnoreColor, &QAction::triggered, this, [=]{
+        QString s = danmaku.getTextColor();
+        if (s.isEmpty())
+            return ;
+        if (ignoreDanmakuColors.contains(s))
+        {
+            ignoreDanmakuColors.removeOne(s);
+        }
+        else
+        {
+            ignoreDanmakuColors.append(s);
+        }
+
+        settings.setValue("livedanmakuwindow/ignoreColor", ignoreDanmakuColors.join(";"));
+        resetItemsText();
+    });
     connect(actionSendMsg, &QAction::triggered, this, [=]{
         if (lineEdit->isHidden())
             lineEdit->show();
@@ -1007,7 +1037,6 @@ void LiveDanmakuWindow::showMenu()
         settings.setValue("livedanmakuwindow/sendOnce", enable);
     });
     connect(actionWindow, &QAction::triggered, this, [=]{
-        qDebug() << "~~~~~~~~~~~~~~~~~";
         bool enable = !settings.value("livedanmakuwindow/jiWindow", false).toBool();
         settings.setValue("livedanmakuwindow/jiWindow", enable);
         if (enable)

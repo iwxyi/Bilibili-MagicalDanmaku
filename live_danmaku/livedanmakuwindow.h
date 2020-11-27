@@ -130,6 +130,7 @@ private:
     bool enableBlock = false;
     bool newbieTip = true;
     QHash<qint64, QPixmap> headPortraits;
+    QList<QString> ignoreDanmakuColors;
 
     int fontHeight;
     int lineSpacing;
