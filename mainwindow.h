@@ -25,6 +25,7 @@
 #include "commonvalues.h"
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
+#include "luckydrawwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -255,6 +256,8 @@ private slots:
 
     void on_actionCustom_Variant_triggered();
 
+    void on_actionShow_Lucky_Draw_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -398,6 +401,9 @@ private:
     int minuteDanmuPopular = 0;
     QList<int> danmuPopularQueue;
     int danmuPopularValue = 0;
+
+    // 抽奖机
+    LuckyDrawWindow* luckyDrawWindow = nullptr;
 
 };
 #endif // MAINWINDOW_H

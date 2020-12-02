@@ -4177,3 +4177,13 @@ void MainWindow::on_actionCustom_Variant_triggered()
 
     restoreCustomVariant(text);
 }
+
+void MainWindow::on_actionShow_Lucky_Draw_triggered()
+{
+    if (!luckyDrawWindow)
+    {
+        luckyDrawWindow = new LuckyDrawWindow(nullptr);
+        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), luckyDrawWindow, SLOT(slotNewDanmaku(LiveDanmaku)));
+    }
+    luckyDrawWindow->show();
+}
