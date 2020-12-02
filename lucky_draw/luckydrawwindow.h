@@ -42,8 +42,15 @@ private slots:
 
     void on_countdownButton_clicked();
 
+    void on_onlyLastButton_clicked();
+
+    void on_onlyLastSpin_editingFinished();
+
+    void on_removeHalfButton_clicked();
+
 private:
-    bool isTypeValid();
+    bool isTypeValid() const;
+    bool isWaiting() const;
 
 private:
     Ui::LuckyDrawWindow *ui;
@@ -58,6 +65,7 @@ private:
     QTimer* countdownTimer;
 
     QList<LiveDanmaku> participants;
+    QHash<qint64, QPixmap> headerPortraits;
 };
 
 #endif // LUCKYDRAWWINDOW_H

@@ -10,8 +10,8 @@ LuckyDrawWindow::LuckyDrawWindow(QWidget *parent) :
     ui->setupUi(this);
 
     lotteryType = (LotteryType)settings.value("lottery/type", 0).toInt();
-    lotteryDanmakuMsg =  settings.value("lottery/danmakuMsg").toString();
-    lotteryGiftName = settings.value("lottery/giftName").toString();
+    lotteryDanmakuMsg =  settings.value("lottery/danmakuMsg", "我要抽奖").toString();
+    lotteryGiftName = settings.value("lottery/giftName", "吃瓜").toString();
 
     QActionGroup* typeGroup = new QActionGroup(this);
     typeGroup->addAction(ui->actionSet_Danmaku_Msg);
@@ -22,11 +22,17 @@ LuckyDrawWindow::LuckyDrawWindow(QWidget *parent) :
         ui->actionSet_Gift_Name->setChecked(true);
 
     ui->titleButton->setText(settings.value("lottery/title", "一句“我要抽奖”参与抽奖").toString());
+    ui->onlyLastSpin->setValue(settings.value("lottery/onlyLast", 1).toInt());
 
     countdownTimer->setInterval(300);
     connect(countdownTimer, SIGNAL(timeout()), this, SLOT(slotCountdown()));
 
-    ui->removeHalfButton->hide();
+    ui->removeHalfButton->setEnabled(false);
+    ui->onlyLastButton->setEnabled(false);
+
+    QTime time;
+    time= QTime::currentTime();
+    qsrand(time.msec()+time.second()*1000);
 }
 
 LuckyDrawWindow::~LuckyDrawWindow()
@@ -36,9 +42,42 @@ LuckyDrawWindow::~LuckyDrawWindow()
 
 void LuckyDrawWindow::slotNewDanmaku(LiveDanmaku danmaku)
 {
-    if (this->isHidden())
+    if (this->isHidden() || !isWaiting())
         return ;
-    qDebug() << "抽奖机弹幕：" << danmaku.toString();
+
+    // 过滤内容
+    if (lotteryType == LotteryDanmaku && danmaku.getMsgType() == MSG_DANMAKU)
+    {
+        if (danmaku.getText() != lotteryDanmakuMsg)
+            return ;
+    }
+    else if (lotteryType == LotteryGift && danmaku.getMsgType() == MSG_GIFT)
+    {
+        if (danmaku.getGiftName() != lotteryGiftName)
+            return ;
+    }
+    else
+        return ;
+
+    // 过滤条件
+    if (ui->actionCondition_Fans->isChecked())
+    {
+
+    }
+    if (ui->actionCondition_Guard->isChecked())
+    {
+
+    }
+
+    // 避免重复
+    qint64 uid = danmaku.getUid();
+    foreach (LiveDanmaku danmaku, participants)
+        if (danmaku.getUid() == uid)
+            return ;
+
+    // 添加到列表
+    participants.append(danmaku);
+    ui->listWidget->addItem(danmaku.getNickname());
 }
 
 void LuckyDrawWindow::slotCountdown()
@@ -65,19 +104,27 @@ void LuckyDrawWindow::slotCountdown()
 void LuckyDrawWindow::startWaiting()
 {
     participants.clear();
+    ui->listWidget->clear();
     countdownTimer->start();
-    ui->removeHalfButton->hide();
+
+    ui->removeHalfButton->setEnabled(false);
+    ui->onlyLastButton->setEnabled(false);
+    ui->actionSet_Danmaku_Msg->setEnabled(false);
+    ui->actionSet_Gift_Name->setEnabled(false);
 }
 
 void LuckyDrawWindow::finishWaiting()
 {
     countdownTimer->stop();
-    ui->countdownButton->setText("准备抽奖...");
+    ui->countdownButton->setText("正在抽奖");
+    ui->actionSet_Danmaku_Msg->setEnabled(true);
+    ui->actionSet_Gift_Name->setEnabled(true);
 
     // 有人参与
     if (participants.size())
     {
-        ui->removeHalfButton->show();
+        ui->removeHalfButton->setEnabled(true);
+        ui->onlyLastButton->setEnabled(true);
     }
 }
 
@@ -121,6 +168,15 @@ void LuckyDrawWindow::on_titleButton_clicked()
 
 void LuckyDrawWindow::on_countdownButton_clicked()
 {
+    if (isWaiting())
+    {
+        if (QMessageBox::question(this, "停止倒计时", "是否停止倒计时，立即抽奖？\n当前已参与抽奖的粉丝将保留") == QMessageBox::Yes)
+        {
+            finishWaiting();
+        }
+        return ;
+    }
+
     if (!isTypeValid())
     {
         QMessageBox::warning(this, "提示", "请先设置抽奖类型，最后设置倒计时");
@@ -137,11 +193,57 @@ void LuckyDrawWindow::on_countdownButton_clicked()
     startWaiting();
 }
 
-bool LuckyDrawWindow::isTypeValid()
+bool LuckyDrawWindow::isWaiting() const
+{
+    return countdownTimer->isActive();
+}
+
+bool LuckyDrawWindow::isTypeValid() const
 {
     if (lotteryType == LotteryDanmaku)
         return !lotteryDanmakuMsg.isEmpty();
     if (lotteryType == LotteryGift)
         return !lotteryGiftName.isEmpty();
     return false;
+}
+
+/**
+ * 只剩下n个
+ */
+void LuckyDrawWindow::on_onlyLastButton_clicked()
+{
+    int lastCount = ui->onlyLastSpin->value();
+    int allCount = participants.size();
+    int delta = allCount - lastCount;
+    while (delta-- > 0)
+    {
+        int r = qrand() % allCount;
+        participants.removeAt(r);
+        ui->listWidget->takeItem(r);
+        allCount--;
+        qDebug() << "移除index：" << r;
+    }
+}
+
+void LuckyDrawWindow::on_onlyLastSpin_editingFinished()
+{
+    settings.setValue("lottery/onlyLast", ui->onlyLastSpin->value());
+}
+
+/**
+ * 减去一半
+ */
+void LuckyDrawWindow::on_removeHalfButton_clicked()
+{
+    int allCount = participants.size();
+    int lastCount = (allCount+1) / 2;
+    int delta = allCount - lastCount;
+    while (delta-- > 0)
+    {
+        int r = qrand() % allCount;
+        participants.removeAt(r);
+        ui->listWidget->takeItem(r);
+        allCount--;
+        qDebug() << "移除index：" << r;
+    }
 }
