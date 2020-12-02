@@ -24,7 +24,7 @@
 }</string>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1015,6 +1015,7 @@
     <addaction name="actionShow_Live_Danmaku"/>
     <addaction name="actionShow_Order_Player_Window"/>
     <addaction name="separator"/>
+    <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
    </widget>
    <widget class="QMenu" name="menu_3">
@@ -1090,6 +1091,11 @@
   <action name="actionCustom_Variant">
    <property name="text">
     <string>自定义变量</string>
+   </property>
+  </action>
+  <action name="actionSend_Long_Text">
+   <property name="text">
+    <string>发送长文本</string>
    </property>
   </action>
  </widget>

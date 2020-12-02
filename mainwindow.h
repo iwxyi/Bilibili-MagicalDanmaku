@@ -255,6 +255,8 @@ private slots:
 
     void on_actionCustom_Variant_triggered();
 
+    void on_actionSend_Long_Text_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

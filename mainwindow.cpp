@@ -1064,7 +1064,6 @@ void MainWindow::initWS()
             liveStatus = false;
             // 尝试10秒钟后重连
             connectServerTimer->setInterval(10000);
-            connectServerTimer->start();
         }
 
         qDebug() << "disconnected";
@@ -4176,4 +4175,21 @@ void MainWindow::on_actionCustom_Variant_triggered()
     settings.setValue("danmaku/customVariant", text);
 
     restoreCustomVariant(text);
+}
+
+void MainWindow::on_actionSend_Long_Text_triggered()
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, "发送长文本", "请输入长文本（支持变量），分割为每次20字发送\n注意带有敏感词或特殊字符的部分将无法发送", QLineEdit::Normal, "", &ok);
+    text = text.trimmed();
+
+    QStringList sl;
+    int len = text.length();
+    const int maxOne = 20;
+    int count = (len + maxOne - 1) / maxOne;
+    for (int i = 0; i < count; i++)
+    {
+        sl << text.mid(i * maxOne, maxOne);
+    }
+    sendAutoMsg(sl.join("\\n"));
 }
