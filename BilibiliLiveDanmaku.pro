@@ -25,7 +25,8 @@ INCLUDEPATH += \
     interactive_buttons/ \
     facile_menu/ \
     order_player/ \
-    color_octree/
+    color_octree/ \
+    lucky_draw/
 
 SOURCES += \
     color_octree/coloroctree.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
     facile_menu/facilemenuitem.cpp \
     interactive_buttons/interactivebuttonbase.cpp \
     live_danmaku/livedanmakuwindow.cpp \
+    lucky_draw/luckydrawwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
@@ -56,6 +58,7 @@ HEADERS += \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
     live_danmaku/portraitlabel.h \
+    lucky_draw/luckydrawwindow.h \
     mainwindow.h \
     order_player/desktoplyricwidget.h \
     order_player/lyricstreamwidget.h \
@@ -71,6 +74,7 @@ HEADERS += \
     videolyricscreator.h
 
 FORMS += \
+    lucky_draw/luckydrawwindow.ui \
     mainwindow.ui \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \

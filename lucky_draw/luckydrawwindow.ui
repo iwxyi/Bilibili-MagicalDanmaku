@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LuckyDrawWindow</class>
+ <widget class="QMainWindow" name="LuckyDrawWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>很随便的抽奖机</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="titleButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton
+{
+	font: 40px;
+}</string>
+        </property>
+        <property name="text">
+         <string>一个吃瓜参与抽奖</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="countdownButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton
+{
+	font: 40px;
+}</string>
+        </property>
+        <property name="text">
+         <string>倒计时</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QListWidget" name="listWidget"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="removeHalfButton">
+        <property name="text">
+         <string>减半</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="onlyLastButton">
+        <property name="text">
+         <string>只剩下</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="onlyLastSpin">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>99999</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuOperator">
+    <property name="title">
+     <string>操作</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuType">
+    <property name="title">
+     <string>抽奖设置</string>
+    </property>
+    <addaction name="actionSet_Danmaku_Msg"/>
+    <addaction name="actionSet_Gift_Name"/>
+    <addaction name="separator"/>
+    <addaction name="actionCondition_Fans"/>
+    <addaction name="actionCondition_Guard"/>
+   </widget>
+   <addaction name="menuOperator"/>
+   <addaction name="menuType"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSet_Danmaku_Msg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>类型：弹幕</string>
+   </property>
+  </action>
+  <action name="actionSet_Gift_Name">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>类型：礼物</string>
+   </property>
+  </action>
+  <action name="actionCondition_Fans">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>要求：粉丝牌</string>
+   </property>
+   <property name="toolTip">
+    <string>要求：粉丝牌</string>
+   </property>
+  </action>
+  <action name="actionCondition_Guard">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>要求：舰长</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

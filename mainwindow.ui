@@ -1005,7 +1005,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -1014,6 +1014,7 @@
     </property>
     <addaction name="actionShow_Live_Danmaku"/>
     <addaction name="actionShow_Order_Player_Window"/>
+    <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
@@ -1096,6 +1097,11 @@
   <action name="actionSend_Long_Text">
    <property name="text">
     <string>发送长文本</string>
+   </property>
+  </action>
+  <action name="actionShow_Lucky_Draw">
+   <property name="text">
+    <string>显示抽奖机</string>
    </property>
   </action>
  </widget>

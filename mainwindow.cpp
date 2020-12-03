@@ -2180,7 +2180,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx今天...
-    QRegularExpression jintianRe("^(.{2,})今天.+$");
+    QRegularExpression jintianRe("^(.{3,})今天.+$");
     if (simp.indexOf(jintianRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -2189,7 +2189,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // xxx哥哥
     QRegularExpression gegeRe("^(.+)(哥哥|爸爸|爷爷|奶奶|妈妈)$");
-    if (simp.indexOf(jintianRe, 0, &match) > -1)
+    if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
         simp = tmp;
@@ -4192,4 +4192,14 @@ void MainWindow::on_actionSend_Long_Text_triggered()
         sl << text.mid(i * maxOne, maxOne);
     }
     sendAutoMsg(sl.join("\\n"));
+}
+
+void MainWindow::on_actionShow_Lucky_Draw_triggered()
+{
+    if (!luckyDrawWindow)
+    {
+        luckyDrawWindow = new LuckyDrawWindow(nullptr);
+        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), luckyDrawWindow, SLOT(slotNewDanmaku(LiveDanmaku)));
+    }
+    luckyDrawWindow->show();
 }
