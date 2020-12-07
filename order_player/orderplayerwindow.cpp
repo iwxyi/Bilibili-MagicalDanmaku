@@ -679,6 +679,7 @@ void OrderPlayerWindow::on_searchResultTable_cellActivated(int row, int)
     if (searchResultSongs.size())
     {
         Song song = searchResultSongs.at(row);
+        removeOrder(SongList{song});
         activeSong(song);
     }
     else if (searchResultPlayLists.size())
@@ -1357,6 +1358,7 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
         desktopLyric->setColors(sfg, fg);
         ui->playingNameLabel->setPalette(pa);
         ui->titleButton->setPalette(pa);
+        ui->titleButton->setTextColor(fg);
     });
     connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
     ani->start();
@@ -1524,11 +1526,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
     menu->addAction("下一首播放", [=]{
-        foreach (Song song, songs)
-            orderSongs.removeOne(song);
-        orderSongs = songs + orderSongs;
-        saveSongList("music/order", orderSongs);
-        setSongModelToView(orderSongs, ui->orderSongsListView);
+        appendNextSongs(songs);
     })->disable(!songs.size());
 
     menu->split()->addAction("添加常时播放", [=]{
