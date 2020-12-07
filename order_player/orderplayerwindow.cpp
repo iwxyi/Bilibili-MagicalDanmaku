@@ -815,15 +815,15 @@ void OrderPlayerWindow::appendOrderSongs(SongList songs)
         addDownloadSong(song);
         showTabAnimation(center, "+1");
     }
-    saveSongList("music/order", orderSongs);
-    setSongModelToView(orderSongs, ui->orderSongsListView);
 
     if (isNotPlaying() && orderSongs.size())
     {
         qDebug() << "当前未播放，开始播放列表";
         startPlaySong(orderSongs.takeFirst());
-        setSongModelToView(orderSongs, ui->orderSongsListView);
     }
+
+    saveSongList("music/order", orderSongs);
+    setSongModelToView(orderSongs, ui->orderSongsListView);
 
     downloadNext();
 }
@@ -842,14 +842,16 @@ void OrderPlayerWindow::appendNextSongs(SongList songs)
         addDownloadSong(song);
         showTabAnimation(center, "+1");
     }
-    saveSongList("music/order", orderSongs);
-    setSongModelToView(orderSongs, ui->orderSongsListView);
 
-    if (isNotPlaying() && songs.size())
+    // 一般不会自动播放，除非没有在放的歌
+    /*if (isNotPlaying() && !playingSong.isValid() && songs.size())
     {
         qDebug() << "当前未播放，开始播放本首歌";
-        startPlaySong(songs.first());
-    }
+        startPlaySong(orderSongs.takeFirst());
+    }*/
+
+    saveSongList("music/order", orderSongs);
+    setSongModelToView(orderSongs, ui->orderSongsListView);
 
     downloadNext();
 }
@@ -1522,28 +1524,14 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->addAction("下一首播放", [=]{
         foreach (Song song, songs)
-        {
             orderSongs.removeOne(song);
-        }
-        for (int i = songs.size()-1; i >= 0; i--)
-        {
-            orderSongs.insert(0, songs.at(i));
-        }
+        orderSongs = songs + orderSongs;
         saveSongList("music/order", orderSongs);
         setSongModelToView(orderSongs, ui->orderSongsListView);
     })->disable(!songs.size());
 
     menu->split()->addAction("添加常时播放", [=]{
-        foreach (Song song, songs)
-        {
-            normalSongs.removeOne(song);
-        }
-        for (int i = songs.size()-1; i >= 0; i--)
-        {
-            normalSongs.insert(0, songs.at(i));
-        }
-        saveSongList("music/normal", normalSongs);
-        setSongModelToView(normalSongs, ui->normalSongsListView);
+        addNormal(songs);
     })->disable(!currentSong.isValid());
 
     menu->addAction("收藏", [=]{
