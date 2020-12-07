@@ -176,6 +176,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     blurBg = settings.value("music/blurBg", blurBg).toBool();
     blurAlpha = settings.value("music/blurAlpha", blurAlpha).toInt();
     themeColor = settings.value("music/themeColor", themeColor).toBool();
+    doubleClickToPlay = settings.value("music/doubleClickToPlay", false).toBool();
 
     // 读取数据
     ui->listTabWidget->setCurrentIndex(settings.value("orderplayerwindow/tabIndex").toInt());
@@ -1909,6 +1910,11 @@ void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
 void OrderPlayerWindow::on_settingsButton_clicked()
 {
     FacileMenu* menu = new FacileMenu(this);
+
+    menu->addAction("双击播放", [=]{
+        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
+    })->check(doubleClickToPlay);
+
     bool h = settings.value("music/hideTab", false).toBool();
     menu->addAction("隐藏Tab", [=]{
         settings.setValue("music/hideTab", !h);
