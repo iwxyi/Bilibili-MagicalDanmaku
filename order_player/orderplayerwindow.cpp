@@ -359,6 +359,7 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
     QTableWidget* table = ui->searchResultTable;
     table->clear();
     searchResultPlayLists.clear();
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     enum {
         titleCol,
@@ -392,6 +393,10 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
         table->setItem(row, albumCol, createItem(song.album.name));
         table->setItem(row, durationCol, createItem(msecondToString(song.duration)));
     }
+
+    QTimer::singleShot(0, [=]{
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    });
 }
 
 void OrderPlayerWindow::setSearchResultTable(PlayListList playLists)
