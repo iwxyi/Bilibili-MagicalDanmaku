@@ -1036,11 +1036,19 @@ void OrderPlayerWindow::downloadSong(Song song)
         connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         //开启子事件循环
         loop.exec();
-        QByteArray baData1 = reply1->readAll();
+        QByteArray mp3Ba = reply1->readAll();
 
+        // 解析MP3标签
+        try {
+            readMp3Data(mp3Ba);
+        } catch(...) {
+            qDebug() << "读取音乐标签出错";
+        }
+
+        // 保存到文件
         QFile file(songPath(song));
         file.open(QIODevice::WriteOnly);
-        file.write(baData1);
+        file.write(mp3Ba);
         file.flush();
         file.close();
 
@@ -1377,6 +1385,60 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
     FacileMenu::text_fg = fg;
 
     qDebug() << "当前颜色：" << bg << fg << sfg;
+}
+
+/**
+ * 参考链接：https://blog.csdn.net/weixin_37608233/article/details/82930197
+ */
+void OrderPlayerWindow::readMp3Data(const QByteArray &array)
+{
+    return ; // 仅供测试
+    // ID3V2 标签头
+    std::string header = array.mid(0, 3).toStdString(); // [3] 必须为ID3
+    char ver = *array.mid(3, 1).data(); // [1] 版本号03=v2.3, 04=v2.4
+    char revision = *array.mid(4, 1).data(); // [1] 副版本号
+    char flag = *array.mid(5, 1).data(); // [1] 标志
+    char* sizes = array.mid(6, 4).data(); // [4] 标签大小，包括标签帧和标签头（不包括扩展标签头的10字节）
+    int size = (sizes[0]<<24)+(sizes[1]<<16)+(sizes[2]<<8)+sizes[3];
+    qDebug() << QString::fromStdString(header) << size;
+
+    QHash<QString, QString>frameIds;
+    frameIds.insert("TIT2", "标题");
+    frameIds.insert("TPE1", "作者");
+    frameIds.insert("TALB", "专辑");
+    frameIds.insert("TRCK", "音轨"); // 直接数字 // ???格式：N/M 其中N为专集中的第N首，M为专集中共M首，N和M为ASCII码表示的数字
+    frameIds.insert("TYER", "年代"); // 用ASCII码表示的数字
+    frameIds.insert("TCON", "类型"); // 直接用字符串表示
+    frameIds.insert("COMM", "备注"); // 格式："eng\0备注内容"，其中eng表示备注所使用的自然语言
+    frameIds.insert("APIC", "专辑图片"); // png文件标志的前两个字节为89 50；jpeg文件标志的前两个字节为FF,D8；
+    frameIds.insert("TSSE", "专辑图片"); // Lavf56.4.101
+
+    // 标签帧
+    int pos = 10; // 标签头10字节
+    while (pos < size)
+    {
+        std::string frameId = array.mid(pos, 4).toStdString(); // [4] 帧标志
+        char* sizes = array.mid(pos+4, 4).data(); // [4] 帧内容大小（不包括帧头）
+        char* frameFlag = array.mid(pos+8, 2).data(); // [2] 存放标志
+        int frameSize = (sizes[0]<<24)+(sizes[1]<<16)+(sizes[2]<<8)+sizes[3];
+        qDebug() << "pos =" << pos << "    id =" << QString::fromStdString(frameId) << "   size =" << frameSize;
+        pos += 10; // 帧标签10字节
+        if (frameIds.contains(QString::fromStdString(frameId)))
+        {
+            QByteArray ba;
+            if (*array.mid(pos, 1).data() == 0 && *array.mid(pos+frameSize-1, 1).data()==0)
+                ba = array.mid(pos+1, frameSize-2);
+            else
+                ba = array.mid(pos, frameSize);
+            qDebug() << frameIds.value(QString::fromStdString(frameId)) << ba;
+        }
+        else if (frameSize < 1000)
+            qDebug() << array.mid(pos, frameSize);
+        else
+            qDebug() << array.mid(pos, 100) << "...";
+        pos += frameSize; // 帧内容x字节
+    }
+
 }
 
 /**

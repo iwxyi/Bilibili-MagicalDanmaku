@@ -224,6 +224,8 @@ private:
     void setBlurBackground(const QPixmap& bg);
     void setThemeColor(const QPixmap& cover);
 
+    void readMp3Data(const QByteArray& array);
+
 protected:
     void showEvent(QShowEvent*e) override;
     void closeEvent(QCloseEvent*) override;
