@@ -4264,7 +4264,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
 {
     if (videoPlayer == nullptr)
     {
-        videoPlayer = new LiveVideoPlayer(this);
+        videoPlayer = new LiveVideoPlayer(settings, this);
         connect(this, &MainWindow::signalRoomChanged, this, [=](QString s){
             getRoomLiveVideoUrl();
         });
