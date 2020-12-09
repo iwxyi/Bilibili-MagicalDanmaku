@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia
+QT       += core gui network websockets multimedia multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -26,7 +26,8 @@ INCLUDEPATH += \
     facile_menu/ \
     order_player/ \
     color_octree/ \
-    lucky_draw/
+    lucky_draw/ \
+    video_player/
 
 SOURCES += \
     color_octree/coloroctree.cpp \
@@ -45,6 +46,7 @@ SOURCES += \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
     utils/textinputdialog.cpp \
+    video_player/livevideoplayer.cpp \
     videolyricscreator.cpp
 
 HEADERS += \
@@ -71,6 +73,7 @@ HEADERS += \
     utils/pinyinutil.h \
     utils/stringutil.h \
     utils/textinputdialog.h \
+    video_player/livevideoplayer.h \
     videolyricscreator.h
 
 FORMS += \
@@ -78,6 +81,7 @@ FORMS += \
     mainwindow.ui \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \
+    video_player/livevideoplayer.ui \
     videolyricscreator.ui
 
 # Default rules for deployment.
@@ -88,7 +92,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
         README.md \
         appicon.ico \
-        resource.rc \
+        resource.rc \ \
+    resources/LAVFilters-0.74.1-Installer.exe
 
 RESOURCES += \
     resource.qrc

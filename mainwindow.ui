@@ -1013,6 +1013,7 @@
      <string>功能</string>
     </property>
     <addaction name="actionShow_Live_Danmaku"/>
+    <addaction name="actionShow_Live_Video"/>
     <addaction name="actionShow_Order_Player_Window"/>
     <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
@@ -1108,6 +1109,11 @@
   <action name="actionGet_Play_Url">
    <property name="text">
     <string>获取视频流地址</string>
+   </property>
+  </action>
+  <action name="actionShow_Live_Video">
+   <property name="text">
+    <string>显示实时视频</string>
    </property>
   </action>
  </widget>

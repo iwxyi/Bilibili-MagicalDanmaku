@@ -26,6 +26,7 @@
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
 #include "luckydrawwindow.h"
+#include "livevideoplayer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -106,6 +107,7 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 signals:
+    void signalRoomChanged(QString roomId);
     void signalNewDanmaku(LiveDanmaku danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
 
@@ -262,6 +264,8 @@ private slots:
 
     void on_actionGet_Play_Url_triggered();
 
+    void on_actionShow_Live_Video_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -293,6 +297,7 @@ private:
     void refreshBlockList();
     bool isInFans(qint64 upUid);
     void sendGify(int giftId, int giftNum);
+    void getRoomLiveVideoUrl();
 
     QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
@@ -409,5 +414,7 @@ private:
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;
 
+    // 视频
+    LiveVideoPlayer* videoPlayer = nullptr;
 };
 #endif // MAINWINDOW_H
