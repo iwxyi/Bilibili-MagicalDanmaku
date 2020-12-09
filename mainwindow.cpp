@@ -3655,7 +3655,7 @@ void MainWindow::getRoomLiveVideoUrl()
           "stream_type": 0,
           "p2p_type": 0*/
         QString url = array.first().toObject().value("url").toString();
-        qDebug() << "直播视频流地址：" << url;
+//        qDebug() << "直播视频流地址：" << url;
         if (!videoPlayer || videoPlayer->isHidden())
         {
             QApplication::clipboard()->setText(url);
