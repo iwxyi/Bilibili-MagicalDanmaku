@@ -129,6 +129,7 @@ void LiveDanmakuWindow::hideEvent(QHideEvent *event)
 
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
+#ifdef Q_OS_WIN32
     Q_UNUSED(eventType)
     MSG* msg = static_cast<MSG*>(message);
     switch(msg->message)
@@ -157,6 +158,9 @@ bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, 
            return false;
         return true;
     }
+#else
+    return QWidget::nativeEvent(eventType, message, result);
+#endif
     return false;         //此处返回false，留给其他事件处理器处理
 }
 

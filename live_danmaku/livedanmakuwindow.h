@@ -2,8 +2,10 @@
 #define LIVEDANMAKUWINDOW_H
 
 #include <QWidget>
+#ifdef Q_OS_WIN32
 #include <windows.h>
 #include <windowsx.h>
+#endif
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -37,10 +39,6 @@
 #include "qxtglobalshortcut.h"
 #include "portraitlabel.h"
 #include "commonvalues.h"
-
-#ifdef Q_OS_WIN32
-#include <windows.h>
-#endif
 
 #define DANMAKU_ANIMATION_ENABLED true
 

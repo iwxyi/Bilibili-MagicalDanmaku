@@ -91,9 +91,21 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
         README.md \
+    android/AndroidManifest.xml \
+    android/build.gradle \
+    android/gradle/wrapper/gradle-wrapper.jar \
+    android/gradle/wrapper/gradle-wrapper.properties \
+    android/gradlew \
+    android/gradlew.bat \
+    android/res/values/libs.xml \
         appicon.ico \
         resource.rc \ \
     resources/LAVFilters-0.74.1-Installer.exe
 
 RESOURCES += \
     resource.qrc
+
+contains(ANDROID_TARGET_ARCH,) {
+    ANDROID_PACKAGE_SOURCE_DIR = \
+        $$PWD/android
+}
