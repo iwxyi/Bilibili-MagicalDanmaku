@@ -3,9 +3,16 @@
 
 #include <QDialog>
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
 #include <QMediaContent>
-#include <QNetworkRequest>
 #include <QSettings>
+#include <QNetworkRequest>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QJsonParseError>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 namespace Ui {
 class LiveVideoPlayer;
 }
@@ -18,7 +25,9 @@ public:
     ~LiveVideoPlayer() override;
 
 public slots:
-    void setPlayUrl(QString url);
+    void setRoomId(QString roomId);
+    void addPlayUrl(QString url);
+    void refreshPlayUrl();
 
 protected:
     void showEvent(QShowEvent *) override;
@@ -28,7 +37,9 @@ private:
     Ui::LiveVideoPlayer *ui;
     QSettings& settings;
     QString playUrl;
+    QString roomId;
     QMediaPlayer* player;
+    QMediaPlaylist* playList;
 };
 
 #endif // LIVEVIDEOPLAYER_H

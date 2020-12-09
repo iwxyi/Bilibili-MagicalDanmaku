@@ -3058,9 +3058,14 @@ void MainWindow::handleMessage(QJsonObject json)
             int r = qrand() % words.size();
             QString msg = words.at(r);
             if (strongNotifyUsers.contains(uid))
+            {
+                qDebug() << "强提醒用户：" << username;
                 sendNotifyMsg(msg);
+            }
             else
+            {
                 sendWelcomeMsg(msg);
+            }
         }
         else
         {
@@ -3654,11 +3659,14 @@ void MainWindow::getRoomLiveVideoUrl()
         if (!videoPlayer || videoPlayer->isHidden())
         {
             QApplication::clipboard()->setText(url);
+
+            for (int i = 0; i < array.size(); i++)
+                qDebug() << "链接列表：" << array.at(i).toObject().value("url").toString();
             return ;
         }
 
         // 重新设置视频流
-        videoPlayer->setPlayUrl(url);
+        videoPlayer->addPlayUrl(url);
     });
     manager->get(*request);
 }
@@ -4264,11 +4272,11 @@ void MainWindow::on_actionShow_Live_Video_triggered()
 {
     if (videoPlayer == nullptr)
     {
-        videoPlayer = new LiveVideoPlayer(settings, this);
-        connect(this, &MainWindow::signalRoomChanged, this, [=](QString s){
-            getRoomLiveVideoUrl();
+        videoPlayer = new LiveVideoPlayer(settings, nullptr);
+        connect(this, &MainWindow::signalRoomChanged, this, [=](QString roomId){
+            videoPlayer->setRoomId(roomId);
         });
     }
     videoPlayer->show();
-    getRoomLiveVideoUrl();
+    videoPlayer->setRoomId(roomId);
 }
