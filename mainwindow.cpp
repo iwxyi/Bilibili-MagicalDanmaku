@@ -4203,3 +4203,46 @@ void MainWindow::on_actionShow_Lucky_Draw_triggered()
     }
     luckyDrawWindow->show();
 }
+
+void MainWindow::on_actionGet_Play_Url_triggered()
+{
+    if (roomId.isEmpty())
+        return ;
+    QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
+            + "&quality=4&qn=10000";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取链接
+        QJsonArray array = json.value("data").toObject().value("durl").toArray();
+        /*"url": "http://d1--cn-gotcha04.bilivideo.com/live-bvc/521719/live_688893202_7694436.flv?cdn=cn-gotcha04\\u0026expires=1607505058\\u0026len=0\\u0026oi=1944862322\\u0026pt=\\u0026qn=10000\\u0026trid=40938d869aca4cb39041730f74ff9051\\u0026sigparams=cdn,expires,len,oi,pt,qn,trid\\u0026sign=ac701ba60c346bf3a173e56bcb14b7b9\\u0026ptype=0\\u0026src=9\\u0026sl=1\\u0026order=1",
+          "length": 0,
+          "order": 1,
+          "stream_type": 0,
+          "p2p_type": 0*/
+        QString url = array.first().toObject().value("url").toString();
+        qDebug() << "直播视频流地址：" << url;
+        QApplication::clipboard()->setText(url);
+    });
+    manager->get(*request);
+
+}

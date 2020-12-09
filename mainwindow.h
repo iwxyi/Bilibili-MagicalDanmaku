@@ -260,6 +260,8 @@ private slots:
 
     void on_actionShow_Lucky_Draw_triggered();
 
+    void on_actionGet_Play_Url_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

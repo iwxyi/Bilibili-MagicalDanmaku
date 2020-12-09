@@ -1005,7 +1005,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -1032,6 +1032,7 @@
      <string>工具</string>
     </property>
     <addaction name="actionCreate_Video_LRC"/>
+    <addaction name="actionGet_Play_Url"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionGitHub"/>
@@ -1102,6 +1103,11 @@
   <action name="actionShow_Lucky_Draw">
    <property name="text">
     <string>显示抽奖机</string>
+   </property>
+  </action>
+  <action name="actionGet_Play_Url">
+   <property name="text">
+    <string>获取视频流地址</string>
    </property>
   </action>
  </widget>
