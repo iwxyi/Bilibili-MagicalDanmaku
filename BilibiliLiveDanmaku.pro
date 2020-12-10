@@ -8,7 +8,7 @@ CONFIG += c++11
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT
 
 RC_FILE += resource.rc
 
@@ -62,6 +62,7 @@ HEADERS += \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
     taskwidget.h \
+    utils/dlog.h \
     utils/fileutil.h \
     utils/netutil.h \
     utils/pinyinutil.h \

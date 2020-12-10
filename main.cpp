@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include "utils/dlog.h"
 
 #ifdef Q_OS_WIN32
 // 崩溃前操作
@@ -13,10 +14,11 @@ LONG ApplicationCrashHandler(EXCEPTION_POINTERS *pException)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
     QCoreApplication::setOrganizationName("LanYiXi");
     QCoreApplication::setOrganizationDomain("iwxyi.com");
     QCoreApplication::setApplicationName("神奇弹幕");
+
+    qInstallMessageHandler(myMsgOutput);
 
     MainWindow w;
     w.show();
