@@ -1055,6 +1055,7 @@ void MainWindow::initWS()
         // 正在直播的时候突然断开了
         if (liveStatus)
         {
+            qDebug() << "正在直播的时候突然端口，10秒后重连...";
             liveStatus = false;
             // 尝试10秒钟后重连
             connectServerTimer->setInterval(10000);
@@ -1232,15 +1233,20 @@ void MainWindow::getRoomInfo()
                 qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
                 if (start < end) // 白天档
                 {
+                    qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
                     if (nextVal >= start * 3600000
                             && currentVal <= end * 3600000)
                     {
                         if (ui->doveCheck->isChecked()) // 今天鸽了
+                        {
                             abort = true;
+                            qDebug() << "今天鸽了";
+                        }
                         // 即将开播
                     }
                     else // 直播时间之外
                     {
+                        qDebug() << "未开播，继续等待";
                         abort = true;
                         if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
                             ui->doveCheck->setChecked(false);
@@ -1248,6 +1254,7 @@ void MainWindow::getRoomInfo()
                 }
                 else if (start > end) // 熬夜档
                 {
+                    qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
                     if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
                             || currentVal <= end * 3600000)
                     {
@@ -1257,6 +1264,7 @@ void MainWindow::getRoomInfo()
                     }
                     else // 直播时间之外
                     {
+                        qDebug() << "未开播，继续等待";
                         abort = true;
                         if (currentVal > end * 3600000 && currentVal < start * 3600000
                                 && ui->doveCheck->isChecked())
@@ -1266,6 +1274,7 @@ void MainWindow::getRoomInfo()
 
                 if (abort)
                 {
+                    qDebug() << "短期内不会开播，暂且断开连接";
                     if (!connectServerTimer->isActive())
                         connectServerTimer->start();
                     ui->connectStateLabel->setText("等待连接");
@@ -1278,6 +1287,7 @@ void MainWindow::getRoomInfo()
             }
             else // 已开播，则停下
             {
+                qDebug() << "开播，停止定时连接";
                 if (connectServerTimer->isActive())
                     connectServerTimer->stop();
                 if (ui->doveCheck->isChecked())
