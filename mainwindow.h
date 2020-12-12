@@ -324,6 +324,12 @@ private:
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
 
+    void pkPre(QJsonObject json);
+    void pkStart(QJsonObject json);
+    void pkProcess(QJsonObject data);
+    void pkEnd(QJsonObject json);
+    void connectPkSocket();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
