@@ -3319,6 +3319,9 @@ bool MainWindow::handlePK(QJsonObject json)
             int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             danmakuCounts->setValue("touta/" + pkRoomId, count+1);
         }
+        pkUname = "";
+        pkUid = "";
+        pkRoomId = "";
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
@@ -3528,7 +3531,11 @@ bool MainWindow::handlePK2(QJsonObject json)
         QString uname = data.value("uname").toString();
         QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
         QString room_id = QString::number(static_cast<qint64>(data.value("room_id").toDouble()));
+        pkUname = uname;
+        pkRoomId = room_id;
+        pkUid = uid;
 
+        qDebug() << "准备大乱斗，开启匹配...";
         if (danmakuWindow)
         {
             if (uname.isEmpty())
@@ -3540,14 +3547,11 @@ bool MainWindow::handlePK2(QJsonObject json)
                 if(pkCount > 0)
                     text += "[" + QString::number(pkCount) + "]";
                 danmakuWindow->setStatusText(text);
+                qDebug() << "主播：" << uname << pkUid << pkRoomId;
             }
         }
         pkToLive = QDateTime::currentSecsSinceEpoch();
-        qDebug() << "准备大乱斗，开启匹配...";
 
-        pkUname = uname;
-        pkRoomId = room_id;
-        pkUid = uid;
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
     {

@@ -416,6 +416,9 @@ private:
     QString pkRoomId;
     QString pkUid;
     QString pkUname;
+    QList<qint64> oppositeAudience; // 对面的观众
+    QList<qint64> myAudience; // 自己的观众
+    QWebSocket* pkSocket; // 连接对面的房间
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;
