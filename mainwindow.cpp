@@ -3122,6 +3122,7 @@ bool MainWindow::handlePK(QJsonObject json)
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         qint64 deltaEnd = pkEndTime - currentTime;
         QString roomId = this->roomId;
+        oppositeTouta = false;
         pkToLive = currentTime;
 
         // 结束后
@@ -3129,6 +3130,7 @@ bool MainWindow::handlePK(QJsonObject json)
             pkEnding = false;
             pkVoting = 0;
         });
+
         // 结束前2秒
         QTimer::singleShot(deltaEnd*1000 - pkJudgeEarly, [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
@@ -3158,8 +3160,18 @@ bool MainWindow::handlePK(QJsonObject json)
             }
             else
             {
-                showLocalNotify(QString("大乱斗尾声：%1 vs %2")
-                                .arg(myVotes).arg(matchVotes));
+                QString text = QString("大乱斗尾声：%1 vs %2")
+                        .arg(myVotes).arg(matchVotes);
+                if (!pkRoomId.isEmpty())
+                {
+                    int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+                    int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+                    if (totalCount > 1) // 开始的时候就已经+1了
+                        text += QString("  偷塔概率:%1/%2")
+                                        .arg(toutaCount).arg(totalCount);
+                }
+
+                showLocalNotify(text);
             }
         });
 
@@ -3167,14 +3179,20 @@ bool MainWindow::handlePK(QJsonObject json)
         if (danmakuWindow)
             danmakuWindow->showStatusText();
         qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
-        qDebug() << "开启大乱斗, id =" << pkid;
-        showLocalNotify("开启大乱斗：" + snum(pkid));
-        // 1605757123 1605757123 1605757433
-//        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
+        qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid;
+
+        // 1605757123 1605757123 1605757433 时间测试
+        // qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
 
         // 保存PK信息
         int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-        danmakuCounts->setValue("pk/" + pkRoomId, pkCount);
+        danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+
+        // PK提示
+        QString text = "开启大乱斗：" + pkUname;
+        if (pkCount)
+            text += "  PK过" + QString::number(pkCount) + "次";
+        showLocalNotify(text);
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -3216,7 +3234,16 @@ bool MainWindow::handlePK(QJsonObject json)
         if (pkEnding)
         {
             qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
-
+            if (prevMyVotes < myVotes)
+            {
+                showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+            }
+            if (prevMatchVotes < matchVotes)
+            {
+                if (!oppositeTouta)
+                    oppositeTouta = true;
+                showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+            }
             // 反偷塔，防止对方也在最后几秒刷礼物
             if (ui->pkAutoMelonCheck->isChecked()
                     && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes)
@@ -3230,17 +3257,6 @@ bool MainWindow::handlePK(QJsonObject json)
                 toutaCount++;
                 chiguaCount += num;
                 saveTouta();
-            }
-            else
-            {
-                if (prevMyVotes < myVotes)
-                {
-                    showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
-                }
-                if (prevMatchVotes < matchVotes)
-                {
-                    showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
-                }
             }
         }
         else
@@ -3272,7 +3288,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 401,
             "timestamp": 1605748006
         }*/
-        // winner_type: 2赢，-1输
+        // winner_type: 2赢，-1输，两边2平局
 
         pkToLive = QDateTime::currentSecsSinceEpoch();
         pking = false;
@@ -3296,6 +3312,13 @@ bool MainWindow::handlePK(QJsonObject json)
         myVotes = 0;
         matchVotes = 0;
         qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
+
+        // 保存对面偷塔次数
+        if (oppositeTouta && !pkUname.isEmpty())
+        {
+            int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        }
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
@@ -3510,7 +3533,7 @@ bool MainWindow::handlePK2(QJsonObject json)
         {
             if (uname.isEmpty())
                 danmakuWindow->setStatusText("大乱斗匹配中...");
-            else
+            else if (!pkRoomId.isEmpty())
             {
                 int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
                 QString text = "匹配：" + uname;

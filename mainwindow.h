@@ -409,6 +409,7 @@ private:
     int pkVoting = 0;
     int toutaCount = 0;
     int chiguaCount = 0;
+    bool oppositeTouta = false; // 对面是否偷塔（用作判断）
 
     // 大乱斗串门
     bool pkChuanmenEnable = false;
