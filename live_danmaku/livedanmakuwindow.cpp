@@ -519,7 +519,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (!danmaku.getAnchorRoomid().isEmpty()
                 && !danmaku.getMedalName().isEmpty())
         {
-            text = QString("<font style=\"color:%1;\">%2%3</font> ")
+            text += QString("<font style=\"color:%1;\">%2%3</font> ")
                     .arg(medalColorStr)
                     .arg(danmaku.getMedalName())
                     .arg(danmaku.getMedalLevel());
@@ -582,6 +582,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = QString("<font color='gray'>%1</font>")
                 .arg(danmaku.getText());
     }
+
+    if (danmaku.isOpposite())
+        text = "[对面] " + text;
 
     // 文字与大小
     label->setText(text);

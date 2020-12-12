@@ -270,12 +270,12 @@ public:
 
     void setNoReply()
     {
-        no_reply = true;
+        this->no_reply = true;
     }
 
-    void setOpposite()
+    void setOpposite(bool op)
     {
-        opposite = true;
+        this->opposite = op;
     }
 
     bool equal(const LiveDanmaku& another) const

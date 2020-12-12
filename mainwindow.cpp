@@ -1875,6 +1875,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%new_attention%", isInFans ? "1" : "0");
     }
 
+    // 是否是对面串门
+    if (msg.contains("%pk_opposite%"))
+        msg.replace("%pk_opposite%", danmaku.isOpposite() ? "1" : "0");
+
     // 本次进来人次
     if (msg.contains("%today_come%"))
         msg.replace("%today_come%", snum(dailyCome));
@@ -2761,6 +2765,11 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonArray medal = info[3].toArray();
         int medal_level = 0;
 
+        bool opposite = pking &&
+                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
+
         // !弹幕的时间戳是13位，其他的是10位！
         qDebug() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
         /*QString localName = danmakuWindow->getLocalNickname(uid);
@@ -2793,6 +2802,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else
             minuteDanmuPopular++;
+        danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
 
         // 新人发言
@@ -2801,6 +2811,10 @@ void MainWindow::handleMessage(QJsonObject json)
             dailyNewbieMsg++;
             if (dailySettings)
                 dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+        }
+        if (opposite)
+        {
+            qDebug() << "xxxxxxxxxxxxxxxxxxxx大乱斗对面观众：" << username;
         }
 
         // 新人小号禁言
@@ -3024,6 +3038,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QString spreadDesc = data.value("spread_desc").toString();
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
+        bool opposite = pking &&
+                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         qDebug() << s8("观众进入：") << username;
         if (isSpread)
             qDebug() << s8("    来源：") << spreadDesc;
@@ -3037,6 +3055,7 @@ void MainWindow::handleMessage(QJsonObject json)
                          fansMedal.value("medal_level").toInt(),
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
+        danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
 
         // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
@@ -3051,6 +3070,11 @@ void MainWindow::handleMessage(QJsonObject json)
         dailyCome++;
         if (dailySettings)
             dailySettings->setValue("come", dailyCome);
+        if (opposite)
+        {
+            qDebug() << "xxxxxxxxxxxxxxxxxxxx大乱斗对面观众：" << username;
+            // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
+        }
 
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
