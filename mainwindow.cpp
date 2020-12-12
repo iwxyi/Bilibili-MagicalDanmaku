@@ -3171,6 +3171,10 @@ bool MainWindow::handlePK(QJsonObject json)
         showLocalNotify("开启大乱斗：" + snum(pkid));
         // 1605757123 1605757123 1605757433
 //        qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
+
+        // 保存PK信息
+        int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+        danmakuCounts->setValue("pk/" + pkRoomId, pkCount);
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -3507,7 +3511,13 @@ bool MainWindow::handlePK2(QJsonObject json)
             if (uname.isEmpty())
                 danmakuWindow->setStatusText("大乱斗匹配中...");
             else
-                danmakuWindow->setStatusText("大乱斗匹配：" + uname);
+            {
+                int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+                QString text = "匹配：" + uname;
+                if(pkCount > 0)
+                    text += "[" + QString::number(pkCount) + "]";
+                danmakuWindow->setStatusText(text);
+            }
         }
         pkToLive = QDateTime::currentSecsSinceEpoch();
         qDebug() << "准备大乱斗，开启匹配...";
