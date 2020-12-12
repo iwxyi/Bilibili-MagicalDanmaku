@@ -2698,6 +2698,8 @@ void MainWindow::handleMessage(QJsonObject json)
     qDebug() << s8(">消息命令：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
+        if (pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+            return ;
         QString roomId = json.value("roomid").toString();
         if (roomId.isEmpty())
             roomId = QString::number(static_cast<qint64>(json.value("roomid").toDouble()));
@@ -2714,6 +2716,8 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "PREPARING") // 下播
     {
+        if (pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+            return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
@@ -3114,6 +3118,7 @@ bool MainWindow::handlePK(QJsonObject json)
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         qint64 deltaEnd = pkEndTime - currentTime;
         QString roomId = this->roomId;
+        pkToLive = currentTime;
 
         // 结束后
         QTimer::singleShot(deltaEnd, [=]{
@@ -3261,6 +3266,7 @@ bool MainWindow::handlePK(QJsonObject json)
         }*/
         // winner_type: 2赢，-1输
 
+        pkToLive = QDateTime::currentSecsSinceEpoch();
         pking = false;
         pkEnding = false;
         pkVoting = 0;
@@ -3452,15 +3458,34 @@ bool MainWindow::handlePK2(QJsonObject json)
         /*{
             "cmd": "PK_BATTLE_PRE",
             "pk_status": 101,
-            "pk_id": 100729281,
-            "timestamp": 1605748022,
+            "pk_id": 100970480,
+            "timestamp": 1607763991,
             "data": {
                 "battle_type": 1,
-                "uname": "\\u6b27\\u6c14\\u6ee1\\u6ee1\\u7684\\u9e92\\u9e9f",
-                "face": "http:\\/\\/i1.hdslb.com\\/bfs\\/face\\/1ffaf0ab3f510a31fdf7d40a3a4bda94c3b94ea2.jpg",
-                "uid": 699980313,
-                "room_id": 22580754,
-                "season_id": 29,
+                "uname": "SLe\\u4e36\\u82cf\\u4e50",
+                "face": "http:\\/\\/i2.hdslb.com\\/bfs\\/face\\/4636d48aeefa1a177bc2bdfb595892d3648b80b1.jpg",
+                "uid": 13330958,
+                "room_id": 271270,
+                "season_id": 30,
+                "pre_timer": 10,
+                "pk_votes_name": "\\u4e71\\u6597\\u503c",
+                "end_win_task": null
+            },
+            "roomid": 22532956
+        }*/
+
+        /*{ 对面匹配过来的情况
+            "cmd": "PK_BATTLE_PRE",
+            "pk_status": 101,
+            "pk_id": 100970387,
+            "timestamp": 1607763565,
+            "data": {
+                "battle_type": 2,
+                "uname": "\\u519c\\u6751\\u9493\\u9c7c\\u5c0f\\u6b66\\u5929\\u5929\\u76f4\\u64ad",
+                "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/fbaa9cfbc214164236cdbe79a77bcaae5334e9ef.jpg",
+                "uid": 199775659, // 对面用户ID
+                "room_id": 12298098, // 对面房间ID
+                "season_id": 30,
                 "pre_timer": 10,
                 "pk_votes_name": "\\u4e71\\u6597\\u503c",
                 "end_win_task": null
@@ -3469,6 +3494,7 @@ bool MainWindow::handlePK2(QJsonObject json)
         }*/
         if (danmakuWindow)
             danmakuWindow->setStatusText("大乱斗匹配中...");
+        pkToLive = QDateTime::currentSecsSinceEpoch();
         qDebug() << "准备大乱斗，开启匹配...";
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
