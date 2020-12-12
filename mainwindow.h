@@ -33,7 +33,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug()
-#define SOCKET_INF if (0) qDebug()
+#define SOCKET_INF if (1) qDebug()
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -266,6 +266,8 @@ private slots:
 
     void on_actionShow_Live_Video_triggered();
 
+    void on_pkChuanmenCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -394,16 +396,25 @@ private:
 
     // 大乱斗
     bool pking = false;
+    qint64 pkToLive = 0; // PK导致的下播（视频必定触发）
     int myVotes = 0;
     int matchVotes = 0;
     qint64 pkEndTime = 0;
     QTimer* pkTimer = nullptr;
     int pkJudgeEarly = 2000;
+
+    // 大乱斗偷塔
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
     int pkVoting = 0;
     int toutaCount = 0;
     int chiguaCount = 0;
+
+    // 大乱斗串门
+    bool pkChuanmenEnable = false;
+    QString pkRoomId;
+    QString pkUid;
+    QString pkUname;
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

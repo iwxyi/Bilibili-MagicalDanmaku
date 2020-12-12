@@ -169,6 +169,10 @@ MainWindow::MainWindow(QWidget *parent)
     if (calcDaliy)
         startCalculateDailyData();
 
+    // PK串门提示
+    pkChuanmenEnable = settings.value("pk/chuanmen", false).toBool();
+    ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
+
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
@@ -3461,7 +3465,7 @@ bool MainWindow::handlePK2(QJsonObject json)
             "pk_id": 100970480,
             "timestamp": 1607763991,
             "data": {
-                "battle_type": 1,
+                "battle_type": 1, // 自己开始匹配？
                 "uname": "SLe\\u4e36\\u82cf\\u4e50",
                 "face": "http:\\/\\/i2.hdslb.com\\/bfs\\/face\\/4636d48aeefa1a177bc2bdfb595892d3648b80b1.jpg",
                 "uid": 13330958,
@@ -3480,22 +3484,37 @@ bool MainWindow::handlePK2(QJsonObject json)
             "pk_id": 100970387,
             "timestamp": 1607763565,
             "data": {
-                "battle_type": 2,
+                "battle_type": 2, // 对面开始匹配？
                 "uname": "\\u519c\\u6751\\u9493\\u9c7c\\u5c0f\\u6b66\\u5929\\u5929\\u76f4\\u64ad",
                 "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/fbaa9cfbc214164236cdbe79a77bcaae5334e9ef.jpg",
                 "uid": 199775659, // 对面用户ID
                 "room_id": 12298098, // 对面房间ID
                 "season_id": 30,
                 "pre_timer": 10,
-                "pk_votes_name": "\\u4e71\\u6597\\u503c",
+                "pk_votes_name": "\\u4e71\\u6597\\u503c", // 乱斗值
                 "end_win_task": null
             },
             "roomid": 22532956
         }*/
+
+        QJsonObject data = json.value("data").toObject();
+        QString uname = data.value("uname").toString();
+        QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
+        QString room_id = QString::number(static_cast<qint64>(data.value("room_id").toDouble()));
+
         if (danmakuWindow)
-            danmakuWindow->setStatusText("大乱斗匹配中...");
+        {
+            if (uname.isEmpty())
+                danmakuWindow->setStatusText("大乱斗匹配中...");
+            else
+                danmakuWindow->setStatusText("大乱斗匹配：" + uname);
+        }
         pkToLive = QDateTime::currentSecsSinceEpoch();
         qDebug() << "准备大乱斗，开启匹配...";
+
+        pkUname = uname;
+        pkRoomId = room_id;
+        pkUid = uid;
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
     {
@@ -4305,4 +4324,10 @@ void MainWindow::on_actionShow_Live_Video_triggered()
     }
     videoPlayer->show();
     videoPlayer->setRoomId(roomId);
+}
+
+void MainWindow::on_pkChuanmenCheck_clicked()
+{
+    pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
+    settings.setValue("pk/chuanmen", pkChuanmenEnable);
 }

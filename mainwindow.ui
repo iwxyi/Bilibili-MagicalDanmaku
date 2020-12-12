@@ -24,7 +24,7 @@
 }</string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -429,6 +429,23 @@
             </property>
             <property name="text">
              <string>提前</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="pkChuanmenCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门欢迎；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>大乱斗串门小报告</string>
             </property>
            </widget>
           </item>
@@ -1005,7 +1022,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
