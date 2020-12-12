@@ -32,7 +32,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (0) qDebug()
+#define SOCKET_DEB if (1) qDebug()
 #define SOCKET_INF if (1) qDebug()
 #define SOCKET_MODE
 
@@ -268,6 +268,10 @@ private slots:
 
     void on_pkChuanmenCheck_clicked();
 
+    void on_pkMsgSyncCheck_clicked();
+
+    void slotPkBinaryMessageReceived(const QByteArray &message);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -291,7 +295,7 @@ private:
     void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
-    void sendVeriPacket();
+    void sendVeriPacket(QWebSocket *socket);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
     bool handlePK(QJsonObject json);
@@ -330,6 +334,8 @@ private:
     void pkEnd(QJsonObject json);
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
     void connectPkRoom();
+    void uncompressPkBytes(const QByteArray &body);
+    void handlePkMessage(QJsonObject json);
 
 private:
     Ui::MainWindow *ui;
@@ -425,7 +431,7 @@ private:
     QString pkUname;
     QSet<qint64> myAudience; // 自己这边的观众
     QSet<qint64> oppositeAudience; // 对面的观众
-    QWebSocket* pkSocket; // 连接对面的房间
+    QWebSocket* pkSocket = nullptr; // 连接对面的房间
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

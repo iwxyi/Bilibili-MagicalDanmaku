@@ -1056,7 +1056,7 @@ void MainWindow::initWS()
         ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
-        sendVeriPacket();
+        sendVeriPacket(socket);
 
         // 定时发送心跳包
         heartTimer->start();
@@ -1128,6 +1128,15 @@ void MainWindow::initWS()
             sendHeartPacket();
         else if (socket->state() == QAbstractSocket::UnconnectedState)
             startConnectRoom();
+
+        if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
+        {
+            QByteArray ba;
+            ba.append("[object Object]");
+            ba = makePack(ba, HEARTBEAT);
+        //    SOCKET_DEB << "发送心跳包：" << ba;
+            socket->sendBinaryMessage(ba);
+        }
     });
 }
 
@@ -1486,7 +1495,7 @@ void MainWindow::getFansAndUpdate()
 
 void MainWindow::startMsgLoop()
 {
-    int hostRetry = 0;
+    int hostRetry = 0; // 循环测试连接（意思一下，暂时未使用，否则应当设置为成员变量）
     HostInfo hostServer = hostList.at(hostRetry);
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
     qDebug() << "hostServer:" << host;
@@ -1555,7 +1564,7 @@ QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
     return ba + body;*/
 }
 
-void MainWindow::sendVeriPacket()
+void MainWindow::sendVeriPacket(QWebSocket* socket)
 {
     QByteArray ba;
     ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
@@ -4116,6 +4125,10 @@ void MainWindow::on_pkChuanmenCheck_clicked()
     settings.setValue("pk/chuanmen", pkChuanmenEnable);
 }
 
+void MainWindow::on_pkMsgSyncCheck_clicked()
+{
+
+}
 
 void MainWindow::pkPre(QJsonObject json)
 {
@@ -4165,7 +4178,7 @@ void MainWindow::pkPre(QJsonObject json)
     pkRoomId = room_id;
     pkUid = uid;
 
-    qDebug() << "准备大乱斗，已匹配：" << json.value("pk_id");
+    qDebug() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble());
     if (danmakuWindow)
     {
         if (uname.isEmpty())
@@ -4433,6 +4446,12 @@ void MainWindow::pkEnd(QJsonObject json)
     pkRoomId = "";
     myAudience.clear();
     oppositeAudience.clear();
+    if (pkSocket)
+    {
+        pkSocket->abort();
+        pkSocket->deleteLater();
+        pkSocket = nullptr;
+    }
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -4464,8 +4483,319 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
 
 void MainWindow::connectPkRoom()
 {
+    if (pkRoomId.isEmpty())
+        return ;
+
     getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
+    if (pkSocket)
+        pkSocket->deleteLater();
 
+    pkSocket = new QWebSocket();
+
+    connect(pkSocket, &QWebSocket::connected, this, [=]{
+        qDebug() << "pkSocket connected";
+        // 5秒内发送认证包
+        sendVeriPacket(pkSocket);
+    });
+
+    connect(pkSocket, &QWebSocket::disconnected, this, [=]{
+        // 正在直播的时候突然断开了
+        if (liveStatus)
+        {
+            this->deleteLater();
+            pkSocket = nullptr;
+            return ;
+        }
+    });
+
+    connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+        try {
+            slotPkBinaryMessageReceived(message);
+        } catch (...) {
+            qDebug() << "!!!!!!!pk.error:slotBinaryMessageReceived";
+        }
+    });
+
+    // ========== 开始连接 ==========
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
+    url += "?id="+pkRoomId+"&type=0";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray dataBa = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("pk返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        QString token = data.value("token").toString();
+        QJsonArray hostArray = data.value("host_list").toArray();
+        QString link = hostArray.first().toObject().value("host").toString();
+        int port = hostArray.first().toObject().value("wss_port").toInt();
+        QString host = QString("wss://%1:%2/sub").arg(link).arg(port);
+        qDebug() << "pk.socket.host:" << host;
+
+        // ========== 连接Socket ==========
+        QSslConfiguration config = pkSocket->sslConfiguration();
+        config.setPeerVerifyMode(QSslSocket::VerifyNone);
+        config.setProtocol(QSsl::TlsV1SslV3);
+        pkSocket->setSslConfiguration(config);
+        pkSocket->open(host);
+    });
+    manager->get(*request);
+}
+
+void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
+{
+    int operation = ((uchar)message[8] << 24)
+            + ((uchar)message[9] << 16)
+            + ((uchar)message[10] << 8)
+            + ((uchar)message[11]);
+    QByteArray body = message.right(message.length() - 16);
+    SOCKET_DEB << "pk操作码=" << operation << "  正文=" << (body.left(35)) << "...";
+
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(body, &error);
+    QJsonObject json;
+    if (error.error == QJsonParseError::NoError)
+        json = document.object();
+
+    if (operation == SEND_MSG_REPLY) // 普通包
+    {
+        QString cmd;
+        if (!json.isEmpty())
+        {
+            cmd = json.value("cmd").toString();
+            qDebug() << "pk普通CMD：" << cmd;
+            SOCKET_INF << json;
+        }
+
+        if (cmd == "NOTICE_MSG") // 全站广播（不用管）
+        {
+        }
+        else if (cmd == "ROOM_RANK")
+        {
+        }
+        else if (handlePK(json))
+        {
+
+        }
+        else // 压缩弹幕消息
+        {
+            short protover = (message[6]<<8) + message[7];
+            SOCKET_INF << "pk协议版本：" << protover;
+            if (protover == 2) // 默认协议版本，zlib解压
+            {
+                uncompressPkBytes(body);
+            }
+            else if (protover == 0)
+            {
+                QJsonDocument document = QJsonDocument::fromJson(body, &error);
+                if (error.error != QJsonParseError::NoError)
+                {
+                    qDebug() << s8("pkbody转json出错：") << error.errorString();
+                    return ;
+                }
+                QJsonObject json = document.object();
+                QString cmd = json.value("cmd").toString();
+
+                if (cmd == "ROOM_RANK")
+                {
+                }
+                else if (cmd == "ROOM_REAL_TIME_MESSAGE_UPDATE")
+                {
+                    // {"cmd":"ROOM_REAL_TIME_MESSAGE_UPDATE","data":{"roomid":22532956,"fans":1022,"red_notice":-1,"fans_club":50}}
+                    /*QJsonObject data = json.value("data").toObject();
+                    int fans = data.value("fans").toInt();
+                    int fans_club = data.value("fans_club").toInt();
+                    int delta_fans = 0, delta_club = 0;
+                    if (currentFans || currentFansClub)
+                    {
+                        delta_fans = fans - currentFans;
+                        delta_club = fans_club - currentFansClub;
+                    }
+                    currentFans = fans;
+                    currentFansClub = fans_club;
+                    qDebug() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
+                    appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
+                                                     delta_fans, delta_club));
+
+                    dailyNewFans += delta_fans;
+                    if (dailySettings)
+                        dailySettings->setValue("new_fans", dailyNewFans);
+
+
+                    if (delta_fans)
+                        getFansAndUpdate();*/
+                }
+                else
+                {
+                    SOCKET_DEB << "pk未处理的命令=" << cmd << "   正文=" << body;
+                }
+            }
+            else
+            {
+                qDebug() << s8("pk未知协议：") << protover << s8("，若有必要请处理");
+                qDebug() << s8("pk未知正文：") << body;
+            }
+        }
+    }
+
+//    delete[] body.data();
+//    delete[] message.data();
+    SOCKET_DEB << "PkSocket消息处理结束";
+}
+
+void MainWindow::uncompressPkBytes(const QByteArray &body)
+{
+    QByteArray unc = zlibToQtUncompr(body.data(), body.size()+1);
+    int offset = 0;
+    short headerSize = 16;
+    while (offset < unc.size() - headerSize)
+    {
+        int packSize = ((uchar)unc[offset+0] << 24)
+                + ((uchar)unc[offset+1] << 16)
+                + ((uchar)unc[offset+2] << 8)
+                + (uchar)unc[offset+3];
+        QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << s8("pk解析解压后的JSON出错：") << error.errorString();
+            qDebug() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
+            qDebug() << s8(">>pk当前JSON") << jsonBa;
+            qDebug() << s8(">>pk解压正文") << unc;
+            return ;
+        }
+        QJsonObject json = document.object();
+        QString cmd = json.value("cmd").toString();
+        SOCKET_INF << "pk解压后获取到CMD：" << cmd;
+        if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
+                && cmd != "ONLINERANK")
+            SOCKET_INF << "pk单个JSON消息：" << offset << packSize << QString(jsonBa);
+        try {
+            handlePkMessage(json);
+        } catch (...) {
+            qDebug() << s8("pk出错啦") << jsonBa;
+        }
+
+        offset += packSize;
+    }
+}
+
+void MainWindow::handlePkMessage(QJsonObject json)
+{
+    QString cmd = json.value("cmd").toString();
+    qDebug() << s8(">pk消息命令：") << cmd;
+    if (cmd == "DANMU_MSG") // 收到弹幕
+    {
+        QJsonArray info = json.value("info").toArray();
+        QJsonArray array = info[0].toArray();
+        qint64 textColor = array[3].toInt(); // 弹幕颜色
+        qint64 timestamp = static_cast<qint64>(array[4].toDouble());
+        QString msg = info[1].toString();
+        QJsonArray user = info[2].toArray();
+        qint64 uid = static_cast<qint64>(user[0].toDouble());
+        QString username = user[1].toString();
+        QString unameColor = user[7].toString();
+        int level = info[4].toArray()[0].toInt();
+        QJsonArray medal = info[3].toArray();
+        int medal_level = 0;
+
+        bool opposite = pking &&
+                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
+
+        // !弹幕的时间戳是13位，其他的是10位！
+        qDebug() << s8("pk接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
+
+        // 添加到列表
+        QString cs = QString::number(textColor, 16);
+        while (cs.size() < 6)
+            cs = "0" + cs;
+        LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
+                                                 unameColor, "#"+cs);
+        if (medal.size() >= 4)
+        {
+            medal_level = medal[0].toInt();
+            danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
+                    medal[1].toString(), medal_level, medal[2].toString());
+        }
+        if (noReplyMsgs.contains(msg))
+        {
+            danmaku.setNoReply();
+            noReplyMsgs.clear();
+        }
+        else
+            minuteDanmuPopular++;
+        danmaku.setOpposite(opposite);
+        danmaku.setPkLink(true);
+        appendNewLiveDanmaku(danmaku);
+    }
+    else if (cmd == "SEND_GIFT") // 有人送礼
+    {
+        QJsonObject data = json.value("data").toObject();
+        QString giftName = data.value("giftName").toString();
+        QString username = data.value("uname").toString();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        int num = data.value("num").toInt();
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        QString coinType = data.value("coin_type").toString();
+        int totalCoin = data.value("total_coin").toInt();
+
+        qDebug() << s8("pk接收到送礼：") << username << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        QString localName = getLocalNickname(uid);
+        /*if (!localName.isEmpty())
+            username = localName;*/
+        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        danmaku.setPkLink(true);
+        appendNewLiveDanmaku(danmaku);
+    }
+    else if (cmd == "INTERACT_WORD")
+    {
+        QJsonObject data = json.value("data").toObject();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        QString username = data.value("uname").toString();
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        bool isadmin = data.value("isadmin").toBool();
+        QString unameColor = data.value("uname_color").toString();
+        bool isSpread = data.value("is_spread").toBool();
+        QString spreadDesc = data.value("spread_desc").toString();
+        QString spreadInfo = data.value("spread_info").toString();
+        QJsonObject fansMedal = data.value("fans_medal").toObject();
+        bool opposite = pking &&
+                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
+        qDebug() << s8("pk观众进入：") << username;
+        if (isSpread)
+            qDebug() << s8("    pk来源：") << spreadDesc;
+        QString localName = getLocalNickname(uid);
+        /*if (!localName.isEmpty())
+            username = localName;*/
+        LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
+                            unameColor, spreadDesc, spreadInfo);
+        danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
+                         fansMedal.value("medal_name").toString(),
+                         fansMedal.value("medal_level").toInt(),
+                         QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
+                         "");
+        danmaku.setOpposite(opposite);
+        danmaku.setPkLink(true);
+        appendNewLiveDanmaku(danmaku);
+    }
 }

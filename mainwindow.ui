@@ -435,7 +435,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -446,6 +446,13 @@
             </property>
             <property name="text">
              <string>大乱斗串门小报告</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="pkMsgSyncCheck">
+            <property name="text">
+             <string>同步消息</string>
             </property>
            </widget>
           </item>

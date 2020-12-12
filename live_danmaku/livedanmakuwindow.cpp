@@ -583,7 +583,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getText());
     }
 
-    if (danmaku.isOpposite())
+    if (danmaku.isPkLink())
+        text = "[同步] " + text;
+    if (danmaku.isToView())
+        text = "[串门] " + text;
+    else if (danmaku.isOpposite())
         text = "[对面] " + text;
 
     // 文字与大小
