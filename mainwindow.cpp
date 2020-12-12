@@ -4257,9 +4257,14 @@ void MainWindow::pkStart(QJsonObject json)
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
     showLocalNotify(text);
+
+    if (pkChuanmenEnable)
+    {
+        connectPkRoom();
+    }
 }
 
-void MainWindow::pkProcess(QJsonObject data)
+void MainWindow::pkProcess(QJsonObject json)
 {
     /*{
         "cmd": "PK_BATTLE_PROCESS",
@@ -4280,6 +4285,7 @@ void MainWindow::pkProcess(QJsonObject data)
         "pk_status": 201,
         "timestamp": 1605749908
     }*/
+    QJsonObject data = json.value("data").toObject();
     int prevMyVotes = myVotes;
     int prevMatchVotes = matchVotes;
     if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == roomId)
@@ -4358,10 +4364,6 @@ void MainWindow::pkEnd(QJsonObject json)
 
     QJsonObject data = json.value("data").toObject();
     pkToLive = QDateTime::currentSecsSinceEpoch();
-    pking = false;
-    pkEnding = false;
-    pkVoting = 0;
-    pkEndTime = 0;
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
     int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
@@ -4372,6 +4374,16 @@ void MainWindow::pkEnd(QJsonObject json)
     bool ping = winnerType1 == winnerType2;
     bool result = (winnerType1 > 0 && snum(thisRoomId) == roomId)
             || (winnerType1 < 0 && snum(thisRoomId) != roomId);
+    if (snum(thisRoomId) == roomId)
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+    }
+    else
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+    }
     showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
@@ -4386,12 +4398,50 @@ void MainWindow::pkEnd(QJsonObject json)
         int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
         danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
     pkUname = "";
     pkUid = "";
     pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
 }
 
-void MainWindow::connectPkSocket()
+void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
 {
+    QString url = "https://api.live.bilibili.com/ajax/msg";
+    QStringList param{"roomid", roomId};
+    connect(new NetUtil(url, param), &NetUtil::finished, this, [&](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qDebug() << result;
+            return ;
+        }
+        QJsonObject json = document.object();
+        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
+        audiences.clear();
+//        qDebug() << "初始化房间" << roomId << "观众：";
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+//            if (!audiences.contains(danmaku.getUid()))
+//                qDebug() << "    添加观众：" << danmaku.getNickname();
+            audiences.insert(danmaku.getUid());
+        }
+    });
+}
+
+void MainWindow::connectPkRoom()
+{
+    getRoomCurrentAudiences(roomId, myAudience);
+    getRoomCurrentAudiences(pkRoomId, oppositeAudience);
+
 
 }

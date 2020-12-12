@@ -326,9 +326,10 @@ private:
 
     void pkPre(QJsonObject json);
     void pkStart(QJsonObject json);
-    void pkProcess(QJsonObject data);
+    void pkProcess(QJsonObject json);
     void pkEnd(QJsonObject json);
-    void connectPkSocket();
+    void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
+    void connectPkRoom();
 
 private:
     Ui::MainWindow *ui;
@@ -422,8 +423,8 @@ private:
     QString pkRoomId;
     QString pkUid;
     QString pkUname;
-    QList<qint64> oppositeAudience; // 对面的观众
-    QList<qint64> myAudience; // 自己的观众
+    QSet<qint64> myAudience; // 自己这边的观众
+    QSet<qint64> oppositeAudience; // 对面的观众
     QWebSocket* pkSocket; // 连接对面的房间
 
     // 弹幕人气判断
