@@ -1056,7 +1056,7 @@ void MainWindow::initWS()
         ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
-        sendVeriPacket(socket);
+        sendVeriPacket(socket, roomId, token);
 
         // 定时发送心跳包
         heartTimer->start();
@@ -1085,6 +1085,7 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+        SOCKET_DEB << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~mySocket receive";
 //        qDebug() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
         try {
@@ -1564,7 +1565,7 @@ QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
     return ba + body;*/
 }
 
-void MainWindow::sendVeriPacket(QWebSocket* socket)
+void MainWindow::sendVeriPacket(QWebSocket* socket, QString roomId, QString token)
 {
     QByteArray ba;
     ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
@@ -2611,6 +2612,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (delta_fans)
                         getFansAndUpdate();
                 }
+                else if (cmd == "WIDGET_BANNER")
+                {}
                 else
                 {
                     SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
@@ -2776,7 +2779,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
+                 || (!pkRoomId.isEmpty() && medal.size() &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
@@ -4497,7 +4500,7 @@ void MainWindow::connectPkRoom()
     connect(pkSocket, &QWebSocket::connected, this, [=]{
         qDebug() << "pkSocket connected";
         // 5秒内发送认证包
-        sendVeriPacket(pkSocket);
+        sendVeriPacket(pkSocket, pkRoomId, pkToken);
     });
 
     connect(pkSocket, &QWebSocket::disconnected, this, [=]{
@@ -4511,6 +4514,7 @@ void MainWindow::connectPkRoom()
     });
 
     connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+        SOCKET_DEB << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~pkSocket receive";
         try {
             slotPkBinaryMessageReceived(message);
         } catch (...) {
@@ -4540,7 +4544,7 @@ void MainWindow::connectPkRoom()
         }
 
         QJsonObject data = json.value("data").toObject();
-        QString token = data.value("token").toString();
+        pkToken = data.value("token").toString();
         QJsonArray hostArray = data.value("host_list").toArray();
         QString link = hostArray.first().toObject().value("host").toString();
         int port = hostArray.first().toObject().value("wss_port").toInt();
@@ -4600,56 +4604,6 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
             {
                 uncompressPkBytes(body);
             }
-            else if (protover == 0)
-            {
-                QJsonDocument document = QJsonDocument::fromJson(body, &error);
-                if (error.error != QJsonParseError::NoError)
-                {
-                    qDebug() << s8("pkbody转json出错：") << error.errorString();
-                    return ;
-                }
-                QJsonObject json = document.object();
-                QString cmd = json.value("cmd").toString();
-
-                if (cmd == "ROOM_RANK")
-                {
-                }
-                else if (cmd == "ROOM_REAL_TIME_MESSAGE_UPDATE")
-                {
-                    // {"cmd":"ROOM_REAL_TIME_MESSAGE_UPDATE","data":{"roomid":22532956,"fans":1022,"red_notice":-1,"fans_club":50}}
-                    /*QJsonObject data = json.value("data").toObject();
-                    int fans = data.value("fans").toInt();
-                    int fans_club = data.value("fans_club").toInt();
-                    int delta_fans = 0, delta_club = 0;
-                    if (currentFans || currentFansClub)
-                    {
-                        delta_fans = fans - currentFans;
-                        delta_club = fans_club - currentFansClub;
-                    }
-                    currentFans = fans;
-                    currentFansClub = fans_club;
-                    qDebug() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
-                    appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
-                                                     delta_fans, delta_club));
-
-                    dailyNewFans += delta_fans;
-                    if (dailySettings)
-                        dailySettings->setValue("new_fans", dailyNewFans);
-
-
-                    if (delta_fans)
-                        getFansAndUpdate();*/
-                }
-                else
-                {
-                    SOCKET_DEB << "pk未处理的命令=" << cmd << "   正文=" << body;
-                }
-            }
-            else
-            {
-                qDebug() << s8("pk未知协议：") << protover << s8("，若有必要请处理");
-                qDebug() << s8("pk未知正文：") << body;
-            }
         }
     }
 
@@ -4686,11 +4640,7 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
         if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                 && cmd != "ONLINERANK")
             SOCKET_INF << "pk单个JSON消息：" << offset << packSize << QString(jsonBa);
-        try {
-            handlePkMessage(json);
-        } catch (...) {
-            qDebug() << s8("pk出错啦") << jsonBa;
-        }
+        handlePkMessage(json);
 
         offset += packSize;
     }
@@ -4705,7 +4655,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
         qint64 textColor = array[3].toInt(); // 弹幕颜色
-        qint64 timestamp = static_cast<qint64>(array[4].toDouble());
+        qint64 timestamp = static_cast<qint64>(array[4].toDouble()); // 13位
         QString msg = info[1].toString();
         QJsonArray user = info[2].toArray();
         qint64 uid = static_cast<qint64>(user[0].toDouble());
@@ -4717,7 +4667,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
         bool opposite = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
+                 || (!pkRoomId.isEmpty() && medal.size() &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
@@ -4748,7 +4698,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
-        QJsonObject data = json.value("data").toObject();
+        /*QJsonObject data = json.value("data").toObject();
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -4759,11 +4709,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
         qDebug() << s8("pk接收到送礼：") << username << giftName << num << s8("  总价值：") << totalCoin << coinType;
         QString localName = getLocalNickname(uid);
-        /*if (!localName.isEmpty())
-            username = localName;*/
         LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);
+        appendNewLiveDanmaku(danmaku);*/
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -4781,6 +4729,8 @@ void MainWindow::handlePkMessage(QJsonObject json)
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
+        if (!opposite) // 不是自己方过去串门的
+            return ;
         qDebug() << s8("pk观众进入：") << username;
         if (isSpread)
             qDebug() << s8("    pk来源：") << spreadDesc;
@@ -4794,7 +4744,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                          fansMedal.value("medal_level").toInt(),
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
-        danmaku.setOpposite(opposite);
+        danmaku.setToView(opposite);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
     }

@@ -295,7 +295,7 @@ private:
     void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
-    void sendVeriPacket(QWebSocket *socket);
+    void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
     bool handlePK(QJsonObject json);
@@ -432,6 +432,7 @@ private:
     QSet<qint64> myAudience; // 自己这边的观众
     QSet<qint64> oppositeAudience; // 对面的观众
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
+    QString pkToken;
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;
