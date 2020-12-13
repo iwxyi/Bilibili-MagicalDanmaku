@@ -173,6 +173,10 @@ MainWindow::MainWindow(QWidget *parent)
     pkChuanmenEnable = settings.value("pk/chuanmen", false).toBool();
     ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
 
+    // PK消息同步
+    pkMsgSync = settings.value("pk/msgSync", false).toBool();
+    ui->pkMsgSyncCheck->setChecked(pkMsgSync);
+
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
@@ -443,7 +447,7 @@ void MainWindow::removeTimeoutDanmaku()
         }
     }
 
-    // 移除多余的提示
+    // 移除多余的提示（一般时间更短）
     for (int i = 0; i < roomDanmakus.size(); i++)
     {
         auto danmaku = roomDanmakus.at(i);
@@ -451,7 +455,8 @@ void MainWindow::removeTimeoutDanmaku()
         if (type == MSG_ATTENTION || type == MSG_WELCOME || type == MSG_FANS
                 || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000))
                 || (type == MSG_DANMAKU && danmaku.isNoReply())
-                || type == MSG_MSG)
+                || type == MSG_MSG
+                || danmaku.isToView() || danmaku.isPkLink())
         {
             QDateTime dateTime = danmaku.getTimeline();
             if (dateTime.toMSecsSinceEpoch() + removeDanmakuTipInterval < timestamp)
@@ -1132,11 +1137,13 @@ void MainWindow::initWS()
 
         if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
         {
+            qDebug() << "==================send heart pack";
             QByteArray ba;
             ba.append("[object Object]");
             ba = makePack(ba, HEARTBEAT);
         //    SOCKET_DEB << "发送心跳包：" << ba;
-            socket->sendBinaryMessage(ba);
+            pkSocket->sendBinaryMessage(ba);
+            qDebug() << "=================heart pack finish";
         }
     });
 }
@@ -2779,7 +2786,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() &&
+                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
@@ -4130,7 +4137,8 @@ void MainWindow::on_pkChuanmenCheck_clicked()
 
 void MainWindow::on_pkMsgSyncCheck_clicked()
 {
-
+    pkMsgSync = ui->pkMsgSyncCheck->isChecked();
+    settings.setValue("pk/msgSync", pkMsgSync);
 }
 
 void MainWindow::pkPre(QJsonObject json)
@@ -4401,7 +4409,7 @@ void MainWindow::pkEnd(QJsonObject json)
         "timestamp": 1605748006
     }*/
     // winner_type: 2赢，-1输，两边2平局
-
+qDebug() << "1111111111111111111111111111";
     QJsonObject data = json.value("data").toObject();
     pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
@@ -4424,6 +4432,7 @@ void MainWindow::pkEnd(QJsonObject json)
         matchVotes = data.value("init_info").toObject().value("votes").toInt();
         myVotes = data.value("match_info").toObject().value("votes").toInt();
     }
+qDebug() << "2222222222222222222222222222222222";
     showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
@@ -4431,14 +4440,14 @@ void MainWindow::pkEnd(QJsonObject json)
     myVotes = 0;
     matchVotes = 0;
     qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
-
+qDebug() << "333333333333333333333333333333333333";
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
         int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
         danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
-
+qDebug() << "4444444444444444444444444444444444444";
     // 清空大乱斗数据
     pking = false;
     pkEnding = false;
@@ -4449,12 +4458,15 @@ void MainWindow::pkEnd(QJsonObject json)
     pkRoomId = "";
     myAudience.clear();
     oppositeAudience.clear();
+qDebug() << "555555555555555555555555555555555555555";
     if (pkSocket)
     {
-        pkSocket->abort();
+        if (pkSocket->state() == QAbstractSocket::ConnectingState)
+            pkSocket->abort(); // 多次abort好像会崩溃掉？
         pkSocket->deleteLater();
         pkSocket = nullptr;
     }
+qDebug() << "66666666666666666666666666666666666666";
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -4515,11 +4527,7 @@ void MainWindow::connectPkRoom()
 
     connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
         SOCKET_DEB << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~pkSocket receive";
-        try {
-            slotPkBinaryMessageReceived(message);
-        } catch (...) {
-            qDebug() << "!!!!!!!pk.error:slotBinaryMessageReceived";
-        }
+        slotPkBinaryMessageReceived(message);
     });
 
     // ========== 开始连接 ==========
@@ -4563,6 +4571,7 @@ void MainWindow::connectPkRoom()
 
 void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 {
+    return ;
     int operation = ((uchar)message[8] << 24)
             + ((uchar)message[9] << 16)
             + ((uchar)message[10] << 8)
@@ -4592,10 +4601,6 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
         else if (cmd == "ROOM_RANK")
         {
         }
-        else if (handlePK(json))
-        {
-
-        }
         else // 压缩弹幕消息
         {
             short protover = (message[6]<<8) + message[7];
@@ -4614,6 +4619,7 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 
 void MainWindow::uncompressPkBytes(const QByteArray &body)
 {
+    return ;
     QByteArray unc = zlibToQtUncompr(body.data(), body.size()+1);
     int offset = 0;
     short headerSize = 16;
@@ -4648,10 +4654,13 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
 
 void MainWindow::handlePkMessage(QJsonObject json)
 {
+    return ;
     QString cmd = json.value("cmd").toString();
     qDebug() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG") // 收到弹幕
     {
+        if (!pkMsgSync)
+            return ;
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
         qint64 textColor = array[3].toInt(); // 弹幕颜色
@@ -4667,7 +4676,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
         bool opposite = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() &&
+                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
@@ -4695,6 +4704,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setOpposite(opposite);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
+        qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~finished";
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -4715,6 +4725,8 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
     else if (cmd == "INTERACT_WORD")
     {
+        if (!pkChuanmenEnable) // 可能是中途就关了
+            return ;
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();

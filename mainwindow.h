@@ -426,6 +426,7 @@ private:
 
     // 大乱斗串门
     bool pkChuanmenEnable = false;
+    bool pkMsgSync = false;
     QString pkRoomId;
     QString pkUid;
     QString pkUname;
