@@ -1090,7 +1090,6 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-        SOCKET_DEB << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~mySocket receive";
 //        qDebug() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
         try {
@@ -1137,13 +1136,10 @@ void MainWindow::initWS()
 
         if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
         {
-            qDebug() << "==================send heart pack";
             QByteArray ba;
             ba.append("[object Object]");
             ba = makePack(ba, HEARTBEAT);
-        //    SOCKET_DEB << "发送心跳包：" << ba;
             pkSocket->sendBinaryMessage(ba);
-            qDebug() << "=================heart pack finish";
         }
     });
 }
@@ -4589,7 +4585,6 @@ void MainWindow::connectPkRoom()
     });
 
     connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-        SOCKET_DEB << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~pkSocket receive";
         slotPkBinaryMessageReceived(message);
     });
 
@@ -4764,7 +4759,6 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
-        qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~finished";
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
