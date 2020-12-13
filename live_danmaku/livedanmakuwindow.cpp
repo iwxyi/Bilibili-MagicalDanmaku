@@ -679,6 +679,35 @@ void LiveDanmakuWindow::resetItemsText()
     }
 }
 
+void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
+{
+    qint64 uid = danmaku.getUid();
+    QString gift = danmaku.getGiftName();
+    qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
+
+    for (int i = listWidget->count()-1; i >= 0; i--)
+    {
+        auto item = listWidget->item(i);
+        LiveDanmaku dm = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+        qint64 t = dm.getTimeline().toSecsSinceEpoch();
+        if (t == 0)
+            continue;
+        if (t + 3 < time)
+            return ;
+        if (dm.getMsgType() != MSG_GIFT
+                || danmaku.getUid() != uid
+                || danmaku.getGiftName() != gift)
+            continue;
+
+        // 是这个没错了
+        dm.addGift(danmaku.getNumber(), danmaku.getTotalCoin());
+        item->setData(DANMAKU_JSON_ROLE, dm.toJson());
+        item->setData(DANMAKU_STRING_ROLE, dm.toString());
+        setItemWidgetText(item);
+        break;
+    }
+}
+
 void LiveDanmakuWindow::showMenu()
 {
     auto item = listWidget->currentItem();

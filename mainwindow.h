@@ -298,6 +298,7 @@ private:
     void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
+    bool mergeGiftCombo(LiveDanmaku danmaku);
     bool handlePK(QJsonObject json);
     bool handlePK2(QJsonObject json);
     void refreshBlockList();

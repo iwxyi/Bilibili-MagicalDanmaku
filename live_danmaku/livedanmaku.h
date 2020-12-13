@@ -292,6 +292,12 @@ public:
         this->pk_link = link;
     }
 
+    void addGift(int count, int total)
+    {
+        this->number += count;
+        this->total_coin += total;
+    }
+
     bool equal(const LiveDanmaku& another) const
     {
         return this->uid == another.uid

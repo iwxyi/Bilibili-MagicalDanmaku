@@ -3159,7 +3159,9 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
     {
         LiveDanmaku dm = roomDanmakus.at(i);
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
-        if (t + 3 < time)
+        if (t == 0) // 有些是没带时间的
+            continue;
+        if (t + 3 < time) // 3秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || danmaku.getUid() != uid
@@ -3168,11 +3170,13 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
 
         // 是这个没错了
         merged = &roomDanmakus[i];
+        break;
     }
     if (!merged)
         return false;
 
     // 开始合并
+    qDebug() << "合并相同礼物至：" << merged->toString();
     merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin());
 
     // 合并实时弹幕
