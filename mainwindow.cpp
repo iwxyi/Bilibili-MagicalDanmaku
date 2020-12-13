@@ -4501,9 +4501,19 @@ void MainWindow::connectPkRoom()
     if (pkRoomId.isEmpty())
         return ;
 
+    // 根据弹幕消息
     getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
+    // 额外保存的许多本地弹幕消息
+    for (int i = 0; i < roomDanmakus.size(); i++)
+    {
+        qint64 uid = roomDanmakus.at(i).getUid();
+        if (uid)
+            myAudience.insert(uid);
+    }
+
+    // 连接socket
     if (pkSocket)
         pkSocket->deleteLater();
 
@@ -4571,7 +4581,6 @@ void MainWindow::connectPkRoom()
 
 void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 {
-    return ;
     int operation = ((uchar)message[8] << 24)
             + ((uchar)message[9] << 16)
             + ((uchar)message[10] << 8)
@@ -4619,7 +4628,6 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 
 void MainWindow::uncompressPkBytes(const QByteArray &body)
 {
-    return ;
     QByteArray unc = zlibToQtUncompr(body.data(), body.size()+1);
     int offset = 0;
     short headerSize = 16;
@@ -4654,7 +4662,6 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
 
 void MainWindow::handlePkMessage(QJsonObject json)
 {
-    return ;
     QString cmd = json.value("cmd").toString();
     qDebug() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG") // 收到弹幕
@@ -4674,7 +4681,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QJsonArray medal = info[3].toArray();
         int medal_level = 0;
 
-        bool opposite = pking &&
+        bool toView = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
@@ -4701,7 +4708,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         }
         else
             minuteDanmuPopular++;
-        danmaku.setOpposite(opposite);
+        danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
         qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~finished";
@@ -4725,7 +4732,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
     else if (cmd == "INTERACT_WORD")
     {
-        if (!pkChuanmenEnable) // 可能是中途就关了
+        if (!pkChuanmenEnable) // 可能是中途关了
             return ;
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -4737,11 +4744,11 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QString spreadDesc = data.value("spread_desc").toString();
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
-        bool opposite = pking &&
+        bool toView = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
-        if (!opposite) // 不是自己方过去串门的
+        if (!toView) // 不是自己方过去串门的
             return ;
         qDebug() << s8("pk观众进入：") << username;
         if (isSpread)
@@ -4756,7 +4763,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                          fansMedal.value("medal_level").toInt(),
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
-        danmaku.setToView(opposite);
+        danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
     }

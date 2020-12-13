@@ -293,7 +293,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         if (danmaku.getText() == myPrevSendMsg)
             myPrevSendMsg = "";
 
-        if (!danmaku.isNoReply())
+        if (!danmaku.isNoReply() && !danmaku.isPkLink())
         {
             QRegExp hei("[（）\\(\\)~]"); // 带有特殊字符的黑名单
 
@@ -455,7 +455,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (msgType == MSG_DANMAKU)
     {
         // 新人：0级，3次以内
-        if (newbieTip)
+        if (newbieTip && !danmaku.isPkLink())
         {
             int count = danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
@@ -470,7 +470,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
         // 彩色消息
         QString colorfulMsg = msg;
-        if (danmaku.isNoReply()) // 灰色
+        if (danmaku.isNoReply() || danmaku.isPkLink()) // 灰色
         {
             colorfulMsg = "<font color='gray'>"
                     + danmaku.getText() + "</font> ";
@@ -589,7 +589,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         text = "[对面] " + text;
 
     if (danmaku.isPkLink()) // 这个最置顶前面
-        text = "[同步] " + text;
+        text = "<font color='gray'>[同步]</font> " + text;
 
     // 文字与大小
     label->setText(text);
