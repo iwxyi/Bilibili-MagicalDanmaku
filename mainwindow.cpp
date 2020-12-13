@@ -2932,7 +2932,10 @@ void MainWindow::handleMessage(QJsonObject json)
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        appendNewLiveDanmaku(danmaku);
+        if (!mergeGiftCombo(danmaku)) // 如果有合并，则合并到之前的弹幕上面
+        {
+            appendNewLiveDanmaku(danmaku);
+        }
 
         if (coinType == "silver")
         {
@@ -3133,6 +3136,50 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
+}
+
+/**
+ * 合并消息
+ * 在添加到消息队列前调用此函数判断
+ * 若是，则同步合并实时弹幕中的礼物连击
+ */
+bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
+{
+    if (danmaku.getMsgType() != MSG_GIFT)
+        return false;
+
+    // 判断，同人 && 礼物同名 && 3秒内
+    qint64 uid = danmaku.getUid();
+    QString gift = danmaku.getGiftName();
+    qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
+    LiveDanmaku* merged = nullptr;
+
+    // 遍历房间弹幕
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        LiveDanmaku dm = roomDanmakus.at(i);
+        qint64 t = dm.getTimeline().toSecsSinceEpoch();
+        if (t + 3 < time)
+            return false;
+        if (dm.getMsgType() != MSG_GIFT
+                || danmaku.getUid() != uid
+                || danmaku.getGiftName() != gift)
+            continue;
+
+        // 是这个没错了
+        merged = &roomDanmakus[i];
+    }
+    if (!merged)
+        return false;
+
+    // 开始合并
+    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin());
+
+    // 合并实时弹幕
+    if (danmakuWindow)
+        danmakuWindow->mergeGift(danmaku);
+
+    return true;
 }
 
 bool MainWindow::handlePK(QJsonObject json)
@@ -4353,19 +4400,10 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
-        if (prevMyVotes < myVotes)
-        {
-            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
-        }
-        if (prevMatchVotes < matchVotes)
-        {
-            if (!oppositeTouta)
-                oppositeTouta = true;
-            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
-        }
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
-                && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes)
+                && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/10 > matchVotes
+                && !oppositeTouta) // 对面之前未偷塔（可能是连刷，这时候几个吃瓜偷塔没用）
         {
             // 调用送礼
             int num = static_cast<int>((matchVotes-myVotes-pkVoting+1)/10 + 1);
@@ -4376,6 +4414,17 @@ void MainWindow::pkProcess(QJsonObject json)
             toutaCount++;
             chiguaCount += num;
             saveTouta();
+        }
+        // 显示偷塔情况
+        if (prevMyVotes < myVotes)
+        {
+            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+        }
+        if (prevMatchVotes < matchVotes)
+        {
+            if (!oppositeTouta)
+                oppositeTouta = true;
+            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
         }
     }
     else
@@ -4750,12 +4799,12 @@ void MainWindow::handlePkMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
         if (!toView) // 不是自己方过去串门的
             return ;
-        qDebug() << s8("pk观众进入：") << username;
+        showLocalNotify(username + " 跑去对面串门"); // 显示一个短通知，就不作为一个弹幕了
+
+        /*qDebug() << s8("pk观众进入：") << username;
         if (isSpread)
             qDebug() << s8("    pk来源：") << spreadDesc;
         QString localName = getLocalNickname(uid);
-        /*if (!localName.isEmpty())
-            username = localName;*/
         LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
                             unameColor, spreadDesc, spreadInfo);
         danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
@@ -4765,6 +4814,6 @@ void MainWindow::handlePkMessage(QJsonObject json)
                          "");
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);
+        appendNewLiveDanmaku(danmaku);*/
     }
 }
