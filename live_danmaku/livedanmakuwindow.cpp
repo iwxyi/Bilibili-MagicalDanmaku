@@ -1,7 +1,7 @@
 #include "livedanmakuwindow.h"
 
-LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
-    : QWidget(nullptr), settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
+LiveDanmakuWindow::LiveDanmakuWindow(QSettings& settings, QWidget *parent)
+    : QWidget(nullptr), settings(settings)
 {
     this->setWindowTitle("实时弹幕");
     this->setMinimumSize(45,45);                        //设置最小尺寸
@@ -44,7 +44,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     });
 
     // 发送消息后返回原窗口
-    auto returnPrevWindow = [=]{
+    auto returnPrevWindow = [&]{
         // 如果单次显示了输入框，则退出时隐藏
         bool showEdit = settings.value("livedanmakuwindow/sendEdit", false).toBool();
         if (!showEdit)
@@ -56,7 +56,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 #endif
     };
     lineEdit->setPlaceholderText("回车发送消息");
-    connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
+    connect(lineEdit, &QLineEdit::returnPressed, this, [&]{
         QString text = lineEdit->text();
         if (!text.trimmed().isEmpty())
         {
@@ -72,10 +72,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 
     editShortcut = new QxtGlobalShortcut(this);
     editShortcut->setShortcut(QKeySequence("shift+alt+d"));
-    connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
+    connect(lineEdit, &TransparentEdit::signalESC, this, [&]{
         returnPrevWindow();
     });
-    connect(editShortcut, &QxtGlobalShortcut::activated, this, [=]() {
+    connect(editShortcut, &QxtGlobalShortcut::activated, this, [&]() {
         if (this->isActiveWindow() && lineEdit->hasFocus())
         {
             returnPrevWindow();

@@ -48,7 +48,7 @@ class DesktopLyricWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit DesktopLyricWidget(QWidget *parent = nullptr);
+    explicit DesktopLyricWidget(QSettings &settings, QWidget *parent = nullptr);
 
     enum LineMode
     {
@@ -89,7 +89,7 @@ public slots:
     void setPosition(qint64 position);
 
 private:
-    QSettings settings;
+    QSettings& settings;
 
     // 几何数值
     int fontHeight;

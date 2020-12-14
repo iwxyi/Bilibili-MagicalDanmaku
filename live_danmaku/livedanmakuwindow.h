@@ -57,7 +57,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     Q_OBJECT
     friend class MainWindow;
 public:
-    LiveDanmakuWindow(QWidget *parent = nullptr);
+    LiveDanmakuWindow(QSettings &settings, QWidget *parent = nullptr);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -111,7 +111,7 @@ private:
     QString getPinyin(QString text);
 
 private:
-    QSettings settings;
+    QSettings& settings;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
     QxtGlobalShortcut* editShortcut;

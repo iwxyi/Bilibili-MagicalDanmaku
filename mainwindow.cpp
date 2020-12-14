@@ -3987,7 +3987,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 {
     if (!danmakuWindow)
     {
-        danmakuWindow = new LiveDanmakuWindow(this);
+        danmakuWindow = new LiveDanmakuWindow(settings, this);
 
         connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));

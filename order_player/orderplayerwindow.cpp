@@ -1221,7 +1221,7 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
         desktopLyric->close();
         desktopLyric->deleteLater();
 
-        desktopLyric = new DesktopLyricWidget(nullptr);
+        desktopLyric = new DesktopLyricWidget(settings, nullptr);
         connectDesktopLyricSignals();
         desktopLyric->show();
 
