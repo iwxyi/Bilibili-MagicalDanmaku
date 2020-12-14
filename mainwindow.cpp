@@ -4544,7 +4544,7 @@ PK_END_DEB << "555555555555555555555555555555555555555";
     {
         try {
             if (pkSocket->state() == QAbstractSocket::ConnectedState)
-                pkSocket->close(); // 多次abort好像会崩溃掉？
+                pkSocket->close(); // 会自动deleterLater
             // pkSocket->deleteLater();
         } catch (...) {
             qDebug() << "delete pkSocket failed";
@@ -4613,9 +4613,9 @@ void MainWindow::connectPkRoom()
 
     connect(pkSocket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
-        if (liveStatus)
+        if (liveStatus && pkSocket)
         {
-            this->deleteLater();
+            pkSocket->deleteLater();
             pkSocket = nullptr;
             return ;
         }
