@@ -1,7 +1,7 @@
 #include "livedanmakuwindow.h"
 
-LiveDanmakuWindow::LiveDanmakuWindow(QSettings& settings, QWidget *parent)
-    : QWidget(nullptr), settings(settings)
+LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
+    : QWidget(nullptr), settings(st)
 {
     this->setWindowTitle("实时弹幕");
     this->setMinimumSize(45,45);                        //设置最小尺寸
@@ -44,7 +44,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& settings, QWidget *parent)
     });
 
     // 发送消息后返回原窗口
-    auto returnPrevWindow = [&]{
+    auto returnPrevWindow = [=]{
         // 如果单次显示了输入框，则退出时隐藏
         bool showEdit = settings.value("livedanmakuwindow/sendEdit", false).toBool();
         if (!showEdit)
@@ -56,7 +56,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& settings, QWidget *parent)
 #endif
     };
     lineEdit->setPlaceholderText("回车发送消息");
-    connect(lineEdit, &QLineEdit::returnPressed, this, [&]{
+    connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
         QString text = lineEdit->text();
         if (!text.trimmed().isEmpty())
         {
@@ -72,10 +72,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& settings, QWidget *parent)
 
     editShortcut = new QxtGlobalShortcut(this);
     editShortcut->setShortcut(QKeySequence("shift+alt+d"));
-    connect(lineEdit, &TransparentEdit::signalESC, this, [&]{
+    connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
     });
-    connect(editShortcut, &QxtGlobalShortcut::activated, this, [&]() {
+    connect(editShortcut, &QxtGlobalShortcut::activated, this, [=]() {
         if (this->isActiveWindow() && lineEdit->hasFocus())
         {
             returnPrevWindow();
@@ -754,6 +754,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionWindow = new QAction("直播姬模式", this);
 
     QAction* actionDelete = new QAction("删除", this);
+    QAction* actionHide = new QAction("隐藏", this);
 
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
@@ -882,6 +883,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionWindow);
 
     menu->addAction(actionDelete);
+    menu->addAction(actionHide);
 
     connect(actionNameColor, &QAction::triggered, this, [=]{
         QColor c = QColorDialog::getColor(nameColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);
@@ -1128,6 +1130,9 @@ void LiveDanmakuWindow::showMenu()
         }
 //        slotOldLiveDanmakuRemoved(danmaku);
     });
+    connect(actionHide, &QAction::trigger, this, [=]{
+        this->hide();
+    });
 
     menu->exec(QCursor::pos());
 
@@ -1144,6 +1149,7 @@ void LiveDanmakuWindow::showMenu()
     actionFreeCopy->deleteLater();
     actionSendMsg->deleteLater();
     actionDelete->deleteLater();
+    actionHide->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)
@@ -1353,6 +1359,11 @@ void LiveDanmakuWindow::setStatusText(QString text)
     statusLabel->setText(text);
     statusLabel->adjustSize();
     statusLabel->move(width() - statusLabel->width(), 0);
+}
+
+void LiveDanmakuWindow::setStatusTooltip(QString tooltip)
+{
+    statusLabel->setToolTip(tooltip);
 }
 
 void LiveDanmakuWindow::hideStatusText()
