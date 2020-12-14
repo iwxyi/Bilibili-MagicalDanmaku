@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (danmaku.getMsgType() != MSG_DANMAKU)
+       if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
            return ;
        QRegularExpression re(diangeFormatString);
        QRegularExpressionMatch match;
