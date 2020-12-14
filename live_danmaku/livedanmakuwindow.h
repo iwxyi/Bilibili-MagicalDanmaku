@@ -82,6 +82,7 @@ public slots:
     void highlightItemText(QListWidgetItem* item, bool recover = false);
     void resetItemsTextColor();
     void resetItemsText();
+    void mergeGift(LiveDanmaku danmaku);
 
     void showMenu();
 

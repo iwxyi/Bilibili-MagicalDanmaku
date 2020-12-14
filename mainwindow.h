@@ -266,6 +266,12 @@ private slots:
 
     void on_actionShow_Live_Video_triggered();
 
+    void on_pkChuanmenCheck_clicked();
+
+    void on_pkMsgSyncCheck_clicked();
+
+    void slotPkBinaryMessageReceived(const QByteArray &message);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -289,9 +295,10 @@ private:
     void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
-    void sendVeriPacket();
+    void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
+    bool mergeGiftCombo(LiveDanmaku danmaku);
     bool handlePK(QJsonObject json);
     bool handlePK2(QJsonObject json);
     void refreshBlockList();
@@ -321,6 +328,15 @@ private:
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
+
+    void pkPre(QJsonObject json);
+    void pkStart(QJsonObject json);
+    void pkProcess(QJsonObject json);
+    void pkEnd(QJsonObject json);
+    void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
+    void connectPkRoom();
+    void uncompressPkBytes(const QByteArray &body);
+    void handlePkMessage(QJsonObject json);
 
 private:
     Ui::MainWindow *ui;
@@ -394,16 +410,31 @@ private:
 
     // 大乱斗
     bool pking = false;
+    qint64 pkToLive = 0; // PK导致的下播（视频必定触发）
     int myVotes = 0;
     int matchVotes = 0;
     qint64 pkEndTime = 0;
     QTimer* pkTimer = nullptr;
     int pkJudgeEarly = 2000;
+
+    // 大乱斗偷塔
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
     int pkVoting = 0;
     int toutaCount = 0;
     int chiguaCount = 0;
+    bool oppositeTouta = false; // 对面是否偷塔（用作判断）
+
+    // 大乱斗串门
+    bool pkChuanmenEnable = false;
+    bool pkMsgSync = false;
+    QString pkRoomId;
+    QString pkUid;
+    QString pkUname;
+    QSet<qint64> myAudience; // 自己这边的观众
+    QSet<qint64> oppositeAudience; // 对面的观众
+    QWebSocket* pkSocket = nullptr; // 连接对面的房间
+    QString pkToken;
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

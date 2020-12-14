@@ -126,6 +126,9 @@ public:
         danmaku.medal_color = object.value("medal_color").toString();
         danmaku.medal_up = object.value("medal_up").toString();
         danmaku.no_reply = object.value("no_reply").toBool();
+        danmaku.opposite = object.value("opposite").toBool();
+        danmaku.to_view = object.value("to_view").toBool();
+        danmaku.pk_link = object.value("pk_link").toBool();
         return danmaku;
     }
 
@@ -188,6 +191,12 @@ public:
             object.insert("medal_color", medal_color);
             object.insert("medal_up", medal_up);
         }
+        if (opposite)
+            object.insert("opposite", opposite);
+        if (to_view)
+            object.insert("to_view", to_view);
+        if (pk_link)
+            object.insert("pk_link", pk_link);
 
         return object;
     }
@@ -265,7 +274,28 @@ public:
 
     void setNoReply()
     {
-        no_reply = true;
+        this->no_reply = true;
+    }
+
+    void setOpposite(bool op)
+    {
+        this->opposite = op;
+    }
+
+    void setToView(bool to)
+    {
+        this->to_view = to;
+    }
+
+    void setPkLink(bool link)
+    {
+        this->pk_link = link;
+    }
+
+    void addGift(int count, int total)
+    {
+        this->number += count;
+        this->total_coin += total;
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -415,6 +445,21 @@ public:
         return no_reply;
     }
 
+    bool isOpposite() const
+    {
+        return opposite;
+    }
+
+    bool isToView() const
+    {
+        return to_view;
+    }
+
+    bool isPkLink() const
+    {
+        return pk_link;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -458,7 +503,11 @@ private:
     int fans_club = 0;
     int delta_fans = 0;
     int delta_fans_club = 0;
-    bool attention = false;
+    bool attention = false; // 关注还是取关
+
+    bool opposite = false; // 是否是大乱斗对面的
+    bool to_view = false; // 是否是自己这边过去串门的
+    bool pk_link = false; // 是否是PK连接的
 };
 
 #endif // LIVEDANMAKU_H
