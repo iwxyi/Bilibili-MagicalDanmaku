@@ -57,7 +57,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     Q_OBJECT
     friend class MainWindow;
 public:
-    LiveDanmakuWindow(QSettings &settings, QWidget *parent = nullptr);
+    LiveDanmakuWindow(QSettings &st, QWidget *parent = nullptr);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -99,6 +99,7 @@ public slots:
 
     void showStatusText();
     void setStatusText(QString text);
+    void setStatusTooltip(QString tooltip);
     void hideStatusText();
 
 private:

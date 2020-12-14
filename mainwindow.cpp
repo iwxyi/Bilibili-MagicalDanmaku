@@ -4201,6 +4201,11 @@ void MainWindow::on_pkChuanmenCheck_clicked()
 {
     pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
     settings.setValue("pk/chuanmen", pkChuanmenEnable);
+
+    if (pkChuanmenEnable)
+    {
+        connectPkRoom();
+    }
 }
 
 void MainWindow::on_pkMsgSyncCheck_clicked()
@@ -4357,7 +4362,10 @@ void MainWindow::pkStart(QJsonObject json)
 
     pkTimer->start();
     if (danmakuWindow)
+    {
         danmakuWindow->showStatusText();
+        danmakuWindow->setToolTip(pkUname);
+    }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
     qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid;
 
@@ -4479,7 +4487,7 @@ void MainWindow::pkEnd(QJsonObject json)
         "timestamp": 1605748006
     }*/
     // winner_type: 2赢，-1输，两边2平局
-qDebug() << "1111111111111111111111111111";
+PK_END_DEB << "1111111111111111111111111111";
     QJsonObject data = json.value("data").toObject();
     pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
@@ -4488,7 +4496,10 @@ qDebug() << "1111111111111111111111111111";
     if (pkTimer)
         pkTimer->stop();
     if (danmakuWindow)
+    {
         danmakuWindow->hideStatusText();
+        danmakuWindow->setToolTip("");
+    }
     bool ping = winnerType1 == winnerType2;
     bool result = (winnerType1 > 0 && snum(thisRoomId) == roomId)
             || (winnerType1 < 0 && snum(thisRoomId) != roomId);
@@ -4502,7 +4513,7 @@ qDebug() << "1111111111111111111111111111";
         matchVotes = data.value("init_info").toObject().value("votes").toInt();
         myVotes = data.value("match_info").toObject().value("votes").toInt();
     }
-qDebug() << "2222222222222222222222222222222222";
+PK_END_DEB << "2222222222222222222222222222222222";
     showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
@@ -4510,14 +4521,14 @@ qDebug() << "2222222222222222222222222222222222";
     myVotes = 0;
     matchVotes = 0;
     qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
-qDebug() << "333333333333333333333333333333333333";
+PK_END_DEB << "333333333333333333333333333333333333";
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
         int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
         danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
-qDebug() << "4444444444444444444444444444444444444";
+PK_END_DEB << "4444444444444444444444444444444444444";
     // 清空大乱斗数据
     pking = false;
     pkEnding = false;
@@ -4528,7 +4539,7 @@ qDebug() << "4444444444444444444444444444444444444";
     pkRoomId = "";
     myAudience.clear();
     oppositeAudience.clear();
-qDebug() << "555555555555555555555555555555555555555";
+PK_END_DEB << "555555555555555555555555555555555555555";
     if (pkSocket)
     {
         if (pkSocket->state() == QAbstractSocket::ConnectingState)
@@ -4536,7 +4547,7 @@ qDebug() << "555555555555555555555555555555555555555";
         pkSocket->deleteLater();
         pkSocket = nullptr;
     }
-qDebug() << "66666666666666666666666666666666666666";
+PK_END_DEB << "66666666666666666666666666666666666666";
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
