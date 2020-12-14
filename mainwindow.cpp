@@ -4542,11 +4542,16 @@ PK_END_DEB << "4444444444444444444444444444444444444";
 PK_END_DEB << "555555555555555555555555555555555555555";
     if (pkSocket)
     {
-        if (pkSocket->state() == QAbstractSocket::ConnectingState)
-            pkSocket->abort(); // 多次abort好像会崩溃掉？
-        pkSocket->deleteLater();
+        try {
+            if (pkSocket->state() == QAbstractSocket::ConnectedState)
+                pkSocket->close(); // 多次abort好像会崩溃掉？
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qDebug() << "delete pkSocket failed";
+        }
         pkSocket = nullptr;
     }
+    qDebug() << "关闭PKSocket结束，正常退出";
 PK_END_DEB << "66666666666666666666666666666666666666";
 }
 

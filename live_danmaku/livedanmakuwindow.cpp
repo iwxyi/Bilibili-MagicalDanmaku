@@ -1130,7 +1130,7 @@ void LiveDanmakuWindow::showMenu()
         }
 //        slotOldLiveDanmakuRemoved(danmaku);
     });
-    connect(actionHide, &QAction::trigger, this, [=]{
+    connect(actionHide, &QAction::triggered, this, [=]{
         this->hide();
     });
 
