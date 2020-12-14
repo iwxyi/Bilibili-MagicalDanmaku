@@ -7,7 +7,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat),
       musicsFileDir(QApplication::applicationDirPath()+"/musics"),
       player(new QMediaPlayer(this)),
-      desktopLyric(new DesktopLyricWidget(nullptr)),
+      desktopLyric(new DesktopLyricWidget(settings, nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this)),
       playingPositionTimer(new QTimer(this))
 {
