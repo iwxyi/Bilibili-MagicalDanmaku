@@ -2938,7 +2938,8 @@ void MainWindow::handleMessage(QJsonObject json)
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        if (!mergeGiftCombo(danmaku)) // 如果有合并，则合并到之前的弹幕上面
+        bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
+        if (!merged)
         {
             appendNewLiveDanmaku(danmaku);
         }
@@ -2977,7 +2978,7 @@ void MainWindow::handleMessage(QJsonObject json)
             return ;
         int r = qrand() % words.size();
         QString msg = words.at(r);
-        if (!justStart && ui->autoSendGiftCheck->isChecked())
+        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
             if (strongNotifyUsers.contains(uid))
                 sendAutoMsg(msg);
