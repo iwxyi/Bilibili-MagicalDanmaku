@@ -583,11 +583,17 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getText());
     }
 
+    // 主播判断
+    if (upUid && danmaku.getUid() == upUid)
+        text = "<font color='#F08080'>[主播]</font> " + text;
+
+    // 串门判断
     if (danmaku.isToView())
         text = "[串门] " + text;
     else if (danmaku.isOpposite())
         text = "[对面] " + text;
 
+    // 消息同步
     if (danmaku.isPkLink()) // 这个最置顶前面
         text = "<font color='gray'>[同步]</font> " + text;
 
@@ -1257,6 +1263,11 @@ void LiveDanmakuWindow::setListWidgetItemSpacing(int x)
 void LiveDanmakuWindow::setNewbieTip(bool tip)
 {
     this->newbieTip = tip;
+}
+
+void LiveDanmakuWindow::setUpUid(qint64 uid)
+{
+    this->upUid = uid;
 }
 
 void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)

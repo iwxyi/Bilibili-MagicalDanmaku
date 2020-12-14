@@ -763,7 +763,10 @@ void MainWindow::on_roomIdEdit_editingFinished()
     danmuPopularValue = 0;
 
     if (danmakuWindow)
+    {
         danmakuWindow->hideStatusText();
+        danmakuWindow->setUpUid(0);
+    }
 
     emit signalRoomChanged(roomId);
 
@@ -1173,6 +1176,10 @@ void MainWindow::startConnectRoom()
         refreshBlockList();
 }
 
+/**
+ * 获取房间信息
+ * （已废弃）
+ */
 void MainWindow::getRoomInit()
 {
     QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
@@ -1227,14 +1234,16 @@ void MainWindow::getRoomInfo()
         roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
-        upUid = QString::number(roomInfo.value("uid").toInt());
+        upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
         liveStatus = roomInfo.value("live_status").toInt();
+        if (danmakuWindow)
+            danmakuWindow->setUpUid(upUid.toLongLong());
         qDebug() << "getRoomInfo: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << upUid;
 
         roomName = roomInfo.value("title").toString();
-        setWindowTitle(QApplication::applicationName() + " - " + roomName);
+        setWindowTitle(roomName + " - " + QApplication::applicationName());
         ui->roomNameLabel->setText(roomName);
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         if (liveStatus != 1)
@@ -2162,8 +2171,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是"};
-    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦"};
+    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是", "但是", "但", "在下"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)
@@ -3978,7 +3987,7 @@ void MainWindow::on_roomIdEdit_returnPressed()
 
 void MainWindow::on_actionData_Path_triggered()
 {
-
+    QDesktopServices::openUrl(QUrl("file:///" + QApplication::applicationDirPath(), QUrl::TolerantMode));
 }
 
 /**
@@ -4004,6 +4013,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
+        danmakuWindow->setUpUid(upUid.toLongLong());
         danmakuWindow->hide();
     }
 

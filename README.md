@@ -190,7 +190,7 @@
 | time_month       | 当前月份           |                                              |
 | time_year        | 当前年份           |                                              |
 | time_day_week    | 当前星期           | 1~7                                          |
-| time_day_year    | 当前第几天         |                                              |
+| time_day_year    | 当前一年中第几天   |                                              |
 | timestamp        | 当前10位时间戳     | 可用于比较进入时间、多久没来等               |
 | timestamp13      | 当前13位时间戳     |                                              |
 | pking            | 当前是否在大乱斗   | 是：1，否：0                                 |
