@@ -3183,7 +3183,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
 
     // 开始合并
     qDebug() << "合并相同礼物至：" << merged->toString();
-    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin());
+    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
 
     // 合并实时弹幕
     if (danmakuWindow)

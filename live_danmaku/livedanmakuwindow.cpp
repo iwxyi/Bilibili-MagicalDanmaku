@@ -700,7 +700,7 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
             continue;
 
         // 是这个没错了
-        dm.addGift(danmaku.getNumber(), danmaku.getTotalCoin());
+        dm.addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
         item->setData(DANMAKU_JSON_ROLE, dm.toJson());
         item->setData(DANMAKU_STRING_ROLE, dm.toString());
         setItemWidgetText(item);

@@ -292,10 +292,11 @@ public:
         this->pk_link = link;
     }
 
-    void addGift(int count, int total)
+    void addGift(int count, int total, QDateTime time)
     {
         this->number += count;
         this->total_coin += total;
+        this->timeline = time;
     }
 
     bool equal(const LiveDanmaku& another) const
