@@ -281,6 +281,7 @@ private:
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void addNoReplyDanmakuText(QString text);
     void showLocalNotify(QString text);
+    void showLocalNotify(QString text, qint64 uid);
 
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();
@@ -305,7 +306,7 @@ private:
     bool handlePK2(QJsonObject json);
     void refreshBlockList();
     bool isInFans(qint64 upUid);
-    void sendGify(int giftId, int giftNum);
+    void sendGift(int giftId, int giftNum);
     void getRoomLiveVideoUrl();
 
     QByteArray zlibUncompress(QByteArray ba) const;

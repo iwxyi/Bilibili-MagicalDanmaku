@@ -533,6 +533,13 @@ void MainWindow::showLocalNotify(QString text)
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
+void MainWindow::showLocalNotify(QString text, qint64 uid)
+{
+    LiveDanmaku danmaku(text);
+    danmaku.setUid(uid);
+    appendNewLiveDanmaku(danmaku);
+}
+
 /**
  * 发送单挑弹幕的原子操作
  */
@@ -721,7 +728,7 @@ void MainWindow::on_testDanmakuButton_clicked()
 
     if (text == "赠送吃瓜")
     {
-        sendGify(20004, 1);
+        sendGift(20004, 1);
     }
     else if (text == "测试送礼")
     {
@@ -3005,9 +3012,13 @@ void MainWindow::handleMessage(QJsonObject json)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
 
             // 正在偷塔阶段
-            if (pkEnding)
+            if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
             {
                 pkVoting -= totalCoin;
+                if (pkVoting < 0) // 自己在其他地方送了更大的礼物
+                {
+                    pkVoting = 0;
+                }
             }
         }
 
@@ -3143,7 +3154,6 @@ void MainWindow::handleMessage(QJsonObject json)
             dailySettings->setValue("come", dailyCome);
         if (opposite)
         {
-            qDebug() << "xxxxxxxxxxxxxxxxxxxx大乱斗对面观众：" << username;
             // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
         }
 
@@ -3507,7 +3517,7 @@ bool MainWindow::isInFans(qint64 uid)
     return false;
 }
 
-void MainWindow::sendGify(int giftId, int giftNum)
+void MainWindow::sendGift(int giftId, int giftNum)
 {
     if (roomId.isEmpty() || browserCookie.isEmpty())
     {
@@ -4380,7 +4390,7 @@ void MainWindow::pkStart(QJsonObject json)
         {
             // 调用送礼
             int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
-            sendGify(20004, num);
+            sendGift(20004, num);
             showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
             pkVoting += 10 * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
             qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
@@ -4425,7 +4435,7 @@ void MainWindow::pkStart(QJsonObject json)
     QString text = "开启大乱斗：" + pkUname;
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
-    showLocalNotify(text);
+    showLocalNotify(text, pkUid.toLongLong());
 
     if (pkChuanmenEnable)
     {
@@ -4481,7 +4491,7 @@ void MainWindow::pkProcess(QJsonObject json)
         {
             // 调用送礼
             int num = static_cast<int>((matchVotes-myVotes-pkVoting+1)/10 + 1);
-            sendGify(20004, num);
+            sendGift(20004, num);
             showLocalNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
             pkVoting += 10 * num;
             qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
@@ -4883,7 +4893,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
         if (!toView) // 不是自己方过去串门的
             return ;
-        showLocalNotify(username + " 跑去对面串门"); // 显示一个短通知，就不作为一个弹幕了
+        showLocalNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
 
         /*qDebug() << s8("pk观众进入：") << username;
         if (isSpread)

@@ -273,6 +273,11 @@ public:
         this->medal_up = up;
     }
 
+    void setUid(qint64 uid)
+    {
+        this->uid = uid;
+    }
+
     void setNumber(int num)
     {
         this->number = num;
