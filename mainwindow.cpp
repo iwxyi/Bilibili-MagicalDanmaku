@@ -639,6 +639,23 @@ void MainWindow::sendWelcomeMsg(QString msg)
     sendAutoMsg(msg);
 }
 
+void MainWindow::sendOppositeMsg(QString msg)
+{
+    if (!liveStatus) // 不在直播中
+        return ;
+
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 2; // 一般的欢迎冷却时间
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
+}
+
 void MainWindow::sendGiftMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
@@ -1927,7 +1944,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%today_fans%"))
         msg.replace("%today_fans%", snum(dailyNewFans));
 
-    // 当前粉丝数量
+    // 当前粉丝数量111
     if (msg.contains("%fans_count%"))
         msg.replace("%fans_count%", snum(dailyTotalFans));
 
@@ -3094,11 +3111,13 @@ void MainWindow::handleMessage(QJsonObject json)
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
         danmaku.setOpposite(opposite);
-        appendNewLiveDanmaku(danmaku);
 
         // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
         // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
         int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
+        danmaku.setNumber(userCome);
+        appendNewLiveDanmaku(danmaku);
+
         userCome++;
         QTimer::singleShot(10, [=]{ // 延迟一下，等到下面代码执行结束
             danmakuCounts->setValue("come/"+snum(uid), userCome);
@@ -3134,7 +3153,10 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else
             {
-                sendWelcomeMsg(msg);
+                if (danmaku.isOpposite())
+                    sendOppositeMsg(msg);
+                else
+                    sendWelcomeMsg(msg);
             }
         }
         else
@@ -3579,9 +3601,11 @@ void MainWindow::getRoomLiveVideoUrl()
                 qDebug() << "链接列表：" << array.at(i).toObject().value("url").toString();
             return ;
         }
-
-        // 重新设置视频流
-        videoPlayer->addPlayUrl(url);
+        else
+        {
+            // 重新设置视频流
+            videoPlayer->addPlayUrl(url);
+        }
     });
     manager->get(*request);
 }
@@ -4285,7 +4309,7 @@ void MainWindow::pkStart(QJsonObject json)
     /*{
         "cmd": "PK_BATTLE_START",
         "data": {
-            "battle_type": 1,
+            "battle_type": 1, // 不知道其他类型是啥
             "final_hit_votes": 0,
             "pk_end_time": 1605748342,
             "pk_frozen_time": 1605748332,
@@ -4367,7 +4391,7 @@ void MainWindow::pkStart(QJsonObject json)
         danmakuWindow->setToolTip(pkUname);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
-    qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid;
+    qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << data.value("battle_type").toInt();
 
     // 1605757123 1605757123 1605757433 时间测试
     // qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
@@ -4487,7 +4511,7 @@ void MainWindow::pkEnd(QJsonObject json)
         "timestamp": 1605748006
     }*/
     // winner_type: 2赢，-1输，两边2平局
-PK_END_DEB << "1111111111111111111111111111";
+
     QJsonObject data = json.value("data").toObject();
     pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
@@ -4513,7 +4537,7 @@ PK_END_DEB << "1111111111111111111111111111";
         matchVotes = data.value("init_info").toObject().value("votes").toInt();
         myVotes = data.value("match_info").toObject().value("votes").toInt();
     }
-PK_END_DEB << "2222222222222222222222222222222222";
+
     showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
@@ -4521,14 +4545,14 @@ PK_END_DEB << "2222222222222222222222222222222222";
     myVotes = 0;
     matchVotes = 0;
     qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
-PK_END_DEB << "333333333333333333333333333333333333";
+
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
         int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
         danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
-PK_END_DEB << "4444444444444444444444444444444444444";
+
     // 清空大乱斗数据
     pking = false;
     pkEnding = false;
@@ -4539,7 +4563,7 @@ PK_END_DEB << "4444444444444444444444444444444444444";
     pkRoomId = "";
     myAudience.clear();
     oppositeAudience.clear();
-PK_END_DEB << "555555555555555555555555555555555555555";
+
     if (pkSocket)
     {
         try {
@@ -4552,7 +4576,6 @@ PK_END_DEB << "555555555555555555555555555555555555555";
         pkSocket = nullptr;
     }
     qDebug() << "关闭PKSocket结束，正常退出";
-PK_END_DEB << "66666666666666666666666666666666666666";
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -4598,6 +4621,10 @@ void MainWindow::connectPkRoom()
         if (uid)
             myAudience.insert(uid);
     }
+
+    // 保存自己主播、对面主播（带头串门？？？）
+    myAudience.insert(upUid.toLongLong());
+    oppositeAudience.insert(pkUid.toLongLong());
 
     // 连接socket
     if (pkSocket)

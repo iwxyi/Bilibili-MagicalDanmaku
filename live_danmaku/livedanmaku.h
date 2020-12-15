@@ -161,6 +161,7 @@ public:
             object.insert("uname_color", uname_color);
             object.insert("spread_desc", spread_desc);
             object.insert("spread_info", spread_info);
+            object.insert("number", number);
         }
         else if (msgType == MSG_DIANGE)
         {
@@ -270,6 +271,11 @@ public:
         this->medal_level = level;
         this->medal_color = color;
         this->medal_up = up;
+    }
+
+    void setNumber(int num)
+    {
+        this->number = num;
     }
 
     void setNoReply()

@@ -527,11 +527,18 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
         // 人名
         if (danmaku.isAdmin())
+        {
             text += QString("舰长 %1")
                     .arg(nameText);
+        }
         else
-            text += QString("%1 进入直播间")
-                    .arg(nameText);
+        {
+            text += nameText + " 进入";
+            if (danmaku.getNumber() > 0) // 不包括这一次的
+                text += QString("<font color='gray'> - %1次</font>").arg(danmaku.getNumber());
+            else
+                text += "直播间";
+        }
 
         // 推广
         if (!danmaku.getSpreadDesc().isEmpty())
@@ -1100,6 +1107,10 @@ void LiveDanmakuWindow::showMenu()
             this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
             this->setAttribute(Qt::WA_TranslucentBackground, true);
         }
+        editShortcut->setShortcut(QKeySequence(""));
+        editShortcut->setDisabled(true);
+        delete editShortcut;
+        editShortcut = nullptr;
         emit signalChangeWindowMode();
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
