@@ -3579,9 +3579,11 @@ void MainWindow::getRoomLiveVideoUrl()
                 qDebug() << "链接列表：" << array.at(i).toObject().value("url").toString();
             return ;
         }
-
-        // 重新设置视频流
-        videoPlayer->addPlayUrl(url);
+        else
+        {
+            // 重新设置视频流
+            videoPlayer->addPlayUrl(url);
+        }
     });
     manager->get(*request);
 }
@@ -4285,7 +4287,7 @@ void MainWindow::pkStart(QJsonObject json)
     /*{
         "cmd": "PK_BATTLE_START",
         "data": {
-            "battle_type": 1,
+            "battle_type": 1, // 不知道其他类型是啥
             "final_hit_votes": 0,
             "pk_end_time": 1605748342,
             "pk_frozen_time": 1605748332,
@@ -4309,6 +4311,7 @@ void MainWindow::pkStart(QJsonObject json)
     QString roomId = this->roomId;
     oppositeTouta = false;
     pkToLive = currentTime;
+    qDebug() << "大乱斗类型 bettle_type:" << data.value("battle_type").toInt();
 
     // 结束后
     QTimer::singleShot(deltaEnd, [=]{
@@ -4613,9 +4616,9 @@ void MainWindow::connectPkRoom()
 
     connect(pkSocket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
-        if (liveStatus)
+        if (liveStatus && pkSocket)
         {
-            this->deleteLater();
+            pkSocket->deleteLater();
             pkSocket = nullptr;
             return ;
         }
