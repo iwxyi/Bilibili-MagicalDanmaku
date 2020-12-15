@@ -1100,6 +1100,10 @@ void LiveDanmakuWindow::showMenu()
             this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
             this->setAttribute(Qt::WA_TranslucentBackground, true);
         }
+        editShortcut->setShortcut(QKeySequence(""));
+        editShortcut->setDisabled(true);
+        delete editShortcut;
+        editShortcut = nullptr;
         emit signalChangeWindowMode();
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{

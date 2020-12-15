@@ -1927,7 +1927,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%today_fans%"))
         msg.replace("%today_fans%", snum(dailyNewFans));
 
-    // 当前粉丝数量
+    // 当前粉丝数量111
     if (msg.contains("%fans_count%"))
         msg.replace("%fans_count%", snum(dailyTotalFans));
 
