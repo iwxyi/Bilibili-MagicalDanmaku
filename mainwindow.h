@@ -146,6 +146,8 @@ private slots:
 
     void sendWelcomeMsg(QString msg);
 
+    void sendOppositeMsg(QString msg);
+
     void sendGiftMsg(QString msg);
 
     void sendAttentionMsg(QString msg);

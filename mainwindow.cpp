@@ -639,6 +639,23 @@ void MainWindow::sendWelcomeMsg(QString msg)
     sendAutoMsg(msg);
 }
 
+void MainWindow::sendOppositeMsg(QString msg)
+{
+    if (!liveStatus) // 不在直播中
+        return ;
+
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 2; // 一般的欢迎冷却时间
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    msg = msgToShort(msg);
+    sendAutoMsg(msg);
+}
+
 void MainWindow::sendGiftMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
@@ -3134,7 +3151,10 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else
             {
-                sendWelcomeMsg(msg);
+                if (danmaku.isOpposite())
+                    sendOppositeMsg(msg);
+                else
+                    sendWelcomeMsg(msg);
             }
         }
         else
