@@ -771,9 +771,16 @@ void MainWindow::on_roomIdEdit_editingFinished()
     settings.setValue("danmaku/roomId", roomId);
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
+
     pking = false;
+    pkUid = "";
+    pkUname = "";
+    pkRoomId = "";
     pkEnding = false;
     pkVoting = 0;
+    pkVideo = false;
+    myAudience.clear();
+    oppositeAudience.clear();
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
@@ -783,6 +790,13 @@ void MainWindow::on_roomIdEdit_editingFinished()
     {
         danmakuWindow->hideStatusText();
         danmakuWindow->setUpUid(0);
+    }
+
+    if (pkSocket)
+    {
+        if (pkSocket->state() == QAbstractSocket::ConnectedState)
+            pkSocket->close();
+        pkSocket = nullptr;
     }
 
     emit signalRoomChanged(roomId);
@@ -1092,7 +1106,7 @@ void MainWindow::initWS()
         // 正在直播的时候突然断开了
         if (liveStatus)
         {
-            qDebug() << "正在直播的时候突然端口，10秒后重连...";
+            qDebug() << "正在直播的时候突然断开，10秒后重连...";
             liveStatus = false;
             // 尝试10秒钟后重连
             connectServerTimer->setInterval(10000);
@@ -4333,6 +4347,13 @@ void MainWindow::pkStart(QJsonObject json)
     QString roomId = this->roomId;
     oppositeTouta = false;
     pkToLive = currentTime;
+    int battle_type = data.value("battle_type").toInt();
+    if (battle_type == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (battle_type == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
 
     // 结束后
     QTimer::singleShot(deltaEnd, [=]{
@@ -4391,7 +4412,7 @@ void MainWindow::pkStart(QJsonObject json)
         danmakuWindow->setToolTip(pkUname);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
-    qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << data.value("battle_type").toInt();
+    qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
 
     // 1605757123 1605757123 1605757433 时间测试
     // qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
@@ -4563,6 +4584,7 @@ void MainWindow::pkEnd(QJsonObject json)
     pkRoomId = "";
     myAudience.clear();
     oppositeAudience.clear();
+    pkVideo = false;
 
     if (pkSocket)
     {
@@ -4778,7 +4800,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     qDebug() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG") // 收到弹幕
     {
-        if (!pkMsgSync)
+        if (!pkMsgSync || !pkVideo)
             return ;
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();

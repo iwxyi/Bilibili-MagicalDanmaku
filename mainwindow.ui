@@ -444,6 +444,10 @@
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门欢迎；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
+            <property name="styleSheet">
+             <string notr="true">己方到对方串门：xxx跑到对面串门
+对方到己方串门：[对面] xxx 进入直播间</string>
+            </property>
             <property name="text">
              <string>大乱斗串门小报告</string>
             </property>
@@ -451,8 +455,12 @@
           </item>
           <item>
            <widget class="QCheckBox" name="pkMsgSyncCheck">
+            <property name="styleSheet">
+             <string notr="true">视频大乱斗时显示对面的消息，格式如下：
+[同步] 昵称 灰色弹幕</string>
+            </property>
             <property name="text">
-             <string>同步消息</string>
+             <string>视频PK同步消息</string>
             </property>
            </widget>
           </item>

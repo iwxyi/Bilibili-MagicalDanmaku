@@ -535,7 +535,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         {
             text += nameText + " 进入";
             if (danmaku.getNumber() > 0) // 不包括这一次的
-                text += QString("<font color='gray'> - %1次</font>").arg(danmaku.getNumber());
+                text += QString("<font color='gray'> %1次</font>").arg(danmaku.getNumber());
             else
                 text += "直播间";
         }

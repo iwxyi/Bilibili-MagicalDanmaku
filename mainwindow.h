@@ -418,6 +418,7 @@ private:
     qint64 pkEndTime = 0;
     QTimer* pkTimer = nullptr;
     int pkJudgeEarly = 2000;
+    bool pkVideo = false;
 
     // 大乱斗偷塔
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
