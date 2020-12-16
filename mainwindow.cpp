@@ -1183,6 +1183,18 @@ void MainWindow::initWS()
             ba = makePack(ba, HEARTBEAT);
             pkSocket->sendBinaryMessage(ba);
         }
+
+        for (int i = 0; i < robots_sockets.size(); i++)
+        {
+            QWebSocket* socket = robots_sockets.at(i);
+            if (socket->state() == QAbstractSocket::ConnectedState)
+            {
+                QByteArray ba;
+                ba.append("[object Object]");
+                ba = makePack(ba, HEARTBEAT);
+                socket->sendBinaryMessage(ba);
+            }
+        }
     });
 }
 
@@ -4909,5 +4921,35 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);*/
+    }
+}
+
+void MainWindow::on_actionMany_Robots_triggered()
+{
+    if (!hostList.size()) // 未连接
+        return ;
+
+    HostInfo hostServer = hostList.at(0);
+    QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
+
+    QSslConfiguration config = this->socket->sslConfiguration();
+    config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    config.setProtocol(QSsl::TlsV1SslV3);
+
+    for (int i = 0; i < 1000; i++)
+    {
+        QWebSocket* socket = new QWebSocket();
+        connect(socket, &QWebSocket::connected, this, [=]{
+            qDebug() << "rSocket" << i << "connected";
+            // 5秒内发送认证包
+            sendVeriPacket(socket, pkRoomId, pkToken);
+        });
+        connect(socket, &QWebSocket::disconnected, this, [=]{
+            robots_sockets.removeOne(socket);
+            socket->deleteLater();
+        });
+        socket->setSslConfiguration(config);
+        socket->open(host);
+        robots_sockets.append(socket);
     }
 }

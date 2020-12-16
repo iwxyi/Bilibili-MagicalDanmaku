@@ -24,7 +24,7 @@
 }</string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1059,6 +1059,8 @@
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="actionCookie_Help"/>
+    <addaction name="separator"/>
+    <addaction name="actionMany_Robots"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -1146,6 +1148,14 @@
   <action name="actionShow_Live_Video">
    <property name="text">
     <string>显示实时视频</string>
+   </property>
+  </action>
+  <action name="actionMany_Robots">
+   <property name="text">
+    <string>涨人气测试</string>
+   </property>
+   <property name="toolTip">
+    <string>涨人气测试（实测没有效果）</string>
    </property>
   </action>
  </widget>

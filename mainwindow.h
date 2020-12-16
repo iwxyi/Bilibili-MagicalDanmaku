@@ -274,6 +274,8 @@ private slots:
 
     void slotPkBinaryMessageReceived(const QByteArray &message);
 
+    void on_actionMany_Robots_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -451,5 +453,8 @@ private:
 
     // 视频
     LiveVideoPlayer* videoPlayer = nullptr;
+
+    // 人气测试机器人
+    QList<QWebSocket*> robots_sockets;
 };
 #endif // MAINWINDOW_H
