@@ -1903,10 +1903,17 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 进来次数
     if (msg.contains("%come_count%"))
         msg.replace("%come_count%", snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt()));
-
+/*qDebug() << ">>>>>>>>>进入时间：" << QDateTime::currentSecsSinceEpoch() <<
+            QDateTime::currentSecsSinceEpoch() - (danmaku.getMsgType() == MSG_WELCOME
+             ? danmaku.getPrevTimestamp()
+             : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());*/
     // 上次进来
     if (msg.contains("%come_time%"))
-        msg.replace("%come_time%", snum(danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong()));
+    {
+        msg.replace("%come_time%", snum(danmaku.getMsgType() == MSG_WELCOME
+                                        ? danmaku.getPrevTimestamp()
+                                        : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong()));
+    }
 
     // 本次送礼金瓜子
     if (msg.contains("%gift_gold%"))
@@ -3158,13 +3165,12 @@ void MainWindow::handleMessage(QJsonObject json)
         // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
         int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
         danmaku.setNumber(userCome);
+        danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
         appendNewLiveDanmaku(danmaku);
 
         userCome++;
-        QTimer::singleShot(10, [=]{ // 延迟一下，等到下面代码执行结束
-            danmakuCounts->setValue("come/"+snum(uid), userCome);
-            danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
-        });
+        danmakuCounts->setValue("come/"+snum(uid), userCome);
+        danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
 
         dailyCome++;
         if (dailySettings)
@@ -3237,6 +3243,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
     {
         if (ifIs)
             ifIs(danmaku);
+        return ;
     }
     else if (val == -1) // 是人
     {
@@ -3345,7 +3352,9 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         else // 不是机器人
         {
             if (ifNot)
+            {
                 ifNot(danmaku);
+            }
         }
     });
     manager->get(*request);
@@ -3379,7 +3388,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         }
         QJsonObject obj = json.value("data").toObject();
         int allCount = obj.value("all_count").toInt();
-        bool robot = (allCount == 0); // 机器人，或者小号
+        bool robot = (allCount <= 1); // 机器人，或者小号（1是因为有默认成为会员的相簿）
         qDebug() << "判断机器人：" << danmaku.getNickname() << "    投稿数量：" << allCount << robot;
         robotRecord.setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)

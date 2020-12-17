@@ -318,6 +318,11 @@ public:
         this->robot = r;
     }
 
+    void setPrevTimestamp(qint64 timestamp)
+    {
+        this->prev_timestamp = timestamp;
+    }
+
     bool equal(const LiveDanmaku& another) const
     {
         return this->uid == another.uid
@@ -485,6 +490,11 @@ public:
         return robot;
     }
 
+    qint64 getPrevTimestamp() const
+    {
+        return prev_timestamp;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -535,6 +545,7 @@ private:
     bool pk_link = false; // 是否是PK连接的
 
     bool robot = false;
+    qint64 prev_timestamp = 0;
 };
 
 #endif // LIVEDANMAKU_H
