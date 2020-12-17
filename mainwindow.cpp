@@ -179,6 +179,10 @@ MainWindow::MainWindow(QWidget *parent)
     pkMsgSync = settings.value("pk/msgSync", false).toBool();
     ui->pkMsgSyncCheck->setChecked(pkMsgSync);
 
+    // 判断机器人
+    judgeRobot = settings.value("danmaku/judgeRobot", false).toBool();
+    ui->judgeRobotCheck->setChecked(judgeRobot);
+
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
@@ -3281,16 +3285,62 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         int follower = obj.value("follower").toInt(); // 粉丝
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
-        bool robot =  (following > 100 && follower < 5) || (following > follower * 100); // 机器人，或者小号
+        bool robot =  (following > 100 && follower < 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
         qDebug() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
         if (robot)
         {
             // 进一步使用投稿数量判断
-            judgeUserRobotByUpload(danmaku, ifNot, ifIs);
+            judgeUserRobotByUpstate(danmaku, ifNot, ifIs);
         }
         else // 不是机器人
         {
             robotRecord.setValue("robot/" + snum(danmaku.getUid()), -1);
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
+    manager->get(*request);
+}
+
+void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int achive_view = obj.value("archive").toObject().value("view").toInt();
+        int article_view = obj.value("article").toObject().value("view").toInt();
+        bool robot = (achive_view + article_view < 10); // 机器人，或者小号
+        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view << "  专栏阅读量：" << article_view << robot;
+        robotRecord.setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else // 不是机器人
+        {
             if (ifNot)
                 ifNot(danmaku);
         }
@@ -5125,4 +5175,10 @@ void MainWindow::on_actionMany_Robots_triggered()
         socket->open(host);
         robots_sockets.append(socket);
     }
+}
+
+void MainWindow::on_judgeRobotCheck_clicked()
+{
+    judgeRobot = ui->judgeRobotCheck->isChecked();
+    settings.setValue("danmaku/judgeRobot", judgeRobot);
 }

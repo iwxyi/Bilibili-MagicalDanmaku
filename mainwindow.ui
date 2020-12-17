@@ -24,7 +24,7 @@
 }</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -355,7 +355,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -366,6 +366,16 @@
             </property>
             <property name="text">
              <string>新人发言提示</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="judgeRobotCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>机器人判断</string>
             </property>
            </widget>
           </item>

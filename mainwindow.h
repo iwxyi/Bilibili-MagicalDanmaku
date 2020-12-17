@@ -274,6 +274,8 @@ private slots:
 
     void on_actionMany_Robots_triggered();
 
+    void on_judgeRobotCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -324,6 +326,7 @@ private:
     void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
     void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
     void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
+    void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
     void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
@@ -461,7 +464,7 @@ private:
     LiveVideoPlayer* videoPlayer = nullptr;
 
     // 机器人
-    bool judgeRobot = true;
+    bool judgeRobot = false;
     QSettings robotRecord;
     QList<QWebSocket*> robots_sockets;
 };
