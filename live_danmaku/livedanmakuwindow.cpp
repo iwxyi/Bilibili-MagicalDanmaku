@@ -594,6 +594,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (upUid && danmaku.getUid() == upUid)
         text = "<font color='#F08080'>[主播]</font> " + text;
 
+    if (danmaku.isRobot())
+        text = "<font color='#5E86C1'>[机]</font> " + text;
+
     // 串门判断
     if (danmaku.isToView())
         text = "[串门] " + text;
@@ -1285,6 +1288,21 @@ void LiveDanmakuWindow::setNewbieTip(bool tip)
 void LiveDanmakuWindow::setUpUid(qint64 uid)
 {
     this->upUid = uid;
+}
+
+void LiveDanmakuWindow::markRobot(qint64 uid)
+{
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        auto item = listWidget->item(i);
+        auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
+        if (danmaku.getUid() == uid)
+        {
+            danmaku.setRobot(true);
+            item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
+            setItemWidgetText(item);
+        }
+    }
 }
 
 void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)

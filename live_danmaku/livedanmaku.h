@@ -129,6 +129,7 @@ public:
         danmaku.opposite = object.value("opposite").toBool();
         danmaku.to_view = object.value("to_view").toBool();
         danmaku.pk_link = object.value("pk_link").toBool();
+        danmaku.robot = object.value("robot").toBool();
         return danmaku;
     }
 
@@ -198,6 +199,8 @@ public:
             object.insert("to_view", to_view);
         if (pk_link)
             object.insert("pk_link", pk_link);
+        if (robot)
+            object.insert("robot", robot);
 
         return object;
     }
@@ -308,6 +311,11 @@ public:
         this->number += count;
         this->total_coin += total;
         this->timeline = time;
+    }
+
+    void setRobot(bool r)
+    {
+        this->robot = r;
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -472,6 +480,11 @@ public:
         return pk_link;
     }
 
+    bool isRobot() const
+    {
+        return robot;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -520,6 +533,8 @@ private:
     bool opposite = false; // 是否是大乱斗对面的
     bool to_view = false; // 是否是自己这边过去串门的
     bool pk_link = false; // 是否是PK连接的
+
+    bool robot = false;
 };
 
 #endif // LIVEDANMAKU_H

@@ -351,6 +351,7 @@ private:
 private:
     Ui::MainWindow *ui;
     QSettings settings;
+    QSettings robotRecord;
 
     // 房间信息
     QString roomId;

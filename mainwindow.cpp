@@ -15,7 +15,9 @@ QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
+    , ui(new Ui::MainWindow),
+      settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat),
+      robotRecord(QApplication::applicationDirPath()+"/robots.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
     connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
@@ -1548,15 +1550,7 @@ void MainWindow::getFansAndUpdate()
 
             if (i == 0) // 只发送第一个（其他几位，对不起了……）
             {
-                QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
-                if (!words.size())
-                    return ;
-                int r = qrand() % words.size();
-                QString msg = words.at(r);
-                if (!justStart && ui->autoSendAttentionCheck->isChecked())
-                {
-                    sendAttentionMsg(msg);
-                }
+                sendAttentionThankIfNotRobot(danmaku);
             }
 
             fansList.insert(0, fan);
@@ -3232,7 +3226,7 @@ void MainWindow::sendAttentionThankIfNotRobot(LiveDanmaku danmaku)
 
 int MainWindow::isLocalUserRobot(LiveDanmaku danmaku)
 {
-    int val = danmakuCounts->value("robot/" + snum(danmaku.getUid()), 0).toInt();
+    int val = robotRecord.value("robot/" + snum(danmaku.getUid()), 0).toInt();
     if (val == 1) // 是机器人
         return 1;
     if (val == -1) // 是人
@@ -3243,7 +3237,7 @@ int MainWindow::isLocalUserRobot(LiveDanmaku danmaku)
     // 其余判断
     if (danmaku.getMedalLevel() > 0 || danmaku.getLevel() > 1)
     {
-        danmakuCounts->setValue("robot/" + snum(danmaku.getUid()), -1);
+        robotRecord.setValue("robot/" + snum(danmaku.getUid()), -1);
         return -1;
     }
     return 0;
@@ -3282,7 +3276,7 @@ void MainWindow::judgeNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifNot, D
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
         bool robot =  (following > 100 && follower < 10); // 机器人，或者小号
-        danmakuCounts->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        robotRecord.setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
         {
             if (ifIs)
@@ -3320,7 +3314,15 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
 
 void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
 {
-
+    QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
+    if (!words.size())
+        return ;
+    int r = qrand() % words.size();
+    QString msg = words.at(r);
+    if (!justStart && ui->autoSendAttentionCheck->isChecked())
+    {
+        sendAttentionMsg(msg);
+    }
 }
 
 /**

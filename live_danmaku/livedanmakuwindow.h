@@ -94,6 +94,7 @@ public slots:
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
     void setUpUid(qint64 uid);
+    void markRobot(qint64 uid);
 
     void showFastBlock(qint64 uid, QString msg);
 
