@@ -38,6 +38,8 @@ QT_END_NAMESPACE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
+typedef std::function<void(LiveDanmaku)> DanmakuFunc;
+
 class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
@@ -141,13 +143,9 @@ private slots:
     void on_addTaskButton_clicked();
 
     void sendMsg(QString msg);
-
     void sendAutoMsg(QString msgs);
-
     void sendWelcomeMsg(QString msg);
-
     void sendOppositeMsg(QString msg);
-
     void sendGiftMsg(QString msg);
 
     void sendAttentionMsg(QString msg);
@@ -320,6 +318,12 @@ private:
     bool isConditionTrue(T a, T b, QString op) const;
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
+
+    void sendWelcomeIfNotRobor(LiveDanmaku danmaku);
+    int isLocalUserRobot(LiveDanmaku danmaku);
+    void isNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifIs, DanmakuFunc ifNot = nullptr);
+    void sendWelcome(LiveDanmaku danmaku);
+    void sendAttentionThans(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();

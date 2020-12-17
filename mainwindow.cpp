@@ -3165,27 +3165,11 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
             userComeTimes[uid] = currentTime;
 
-            QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
-            if (!words.size())
-                return ;
-            int r = qrand() % words.size();
-            QString msg = words.at(r);
-            if (strongNotifyUsers.contains(uid))
-            {
-                qDebug() << "强提醒用户：" << username;
-                sendNotifyMsg(msg);
-            }
-            else
-            {
-                if (danmaku.isOpposite())
-                    sendOppositeMsg(msg);
-                else
-                    sendWelcomeMsg(msg);
-            }
+            sendWelcomeIfNotRobor(danmaku);
         }
         else
         {
-            userComeTimes[uid] = currentTime;
+            userComeTimes[uid] = currentTime; // 直接更新了
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG")
@@ -3198,6 +3182,116 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
+}
+
+void MainWindow::sendWelcomeIfNotRobor(LiveDanmaku danmaku)
+{
+    int val = isLocalUserRobot(danmaku);
+    if (val == 1)
+        return ;
+    if (val == -1)
+        sendWelcome(danmaku);
+    else
+    {
+        isNetworkUserRobot(danmaku, [=](LiveDanmaku danmaku){
+            sendWelcome(danmaku);
+        }, [=](LiveDanmaku danmaku){
+            // 实时弹幕显示机器人
+        });
+    }
+}
+
+int MainWindow::isLocalUserRobot(LiveDanmaku danmaku)
+{
+    int val = danmakuCounts->value("robot/" + snum(danmaku.getUid()), 0).toInt();
+    if (val == 1) // 是机器人
+        return 1;
+    if (val == -1) // 是人
+    {
+        return -1;
+    }
+
+    // 其余判断
+    if (danmaku.getMedalLevel() > 0 || danmaku.getLevel() > 1)
+    {
+        danmakuCounts->setValue("robot/" + snum(danmaku.getUid()), -1);
+        return -1;
+    }
+    return 0;
+}
+
+void MainWindow::isNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifIs, DanmakuFunc ifNot)
+{
+    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int following = obj.value("following").toInt(); // 关注
+        int follower = obj.value("follower").toInt(); // 粉丝
+        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
+        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
+        bool robot =  (following > 100 && follower < 10);
+        danmakuCounts->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else
+        {
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
+    manager->get(*request);
+}
+
+void MainWindow::sendWelcome(LiveDanmaku danmaku)
+{
+    QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
+    if (!words.size())
+        return ;
+    int r = qrand() % words.size();
+    QString msg = words.at(r);
+    if (strongNotifyUsers.contains(danmaku.getUid()))
+    {
+        qDebug() << "强提醒用户：" << danmaku.getNickname();
+        sendNotifyMsg(msg);
+    }
+    else
+    {
+        if (danmaku.isOpposite())
+            sendOppositeMsg(msg);
+        else
+            sendWelcomeMsg(msg);
+    }
+}
+
+void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
+{
+
 }
 
 /**
