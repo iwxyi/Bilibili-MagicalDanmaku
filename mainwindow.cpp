@@ -3165,7 +3165,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
             userComeTimes[uid] = currentTime;
 
-            sendWelcomeIfNotRobor(danmaku);
+            sendWelcomeIfNotRobot(danmaku);
         }
         else
         {
@@ -3184,7 +3184,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
 }
 
-void MainWindow::sendWelcomeIfNotRobor(LiveDanmaku danmaku)
+void MainWindow::sendWelcomeIfNotRobot(LiveDanmaku danmaku)
 {
     int val = isLocalUserRobot(danmaku);
     if (val == 1)
@@ -3193,8 +3193,25 @@ void MainWindow::sendWelcomeIfNotRobor(LiveDanmaku danmaku)
         sendWelcome(danmaku);
     else
     {
-        isNetworkUserRobot(danmaku, [=](LiveDanmaku danmaku){
+        judgeNetworkUserRobot(danmaku, [=](LiveDanmaku danmaku){
             sendWelcome(danmaku);
+        }, [=](LiveDanmaku danmaku){
+            // 实时弹幕显示机器人
+        });
+    }
+}
+
+void MainWindow::sendAttentionThankIfNotRobot(LiveDanmaku danmaku)
+{
+    int val = isLocalUserRobot(danmaku);
+    if (val == 1)
+        return ;
+    if (val == -1)
+        sendAttentionThans(danmaku);
+    else
+    {
+        judgeNetworkUserRobot(danmaku, [=](LiveDanmaku danmaku){
+            sendAttentionThans(danmaku);
         }, [=](LiveDanmaku danmaku){
             // 实时弹幕显示机器人
         });
@@ -3220,7 +3237,7 @@ int MainWindow::isLocalUserRobot(LiveDanmaku danmaku)
     return 0;
 }
 
-void MainWindow::isNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifIs, DanmakuFunc ifNot)
+void MainWindow::judgeNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
 {
     QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
     QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -3252,7 +3269,7 @@ void MainWindow::isNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifIs, Danma
         int follower = obj.value("follower").toInt(); // 粉丝
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
-        bool robot =  (following > 100 && follower < 10);
+        bool robot =  (following > 100 && follower < 10); // 机器人，或者小号
         danmakuCounts->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
         {

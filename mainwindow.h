@@ -319,9 +319,10 @@ private:
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
 
-    void sendWelcomeIfNotRobor(LiveDanmaku danmaku);
+    void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
+    void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
     int isLocalUserRobot(LiveDanmaku danmaku);
-    void isNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifIs, DanmakuFunc ifNot = nullptr);
+    void judgeNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
 
