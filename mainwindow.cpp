@@ -3285,7 +3285,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         int follower = obj.value("follower").toInt(); // 粉丝
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
-        bool robot =  (following > 100 && follower < 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
+        bool robot =  (following >= 100 && follower <= 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
         qDebug() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
         if (robot)
         {
@@ -3307,6 +3307,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
     QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies()); // 这个好像需要cookies?
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -3331,8 +3332,10 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         QJsonObject obj = json.value("data").toObject();
         int achive_view = obj.value("archive").toObject().value("view").toInt();
         int article_view = obj.value("article").toObject().value("view").toInt();
-        bool robot = (achive_view + article_view < 10); // 机器人，或者小号
-        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view << "  专栏阅读量：" << article_view << robot;
+        int article_like = obj.value("article").toObject().value("like").toInt();
+        bool robot = (achive_view + article_view + article_like < 10); // 机器人，或者小号
+        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
+                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
         robotRecord.setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
         {
