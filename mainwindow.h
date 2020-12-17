@@ -323,10 +323,11 @@ private:
 
     void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
     void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
-    int isLocalUserRobot(LiveDanmaku danmaku);
-    void judgeNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
+    void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
+    void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
+    void judgeRobotAndMark(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
@@ -351,7 +352,6 @@ private:
 private:
     Ui::MainWindow *ui;
     QSettings settings;
-    QSettings robotRecord;
 
     // 房间信息
     QString roomId;
@@ -460,7 +460,9 @@ private:
     // 视频
     LiveVideoPlayer* videoPlayer = nullptr;
 
-    // 人气测试机器人
+    // 机器人
+    bool judgeRobot = true;
+    QSettings robotRecord;
     QList<QWebSocket*> robots_sockets;
 };
 #endif // MAINWINDOW_H
