@@ -833,7 +833,7 @@ void LiveDanmakuWindow::showMenu()
             actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
             actionHistory->setText("消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条");
         }
-        else if (danmaku.getMsgType() == MSG_GIFT)
+        else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
         }
@@ -1723,7 +1723,7 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
     for (int i = allDanmakus.size()-1; i >= 0; i--)
     {
         const LiveDanmaku& danmaku = allDanmakus.at(i);
-        if (danmaku.getMsgType() == MSG_DANMAKU && danmaku.getUid() == uid)
+        if (/*danmaku.getMsgType() == MSG_DANMAKU && */danmaku.getUid() == uid)
         {
             sl.append(danmaku.getTimeline().toString("hh:mm:ss") + "  " + danmaku.getText());
         }
