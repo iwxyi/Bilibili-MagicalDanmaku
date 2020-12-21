@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
         ui->tabWidget->setPalette(pa);
     });
+    ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
     // 页面
     int tabIndex = settings.value("mainwindow/tabIndex", 0).toInt();
