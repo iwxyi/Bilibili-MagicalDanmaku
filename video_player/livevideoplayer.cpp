@@ -8,7 +8,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
 {
     ui->setupUi(this);
     setModal(false);
-    player = new QMediaPlayer(nullptr, QMediaPlayer::VideoSurface);
+    player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
 //        qDebug() << "position changed:" << position << player->duration();
     });
@@ -66,6 +66,9 @@ void LiveVideoPlayer::refreshPlayUrl()
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -103,6 +106,9 @@ void LiveVideoPlayer::downloadFlv(QString url)
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray baData = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(baData, &error);
         if (error.error != QJsonParseError::NoError)
@@ -182,7 +188,6 @@ void LiveVideoPlayer::downloadFlv(QString url)
 void LiveVideoPlayer::showEvent(QShowEvent *)
 {
     restoreGeometry(settings.value("videoplayer/geometry").toByteArray());
-//    ui->videoWidget->show();
 
     if (!playUrl.isEmpty() && player)
     {
@@ -199,4 +204,5 @@ void LiveVideoPlayer::hideEvent(QHideEvent *)
     {
         player->pause();
     }
+    this->deleteLater();
 }
