@@ -297,6 +297,9 @@ private:
     void startConnectRoom();
     void getRoomInit();
     void getRoomInfo();
+    bool isLivingOrMayliving();
+    void getRoomCover(QString url);
+    void getUpPortrait(QString uid);
     void getDanmuInfo();
     void getFansAndUpdate();
     void startMsgLoop();

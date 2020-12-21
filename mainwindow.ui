@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>神奇弹幕</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resource.qrc">
+    <normaloff>:/icons/bowknot2</normaloff>:/icons/bowknot2</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -1037,7 +1041,7 @@
      <x>0</x>
      <y>0</y>
      <width>384</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -1149,6 +1153,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -1316,6 +1316,7 @@ void MainWindow::getRoomInfo()
 
         roomName = roomInfo.value("title").toString();
         setWindowTitle(roomName + " - " + QApplication::applicationName());
+        tray->setToolTip(roomName + " - " + QApplication::applicationName());
         ui->roomNameLabel->setText(roomName);
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         if (liveStatus != 1)
@@ -1323,82 +1324,9 @@ void MainWindow::getRoomInfo()
         else
             ui->popularityLabel->setText("已开播");
 
-        // 判断房间，未开播则暂停链接，等待开播
-        if (ui->timerConnectServerCheck->isChecked())
-        {
-            if (!liveStatus) // 未开播，等待下一次的检测
-            {
-                // 如果是开播前一段时间，则继续保持着连接
-                int start = ui->startLiveHourSpin->value();
-                int end = ui->endLiveHourSpin->value();
-                int hour = QDateTime::currentDateTime().time().hour();
-                int minu = QDateTime::currentDateTime().time().minute();
-                bool abort = false;
-                qint64 currentVal = hour * 3600000 + minu * 60000;
-                qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
-                if (start < end) // 白天档
-                {
-                    qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
-                    if (nextVal >= start * 3600000
-                            && currentVal <= end * 3600000)
-                    {
-                        if (ui->doveCheck->isChecked()) // 今天鸽了
-                        {
-                            abort = true;
-                            qDebug() << "今天鸽了";
-                        }
-                        // 即将开播
-                    }
-                    else // 直播时间之外
-                    {
-                        qDebug() << "未开播，继续等待";
-                        abort = true;
-                        if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
-                            ui->doveCheck->setChecked(false);
-                    }
-                }
-                else if (start > end) // 熬夜档
-                {
-                    qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
-                    if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
-                            || currentVal <= end * 3600000)
-                    {
-                        if (ui->doveCheck->isChecked()) // 今晚鸽了
-                            abort = true;
-                        // 即将开播
-                    }
-                    else // 直播时间之外
-                    {
-                        qDebug() << "未开播，继续等待";
-                        abort = true;
-                        if (currentVal > end * 3600000 && currentVal < start * 3600000
-                                && ui->doveCheck->isChecked())
-                            ui->doveCheck->setChecked(false);
-                    }
-                }
-
-                if (abort)
-                {
-                    qDebug() << "短期内不会开播，暂且断开连接";
-                    if (!connectServerTimer->isActive())
-                        connectServerTimer->start();
-                    ui->connectStateLabel->setText("等待连接");
-
-                    // 如果正在连接或打算连接，却未开播，则断开
-                    if (socket->state() != QAbstractSocket::UnconnectedState)
-                        socket->close();
-                    return ;
-                }
-            }
-            else // 已开播，则停下
-            {
-                qDebug() << "开播，停止定时连接";
-                if (connectServerTimer->isActive())
-                    connectServerTimer->stop();
-                if (ui->doveCheck->isChecked())
-                    ui->doveCheck->setChecked(false);
-            }
-        }
+        // 判断房间，未开播则暂停连接，等待开播
+        if (!isLivingOrMayliving())
+            return ;
 
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -1410,27 +1338,120 @@ void MainWindow::getRoomInfo()
         getDanmuInfo();
 
         // 异步获取房间封面
-        QString coverUrl = roomInfo.value("cover").toString();
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(coverUrl)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray jpegData = reply1->readAll();
-        QPixmap pixmap;
-        pixmap.loadFromData(jpegData);
-        coverPixmap = pixmap;
-        int w = ui->roomCoverLabel->width();
-        if (w > ui->tabWidget->contentsRect().width())
-            w = ui->tabWidget->contentsRect().width();
-        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(pixmap);
-        ui->roomCoverLabel->setMinimumSize(1, 1);
+        getRoomCover(roomInfo.value("cover").toString());
+
+        // 获取主播头像
+        getUpPortrait(upUid);
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取房间信息...");
+}
+
+bool MainWindow::isLivingOrMayliving()
+{
+    if (ui->timerConnectServerCheck->isChecked())
+    {
+        if (!liveStatus) // 未开播，等待下一次的检测
+        {
+            // 如果是开播前一段时间，则继续保持着连接
+            int start = ui->startLiveHourSpin->value();
+            int end = ui->endLiveHourSpin->value();
+            int hour = QDateTime::currentDateTime().time().hour();
+            int minu = QDateTime::currentDateTime().time().minute();
+            bool abort = false;
+            qint64 currentVal = hour * 3600000 + minu * 60000;
+            qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
+            if (start < end) // 白天档
+            {
+                qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
+                if (nextVal >= start * 3600000
+                        && currentVal <= end * 3600000)
+                {
+                    if (ui->doveCheck->isChecked()) // 今天鸽了
+                    {
+                        abort = true;
+                        qDebug() << "今天鸽了";
+                    }
+                    // 即将开播
+                }
+                else // 直播时间之外
+                {
+                    qDebug() << "未开播，继续等待";
+                    abort = true;
+                    if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
+                        ui->doveCheck->setChecked(false);
+                }
+            }
+            else if (start > end) // 熬夜档
+            {
+                qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
+                if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                        || currentVal <= end * 3600000)
+                {
+                    if (ui->doveCheck->isChecked()) // 今晚鸽了
+                        abort = true;
+                    // 即将开播
+                }
+                else // 直播时间之外
+                {
+                    qDebug() << "未开播，继续等待";
+                    abort = true;
+                    if (currentVal > end * 3600000 && currentVal < start * 3600000
+                            && ui->doveCheck->isChecked())
+                        ui->doveCheck->setChecked(false);
+                }
+            }
+
+            if (abort)
+            {
+                qDebug() << "短期内不会开播，暂且断开连接";
+                if (!connectServerTimer->isActive())
+                    connectServerTimer->start();
+                ui->connectStateLabel->setText("等待连接");
+
+                // 如果正在连接或打算连接，却未开播，则断开
+                if (socket->state() != QAbstractSocket::UnconnectedState)
+                    socket->close();
+                return false;
+            }
+        }
+        else // 已开播，则停下
+        {
+            qDebug() << "开播，停止定时连接";
+            if (connectServerTimer->isActive())
+                connectServerTimer->stop();
+            if (ui->doveCheck->isChecked())
+                ui->doveCheck->setChecked(false);
+            return true;
+        }
+    }
+    return true;
+}
+
+void MainWindow::getRoomCover(QString url)
+{
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+    //请求结束并下载完成后，退出子事件循环
+    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //开启子事件循环
+    loop.exec();
+    QByteArray jpegData = reply1->readAll();
+    QPixmap pixmap;
+    pixmap.loadFromData(jpegData);
+    coverPixmap = pixmap;
+    int w = ui->roomCoverLabel->width();
+    if (w > ui->tabWidget->contentsRect().width())
+        w = ui->tabWidget->contentsRect().width();
+    pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+    ui->roomCoverLabel->setPixmap(pixmap);
+    ui->roomCoverLabel->setMinimumSize(1, 1);
+}
+
+void MainWindow::getUpPortrait(QString uid)
+{
+
 }
 
 void MainWindow::getDanmuInfo()
