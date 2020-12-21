@@ -1468,6 +1468,7 @@ void MainWindow::getRoomCover(QString url)
         pa.setColor(QPalette::Window, bg);
         pa.setColor(QPalette::Background, bg);
         pa.setColor(QPalette::Button, bg);
+        pa.setColor(QPalette::Base, bg);
 
         pa.setColor(QPalette::Foreground, fg);
         pa.setColor(QPalette::Text, fg);
@@ -1476,6 +1477,7 @@ void MainWindow::getRoomCover(QString url)
 
         pa.setColor(QPalette::Highlight, sbg);
         pa.setColor(QPalette::HighlightedText, sfg);
+        pa.setColor(QPalette::BrightText, sfg);
 
         QApplication::setPalette(pa);
         setPalette(pa);

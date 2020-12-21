@@ -30,6 +30,8 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     edit->setMaximumHeight(h*5);
     edit->setFixedHeight(h);
 
+    edit->setStyleSheet("QPlainTextEdit{background: transparent;}");
+
     auto sendMsgs = [=]{
         emit signalSendMsgs(edit->toPlainText());
     };
