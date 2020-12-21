@@ -12,6 +12,7 @@ QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
+QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -200,6 +201,13 @@ MainWindow::MainWindow(QWidget *parent)
     foreach (QString s, usersSN)
     {
         strongNotifyUsers.append(s.toLongLong());
+    }
+
+    // 不自动欢迎
+    QStringList usersNW = settings.value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersNW)
+    {
+        notWelcomeUsers.append(s.toLongLong());
     }
 
     // 弹幕次数
@@ -3287,6 +3295,8 @@ void MainWindow::judgeNetworkUserRobot(LiveDanmaku danmaku, DanmakuFunc ifNot, D
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
+    if (notWelcomeUsers.contains(danmaku.getUid())) // 不自动欢迎
+        return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (!words.size())
         return ;

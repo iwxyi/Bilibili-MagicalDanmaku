@@ -422,7 +422,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             return ;
         }
     }
-    qDebug() << "错误：找不到要删除的item" << danmaku.toString();
+    qDebug() << "忽略没找到的要删除的item" << danmaku.toString();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
@@ -760,9 +760,11 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMedal = new QAction("粉丝牌子", this);
     QAction* actionHistory = new QAction("消息记录", this);
 
+
     QAction* actionAddBlock = new QAction("禁言720小时", this);
     QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
     QAction* actionDelBlock = new QAction("取消禁言", this);
+    QAction* actionNotWelcome = new QAction("不自动欢迎", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
@@ -787,6 +789,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionDelete = new QAction("删除", this);
     QAction* actionHide = new QAction("隐藏", this);
 
+    actionNotWelcome->setCheckable(true);
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
@@ -811,6 +814,7 @@ void LiveDanmakuWindow::showMenu()
             actionStrongNotify->setText("移除强提醒");
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+        actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
 
         // 弹幕的数据多一点，包含牌子、等级等
         if (danmaku.getMsgType() == MSG_DANMAKU)
@@ -838,7 +842,7 @@ void LiveDanmakuWindow::showMenu()
                 actionIgnoreColor->setText("恢复颜色");
         }
     }
-    else
+    else // 包括 item == nullptr
     {
         userMenu->setEnabled(false);
         actionUserInfo->setEnabled(false);
@@ -847,6 +851,10 @@ void LiveDanmakuWindow::showMenu()
         actionAddBlockTemp->setEnabled(false);
         actionDelBlock->setEnabled(false);
         actionMedal->setEnabled(false);
+        actionAddCare->setEnabled(false);
+        actionStrongNotify->setEnabled(false);
+        actionSetName->setEnabled(false);
+        actionNotWelcome->setEnabled(false);
     }
 
     if (!item)
@@ -862,12 +870,6 @@ void LiveDanmakuWindow::showMenu()
         actionFreeCopy->setEnabled(false);
         actionDelete->setEnabled(false);
         actionIgnoreColor->setEnabled(false);
-    }
-    else if (!uid)
-    {
-        actionAddCare->setEnabled(false);
-        actionStrongNotify->setEnabled(false);
-        actionSetName->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
@@ -891,6 +893,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionAddCare);
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
+    menu->addAction(actionNotWelcome);
     menu->addSeparator();
 //    menu->addMenu(userMenu);
 //    menu->addSeparator();
@@ -1054,6 +1057,17 @@ void LiveDanmakuWindow::showMenu()
             it++;
         }
         settings.setValue("danmaku/localNicknames", ress.join(";"));
+    });
+    connect(actionNotWelcome, &QAction::triggered, this, [=]{
+        if (notWelcomeUsers.contains(uid))
+            notWelcomeUsers.removeOne(uid);
+        else
+            notWelcomeUsers.append(uid);
+
+        QStringList ress;
+        foreach (qint64 uid, notWelcomeUsers)
+            ress << QString::number(uid);
+        settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
