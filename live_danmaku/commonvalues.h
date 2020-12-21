@@ -27,6 +27,11 @@ protected:
     static QHash<QString, QString> pinyinMap; // 拼音
     static QHash<QString, QString> customVariant; // 自定义变量
     static QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
+
+    // 登陆信息
+    static QString browserCookie;
+    static QString browserData;
+    static QString csrf_token;
 };
 
 #endif // COMMANDVALUES_H

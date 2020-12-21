@@ -13,6 +13,9 @@ QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
+QString CommonValues::browserCookie;
+QString CommonValues::browserData;
+QString CommonValues::csrf_token;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -639,6 +642,9 @@ void MainWindow::sendMsg(QString msg)
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
 //        qDebug() << data;
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1039,6 +1045,9 @@ void MainWindow::getUserInfo()
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1079,6 +1088,9 @@ void MainWindow::getRoomUserInfo()
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1319,6 +1331,9 @@ void MainWindow::getRoomInfo()
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1529,6 +1544,9 @@ void MainWindow::getUpPortrait(QString uid)
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray dataBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1583,6 +1601,9 @@ void MainWindow::getDanmuInfo()
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray dataBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
@@ -1630,6 +1651,8 @@ void MainWindow::getFansAndUpdate()
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1819,20 +1842,6 @@ void MainWindow::sendHeartPacket()
     ba = makePack(ba, HEARTBEAT);
 //    SOCKET_DEB << "发送心跳包：" << ba;
     socket->sendBinaryMessage(ba);
-}
-
-/**
- * 解压数据
- * 这个方法必须要qDebug输出一个东西才能用
- * 否则只能拆开放到要用的地方
- */
-QByteArray MainWindow::zlibUncompress(QByteArray ba) const
-{
-    unsigned long si = 0;
-    BYTE* target = new BYTE[ba.size()*5+10000]{};
-//    uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-    // SOCKET_DEB << "解压后数据大小：" << si << ba.size(); // 这句话不能删！ // 这句话不能加！
-    return QByteArray::fromRawData((char*)target, si);
 }
 
 QString MainWindow::getLocalNickname(qint64 uid) const
@@ -2900,27 +2909,12 @@ QByteArray zlibToQtUncompr(const char *pZLIBData, uLongf dataLen/*, uLongf srcDa
     pQtData[0] = *(pByte + 3);
     memcpy(pQtData + 4, pZLIBData, dataLen);
     QByteArray qByteArray(pQtData, dataLen + 4);
-    delete []pQtData;
+    delete[] pQtData;
     return qUncompress(qByteArray);
 }
 
 void MainWindow::slotUncompressBytes(const QByteArray &body)
 {
-/*//    qDebug() << ">>>>>>>>>>>>>>解压：" << body.size() << body;
-    unsigned long si;
-    BYTE* target = new BYTE[body.size()*5+100]{};
-    unsigned char* buffer_compress = (unsigned char*)body.data();
-    unsigned long len = body.size()+1;
-//    unsigned char* buffer_compress = new unsigned char[body.size()+1]{};
-//    memcpy(buffer_compress, body.constData(), len);
-    uncompress(target, &si, buffer_compress, len);
-    SOCKET_DEB << "解压后数据大小：" << si << "    原来：" << len;
-    QByteArray unc = QByteArray::fromRawData((char*)target, si);
-    qDebug() << "<<<<<<<<<<<<<<结果：" << unc.size() << unc; // 加上这句话似乎就能用了……
-    if (unc.size() < len)
-        QApplication::quit();
-    splitUncompressedBody(unc);
-    delete[] target;*/
     splitUncompressedBody(zlibToQtUncompr(body.data(), body.size()+1));
 }
 
@@ -3438,6 +3432,9 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -3487,6 +3484,9 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -3505,6 +3505,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
+        qDebug() << obj;
         int achive_view = obj.value("archive").toObject().value("view").toInt();
         int article_view = obj.value("article").toObject().value("view").toInt();
         int article_like = obj.value("article").toObject().value("like").toInt();
@@ -3537,6 +3538,9 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -3891,6 +3895,9 @@ void MainWindow::refreshBlockList()
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -3977,6 +3984,9 @@ void MainWindow::sendGift(int giftId, int giftNum)
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
 //        qDebug() << data;
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -4011,6 +4021,9 @@ void MainWindow::getRoomLiveVideoUrl()
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -4144,6 +4157,9 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         qDebug() << "拉黑用户：" << uid << hour << QString(data);
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -4192,6 +4208,9 @@ void MainWindow::delBlockUser(qint64 uid)
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
@@ -4241,6 +4260,9 @@ void MainWindow::delRoomBlockUser(qint64 id)
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         qDebug() << "取消用户：" << id << QString(data);
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -5128,6 +5150,9 @@ void MainWindow::connectPkRoom()
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray dataBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)

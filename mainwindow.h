@@ -322,7 +322,6 @@ private:
     void sendGift(int giftId, int giftNum);
     void getRoomLiveVideoUrl();
 
-    QByteArray zlibUncompress(QByteArray ba) const;
     QString getLocalNickname(qint64 name) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
@@ -409,10 +408,7 @@ private:
     QString diangeFormatString;
     OrderPlayerWindow* playerWindow = nullptr;
 
-    // 登陆信息
-    QString browserCookie;
-    QString browserData;
-    QString csrf_token;
+    // 控件
     QTimer* sendMsgTimer;
     QLabel* statusLabel;
 

@@ -33,6 +33,7 @@
 #include <QPushButton>
 #include <QStringListModel>
 #include <QGraphicsDropShadowEffect>
+#include <QNetworkCookie>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -103,6 +104,9 @@ public slots:
     void setStatusTooltip(QString tooltip);
     void hideStatusText();
 
+    void showFollowCountInAction(qint64 uid, QAction* action);
+    void showViewCountInAction(qint64 uid, QAction* action);
+
 private:
     bool isItemExist(QListWidgetItem *item);
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
@@ -112,6 +116,7 @@ private:
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
     void showUserMsgHistory(qint64 uid, QString title);
     QString getPinyin(QString text);
+    QVariant getCookies();
 
 private:
     QSettings& settings;
