@@ -7,13 +7,17 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     this->setMinimumSize(45,45);                        //设置最小尺寸
     if (settings.value("livedanmakuwindow/jiWindow", false).toBool())
     {
-        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        this->setWindowFlags(Qt::FramelessWindowHint);
         this->setAttribute(Qt::WA_TranslucentBackground, false);
     }
     else
     {
-        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    }
+    if (settings.value("livedanmakuwindow/onTop", true).toBool())
+    {
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     }
 
     QFontMetrics fm(this->font());
@@ -784,7 +788,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSendOnce = new QAction("单次发送", this);
     QAction* actionSimpleMode  = new QAction("简约模式", this);
     QAction* actionChatMode  = new QAction("聊天模式", this);
-    QAction* actionWindow = new QAction("直播姬模式", this);
+    QAction* actionWindow = new QAction("窗口模式", this);
+    QAction* actionOnTop = new QAction("置顶显示", this);
 
     QAction* actionDelete = new QAction("删除", this);
     QAction* actionHide = new QAction("隐藏", this);
@@ -804,6 +809,8 @@ void LiveDanmakuWindow::showMenu()
     actionChatMode->setChecked(chatMode);
     actionWindow->setCheckable(true);
     actionWindow->setChecked(settings.value("livedanmakuwindow/jiWindow", false).toBool());
+    actionOnTop->setCheckable(true);
+    actionOnTop->setChecked(settings.value("livedanmakuwindow/onTop", true).toBool());
 
     qint64 uid = danmaku.getUid();
     if (uid != 0)
@@ -921,6 +928,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionSimpleMode);
     settingMenu->addAction(actionChatMode);
     settingMenu->addAction(actionWindow);
+    settingMenu->addAction(actionOnTop);
 
     menu->addAction(actionDelete);
     menu->addAction(actionHide);
@@ -1157,6 +1165,13 @@ void LiveDanmakuWindow::showMenu()
         editShortcut = nullptr;
         emit signalChangeWindowMode();
     });
+    connect(actionOnTop, &QAction::triggered, this, [=]{
+        bool onTop = !settings.value("livedanmakuwindow/onTop", true).toBool();
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        settings.setValue("livedanmakuwindow/onTop", onTop);
+        qDebug() << "置顶显示：" << onTop;
+        this->show();
+    });
     connect(actionSimpleMode, &QAction::triggered, this, [=]{
         settings.setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
     });
@@ -1214,6 +1229,7 @@ void LiveDanmakuWindow::showMenu()
     actionSimpleMode->deleteLater();
     actionChatMode->deleteLater();
     actionWindow->deleteLater();
+    actionOnTop->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)
