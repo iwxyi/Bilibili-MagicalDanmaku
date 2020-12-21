@@ -26,5 +26,7 @@
         <file alias="playlist">resources/icons/playlist.png</file>
         <file alias="random">resources/icons/random.png</file>
         <file alias="order">resources/icons/order.png</file>
+        <file alias="bowknot">resources/icons/bowknot.png</file>
+        <file alias="bowknot2">resources/icons/bowknot2.png</file>
     </qresource>
 </RCC>

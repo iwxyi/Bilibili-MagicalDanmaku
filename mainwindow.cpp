@@ -217,6 +217,28 @@ MainWindow::MainWindow(QWidget *parent)
     statusLabel = new QLabel(this);
     this->statusBar()->addWidget(statusLabel);
 
+    // 托盘
+    tray = new QSystemTrayIcon(this);//初始化托盘对象tray
+    tray->setIcon(QIcon(QPixmap(":/icons/bowknot")));//设定托盘图标，引号内是自定义的png图片路径
+    tray->setToolTip("神奇弹幕");
+    tray->show();//让托盘图标显示在系统托盘上
+    QString title="APP Message";
+    QString text="神奇弹幕";
+//    tray->showMessage(title,text,QSystemTrayIcon::Information,3000); //最后一个参数为提示时长，默认10000，即10s
+
+    restoreAction = new QAction("显示", this);
+    connect(restoreAction, SIGNAL(triggered()), this, SLOT(show()));
+    quitAction = new QAction("退出", this);
+    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+
+    trayMenu = new QMenu(this);
+    trayMenu->addAction(restoreAction);
+    trayMenu->addSeparator();
+    trayMenu->addAction(quitAction);
+    tray->setContextMenu(trayMenu);
+
+    connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(showWidget(QSystemTrayIcon::ActivationReason)));
+
     // 大乱斗
     pkTimer = new QTimer(this);
     connect(pkTimer, &QTimer::timeout, this, [=]{
@@ -381,10 +403,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings.setValue("mainwindow/geometry", this->saveGeometry());
 
-    if (danmakuWindow)
-    {
-        danmakuWindow->close();
-    }
+    event->ignore();
+    this->hide();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -415,6 +435,12 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         widget->adjustSize();
         item->setSizeHint(widget->size());
     }*/
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+
+    QMainWindow::changeEvent(event);
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -4889,6 +4915,20 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 //    delete[] body.data();
 //    delete[] message.data();
     SOCKET_DEB << "PkSocket消息处理结束";
+}
+
+void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
+{
+    switch(reason)
+    {
+    case QSystemTrayIcon::Trigger://单击托盘图标
+        break;
+    case QSystemTrayIcon::DoubleClick://双击托盘图标
+        this->showNormal();
+        break;
+    default:
+        break;
+    }
 }
 
 void MainWindow::uncompressPkBytes(const QByteArray &body)

@@ -18,6 +18,8 @@
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
 #include <QtConcurrent/QtConcurrent>
+#include <QSystemTrayIcon>
+#include <QDesktopServices>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -107,6 +109,7 @@ protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void changeEvent (QEvent * event) override;
 
 signals:
     void signalRoomChanged(QString roomId);
@@ -271,6 +274,8 @@ private slots:
     void on_pkMsgSyncCheck_clicked();
 
     void slotPkBinaryMessageReceived(const QByteArray &message);
+
+    void showWidget(QSystemTrayIcon::ActivationReason reason);
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
@@ -456,5 +461,10 @@ private:
 
     // 视频
     LiveVideoPlayer* videoPlayer = nullptr;
+
+    QMenu *trayMenu;//托盘菜单
+    QSystemTrayIcon *tray;//托盘图标添加成员
+    QAction *restoreAction;//托盘图标右键点击时弹出选项
+    QAction *quitAction;//托盘图标右键点击时弹出选项
 };
 #endif // MAINWINDOW_H
