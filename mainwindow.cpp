@@ -364,6 +364,15 @@ MainWindow::MainWindow(QWidget *parent)
             line = pinyinIn.readLine();
         }
     });
+
+    // 隐藏偷塔
+    if (!QFileInfo(QApplication::applicationDirPath() + "/touta").exists())
+    {
+        ui->pkAutoMelonCheck->setText("此项禁止使用");
+        ui->pkAutoMelonCheck->hide();
+        ui->pkMaxGoldButton->hide();
+        ui->pkJudgeEarlyButton->hide();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -3891,7 +3900,7 @@ void MainWindow::getRoomLiveVideoUrl()
         else
         {
             // 重新设置视频流
-            videoPlayer->addPlayUrl(url);
+            videoPlayer-> setPlayUrl(url);
         }
     });
     manager->get(*request);
@@ -4497,7 +4506,7 @@ void MainWindow::on_actionGet_Play_Url_triggered()
 
 void MainWindow::on_actionShow_Live_Video_triggered()
 {
-    if (videoPlayer == nullptr)
+    /*if (videoPlayer == nullptr)
     {
         videoPlayer = new LiveVideoPlayer(settings, nullptr);
         connect(this, &MainWindow::signalRoomChanged, this, [=](QString roomId){
@@ -4505,7 +4514,25 @@ void MainWindow::on_actionShow_Live_Video_triggered()
         });
     }
     videoPlayer->show();
-    videoPlayer->setRoomId(roomId);
+    videoPlayer->setRoomId(roomId);*/
+    if (roomId.isEmpty())
+        return ;
+
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(roomId);
+    player->show();
+}
+
+void MainWindow::on_actionShow_PK_Video_triggered()
+{
+    if (pkRoomId.isEmpty())
+        return ;
+
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(pkRoomId);
+    player->show();
 }
 
 void MainWindow::on_pkChuanmenCheck_clicked()
@@ -4704,6 +4731,7 @@ void MainWindow::pkStart(QJsonObject json)
     {
         connectPkRoom();
     }
+    ui->actionShow_PK_Video->setEnabled(true);
 }
 
 void MainWindow::pkProcess(QJsonObject json)
@@ -4858,6 +4886,7 @@ void MainWindow::pkEnd(QJsonObject json)
     myAudience.clear();
     oppositeAudience.clear();
     pkVideo = false;
+    ui->actionShow_PK_Video->setEnabled(false);
 
     if (pkSocket)
     {

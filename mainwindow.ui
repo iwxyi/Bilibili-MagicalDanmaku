@@ -33,7 +33,7 @@ QTabBar::tab:hover{background-color:#44888888;}
 QTabBar::tab:selected{background-color: #88888888;}</string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1100,6 +1100,7 @@ QTabBar::tab:selected{background-color: #88888888;}</string>
     <addaction name="actionShow_Order_Player_Window"/>
     <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
+    <addaction name="actionShow_PK_Video"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
    </widget>
@@ -1197,6 +1198,14 @@ QTabBar::tab:selected{background-color: #88888888;}</string>
   <action name="actionShow_Live_Video">
    <property name="text">
     <string>显示实时视频</string>
+   </property>
+  </action>
+  <action name="actionShow_PK_Video">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>查看PK对面</string>
    </property>
   </action>
  </widget>

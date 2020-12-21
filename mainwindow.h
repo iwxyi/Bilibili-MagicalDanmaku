@@ -269,6 +269,8 @@ private slots:
 
     void on_actionShow_Live_Video_triggered();
 
+    void on_actionShow_PK_Video_triggered();
+
     void on_pkChuanmenCheck_clicked();
 
     void on_pkMsgSyncCheck_clicked();
