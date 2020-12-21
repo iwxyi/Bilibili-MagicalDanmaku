@@ -5037,10 +5037,16 @@ void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
 {
     switch(reason)
     {
-    case QSystemTrayIcon::Trigger://单击托盘图标
+    case QSystemTrayIcon::Trigger:
+        qDebug() << "单击托盘";
+        if (!this->isHidden())
+            this->hide();
+        else
+            this->showNormal();
         break;
-    case QSystemTrayIcon::DoubleClick://双击托盘图标
-        this->showNormal();
+    case QSystemTrayIcon::MiddleClick:
+        qDebug() << "中击托盘";
+        on_actionShow_Live_Danmaku_triggered();
         break;
     default:
         break;
