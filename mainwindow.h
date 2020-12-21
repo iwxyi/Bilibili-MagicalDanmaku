@@ -45,7 +45,7 @@ typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
-
+    Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
@@ -326,6 +326,8 @@ private:
     bool isConditionTrue(T a, T b, QString op) const;
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
+    double getPaletteBgProg() const;
+    void setPaletteBgProg(double x);
 
     void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
     void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
@@ -366,6 +368,11 @@ private:
     QPixmap roomCover;
     QPixmap upFace;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+
+    // 动画
+    double paletteProg = 0;
+    BFSColor prevPa;
+    BFSColor currentPa;
 
     // 粉丝数量
     int currentFans = 0;

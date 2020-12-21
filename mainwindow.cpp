@@ -1447,6 +1447,41 @@ void MainWindow::getRoomCover(QString url)
     pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
     ui->roomCoverLabel->setPixmap(pixmap);
     ui->roomCoverLabel->setMinimumSize(1, 1);
+
+    // 设置程序主题
+    QColor bg, fg, sbg, sfg;
+    auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    prevPa = BFSColor::fromPalette(palette());
+    currentPa = BFSColor(QList<QColor>{bg, fg,sbg, sfg});
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
+    ani->setStartValue(0);
+    ani->setEndValue(1.0);
+    ani->setDuration(500);
+    connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        double d = val.toDouble();
+        BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+        QColor bg, fg, sbg, sfg;
+        bfs.toColors(&bg, &fg, &sbg, &sfg);
+
+        QPalette pa;
+        pa.setColor(QPalette::Window, bg);
+        pa.setColor(QPalette::Background, bg);
+        pa.setColor(QPalette::Button, bg);
+
+        pa.setColor(QPalette::Foreground, fg);
+        pa.setColor(QPalette::Text, fg);
+        pa.setColor(QPalette::ButtonText, fg);
+        pa.setColor(QPalette::WindowText, fg);
+
+        pa.setColor(QPalette::Highlight, sbg);
+        pa.setColor(QPalette::HighlightedText, sfg);
+
+        QApplication::setPalette(pa);
+        setPalette(pa);
+    });
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
 }
 
 void MainWindow::getUpPortrait(QString uid)
@@ -2410,6 +2445,16 @@ QString MainWindow::msgToShort(QString msg) const
             return msg;
     }
     return msg;
+}
+
+double MainWindow::getPaletteBgProg() const
+{
+    return paletteProg;
+}
+
+void MainWindow::setPaletteBgProg(double x)
+{
+    this->paletteProg = x;
 }
 
 void MainWindow::startSaveDanmakuToFile()
