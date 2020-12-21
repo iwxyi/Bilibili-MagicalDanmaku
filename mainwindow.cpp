@@ -412,9 +412,9 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     QMainWindow::resizeEvent(event);
 
     // 自动调整封面大小
-    if (!coverPixmap.isNull())
+    if (!roomCover.isNull())
     {
-        QPixmap pixmap = coverPixmap;
+        QPixmap pixmap = roomCover;
         int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
@@ -1440,7 +1440,7 @@ void MainWindow::getRoomCover(QString url)
     QByteArray jpegData = reply1->readAll();
     QPixmap pixmap;
     pixmap.loadFromData(jpegData);
-    coverPixmap = pixmap;
+    roomCover = pixmap;
     int w = ui->roomCoverLabel->width();
     if (w > ui->tabWidget->contentsRect().width())
         w = ui->tabWidget->contentsRect().width();
@@ -1451,13 +1451,61 @@ void MainWindow::getRoomCover(QString url)
 
 void MainWindow::getUpPortrait(QString uid)
 {
+    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray dataBa = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
 
+        QJsonObject data = json.value("data").toObject();
+        QString face = data.value("face").toString();
+
+        // 开始下载头像
+        QNetworkAccessManager manager;
+        QEventLoop loop;
+        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(face)));
+        //请求结束并下载完成后，退出子事件循环
+        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        //开启子事件循环
+        loop.exec();
+        QByteArray jpegData = reply1->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+
+        // 设置成圆角
+        int side = qMin(pixmap.width(), pixmap.height());
+        upFace = QPixmap(side, side);
+        upFace.fill(Qt::transparent);
+        QPainter painter(&upFace);
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addEllipse(0, 0, side, side);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, side, side, pixmap);
+
+        // 设置到程序
+        setWindowIcon(upFace);
+        tray->setIcon(upFace);
+    });
+    manager->get(*request);
 }
 
 void MainWindow::getDanmuInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
-    url += "?id="+roomId+"&type=0";
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+roomId+"&type=0";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){

@@ -363,7 +363,8 @@ private:
     int liveStatus = 0; // 是否正在直播
     QString upName;
     QString roomName;
-    QPixmap coverPixmap;
+    QPixmap roomCover;
+    QPixmap upFace;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
 
     // 粉丝数量
