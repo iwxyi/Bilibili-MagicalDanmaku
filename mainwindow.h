@@ -284,6 +284,8 @@ private slots:
 
     void showWidget(QSystemTrayIcon::ActivationReason reason);
 
+    void on_actionAdd_Room_To_List_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

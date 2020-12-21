@@ -383,6 +383,24 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkMaxGoldButton->hide();
         ui->pkJudgeEarlyButton->hide();
     }
+
+    // 读取自定义快捷房间
+    QStringList list = settings.value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    ui->menu_3->addSeparator();
+    for (int i = 0; i < list.size(); i++)
+    {
+        QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+        if (texts.size() < 1)
+            continue ;
+        QString id = texts.first();
+        QString name = texts.size() >= 2 ? texts.at(1) : id;
+        QAction* action = new QAction(name, this);
+        ui->menu_3->addAction(action);
+        connect(action, &QAction::triggered, this, [=]{
+            ui->roomIdEdit->setText(id);
+            on_roomIdEdit_editingFinished();
+        });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -5428,4 +5446,40 @@ void MainWindow::on_judgeRobotCheck_clicked()
 {
     judgeRobot = ui->judgeRobotCheck->isChecked();
     settings.setValue("danmaku/judgeRobot", judgeRobot);
+}
+
+void MainWindow::on_actionAdd_Room_To_List_triggered()
+{
+    if (roomId.isEmpty())
+        return ;
+
+    QStringList list = settings.value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    for (int i = 0; i < list.size(); i++)
+    {
+        QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+        if (texts.size() < 1)
+            continue ;
+        QString id = texts.first();
+        QString name = texts.size() >= 2 ? texts.at(1) : id;
+        if (id == roomId) // 找到这个
+        {
+            ui->menu_3->removeAction(ui->menu_3->actions().at(ui->menu_3->actions().size() - (list.size() - i)));
+            list.removeAt(i);
+            settings.setValue("custom/rooms", list.join(";"));
+            return ;
+        }
+    }
+
+    QString id = roomId; // 不能用成员变量，否则无效（lambda中值会变，自己试试就知道了）
+    QString name = upName;
+
+    list.append(id + "," + name.replace(";","").replace(",",""));
+    settings.setValue("custom/rooms", list.join(";"));
+
+    QAction* action = new QAction(name, this);
+    ui->menu_3->addAction(action);
+    connect(action, &QAction::triggered, this, [=]{
+        ui->roomIdEdit->setText(id);
+        on_roomIdEdit_editingFinished();
+    });
 }

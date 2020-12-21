@@ -1113,8 +1113,8 @@
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="actionCookie_Help"/>
+    <addaction name="actionAdd_Room_To_List"/>
     <addaction name="separator"/>
-    <addaction name="actionMany_Robots"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -1218,6 +1218,11 @@
    </property>
    <property name="text">
     <string>查看PK对面</string>
+   </property>
+  </action>
+  <action name="actionAdd_Room_To_List">
+   <property name="text">
+    <string>增删房间列表</string>
    </property>
   </action>
  </widget>
