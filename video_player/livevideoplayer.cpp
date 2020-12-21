@@ -39,13 +39,14 @@ void LiveVideoPlayer::setRoomId(QString roomId)
     refreshPlayUrl();
 }
 
-void LiveVideoPlayer::addPlayUrl(QString url)
+void LiveVideoPlayer::setPlayUrl(QString url)
 {
     this->playUrl = url;
 
     player->setVideoOutput(ui->videoWidget);
     QNetworkRequest req((QUrl(url)));
     QMediaContent c(req);
+    playList->clear();
     playList->addMedia(c);
 //    player->setMedia(c);
 //    player->play();
@@ -84,7 +85,7 @@ void LiveVideoPlayer::refreshPlayUrl()
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
         playUrl = url;
         playList->clear();
-        addPlayUrl(url);
+        setPlayUrl(url);
         /*for (int i = 0; i < array.size(); i++)
         {
             QString url = array.at(i).toObject().value("url").toString();
@@ -181,7 +182,7 @@ void LiveVideoPlayer::downloadFlv(QString url)
 void LiveVideoPlayer::showEvent(QShowEvent *)
 {
     restoreGeometry(settings.value("videoplayer/geometry").toByteArray());
-    ui->videoWidget->show();
+//    ui->videoWidget->show();
 
     if (!playUrl.isEmpty() && player)
     {

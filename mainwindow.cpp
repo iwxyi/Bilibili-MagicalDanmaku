@@ -12,6 +12,7 @@ QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
+QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
         ui->tabWidget->setPalette(pa);
     });
+    ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
     // 页面
     int tabIndex = settings.value("mainwindow/tabIndex", 0).toInt();
@@ -208,12 +210,41 @@ MainWindow::MainWindow(QWidget *parent)
         strongNotifyUsers.append(s.toLongLong());
     }
 
+    // 不自动欢迎
+    QStringList usersNW = settings.value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersNW)
+    {
+        notWelcomeUsers.append(s.toLongLong());
+    }
+
     // 弹幕次数
     danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
 
     // 状态栏
     statusLabel = new QLabel(this);
     this->statusBar()->addWidget(statusLabel);
+
+    // 托盘
+    tray = new QSystemTrayIcon(this);//初始化托盘对象tray
+    tray->setIcon(QIcon(QPixmap(":/icons/bowknot")));//设定托盘图标，引号内是自定义的png图片路径
+    tray->setToolTip("神奇弹幕");
+    tray->show();//让托盘图标显示在系统托盘上
+    QString title="APP Message";
+    QString text="神奇弹幕";
+//    tray->showMessage(title,text,QSystemTrayIcon::Information,3000); //最后一个参数为提示时长，默认10000，即10s
+
+    restoreAction = new QAction("显示", this);
+    connect(restoreAction, SIGNAL(triggered()), this, SLOT(show()));
+    quitAction = new QAction("退出", this);
+    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+
+    trayMenu = new QMenu(this);
+    trayMenu->addAction(restoreAction);
+    trayMenu->addSeparator();
+    trayMenu->addAction(quitAction);
+    tray->setContextMenu(trayMenu);
+
+    connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(showWidget(QSystemTrayIcon::ActivationReason)));
 
     // 大乱斗
     pkTimer = new QTimer(this);
@@ -340,6 +371,15 @@ MainWindow::MainWindow(QWidget *parent)
             line = pinyinIn.readLine();
         }
     });
+
+    // 隐藏偷塔
+    if (!QFileInfo(QApplication::applicationDirPath() + "/touta").exists())
+    {
+        ui->pkAutoMelonCheck->setText("此项禁止使用");
+        ui->pkAutoMelonCheck->hide();
+        ui->pkMaxGoldButton->hide();
+        ui->pkJudgeEarlyButton->hide();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -379,10 +419,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings.setValue("mainwindow/geometry", this->saveGeometry());
 
-    if (danmakuWindow)
-    {
-        danmakuWindow->close();
-    }
+    event->ignore();
+    this->hide();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -390,9 +428,9 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     QMainWindow::resizeEvent(event);
 
     // 自动调整封面大小
-    if (!coverPixmap.isNull())
+    if (!roomCover.isNull())
     {
-        QPixmap pixmap = coverPixmap;
+        QPixmap pixmap = roomCover;
         int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
@@ -413,6 +451,18 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         widget->adjustSize();
         item->setSizeHint(widget->size());
     }*/
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+
+    QMainWindow::changeEvent(event);
+}
+
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+    QMainWindow::paintEvent(event);
+    QPainter painter(this);
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -1300,6 +1350,7 @@ void MainWindow::getRoomInfo()
 
         roomName = roomInfo.value("title").toString();
         setWindowTitle(roomName + " - " + QApplication::applicationName());
+        tray->setToolTip(roomName + " - " + QApplication::applicationName());
         ui->roomNameLabel->setText(roomName);
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         if (liveStatus != 1)
@@ -1307,82 +1358,9 @@ void MainWindow::getRoomInfo()
         else
             ui->popularityLabel->setText("已开播");
 
-        // 判断房间，未开播则暂停链接，等待开播
-        if (ui->timerConnectServerCheck->isChecked())
-        {
-            if (!liveStatus) // 未开播，等待下一次的检测
-            {
-                // 如果是开播前一段时间，则继续保持着连接
-                int start = ui->startLiveHourSpin->value();
-                int end = ui->endLiveHourSpin->value();
-                int hour = QDateTime::currentDateTime().time().hour();
-                int minu = QDateTime::currentDateTime().time().minute();
-                bool abort = false;
-                qint64 currentVal = hour * 3600000 + minu * 60000;
-                qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
-                if (start < end) // 白天档
-                {
-                    qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
-                    if (nextVal >= start * 3600000
-                            && currentVal <= end * 3600000)
-                    {
-                        if (ui->doveCheck->isChecked()) // 今天鸽了
-                        {
-                            abort = true;
-                            qDebug() << "今天鸽了";
-                        }
-                        // 即将开播
-                    }
-                    else // 直播时间之外
-                    {
-                        qDebug() << "未开播，继续等待";
-                        abort = true;
-                        if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
-                            ui->doveCheck->setChecked(false);
-                    }
-                }
-                else if (start > end) // 熬夜档
-                {
-                    qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
-                    if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
-                            || currentVal <= end * 3600000)
-                    {
-                        if (ui->doveCheck->isChecked()) // 今晚鸽了
-                            abort = true;
-                        // 即将开播
-                    }
-                    else // 直播时间之外
-                    {
-                        qDebug() << "未开播，继续等待";
-                        abort = true;
-                        if (currentVal > end * 3600000 && currentVal < start * 3600000
-                                && ui->doveCheck->isChecked())
-                            ui->doveCheck->setChecked(false);
-                    }
-                }
-
-                if (abort)
-                {
-                    qDebug() << "短期内不会开播，暂且断开连接";
-                    if (!connectServerTimer->isActive())
-                        connectServerTimer->start();
-                    ui->connectStateLabel->setText("等待连接");
-
-                    // 如果正在连接或打算连接，却未开播，则断开
-                    if (socket->state() != QAbstractSocket::UnconnectedState)
-                        socket->close();
-                    return ;
-                }
-            }
-            else // 已开播，则停下
-            {
-                qDebug() << "开播，停止定时连接";
-                if (connectServerTimer->isActive())
-                    connectServerTimer->stop();
-                if (ui->doveCheck->isChecked())
-                    ui->doveCheck->setChecked(false);
-            }
-        }
+        // 判断房间，未开播则暂停连接，等待开播
+        if (!isLivingOrMayliving())
+            return ;
 
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -1394,10 +1372,184 @@ void MainWindow::getRoomInfo()
         getDanmuInfo();
 
         // 异步获取房间封面
-        QString coverUrl = roomInfo.value("cover").toString();
+        getRoomCover(roomInfo.value("cover").toString());
+
+        // 获取主播头像
+        getUpPortrait(upUid);
+    });
+    manager->get(*request);
+    ui->connectStateLabel->setText("获取房间信息...");
+}
+
+bool MainWindow::isLivingOrMayliving()
+{
+    if (ui->timerConnectServerCheck->isChecked())
+    {
+        if (!liveStatus) // 未开播，等待下一次的检测
+        {
+            // 如果是开播前一段时间，则继续保持着连接
+            int start = ui->startLiveHourSpin->value();
+            int end = ui->endLiveHourSpin->value();
+            int hour = QDateTime::currentDateTime().time().hour();
+            int minu = QDateTime::currentDateTime().time().minute();
+            bool abort = false;
+            qint64 currentVal = hour * 3600000 + minu * 60000;
+            qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
+            if (start < end) // 白天档
+            {
+                qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
+                if (nextVal >= start * 3600000
+                        && currentVal <= end * 3600000)
+                {
+                    if (ui->doveCheck->isChecked()) // 今天鸽了
+                    {
+                        abort = true;
+                        qDebug() << "今天鸽了";
+                    }
+                    // 即将开播
+                }
+                else // 直播时间之外
+                {
+                    qDebug() << "未开播，继续等待";
+                    abort = true;
+                    if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
+                        ui->doveCheck->setChecked(false);
+                }
+            }
+            else if (start > end) // 熬夜档
+            {
+                qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
+                if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                        || currentVal <= end * 3600000)
+                {
+                    if (ui->doveCheck->isChecked()) // 今晚鸽了
+                        abort = true;
+                    // 即将开播
+                }
+                else // 直播时间之外
+                {
+                    qDebug() << "未开播，继续等待";
+                    abort = true;
+                    if (currentVal > end * 3600000 && currentVal < start * 3600000
+                            && ui->doveCheck->isChecked())
+                        ui->doveCheck->setChecked(false);
+                }
+            }
+
+            if (abort)
+            {
+                qDebug() << "短期内不会开播，暂且断开连接";
+                if (!connectServerTimer->isActive())
+                    connectServerTimer->start();
+                ui->connectStateLabel->setText("等待连接");
+
+                // 如果正在连接或打算连接，却未开播，则断开
+                if (socket->state() != QAbstractSocket::UnconnectedState)
+                    socket->close();
+                return false;
+            }
+        }
+        else // 已开播，则停下
+        {
+            qDebug() << "开播，停止定时连接";
+            if (connectServerTimer->isActive())
+                connectServerTimer->stop();
+            if (ui->doveCheck->isChecked())
+                ui->doveCheck->setChecked(false);
+            return true;
+        }
+    }
+    return true;
+}
+
+void MainWindow::getRoomCover(QString url)
+{
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+    //请求结束并下载完成后，退出子事件循环
+    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //开启子事件循环
+    loop.exec();
+    QByteArray jpegData = reply1->readAll();
+    QPixmap pixmap;
+    pixmap.loadFromData(jpegData);
+    roomCover = pixmap;
+    int w = ui->roomCoverLabel->width();
+    if (w > ui->tabWidget->contentsRect().width())
+        w = ui->tabWidget->contentsRect().width();
+    pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+    ui->roomCoverLabel->setPixmap(pixmap);
+    ui->roomCoverLabel->setMinimumSize(1, 1);
+
+    // 设置程序主题
+    QColor bg, fg, sbg, sfg;
+    auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    prevPa = BFSColor::fromPalette(palette());
+    currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
+    qDebug() << bg << fg << sbg << sfg;
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
+    ani->setStartValue(0);
+    ani->setEndValue(1.0);
+    ani->setDuration(500);
+    connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        double d = val.toDouble();
+        BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+        QColor bg, fg, sbg, sfg;
+        bfs.toColors(&bg, &fg, &sbg, &sfg);
+
+        QPalette pa;
+        pa.setColor(QPalette::Window, bg);
+        pa.setColor(QPalette::Background, bg);
+        pa.setColor(QPalette::Button, bg);
+        pa.setColor(QPalette::Base, bg);
+
+        pa.setColor(QPalette::Foreground, fg);
+        pa.setColor(QPalette::Text, fg);
+        pa.setColor(QPalette::ButtonText, fg);
+        pa.setColor(QPalette::WindowText, fg);
+
+        pa.setColor(QPalette::Highlight, sbg);
+        pa.setColor(QPalette::HighlightedText, sfg);
+        setPalette(pa);
+        ui->tabWidget->setPalette(pa);
+
+        setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
+        ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
+    });
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
+}
+
+void MainWindow::getUpPortrait(QString uid)
+{
+    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray dataBa = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        QString face = data.value("face").toString();
+
+        // 开始下载头像
         QNetworkAccessManager manager;
         QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(coverUrl)));
+        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(face)));
         //请求结束并下载完成后，退出子事件循环
         connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         //开启子事件循环
@@ -1405,22 +1557,28 @@ void MainWindow::getRoomInfo()
         QByteArray jpegData = reply1->readAll();
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
-        coverPixmap = pixmap;
-        int w = ui->roomCoverLabel->width();
-        if (w > ui->tabWidget->contentsRect().width())
-            w = ui->tabWidget->contentsRect().width();
-        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(pixmap);
-        ui->roomCoverLabel->setMinimumSize(1, 1);
+
+        // 设置成圆角
+        int side = qMin(pixmap.width(), pixmap.height());
+        upFace = QPixmap(side, side);
+        upFace.fill(Qt::transparent);
+        QPainter painter(&upFace);
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addEllipse(0, 0, side, side);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, side, side, pixmap);
+
+        // 设置到程序
+        setWindowIcon(upFace);
+        tray->setIcon(upFace);
     });
     manager->get(*request);
-    ui->connectStateLabel->setText("获取房间信息...");
 }
 
 void MainWindow::getDanmuInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
-    url += "?id="+roomId+"&type=0";
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+roomId+"&type=0";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -2331,6 +2489,16 @@ QString MainWindow::msgToShort(QString msg) const
             return msg;
     }
     return msg;
+}
+
+double MainWindow::getPaletteBgProg() const
+{
+    return paletteProg;
+}
+
+void MainWindow::setPaletteBgProg(double x)
+{
+    this->paletteProg = x;
 }
 
 void MainWindow::startSaveDanmakuToFile()
@@ -3407,6 +3575,8 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
+    if (notWelcomeUsers.contains(danmaku.getUid())) // 不自动欢迎
+        return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (!words.size())
         return ;
@@ -3875,7 +4045,7 @@ void MainWindow::getRoomLiveVideoUrl()
         else
         {
             // 重新设置视频流
-            videoPlayer->addPlayUrl(url);
+            videoPlayer-> setPlayUrl(url);
         }
     });
     manager->get(*request);
@@ -4481,7 +4651,7 @@ void MainWindow::on_actionGet_Play_Url_triggered()
 
 void MainWindow::on_actionShow_Live_Video_triggered()
 {
-    if (videoPlayer == nullptr)
+    /*if (videoPlayer == nullptr)
     {
         videoPlayer = new LiveVideoPlayer(settings, nullptr);
         connect(this, &MainWindow::signalRoomChanged, this, [=](QString roomId){
@@ -4489,7 +4659,25 @@ void MainWindow::on_actionShow_Live_Video_triggered()
         });
     }
     videoPlayer->show();
-    videoPlayer->setRoomId(roomId);
+    videoPlayer->setRoomId(roomId);*/
+    if (roomId.isEmpty())
+        return ;
+
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(roomId);
+    player->show();
+}
+
+void MainWindow::on_actionShow_PK_Video_triggered()
+{
+    if (pkRoomId.isEmpty())
+        return ;
+
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(pkRoomId);
+    player->show();
 }
 
 void MainWindow::on_pkChuanmenCheck_clicked()
@@ -4688,6 +4876,7 @@ void MainWindow::pkStart(QJsonObject json)
     {
         connectPkRoom();
     }
+    ui->actionShow_PK_Video->setEnabled(true);
 }
 
 void MainWindow::pkProcess(QJsonObject json)
@@ -4842,6 +5031,7 @@ void MainWindow::pkEnd(QJsonObject json)
     myAudience.clear();
     oppositeAudience.clear();
     pkVideo = false;
+    ui->actionShow_PK_Video->setEnabled(false);
 
     if (pkSocket)
     {
@@ -5015,6 +5205,26 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
 //    delete[] body.data();
 //    delete[] message.data();
     SOCKET_DEB << "PkSocket消息处理结束";
+}
+
+void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
+{
+    switch(reason)
+    {
+    case QSystemTrayIcon::Trigger:
+        qDebug() << "单击托盘";
+        if (!this->isHidden())
+            this->hide();
+        else
+            this->showNormal();
+        break;
+    case QSystemTrayIcon::MiddleClick:
+        qDebug() << "中击托盘";
+        on_actionShow_Live_Danmaku_triggered();
+        break;
+    default:
+        break;
+    }
 }
 
 void MainWindow::uncompressPkBytes(const QByteArray &body)

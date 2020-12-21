@@ -7,13 +7,17 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     this->setMinimumSize(45,45);                        //设置最小尺寸
     if (settings.value("livedanmakuwindow/jiWindow", false).toBool())
     {
-        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+        this->setWindowFlags(Qt::FramelessWindowHint);
         this->setAttribute(Qt::WA_TranslucentBackground, false);
     }
     else
     {
-        this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);      //设置为无边框置顶窗口
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    }
+    if (settings.value("livedanmakuwindow/onTop", true).toBool())
+    {
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     }
 
     QFontMetrics fm(this->font());
@@ -109,6 +113,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
 
     // 忽略的颜色
     ignoreDanmakuColors = settings.value("livedanmakuwindow/ignoreColor").toString().split(";");
+
+    // 模式
+    simpleMode = settings.value("livedanmakuwindow/simpleMode", false).toBool();
+    chatMode = settings.value("livedanmakuwindow/chatMode", false).toBool();
 
     statusLabel = new QLabel(this);
     statusLabel->hide();
@@ -236,6 +244,12 @@ void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
+    if (chatMode) // 聊天模式：只显示弹幕
+    {
+        if (danmaku.getMsgType() != MSG_DANMAKU)
+            return ;
+    }
+
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
 
@@ -267,7 +281,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    if (danmaku.getMsgType() == MSG_DANMAKU) // 只显示弹幕的数据
+    if (danmaku.getMsgType() == MSG_DANMAKU && !simpleMode) // 只显示弹幕的数据
     {
         bool hasPortrait = headPortraits.contains(danmaku.getUid());
         if (hasPortrait)
@@ -412,7 +426,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             return ;
         }
     }
-    qDebug() << "错误：找不到要删除的item" << danmaku.toString();
+    qDebug() << "忽略没找到的要删除的item" << danmaku.toString();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
@@ -449,6 +463,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             : danmaku.getUnameColor();
     QString nameText = "<font color='" + nameColorStr + "'>"
                        + danmaku.getNickname() + "</font>";
+    if (simpleMode)
+        nameText = danmaku.getNickname();
 
     QString text;
     MessageType msgType = danmaku.getMsgType();
@@ -460,17 +476,25 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             int count = danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
-                nameText = "<font color='red'>[新]</font>" + nameText;
+                if (simpleMode)
+                    nameText = "<font color='gray'>[新]</font>" + nameText;
+                else
+                    nameText = "<font color='red'>[新]</font>" + nameText;
             }
             else if (danmaku.getLevel() > 0 && count <= 1) // 10句话以内
             {
-                nameText = "<font color='green'>[初]</font>" + nameText;
+                if (simpleMode)
+                    nameText = "<font color='gray'>[初]</font>" + nameText;
+                else
+                    nameText = "<font color='green'>[初]</font>" + nameText;
             }
         }
 
         // 彩色消息
         QString colorfulMsg = msg;
-        if (danmaku.isNoReply() || danmaku.isPkLink()) // 灰色
+        if (simpleMode)
+        {}
+        else if (danmaku.isNoReply() || danmaku.isPkLink()) // 灰色
         {
             colorfulMsg = "<font color='gray'>"
                     + danmaku.getText() + "</font> ";
@@ -516,6 +540,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         QString medalColorStr = isBlankColor(danmaku.getMedalColor())
                 ? QVariant(this->msgColor).toString()
                 : danmaku.getMedalColor();
+        if (simpleMode)
+            medalColorStr = QVariant(QColor(Qt::gray)).toString();
         if (!danmaku.getAnchorRoomid().isEmpty()
                 && !danmaku.getMedalName().isEmpty())
         {
@@ -741,9 +767,11 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMedal = new QAction("粉丝牌子", this);
     QAction* actionHistory = new QAction("消息记录", this);
 
+
     QAction* actionAddBlock = new QAction("禁言720小时", this);
     QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
     QAction* actionDelBlock = new QAction("取消禁言", this);
+    QAction* actionNotWelcome = new QAction("不自动欢迎", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
@@ -761,11 +789,15 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
-    QAction* actionWindow = new QAction("直播姬模式", this);
+    QAction* actionSimpleMode  = new QAction("简约模式", this);
+    QAction* actionChatMode  = new QAction("聊天模式", this);
+    QAction* actionWindow = new QAction("窗口模式", this);
+    QAction* actionOnTop = new QAction("置顶显示", this);
 
     QAction* actionDelete = new QAction("删除", this);
     QAction* actionHide = new QAction("隐藏", this);
 
+    actionNotWelcome->setCheckable(true);
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
@@ -774,8 +806,14 @@ void LiveDanmakuWindow::showMenu()
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
     actionSendOnce->setChecked(settings.value("livedanmakuwindow/sendOnce", false).toBool());
+    actionSimpleMode->setCheckable(true);
+    actionSimpleMode->setChecked(simpleMode);
+    actionChatMode->setCheckable(true);
+    actionChatMode->setChecked(chatMode);
     actionWindow->setCheckable(true);
     actionWindow->setChecked(settings.value("livedanmakuwindow/jiWindow", false).toBool());
+    actionOnTop->setCheckable(true);
+    actionOnTop->setChecked(settings.value("livedanmakuwindow/onTop", true).toBool());
 
     qint64 uid = danmaku.getUid();
     if (uid != 0)
@@ -786,6 +824,7 @@ void LiveDanmakuWindow::showMenu()
             actionStrongNotify->setText("移除强提醒");
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+        actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
 
         // 弹幕的数据多一点，包含牌子、等级等
         if (danmaku.getMsgType() == MSG_DANMAKU)
@@ -813,7 +852,7 @@ void LiveDanmakuWindow::showMenu()
                 actionIgnoreColor->setText("恢复颜色");
         }
     }
-    else
+    else // 包括 item == nullptr
     {
         userMenu->setEnabled(false);
         actionUserInfo->setEnabled(false);
@@ -822,6 +861,10 @@ void LiveDanmakuWindow::showMenu()
         actionAddBlockTemp->setEnabled(false);
         actionDelBlock->setEnabled(false);
         actionMedal->setEnabled(false);
+        actionAddCare->setEnabled(false);
+        actionStrongNotify->setEnabled(false);
+        actionSetName->setEnabled(false);
+        actionNotWelcome->setEnabled(false);
     }
 
     if (!item)
@@ -837,12 +880,6 @@ void LiveDanmakuWindow::showMenu()
         actionFreeCopy->setEnabled(false);
         actionDelete->setEnabled(false);
         actionIgnoreColor->setEnabled(false);
-    }
-    else if (!uid)
-    {
-        actionAddCare->setEnabled(false);
-        actionStrongNotify->setEnabled(false);
-        actionSetName->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
@@ -866,6 +903,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionAddCare);
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
+    menu->addAction(actionNotWelcome);
     menu->addSeparator();
 //    menu->addMenu(userMenu);
 //    menu->addSeparator();
@@ -890,7 +928,10 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionSendOnce);
     settingMenu->addSeparator();
+    settingMenu->addAction(actionSimpleMode);
+    settingMenu->addAction(actionChatMode);
     settingMenu->addAction(actionWindow);
+    settingMenu->addAction(actionOnTop);
 
     menu->addAction(actionDelete);
     menu->addAction(actionHide);
@@ -1028,6 +1069,17 @@ void LiveDanmakuWindow::showMenu()
         }
         settings.setValue("danmaku/localNicknames", ress.join(";"));
     });
+    connect(actionNotWelcome, &QAction::triggered, this, [=]{
+        if (notWelcomeUsers.contains(uid))
+            notWelcomeUsers.removeOne(uid);
+        else
+            notWelcomeUsers.append(uid);
+
+        QStringList ress;
+        foreach (qint64 uid, notWelcomeUsers)
+            ress << QString::number(uid);
+        settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
+    });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
@@ -1116,6 +1168,19 @@ void LiveDanmakuWindow::showMenu()
         editShortcut = nullptr;
         emit signalChangeWindowMode();
     });
+    connect(actionOnTop, &QAction::triggered, this, [=]{
+        bool onTop = !settings.value("livedanmakuwindow/onTop", true).toBool();
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        settings.setValue("livedanmakuwindow/onTop", onTop);
+        qDebug() << "置顶显示：" << onTop;
+        this->show();
+    });
+    connect(actionSimpleMode, &QAction::triggered, this, [=]{
+        settings.setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
+    });
+    connect(actionChatMode, &QAction::triggered, this, [=]{
+        settings.setValue("livedanmakuwindow/chatMode", chatMode = !chatMode);
+    });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
     });
@@ -1164,6 +1229,10 @@ void LiveDanmakuWindow::showMenu()
     actionSendMsg->deleteLater();
     actionDelete->deleteLater();
     actionHide->deleteLater();
+    actionSimpleMode->deleteLater();
+    actionChatMode->deleteLater();
+    actionWindow->deleteLater();
+    actionOnTop->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)

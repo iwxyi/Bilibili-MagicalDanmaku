@@ -131,6 +131,8 @@ private:
     bool autoTrans = true;
     bool aiReply = false;
     bool enableBlock = false;
+    bool simpleMode = false; // 简约模式：不显示头像
+    bool chatMode = false; // 聊天模式：只显示弹幕，并且不使用彩色
     bool newbieTip = true;
     QHash<qint64, QPixmap> headPortraits;
     QList<QString> ignoreDanmakuColors;

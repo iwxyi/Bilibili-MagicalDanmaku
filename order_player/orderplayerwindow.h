@@ -43,6 +43,67 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
+struct BFSColor
+{
+    int v[12] = {0};
+
+    BFSColor()
+    {}
+
+    BFSColor(QList<QColor> cs)
+    {
+        Q_ASSERT(cs.size() == 4);
+        for (int i = 0; i < 4; i++)
+        {
+            QColor c = cs[i];
+            v[i*3+0] = c.red();
+            v[i*3+1] = c.green();
+            v[i*3+2] = c.blue();
+        }
+    }
+
+    BFSColor operator-(const BFSColor& ano)
+    {
+        BFSColor bfs;
+        for (int i = 0; i < 12; i++)
+            bfs.v[i] = this->v[i] - ano.v[i];
+        return bfs;
+    }
+
+    BFSColor operator+(const BFSColor& ano)
+    {
+        BFSColor bfs;
+        for (int i = 0; i < 12; i++)
+            bfs.v[i] = this->v[i] + ano.v[i];
+        return bfs;
+    }
+
+    BFSColor operator*(const double& prop)
+    {
+        BFSColor bfs;
+        for (int i = 0; i < 12; i++)
+            bfs.v[i] = this->v[i] * prop;
+        return bfs;
+    }
+
+    static BFSColor fromPalette(QPalette pa)
+    {
+        QColor bg = pa.color(QPalette::Window);
+        QColor fg = pa.color(QPalette::Text);
+        QColor sbg = pa.color(QPalette::Highlight);
+        QColor sfg = pa.color(QPalette::HighlightedText);
+        return BFSColor(QList<QColor>{bg, fg, sbg, sfg});
+    }
+
+    void toColors(QColor* bg, QColor* fg, QColor* sbg, QColor* sfg)
+    {
+        *bg = QColor(v[0], v[1], v[2]);
+        *fg = QColor(v[3], v[4], v[5]);
+        *sbg = QColor(v[6], v[7], v[8]);
+        *sfg = QColor(v[9], v[10], v[11]);
+    }
+};
+
 class OrderPlayerWindow : public QMainWindow
 {
     Q_OBJECT
@@ -58,67 +119,6 @@ public:
     {
         OrderList,
         SingleCircle
-    };
-
-    struct BFSColor
-    {
-        int v[12] = {0};
-
-        BFSColor()
-        {}
-
-        BFSColor(QList<QColor> cs)
-        {
-            Q_ASSERT(cs.size() == 4);
-            for (int i = 0; i < 4; i++)
-            {
-                QColor c = cs[i];
-                v[i*3+0] = c.red();
-                v[i*3+1] = c.green();
-                v[i*3+2] = c.blue();
-            }
-        }
-
-        BFSColor operator-(const BFSColor& ano)
-        {
-            BFSColor bfs;
-            for (int i = 0; i < 12; i++)
-                bfs.v[i] = this->v[i] - ano.v[i];
-            return bfs;
-        }
-
-        BFSColor operator+(const BFSColor& ano)
-        {
-            BFSColor bfs;
-            for (int i = 0; i < 12; i++)
-                bfs.v[i] = this->v[i] + ano.v[i];
-            return bfs;
-        }
-
-        BFSColor operator*(const double& prop)
-        {
-            BFSColor bfs;
-            for (int i = 0; i < 12; i++)
-                bfs.v[i] = this->v[i] * prop;
-            return bfs;
-        }
-
-        static BFSColor fromPalette(QPalette pa)
-        {
-            QColor bg = pa.color(QPalette::Window);
-            QColor fg = pa.color(QPalette::Text);
-            QColor sbg = pa.color(QPalette::Highlight);
-            QColor sfg = pa.color(QPalette::Text);
-            return BFSColor(QList<QColor>{bg, fg, sbg, sfg});
-        }
-
-        void toColors(QColor* bg, QColor* fg, QColor* sbg, QColor* sfg)
-        {
-            *bg = QColor(v[0], v[1], v[2]);
-            *fg = QColor(v[3], v[4], v[5]);
-            *sbg = QColor(v[6], v[7], v[8]);
-            *sfg = QColor(v[9], v[10], v[11]);
-        }
     };
 
     bool hasSongInOrder(QString by);

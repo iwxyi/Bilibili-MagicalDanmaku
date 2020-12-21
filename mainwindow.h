@@ -18,6 +18,8 @@
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
 #include <QtConcurrent/QtConcurrent>
+#include <QSystemTrayIcon>
+#include <QDesktopServices>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -43,7 +45,7 @@ typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 class MainWindow : public QMainWindow, public CommonValues
 {
     Q_OBJECT
-
+    Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
@@ -107,6 +109,8 @@ protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void changeEvent (QEvent * event) override;
+    void paintEvent(QPaintEvent * event) override;
 
 signals:
     void signalRoomChanged(QString roomId);
@@ -266,6 +270,8 @@ private slots:
 
     void on_actionShow_Live_Video_triggered();
 
+    void on_actionShow_PK_Video_triggered();
+
     void on_pkChuanmenCheck_clicked();
 
     void on_pkMsgSyncCheck_clicked();
@@ -275,6 +281,8 @@ private slots:
     void on_actionMany_Robots_triggered();
 
     void on_judgeRobotCheck_clicked();
+
+    void showWidget(QSystemTrayIcon::ActivationReason reason);
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
@@ -296,6 +304,9 @@ private:
     void startConnectRoom();
     void getRoomInit();
     void getRoomInfo();
+    bool isLivingOrMayliving();
+    void getRoomCover(QString url);
+    void getUpPortrait(QString uid);
     void getDanmuInfo();
     void getFansAndUpdate();
     void startMsgLoop();
@@ -322,6 +333,8 @@ private:
     bool isConditionTrue(T a, T b, QString op) const;
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
+    double getPaletteBgProg() const;
+    void setPaletteBgProg(double x);
 
     void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
     void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
@@ -361,8 +374,14 @@ private:
     int liveStatus = 0; // 是否正在直播
     QString upName;
     QString roomName;
-    QPixmap coverPixmap;
+    QPixmap roomCover;
+    QPixmap upFace;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+
+    // 动画
+    double paletteProg = 0;
+    BFSColor prevPa;
+    BFSColor currentPa;
 
     // 粉丝数量
     int currentFans = 0;
@@ -467,5 +486,11 @@ private:
     bool judgeRobot = false;
     QSettings robotRecord;
     QList<QWebSocket*> robots_sockets;
+
+    // 托盘
+    QMenu *trayMenu;//托盘菜单
+    QSystemTrayIcon *tray;//托盘图标添加成员
+    QAction *restoreAction;//托盘图标右键点击时弹出选项
+    QAction *quitAction;//托盘图标右键点击时弹出选项
 };
 #endif // MAINWINDOW_H

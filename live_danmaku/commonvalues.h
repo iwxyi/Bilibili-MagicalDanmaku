@@ -26,6 +26,7 @@ protected:
     static QList<qint64> strongNotifyUsers; // 强提醒
     static QHash<QString, QString> pinyinMap; // 拼音
     static QHash<QString, QString> customVariant; // 自定义变量
+    static QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
 };
 
 #endif // COMMANDVALUES_H

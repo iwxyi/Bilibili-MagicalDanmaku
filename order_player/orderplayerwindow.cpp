@@ -1360,9 +1360,9 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
         pa.setColor(QPalette::Text, fg);
         pa.setColor(QPalette::ButtonText, fg);
         pa.setColor(QPalette::WindowText, fg);
-        pa.setColor(QPalette::HighlightedText, fg);
 
         pa.setColor(QPalette::Highlight, sbg);
+        pa.setColor(QPalette::HighlightedText, sfg);
 
         QApplication::setPalette(pa);
         setPalette(pa);

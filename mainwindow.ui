@@ -13,18 +13,19 @@
   <property name="windowTitle">
    <string>神奇弹幕</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resource.qrc">
+    <normaloff>:/icons/bowknot2</normaloff>:/icons/bowknot2</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="styleSheet">
-       <string notr="true">#tabWidget
-{
-	background: transparent;
-}</string>
+       <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -532,6 +533,12 @@
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QListWidget
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="verticalScrollMode">
            <enum>QAbstractItemView::ScrollPerPixel</enum>
           </property>
@@ -628,6 +635,12 @@
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="plainText">
            <string>欢迎 %ai_name% ~~~</string>
           </property>
@@ -690,6 +703,12 @@
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;%2：礼物名称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="plainText">
            <string>感谢 %ai_name% 赠送的 %gift_name% ~</string>
           </property>
@@ -751,6 +770,12 @@
          <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1：用户昵称&lt;/p&gt;&lt;p&gt;支持变量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
           </property>
           <property name="plainText">
            <string>谢谢 %ai_name% 的关注%punc%</string>
@@ -953,6 +978,12 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoBlockNewbieKeysEdit">
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="maximumBlockCount">
            <number>1</number>
           </property>
@@ -980,6 +1011,12 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="autoBlockNewbieNotifyWordsEdit">
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="maximumBlockCount">
            <number>1</number>
           </property>
@@ -1030,6 +1067,12 @@
         </item>
         <item>
          <widget class="QPlainTextEdit" name="promptBlockNewbieKeysEdit">
+          <property name="styleSheet">
+           <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+          </property>
           <property name="placeholderText">
            <string>触发以下关键词时弹出快速禁言按钮，多个用“|”分隔</string>
           </property>
@@ -1059,6 +1102,7 @@
     <addaction name="actionShow_Order_Player_Window"/>
     <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
+    <addaction name="actionShow_PK_Video"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
    </widget>
@@ -1168,7 +1212,17 @@
     <string>涨人气测试（实测没有效果）</string>
    </property>
   </action>
+  <action name="actionShow_PK_Video">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>查看PK对面</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>
