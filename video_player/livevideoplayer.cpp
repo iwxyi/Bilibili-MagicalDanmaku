@@ -8,6 +8,8 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
 {
     ui->setupUi(this);
     setModal(false);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+
     player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
 //        qDebug() << "position changed:" << position << player->duration();

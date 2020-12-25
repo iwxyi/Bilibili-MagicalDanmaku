@@ -2575,6 +2575,89 @@ void MainWindow::saveTouta()
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2").arg(toutaCount).arg(chiguaCount));
 }
 
+void MainWindow::startLiveRecord()
+{
+    finishLiveRecord();
+
+    QDir dir(QApplication::applicationDirPath());
+    dir.mkpath("record");
+    dir.cd("record");
+
+    getRoomLiveVideoUrl([=](QString url){
+        QString path = QFileInfo(dir.absoluteFilePath(
+                                     roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
+                .absoluteFilePath();
+        qDebug() << "开始录播：" << url;
+
+        QNetworkAccessManager manager;
+        QNetworkRequest* request = new QNetworkRequest(QUrl(url));
+        QEventLoop* loop = new QEventLoop();
+
+//        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+//        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+//        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+        QNetworkReply *reply = manager.get(*request);
+        QObject::connect(reply, SIGNAL(finished()), loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        loop->exec(); //开启子事件循环
+        loop->deleteLater();
+
+        // B站下载会有302重定向的，需要获取headers里面的Location值
+        auto headers = reply->rawHeaderPairs();
+        QString location;
+        for (int i = 0; i < headers.size(); i++)
+            if (headers.at(i).first.toLower() == "location")
+            {
+                location = headers.at(i).second;
+                break;
+            }
+
+        reply->deleteLater();
+        delete request;
+        if (location.isEmpty())
+            return ;
+
+        // 开始下载文件
+        qDebug() << "重定向下载地址：" << location;
+        recordLoop = new QEventLoop;
+        request = new QNetworkRequest(QUrl(location));
+        reply = manager.get(*request);
+        QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        recordLoop->exec(); //开启子事件循环
+        recordLoop->deleteLater();
+        recordLoop = nullptr;
+
+        QFile file(path);
+        if (!file.open(QFile::WriteOnly))
+        {
+            qDebug() << "写入文件失败" << path;
+            reply->deleteLater();
+            return ;
+        }
+        QByteArray data = reply->readAll();
+        if (!data.isEmpty())
+        {
+            qint64 write_bytes = file.write(data);
+            file.flush();
+            if (write_bytes != data.size())
+                qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
+        }
+
+        reply->deleteLater();
+        delete request;
+        qDebug() << "录播结束：" << path;
+    });
+}
+
+void MainWindow::finishLiveRecord()
+{
+    if (!recordLoop)
+        return ;
+    qDebug() << "结束录播";
+    recordLoop->quit();
+    recordLoop = nullptr;
+}
+
 void MainWindow::processDanmakuCmd(QString msg)
 {
     if (!remoteControl)
@@ -4000,12 +4083,12 @@ void MainWindow::sendGift(int giftId, int giftNum)
     manager->post(*request, ba);
 }
 
-void MainWindow::getRoomLiveVideoUrl()
+void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
     if (roomId.isEmpty())
         return ;
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
-            + "&quality=4&qn=10000";
+            + "&quality=4&qn=10000&platform=web&otype=json";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
@@ -4039,20 +4122,8 @@ void MainWindow::getRoomLiveVideoUrl()
           "stream_type": 0,
           "p2p_type": 0*/
         QString url = array.first().toObject().value("url").toString();
-//        qDebug() << "直播视频流地址：" << url;
-        if (!videoPlayer || videoPlayer->isHidden())
-        {
-            QApplication::clipboard()->setText(url);
-
-            for (int i = 0; i < array.size(); i++)
-                qDebug() << "链接列表：" << array.at(i).toObject().value("url").toString();
-            return ;
-        }
-        else
-        {
-            // 重新设置视频流
-            videoPlayer-> setPlayUrl(url);
-        }
+        if (func)
+            func(url);
     });
     manager->get(*request);
 }
@@ -4661,7 +4732,9 @@ void MainWindow::on_actionShow_Lucky_Draw_triggered()
 
 void MainWindow::on_actionGet_Play_Url_triggered()
 {
-    getRoomLiveVideoUrl();
+    getRoomLiveVideoUrl([=](QString url) {
+        QApplication::clipboard()->setText(url);
+    });
 }
 
 void MainWindow::on_actionShow_Live_Video_triggered()
@@ -5491,4 +5564,15 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
         ui->roomIdEdit->setText(id);
         on_roomIdEdit_editingFinished();
     });
+}
+
+void MainWindow::on_recordCheck_clicked()
+{
+    bool check = ui->recordCheck->isChecked();
+    settings.setValue("danmaku/record", check);
+
+    if (check)
+        startLiveRecord();
+    else
+        finishLiveRecord();
 }
