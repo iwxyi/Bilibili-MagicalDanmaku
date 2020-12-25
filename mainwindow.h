@@ -366,6 +366,8 @@ private:
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
 
+    void releaseLiveData();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;

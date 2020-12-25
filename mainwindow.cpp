@@ -856,40 +856,8 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
-    ui->roomRankLabel->setText("");
-    ui->roomRankLabel->setToolTip("");
 
-    if (pking)
-    {
-        if (danmakuWindow)
-            danmakuWindow->hideStatusText();
-    }
-    pking = false;
-    pkUid = "";
-    pkUname = "";
-    pkRoomId = "";
-    pkEnding = false;
-    pkVoting = 0;
-    pkVideo = false;
-    myAudience.clear();
-    oppositeAudience.clear();
-
-    danmuPopularQueue.clear();
-    minuteDanmuPopular = 0;
-    danmuPopularValue = 0;
-
-    if (danmakuWindow)
-    {
-        danmakuWindow->hideStatusText();
-        danmakuWindow->setUpUid(0);
-    }
-
-    if (pkSocket)
-    {
-        if (pkSocket->state() == QAbstractSocket::ConnectedState)
-            pkSocket->close();
-        pkSocket = nullptr;
-    }
+    releaseLiveData();
 
     emit signalRoomChanged(roomId);
 
@@ -3020,11 +2988,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 connectServerTimer->start();
         }
 
-        if (pking)
-        {
-            if (danmakuWindow)
-                danmakuWindow->hideStatusText();
-        }
+        releaseLiveData();
     }
     else if (cmd == "ROOM_CHANGE")
     {
@@ -3676,8 +3640,8 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         if (t + 3 < time) // 3秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
-                || danmaku.getUid() != uid
-                || danmaku.getGiftName() != gift)
+                || dm.getUid() != uid
+                || dm.getGiftName() != gift)
             continue;
 
         // 是这个没错了
@@ -5420,6 +5384,40 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);*/
+    }
+}
+
+void MainWindow::releaseLiveData()
+{
+    ui->roomRankLabel->setText("");
+    ui->roomRankLabel->setToolTip("");
+
+    pking = false;
+    pkUid = "";
+    pkUname = "";
+    pkRoomId = "";
+    pkEnding = false;
+    pkVoting = 0;
+    pkVideo = false;
+    myAudience.clear();
+    oppositeAudience.clear();
+
+    danmuPopularQueue.clear();
+    minuteDanmuPopular = 0;
+    danmuPopularValue = 0;
+
+    if (danmakuWindow)
+    {
+        danmakuWindow->hideStatusText();
+        danmakuWindow->setUpUid(0);
+        danmakuWindow->releaseLiveData();
+    }
+
+    if (pkSocket)
+    {
+        if (pkSocket->state() == QAbstractSocket::ConnectedState)
+            pkSocket->close();
+        pkSocket = nullptr;
     }
 }
 

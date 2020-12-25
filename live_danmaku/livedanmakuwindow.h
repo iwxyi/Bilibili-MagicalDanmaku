@@ -107,6 +107,8 @@ public slots:
     void showFollowCountInAction(qint64 uid, QAction* action);
     void showViewCountInAction(qint64 uid, QAction* action);
 
+    void releaseLiveData();
+
 private:
     bool isItemExist(QListWidgetItem *item);
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
