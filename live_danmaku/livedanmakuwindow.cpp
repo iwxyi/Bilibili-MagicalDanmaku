@@ -1710,6 +1710,8 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
 
 void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
 {
+    if (!uid)
+        return ;
     QStringList sums;
     int c = danmakuCounts->value("danmaku/"+snum(uid)).toInt();
     if(c)
@@ -1730,9 +1732,12 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
     for (int i = allDanmakus.size()-1; i >= 0; i--)
     {
         const LiveDanmaku& danmaku = allDanmakus.at(i);
-        if (/*danmaku.getMsgType() == MSG_DANMAKU && */danmaku.getUid() == uid)
+        if (danmaku.getUid() == uid)
         {
-            sl.append(danmaku.getTimeline().toString("hh:mm:ss") + "  " + danmaku.getText());
+            if (danmaku.getMsgType() == MSG_DANMAKU)
+                sl.append(danmaku.getTimeline().toString("hh:mm:ss") + "  " + danmaku.getText());
+            else
+                sl.append(danmaku.toString());
         }
     }
 
