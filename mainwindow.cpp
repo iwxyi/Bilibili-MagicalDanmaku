@@ -859,6 +859,11 @@ void MainWindow::on_roomIdEdit_editingFinished()
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
 
+    if (pking)
+    {
+        if (danmakuWindow)
+            danmakuWindow->hideStatusText();
+    }
     pking = false;
     pkUid = "";
     pkUname = "";
@@ -3013,6 +3018,12 @@ void MainWindow::handleMessage(QJsonObject json)
 
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
+        }
+
+        if (pking)
+        {
+            if (danmakuWindow)
+                danmakuWindow->hideStatusText();
         }
     }
     else if (cmd == "ROOM_CHANGE")
