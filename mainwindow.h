@@ -355,6 +355,7 @@ private:
     void saveCalculateDailyData();
     void saveTouta();
     void startLiveRecord();
+    void startRecordUrl(QString url);
     void finishLiveRecord();
 
     void processDanmakuCmd(QString msg);
@@ -445,7 +446,12 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+
+    // 录播
+    qint64 startRecordTime = 0;
+    QString recordUrl;
     QEventLoop* recordLoop = nullptr;
+    QTimer* recordTimer = nullptr;
 
     // 大乱斗
     bool pking = false;

@@ -143,15 +143,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
-    {
          on_actionShow_Live_Danmaku_triggered();
-    }
 
     // 点歌姬
     if (settings.value("danmaku/playerWindow", false).toBool())
-    {
         on_actionShow_Order_Player_Window_triggered();
-    }
+
+    // 录播
+    if (settings.value("danmaku/record", false).toBool())
+        ui->recordCheck->setChecked(true);
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -1382,6 +1382,10 @@ void MainWindow::getRoomInfo()
 
         // 获取主播头像
         getUpPortrait(upUid);
+
+        // 录播
+        if (ui->recordCheck->isChecked() && liveStatus)
+            startLiveRecord();
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取房间信息...");
@@ -1700,7 +1704,9 @@ void MainWindow::getFansAndUpdate()
 //SOCKET_DEB << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
         // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
-        if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
+        if (!fansList.size())
+        {}
+        else if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
             qDebug() << s8("没有被关注过，或之前关注的全部取关了？");
         }
@@ -2578,75 +2584,103 @@ void MainWindow::saveTouta()
 void MainWindow::startLiveRecord()
 {
     finishLiveRecord();
-
-    QDir dir(QApplication::applicationDirPath());
-    dir.mkpath("record");
-    dir.cd("record");
+    if (roomId.isEmpty())
+        return ;
 
     getRoomLiveVideoUrl([=](QString url){
-        QString path = QFileInfo(dir.absoluteFilePath(
-                                     roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
-                .absoluteFilePath();
-        qDebug() << "开始录播：" << url;
+        recordUrl = "";
 
+        qDebug() << "开始录播：" << url;
         QNetworkAccessManager manager;
         QNetworkRequest* request = new QNetworkRequest(QUrl(url));
         QEventLoop* loop = new QEventLoop();
-
-//        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-//        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-//        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
         QNetworkReply *reply = manager.get(*request);
+
         QObject::connect(reply, SIGNAL(finished()), loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 bytesReceived, qint64 bytesTotal){
+            if (bytesReceived > 0)
+            {
+                qDebug() << "原始地址可直接下载";
+                recordUrl = url;
+                loop->quit();
+                reply->deleteLater();
+            }
+        });
         loop->exec(); //开启子事件循环
         loop->deleteLater();
 
         // B站下载会有302重定向的，需要获取headers里面的Location值
-        auto headers = reply->rawHeaderPairs();
-        QString location;
-        for (int i = 0; i < headers.size(); i++)
-            if (headers.at(i).first.toLower() == "location")
-            {
-                location = headers.at(i).second;
-                break;
-            }
-
-        reply->deleteLater();
+        if (recordUrl.isEmpty())
+        {
+            auto headers = reply->rawHeaderPairs();
+            for (int i = 0; i < headers.size(); i++)
+                if (headers.at(i).first.toLower() == "location")
+                {
+                    recordUrl = headers.at(i).second;
+                    qDebug() << "重定向下载地址：" << recordUrl;
+                    break;
+                }
+            reply->deleteLater();
+        }
         delete request;
-        if (location.isEmpty())
+        if (recordUrl.isEmpty())
+        {
+            qDebug() << "无法获取下载地址";
             return ;
+        }
 
         // 开始下载文件
-        qDebug() << "重定向下载地址：" << location;
-        recordLoop = new QEventLoop;
-        request = new QNetworkRequest(QUrl(location));
-        reply = manager.get(*request);
-        QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
-        recordLoop->exec(); //开启子事件循环
-        recordLoop->deleteLater();
-        recordLoop = nullptr;
-
-        QFile file(path);
-        if (!file.open(QFile::WriteOnly))
-        {
-            qDebug() << "写入文件失败" << path;
-            reply->deleteLater();
-            return ;
-        }
-        QByteArray data = reply->readAll();
-        if (!data.isEmpty())
-        {
-            qint64 write_bytes = file.write(data);
-            file.flush();
-            if (write_bytes != data.size())
-                qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
-        }
-
-        reply->deleteLater();
-        delete request;
-        qDebug() << "录播结束：" << path;
+        startRecordUrl(recordUrl);
     });
+}
+
+void MainWindow::startRecordUrl(QString url)
+{
+    QDir dir(QApplication::applicationDirPath());
+    dir.mkpath("record");
+    dir.cd("record");
+    QString path = QFileInfo(dir.absoluteFilePath(
+                                 roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
+            .absoluteFilePath();
+
+    ui->recordCheck->setText("录制中...");
+    startRecordTime = QDateTime::currentMSecsSinceEpoch();
+    recordLoop = new QEventLoop;
+    QNetworkAccessManager manager;
+    QNetworkRequest* request = new QNetworkRequest(QUrl(url));
+    QNetworkReply *reply = manager.get(*request);
+    QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+    recordLoop->exec(); //开启子事件循环
+    recordLoop->deleteLater();
+    recordLoop = nullptr;
+    qDebug() << "录播结束：" << path;
+
+    QFile file(path);
+    if (!file.open(QFile::WriteOnly))
+    {
+        qDebug() << "写入文件失败" << path;
+        reply->deleteLater();
+        return ;
+    }
+    QByteArray data = reply->readAll();
+    if (!data.isEmpty())
+    {
+        qint64 write_bytes = file.write(data);
+        file.flush();
+        if (write_bytes != data.size())
+            qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
+    }
+
+    reply->deleteLater();
+    delete request;
+    startRecordTime = 0;
+    ui->recordCheck->setText("录播");
+
+    // 可能是超时结束了，重新下载
+    if (ui->recordCheck->isChecked() && liveStatus)
+    {
+        startLiveRecord();
+    }
 }
 
 void MainWindow::finishLiveRecord()
@@ -3052,6 +3086,8 @@ void MainWindow::handleMessage(QJsonObject json)
             liveStatus = true;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
+            if (ui->recordCheck->isChecked())
+                startLiveRecord();
         }
     }
     else if (cmd == "PREPARING") // 下播
@@ -5474,6 +5510,7 @@ void MainWindow::releaseLiveData()
     pkVideo = false;
     myAudience.clear();
     oppositeAudience.clear();
+    fansList.clear();
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
@@ -5492,6 +5529,8 @@ void MainWindow::releaseLiveData()
             pkSocket->close();
         pkSocket = nullptr;
     }
+
+    finishLiveRecord();
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
@@ -5572,7 +5611,10 @@ void MainWindow::on_recordCheck_clicked()
     settings.setValue("danmaku/record", check);
 
     if (check)
-        startLiveRecord();
+    {
+        if (!roomId.isEmpty() && liveStatus)
+            startLiveRecord();
+    }
     else
         finishLiveRecord();
 }
