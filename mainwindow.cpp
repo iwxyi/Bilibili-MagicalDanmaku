@@ -152,6 +152,16 @@ MainWindow::MainWindow(QWidget *parent)
     // 录播
     if (settings.value("danmaku/record", false).toBool())
         ui->recordCheck->setChecked(true);
+    recordTimer = new QTimer(this);
+    recordTimer->setInterval(30 * 60 * 1000); // 30分钟断开一次
+    connect(recordTimer, &QTimer::timeout, this, [=]{
+        if (!recordLoop) // 没有正在录制
+            return ;
+
+        recordLoop->quit(); // 这个就是停止录制了
+        // 停止之后，录播会检测是否还需要重新录播
+        // 如果是，则继续录
+    });
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -2644,6 +2654,7 @@ void MainWindow::startRecordUrl(QString url)
             .absoluteFilePath();
 
     ui->recordCheck->setText("录制中...");
+    recordTimer->start();
     startRecordTime = QDateTime::currentMSecsSinceEpoch();
     recordLoop = new QEventLoop;
     QNetworkAccessManager manager;
@@ -2675,6 +2686,7 @@ void MainWindow::startRecordUrl(QString url)
     delete request;
     startRecordTime = 0;
     ui->recordCheck->setText("录播");
+    recordTimer->stop();
 
     // 可能是超时结束了，重新下载
     if (ui->recordCheck->isChecked() && liveStatus)
