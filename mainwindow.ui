@@ -54,7 +54,7 @@
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,1,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -69,6 +69,13 @@
            <widget class="QLabel" name="popularityLabel">
             <property name="text">
              <string>未开播</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="recordCheck">
+            <property name="text">
+             <string>录播</string>
             </property>
            </widget>
           </item>

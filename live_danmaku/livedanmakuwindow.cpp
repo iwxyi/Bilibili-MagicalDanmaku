@@ -737,8 +737,8 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
         if (t + 3 < time)
             return ;
         if (dm.getMsgType() != MSG_GIFT
-                || danmaku.getUid() != uid
-                || danmaku.getGiftName() != gift)
+                || dm.getUid() != uid
+                || dm.getGiftName() != gift)
             continue;
 
         // 是这个没错了
@@ -1575,6 +1575,13 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action)
             action->setText("没有投稿");
     });
     manager->get(*request);
+}
+
+void LiveDanmakuWindow::releaseLiveData()
+{
+    headPortraits.clear();
+    hideStatusText();
+    setUpUid(0);
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

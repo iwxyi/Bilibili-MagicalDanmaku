@@ -41,6 +41,7 @@ QT_END_NAMESPACE
 #define CONNECT_SERVER_INTERVAL 1800000
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
+typedef std::function<void(QString)> StringFunc;
 
 class MainWindow : public QMainWindow, public CommonValues
 {
@@ -286,6 +287,8 @@ private slots:
 
     void on_actionAdd_Room_To_List_triggered();
 
+    void on_recordCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -322,7 +325,7 @@ private:
     void refreshBlockList();
     bool isInFans(qint64 upUid);
     void sendGift(int giftId, int giftNum);
-    void getRoomLiveVideoUrl();
+    void getRoomLiveVideoUrl(StringFunc func = nullptr);
 
     QString getLocalNickname(qint64 name) const;
     QString processTimeVariants(QString msg) const;
@@ -352,6 +355,9 @@ private:
     void startCalculateDailyData();
     void saveCalculateDailyData();
     void saveTouta();
+    void startLiveRecord();
+    void startRecordUrl(QString url);
+    void finishLiveRecord();
 
     void processDanmakuCmd(QString msg);
 
@@ -366,6 +372,8 @@ private:
     void connectPkRoom();
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
+
+    void releaseLiveData();
 
 private:
     Ui::MainWindow *ui;
@@ -439,6 +447,12 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+
+    // 录播
+    qint64 startRecordTime = 0;
+    QString recordUrl;
+    QEventLoop* recordLoop = nullptr;
+    QTimer* recordTimer = nullptr;
 
     // 大乱斗
     bool pking = false;

@@ -143,15 +143,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
-    {
          on_actionShow_Live_Danmaku_triggered();
-    }
 
     // 点歌姬
     if (settings.value("danmaku/playerWindow", false).toBool())
-    {
         on_actionShow_Order_Player_Window_triggered();
-    }
+
+    // 录播
+    if (settings.value("danmaku/record", false).toBool())
+        ui->recordCheck->setChecked(true);
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -856,35 +856,8 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
-    ui->roomRankLabel->setText("");
-    ui->roomRankLabel->setToolTip("");
 
-    pking = false;
-    pkUid = "";
-    pkUname = "";
-    pkRoomId = "";
-    pkEnding = false;
-    pkVoting = 0;
-    pkVideo = false;
-    myAudience.clear();
-    oppositeAudience.clear();
-
-    danmuPopularQueue.clear();
-    minuteDanmuPopular = 0;
-    danmuPopularValue = 0;
-
-    if (danmakuWindow)
-    {
-        danmakuWindow->hideStatusText();
-        danmakuWindow->setUpUid(0);
-    }
-
-    if (pkSocket)
-    {
-        if (pkSocket->state() == QAbstractSocket::ConnectedState)
-            pkSocket->close();
-        pkSocket = nullptr;
-    }
+    releaseLiveData();
 
     emit signalRoomChanged(roomId);
 
@@ -1409,6 +1382,10 @@ void MainWindow::getRoomInfo()
 
         // 获取主播头像
         getUpPortrait(upUid);
+
+        // 录播
+        if (ui->recordCheck->isChecked() && liveStatus)
+            startLiveRecord();
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取房间信息...");
@@ -1727,7 +1704,9 @@ void MainWindow::getFansAndUpdate()
 //SOCKET_DEB << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
         // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
-        if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
+        if (!fansList.size())
+        {}
+        else if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
             qDebug() << s8("没有被关注过，或之前关注的全部取关了？");
         }
@@ -2602,6 +2581,117 @@ void MainWindow::saveTouta()
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2").arg(toutaCount).arg(chiguaCount));
 }
 
+void MainWindow::startLiveRecord()
+{
+    finishLiveRecord();
+    if (roomId.isEmpty())
+        return ;
+
+    getRoomLiveVideoUrl([=](QString url){
+        recordUrl = "";
+
+        qDebug() << "开始录播：" << url;
+        QNetworkAccessManager manager;
+        QNetworkRequest* request = new QNetworkRequest(QUrl(url));
+        QEventLoop* loop = new QEventLoop();
+        QNetworkReply *reply = manager.get(*request);
+
+        QObject::connect(reply, SIGNAL(finished()), loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 bytesReceived, qint64 bytesTotal){
+            if (bytesReceived > 0)
+            {
+                qDebug() << "原始地址可直接下载";
+                recordUrl = url;
+                loop->quit();
+                reply->deleteLater();
+            }
+        });
+        loop->exec(); //开启子事件循环
+        loop->deleteLater();
+
+        // B站下载会有302重定向的，需要获取headers里面的Location值
+        if (recordUrl.isEmpty())
+        {
+            auto headers = reply->rawHeaderPairs();
+            for (int i = 0; i < headers.size(); i++)
+                if (headers.at(i).first.toLower() == "location")
+                {
+                    recordUrl = headers.at(i).second;
+                    qDebug() << "重定向下载地址：" << recordUrl;
+                    break;
+                }
+            reply->deleteLater();
+        }
+        delete request;
+        if (recordUrl.isEmpty())
+        {
+            qDebug() << "无法获取下载地址";
+            return ;
+        }
+
+        // 开始下载文件
+        startRecordUrl(recordUrl);
+    });
+}
+
+void MainWindow::startRecordUrl(QString url)
+{
+    QDir dir(QApplication::applicationDirPath());
+    dir.mkpath("record");
+    dir.cd("record");
+    QString path = QFileInfo(dir.absoluteFilePath(
+                                 roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
+            .absoluteFilePath();
+
+    ui->recordCheck->setText("录制中...");
+    startRecordTime = QDateTime::currentMSecsSinceEpoch();
+    recordLoop = new QEventLoop;
+    QNetworkAccessManager manager;
+    QNetworkRequest* request = new QNetworkRequest(QUrl(url));
+    QNetworkReply *reply = manager.get(*request);
+    QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+    recordLoop->exec(); //开启子事件循环
+    recordLoop->deleteLater();
+    recordLoop = nullptr;
+    qDebug() << "录播结束：" << path;
+
+    QFile file(path);
+    if (!file.open(QFile::WriteOnly))
+    {
+        qDebug() << "写入文件失败" << path;
+        reply->deleteLater();
+        return ;
+    }
+    QByteArray data = reply->readAll();
+    if (!data.isEmpty())
+    {
+        qint64 write_bytes = file.write(data);
+        file.flush();
+        if (write_bytes != data.size())
+            qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
+    }
+
+    reply->deleteLater();
+    delete request;
+    startRecordTime = 0;
+    ui->recordCheck->setText("录播");
+
+    // 可能是超时结束了，重新下载
+    if (ui->recordCheck->isChecked() && liveStatus)
+    {
+        startLiveRecord();
+    }
+}
+
+void MainWindow::finishLiveRecord()
+{
+    if (!recordLoop)
+        return ;
+    qDebug() << "结束录播";
+    recordLoop->quit();
+    recordLoop = nullptr;
+}
+
 void MainWindow::processDanmakuCmd(QString msg)
 {
     if (!remoteControl)
@@ -2982,7 +3072,7 @@ void MainWindow::handleMessage(QJsonObject json)
     qDebug() << s8(">消息命令：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
-        if (pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
         if (roomId.isEmpty())
@@ -2996,11 +3086,13 @@ void MainWindow::handleMessage(QJsonObject json)
             liveStatus = true;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
+            if (ui->recordCheck->isChecked())
+                startLiveRecord();
         }
     }
     else if (cmd == "PREPARING") // 下播
     {
-        if (pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
@@ -3014,6 +3106,8 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
         }
+
+        releaseLiveData();
     }
     else if (cmd == "ROOM_CHANGE")
     {
@@ -3681,8 +3775,8 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         if (t + 3 < time) // 3秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
-                || danmaku.getUid() != uid
-                || danmaku.getGiftName() != gift)
+                || dm.getUid() != uid
+                || dm.getGiftName() != gift)
             continue;
 
         // 是这个没错了
@@ -4041,12 +4135,12 @@ void MainWindow::sendGift(int giftId, int giftNum)
     manager->post(*request, ba);
 }
 
-void MainWindow::getRoomLiveVideoUrl()
+void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
     if (roomId.isEmpty())
         return ;
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
-            + "&quality=4&qn=10000";
+            + "&quality=4&qn=10000&platform=web&otype=json";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
@@ -4080,20 +4174,8 @@ void MainWindow::getRoomLiveVideoUrl()
           "stream_type": 0,
           "p2p_type": 0*/
         QString url = array.first().toObject().value("url").toString();
-//        qDebug() << "直播视频流地址：" << url;
-        if (!videoPlayer || videoPlayer->isHidden())
-        {
-            QApplication::clipboard()->setText(url);
-
-            for (int i = 0; i < array.size(); i++)
-                qDebug() << "链接列表：" << array.at(i).toObject().value("url").toString();
-            return ;
-        }
-        else
-        {
-            // 重新设置视频流
-            videoPlayer-> setPlayUrl(url);
-        }
+        if (func)
+            func(url);
     });
     manager->get(*request);
 }
@@ -4702,7 +4784,9 @@ void MainWindow::on_actionShow_Lucky_Draw_triggered()
 
 void MainWindow::on_actionGet_Play_Url_triggered()
 {
-    getRoomLiveVideoUrl();
+    getRoomLiveVideoUrl([=](QString url) {
+        QApplication::clipboard()->setText(url);
+    });
 }
 
 void MainWindow::on_actionShow_Live_Video_triggered()
@@ -5428,6 +5512,43 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
 }
 
+void MainWindow::releaseLiveData()
+{
+    ui->roomRankLabel->setText("");
+    ui->roomRankLabel->setToolTip("");
+
+    pking = false;
+    pkUid = "";
+    pkUname = "";
+    pkRoomId = "";
+    pkEnding = false;
+    pkVoting = 0;
+    pkVideo = false;
+    myAudience.clear();
+    oppositeAudience.clear();
+    fansList.clear();
+
+    danmuPopularQueue.clear();
+    minuteDanmuPopular = 0;
+    danmuPopularValue = 0;
+
+    if (danmakuWindow)
+    {
+        danmakuWindow->hideStatusText();
+        danmakuWindow->setUpUid(0);
+        danmakuWindow->releaseLiveData();
+    }
+
+    if (pkSocket)
+    {
+        if (pkSocket->state() == QAbstractSocket::ConnectedState)
+            pkSocket->close();
+        pkSocket = nullptr;
+    }
+
+    finishLiveRecord();
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -5498,4 +5619,18 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
         ui->roomIdEdit->setText(id);
         on_roomIdEdit_editingFinished();
     });
+}
+
+void MainWindow::on_recordCheck_clicked()
+{
+    bool check = ui->recordCheck->isChecked();
+    settings.setValue("danmaku/record", check);
+
+    if (check)
+    {
+        if (!roomId.isEmpty() && liveStatus)
+            startLiveRecord();
+    }
+    else
+        finishLiveRecord();
 }
