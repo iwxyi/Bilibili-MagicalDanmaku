@@ -3094,7 +3094,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         // 新人小号禁言
-        auto testTipBlock = [=]{
+        bool blocked = false;
+        auto testTipBlock = [&]{
             if (danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
                 QString reStr = ui->promptBlockNewbieKeysEdit->toPlainText();
@@ -3102,6 +3103,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     reStr = reStr.left(reStr.length()-1);
                 if (msg.indexOf(QRegularExpression(reStr)) > -1) // 提示拉黑
                 {
+                    blocked = true;
                     danmakuWindow->showFastBlock(uid, msg);
                 }
             }
@@ -3113,7 +3115,6 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
-            bool blocked = false;
             // 自动拉黑
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
@@ -3172,6 +3173,9 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             testTipBlock();
         }
+
+        if (!blocked)
+            markNotRobot(uid);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -3225,6 +3229,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         }
+
+        // 都送礼了，总该不是机器人了吧
+        markNotRobot(uid);
 
         if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
@@ -3637,6 +3644,15 @@ void MainWindow::judgeRobotAndMark(LiveDanmaku danmaku)
         if (danmakuWindow)
             danmakuWindow->markRobot(danmaku.getUid());
     });
+}
+
+void MainWindow::markNotRobot(qint64 uid)
+{
+    if (!judgeRobot)
+        return ;
+    int val = robotRecord.value("robot/" + snum(uid), 0).toInt();
+    if (val != -1)
+        robotRecord.setValue("robot/" + snum(uid), -1);
 }
 
 /**
