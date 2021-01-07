@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1099,6 +1099,12 @@
             <property name="prefix">
              <string>左边缘</string>
             </property>
+            <property name="minimum">
+             <number>-200</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
            </widget>
           </item>
           <item>
@@ -1108,6 +1114,12 @@
             </property>
             <property name="prefix">
              <string>右边缘</string>
+            </property>
+            <property name="minimum">
+             <number>-200</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
             </property>
            </widget>
           </item>
@@ -1126,6 +1138,12 @@
             <property name="prefix">
              <string>上边缘</string>
             </property>
+            <property name="minimum">
+             <number>-200</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
+            </property>
            </widget>
           </item>
           <item>
@@ -1135,6 +1153,12 @@
             </property>
             <property name="prefix">
              <string>下边缘</string>
+            </property>
+            <property name="minimum">
+             <number>-200</number>
+            </property>
+            <property name="maximum">
+             <number>200</number>
             </property>
            </widget>
           </item>
@@ -1148,10 +1172,10 @@
           <item>
            <widget class="QSpinBox" name="screenDanmakuSpeedSpin">
             <property name="suffix">
-             <string>像素</string>
+             <string>秒</string>
             </property>
             <property name="prefix">
-             <string>移动速度</string>
+             <string>移动时间</string>
             </property>
             <property name="minimum">
              <number>1</number>

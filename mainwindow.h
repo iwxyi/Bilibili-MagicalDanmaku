@@ -407,6 +407,7 @@ private:
     void handlePkMessage(QJsonObject json);
 
     void releaseLiveData();
+    QRect getScreenRect();
 
 private:
     Ui::MainWindow *ui;

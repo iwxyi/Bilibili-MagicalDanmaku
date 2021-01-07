@@ -439,8 +439,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->screenDanmakuRightSpin->setValue(settings.value("screendanmaku/right", 0).toInt());
     ui->screenDanmakuTopSpin->setValue(settings.value("screendanmaku/top", 0).toInt());
     ui->screenDanmakuBottomSpin->setValue(settings.value("screendanmaku/bottom", 0).toInt());
-    ui->screenDanmakuSpeedSpin->setValue(settings.value("screendanmaku/speed", 0).toInt());
+    ui->screenDanmakuSpeedSpin->setValue(settings.value("screendanmaku/speed", 10).toInt());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
+    QString danmakuFontString = settings.value("screendanmaku/font").toString();
+    if (!danmakuFontString.isEmpty())
+        screenDanmakuFont.fromString(danmakuFontString);
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+       showScreenDanmaku(danmaku);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -3848,6 +3854,46 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
         return ;
     if (!ui->enableScreenMsgCheck->isChecked() && danmaku.getMsgType() != MSG_DANMAKU) // 不显示所有msg
         return ;
+
+    // 显示动画
+    QLabel* label = new QLabel(nullptr);
+    label->setWindowFlag(Qt::FramelessWindowHint, true);
+    if (danmaku.getMsgType() == MSG_DANMAKU)
+        label->setText(danmaku.getText());
+    else
+        label->setText(danmaku.toString());
+    label->setFont(screenDanmakuFont);
+    label->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    label->adjustSize();
+    label->show();
+
+    int left = ui->screenDanmakuLeftSpin->value();
+    int right = ui->screenDanmakuRightSpin->value();
+    int top = ui->screenDanmakuTopSpin->value();
+    int bottom = ui->screenDanmakuBottomSpin->value();
+    QRect rect = getScreenRect();
+    left = rect.left() + rect.width() * left / 100;
+    right = rect.right() - rect.width() * right / 100;
+    top = rect.top() + rect.height() * top / 100;
+    bottom = rect.bottom() - rect.height() * top / 100;
+    int sx = right, ex = left - label->width();
+    if (left > right) // 从左往右
+    {
+        sx = right - label->width();
+        ex = left;
+    }
+    int y = qMin(top, bottom) + label->height() + qrand() % (qMax(30, qAbs(bottom - top - label->height())));
+
+    QPropertyAnimation* ani = new QPropertyAnimation(label, "pos");
+    ani->setStartValue(QPoint(sx, y));
+    ani->setEndValue(QPoint(ex, y));
+    qDebug() << rect << QPoint(sx, y) << QPoint(ex, y);
+    ani->setDuration(ui->screenDanmakuSpeedSpin->value());
+    connect(ani, &QPropertyAnimation::finished, ani, [=]{
+        ani->deleteLater();
+        label->deleteLater();
+    });
+    ani->start();
 }
 
 /**
@@ -5657,6 +5703,13 @@ void MainWindow::releaseLiveData()
     finishLiveRecord();
 }
 
+QRect MainWindow::getScreenRect()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect screenRect = screen->availableVirtualGeometry();
+    return screenRect;
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -5788,40 +5841,47 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
 {
+    settings.setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
 }
 
 void MainWindow::on_enableScreenMsgCheck_clicked()
 {
-
+    settings.setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
 }
 
 void MainWindow::on_screenDanmakuLeftSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("screendanmaku/left", arg1);
 }
 
 void MainWindow::on_screenDanmakuRightSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("screendanmaku/right", arg1);
 }
 
 void MainWindow::on_screenDanmakuTopSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("screendanmaku/top", arg1);
 }
 
 void MainWindow::on_screenDanmakuBottomSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("screendanmaku/bottom", arg1);
 }
 
 void MainWindow::on_screenDanmakuSpeedSpin_valueChanged(int arg1)
 {
-
+    settings.setValue("screendanmaku/speed", arg1);
 }
 
 void MainWindow::on_screenDanmakuFontButton_clicked()
 {
-
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok,this);
+    if (!ok)
+        return ;
+    this->screenDanmakuFont = font;
+    this->setFont(font);
+    settings.setValue("screendanmaku/font", screenDanmakuFont.toString());
 }
