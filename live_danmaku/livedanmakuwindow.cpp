@@ -110,6 +110,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     msgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/msgColor", QColor(Qt::white)));
     bgColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
     hlColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
+    QString fontString = settings.value("livedanmakuwindow/font").toString();
+    if (!fontString.isEmpty())
+        danmakuFont.fromString(fontString);
 
     // 忽略的颜色
     ignoreDanmakuColors = settings.value("livedanmakuwindow/ignoreColor").toString().split(";");
@@ -273,6 +276,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     label->setWordWrap(true);
     label->setAlignment((Qt::Alignment)( (int)Qt::AlignVCenter ));
+    label->setFont(danmakuFont);
 
     QListWidgetItem* item = new QListWidgetItem(listWidget);
     listWidget->addItem(item);
@@ -787,6 +791,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
+    QAction* actionFont = new QAction("字体", this);
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
@@ -935,6 +940,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionMsgColor);
     settingMenu->addAction(actionBgColor);
     settingMenu->addAction(actionHlColor);
+    settingMenu->addAction(actionFont);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
@@ -993,6 +999,15 @@ void LiveDanmakuWindow::showMenu()
             settings.setValue("livedanmakuwindow/hlColor", hlColor = c);
             resetItemsTextColor();
         }
+    });
+    connect(actionFont, &QAction::triggered, this, [=]{
+        bool ok;
+        QFont font = QFontDialog::getFont(&ok,this);
+        if (!ok)
+            return ;
+        this->danmakuFont = font;
+        this->setFont(font);
+        settings.setValue("livedanmakuwindow/font", danmakuFont.toString());
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

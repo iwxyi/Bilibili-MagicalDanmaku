@@ -34,6 +34,7 @@
 #include <QStringListModel>
 #include <QGraphicsDropShadowEffect>
 #include <QNetworkCookie>
+#include <QFontDialog>
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -135,6 +136,7 @@ private:
     QColor msgColor;
     QColor bgColor;
     QColor hlColor;
+    QFont danmakuFont;
     bool autoTrans = true;
     bool aiReply = false;
     bool enableBlock = false;
