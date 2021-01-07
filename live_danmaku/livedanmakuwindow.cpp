@@ -725,6 +725,26 @@ void LiveDanmakuWindow::resetItemsText()
     }
 }
 
+void LiveDanmakuWindow::resetItemsFont()
+{
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        auto item = listWidget->item(i);
+        auto widget = listWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+        auto layoutItem = layout->itemAt(DANMAKU_WIDGET_LABEL);
+        auto label = layoutItem->widget();
+        if (!label)
+            continue;
+        label->setFont(danmakuFont);
+        label->adjustSize();
+        widget->adjustSize();
+        item->setSizeHint(widget->size());
+    }
+}
+
 void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
 {
     qint64 uid = danmaku.getUid();
@@ -1008,6 +1028,7 @@ void LiveDanmakuWindow::showMenu()
         this->danmakuFont = font;
         this->setFont(font);
         settings.setValue("livedanmakuwindow/font", danmakuFont.toString());
+        resetItemsFont();
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
