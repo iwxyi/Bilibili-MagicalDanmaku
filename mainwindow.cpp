@@ -120,7 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
-    bool reply = settings.value("danmaku/aiReply", true).toBool();
+    bool reply = settings.value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
 
     // 黑名单管理
@@ -439,8 +439,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->enableScreenMsgCheck->setChecked(settings.value("screendanmaku/enableMsg", false).toBool());
     ui->screenDanmakuLeftSpin->setValue(settings.value("screendanmaku/left", 0).toInt());
     ui->screenDanmakuRightSpin->setValue(settings.value("screendanmaku/right", 0).toInt());
-    ui->screenDanmakuTopSpin->setValue(settings.value("screendanmaku/top", 0).toInt());
-    ui->screenDanmakuBottomSpin->setValue(settings.value("screendanmaku/bottom", 0).toInt());
+    ui->screenDanmakuTopSpin->setValue(settings.value("screendanmaku/top", 10).toInt());
+    ui->screenDanmakuBottomSpin->setValue(settings.value("screendanmaku/bottom", 60).toInt());
     ui->screenDanmakuSpeedSpin->setValue(settings.value("screendanmaku/speed", 10).toInt());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
     QString danmakuFontString = settings.value("screendanmaku/font").toString();
@@ -4918,13 +4918,14 @@ void MainWindow::on_diangeReplyCheck_clicked()
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
-    text += "由小乂独立开发。\n此程序仅供个人学习、研究之用，禁止用于商业用途。\n请在下载后24小时内删除！";
+    text += "由小乂独立开发。\n此程序仅供个人学习、研究之用，禁止用于商业用途。\n请在下载后24小时内删除！\n";
+    text += "email : wxy@iwxyi.com\ngithub: https://github.com/iwxyi";
     QMessageBox::information(this, "关于", text);
 }
 
 void MainWindow::on_actionGitHub_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/MRXY001/BilibiliLiveDanmaku"));
+    QDesktopServices::openUrl(QUrl("https://github.com/iwxyi/BilibiliLiveDanmaku"));
 }
 
 void MainWindow::on_actionCustom_Variant_triggered()
