@@ -291,6 +291,18 @@ private slots:
 
     void on_recordSplitSpin_valueChanged(int arg1);
 
+    void on_sendWelcomeTextCheck_clicked();
+
+    void on_sendWelcomeVoiceCheck_clicked();
+
+    void on_sendGiftTextCheck_clicked();
+
+    void on_sendGiftVoiceCheck_clicked();
+
+    void on_sendAttentionTextCheck_clicked();
+
+    void on_sendAttentionVoiceCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -351,6 +363,7 @@ private:
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
+    void speekText(QString text);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();

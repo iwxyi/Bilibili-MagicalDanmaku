@@ -311,6 +311,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoWelcomeWordsEdit->setPlainText(settings.value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
     ui->autoThankWordsEdit->setPlainText(settings.value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
     ui->autoAttentionWordsEdit->setPlainText(settings.value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
+    ui->sendWelcomeTextCheck->setChecked(settings.value("danmaku/sendWelcomeText", true).toBool());
+    ui->sendWelcomeVoiceCheck->setChecked(settings.value("danmaku/sendWelcomeVoice", false).toBool());
+    ui->sendGiftTextCheck->setChecked(settings.value("danmaku/sendGiftText", true).toBool());
+    ui->sendGiftVoiceCheck->setChecked(settings.value("danmaku/sendGiftVoice", false).toBool());
+    ui->sendAttentionTextCheck->setChecked(settings.value("danmaku/sendAttentionText", true).toBool());
+    ui->sendAttentionVoiceCheck->setChecked(settings.value("danmaku/sendAttentionVoice", false).toBool());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -735,8 +741,13 @@ void MainWindow::sendWelcomeMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    if (ui->sendWelcomeTextCheck->isChecked())
+    {
+        msg = msgToShort(msg);
+        sendAutoMsg(msg);
+    }
+    if (ui->sendWelcomeVoiceCheck->isChecked())
+        speekText(msg);
 }
 
 void MainWindow::sendOppositeMsg(QString msg)
@@ -747,13 +758,18 @@ void MainWindow::sendOppositeMsg(QString msg)
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 2; // 一般的欢迎冷却时间
+    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 2; // 一半的欢迎冷却时间
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
 
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    if (ui->sendWelcomeTextCheck->isChecked())
+    {
+        msg = msgToShort(msg);
+        sendAutoMsg(msg);
+    }
+    if (ui->sendWelcomeVoiceCheck->isChecked())
+        speekText(msg);
 }
 
 void MainWindow::sendGiftMsg(QString msg)
@@ -769,8 +785,13 @@ void MainWindow::sendGiftMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    if (ui->sendGiftTextCheck->isChecked())
+    {
+        msg = msgToShort(msg);
+        sendAutoMsg(msg);
+    }
+    if (ui->sendGiftVoiceCheck->isChecked())
+        speekText(msg);
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
@@ -786,8 +807,13 @@ void MainWindow::sendAttentionMsg(QString msg)
         return ;
     prevTimestamp = timestamp;
 
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    if (ui->sendAttentionTextCheck->isChecked())
+    {
+        msg = msgToShort(msg);
+        sendAutoMsg(msg);
+    }
+    if (ui->sendAttentionVoiceCheck->isChecked())
+        speekText(msg);
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
@@ -3723,7 +3749,11 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
         qDebug() << "强提醒用户：" << danmaku.getNickname();
-        sendNotifyMsg(msg);
+        // 这里要特别判断一下语音，因为 sendNotifyMsg 是不会发送语音的
+        if (ui->sendWelcomeTextCheck->isChecked())
+            sendNotifyMsg(msg);
+        if (ui->sendWelcomeVoiceCheck->isChecked())
+            speekText(msg);
     }
     else
     {
@@ -3762,6 +3792,11 @@ void MainWindow::markNotRobot(qint64 uid)
     int val = robotRecord.value("robot/" + snum(uid), 0).toInt();
     if (val != -1)
         robotRecord.setValue("robot/" + snum(uid), -1);
+}
+
+void MainWindow::speekText(QString text)
+{
+
 }
 
 /**
@@ -5655,4 +5690,34 @@ void MainWindow::on_recordSplitSpin_valueChanged(int arg1)
     settings.setValue("danmaku/recordSplit", arg1);
     if (recordTimer)
         recordTimer->setInterval(arg1 * 60000);
+}
+
+void MainWindow::on_sendWelcomeTextCheck_clicked()
+{
+    settings.setValue("danmaku/sendWelcomeText", ui->sendWelcomeTextCheck->isChecked());
+}
+
+void MainWindow::on_sendWelcomeVoiceCheck_clicked()
+{
+    settings.setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
+}
+
+void MainWindow::on_sendGiftTextCheck_clicked()
+{
+    settings.setValue("danmaku/sendGiftText", ui->sendGiftTextCheck->isChecked());
+}
+
+void MainWindow::on_sendGiftVoiceCheck_clicked()
+{
+    settings.setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
+}
+
+void MainWindow::on_sendAttentionTextCheck_clicked()
+{
+    settings.setValue("danmaku/sendAttentionText", ui->sendAttentionTextCheck->isChecked());
+}
+
+void MainWindow::on_sendAttentionVoiceCheck_clicked()
+{
+    settings.setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
 }

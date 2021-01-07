@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>384</width>
+    <width>390</width>
     <height>496</height>
    </rect>
   </property>
@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -604,6 +604,23 @@
            </spacer>
           </item>
           <item>
+           <widget class="QCheckBox" name="sendWelcomeTextCheck">
+            <property name="text">
+             <string>文字</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendWelcomeVoiceCheck">
+            <property name="text">
+             <string>语音</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QSpinBox" name="sendWelcomeCDSpin">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连续两次自动发送弹幕的冷却时间&lt;/p&gt;&lt;p&gt;在此期间会无视进入直播间、送礼等&lt;/p&gt;&lt;p&gt;建议调高，避免被B站冻结发言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -678,6 +695,23 @@
            </spacer>
           </item>
           <item>
+           <widget class="QCheckBox" name="sendGiftTextCheck">
+            <property name="text">
+             <string>文字</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendGiftVoiceCheck">
+            <property name="text">
+             <string>语音</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QSpinBox" name="sendGiftCDSpin">
             <property name="suffix">
              <string>秒</string>
@@ -741,6 +775,23 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendAttentionTextCheck">
+            <property name="text">
+             <string>文字</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendAttentionVoiceCheck">
+            <property name="text">
+             <string>语音</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QSpinBox" name="sendAttentionCDSpin">
@@ -1144,7 +1195,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>384</width>
+     <width>390</width>
      <height>26</height>
     </rect>
    </property>
