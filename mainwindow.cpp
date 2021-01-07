@@ -135,6 +135,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->autoBlockNewbieNotifyCheck->setChecked(settings.value("block/autoBlockNewbieNotify", false).toBool());
     ui->autoBlockNewbieNotifyWordsEdit->setPlainText(settings.value("block/autoBlockNewbieNotifyWords").toString());
+    ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 
     ui->promptBlockNewbieCheck->setChecked(settings.value("block/promptBlockNewbie", false).toBool());
     ui->promptBlockNewbieKeysEdit->setPlainText(settings.value("block/promptBlockNewbieKeys").toString());
@@ -317,6 +318,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sendGiftVoiceCheck->setChecked(settings.value("danmaku/sendGiftVoice", false).toBool());
     ui->sendAttentionTextCheck->setChecked(settings.value("danmaku/sendAttentionText", true).toBool());
     ui->sendAttentionVoiceCheck->setChecked(settings.value("danmaku/sendAttentionVoice", false).toBool());
+    ui->sendWelcomeTextCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
+    ui->sendWelcomeVoiceCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
+    ui->sendGiftTextCheck->setEnabled(ui->autoSendGiftCheck->isChecked());
+    ui->sendGiftVoiceCheck->setEnabled(ui->autoSendGiftCheck->isChecked());
+    ui->sendAttentionTextCheck->setEnabled(ui->autoSendAttentionCheck->isChecked());
+    ui->sendAttentionVoiceCheck->setEnabled(ui->autoSendAttentionCheck->isChecked());
 
     // 文字转语音
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked() || ui->sendAttentionVoiceCheck->isChecked())
@@ -424,6 +431,16 @@ MainWindow::MainWindow(QWidget *parent)
             on_roomIdEdit_editingFinished();
         });
     }
+
+    // 滚屏
+    ui->enableScreenDanmakuCheck->setChecked(settings.value("screendanmaku/enableDanmaku", false).toBool());
+    ui->enableScreenMsgCheck->setChecked(settings.value("screendanmaku/enableMsg", false).toBool());
+    ui->screenDanmakuLeftSpin->setValue(settings.value("screendanmaku/left", 0).toInt());
+    ui->screenDanmakuRightSpin->setValue(settings.value("screendanmaku/right", 0).toInt());
+    ui->screenDanmakuTopSpin->setValue(settings.value("screendanmaku/top", 0).toInt());
+    ui->screenDanmakuBottomSpin->setValue(settings.value("screendanmaku/bottom", 0).toInt());
+    ui->screenDanmakuSpeedSpin->setValue(settings.value("screendanmaku/speed", 0).toInt());
+    ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
 }
 
 MainWindow::~MainWindow()
@@ -2874,6 +2891,16 @@ void MainWindow::processDanmakuCmd(QString msg)
         saveTaskList();
         sendNotifyMsg(">已开启定时任务");
     }
+    else if (msg == "开启录播")
+    {
+        startLiveRecord();
+        sendNotifyMsg(">已开启录播");
+    }
+    else if (msg == "关闭录播")
+    {
+        finishLiveRecord();
+        sendNotifyMsg(">已关闭录播");
+    }
 }
 
 void MainWindow::restoreCustomVariant(QString text)
@@ -3815,6 +3842,14 @@ void MainWindow::speekText(QString text)
     tts->say(text);
 }
 
+void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
+{
+    if (!ui->enableScreenDanmakuCheck->isChecked()) // 不显示所有弹幕
+        return ;
+    if (!ui->enableScreenMsgCheck->isChecked() && danmaku.getMsgType() != MSG_DANMAKU) // 不显示所有msg
+        return ;
+}
+
 /**
  * 合并消息
  * 在添加到消息队列前调用此函数判断
@@ -4249,11 +4284,15 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
+    ui->sendWelcomeTextCheck->setEnabled(arg1);
+    ui->sendWelcomeVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoSendGiftCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
+    ui->sendGiftTextCheck->setEnabled(arg1);
+    ui->sendGiftVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoWelcomeWordsEdit_textChanged()
@@ -4284,6 +4323,8 @@ void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
+    ui->sendAttentionTextCheck->setEnabled(arg1);
+    ui->sendAttentionVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoAttentionWordsEdit_textChanged()
@@ -4500,6 +4541,7 @@ void MainWindow::on_diangeFormatButton_clicked()
 void MainWindow::on_autoBlockNewbieCheck_clicked()
 {
     settings.setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
+    ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 }
 
 void MainWindow::on_autoBlockNewbieKeysEdit_textChanged()
@@ -5742,4 +5784,44 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
     settings.setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
         tts = new QTextToSpeech(this);
+}
+
+void MainWindow::on_enableScreenDanmakuCheck_clicked()
+{
+    ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
+}
+
+void MainWindow::on_enableScreenMsgCheck_clicked()
+{
+
+}
+
+void MainWindow::on_screenDanmakuLeftSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_screenDanmakuRightSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_screenDanmakuTopSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_screenDanmakuBottomSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_screenDanmakuSpeedSpin_valueChanged(int arg1)
+{
+
+}
+
+void MainWindow::on_screenDanmakuFontButton_clicked()
+{
+
 }

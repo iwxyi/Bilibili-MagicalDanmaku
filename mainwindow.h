@@ -304,6 +304,22 @@ private slots:
 
     void on_sendAttentionVoiceCheck_clicked();
 
+    void on_enableScreenDanmakuCheck_clicked();
+
+    void on_enableScreenMsgCheck_clicked();
+
+    void on_screenDanmakuLeftSpin_valueChanged(int arg1);
+
+    void on_screenDanmakuRightSpin_valueChanged(int arg1);
+
+    void on_screenDanmakuTopSpin_valueChanged(int arg1);
+
+    void on_screenDanmakuBottomSpin_valueChanged(int arg1);
+
+    void on_screenDanmakuSpeedSpin_valueChanged(int arg1);
+
+    void on_screenDanmakuFontButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -365,6 +381,7 @@ private:
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
     void speekText(QString text);
+    void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
@@ -524,5 +541,8 @@ private:
 
     // 文字转语音
     QTextToSpeech *tts = nullptr;
+
+    // 全屏弹幕
+    QFont screenDanmakuFont;
 };
 #endif // MAINWINDOW_H

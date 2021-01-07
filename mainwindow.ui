@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>6</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -518,7 +518,7 @@
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
-        <string>发送</string>
+        <string>定时</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -572,7 +572,7 @@
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>感谢</string>
+        <string>答谢</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
@@ -1057,6 +1057,128 @@
            <size>
             <width>20</width>
             <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_7">
+       <attribute name="title">
+        <string>滚屏</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <item>
+           <widget class="QCheckBox" name="enableScreenDanmakuCheck">
+            <property name="text">
+             <string>全屏滚动弹幕</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="enableScreenMsgCheck">
+            <property name="text">
+             <string>全屏滚动信息</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_29">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="screenDanmakuLeftSpin">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="prefix">
+             <string>左边缘</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="screenDanmakuRightSpin">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="prefix">
+             <string>右边缘</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_30">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="screenDanmakuTopSpin">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="prefix">
+             <string>上边缘</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="screenDanmakuBottomSpin">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="prefix">
+             <string>下边缘</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="screenDanmakuSpeedSpin">
+            <property name="suffix">
+             <string>像素</string>
+            </property>
+            <property name="prefix">
+             <string>移动速度</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="screenDanmakuFontButton">
+            <property name="text">
+             <string>字体</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>245</height>
            </size>
           </property>
          </spacer>
