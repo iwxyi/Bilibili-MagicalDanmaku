@@ -322,6 +322,8 @@ private slots:
 
     void on_screenDanmakuColorButton_clicked();
 
+    void on_autoSpeekDanmakuCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -382,6 +384,7 @@ private:
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
+    void speekVariantText(QString text);
     void speekText(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 

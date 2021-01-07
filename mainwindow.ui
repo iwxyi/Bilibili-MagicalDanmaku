@@ -1217,6 +1217,20 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_32">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+            <property name="text">
+             <string>朗读弹幕</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <spacer name="verticalSpacer_5">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -1224,7 +1238,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>245</height>
+            <height>217</height>
            </size>
           </property>
          </spacer>

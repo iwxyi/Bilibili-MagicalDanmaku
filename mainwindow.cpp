@@ -326,7 +326,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sendAttentionVoiceCheck->setEnabled(ui->autoSendAttentionCheck->isChecked());
 
     // 文字转语音
-    if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked() || ui->sendAttentionVoiceCheck->isChecked())
+    ui->autoSpeekDanmakuCheck->setChecked(settings.value("danmaku/autoSpeek", false).toBool());
+    if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
+            || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck)
         tts = new QTextToSpeech(this);
 
     // 开播
@@ -447,6 +449,11 @@ MainWindow::MainWindow(QWidget *parent)
     screenDanmakuColor = qvariant_cast<QColor>(settings.value("screendanmaku/color", QColor(0, 0, 0)));
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
        showScreenDanmaku(danmaku);
+    });
+
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+       if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
+           speekText(danmaku.getText());
     });
 }
 
@@ -775,7 +782,7 @@ void MainWindow::sendWelcomeMsg(QString msg)
         sendAutoMsg(msg);
     }
     if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekText(msg);
+        speekVariantText(msg);
 }
 
 void MainWindow::sendOppositeMsg(QString msg)
@@ -797,7 +804,7 @@ void MainWindow::sendOppositeMsg(QString msg)
         sendAutoMsg(msg);
     }
     if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekText(msg);
+        speekVariantText(msg);
 }
 
 void MainWindow::sendGiftMsg(QString msg)
@@ -818,7 +825,7 @@ void MainWindow::sendGiftMsg(QString msg)
         sendAutoMsg(msg);
     }
     if (ui->sendGiftVoiceCheck->isChecked())
-        speekText(msg);
+        speekVariantText(msg);
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
@@ -840,7 +847,7 @@ void MainWindow::sendAttentionMsg(QString msg)
         sendAutoMsg(msg);
     }
     if (ui->sendAttentionVoiceCheck->isChecked())
-        speekText(msg);
+        speekVariantText(msg);
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
@@ -3419,7 +3426,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 if (ui->sendGiftTextCheck->isChecked())
                     sendAutoMsg(msg);
                 if (ui->sendGiftVoiceCheck->isChecked())
-                    speekText(msg);
+                    speekVariantText(msg);
             }
             else
                 sendGiftMsg(msg);
@@ -3795,7 +3802,7 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
         if (ui->sendWelcomeTextCheck->isChecked())
             sendNotifyMsg(msg);
         if (ui->sendWelcomeVoiceCheck->isChecked())
-            speekText(msg);
+            speekVariantText(msg);
     }
     else
     {
@@ -3836,13 +3843,24 @@ void MainWindow::markNotRobot(qint64 uid)
         robotRecord.setValue("robot/" + snum(uid), -1);
 }
 
+void MainWindow::speekVariantText(QString text)
+{
+    if(!tts || tts->state() != QTextToSpeech::Ready)
+        return ;
+
+    // 处理带变量的内容
+    text = processTimeVariants(text);
+
+    // 开始播放
+    speekText(text);
+}
+
 void MainWindow::speekText(QString text)
 {
-    if(tts->state() != QTextToSpeech::Ready)
+    if(!tts || tts->state() != QTextToSpeech::Ready)
         return ;
 
     // 处理特殊字符
-    text = processTimeVariants(text);
     text.replace("_", " ");
 
     // 开始播放
@@ -3862,6 +3880,7 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
     label->setWindowFlag(Qt::Tool, true);
     label->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     label->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+    label->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
     if (danmaku.getMsgType() == MSG_DANMAKU || !danmaku.getText().isEmpty())
         label->setText(danmaku.getText());
@@ -5906,4 +5925,11 @@ void MainWindow::on_screenDanmakuColorButton_clicked()
     {
         settings.setValue("screendanmaku/color", screenDanmakuColor = c);
     }
+}
+
+void MainWindow::on_autoSpeekDanmakuCheck_clicked()
+{
+    settings.setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
+    if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
+        tts = new QTextToSpeech(this);
 }
