@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets
+QT       += core gui network websockets multimedia multimediawidgets texttospeech
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

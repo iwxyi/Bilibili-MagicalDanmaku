@@ -20,6 +20,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
+#include <QtTextToSpeech/QTextToSpeech>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -520,5 +521,8 @@ private:
     QSystemTrayIcon *tray;//托盘图标添加成员
     QAction *restoreAction;//托盘图标右键点击时弹出选项
     QAction *quitAction;//托盘图标右键点击时弹出选项
+
+    // 文字转语音
+    QTextToSpeech *tts = nullptr;
 };
 #endif // MAINWINDOW_H

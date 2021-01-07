@@ -318,6 +318,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sendAttentionTextCheck->setChecked(settings.value("danmaku/sendAttentionText", true).toBool());
     ui->sendAttentionVoiceCheck->setChecked(settings.value("danmaku/sendAttentionVoice", false).toBool());
 
+    // 文字转语音
+    if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked() || ui->sendAttentionVoiceCheck->isChecked())
+        tts = new QTextToSpeech(this);
+
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
@@ -3796,7 +3800,14 @@ void MainWindow::markNotRobot(qint64 uid)
 
 void MainWindow::speekText(QString text)
 {
+    if(tts->state() != QTextToSpeech::Ready)
+        return ;
 
+    // 处理特殊字符
+    text.replace("_", " ");
+
+    // 开始播放
+    tts->say(text);
 }
 
 /**
@@ -5700,6 +5711,8 @@ void MainWindow::on_sendWelcomeTextCheck_clicked()
 void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
+    if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
+        tts = new QTextToSpeech(this);
 }
 
 void MainWindow::on_sendGiftTextCheck_clicked()
@@ -5710,6 +5723,8 @@ void MainWindow::on_sendGiftTextCheck_clicked()
 void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
+    if (!tts && ui->sendGiftVoiceCheck->isChecked())
+        tts = new QTextToSpeech(this);
 }
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
@@ -5720,4 +5735,6 @@ void MainWindow::on_sendAttentionTextCheck_clicked()
 void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
+    if (!tts && ui->sendAttentionVoiceCheck->isChecked())
+        tts = new QTextToSpeech(this);
 }
