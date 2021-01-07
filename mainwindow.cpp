@@ -152,6 +152,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 录播
     if (settings.value("danmaku/record", false).toBool())
         ui->recordCheck->setChecked(true);
+    int recordSplit = settings.value("danmaku/recordSplit", 30).toInt();
+    ui->recordSplitSpin->setValue(recordSplit);
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -5617,4 +5619,11 @@ void MainWindow::on_recordCheck_clicked()
     }
     else
         finishLiveRecord();
+}
+
+void MainWindow::on_recordSplitSpin_valueChanged(int arg1)
+{
+    settings.setValue("danmaku/recordSplit", arg1);
+    if (recordTimer)
+        recordTimer->setInterval(arg1 * 60000);
 }

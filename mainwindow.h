@@ -289,6 +289,8 @@ private slots:
 
     void on_recordCheck_clicked();
 
+    void on_recordSplitSpin_valueChanged(int arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
