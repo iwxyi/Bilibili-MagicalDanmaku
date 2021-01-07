@@ -444,6 +444,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString danmakuFontString = settings.value("screendanmaku/font").toString();
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
+    screenDanmakuColor = qvariant_cast<QColor>(settings.value("screendanmaku/color", QColor(0, 0, 0)));
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
        showScreenDanmaku(danmaku);
     });
@@ -3858,37 +3859,47 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
     // 显示动画
     QLabel* label = new QLabel(nullptr);
     label->setWindowFlag(Qt::FramelessWindowHint, true);
-    if (danmaku.getMsgType() == MSG_DANMAKU)
+    label->setWindowFlag(Qt::Tool, true);
+    label->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    label->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+
+    if (danmaku.getMsgType() == MSG_DANMAKU || !danmaku.getText().isEmpty())
         label->setText(danmaku.getText());
     else
         label->setText(danmaku.toString());
     label->setFont(screenDanmakuFont);
-    label->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+
+    auto isBlankColor = [=](QString c) -> bool {
+        c = c.toLower();
+        return c.isEmpty() || c == "#ffffff" || c == "#000000"
+                || c == "#ffffffff" || c == "#00000000";
+    };
+    if (!danmaku.getTextColor().isEmpty() && !isBlankColor(danmaku.getTextColor()))
+        label->setStyleSheet("color:" + danmaku.getTextColor() + ";");
+    else
+        label->setStyleSheet("color:" + QVariant(screenDanmakuColor).toString() + ";");
     label->adjustSize();
     label->show();
 
-    int left = ui->screenDanmakuLeftSpin->value();
-    int right = ui->screenDanmakuRightSpin->value();
-    int top = ui->screenDanmakuTopSpin->value();
-    int bottom = ui->screenDanmakuBottomSpin->value();
     QRect rect = getScreenRect();
-    left = rect.left() + rect.width() * left / 100;
-    right = rect.right() - rect.width() * right / 100;
-    top = rect.top() + rect.height() * top / 100;
-    bottom = rect.bottom() - rect.height() * top / 100;
+    int left = rect.left() + rect.width() * ui->screenDanmakuLeftSpin->value() / 100;
+    int right = rect.right() - rect.width() * ui->screenDanmakuRightSpin->value() / 100;
+    int top = rect.top() + rect.height() * ui->screenDanmakuTopSpin->value() / 100;
+    int bottom = rect.bottom() - rect.height() * ui->screenDanmakuBottomSpin->value() / 100;
     int sx = right, ex = left - label->width();
     if (left > right) // 从左往右
     {
         sx = right - label->width();
         ex = left;
     }
-    int y = qMin(top, bottom) + label->height() + qrand() % (qMax(30, qAbs(bottom - top - label->height())));
+    int ry = qrand() % (qMax(30, qAbs(bottom - top) - label->height()));
+    int y = qMin(top, bottom) + label->height() + ry;
 
+    label->move(QPoint(sx, y));
     QPropertyAnimation* ani = new QPropertyAnimation(label, "pos");
     ani->setStartValue(QPoint(sx, y));
     ani->setEndValue(QPoint(ex, y));
-    qDebug() << rect << QPoint(sx, y) << QPoint(ex, y);
-    ani->setDuration(ui->screenDanmakuSpeedSpin->value());
+    ani->setDuration(ui->screenDanmakuSpeedSpin->value() * 1000);
     connect(ani, &QPropertyAnimation::finished, ani, [=]{
         ani->deleteLater();
         label->deleteLater();
@@ -5884,4 +5895,15 @@ void MainWindow::on_screenDanmakuFontButton_clicked()
     this->screenDanmakuFont = font;
     this->setFont(font);
     settings.setValue("screendanmaku/font", screenDanmakuFont.toString());
+}
+
+void MainWindow::on_screenDanmakuColorButton_clicked()
+{
+    QColor c = QColorDialog::getColor(screenDanmakuColor, this, "选择昵称颜色", QColorDialog::ShowAlphaChannel);
+    if (!c.isValid())
+        return ;
+    if (c != screenDanmakuColor)
+    {
+        settings.setValue("screendanmaku/color", screenDanmakuColor = c);
+    }
 }

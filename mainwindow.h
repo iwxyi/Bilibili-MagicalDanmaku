@@ -320,6 +320,8 @@ private slots:
 
     void on_screenDanmakuFontButton_clicked();
 
+    void on_screenDanmakuColorButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -545,5 +547,6 @@ private:
 
     // 全屏弹幕
     QFont screenDanmakuFont;
+    QColor screenDanmakuColor;
 };
 #endif // MAINWINDOW_H

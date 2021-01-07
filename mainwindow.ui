@@ -1105,6 +1105,9 @@
             <property name="maximum">
              <number>200</number>
             </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
            </widget>
           </item>
           <item>
@@ -1120,6 +1123,9 @@
             </property>
             <property name="maximum">
              <number>200</number>
+            </property>
+            <property name="singleStep">
+             <number>5</number>
             </property>
            </widget>
           </item>
@@ -1144,6 +1150,9 @@
             <property name="maximum">
              <number>200</number>
             </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
            </widget>
           </item>
           <item>
@@ -1160,12 +1169,15 @@
             <property name="maximum">
              <number>200</number>
             </property>
+            <property name="singleStep">
+             <number>5</number>
+            </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -1183,12 +1195,22 @@
             <property name="maximum">
              <number>1000</number>
             </property>
+            <property name="singleStep">
+             <number>3</number>
+            </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="screenDanmakuFontButton">
             <property name="text">
              <string>字体</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="screenDanmakuColorButton">
+            <property name="text">
+             <string>颜色</string>
             </property>
            </widget>
           </item>
