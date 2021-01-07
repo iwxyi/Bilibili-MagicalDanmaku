@@ -780,7 +780,6 @@ void MainWindow::sendGiftMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
-
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -3382,7 +3381,12 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
             if (strongNotifyUsers.contains(uid))
-                sendAutoMsg(msg);
+            {
+                if (ui->sendGiftTextCheck->isChecked())
+                    sendAutoMsg(msg);
+                if (ui->sendGiftVoiceCheck->isChecked())
+                    speekText(msg);
+            }
             else
                 sendGiftMsg(msg);
         }
@@ -3804,6 +3808,7 @@ void MainWindow::speekText(QString text)
         return ;
 
     // 处理特殊字符
+    text = processTimeVariants(text);
     text.replace("_", " ");
 
     // 开始播放
