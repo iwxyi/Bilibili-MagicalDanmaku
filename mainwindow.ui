@@ -979,7 +979,7 @@
              <string>分钟</string>
             </property>
             <property name="prefix">
-             <string>分割时长</string>
+             <string>自动分割</string>
             </property>
             <property name="minimum">
              <number>1</number>

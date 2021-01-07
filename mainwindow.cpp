@@ -154,6 +154,17 @@ MainWindow::MainWindow(QWidget *parent)
         ui->recordCheck->setChecked(true);
     int recordSplit = settings.value("danmaku/recordSplit", 30).toInt();
     ui->recordSplitSpin->setValue(recordSplit);
+    recordTimer = new QTimer(this);
+    recordTimer->setInterval(recordSplit * 60000); // 默认30分钟断开一次
+    connect(recordTimer, &QTimer::timeout, this, [=]{
+        if (!recordLoop) // 没有正在录制
+            return ;
+
+        recordLoop->quit(); // 这个就是停止录制了
+        // 停止之后，录播会检测是否还需要重新录播
+        // 如果是，则继续录
+    });
+    ui->recordCheck->setToolTip("保存地址：" + QApplication::applicationDirPath() + "/record/房间名_时间.mp4");
 
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
@@ -2646,6 +2657,7 @@ void MainWindow::startRecordUrl(QString url)
             .absoluteFilePath();
 
     ui->recordCheck->setText("录制中...");
+    recordTimer->start();
     startRecordTime = QDateTime::currentMSecsSinceEpoch();
     recordLoop = new QEventLoop;
     QNetworkAccessManager manager;
@@ -2677,6 +2689,7 @@ void MainWindow::startRecordUrl(QString url)
     delete request;
     startRecordTime = 0;
     ui->recordCheck->setText("录播");
+    recordTimer->stop();
 
     // 可能是超时结束了，重新下载
     if (ui->recordCheck->isChecked() && liveStatus)
@@ -3190,7 +3203,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         // 新人小号禁言
-        auto testTipBlock = [=]{
+        bool blocked = false;
+        auto testTipBlock = [&]{
             if (danmakuWindow && !ui->promptBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
                 QString reStr = ui->promptBlockNewbieKeysEdit->toPlainText();
@@ -3198,6 +3212,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     reStr = reStr.left(reStr.length()-1);
                 if (msg.indexOf(QRegularExpression(reStr)) > -1) // 提示拉黑
                 {
+                    blocked = true;
                     danmakuWindow->showFastBlock(uid, msg);
                 }
             }
@@ -3209,7 +3224,6 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
-            bool blocked = false;
             // 自动拉黑
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
@@ -3268,6 +3282,9 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             testTipBlock();
         }
+
+        if (!blocked)
+            markNotRobot(uid);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -3321,6 +3338,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         }
+
+        // 都送礼了，总该不是机器人了吧
+        markNotRobot(uid);
 
         if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
@@ -3733,6 +3753,15 @@ void MainWindow::judgeRobotAndMark(LiveDanmaku danmaku)
         if (danmakuWindow)
             danmakuWindow->markRobot(danmaku.getUid());
     });
+}
+
+void MainWindow::markNotRobot(qint64 uid)
+{
+    if (!judgeRobot)
+        return ;
+    int val = robotRecord.value("robot/" + snum(uid), 0).toInt();
+    if (val != -1)
+        robotRecord.setValue("robot/" + snum(uid), -1);
 }
 
 /**

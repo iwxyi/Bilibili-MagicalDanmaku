@@ -350,6 +350,7 @@ private:
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
+    void markNotRobot(qint64 uid);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
