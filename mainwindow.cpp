@@ -4894,6 +4894,9 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             showLocalNotify("开始播放：" + song.simpleString());
         });
+        connect(playerWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
+            settings.setValue("danmaku/playerWindow", false);
+        });
     }
 
     bool hidding = playerWindow->isHidden();
@@ -5943,4 +5946,9 @@ void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
 void MainWindow::on_diangeNeedMedalCheck_clicked()
 {
     settings.setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
+}
+
+void MainWindow::on_showOrderPlayerButton_clicked()
+{
+    on_actionShow_Order_Player_Window_triggered();
 }

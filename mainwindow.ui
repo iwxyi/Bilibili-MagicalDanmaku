@@ -135,7 +135,7 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>功能</string>
+        <string>弹幕</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
@@ -465,7 +465,7 @@
           <item>
            <widget class="QPushButton" name="testDanmakuButton">
             <property name="text">
-             <string> 测试弹幕</string>
+             <string>测试弹幕</string>
             </property>
            </widget>
           </item>
@@ -850,7 +850,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="showOrderPlayerButton">
           <property name="text">
            <string>显示点歌姬</string>
           </property>
@@ -917,6 +917,26 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_2" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background: rgba(88, 88, 88, 64);
+margin: 6px;</string>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_26">
@@ -1018,7 +1038,8 @@
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">background: rgba(88, 88, 88, 64);</string>
+           <string notr="true">background: rgba(88, 88, 88, 64);
+margin: 6px;</string>
           </property>
          </widget>
         </item>
@@ -1282,6 +1303,26 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_3" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background: rgba(88, 88, 88, 64);
+margin: 6px;</string>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_32">

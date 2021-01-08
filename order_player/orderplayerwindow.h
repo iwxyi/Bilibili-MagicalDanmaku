@@ -251,6 +251,7 @@ signals:
     void signalSongPlayFinished(Song song);
     void signalOrderSongSucceed(Song song, qint64 msecond);
     void signalOrderSongPlayed(Song song);
+    void signalWindowClosed();
 
 private:
     Ui::OrderPlayerWindow *ui;

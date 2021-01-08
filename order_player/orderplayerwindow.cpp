@@ -598,6 +598,8 @@ void OrderPlayerWindow::closeEvent(QCloseEvent *)
     // 保存位置
     if (!desktopLyric->isHidden())
         desktopLyric->close();
+
+    emit signalWindowClosed();
 }
 
 void OrderPlayerWindow::resizeEvent(QResizeEvent *)

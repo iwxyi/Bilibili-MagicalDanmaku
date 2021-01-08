@@ -326,6 +326,8 @@ private slots:
 
     void on_diangeNeedMedalCheck_clicked();
 
+    void on_showOrderPlayerButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
