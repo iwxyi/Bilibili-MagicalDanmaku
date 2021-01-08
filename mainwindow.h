@@ -152,6 +152,7 @@ private slots:
 
     void sendMsg(QString msg);
     void sendAutoMsg(QString msgs);
+    void sendWelcomeGuard(QString msg);
     void sendWelcomeMsg(QString msg);
     void sendOppositeMsg(QString msg);
     void sendGiftMsg(QString msg);

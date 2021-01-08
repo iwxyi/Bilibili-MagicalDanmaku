@@ -538,7 +538,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
     }
-    else if (msgType == MSG_WELCOME)
+    else if (msgType == MSG_WELCOME || msgType == MSG_WELCOME_GUARD)
     {
         // 粉丝牌
         QString medalColorStr = isBlankColor(danmaku.getMedalColor())
@@ -556,9 +556,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         }
 
         // 人名
-        if (danmaku.isAdmin())
+        if (danmaku.isAdmin() || danmaku.isGuard())
         {
-            text += QString("舰长 %1")
+            text += QString("舰长 %1 进入直播间")
                     .arg(nameText);
         }
         else

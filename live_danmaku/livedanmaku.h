@@ -47,6 +47,11 @@ public:
     {
 
     }
+    LiveDanmaku(int guard, QString nickname, qint64 uid, QDateTime time)
+        : msgType(MSG_WELCOME_GUARD), guard(guard), nickname(nickname), uid(uid), timeline(time)
+    {
+
+    }
 
     LiveDanmaku(QString nickname, qint64 uid, QString song, QDateTime time)
         : msgType(MSG_DIANGE), nickname(nickname), uid(uid), text(song), timeline(time)
@@ -130,6 +135,7 @@ public:
         danmaku.to_view = object.value("to_view").toBool();
         danmaku.pk_link = object.value("pk_link").toBool();
         danmaku.robot = object.value("robot").toBool();
+        danmaku.guard = object.value("guard").toInt();
         return danmaku;
     }
 
@@ -163,6 +169,11 @@ public:
             object.insert("spread_desc", spread_desc);
             object.insert("spread_info", spread_info);
             object.insert("number", number);
+        }
+        else if (msgType == MSG_WELCOME_GUARD)
+        {
+            object.insert("isadmin", isadmin);
+            object.insert("guard", guard);
         }
         else if (msgType == MSG_DIANGE)
         {
@@ -225,12 +236,18 @@ public:
         else if (msgType == MSG_WELCOME)
         {
             if (isAdmin())
-                return QString("%1    [光临] 舰长 %2")
+                return QString("%1    [光临] 房管 %2")
                         .arg(timeline.toString("hh:mm:ss"))
                         .arg(nickname);
             return QString("%1    [欢迎] %2 进入直播间%3")
                     .arg(timeline.toString("hh:mm:ss"))
                     .arg(nickname).arg(spread_desc.isEmpty() ? "" : (" "+spread_desc));
+        }
+        else if (msgType == MSG_WELCOME)
+        {
+            return QString("%1    [光临] 舰长 %2")
+                    .arg(timeline.toString("hh:mm:ss"))
+                    .arg(nickname);
         }
         else if (msgType == MSG_DIANGE)
         {
@@ -495,6 +512,11 @@ public:
         return prev_timestamp;
     }
 
+    bool isGuard() const
+    {
+        return guard;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -505,6 +527,7 @@ private:
     QString text_color; // 没有的话是空的
     QDateTime timeline;
     int isadmin = 0; // 房管
+    int guard = 0; // 舰长
     int vip = 0;
     int svip = 0;
     bool no_reply = false;

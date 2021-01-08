@@ -634,7 +634,7 @@ void MainWindow::showLocalNotify(QString text, qint64 uid)
 }
 
 /**
- * 发送单挑弹幕的原子操作
+ * 发送单条弹幕的原子操作
  */
 void MainWindow::sendMsg(QString msg)
 {
@@ -694,6 +694,7 @@ void MainWindow::sendMsg(QString msg)
         {
             statusLabel->setText(errorMsg);
             qDebug() << s8("warning: 发送失败：") << errorMsg << msg;
+            showLocalNotify(errorMsg);
         }
     });
 
@@ -723,6 +724,28 @@ void MainWindow::sendAutoMsg(QString msgs)
             delay += cd;
         }
     }
+}
+
+void MainWindow::sendWelcomeGuard(QString msg)
+{
+    if (!liveStatus) // 不在直播中
+        return ;
+
+    // 避免太频繁发消息
+    static qint64 prevTimestamp = 0;
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 10; // 十分之一的冷却，并且独立发送
+    if (timestamp - prevTimestamp < cd)
+        return ;
+    prevTimestamp = timestamp;
+
+    if (ui->sendWelcomeTextCheck->isChecked())
+    {
+        msg = msgToShort(msg);
+        sendAutoMsg(msg);
+    }
+    if (ui->sendWelcomeVoiceCheck->isChecked())
+        speekVariantText(msg);
 }
 
 void MainWindow::sendWelcomeMsg(QString msg)
@@ -2219,6 +2242,30 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%medal_up%"))
         msg.replace("%medal_up%", danmaku.getMedalUp());
 
+    // 房管
+    if (msg.contains("%admin%"))
+        msg.replace("%admin%", danmaku.isGuard() ? "1" : "0");
+
+    // 舰长
+    if (msg.contains("%guard%"))
+        msg.replace("%guard%", danmaku.isGuard() ? "1" : "0");
+
+    // 房管或舰长
+    if (msg.contains("%admin_or_guard%"))
+        msg.replace("%admin_or_guard%", (danmaku.isGuard() || danmaku.isAdmin()) ? "1" : "0");
+
+    // 昵称长度
+    if (msg.contains("%nickname_len%"))
+        msg.replace("%nickname_len%", snum(danmaku.getNickname().length()));
+
+    // 礼物名字长度
+    if (msg.contains("%giftname_len%"))
+        msg.replace("%giftname_len%", snum(danmaku.getGiftName().length()));
+
+    // 昵称+礼物名字长度
+    if (msg.contains("%name_snum_len%"))
+        msg.replace("%name_snum_len%", snum(danmaku.getNickname().length() + danmaku.getGiftName().length()));
+
     // 是否新关注
     if (msg.contains("%new_attention%"))
     {
@@ -2497,7 +2544,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是", "但是", "但", "在下"};
+    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是", "但是", "但", "在下", "做"};
     QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶"};
     starts += special;
     ends += special;
@@ -2571,6 +2618,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         QString all = match.capturedTexts().at(0);
         simp = simp.replace(all, QString("%1%1").arg(ch));
     }
+
+    // 特殊字符
+    simp = simp.replace(QRegularExpression("丨|丶"), "");
 
     if (simp.isEmpty())
         return nickname;
@@ -3516,7 +3566,55 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
     {
+        /*{
+            "cmd": "ENTRY_EFFECT",
+            "data": {
+                "id": 4,
+                "uid": 20285041,
+                "target_id": 688893202,
+                "mock_effect": 0,
+                "face": "https://i2.hdslb.com/bfs/face/24420cdcb6eeb119dbcd1f1843fdd8ada5b7d045.jpg",
+                "privilege_type": 3,
+                "copy_writing": "欢迎舰长 \\u003c%心乂鸽鸽%\\u003e 进入直播间",
+                "copy_color": "#ffffff",
+                "highlight_color": "#E6FF00",
+                "priority": 70,
+                "basemap_url": "https://i0.hdslb.com/bfs/live/mlive/f34c7441cdbad86f76edebf74e60b59d2958f6ad.png",
+                "show_avatar": 1,
+                "effective_time": 2,
+                "web_basemap_url": "",
+                "web_effective_time": 0,
+                "web_effect_close": 0,
+                "web_close_time": 0,
+                "business": 1,
+                "copy_writing_v2": "欢迎 \\u003c^icon^\\u003e 舰长 \\u003c%心乂鸽鸽%\\u003e 进入直播间",
+                "icon_list": [
+                    2
+                ],
+                "max_delay_time": 7
+            }
+        }*/
 
+        QJsonObject data = json.value("data").toObject();
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        QString copy_writing = data.value("copy_writing").toString();
+        QStringList results = QRegularExpression("<%(.+)%>").match(copy_writing).capturedTexts();
+        if (results.size() < 2)
+        {
+            qDebug() << "识别舰长进入失败：" << copy_writing;
+            qDebug() << data;
+            return ;
+        }
+        QString uname = results.at(1);
+        qDebug() << "舰长进入：" << uname;
+
+        LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
+        appendNewLiveDanmaku(danmaku);
+
+        if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
+        {
+            sendWelcome(danmaku);
+        }
     }
     else if (cmd == "WELCOME") // 进入（偶尔能触发？）
     {
@@ -3533,7 +3631,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
-        bool isadmin = data.value("isadmin").toBool();
+        bool isadmin = data.value("isadmin").toBool(); // 一般房管都是舰长吧？
         QString unameColor = data.value("uname_color").toString();
         bool isSpread = data.value("is_spread").toBool();
         QString spreadDesc = data.value("spread_desc").toString();
@@ -3693,7 +3791,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
         bool robot =  (following >= 100 && follower <= 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
-        qDebug() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
+//        qDebug() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
         if (robot)
         {
             // 进一步使用投稿数量判断
@@ -3740,13 +3838,12 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
-        qDebug() << obj;
         int achive_view = obj.value("archive").toObject().value("view").toInt();
         int article_view = obj.value("article").toObject().value("view").toInt();
         int article_like = obj.value("article").toObject().value("like").toInt();
         bool robot = (achive_view + article_view + article_like < 10); // 机器人，或者小号
-        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
-                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
+//        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
+//                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
         robotRecord.setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
         {
@@ -3835,7 +3932,12 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
         if (danmaku.isOpposite())
             sendOppositeMsg(msg);
         else
-            sendWelcomeMsg(msg);
+        {
+            if (danmaku.isGuard()) // 是舰长
+                sendWelcomeGuard(msg);
+            else
+                sendWelcomeMsg(msg);
+        }
     }
 }
 
