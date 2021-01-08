@@ -1482,7 +1482,8 @@ void MainWindow::getRoomInfo(bool reconnect)
             startLiveRecord();
     });
     manager->get(*request);
-    ui->connectStateLabel->setText("获取房间信息...");
+    if (reconnect)
+        ui->connectStateLabel->setText("获取房间信息...");
 }
 
 bool MainWindow::isLivingOrMayliving()
