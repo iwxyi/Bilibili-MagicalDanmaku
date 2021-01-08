@@ -148,6 +148,8 @@ private slots:
 
     void on_addTaskButton_clicked();
 
+    void slotDiange(LiveDanmaku danmaku);
+
     void sendMsg(QString msg);
     void sendAutoMsg(QString msgs);
     void sendWelcomeMsg(QString msg);
@@ -190,7 +192,7 @@ private slots:
 
     void on_sendAttentionCDSpin_valueChanged(int arg1);
 
-    void on_diangeHistoryButton_clicked();
+    void showDiangeHistory();
 
     void addBlockUser(qint64 upUid, int hour);
 
@@ -327,6 +329,8 @@ private slots:
     void on_diangeNeedMedalCheck_clicked();
 
     void on_showOrderPlayerButton_clicked();
+
+    void on_diangeShuaCheck_clicked();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);

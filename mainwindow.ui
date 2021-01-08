@@ -817,22 +817,32 @@
           <item>
            <widget class="QCheckBox" name="diangeReplyCheck">
             <property name="toolTip">
-             <string>点歌成功的回复消息，并带有预计多长时间播放</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌成功的回复消息，并带有预计多长时间播放&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>成功回复</string>
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="diangeShuaCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>避免刷歌</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
-         <widget class="QPushButton" name="diangeHistoryButton">
+         <widget class="QListWidget" name="diangeHistoryListWidget">
           <property name="styleSheet">
-           <string notr="true"/>
-          </property>
-          <property name="text">
-           <string> 历史</string>
+           <string notr="true">QListWidget
+{
+	background: transparent;
+}</string>
           </property>
          </widget>
         </item>
@@ -844,7 +854,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>232</height>
+            <height>63</height>
            </size>
           </property>
          </spacer>

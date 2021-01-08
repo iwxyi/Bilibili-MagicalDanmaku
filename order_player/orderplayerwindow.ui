@@ -232,7 +232,7 @@ QTabBar::tab:disabled
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="styleSheet">
@@ -306,7 +306,7 @@ QTabBar::tab:disabled
             <string/>
            </attribute>
            <attribute name="toolTip">
-            <string>常时：没有点歌时随机播放里面的</string>
+            <string>固定：没有点歌列表时，随机播放里面的歌曲</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <property name="leftMargin">

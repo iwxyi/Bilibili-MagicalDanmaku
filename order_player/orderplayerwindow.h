@@ -249,7 +249,7 @@ signals:
     void signalCoverDownloadFinished(Song song);
     void signalSongPlayStarted(Song song);
     void signalSongPlayFinished(Song song);
-    void signalOrderSongSucceed(Song song, qint64 msecond);
+    void signalOrderSongSucceed(Song song, qint64 msecond, int waiting);
     void signalOrderSongPlayed(Song song);
     void signalWindowClosed();
 

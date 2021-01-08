@@ -70,57 +70,9 @@ MainWindow::MainWindow(QWidget *parent)
     QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
-           return ;
-       QRegularExpression re(diangeFormatString);
-       QRegularExpressionMatch match;
-       if (danmaku.getText().indexOf(re, 0, &match) == -1)
-           return ;
-       if (match.capturedTexts().size() < 2)
-       {
-           statusLabel->setText("无法获取点歌内容，请检测点歌格式");
-           return ;
-       }
-       if (ui->diangeNeedMedalCheck->isChecked())
-       {
-           if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
-               return ;
-       }
-
-       // 记录到历史（先不复制）
-       QString text = match.capturedTexts().at(1);
-       text = text.trimmed();
-       qDebug() << s8("【点歌自动复制】") << text;
-       diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
-
-       if (!diangeAutoCopy) // 是否进行复制操作
-           return ;
-
-       if (playerWindow && !playerWindow->isHidden()) // 自动播放
-       {
-           if (playerWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
-           {
-               showLocalNotify("已阻止频繁点歌");
-           }
-           else
-           {
-               playerWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
-           }
-       }
-       else
-       {
-           QClipboard* clip = QApplication::clipboard();
-           clip->setText(text);
-
-           addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
-           QTimer::singleShot(10, [=]{
-               appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
-           });
-       }
-       ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
-    });
+    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
     ui->diangeReplyCheck->setChecked(settings.value("danmaku/diangeReply", false).toBool());
+    ui->diangeShuaCheck->setChecked(settings.value("danmaku/diangeShua", true).toBool());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -1224,6 +1176,62 @@ void MainWindow::on_addTaskButton_clicked()
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto tw = static_cast<TaskWidget*>(widget);
     tw->edit->setFocus();
+}
+
+void MainWindow::slotDiange(LiveDanmaku danmaku)
+{
+    if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
+        return ;
+    QRegularExpression re(diangeFormatString);
+    QRegularExpressionMatch match;
+    if (danmaku.getText().indexOf(re, 0, &match) == -1)
+        return ;
+    if (match.capturedTexts().size() < 2)
+    {
+        statusLabel->setText("无法获取点歌内容，请检测点歌格式");
+        return ;
+    }
+    if (ui->diangeNeedMedalCheck->isChecked())
+    {
+        if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
+        {
+            qDebug() << "点歌未带粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
+            return ;
+        }
+    }
+
+    // 记录到历史（先不复制）
+    QString text = match.capturedTexts().at(1);
+    text = text.trimmed();
+    qDebug() << s8("检测到点歌：") << text;
+    diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
+    ui->diangeHistoryListWidget->insertItem(0, text + " - " + danmaku.getNickname());
+
+    if (!diangeAutoCopy) // 是否进行复制操作
+        return ;
+
+    if (playerWindow && !playerWindow->isHidden()) // 自动播放
+    {
+        if (ui->diangeShuaCheck->isChecked() && playerWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
+        {
+            showLocalNotify("已阻止频繁点歌");
+        }
+        else
+        {
+            playerWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
+        }
+    }
+    else
+    {
+        QClipboard* clip = QApplication::clipboard();
+        clip->setText(text);
+
+        addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
+        QTimer::singleShot(10, [=]{
+            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
+        });
+    }
+//    ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
 }
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
@@ -4432,7 +4440,7 @@ void MainWindow::on_sendAttentionCDSpin_valueChanged(int arg1)
     settings.setValue("danmaku/sendAttentionCD", arg1);
 }
 
-void MainWindow::on_diangeHistoryButton_clicked()
+void MainWindow::showDiangeHistory()
 {
     QStringList list;
     int first = qMax(0, diangeHistory.size() - 10);
@@ -4874,28 +4882,37 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     if (!playerWindow)
     {
         playerWindow = new OrderPlayerWindow(nullptr);
-        connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency){
+        connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qDebug() << "点歌成功" << song.simpleString() << latency;
-            if (latency < 180000)
+            if (latency < 180000) // 小于3分钟
             {
                 QString tip = "成功点歌：【" + song.simpleString() + "】";
                 showLocalNotify(tip);
                 if (ui->diangeReplyCheck->isChecked())
-                    sendNotifyMsg("成功点歌");
+                {
+                    if (waiting == 1 && latency > 20000)
+                        sendNotifyMsg("成功点歌，下一首播放");
+                    else if (waiting == 2 && latency > 20000)
+                        sendNotifyMsg("成功点歌，下两首播放");
+                    else // 多首队列
+                        sendNotifyMsg("成功点歌");
+                }
             }
             else // 超过3分钟
             {
                 int minute = (latency+20000) / 60000;
                 showLocalNotify(snum(minute) + "分钟后播放【" + song.simpleString() + "】");
                 if (ui->diangeReplyCheck->isChecked())
-                    sendNotifyMsg("成功点歌，预计" + snum(minute) + "分钟后播放");
+                    sendNotifyMsg("成功点歌，" + snum(minute) + "分钟后播放");
             }
         });
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             showLocalNotify("开始播放：" + song.simpleString());
         });
         connect(playerWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
-            settings.setValue("danmaku/playerWindow", false);
+            QTimer::singleShot(10000, this, [=]{
+                settings.setValue("danmaku/playerWindow", false);
+            });
         });
     }
 
@@ -5719,6 +5736,9 @@ void MainWindow::releaseLiveData()
     minuteDanmuPopular = 0;
     danmuPopularValue = 0;
 
+    diangeHistory.clear();
+    ui->diangeHistoryListWidget->clear();
+
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
@@ -5951,4 +5971,9 @@ void MainWindow::on_diangeNeedMedalCheck_clicked()
 void MainWindow::on_showOrderPlayerButton_clicked()
 {
     on_actionShow_Order_Player_Window_triggered();
+}
+
+void MainWindow::on_diangeShuaCheck_clicked()
+{
+    settings.setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
 }
