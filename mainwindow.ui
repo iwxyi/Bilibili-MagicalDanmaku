@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>330</width>
-    <height>474</height>
+    <width>322</width>
+    <height>422</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -176,7 +176,7 @@
              <string>秒</string>
             </property>
             <property name="prefix">
-             <string>弹幕超时间隔</string>
+             <string>弹幕超时</string>
             </property>
             <property name="maximum">
              <number>3600</number>
@@ -188,6 +188,19 @@
              <number>60</number>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_17">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QSpinBox" name="removeDanmakuTipIntervalSpin">
@@ -210,7 +223,7 @@
              <string>秒</string>
             </property>
             <property name="prefix">
-             <string>提示超时间隔</string>
+             <string>提示超时</string>
             </property>
             <property name="maximum">
              <number>3600</number>
@@ -554,7 +567,7 @@
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>3600</number>
+             <number>600</number>
             </property>
             <property name="singleStep">
              <number>5</number>
@@ -657,10 +670,10 @@
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>3600</number>
+             <number>600</number>
             </property>
             <property name="singleStep">
-             <number>1</number>
+             <number>10</number>
             </property>
            </widget>
           </item>
@@ -754,7 +767,7 @@
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>3600</number>
+             <number>600</number>
             </property>
             <property name="singleStep">
              <number>1</number>
@@ -1052,6 +1065,19 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
+           <spacer name="horizontalSpacer_15">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QSpinBox" name="startLiveHourSpin">
             <property name="contextMenuPolicy">
              <enum>Qt::NoContextMenu</enum>
@@ -1086,6 +1112,19 @@ margin: 6px;</string>
            </widget>
           </item>
           <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QSpinBox" name="endLiveHourSpin">
             <property name="contextMenuPolicy">
              <enum>Qt::NoContextMenu</enum>
@@ -1118,6 +1157,19 @@ margin: 6px;</string>
              <number>13</number>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_16">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -1302,6 +1354,19 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
+           <spacer name="horizontalSpacer_10">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QSpinBox" name="screenDanmakuLeftSpin">
             <property name="contextMenuPolicy">
              <enum>Qt::NoContextMenu</enum>
@@ -1334,6 +1399,19 @@ margin: 6px;</string>
              <number>5</number>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QSpinBox" name="screenDanmakuRightSpin">
@@ -1369,6 +1447,19 @@ margin: 6px;</string>
             </property>
            </widget>
           </item>
+          <item>
+           <spacer name="horizontalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </item>
         <item>
@@ -1376,6 +1467,19 @@ margin: 6px;</string>
           <property name="topMargin">
            <number>0</number>
           </property>
+          <item>
+           <spacer name="horizontalSpacer_12">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <widget class="QSpinBox" name="screenDanmakuTopSpin">
             <property name="contextMenuPolicy">
@@ -1411,6 +1515,19 @@ margin: 6px;</string>
            </widget>
           </item>
           <item>
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QSpinBox" name="screenDanmakuBottomSpin">
             <property name="contextMenuPolicy">
              <enum>Qt::NoContextMenu</enum>
@@ -1444,10 +1561,23 @@ margin: 6px;</string>
             </property>
            </widget>
           </item>
+          <item>
+           <spacer name="horizontalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -1487,6 +1617,19 @@ margin: 6px;</string>
              <number>10</number>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_13">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <widget class="QPushButton" name="screenDanmakuFontButton">
@@ -1685,7 +1828,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>330</width>
+     <width>322</width>
      <height>23</height>
     </rect>
    </property>

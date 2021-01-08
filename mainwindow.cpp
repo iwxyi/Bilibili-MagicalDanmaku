@@ -1577,6 +1577,9 @@ void MainWindow::getRoomCover(QString url)
     QPixmap pixmap;
     pixmap.loadFromData(jpegData);
     roomCover = pixmap; // 原图
+    if (roomCover.isNull())
+        return ;
+
     int w = ui->roomCoverLabel->width();
     if (w > ui->tabWidget->contentsRect().width())
         w = ui->tabWidget->contentsRect().width();
@@ -4834,8 +4837,36 @@ void MainWindow::on_actionSet_Cookie_triggered()
     if (!ok)
         return ;
 
+    if (!s.contains("SESSDATA="))
+    {
+        QMessageBox::warning(this, "设置Cookie", "设置Cookie失败，这不是Bilibili的浏览器Cookie");
+        return ;
+    }
+
+    if (s.toLower().startsWith("cookie:"))
+        s = s.replace(0, 7, "").trimmed();
+
     settings.setValue("danmaku/browserCookie", browserCookie = s);
+    if (browserCookie.isEmpty())
+        return ;
+
     getUserInfo();
+
+    // 自动设置弹幕格式
+    int posl = browserCookie.indexOf("bili_jct=") + 9;
+    if (posl == -1)
+        return ;
+    int posr = browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = browserCookie.length();
+    csrf_token = browserCookie.mid(posl, posr - posl);
+    qDebug() << "检测到csrf_token:" << csrf_token;
+
+    if (browserData.isEmpty())
+        browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
+    browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
+    browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
+    settings.setValue("danmaku/browserData", browserData);
+    qDebug() << "设置弹幕格式：" << browserData;
 }
 
 void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
@@ -4855,11 +4886,10 @@ void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
 void MainWindow::on_actionCookie_Help_triggered()
 {
     QString steps = "发送弹幕前需按以下步骤注入登录信息：\n\n";
-    steps += "步骤一：\n浏览器登录bilibili账号，并进入对应直播间\n\n";
-    steps += "步骤二：\n按下F12（开发者调试工具），找到右边顶部的“Network”项\n\n";
-    steps += "步骤三：\n浏览器上发送弹幕，Network中多出一条“Send”，点它，看右边“Headers”中的代码\n\n";
+    steps += "步骤一：\n浏览器登录bilibili账号，按下F12（开发者调试工具）\n\n";
+    steps += "步骤二：\n找到右边顶部的“Network”项，选择它下面的XHR\n\n";
+    steps += "步骤三：\n刷新B站页面，中间多出一排列表，点其中任意一个，看右边“Headers”中的代码\n\n";
     steps += "步骤四：\n复制“Request Headers”下的“cookie”冒号后的一长串内容，粘贴到本程序“设置Cookie”中\n\n";
-    steps += "步骤五：\n点击“Form Data”右边的“view source”，复制它下面所有内容到本程序“设置Data”中\n\n";
     steps += "设置好直播间ID、要发送的内容，即可发送弹幕！\n";
     steps += "注意：请勿过于频繁发送，容易被临时拉黑！";
 
