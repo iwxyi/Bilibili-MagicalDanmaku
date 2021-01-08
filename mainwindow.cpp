@@ -1789,7 +1789,7 @@ void MainWindow::getFansAndUpdate()
             int attribute = fan.value("attribute").toInt(); // 三位数：1-1-0 被关注-已关注-未知
             if (attribute == 0) // 0是什么意思啊，不懂诶……应该是关注吧？
                 attribute = 2;
-            qint64 mtime = static_cast<qint64>(fan.value("mtime").toDouble());
+            qint64 mtime = static_cast<qint64>(fan.value("mtime").toDouble()); // 这是秒吧？
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
@@ -2545,7 +2545,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
     QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是", "但是", "但", "在下", "做"};
-    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)
@@ -3488,7 +3488,7 @@ void MainWindow::handleMessage(QJsonObject json)
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
 
-        if (coinType == "silver" && totalCoin < 1000 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
+        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
             return ;
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         if (!words.size())
@@ -3599,14 +3599,14 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
         qDebug() << ">>>>>>舰长进入：" << copy_writing;
-        QStringList results = QRegularExpression("欢迎舰长.+<%(.+)%>").match(copy_writing).capturedTexts();
+        QStringList results = QRegularExpression("欢迎(舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
         if (results.size() < 2)
         {
             qDebug() << "识别舰长进入失败：" << copy_writing;
             qDebug() << data;
             return ;
         }
-        QString uname = results.at(1);
+        QString uname = results.at(1); // 这个昵称会被系统自动省略（太长后面会是两个点）
 
         LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
         appendNewLiveDanmaku(danmaku);

@@ -65,6 +65,7 @@ public:
 
     }
 
+    /// 粉丝团？忘了是啥了
     LiveDanmaku(int fans, int club, int delta_fans, int delta_fans_club)
         : msgType(MSG_FANS), fans(fans), fans_club(club),
           delta_fans(delta_fans), delta_fans_club(delta_fans_club),
@@ -73,8 +74,10 @@ public:
 
     }
 
+    /// 关注（粉丝）
     LiveDanmaku(QString nickname, qint64 uid, bool attention, QDateTime time)
-        : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), timeline(time), attention(attention)
+        : msgType(MSG_ATTENTION), nickname(nickname), uid(uid), prev_timestamp(time.toSecsSinceEpoch()),
+        timeline(QDateTime::currentDateTime()), attention(attention)
     {
 
     }
@@ -136,6 +139,7 @@ public:
         danmaku.pk_link = object.value("pk_link").toBool();
         danmaku.robot = object.value("robot").toBool();
         danmaku.guard = object.value("guard").toInt();
+        danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         return danmaku;
     }
 
@@ -212,6 +216,8 @@ public:
             object.insert("pk_link", pk_link);
         if (robot)
             object.insert("robot", robot);
+        if (prev_timestamp)
+            object.insert("prev_timestamp", prev_timestamp);
 
         return object;
     }
