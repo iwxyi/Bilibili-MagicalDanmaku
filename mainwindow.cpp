@@ -684,7 +684,7 @@ void MainWindow::sendMsg(QString msg)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "发送弹幕：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -1101,7 +1101,7 @@ void MainWindow::getUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1144,7 +1144,7 @@ void MainWindow::getRoomUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取房间用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1411,7 +1411,7 @@ void MainWindow::getRoomInit()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取房间初始化出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1443,7 +1443,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取房间信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1669,7 +1669,7 @@ void MainWindow::getUpPortrait(QString uid)
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取主播头像出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1726,7 +1726,7 @@ void MainWindow::getDanmuInfo()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取弹幕信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -1776,7 +1776,7 @@ void MainWindow::getFansAndUpdate()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -3772,7 +3772,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取用户粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -3824,7 +3824,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取用户数据出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -3877,7 +3877,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取用户投稿出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -4335,7 +4335,7 @@ void MainWindow::refreshBlockList()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取房间禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -4424,7 +4424,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "赠送礼物出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -4461,7 +4461,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取视频流网址出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -4592,7 +4592,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "添加禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -4642,7 +4642,7 @@ void MainWindow::delBlockUser(qint64 uid)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "解除屏蔽出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -4695,7 +4695,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "解除禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5619,7 +5619,7 @@ void MainWindow::connectPkRoom()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "连接PK房间出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
