@@ -55,11 +55,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    int removeIv = settings.value("danmaku/removeInterval", 20).toInt();
+    int removeIv = settings.value("danmaku/removeInterval", 60).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
 
-    removeIv = settings.value("danmaku/removeTipInterval", 7).toInt();
+    removeIv = settings.value("danmaku/removeTipInterval", 20).toInt();
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuTipInterval = removeIv * 1000;
 
@@ -446,6 +446,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::showEvent(QShowEvent *event)
 {
+    QMainWindow::showEvent(event);
     restoreGeometry(settings.value("mainwindow/geometry").toByteArray());
 }
 
@@ -455,6 +456,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     event->ignore();
     this->hide();
+    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -1575,7 +1577,7 @@ void MainWindow::getRoomCover(QString url)
     QByteArray jpegData = reply1->readAll();
     QPixmap pixmap;
     pixmap.loadFromData(jpegData);
-    roomCover = pixmap;
+    roomCover = pixmap; // 原图
     int w = ui->roomCoverLabel->width();
     if (w > ui->tabWidget->contentsRect().width())
         w = ui->tabWidget->contentsRect().width();
@@ -1589,7 +1591,6 @@ void MainWindow::getRoomCover(QString url)
     ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
     prevPa = BFSColor::fromPalette(palette());
     currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
-    qDebug() << bg << fg << sbg << sfg;
     QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
     ani->setStartValue(0);
     ani->setEndValue(1.0);
@@ -1621,6 +1622,9 @@ void MainWindow::getRoomCover(QString url)
     });
     connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
     ani->start();
+
+    // 设置主要界面主题
+    ui->tabWidget->setBg(roomCover);
 }
 
 void MainWindow::getUpPortrait(QString uid)
@@ -4951,7 +4955,7 @@ void MainWindow::on_actionCustom_Variant_triggered()
 {
     QString text = saveCustomVariant();
     bool ok;
-    text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量：\n示例格式：%var%=val", text, &ok);
+    text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量，可在答谢、定时中使用：\n示例格式：%var%=val", text, &ok);
     if (!ok)
         return ;
     settings.setValue("danmaku/customVariant", text);

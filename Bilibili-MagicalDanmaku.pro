@@ -27,7 +27,8 @@ INCLUDEPATH += \
     order_player/ \
     color_octree/ \
     lucky_draw/ \
-    video_player/
+    video_player/ \
+    widgets/
 
 SOURCES += \
     color_octree/coloroctree.cpp \
@@ -42,12 +43,13 @@ SOURCES += \
     order_player/desktoplyricwidget.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
-    taskwidget.cpp \
+    widgets/mytabwidget.cpp \
+    widgets/taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
     utils/textinputdialog.cpp \
     video_player/livevideoplayer.cpp \
-    videolyricscreator.cpp
+    widgets/videolyricscreator.cpp
 
 HEADERS += \
     color_octree/coloroctree.h \
@@ -67,7 +69,8 @@ HEADERS += \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
-    taskwidget.h \
+    widgets/mytabwidget.h \
+    widgets/taskwidget.h \
     utils/dlog.h \
     utils/fileutil.h \
     utils/netutil.h \
@@ -75,7 +78,7 @@ HEADERS += \
     utils/stringutil.h \
     utils/textinputdialog.h \
     video_player/livevideoplayer.h \
-    videolyricscreator.h
+    widgets/videolyricscreator.h
 
 FORMS += \
     lucky_draw/luckydrawwindow.ui \
@@ -83,7 +86,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \
-    videolyricscreator.ui
+    widgets/videolyricscreator.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

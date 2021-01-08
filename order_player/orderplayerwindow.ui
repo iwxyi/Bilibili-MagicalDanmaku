@@ -699,8 +699,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>98</width>
-              <height>28</height>
+              <width>95</width>
+              <height>30</height>
              </rect>
             </property>
             <property name="styleSheet">
