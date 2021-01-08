@@ -332,6 +332,8 @@ private slots:
 
     void on_diangeShuaCheck_clicked();
 
+    void on_pkMelonValButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -512,6 +514,7 @@ private:
     bool pkVideo = false;
 
     // 大乱斗偷塔
+    int goldTransPk = 100; // 金瓜子转乱斗值的比例，除以10还是100
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
     int pkVoting = 0;

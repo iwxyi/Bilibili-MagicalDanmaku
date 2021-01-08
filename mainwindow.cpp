@@ -253,6 +253,7 @@ MainWindow::MainWindow(QWidget *parent)
     pkJudgeEarly = settings.value("pk/judgeEarly", 2000).toInt();
     toutaCount = settings.value("pk/toutaCount", 0).toInt();
     chiguaCount = settings.value("pk/chiguaCount", 0).toInt();
+    goldTransPk = settings.value("pk/goldTransPk", goldTransPk).toInt();
 
     // 自定义变量
     restoreCustomVariant(settings.value("danmaku/customVariant", "").toString());
@@ -347,7 +348,7 @@ MainWindow::MainWindow(QWidget *parent)
         justStart = false;
     });
 
-    // 读取拼音
+    // 读取拼音1
     QtConcurrent::run([=]{
         QFile pinyinFile(":/document/pinyin");
         pinyinFile.open(QIODevice::ReadOnly);
@@ -372,6 +373,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->pkAutoMelonCheck->hide();
         ui->pkMaxGoldButton->hide();
+        ui->pkMelonValButton->hide();
         ui->pkJudgeEarlyButton->hide();
     }
 
@@ -4741,7 +4743,7 @@ void MainWindow::on_pkMaxGoldButton_clicked()
 {
     bool ok = false;
     // 最大设置的是1000元，有钱人……
-    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100乱斗值", pkMaxGold, 0, 1000000, 100, &ok);
+    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100或10乱斗值（按B站规则会变）", pkMaxGold, 0, 1000000, 100, &ok);
     if (!ok)
         return ;
 
@@ -5198,13 +5200,14 @@ void MainWindow::pkStart(QJsonObject json)
         pkVoting = 0;
         // 几个吃瓜就能解决的……
         if (ui->pkAutoMelonCheck->isChecked()
-                && myVotes <= matchVotes && myVotes + pkMaxGold/10 > matchVotes)
+                && myVotes <= matchVotes && myVotes + pkMaxGold/goldTransPk > matchVotes)
         {
             // 调用送礼
-            int num = static_cast<int>((matchVotes-myVotes+1)/10 + 1);
+            int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+            int num = static_cast<int>((matchVotes-myVotes+melon)/melon);
             sendGift(20004, num);
             showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
-            pkVoting += 10 * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
+            pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
             qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             toutaCount++;
             chiguaCount += num;
@@ -5303,10 +5306,11 @@ void MainWindow::pkProcess(QJsonObject json)
                 && !oppositeTouta) // 对面之前未偷塔（可能是连刷，这时候几个吃瓜偷塔没用）
         {
             // 调用送礼
-            int num = static_cast<int>((matchVotes-myVotes-pkVoting+1)/10 + 1);
+            int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+            int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
             sendGift(20004, num);
             showLocalNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
-            pkVoting += 10 * num;
+            pkVoting += melon * num;
             qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             toutaCount++;
             chiguaCount += num;
@@ -6009,4 +6013,14 @@ void MainWindow::on_showOrderPlayerButton_clicked()
 void MainWindow::on_diangeShuaCheck_clicked()
 {
     settings.setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
+}
+
+void MainWindow::on_pkMelonValButton_clicked()
+{
+    bool ok = false;
+    int val = QInputDialog::getInt(this, "乱斗值比例", "1乱斗值等于多少金瓜子？10或100？", goldTransPk, 1, 100, 1, &ok);
+    if (!ok)
+        return ;
+    goldTransPk = val;
+    settings.setValue("pk/goldTransPk", goldTransPk);
 }
