@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -43,6 +43,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="roomIdEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -144,19 +150,33 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_3">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;弹幕显示的时间，超时自动移除&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>弹幕超时间隔</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QSpinBox" name="removeDanmakuIntervalSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
             <property name="suffix">
              <string>秒</string>
+            </property>
+            <property name="prefix">
+             <string>弹幕超时间隔</string>
             </property>
             <property name="maximum">
              <number>3600</number>
@@ -170,36 +190,27 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_25">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>提示超时间隔</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QSpinBox" name="removeDanmakuTipIntervalSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
             <property name="suffix">
              <string>秒</string>
+            </property>
+            <property name="prefix">
+             <string>提示超时间隔</string>
             </property>
             <property name="maximum">
              <number>3600</number>
@@ -211,19 +222,6 @@
              <number>20</number>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </item>
@@ -457,6 +455,12 @@
           </property>
           <item>
            <widget class="QLineEdit" name="testDanmakuEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
             <property name="placeholderText">
              <string>任意内容，不会真正发送</string>
             </property>
@@ -525,8 +529,20 @@
           </item>
           <item>
            <widget class="QSpinBox" name="sendWelcomeCDSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连续两次自动发送弹幕的冷却时间&lt;/p&gt;&lt;p&gt;在此期间会无视进入直播间、送礼等&lt;/p&gt;&lt;p&gt;建议调高，避免被B站冻结发言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background: transparent;</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="suffix">
              <string>秒</string>
@@ -616,6 +632,21 @@
           </item>
           <item>
            <widget class="QSpinBox" name="sendGiftCDSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
             <property name="suffix">
              <string>秒</string>
             </property>
@@ -698,6 +729,21 @@
           </item>
           <item>
            <widget class="QSpinBox" name="sendAttentionCDSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
             <property name="suffix">
              <string>秒</string>
             </property>
@@ -894,6 +940,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="startLiveWordsEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
             <property name="text">
              <string>恭迎主播开播~</string>
             </property>
@@ -918,6 +970,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="endLiveWordsEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
             <property name="text">
              <string>下播了，大家散了吧~</string>
             </property>
@@ -995,8 +1053,23 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QSpinBox" name="startLiveHourSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早的开播时间&lt;/p&gt;&lt;p&gt;将在开播前半小时内预先连接B站弹幕服务器&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
             <property name="suffix">
              <string>点</string>
@@ -1014,8 +1087,23 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="QSpinBox" name="endLiveHourSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早下播时间&lt;/p&gt;&lt;p&gt;下播后自动断开与服务器的连接，直到下次开播前&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
             <property name="suffix">
              <string>点</string>
@@ -1067,11 +1155,29 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="QSpinBox" name="recordSplitSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔一段时间保存已录制的文字，并继续重新录制&lt;/p&gt;&lt;p&gt;免得文件太大，也避免程序闪退导致大量数据丢失&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
             <property name="suffix">
              <string>分钟</string>
             </property>
             <property name="prefix">
-             <string>自动分割</string>
+             <string>自动分割每</string>
             </property>
             <property name="minimum">
              <number>1</number>
@@ -1145,6 +1251,12 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QLineEdit" name="SendMsgEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
             <property name="placeholderText">
              <string>请输入消息内容</string>
             </property>
@@ -1191,6 +1303,21 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QSpinBox" name="screenDanmakuLeftSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
             <property name="suffix">
              <string>%</string>
             </property>
@@ -1210,6 +1337,21 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="QSpinBox" name="screenDanmakuRightSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
             <property name="suffix">
              <string>%</string>
             </property>
@@ -1236,6 +1378,21 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QSpinBox" name="screenDanmakuTopSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
             <property name="suffix">
              <string>%</string>
             </property>
@@ -1255,6 +1412,21 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="QSpinBox" name="screenDanmakuBottomSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
             <property name="suffix">
              <string>%</string>
             </property>
@@ -1281,6 +1453,21 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QSpinBox" name="screenDanmakuSpeedSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
             <property name="suffix">
              <string>秒</string>
             </property>

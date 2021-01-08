@@ -456,7 +456,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     event->ignore();
     this->hide();
-    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

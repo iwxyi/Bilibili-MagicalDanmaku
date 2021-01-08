@@ -76,7 +76,7 @@ void MyTabWidget::resizeEvent(QResizeEvent *event)
 
 void MyTabWidget::setBlurBg(const QPixmap &bg)
 {
-    const int radius = qMax(20, qMin(width(), height())/5);
+    const int radius = qMax(20, qMin(width(), height())/4);
     QPixmap pixmap = bg;
     pixmap = pixmap.scaled(this->width()+radius*2, this->height() + radius*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     QImage img = pixmap.toImage(); // img -blur-> painter(pixmap)
