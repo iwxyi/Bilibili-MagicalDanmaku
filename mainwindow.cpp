@@ -2053,7 +2053,7 @@ QString MainWindow::processTimeVariants(QString msg) const
                 || (hour >= 0 && hour <= 3))
             rsts << "还没睡"+tone << "怎么还没睡~";
         else if (hour >= 3 && hour <= 5)
-            rsts << "通宵了吗";
+            rsts << "通宵了吗？";
 
         r = qrand() % rsts.size();
         msg = msg.replace("%all_greet%", rsts.at(r));
@@ -3564,7 +3564,7 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
                                          , true, unameColor, spreadDesc, spreadInfo));
     }
-    else  if (cmd == "ENTRY_EFFECT") // 舰长进入的同时会出现
+    else  if (cmd == "ENTRY_EFFECT") // 舰长进入、高能榜（不知道到榜几）的同时会出现
     {
         /*{
             "cmd": "ENTRY_EFFECT",
@@ -3598,7 +3598,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
-        QStringList results = QRegularExpression("<%(.+)%>").match(copy_writing).capturedTexts();
+        qDebug() << ">>>>>>舰长进入：" << copy_writing;
+        QStringList results = QRegularExpression("欢迎舰长.+<%(.+)%>").match(copy_writing).capturedTexts();
         if (results.size() < 2)
         {
             qDebug() << "识别舰长进入失败：" << copy_writing;
@@ -3606,7 +3607,6 @@ void MainWindow::handleMessage(QJsonObject json)
             return ;
         }
         QString uname = results.at(1);
-        qDebug() << "舰长进入：" << uname;
 
         LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
         appendNewLiveDanmaku(danmaku);
