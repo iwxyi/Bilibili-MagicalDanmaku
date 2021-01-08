@@ -66,8 +66,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
+    ui->diangeNeedMedalCheck->setChecked(settings.value("danmaku/diangeNeedMedal", true).toBool());
     QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
+    ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
        if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
            return ;
@@ -79,6 +81,11 @@ MainWindow::MainWindow(QWidget *parent)
        {
            statusLabel->setText("无法获取点歌内容，请检测点歌格式");
            return ;
+       }
+       if (ui->diangeNeedMedalCheck->isChecked())
+       {
+           if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
+               return ;
        }
 
        // 记录到历史（先不复制）
@@ -1353,7 +1360,7 @@ void MainWindow::startConnectRoom()
         startSaveDanmakuToFile();
 
     // 开始获取房间信息
-    getRoomInfo();
+    getRoomInfo(true);
     if (ui->enableBlockCheck->isChecked())
         refreshBlockList();
 }
@@ -1385,7 +1392,7 @@ void MainWindow::getRoomInit()
     });
 }
 
-void MainWindow::getRoomInfo()
+void MainWindow::getRoomInfo(bool reconnect)
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -1447,14 +1454,17 @@ void MainWindow::getRoomInfo()
         qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
         getFansAndUpdate();
 
-        // 获取弹幕信息
-        getDanmuInfo();
-
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
         getUpPortrait(upUid);
+
+        if (!reconnect)
+            return ;
+
+        // 获取弹幕信息
+        getDanmuInfo();
 
         // 录播
         if (ui->recordCheck->isChecked() && liveStatus)
@@ -3196,8 +3206,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "ROOM_CHANGE")
     {
-        QJsonObject data = json.value("data").toObject();
-
+        getRoomInfo(false);
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
@@ -4604,16 +4613,6 @@ void MainWindow::on_newbieTipCheck_clicked()
         danmakuWindow->setNewbieTip(enable);
 }
 
-void MainWindow::on_diangeFormatButton_clicked()
-{
-    bool ok = false;
-    QString text = QInputDialog::getText(this, "点歌格式", "触发点歌弹幕的正则表达式", QLineEdit::Normal, diangeFormatString, &ok);
-    if (!ok)
-        return ;
-    diangeFormatString = text;
-    settings.setValue("danmaku/diangeFormat", diangeFormatString);
-}
-
 void MainWindow::on_autoBlockNewbieCheck_clicked()
 {
     settings.setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
@@ -5933,4 +5932,15 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
     settings.setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
         tts = new QTextToSpeech(this);
+}
+
+void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
+{
+    diangeFormatString = text;
+    settings.setValue("danmaku/diangeFormat", diangeFormatString);
+}
+
+void MainWindow::on_diangeNeedMedalCheck_clicked()
+{
+    settings.setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
 }

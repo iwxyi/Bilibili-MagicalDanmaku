@@ -202,8 +202,6 @@ private slots:
 
     void on_newbieTipCheck_clicked();
 
-    void on_diangeFormatButton_clicked();
-
     void on_autoBlockNewbieCheck_clicked();
 
     void on_autoBlockNewbieKeysEdit_textChanged();
@@ -324,6 +322,10 @@ private slots:
 
     void on_autoSpeekDanmakuCheck_clicked();
 
+    void on_diangeFormatEdit_textEdited(const QString &text);
+
+    void on_diangeNeedMedalCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -343,7 +345,7 @@ private:
     void initWS();
     void startConnectRoom();
     void getRoomInit();
-    void getRoomInfo();
+    void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
     void getRoomCover(QString url);
     void getUpPortrait(QString uid);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>390</width>
-    <height>496</height>
+    <width>330</width>
+    <height>474</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -234,6 +234,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="saveDanmakuToFileCheck">
+            <property name="toolTip">
+             <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
+            </property>
             <property name="text">
              <string>保存弹幕到文件</string>
             </property>
@@ -248,6 +251,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="calculateDailyDataCheck">
+            <property name="toolTip">
+             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+            </property>
             <property name="text">
              <string>每日数据统计</string>
             </property>
@@ -264,58 +270,6 @@
             </property>
             <property name="text">
              <string>今日</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0,0,0">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="DiangeAutoCopyCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;如果已开启点歌姬，则自动点歌并播放&lt;/p&gt;&lt;p&gt;否则自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>点歌复制/播放</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="diangeReplyCheck">
-            <property name="text">
-             <string>回复</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="diangeFormatButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>格式</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="diangeHistoryButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string> 历史</string>
             </property>
            </widget>
           </item>
@@ -453,7 +407,7 @@
           <item>
            <widget class="QCheckBox" name="pkChuanmenCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门欢迎；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门自动欢迎（需开启自动欢迎）；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">己方到对方串门：xxx跑到对面串门
@@ -466,6 +420,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="pkMsgSyncCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在打视频大乱斗的时候，同步显示对面直播间的弹幕消息，格式如下：&lt;/p&gt;&lt;p&gt;[同步] 灰色弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="styleSheet">
              <string notr="true">视频大乱斗时显示对面的消息，格式如下：
 [同步] 昵称 灰色弹幕</string>
@@ -509,60 +466,6 @@
            <widget class="QPushButton" name="testDanmakuButton">
             <property name="text">
              <string> 测试弹幕</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_3">
-       <attribute name="title">
-        <string>定时</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <widget class="QPushButton" name="addTaskButton">
-          <property name="text">
-           <string> 添加定时任务</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QListWidget" name="taskListWidget">
-          <property name="contextMenuPolicy">
-           <enum>Qt::CustomContextMenu</enum>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QListWidget
-{
-	background: transparent;
-}</string>
-          </property>
-          <property name="verticalScrollMode">
-           <enum>QAbstractItemView::ScrollPerPixel</enum>
-          </property>
-          <property name="horizontalScrollMode">
-           <enum>QAbstractItemView::ScrollPerPixel</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QLineEdit" name="SendMsgEdit">
-            <property name="placeholderText">
-             <string>请输入消息内容</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="SendMsgButton">
-            <property name="text">
-             <string>发送弹幕</string>
             </property>
            </widget>
           </item>
@@ -848,6 +751,113 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_8">
+       <attribute name="title">
+        <string>点歌</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="QCheckBox" name="DiangeAutoCopyCheck">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;如果已开启点歌姬，则自动点歌并播放&lt;/p&gt;&lt;p&gt;否则自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>点歌复制到剪贴板/点歌姬播放</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_34">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="diangeFormatLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;触发弹幕点歌的正则表达式&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>点歌格式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="diangeFormatEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="placeholderText">
+             <string>弹幕点歌的正则表达式</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_33">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="diangeNeedMedalCheck">
+            <property name="styleSheet">
+             <string notr="true">要求带粉丝勋章才能点歌</string>
+            </property>
+            <property name="text">
+             <string>带勋章点歌</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="diangeReplyCheck">
+            <property name="toolTip">
+             <string>点歌成功的回复消息，并带有预计多长时间播放</string>
+            </property>
+            <property name="text">
+             <string>成功回复</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="diangeHistoryButton">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string> 历史</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>232</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="text">
+           <string>显示点歌姬</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_5">
        <attribute name="title">
         <string>开播</string>
@@ -1063,6 +1073,60 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>定时</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QPushButton" name="addTaskButton">
+          <property name="text">
+           <string> 添加定时任务</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="taskListWidget">
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QListWidget
+{
+	background: transparent;
+}</string>
+          </property>
+          <property name="verticalScrollMode">
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
+          <property name="horizontalScrollMode">
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLineEdit" name="SendMsgEdit">
+            <property name="placeholderText">
+             <string>请输入消息内容</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="SendMsgButton">
+            <property name="text">
+             <string>发送弹幕</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_7">
        <attribute name="title">
         <string>滚屏</string>
@@ -1197,6 +1261,9 @@
             </property>
             <property name="singleStep">
              <number>3</number>
+            </property>
+            <property name="value">
+             <number>10</number>
             </property>
            </widget>
           </item>
@@ -1377,8 +1444,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>390</width>
-     <height>26</height>
+     <width>330</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -1478,13 +1545,16 @@
    </property>
   </action>
   <action name="actionShow_Lucky_Draw">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>显示抽奖机</string>
    </property>
   </action>
   <action name="actionGet_Play_Url">
    <property name="text">
-    <string>获取视频流地址</string>
+    <string>拷贝视频流地址</string>
    </property>
   </action>
   <action name="actionShow_Live_Video">
