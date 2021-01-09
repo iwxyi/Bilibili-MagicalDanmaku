@@ -1793,10 +1793,10 @@ void MainWindow::getFansAndUpdate()
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
-//            SOCKET_DEB << "    粉丝信息：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+//qDebug() << "    粉丝信息：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
         }
 
-//        SOCKET_DEB << "用户ID：" << uid << "    现有粉丝数(第一页)：" << newFans.size();
+//qDebug() << "    现有粉丝数(第一页)：" << newFans.size();
 
         // 第一次加载
         if (!fansList.size())
@@ -1824,7 +1824,7 @@ void MainWindow::getFansAndUpdate()
             if (find >= 0)
                 break;
         }
-//SOCKET_DEB << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
+//qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
         // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
         if (!fansList.size())
@@ -3113,11 +3113,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
+                qDebug() << "消息命令0：" << cmd;
 
                 if (cmd == "ROOM_RANK")
                 {
                 }
-                else if (cmd == "ROOM_REAL_TIME_MESSAGE_UPDATE")
+                else if (cmd == "ROOM_REAL_TIME_MESSAGE_UPDATE") // 实时信息改变
                 {
                     // {"cmd":"ROOM_REAL_TIME_MESSAGE_UPDATE","data":{"roomid":22532956,"fans":1022,"red_notice":-1,"fans_club":50}}
                     QJsonObject data = json.value("data").toObject();
@@ -3143,11 +3144,30 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (delta_fans)
                         getFansAndUpdate();
                 }
-                else if (cmd == "WIDGET_BANNER")
+                else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
                 {}
+                else if (cmd == "HOT_RANK_CHANGED") // 热门榜
+                {
+                    /*{
+                        "cmd": "HOT_RANK_CHANGED",
+                        "data": {
+                            "rank": 14,
+                            "trend": 2, // 趋势：1上升，2下降
+                            "countdown": 1705,
+                            "timestamp": 1610168495,
+                            "web_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=2\\u0026area_id=1",
+                            "live_url": "……（太长了）",
+                            "blink_url": "……（太长了）",
+                            "live_link_url": "……（太长了）",
+                            "pc_link_url": "……（太长了）",
+                            "icon": "https://i0.hdslb.com/bfs/live/3f833451003cca16a284119b8174227808d8f936.png",
+                            "area_name": "娱乐"
+                        }
+                    }*/
+                }
                 else
                 {
-                    SOCKET_DEB << "未处理的命令=" << cmd << "   正文=" << body;
+                    qDebug() << "未处理的命令=" << cmd << "   正文=" << QString(body);
                 }
             }
             else
@@ -3508,36 +3528,6 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendGiftMsg(msg);
         }
     }
-    else if (cmd == "GUARD_BUY") // 有人上舰
-    {
-        QJsonObject data = json.value("data").toObject();
-        qDebug() << data;
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
-        QString username = data.value("username").toString();
-        QString giftName = data.value("gift_name").toString();
-        int price = data.value("price").toInt();
-        int num = data.value("num").toInt();
-        qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
-        qDebug() << username << s8("购买") << giftName << num;
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
-
-        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
-        userGold += price;
-        danmakuCounts->setValue("gold/"+snum(uid), userGold);
-
-        dailyGuard += num;
-        if (dailySettings)
-            dailySettings->setValue("guard", dailyGuard);
-
-        if (!justStart && ui->autoSendGiftCheck->isChecked())
-        {
-            QString localName = getLocalNickname(uid);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
-            if (nick.isEmpty())
-                nick = username;
-            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
-        }
-    }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
 
@@ -3546,7 +3536,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
-    else if (cmd == "WELCOME_GUARD") // 舰长进入
+    else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发）
     {
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -3599,7 +3589,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
         qDebug() << ">>>>>>舰长进入：" << copy_writing;
-        QStringList results = QRegularExpression("欢迎(舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
+        QStringList results = QRegularExpression("欢迎(?:舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
         if (results.size() < 2)
         {
             qDebug() << "识别舰长进入失败：" << copy_writing;
@@ -3700,6 +3690,202 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (handlePK2(json)) // 太多了，换到单独一个方法里面
     {
 
+    }
+    else if (cmd == "GUARD_BUY") // 有人上舰
+    {
+        QJsonObject data = json.value("data").toObject();
+        qDebug() << data;
+        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
+        QString username = data.value("username").toString();
+        QString giftName = data.value("gift_name").toString();
+        int price = data.value("price").toInt();
+        int num = data.value("num").toInt();
+        qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
+        qDebug() << username << s8("购买") << giftName << num;
+        appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+
+        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+        userGold += price;
+        danmakuCounts->setValue("gold/"+snum(uid), userGold);
+
+        dailyGuard += num;
+        if (dailySettings)
+            dailySettings->setValue("guard", dailyGuard);
+
+        if (!justStart && ui->autoSendGiftCheck->isChecked())
+        {
+            QString localName = getLocalNickname(uid);
+            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
+            if (nick.isEmpty())
+                nick = username;
+            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
+        }
+    }
+    else if (cmd == "USER_TOAST_MSG") // 续费舰长会附带的；购买不知道
+    {
+        /*{
+            "cmd": "USER_TOAST_MSG",
+            "data": {
+                "anchor_show": true,
+                "color": "#00D1F1",
+                "end_time": 1610167490,
+                "guard_level": 3,
+                "is_show": 0,
+                "num": 1,
+                "op_type": 3,
+                "payflow_id": "2101091244192762134756573",
+                "price": 138000,
+                "role_name": "舰长",
+                "start_time": 1610167490,
+                "svga_block": 0,
+                "target_guard_count": 128,
+                "toast_msg": "<%分说的佛酱%> 自动续费了舰长",
+                "uid": 480643475,
+                "unit": "月",
+                "user_show": true,
+                "username": "分说的佛酱"
+            }
+        }*/
+    }
+    else if (cmd == "ONLINE_RANK_V2") // 礼物榜（高能榜）更新
+    {
+        /*{
+            "cmd": "ONLINE_RANK_V2",
+            "data": {
+                "list": [
+                    {
+                        "face": "http://i0.hdslb.com/bfs/face/5eae154b4ed09c8ae4017325f5fa1ed8fa3757a9.jpg",
+                        "guard_level": 3,
+                        "rank": 1,
+                        "score": "1380",
+                        "uid": 480643475,
+                        "uname": "分说的佛酱"
+                    },
+                    {
+                        "face": "http://i2.hdslb.com/bfs/face/65536122b97302b86b93847054d4ab8cc155afe3.jpg",
+                        "guard_level": 3,
+                        "rank": 2,
+                        "score": "610",
+                        "uid": 407543009,
+                        "uname": "布可人"
+                    },
+                    ..........
+                ],
+                "rank_type": "gold-rank"
+            }
+        }*/
+    }
+    else if (cmd == "ONLINE_RANK_TOP3") // 高能榜
+    {
+        /*{
+            "cmd": "ONLINE_RANK_TOP3",
+            "data": {
+                "list": [
+                    {
+                        "msg": "恭喜 <%分说的佛酱%> 成为高能榜",
+                        "rank": 1
+                    }
+                ]
+            }
+        }*/
+    }
+    else if (cmd == "ONLINE_RANK_COUNT")
+    {
+        /*{
+            "cmd": "ONLINE_RANK_COUNT",
+            "data": {
+                "count": 9
+            }
+        }*/
+    }
+    else if (cmd == "NOTICE_MSG") // 为什么压缩的消息还有一遍？
+    {
+        /*{
+            "business_id": "",
+            "cmd": "NOTICE_MSG",
+            "full": {
+                "background": "#FFB03CFF",
+                "color": "#FFFFFFFF",
+                "head_icon": "https://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png",
+                "head_icon_fa": "https://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png",
+                "head_icon_fan": 1,
+                "highlight": "#B25AC1FF",
+                "tail_icon": "https://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+                "tail_icon_fa": "https://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+                "tail_icon_fan": 4,
+                "time": 10
+            },
+            "half": {
+                "background": "",
+                "color": "",
+                "head_icon": "",
+                "highlight": "",
+                "tail_icon": "",
+                "time": 0
+            },
+            "link_url": "",
+            "msg_common": "",
+            "msg_self": "<%分说的佛酱%> 自动续费了主播的 <%舰长%>",
+            "msg_type": 3,
+            "real_roomid": 12735949,
+            "roomid": 12735949,
+            "scatter": {
+                "max": 0,
+                "min": 0
+            },
+            "shield_uid": -1,
+            "side": {
+                "background": "#FFE9C8FF",
+                "border": "#FFCFA4FF",
+                "color": "#EF903AFF",
+                "head_icon": "https://i0.hdslb.com/bfs/live/31566d8cd5d468c30de8c148c5d06b3b345d8333.png",
+                "highlight": "#D54900FF"
+            }
+        }*/
+    }
+    else if (cmd == "COMBO_SEND") // 连击礼物
+    {
+        /*{
+            "cmd": "COMBO_SEND",
+            "data": {
+                "action": "投喂",
+                "batch_combo_id": "batch:gift:combo_id:8833188:354580019:30607:1610168283.0188",
+                "batch_combo_num": 9,
+                "combo_id": "gift:combo_id:8833188:354580019:30607:1610168283.0182",
+                "combo_num": 9,
+                "combo_total_coin": 0,
+                "gift_id": 30607,
+                "gift_name": "小心心",
+                "gift_num": 0,
+                "is_show": 1,
+                "medal_info": {
+                    "anchor_roomid": 0,
+                    "anchor_uname": "",
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 1,
+                    "medal_color": 1725515,
+                    "medal_color_border": 1725515,
+                    "medal_color_end": 5414290,
+                    "medal_color_start": 1725515,
+                    "medal_level": 23,
+                    "medal_name": "好听",
+                    "special": "",
+                    "target_id": 354580019
+                },
+                "name_color": "",
+                "r_uname": "薄薄的温酱",
+                "ruid": 354580019,
+                "send_master": null,
+                "total_num": 9,
+                "uid": 8833188,
+                "uname": "南酱的可露儿"
+            }
+        }*/
+    }
+    else
+    {
+        qDebug() << "未处理的命令：" << cmd << json;
     }
 }
 
@@ -4846,7 +5032,7 @@ void MainWindow::on_pkMaxGoldButton_clicked()
 {
     bool ok = false;
     // 最大设置的是1000元，有钱人……
-    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n注意：1元=1000金瓜子=100或10乱斗值（按B站规则会变）", pkMaxGold, 0, 1000000, 100, &ok);
+    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n1元=1000金瓜子=100或10乱斗值（按B站规则会变）\n注意：每次偷塔、反偷塔时都单独判断上限，而非一次大乱斗的累加", pkMaxGold, 0, 1000000, 100, &ok);
     if (!ok)
         return ;
 

@@ -603,7 +603,6 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_ATTENTION)
     {
-        qDebug() << "测试秒：" << QDateTime::currentSecsSinceEpoch() << danmaku.getPrevTimestamp();
         qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
         text = QString("<font color='gray'>[关注]</font> %1 %2 <font color='gray'>%3s前</font>")
                 .arg(nameText)
