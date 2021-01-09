@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="plainTextEdit"/>
+    <widget class="ConditionEditor" name="plainTextEdit"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -36,6 +36,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ConditionEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>conditioneditor.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

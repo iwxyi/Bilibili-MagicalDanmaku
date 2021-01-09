@@ -694,7 +694,7 @@ void MainWindow::sendMsg(QString msg)
         {
             statusLabel->setText(errorMsg);
             qDebug() << s8("warning: 发送失败：") << errorMsg << msg;
-            showLocalNotify(errorMsg);
+            showLocalNotify(errorMsg + " -> " + msg);
         }
     });
 
@@ -2431,11 +2431,13 @@ QString MainWindow::processVariantConditions(QString msg) const
                     break;
                 }
             }
-            else/* if (s1.startsWith("\"") || s1.endsWith("\"")
-                    || s2.startsWith("\"") || s2.startsWith("\"")) // 都是字符串*/
+            else/* if (s1.startsWith("\"") || s1.endsWith("\"") || s1.startsWith("'") || s1.endsWith("'")
+                    || s2.startsWith("\"") || s2.startsWith("\"") || s2.startsWith("'") || s2.startsWith("'")) // 都是字符串*/
             {
                 auto removeQuote = [=](QString s) -> QString{
                     if (s.startsWith("\"") && s.endsWith("\""))
+                        return s.mid(1, s.length()-2);
+                    if (s.startsWith("'") && s.endsWith("'"))
                         return s.mid(1, s.length()-2);
                     return s;
                 };

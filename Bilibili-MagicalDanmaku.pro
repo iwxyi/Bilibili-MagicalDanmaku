@@ -43,6 +43,7 @@ SOURCES += \
     order_player/desktoplyricwidget.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
+    widgets/conditioneditor.cpp \
     widgets/mytabwidget.cpp \
     widgets/taskwidget.cpp \
     utils/fileutil.cpp \
@@ -69,6 +70,7 @@ HEADERS += \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
+    widgets/conditioneditor.h \
     widgets/mytabwidget.h \
     widgets/taskwidget.h \
     utils/dlog.h \

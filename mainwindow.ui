@@ -594,7 +594,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="autoWelcomeWordsEdit">
+         <widget class="ConditionEditor" name="autoWelcomeWordsEdit">
           <property name="toolTip">
            <string/>
           </property>
@@ -694,7 +694,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="autoThankWordsEdit">
+         <widget class="ConditionEditor" name="autoThankWordsEdit">
           <property name="toolTip">
            <string/>
           </property>
@@ -794,7 +794,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QPlainTextEdit" name="autoAttentionWordsEdit">
+         <widget class="ConditionEditor" name="autoAttentionWordsEdit">
           <property name="toolTip">
            <string/>
           </property>
@@ -1988,6 +1988,11 @@ margin: 6px;</string>
    <extends>QTabWidget</extends>
    <header>mytabwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConditionEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>conditioneditor.h</header>
   </customwidget>
  </customwidgets>
  <resources>

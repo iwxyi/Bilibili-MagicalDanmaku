@@ -1,3 +1,4 @@
+#include "conditioneditor.h"
 #include "taskwidget.h"
 
 TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
@@ -6,7 +7,7 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     check = new QCheckBox("启用定时", this);
     spin = new QSpinBox(this);
     btn = new QPushButton("发送", this);
-    edit = new QPlainTextEdit(this);
+    edit = new ConditionEditor(this);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(check);
