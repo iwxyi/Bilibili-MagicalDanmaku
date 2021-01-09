@@ -3,6 +3,7 @@
 ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
     new ConditionHighlighter(document());
+//    setWordWrapMode(QTextOption::NoWrap); // 不自动换行
 }
 
 ConditionHighlighter::ConditionHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
@@ -22,6 +23,8 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         QSSRule{QRegularExpression("^(\\[.*\\])"), getTCF(QColor(128, 34, 172))},
         // 变量 %val%
         QSSRule{QRegularExpression("%\\S+?%"), getTCF(QColor(204, 85, 0))},
+        // 名字类变量 %xxx_name%
+        QSSRule{QRegularExpression("%\\S*?name\\S*?%"), getTCF(QColor(237, 51, 0))},
         // 数字 123
         QSSRule{QRegularExpression("\\d+?"), getTCF(QColor(9, 54, 184))},
         // 字符串 'str'  "str
