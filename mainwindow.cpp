@@ -778,7 +778,7 @@ void MainWindow::sendOppositeMsg(QString msg)
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 2; // 一半的欢迎冷却时间
+    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 4; // 四分之一的欢迎冷却时间
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -2588,7 +2588,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})"};
+    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$", "^(.{2,})很.+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));
