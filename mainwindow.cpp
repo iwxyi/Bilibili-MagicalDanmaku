@@ -2570,14 +2570,14 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // xxx的xxx
     QRegularExpression deRe("^(.+)[的之の](.{2,})$");
     QRegularExpressionMatch match;
-    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length())
+    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*2 <= match.capturedTexts().at(2).length())
     {
         simp = match.capturedTexts().at(2);
     }
 
     // 一大串中文en
     QRegularExpression ceRe("^([\u4e00-\u9fa5]{2,})(\\w+)$");
-    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() >= match.capturedTexts().at(2).length())
+    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*2 >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
         if (!QString("的之の是叫有为奶在去着最").contains(tmp.right(1)))
@@ -2586,24 +2586,18 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    // 这个xx不太x
-    QRegularExpression zhegeRe("^这个(.+)不太.+$");
-    if (simp.indexOf(zhegeRe, 0, &match) > -1)
+    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})"};
+    for (int i = 0; i < extraExp.size(); i++)
     {
-        QString tmp = match.capturedTexts().at(1);
-        simp = tmp;
-    }
-
-    // xxx今天...
-    QRegularExpression jintianRe("^(.{3,})今天.+$");
-    if (simp.indexOf(jintianRe, 0, &match) > -1)
-    {
-        QString tmp = match.capturedTexts().at(1);
-        simp = tmp;
+        QRegularExpression re(extraExp.at(i));
+        if (simp.indexOf(re, 0, &match) > -1)
+        {
+            simp = match.capturedTexts().at(1);
+        }
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+)(哥哥|爸爸|爷爷|奶奶|妈妈)$");
+    QRegularExpression gegeRe("^(.+)小?(哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -3162,6 +3156,23 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             "pc_link_url": "……（太长了）",
                             "icon": "https://i0.hdslb.com/bfs/live/3f833451003cca16a284119b8174227808d8f936.png",
                             "area_name": "娱乐"
+                        }
+                    }*/
+                }
+                else if (cmd == "HOT_RANK_SETTLEMENT")
+                {
+                    /*{
+                        "cmd": "HOT_RANK_SETTLEMENT",
+                        "data": {
+                            "rank": 9,
+                            "uname": "丸嘻嘻",
+                            "face": "http://i2.hdslb.com/bfs/face/17f1f3994cb4b2bba97f1557ffc7eb34a05e119b.jpg",
+                            "timestamp": 1610173800,
+                            "icon": "https://i0.hdslb.com/bfs/live/3f833451003cca16a284119b8174227808d8f936.png",
+                            "area_name": "娱乐",
+                            "url": "https://live.bilibili.com/p/html/live-app-hotrank/result.html?is_live_half_webview=1\\u0026hybrid_half_ui=1,5,250,200,f4eefa,0,30,0,0,0;2,5,250,200,f4eefa,0,30,0,0,0;3,5,250,200,f4eefa,0,30,0,0,0;4,5,250,200,f4eefa,0,30,0,0,0;5,5,250,200,f4eefa,0,30,0,0,0;6,5,250,200,f4eefa,0,30,0,0,0;7,5,250,200,f4eefa,0,30,0,0,0;8,5,250,200,f4eefa,0,30,0,0,0\\u0026areaId=1\\u0026cache_key=4417cab3fa8b15ad1b250ee29fd91c52",
+                            "cache_key": "4417cab3fa8b15ad1b250ee29fd91c52",
+                            "dm_msg": "恭喜主播 \\u003c% 丸嘻嘻 %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
                         }
                     }*/
                 }
@@ -3880,6 +3891,18 @@ void MainWindow::handleMessage(QJsonObject json)
                 "total_num": 9,
                 "uid": 8833188,
                 "uname": "南酱的可露儿"
+            }
+        }*/
+    }
+    else if (cmd == "SPECIAL_GIFT")
+    {
+        /*{
+            "cmd": "SPECIAL_GIFT",
+            "data": {
+                "39": {
+                    "action": "end",
+                    "id": 3032328093737
+                }
             }
         }*/
     }
