@@ -2189,7 +2189,12 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 进来次数
     if (msg.contains("%come_count%"))
-        msg.replace("%come_count%", snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt()));
+    {
+        if (danmaku.getMsgType() == MSG_WELCOME)
+            msg.replace("%come_count%", snum(danmaku.getNumber()));
+        else
+            msg.replace("%come_count%", snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt()));
+    }
 /*qDebug() << ">>>>>>>>>进入时间：" << QDateTime::currentSecsSinceEpoch() <<
             QDateTime::currentSecsSinceEpoch() - (danmaku.getMsgType() == MSG_WELCOME
              ? danmaku.getPrevTimestamp()
