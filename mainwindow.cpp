@@ -730,6 +730,8 @@ void MainWindow::sendWelcomeGuard(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
+    if (msg.trimmed().isEmpty())
+        return ;
 
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
@@ -751,6 +753,8 @@ void MainWindow::sendWelcomeGuard(QString msg)
 void MainWindow::sendWelcomeMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
+        return ;
+    if (msg.trimmed().isEmpty())
         return ;
 
     // 避免太频繁发消息
@@ -774,6 +778,8 @@ void MainWindow::sendOppositeMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
+    if (msg.trimmed().isEmpty())
+        return ;
 
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
@@ -796,6 +802,9 @@ void MainWindow::sendGiftMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
+    if (msg.trimmed().isEmpty())
+        return ;
+
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -817,6 +826,8 @@ void MainWindow::sendAttentionMsg(QString msg)
 {
     if (!liveStatus) // 不在直播中
         return ;
+    if (msg.trimmed().isEmpty())
+        return ;
 
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
@@ -837,6 +848,9 @@ void MainWindow::sendAttentionMsg(QString msg)
 
 void MainWindow::sendNotifyMsg(QString msg)
 {
+    if (msg.trimmed().isEmpty())
+        return ;
+
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
@@ -2126,7 +2140,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
                 result[i] = result.at(i).right(result.at(i).length()-1);
         }
     }
-//    qDebug() << "result" << result;
+//    qDebug() << "condition result:" << result;
     return result;
 }
 
@@ -2234,6 +2248,8 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
+    if (msg.contains("%medal_roomid%"))
+        msg.replace("%medal_roomid%", danmaku.getAnchorRoomid());
 
     // 粉丝牌名字
     if (msg.contains("%medal_name%"))
@@ -2549,9 +2565,12 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         return "";
     }
 
+    // 特殊字符
+    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷"), "");
+
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来是", "但是", "但", "在下", "做"};
+    QStringList starts{"我叫", "我是", "我就是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
     QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢"};
     starts += special;
     ends += special;
@@ -2575,16 +2594,16 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx的xxx
-    QRegularExpression deRe("^(.+)[的之の](.{2,})$");
+    QRegularExpression deRe("^(.+)[的の](.{2,})$");
     QRegularExpressionMatch match;
-    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*2 <= match.capturedTexts().at(2).length())
+    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
         simp = match.capturedTexts().at(2);
     }
 
-    // 一大串中文en
-    QRegularExpression ceRe("^([\u4e00-\u9fa5]{2,})(\\w+)$");
-    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*2 >= match.capturedTexts().at(2).length())
+    // 一大串 中文enen
+    QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4e00]+)$");
+    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*3 >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
         if (!QString("的之の是叫有为奶在去着最").contains(tmp.right(1)))
@@ -2592,19 +2611,31 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             simp = tmp;
         }
     }
+    ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4e00]+)([\u4e00-\u9fa5]{2,})");
+    if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*3)
+    {
+        QString tmp = match.capturedTexts().at(2);
+        if (!QString("的之の是叫有为奶在去着最").contains(tmp.right(1)))
+        {
+            simp = tmp;
+        }
+    }
 
-    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$", "^(.{2,})很.+$"};
+    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
+                         "^.+要(.+)$", "^.*还.+就(.{2})$",
+                         "^(.{2})(不是|有点|才是|敲|很).+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));
         if (simp.indexOf(re, 0, &match) > -1)
         {
             simp = match.capturedTexts().at(1);
+            break;
         }
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+)小?(哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友)$");
+    QRegularExpression gegeRe("^(.+)小?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -2612,7 +2643,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // AAAA
-    QRegularExpression dieRe("(.)\\1{1,}");
+    QRegularExpression dieRe("(.)\\1{2,}");
     if (simp.indexOf(dieRe, 0, &match) > -1)
     {
         QString ch = match.capturedTexts().at(1);
@@ -2620,8 +2651,14 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         simp = simp.replace(all, QString("%1%1").arg(ch));
     }
 
-    // 特殊字符
-    simp = simp.replace(QRegularExpression("丨|丶"), "");
+    // ABAB
+    dieRe = QRegularExpression("(.{2,})\\1{1,}");
+    if (simp.indexOf(dieRe, 0, &match) > -1)
+    {
+        QString ch = match.capturedTexts().at(1);
+        QString all = match.capturedTexts().at(0);
+        simp = simp.replace(all, QString("%1").arg(ch));
+    }
 
     if (simp.isEmpty())
         return nickname;
@@ -3687,10 +3724,9 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!justStart && ui->autoSendWelcomeCheck->isChecked())
         {
             int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
-            if (userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
+            if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
                 return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
             userComeTimes[uid] = currentTime;
-
             sendWelcomeIfNotRobot(danmaku);
         }
         else
