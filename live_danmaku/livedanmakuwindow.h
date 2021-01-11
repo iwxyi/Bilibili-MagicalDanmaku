@@ -57,6 +57,8 @@
 class LiveDanmakuWindow : public QWidget, public CommonValues
 {
     Q_OBJECT
+    Q_PROPERTY(int bgAlpha READ getBgAlpha WRITE setBgAlpha)
+    Q_PROPERTY(int prevAlpha READ getPrevAlpha WRITE setPrevAlpha)
     friend class MainWindow;
 public:
     LiveDanmakuWindow(QSettings &st, QWidget *parent = nullptr);
@@ -121,8 +123,14 @@ private:
     void showUserMsgHistory(qint64 uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
-    void selectRandomPicture();
+    void selectBgPicture();
     void drawPixmapCenter(QPainter& painter, const QPixmap& bgPixmap);
+
+private:
+    void setBgAlpha(int x);
+    int getBgAlpha() const;
+    void setPrevAlpha(int x);
+    int getPrevAlpha() const;
 
 private:
     QSettings& settings;
@@ -158,12 +166,17 @@ private:
 
     QLabel* statusLabel = nullptr;
 
+    QPixmap originPixmap;
     QPixmap bgPixmap;
     QString pictureFilePath;
     QString pictureDirPath;
     QTimer* switchBgTimer = nullptr;
     int pictureAlpha;
     bool aspectRatio = false;
+
+    QPixmap prevPixmap;
+    int bgAlpha = 0;
+    int prevAlpha = 0;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

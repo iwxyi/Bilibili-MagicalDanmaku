@@ -125,17 +125,17 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     int switchInterval = settings.value("livedanmakuwindow/pictureInterval", 20).toInt();
     switchBgTimer->setInterval(switchInterval * 1000);
     connect(switchBgTimer, &QTimer::timeout, this, [=]{
-        selectRandomPicture();
+        selectBgPicture();
     });
     aspectRatio = settings.value("livedanmakuwindow/aspectRatio", false).toBool();
     if (!pictureDirPath.isEmpty())
     {
-        selectRandomPicture();
+        selectBgPicture();
         switchBgTimer->start();
     }
     else if (!pictureFilePath.isEmpty())
     {
-        bgPixmap = QPixmap(pictureFilePath);
+        selectBgPicture();
     }
     update();
 
@@ -245,6 +245,11 @@ void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
 
     if (statusLabel && !statusLabel->isHidden())
         statusLabel->move(width() - statusLabel->width(), 0);
+
+    if (!originPixmap.isNull())
+    {
+        bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    }
 }
 
 void LiveDanmakuWindow::paintEvent(QPaintEvent *)
@@ -264,10 +269,21 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
     painter.fillRect(rect(), bgColor);
 
     // 绘制背景图片
+    if (prevAlpha && !prevPixmap.isNull())
+    {
+        painter.setOpacity(prevAlpha / 255.0);
+        if (!aspectRatio)
+        {
+            painter.drawPixmap(rect(), prevPixmap);
+        }
+        else // 绘制中间的图片
+        {
+            drawPixmapCenter(painter, prevPixmap);
+        }
+    }
     if (!bgPixmap.isNull())
     {
-        painter.save();
-        painter.setOpacity(pictureAlpha / 255.0);
+        painter.setOpacity(bgAlpha / 255.0);
         if (!aspectRatio)
         {
             painter.drawPixmap(rect(), bgPixmap);
@@ -276,7 +292,6 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
         {
             drawPixmapCenter(painter, bgPixmap);
         }
-        painter.restore();
     }
 }
 
@@ -1479,8 +1494,8 @@ void LiveDanmakuWindow::showMenu()
         pictureDirPath = "";
         settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
         settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
-        bgPixmap = QPixmap(pictureFilePath);
         switchBgTimer->stop();
+        selectBgPicture();
         update();
     });
     connect(actionPictureFolder, &QAction::triggered, this, [=]{
@@ -1496,8 +1511,8 @@ void LiveDanmakuWindow::showMenu()
         settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
         settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
         bgPixmap = QPixmap();
-        selectRandomPicture();
         switchBgTimer->start();
+        selectBgPicture();
         update();
     });
     connect(actionPictureInterval, &QAction::triggered, this, [=]{
@@ -1529,8 +1544,8 @@ void LiveDanmakuWindow::showMenu()
         pictureDirPath = "";
         settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
         settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
-        bgPixmap = QPixmap();
         switchBgTimer->stop();
+        selectBgPicture();
         update();
     });
 
@@ -2097,10 +2112,21 @@ QVariant LiveDanmakuWindow::getCookies()
     return var;
 }
 
-void LiveDanmakuWindow::selectRandomPicture()
+void LiveDanmakuWindow::selectBgPicture()
 {
-    if (pictureDirPath.isEmpty())
+    if (!pictureFilePath.isEmpty())
+    {
+        originPixmap = QPixmap(pictureFilePath);
+        bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
         return ;
+    }
+
+    if (pictureDirPath.isEmpty()) // 取消了图片
+    {
+        originPixmap = QPixmap();
+        bgPixmap = QPixmap();
+        return ;
+    }
 
     auto files = QDir(pictureDirPath).entryInfoList(QStringList{"*.jpg", "*.png", "*.bmp"});
     if (!files.size())
@@ -2109,9 +2135,48 @@ void LiveDanmakuWindow::selectRandomPicture()
         bgPixmap = QPixmap();
         return ;
     }
-
     QString path = files.at(qrand() % files.size()).absoluteFilePath();
-    qDebug() << "选择图片：" << path;
-    bgPixmap = QPixmap(path);
+
+    prevPixmap = bgPixmap;
+    originPixmap = QPixmap(path);
+    bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "bgAlpha");
+    ani->setStartValue(0);
+    ani->setEndValue(pictureAlpha);
+    ani->setDuration(800);
+    ani->setEasingCurve(QEasingCurve::InOutSine);
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
+
+    ani = new QPropertyAnimation(this, "prevAlpha");
+    ani->setStartValue(pictureAlpha);
+    ani->setEndValue(0);
+    ani->setDuration(800);
+    ani->setEasingCurve(QEasingCurve::InOutSine);
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
+}
+
+void LiveDanmakuWindow::setBgAlpha(int x)
+{
+    this->bgAlpha = x;
     update();
 }
+
+int LiveDanmakuWindow::getBgAlpha() const
+{
+    return bgAlpha;
+}
+
+void LiveDanmakuWindow::setPrevAlpha(int x)
+{
+    this->prevAlpha = x;
+    update();
+}
+
+int LiveDanmakuWindow::getPrevAlpha() const
+{
+    return prevAlpha;
+}
+
