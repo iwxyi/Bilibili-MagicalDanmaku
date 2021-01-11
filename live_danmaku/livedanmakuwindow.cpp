@@ -66,7 +66,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
         prevWindow = nullptr;
 #endif
     };
-    lineEdit->setPlaceholderText("回车发送消息");
+    lineEdit->setPlaceholderText("回车发送弹幕");
     connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
         QString text = lineEdit->text();
         if (!text.trimmed().isEmpty())
@@ -76,13 +76,15 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
             lineEdit->clear();
             if (settings.value("livedanmakuwindow/sendOnce", false).toBool())
                 returnPrevWindow();
+            lineEdit->setPlaceholderText("");
         }
     });
     if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 
     editShortcut = new QxtGlobalShortcut(this);
-    editShortcut->setShortcut(QKeySequence("shift+alt+d"));
+    QString def_key = settings.value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
+    editShortcut->setShortcut(QKeySequence(def_key));
     connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
     });
@@ -1023,6 +1025,7 @@ void LiveDanmakuWindow::showMenu()
 
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
+    QAction* actionShortCut = new QAction("快捷键", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
     QAction* actionSimpleMode  = new QAction("简约模式", this);
     QAction* actionChatMode  = new QAction("聊天模式", this);
@@ -1190,6 +1193,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
+    settingMenu->addAction(actionShortCut);
     settingMenu->addAction(actionSendOnce);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSimpleMode);
@@ -1416,6 +1420,15 @@ void LiveDanmakuWindow::showMenu()
         bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", false).toBool();
         settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
         editShortcut->setEnabled(enable);
+    });
+    connect(actionShortCut, &QAction::triggered, this, [=]{
+        QString def_key = settings.value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
+        QString key = QInputDialog::getText(this, "发弹幕快捷键", "设置显示弹幕发送框的快捷键", QLineEdit::Normal, def_key);
+        if (!key.isEmpty())
+        {
+            if (editShortcut->setShortcut(QKeySequence(key)))
+                settings.setValue("livedanmakuwindow/shortcutKey", key);
+        }
     });
     connect(actionSendOnce, &QAction::triggered, this, [=]{
         bool enable = !settings.value("livedanmakuwindow/sendOnce", false).toBool();
