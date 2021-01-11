@@ -2299,6 +2299,16 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%name_sum_len%"))
         msg.replace("%name_sum_len%", snum(danmaku.getNickname().length() + danmaku.getGiftName().length()));
 
+    if (msg.contains("%ainame_sum_len%"))
+    {
+        QString local = getLocalNickname(danmaku.getUid());
+        if (local.isEmpty())
+            local = nicknameSimplify(danmaku.getNickname());
+        if (local.isEmpty())
+            local = danmaku.getNickname();
+        msg.replace("%ainame_sum_len%", snum(local.length() + danmaku.getGiftName().length()));
+    }
+
     // 是否新关注
     if (msg.contains("%new_attention%"))
     {
@@ -3604,6 +3614,7 @@ void MainWindow::handleMessage(QJsonObject json)
 //        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
 //            return ;
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+        showLocalNotify("TEST送礼：" + words.join(";"));
         if (!words.size())
             return ;
         int r = qrand() % words.size();
