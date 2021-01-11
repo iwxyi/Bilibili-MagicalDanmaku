@@ -123,13 +123,25 @@
 
 ![房间](pictures/screenshot1.png)
 
-![功能](pictures/screenshot2.png)
+![弹幕](pictures/screenshot2.png)
 
-![自动](pictures/screenshot3.png)
+![自动欢迎](pictures/screenshot3.png)
 
-![弹幕](pictures/screenshot4.png)
+![答谢](pictures/screenshot4.png)
 
-![偷塔](pictures/screenshot5.png)
+![点歌](pictures/screenshot5.png)
+
+![开播、录播](pictures/screenshot6.png)
+
+![定时任务](pictures/screenshot7.png)
+
+![全屏滚动、语音朗读](pictures/screenshot8.png)
+
+![喷子禁言](pictures/screenshot9.png)
+
+![实时弹幕](pictures/danmaku1.png)
+
+![自动偷塔、反偷塔](pictures/danmaku2.png)
 
 ![音乐](pictures/music1.png)
 
@@ -149,7 +161,11 @@
 
 懒，所以没有做登录功能，如果要发送弹幕，直接使用浏览器Cookie进行登录。
 
-**步骤**：浏览器上按`F12`打开【开发者工具】，Network-XHR-send-Headers，进入B站主页（登录的需登录），复制如下图的cookie至菜单“账号”中的“设置Cookie”，即可进行发送。
+**步骤**：
+
+1. 浏览器上按`F12`打开【开发者工具】，Network-XHR
+2. 进入或刷新B站主页（没登录的需登录），Name多了一排，点其中任意一个（若找不到Cookie就换个）
+3. 复制如下图的cookie至菜单“账号”中的“设置Cookie”，即可进行发送。
 
 ![1606054818666](pictures/cookie.png)
 

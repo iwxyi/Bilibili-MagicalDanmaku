@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>394</width>
-    <height>484</height>
+    <width>454</width>
+    <height>408</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,13 +25,16 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>房间</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
@@ -1852,7 +1855,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>394</width>
+     <width>454</width>
      <height>23</height>
     </rect>
    </property>
