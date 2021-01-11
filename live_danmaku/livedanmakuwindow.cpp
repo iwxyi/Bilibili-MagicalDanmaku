@@ -2,6 +2,10 @@
 #include "livedanmakuwindow.h"
 #include "facilemenu.h"
 
+QT_BEGIN_NAMESPACE
+    extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
+QT_END_NAMESPACE
+
 LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     : QWidget(nullptr), settings(st)
 {
@@ -121,6 +125,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     pictureFilePath = settings.value("livedanmakuwindow/pictureFilePath", "").toString();
     pictureDirPath = settings.value("livedanmakuwindow/pictureDirPath", "").toString();
     pictureAlpha = settings.value("livedanmakuwindow/pictureAlpha", 64).toInt();
+    pictureBlur = settings.value("livedanmakuwindow/pictureBlur", 0).toInt();
     switchBgTimer = new QTimer(this);
     int switchInterval = settings.value("livedanmakuwindow/pictureInterval", 20).toInt();
     switchBgTimer->setInterval(switchInterval * 1000);
@@ -1013,6 +1018,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionPictureInterval = new QAction("轮播间隔", this);
     QAction* actionPictureRatio = new QAction("保持比例", this);
     QAction* actionPictureAlpha = new QAction("图片透明度", this);
+    QAction* actionPictureBlur = new QAction("模糊半径", this);
     QAction* actionCancelPicture = new QAction("取消图片", this);
 
     QAction* actionSendMsg = new QAction("发送框", this);
@@ -1049,6 +1055,8 @@ void LiveDanmakuWindow::showMenu()
     actionPictureFolder->setChecked(!pictureDirPath.isEmpty());
     actionPictureRatio->setCheckable(true);
     actionPictureRatio->setChecked(aspectRatio);
+    actionPictureBlur->setCheckable(true);
+    actionPictureBlur->setChecked(pictureBlur);
 
     if (uid != 0)
     {
@@ -1169,6 +1177,7 @@ void LiveDanmakuWindow::showMenu()
     pictureMenu->addAction(actionPictureInterval);
     pictureMenu->addAction(actionPictureAlpha);
     pictureMenu->addAction(actionPictureRatio);
+    pictureMenu->addAction(actionPictureBlur);
     pictureMenu->addSeparator();
     pictureMenu->addAction(actionCancelPicture);
 
@@ -1539,6 +1548,16 @@ void LiveDanmakuWindow::showMenu()
         settings.setValue("livedanmakuwindow/aspectRatio", aspectRatio);
         update();
     });
+    connect(actionPictureBlur, &QAction::triggered, this, [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "图片模糊半径", "请输入背景图片模糊半径，越大越模糊", pictureBlur, 0, 2000, 32, &ok);
+        if (!ok)
+            return ;
+        pictureBlur = val;
+        settings.setValue("livedanmakuwindow/pictureBlur", pictureBlur);
+        selectBgPicture();
+        update();
+    });
     connect(actionCancelPicture, &QAction::triggered, this, [=]{
         pictureFilePath = "";
         pictureDirPath = "";
@@ -1572,6 +1591,9 @@ void LiveDanmakuWindow::showMenu()
     actionPictureSelect->deleteLater();
     actionPictureFolder->deleteLater();
     actionPictureAlpha->deleteLater();
+    actionPictureInterval->deleteLater();
+    actionPictureRatio->deleteLater();
+    actionPictureBlur->deleteLater();
     actionCancelPicture->deleteLater();
 #endif
 }
@@ -2117,7 +2139,10 @@ void LiveDanmakuWindow::selectBgPicture()
     if (!pictureFilePath.isEmpty())
     {
         originPixmap = QPixmap(pictureFilePath);
+        if (pictureBlur)
+            originPixmap = getBlurPixmap(originPixmap);
         bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        bgAlpha = pictureAlpha;
         return ;
     }
 
@@ -2139,6 +2164,8 @@ void LiveDanmakuWindow::selectBgPicture()
 
     prevPixmap = bgPixmap;
     originPixmap = QPixmap(path);
+    if (pictureBlur)
+        originPixmap = getBlurPixmap(originPixmap);
     bgPixmap = originPixmap.scaled(this->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
 
     QPropertyAnimation* ani = new QPropertyAnimation(this, "bgAlpha");
@@ -2156,6 +2183,22 @@ void LiveDanmakuWindow::selectBgPicture()
     ani->setEasingCurve(QEasingCurve::InOutSine);
     connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
     ani->start();
+}
+
+QPixmap LiveDanmakuWindow::getBlurPixmap(QPixmap &bg)
+{
+    const int radius = pictureBlur;
+    QPixmap pixmap = bg;
+    pixmap = pixmap.scaled(this->width()+radius*2, this->height() + radius*2, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    QImage img = pixmap.toImage(); // img -blur-> painter(pixmap)
+    QPainter painter( &pixmap );
+    qt_blurImage( &painter, img, radius, true, false );
+
+    // 裁剪掉边缘（模糊后会有黑边）
+    int c = qMin(bg.width(), bg.height());
+    c = qMin(c/2, radius);
+    QPixmap clip = pixmap.copy(c, c, pixmap.width()-c*2, pixmap.height()-c*2);
+    return clip;
 }
 
 void LiveDanmakuWindow::setBgAlpha(int x)

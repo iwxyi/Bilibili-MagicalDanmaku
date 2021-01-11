@@ -124,6 +124,7 @@ private:
     QString getPinyin(QString text);
     QVariant getCookies();
     void selectBgPicture();
+    QPixmap getBlurPixmap(QPixmap& bg);
     void drawPixmapCenter(QPainter& painter, const QPixmap& bgPixmap);
 
 private:
@@ -173,6 +174,7 @@ private:
     QTimer* switchBgTimer = nullptr;
     int pictureAlpha;
     bool aspectRatio = false;
+    int pictureBlur = 0;
 
     QPixmap prevPixmap;
     int bgAlpha = 0;
