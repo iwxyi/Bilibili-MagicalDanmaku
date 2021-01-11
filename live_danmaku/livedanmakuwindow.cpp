@@ -1,4 +1,6 @@
+#include <QFileDialog>
 #include "livedanmakuwindow.h"
+#include "facilemenu.h"
 
 LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     : QWidget(nullptr), settings(st)
@@ -23,6 +25,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
     lineSpacing = fm.lineSpacing();
+    srand(time(0));
 
     listWidget = new QListWidget(this);
     lineEdit = new TransparentEdit(this);
@@ -113,6 +116,28 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     QString fontString = settings.value("livedanmakuwindow/font").toString();
     if (!fontString.isEmpty())
         danmakuFont.fromString(fontString);
+
+    // 背景图片
+    pictureFilePath = settings.value("livedanmakuwindow/pictureFilePath", "").toString();
+    pictureDirPath = settings.value("livedanmakuwindow/pictureDirPath", "").toString();
+    pictureAlpha = settings.value("livedanmakuwindow/pictureAlpha", 64).toInt();
+    switchBgTimer = new QTimer(this);
+    int switchInterval = settings.value("livedanmakuwindow/pictureInterval", 20).toInt();
+    switchBgTimer->setInterval(switchInterval * 1000);
+    connect(switchBgTimer, &QTimer::timeout, this, [=]{
+        selectRandomPicture();
+    });
+    aspectRatio = settings.value("livedanmakuwindow/aspectRatio", false).toBool();
+    if (!pictureDirPath.isEmpty())
+    {
+        selectRandomPicture();
+        switchBgTimer->start();
+    }
+    else if (!pictureFilePath.isEmpty())
+    {
+        bgPixmap = QPixmap(pictureFilePath);
+    }
+    update();
 
     // 忽略的颜色
     ignoreDanmakuColors = settings.value("livedanmakuwindow/ignoreColor").toString().split(";");
@@ -226,13 +251,46 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 {
     QColor c(30, 144, 255, 192);
     int penW = boundaryShowed;
+    Q_UNUSED(penW)
+
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     // 绘制背景
     QPainterPath path;
     path.addRoundedRect(rect(), 5, 5);
-    painter.fillPath(path, bgColor);
+    painter.setClipPath(path);
+
+    painter.fillRect(rect(), bgColor);
+
+    // 绘制背景图片
+    if (!bgPixmap.isNull())
+    {
+        painter.save();
+        painter.setOpacity(pictureAlpha / 255.0);
+        if (!aspectRatio)
+        {
+            painter.drawPixmap(rect(), bgPixmap);
+        }
+        else // 绘制中间的图片
+        {
+            drawPixmapCenter(painter, bgPixmap);
+        }
+        painter.restore();
+    }
+}
+
+/**
+ * 居中绘制图片
+ */
+void LiveDanmakuWindow::drawPixmapCenter(QPainter &painter, const QPixmap &bgPixmap)
+{
+    int x = 0, y = 0;
+    if (bgPixmap.width() > width())
+        x = (bgPixmap.width() - width()) / 2;
+    if (bgPixmap.height() > height())
+        y = (bgPixmap.height() - height()) / 2;
+    painter.drawPixmap(rect(), bgPixmap, QRect(x, y, width(), height()));
 }
 
 void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
@@ -780,7 +838,128 @@ void LiveDanmakuWindow::showMenu()
     auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
     qDebug() << "菜单信息：" << danmaku.toString();
     QString msg = danmaku.getText();
+    qint64 uid = danmaku.getUid();
+    MessageType type = danmaku.getMsgType();
 
+#ifdef false
+    FacileMenu* menu = new FacileMenu(this);
+
+    menu->addAction("用户主页", [=]{
+
+    })->text(type == MSG_DANMAKU, "用户主页：LV" + snum(danmaku.getLevel()))->disable(!uid);
+
+    menu->addAction("粉丝勋章", [=]{
+
+    })->ifer(!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
+            ->text(true, danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()))
+            ->elser()
+            ->ifer(type == MSG_GIFT)
+            ->text(true, snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"))
+            ->disable();
+    menu->addAction("消息记录", [=]{
+
+    })->text(type == MSG_DANMAKU, "消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条")
+      ->text(type == MSG_GIFT || type == MSG_GUARD_BUY, "送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
+    menu->addAction("粉丝数量", [=]{
+
+    });
+    menu->addAction("投稿数据", [=]{
+
+    })->disable(!uid);
+    menu->addAction("禁言", [=]{
+
+    })->disable(!uid);
+
+
+    menu->split()->addAction("添加特别关心", [=]{
+
+    })->text(uid && careUsers.contains(uid), "移除特别关心");
+    menu->addAction("添加强提醒", [=]{
+
+    })->text(uid && strongNotifyUsers.contains(uid), "移除强提醒");
+    menu->addAction("设置专属昵称", [=]{
+
+    })->text(uid && localNicknames.contains(uid), "专属昵称：" + localNicknames.value(uid));
+    menu->addAction("不自动欢迎", [=]{
+
+    })->check(uid && notWelcomeUsers.contains(uid));
+
+
+    FacileMenu* operMenu = menu->addMenu("文字");
+    operMenu->addAction("复制", [=]{
+
+    });
+    operMenu->addAction("自由复制", [=]{
+
+    });
+    operMenu->split()->addAction("搜索", [=]{
+
+    });
+    operMenu->addAction("翻译", [=]{
+
+    });
+    operMenu->addAction("AI闲聊", [=]{
+
+    });
+    operMenu->split()->addAction("无视颜色", [=]{
+
+    });
+
+
+    FacileMenu* settingMenu = menu->addMenu("设置");
+    settingMenu->addAction("昵称颜色", [=]{
+
+    });
+    settingMenu->addAction("消息颜色", [=]{
+
+    });
+    settingMenu->addAction("背景颜色", [=]{
+
+    });
+    settingMenu->addAction("高亮颜色", [=]{
+
+    });
+    settingMenu->addAction("弹幕字体", [=]{
+
+    });
+
+
+    settingMenu->split()->addAction("发送框", [=]{
+
+    })->check(!lineEdit->isHidden());
+    settingMenu->addAction("快速触发", [=]{
+
+    })->tooltip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口")
+      ->check(settings.value("livedanmakuwindow/sendEditShortcut", false).toBool());
+    settingMenu->addAction("单次发送", [=]{
+
+    })->tooltip("发送后，返回原窗口（如果有）")
+      ->check(settings.value("livedanmakuwindow/sendOnce", false).toBool());
+    settingMenu->split()->addAction("简约模式", [=]{
+
+    })->check(simpleMode);
+    settingMenu->addAction("聊天模式", [=]{
+
+    })->check(chatMode);
+    settingMenu->addAction("直播姬捕获模式", [=]{
+
+    })->check(settings.value("livedanmakuwindow/jiWindow", false).toBool());
+    settingMenu->addAction("窗口置顶", [=]{
+
+    })->check(settings.value("livedanmakuwindow/onTop", true).toBool());
+
+
+    menu->split()->addAction("删除", [=]{
+
+    });
+    menu->addAction("隐藏", [=]{
+
+    });
+
+
+    menu->exec();
+
+#else
     QMenu* menu = new QMenu(this);
     QAction* actionAddCare = new QAction("添加特别关心", this);
     QAction* actionStrongNotify = new QAction("添加强提醒", this);
@@ -811,7 +990,16 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
-    QAction* actionFont = new QAction("字体", this);
+    QAction* actionFont = new QAction("弹幕字体", this);
+
+    QMenu* pictureMenu = new QMenu("背景图片", settingMenu);
+    QAction* actionPictureSelect = new QAction("选择图片", this);
+    QAction* actionPictureFolder = new QAction("文件夹轮播", this);
+    QAction* actionPictureInterval = new QAction("轮播间隔", this);
+    QAction* actionPictureRatio = new QAction("保持比例", this);
+    QAction* actionPictureAlpha = new QAction("图片透明度", this);
+    QAction* actionCancelPicture = new QAction("取消图片", this);
+
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionSendOnce = new QAction("单次发送", this);
@@ -840,18 +1028,15 @@ void LiveDanmakuWindow::showMenu()
     actionWindow->setChecked(settings.value("livedanmakuwindow/jiWindow", false).toBool());
     actionOnTop->setCheckable(true);
     actionOnTop->setChecked(settings.value("livedanmakuwindow/onTop", true).toBool());
+    actionPictureSelect->setCheckable(true);
+    actionPictureSelect->setChecked(!pictureFilePath.isEmpty());
+    actionPictureFolder->setCheckable(true);
+    actionPictureFolder->setChecked(!pictureDirPath.isEmpty());
+    actionPictureRatio->setCheckable(true);
+    actionPictureRatio->setChecked(aspectRatio);
 
-    qint64 uid = danmaku.getUid();
     if (uid != 0)
     {
-        if (careUsers.contains(uid))
-            actionAddCare->setText("移除特别关心");
-        if (strongNotifyUsers.contains(uid))
-            actionStrongNotify->setText("移除强提醒");
-        if (localNicknames.contains(uid))
-            actionSetName->setText("专属昵称：" + localNicknames.value(uid));
-        actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
-
         // 弹幕的数据多一点，包含牌子、等级等
         if (danmaku.getMsgType() == MSG_DANMAKU)
         {
@@ -862,6 +1047,7 @@ void LiveDanmakuWindow::showMenu()
         {
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
         }
+
         if (!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
         {
             actionMedal->setText(danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()));
@@ -875,6 +1061,14 @@ void LiveDanmakuWindow::showMenu()
         {
             actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
         }
+
+        if (careUsers.contains(uid))
+            actionAddCare->setText("移除特别关心");
+        if (strongNotifyUsers.contains(uid))
+            actionStrongNotify->setText("移除强提醒");
+        if (localNicknames.contains(uid))
+            actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+        actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
 
         if (!danmaku.getTextColor().isEmpty())
         {
@@ -942,8 +1136,6 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionSetName);
     menu->addAction(actionNotWelcome);
     menu->addSeparator();
-//    menu->addMenu(userMenu);
-//    menu->addSeparator();
     menu->addMenu(operMenu);
     menu->addMenu(settingMenu);
 
@@ -956,11 +1148,21 @@ void LiveDanmakuWindow::showMenu()
     operMenu->addSeparator();
     operMenu->addAction(actionIgnoreColor);
 
+    pictureMenu->addAction(actionPictureSelect);
+    pictureMenu->addAction(actionPictureFolder);
+    pictureMenu->addSeparator();
+    pictureMenu->addAction(actionPictureInterval);
+    pictureMenu->addAction(actionPictureAlpha);
+    pictureMenu->addAction(actionPictureRatio);
+    pictureMenu->addSeparator();
+    pictureMenu->addAction(actionCancelPicture);
+
     settingMenu->addAction(actionNameColor);
     settingMenu->addAction(actionMsgColor);
     settingMenu->addAction(actionBgColor);
     settingMenu->addAction(actionHlColor);
     settingMenu->addAction(actionFont);
+    settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
     settingMenu->addAction(actionDialogSend);
@@ -1257,6 +1459,7 @@ void LiveDanmakuWindow::showMenu()
 //        if (item->data(DANMAKU_STRING_ROLE).toString().isEmpty())
         {
             // 强制删除
+            qDebug() << "强制删除弹幕：" << item->data(DANMAKU_STRING_ROLE).toString();
             listWidget->removeItemWidget(item);
             listWidget->takeItem(listWidget->row(item));
             return ;
@@ -1265,6 +1468,70 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionHide, &QAction::triggered, this, [=]{
         this->hide();
+    });
+
+    connect(actionPictureSelect, &QAction::triggered, this, [=]{
+        QString path = QFileDialog::getOpenFileName(this, tr("请选择图片文件"), pictureFilePath, tr("Images (*.png *.xpm *.jpg)"));
+        if (path.isEmpty())
+            return ;
+
+        pictureFilePath = path;
+        pictureDirPath = "";
+        settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        bgPixmap = QPixmap(pictureFilePath);
+        switchBgTimer->stop();
+        update();
+    });
+    connect(actionPictureFolder, &QAction::triggered, this, [=]{
+        QString dir = QFileDialog::getExistingDirectory(this, tr("请选择图片文件夹"),
+                                                         pictureDirPath,
+                                                         QFileDialog::ShowDirsOnly
+                                                         | QFileDialog::DontResolveSymlinks);
+        if (dir.isEmpty())
+            return ;
+
+        pictureFilePath = "";
+        pictureDirPath = dir;
+        settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        bgPixmap = QPixmap();
+        selectRandomPicture();
+        switchBgTimer->start();
+        update();
+    });
+    connect(actionPictureInterval, &QAction::triggered, this, [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "轮播间隔", "每张图片显示的时长，单位秒",
+                                       switchBgTimer->interval()/1000, 3, 360000, 10, &ok);
+        if (!ok)
+            return ;
+        switchBgTimer->setInterval(val * 1000);
+        settings.setValue("livedanmakuwindow/pictureInterval", val);
+        update();
+    });
+    connect(actionPictureAlpha, &QAction::triggered, this, [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "图片透明度", "请输入背景图片透明度，0~255，越低越透明", pictureAlpha, 0, 255, 32, &ok);
+        if (!ok)
+            return ;
+        pictureAlpha = val;
+        settings.setValue("livedanmakuwindow/pictureAlpha", pictureAlpha);
+        update();
+    });
+    connect(actionPictureRatio, &QAction::triggered, this, [=]{
+        aspectRatio = !aspectRatio;
+        settings.setValue("livedanmakuwindow/aspectRatio", aspectRatio);
+        update();
+    });
+    connect(actionCancelPicture, &QAction::triggered, this, [=]{
+        pictureFilePath = "";
+        pictureDirPath = "";
+        settings.setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        settings.setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        bgPixmap = QPixmap();
+        switchBgTimer->stop();
+        update();
     });
 
     menu->exec(QCursor::pos());
@@ -1287,6 +1554,11 @@ void LiveDanmakuWindow::showMenu()
     actionChatMode->deleteLater();
     actionWindow->deleteLater();
     actionOnTop->deleteLater();
+    actionPictureSelect->deleteLater();
+    actionPictureFolder->deleteLater();
+    actionPictureAlpha->deleteLater();
+    actionCancelPicture->deleteLater();
+#endif
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)
@@ -1823,4 +2095,23 @@ QVariant LiveDanmakuWindow::getCookies()
     QVariant var;
     var.setValue(cookies);
     return var;
+}
+
+void LiveDanmakuWindow::selectRandomPicture()
+{
+    if (pictureDirPath.isEmpty())
+        return ;
+
+    auto files = QDir(pictureDirPath).entryInfoList(QStringList{"*.jpg", "*.png", "*.bmp"});
+    if (!files.size())
+    {
+        qDebug() << "未找到图片文件：" << pictureDirPath;
+        bgPixmap = QPixmap();
+        return ;
+    }
+
+    QString path = files.at(qrand() % files.size()).absoluteFilePath();
+    qDebug() << "选择图片：" << path;
+    bgPixmap = QPixmap(path);
+    update();
 }

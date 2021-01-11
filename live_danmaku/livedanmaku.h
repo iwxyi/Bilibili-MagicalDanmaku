@@ -290,6 +290,11 @@ public:
         return "未知消息类型";
     }
 
+    bool is(MessageType type) const
+    {
+        return this->msgType == type;
+    }
+
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
     {
         this->anchor_roomid = roomId;

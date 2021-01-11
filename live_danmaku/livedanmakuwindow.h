@@ -121,6 +121,8 @@ private:
     void showUserMsgHistory(qint64 uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
+    void selectRandomPicture();
+    void drawPixmapCenter(QPainter& painter, const QPixmap& bgPixmap);
 
 private:
     QSettings& settings;
@@ -155,6 +157,13 @@ private:
     int listItemSpacing = 6;
 
     QLabel* statusLabel = nullptr;
+
+    QPixmap bgPixmap;
+    QString pictureFilePath;
+    QString pictureDirPath;
+    QTimer* switchBgTimer = nullptr;
+    int pictureAlpha;
+    bool aspectRatio = false;
 };
 
 #endif // LIVEDANMAKUWINDOW_H
