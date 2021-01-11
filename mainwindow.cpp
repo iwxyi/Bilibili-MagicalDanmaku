@@ -3202,6 +3202,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             "area_name": "娱乐"
                         }
                     }*/
+                    QJsonObject data = json.value("data").toObject();
+                    int rank = data.value("rank").toInt();
+                    int trend = data.value("trend").toInt(); // 趋势：1上升，2下降
+                    QString area_name = data.value("area_name").toString();
+                    QString msg = QString(area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
+                    showLocalNotify(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
                 {
@@ -3219,6 +3225,12 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             "dm_msg": "恭喜主播 \\u003c% 丸嘻嘻 %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
                         }
                     }*/
+                    QJsonObject data = json.value("data").toObject();
+                    int rank = data.value("rank").toInt();
+                    QString uname = data.value("uname").toString();
+                    QString area_name = data.value("area_name").toString();
+                    QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
+                    showLocalNotify(msg);
                 }
                 else
                 {
