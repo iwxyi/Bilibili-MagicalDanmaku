@@ -419,7 +419,7 @@ MainWindow::MainWindow(QWidget *parent)
             speekText(danmaku.getText());
     });
 
-    qDebug() << nicknameSimplify("一代黑粉头子奥利奥");
+//    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 }
 
 MainWindow::~MainWindow()
@@ -2296,8 +2296,8 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%giftname_len%", snum(danmaku.getGiftName().length()));
 
     // 昵称+礼物名字长度
-    if (msg.contains("%name_snum_len%"))
-        msg.replace("%name_snum_len%", snum(danmaku.getNickname().length() + danmaku.getGiftName().length()));
+    if (msg.contains("%name_sum_len%"))
+        msg.replace("%name_sum_len%", snum(danmaku.getNickname().length() + danmaku.getGiftName().length()));
 
     // 是否新关注
     if (msg.contains("%new_attention%"))
@@ -2648,7 +2648,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
-                         "^.+要(.+)$", "^.*还.+就(.{2})$",
+                         "^.+(?:要|我就是)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2})(不是|有点|才是|敲|很).+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -3232,7 +3232,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     int rank = data.value("rank").toInt();
                     int trend = data.value("trend").toInt(); // 趋势：1上升，2下降
                     QString area_name = data.value("area_name").toString();
-                    QString msg = QString(area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
+                    QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
                     showLocalNotify(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
@@ -3995,6 +3995,8 @@ void MainWindow::handleMessage(QJsonObject json)
 
 void MainWindow::sendWelcomeIfNotRobot(LiveDanmaku danmaku)
 {
+    if (strongNotifyUsers.contains(danmaku.getUid()))
+        showLocalNotify("TEST强提醒sendWelcomeIfNotRobot：" + danmaku.getNickname());
     if (!judgeRobot)
     {
         sendWelcome(danmaku);
@@ -4204,6 +4206,8 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (notWelcomeUsers.contains(danmaku.getUid())) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
+    if (strongNotifyUsers.contains(danmaku.getUid()))
+        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
     if (!words.size())
         return ;
     int r = qrand() % words.size();
