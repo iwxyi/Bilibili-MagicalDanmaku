@@ -409,12 +409,14 @@ MainWindow::MainWindow(QWidget *parent)
         screenDanmakuFont.fromString(danmakuFontString);
     screenDanmakuColor = qvariant_cast<QColor>(settings.value("screendanmaku/color", QColor(0, 0, 0)));
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       showScreenDanmaku(danmaku);
+//        QtConcurrent::run([&]{
+            showScreenDanmaku(danmaku);
+//        });
     });
 
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
-       if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
-           speekText(danmaku.getText());
+        if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
+            speekText(danmaku.getText());
     });
 }
 
@@ -4277,7 +4279,14 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
     if (danmaku.getMsgType() == MSG_DANMAKU || !danmaku.getText().isEmpty())
         label->setText(danmaku.getText());
     else
-        label->setText(danmaku.toString());
+    {
+        QString text = danmaku.toString();
+        QRegularExpression re("^\\d+:\\d+:\\d+\\s+(.+)$"); // 简化表达式
+        QRegularExpressionMatch match;
+        if (text.indexOf(re, 0, &match) > -1)
+            text = match.capturedTexts().at(1);
+        label->setText(text);
+    }
     label->setFont(screenDanmakuFont);
 
     auto isBlankColor = [=](QString c) -> bool {
@@ -4303,16 +4312,35 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
         sx = right - label->width();
         ex = left;
     }
-    int ry = qrand() % (qMax(30, qAbs(bottom - top) - label->height()));
-    int y = qMin(top, bottom) + label->height() + ry;
+
+    // 避免重叠
+    auto isOverlap = [=](int x, int y, int height){
+        foreach (QLabel* label, screenLabels)
+        {
+            if (label->geometry().contains(x, y)
+                    || label->geometry().contains(x, y+height))
+                return true;
+        }
+        return false;
+    };
+    int forCount = 0;
+    int y = 0;
+    do {
+        int ry = qrand() % (qMax(30, qAbs(bottom - top) - label->height()));
+        y = qMin(top, bottom) + label->height() + ry;
+        if (++forCount >= 32) // 最多循环32遍（如果弹幕极多，可能会必定叠在一起）
+            break;
+    } while (isOverlap(sx, y, label->height()));
 
     label->move(QPoint(sx, y));
+    screenLabels.append(label);
     QPropertyAnimation* ani = new QPropertyAnimation(label, "pos");
     ani->setStartValue(QPoint(sx, y));
     ani->setEndValue(QPoint(ex, y));
     ani->setDuration(ui->screenDanmakuSpeedSpin->value() * 1000);
     connect(ani, &QPropertyAnimation::finished, ani, [=]{
         ani->deleteLater();
+        screenLabels.removeOne(label);
         label->deleteLater();
     });
     ani->start();

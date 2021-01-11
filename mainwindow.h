@@ -563,5 +563,6 @@ private:
     // 全屏弹幕
     QFont screenDanmakuFont;
     QColor screenDanmakuColor;
+    QList<QLabel*> screenLabels;
 };
 #endif // MAINWINDOW_H
