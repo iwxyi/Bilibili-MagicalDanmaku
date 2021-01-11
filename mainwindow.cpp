@@ -418,6 +418,8 @@ MainWindow::MainWindow(QWidget *parent)
         if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
             speekText(danmaku.getText());
     });
+
+    qDebug() << nicknameSimplify("一代黑粉头子奥利奥");
 }
 
 MainWindow::~MainWindow()
@@ -2625,7 +2627,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // 一大串 中文enen
-    QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4e00]+)$");
+    // 日语[\u0800-\u4e00] ，实测“一”也会算在里面……？
+    QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4dff]+)$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*3 >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
@@ -2634,7 +2637,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             simp = tmp;
         }
     }
-    ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4e00]+)([\u4e00-\u9fa5]{2,})");
+    ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4dff]+)([\u4e00-\u9fa5]{2,})");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*3)
     {
         QString tmp = match.capturedTexts().at(2);
