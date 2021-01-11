@@ -2231,6 +2231,14 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%gift_silver%"))
         msg.replace("%gift_silver%", snum(danmaku.isGoldCoin() ? 0 : danmaku.getTotalCoin()));
 
+    // 本次送礼金瓜子+银瓜子（应该只有一个，但直接相加了）
+    if (msg.contains("%gift_coin%"))
+        msg.replace("%gift_coin%", snum(danmaku.getTotalCoin()));
+
+    // 是否是金瓜子礼物
+    if (msg.contains("%coin_gold%"))
+        msg.replace("%coin_gold%", danmaku.isGoldCoin() ? "1" : "0");
+
     // 本次送礼名字
     if (msg.contains("%gift_name%"))
         msg.replace("%gift_name%", danmaku.getGiftName());
@@ -2381,6 +2389,19 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%my_uname%"))
         msg.replace("%my_uname%", cookieUname);
 
+    // 本地设置
+    // 特别关心
+    if (msg.contains("%care%"))
+        msg.replace("%care%", careUsers.contains(danmaku.getUid()) ? "1" : "0");
+    // 强提醒
+    if (msg.contains("%strong_notify%"))
+        msg.replace("%strong_notify%", strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0");
+    // 是否被禁言
+    if (msg.contains("%blocked%"))
+        msg.replace("%blocked%", userBlockIds.contains(danmaku.getUid()) ? "1" : "0");
+    // 不自动欢迎
+    if (msg.contains("%not_welcome%"))
+        msg.replace("%noe_welcome%", notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0");
 
     return msg;
 }
@@ -3577,8 +3598,8 @@ void MainWindow::handleMessage(QJsonObject json)
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
 
-        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
-            return ;
+//        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
+//            return ;
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         if (!words.size())
             return ;
@@ -5340,7 +5361,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             showLocalNotify("开始播放：" + song.simpleString());
         });
         connect(playerWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
-            QTimer::singleShot(10000, this, [=]{
+            QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
                 settings.setValue("danmaku/playerWindow", false);
             });
         });
