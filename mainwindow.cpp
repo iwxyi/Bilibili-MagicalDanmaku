@@ -1532,7 +1532,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         getRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
-        getUpPortrait(upUid);
+        getUpFace(upUid);
 
         // 开始工作
         if (liveStatus)
@@ -1636,68 +1636,67 @@ bool MainWindow::isLivingOrMayliving()
 
 void MainWindow::getRoomCover(QString url)
 {
-    QNetworkAccessManager manager;
-    QEventLoop loop;
-    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-    //请求结束并下载完成后，退出子事件循环
-    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //开启子事件循环
-    loop.exec();
-    QByteArray jpegData = reply1->readAll();
-    QPixmap pixmap;
-    pixmap.loadFromData(jpegData);
-    roomCover = pixmap; // 原图
-    if (roomCover.isNull())
-        return ;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
+        QByteArray jpegData = reply1->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        roomCover = pixmap; // 原图
+        if (roomCover.isNull())
+            return ;
 
-    int w = ui->roomCoverLabel->width();
-    if (w > ui->tabWidget->contentsRect().width())
-        w = ui->tabWidget->contentsRect().width();
-    pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-    ui->roomCoverLabel->setPixmap(pixmap);
-    ui->roomCoverLabel->setMinimumSize(1, 1);
+        int w = ui->roomCoverLabel->width();
+        if (w > ui->tabWidget->contentsRect().width())
+            w = ui->tabWidget->contentsRect().width();
+        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+        ui->roomCoverLabel->setPixmap(pixmap);
+        ui->roomCoverLabel->setMinimumSize(1, 1);
 
-    // 设置程序主题
-    QColor bg, fg, sbg, sfg;
-    auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
-    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
-    prevPa = BFSColor::fromPalette(palette());
-    currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
-    QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
-    ani->setStartValue(0);
-    ani->setEndValue(1.0);
-    ani->setDuration(500);
-    connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
-        double d = val.toDouble();
-        BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+        // 设置程序主题
         QColor bg, fg, sbg, sfg;
-        bfs.toColors(&bg, &fg, &sbg, &sfg);
+        auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
+        ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+        prevPa = BFSColor::fromPalette(palette());
+        currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
+        QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
+        ani->setStartValue(0);
+        ani->setEndValue(1.0);
+        ani->setDuration(500);
+        connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+            double d = val.toDouble();
+            BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+            QColor bg, fg, sbg, sfg;
+            bfs.toColors(&bg, &fg, &sbg, &sfg);
 
-        QPalette pa;
-        pa.setColor(QPalette::Window, bg);
-        pa.setColor(QPalette::Background, bg);
-        pa.setColor(QPalette::Button, bg);
-        pa.setColor(QPalette::Base, bg);
+            QPalette pa;
+            pa.setColor(QPalette::Window, bg);
+            pa.setColor(QPalette::Background, bg);
+            pa.setColor(QPalette::Button, bg);
+            pa.setColor(QPalette::Base, bg);
 
-        pa.setColor(QPalette::Foreground, fg);
-        pa.setColor(QPalette::Text, fg);
-        pa.setColor(QPalette::ButtonText, fg);
-        pa.setColor(QPalette::WindowText, fg);
+            pa.setColor(QPalette::Foreground, fg);
+            pa.setColor(QPalette::Text, fg);
+            pa.setColor(QPalette::ButtonText, fg);
+            pa.setColor(QPalette::WindowText, fg);
 
-        pa.setColor(QPalette::Highlight, sbg);
-        pa.setColor(QPalette::HighlightedText, sfg);
-        setPalette(pa);
-        setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
-        ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
+            pa.setColor(QPalette::Highlight, sbg);
+            pa.setColor(QPalette::HighlightedText, sfg);
+            setPalette(pa);
+            setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
+            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
+        });
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        ani->start();
+
+        // 设置主要界面主题
+        ui->tabWidget->setBg(roomCover);
     });
-    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
-    ani->start();
 
-    // 设置主要界面主题
-    ui->tabWidget->setBg(roomCover);
+    manager->get(*request);
 }
 
-void MainWindow::getUpPortrait(QString uid)
+void MainWindow::getUpFace(QString uid)
 {
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -1725,14 +1724,21 @@ void MainWindow::getUpPortrait(QString uid)
         QString face = data.value("face").toString();
 
         // 开始下载头像
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(face)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray jpegData = reply1->readAll();
+        getUpPortrait(face);
+    });
+    manager->get(*request);
+}
+
+void MainWindow::getUpPortrait(QString face)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(face);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray jpegData = reply->readAll();
+        manager->deleteLater();
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
 

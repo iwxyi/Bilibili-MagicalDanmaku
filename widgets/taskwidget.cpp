@@ -64,7 +64,6 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 
 void TaskWidget::slotSpinChanged(int val)
 {
-    qDebug() << "timerChanged" << val;
     timer->setInterval(val * 1000);
     emit spinChanged(val);
 }

@@ -363,7 +363,8 @@ private:
     void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
     void getRoomCover(QString url);
-    void getUpPortrait(QString uid);
+    void getUpFace(QString uid);
+    void getUpPortrait(QString face);
     void getDanmuInfo();
     void updateFansCount();
     void getFansAndUpdate();

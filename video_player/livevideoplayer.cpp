@@ -124,65 +124,6 @@ void LiveVideoPlayer::downloadFlv(QString url)
             qDebug() << ("返回结果不为200：") << json.value("message").toString();
             return ;
         }
-/*
-        QJsonArray array = json.value("data").toArray();
-        if (!array.size())
-        {
-            qDebug() << "未找到歌曲：" << song.simpleString();
-            downloadingSong = Song();
-            downloadNext();
-            return ;
-        }
-
-        json = array.first().toObject();
-        QString url = JVAL_STR(url);
-        int br = JVAL_INT(br); // 比率320000
-        int size = JVAL_INT(size);
-        QString type = JVAL_STR(type); // mp3
-        QString encodeType = JVAL_STR(encodeType); // mp3
-        qDebug() << "    信息：" << br << size << type << url;
-        if (size == 0)
-        {
-            qDebug() << "无法下载，可能没有版权" << song.simpleString();
-            if (playAfterDownloaded == song)
-            {
-                if (orderSongs.contains(song))
-                {
-                    orderSongs.removeOne(song);
-                }
-                playNext();
-            }
-
-            downloadingSong = Song();
-            downloadNext();
-            return ;
-        }
-
-        // 开始下载歌曲本身
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray mp3Ba = reply1->readAll();
-
-        // 保存到文件
-        QFile file(songPath(song));
-        file.open(QIODevice::WriteOnly);
-        file.write(mp3Ba);
-        file.flush();
-        file.close();
-
-        emit signalSongDownloadFinished(song);
-
-        if (playAfterDownloaded == song)
-            playLocalSong(song);
-
-        downloadingSong = Song();
-        downloadNext();
-        */
     });
     manager->get(*request);
 }
