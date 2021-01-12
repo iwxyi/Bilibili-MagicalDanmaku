@@ -377,6 +377,9 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkJudgeEarlyButton->hide();
     }
 
+    // 粉丝勋章
+    ui->autoSwitchMedalCheck->setChecked(settings.value("danmaku/autoSwitchMedal", false).toBool());
+
     // 读取自定义快捷房间
     QStringList list = settings.value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
     ui->menu_3->addSeparator();
@@ -1486,10 +1489,10 @@ void MainWindow::getRoomInfo(bool reconnect)
                  << "  shortid=" << shortId
                  << "  uid=" << upUid;
 
-        roomName = roomInfo.value("title").toString();
-        setWindowTitle(roomName + " - " + QApplication::applicationName());
-        tray->setToolTip(roomName + " - " + QApplication::applicationName());
-        ui->roomNameLabel->setText(roomName);
+        roomTitle = roomInfo.value("title").toString();
+        setWindowTitle(roomTitle + " - " + QApplication::applicationName());
+        tray->setToolTip(roomTitle + " - " + QApplication::applicationName());
+        ui->roomNameLabel->setText(roomTitle);
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         if (liveStatus != 1)
             ui->popularityLabel->setText("未开播");
@@ -1511,6 +1514,10 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 获取主播头像
         getUpPortrait(upUid);
+
+        // 开始工作
+        if (liveStatus)
+            slotStartWork();
 
         if (!reconnect)
             return ;
@@ -2391,7 +2398,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%room_id%"))
         msg.replace("%room_id%", roomId);
     if (msg.contains("%room_name%"))
-        msg.replace("%room_name%", roomName);
+        msg.replace("%room_name%", roomTitle);
     if (msg.contains("%up_name%"))
         msg.replace("%up_name%", upName);
     if (msg.contains("%up_uid%"))
@@ -3373,6 +3380,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 connectServerTimer->stop();
             if (ui->recordCheck->isChecked())
                 startLiveRecord();
+            slotStartWork();
         }
     }
     else if (cmd == "PREPARING") // 下播
@@ -5251,6 +5259,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setUpUid(upUid.toLongLong());
         danmakuWindow->hide();
+        danmakuWindow->setWindowIcon(this->windowIcon());
+        danmakuWindow->setWindowTitle("直播流-" + this->windowTitle());
     }
 
     bool hidding = danmakuWindow->isHidden();
@@ -6234,6 +6244,151 @@ QRect MainWindow::getScreenRect()
     return screenRect;
 }
 
+void MainWindow::switchMedalTo(qint64 targetRoomId)
+{
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/FansMedal/get_list_in_room";
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取用户信息出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonArray medals = json.value("data").toArray();
+        /*  buff_msg: "(舰长buff：上限提升至150%)"
+            can_delete: false     // 变灰了才能删除
+            day_limit: 250000
+            guard_level: 3
+            guard_type: 3
+            icon_code: 2
+            icon_text: "最近获得"
+            intimacy: 1380
+            is_lighted: 1         // 是否未变灰
+            is_receive: 1
+            last_wear_time: 1613491199
+            level: 21
+            live_stream_status: 0  // 是否正在直播
+            lpl_status: 0
+            master_available: 1
+            master_status: 0
+            medal_color: 1725515
+            medal_color_border: 6809855
+            medal_color_end: 5414290
+            medal_color_start: 1725515
+            medal_id: 373753
+            medal_level: 21
+            medal_name: "181mm"
+            next_intimacy: 2000
+            rank: "-"
+            receive_channel: 4
+            receive_time: "2021-01-10 09:33:22"
+            room_id: 11584296      // 牌子房间
+            score: 50001380
+            source: 1
+            status: 1              // 是否佩戴中
+            sup_code: 2
+            sup_text: "最近获得"
+            target_face: ""
+            target_id: 20285041
+            target_name: "懒一夕智能科技"
+            today_feed: 0
+            today_intimacy: 0
+            uid: 20285041          // 牌子用户
+        */
+
+        foreach (QJsonValue val, medals)
+        {
+            QJsonObject medal = val.toObject();
+            qint64 roomId = static_cast<qint64>(medal.value("room_id").toDouble());
+            int status = medal.value("status").toInt(); // 1佩戴，0未佩戴
+
+            if (roomId == targetRoomId)
+            {
+                if (status) // 已佩戴，就不用管了
+                    return ;
+
+                // 佩带牌子
+                /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
+                if (!isLighted) // 牌子是灰的，可以不用管，发个弹幕就点亮了
+                    return ;
+                */
+
+                qint64 medalId = static_cast<qint64>(medal.value("medal_id").toDouble());
+                wearMedal(medalId);
+                return ;
+            }
+        }
+        qDebug() << "未检测到粉丝勋章，无法自动切换";
+
+    });
+    manager->get(*request);
+}
+
+void MainWindow::wearMedal(qint64 medalId)
+{
+    QUrl url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "medal_id=" + QString::number(medalId);
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "设置Medal出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+        qDebug() << "佩戴主播粉丝勋章成功";
+    });
+
+    manager->post(*request, ba);
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -6457,4 +6612,25 @@ void MainWindow::on_pkMelonValButton_clicked()
         return ;
     goldTransPk = val;
     settings.setValue("pk/goldTransPk", goldTransPk);
+}
+
+/**
+ * 机器人开始工作
+ * 开播时连接/连接后开播
+ */
+void MainWindow::slotStartWork()
+{
+    if (ui->autoSwitchMedalCheck->isChecked())
+    {
+        switchMedalTo(roomId.toLongLong());
+    }
+}
+
+void MainWindow::on_autoSwitchMedalCheck_clicked()
+{
+    settings.setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
+    if (!roomId.isEmpty() && liveStatus)
+    {
+        switchMedalTo(roomId.toLongLong());
+    }
 }

@@ -335,6 +335,10 @@ private slots:
 
     void on_pkMelonValButton_clicked();
 
+    void slotStartWork();
+
+    void on_autoSwitchMedalCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -425,6 +429,9 @@ private:
     void releaseLiveData();
     QRect getScreenRect();
 
+    void switchMedalTo(qint64 targetRoomId);
+    void wearMedal(qint64 medalId);
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
@@ -433,7 +440,7 @@ private:
     QString roomId;
     int liveStatus = 0; // 是否正在直播
     QString upName;
-    QString roomName;
+    QString roomTitle;
     QPixmap roomCover;
     QPixmap upFace;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
