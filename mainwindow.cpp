@@ -870,6 +870,7 @@ void MainWindow::sendAttentionMsg(QString msg)
 
 void MainWindow::sendNotifyMsg(QString msg)
 {
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus)
     if (msg.trimmed().isEmpty())
         return ;
 
@@ -1039,8 +1040,8 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
         settings.setValue("task/r"+QString::number(row)+"Msg", content);
     });
 
-    connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl){
-        if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行定时任务
+    connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
+        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行定时任务
             return ;
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
         if (msgs.size())
@@ -1063,6 +1064,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     // 设置属性
     tw->check->setChecked(enable);
     tw->spin->setValue(second);
+    tw->slotSpinChanged(second);
     tw->edit->setPlainText(text);
     tw->adjustSize();
     item->setSizeHint(tw->sizeHint());
@@ -3696,6 +3698,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString msg = words.at(r);
         if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
+            showLocalNotify("TEST送礼答谢：" + msg);
             if (strongNotifyUsers.contains(uid))
             {
                 if (ui->sendGiftTextCheck->isChecked())

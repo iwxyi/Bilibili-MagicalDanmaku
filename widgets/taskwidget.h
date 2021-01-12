@@ -21,11 +21,11 @@ public:
     TaskWidget(QWidget *parent = nullptr);
 
 signals:
-    void signalSendMsgs(QString msgs);
+    void signalSendMsgs(QString msgs, bool manual);
     void spinChanged(int val);
     void signalResized();
 
-private slots:
+public slots:
     void slotSpinChanged(int val);
 
 protected:

@@ -33,8 +33,8 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 
     edit->setStyleSheet("QPlainTextEdit{background: transparent;}");
 
-    auto sendMsgs = [=]{
-        emit signalSendMsgs(edit->toPlainText());
+    auto sendMsgs = [=](bool manual){
+        emit signalSendMsgs(edit->toPlainText(), manual);
     };
 
     connect(check, &QCheckBox::stateChanged, this, [=](int){
@@ -47,9 +47,13 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 
     connect(spin, SIGNAL(valueChanged(int)), this, SLOT(slotSpinChanged(int)));
 
-    connect(timer, &QTimer::timeout, this, sendMsgs);
+    connect(timer, &QTimer::timeout, this, [=]{
+        sendMsgs(false);
+    });
 
-    connect(btn, &QPushButton::clicked, this, sendMsgs);
+    connect(btn, &QPushButton::clicked, this, [=]{
+        sendMsgs(true);
+    });
 
     connect(edit, &QPlainTextEdit::textChanged, this, [=]{
         int hh = edit->document()->size().height(); // 应当是高度，但为什么是1？
@@ -60,6 +64,7 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 
 void TaskWidget::slotSpinChanged(int val)
 {
+    qDebug() << "timerChanged" << val;
     timer->setInterval(val * 1000);
     emit spinChanged(val);
 }
