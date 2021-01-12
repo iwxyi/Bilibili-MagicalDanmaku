@@ -22,10 +22,39 @@
     <item>
      <widget class="MyTabWidget" name="tabWidget">
       <property name="styleSheet">
-       <string notr="true"/>
+       <string notr="true">QTabWidget
+{
+	border: none;
+}
+
+QTabWidget::tab-bar
+{
+	border: none;
+}
+
+QTabBar::tab
+{
+	border: 0px solid #F0F0F000;
+	padding: 4px;
+	padding-left: 8px;
+	padding-right: 8px;
+	min-width: 8ex;
+	margin: 0px;
+}
+
+QTabBar::tab:hover
+{
+	background: rgba(128,128,128,64);
+}
+
+QTabBar::tab:selected
+{
+	background: rgba(128,128,128,64);
+}
+</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">

@@ -39,9 +39,20 @@ void MyTabWidget::setBg(const QPixmap &pixmap)
 
 void MyTabWidget::paintEvent(QPaintEvent *event)
 {
-    QTabWidget::paintEvent(event);
+//    QTabWidget::paintEvent(event);
+    Q_UNUSED(event)
+    QPalette pa(this->palette());
+    QColor bgColor = pa.color(QPalette::Background);
 
+    // 画原背景
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    QPainterPath path;
+    path.addRoundedRect(rect(), 4, 4);
+    painter.setClipPath(path);
+
+    painter.fillRect(rect(), bgColor); // 这个可以画到 TabBar
+
     // 画模糊背景
     if (prevAlpha && !prevPixmap.isNull())
     {

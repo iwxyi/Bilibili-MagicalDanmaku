@@ -1669,8 +1669,6 @@ void MainWindow::getRoomCover(QString url)
         pa.setColor(QPalette::Highlight, sbg);
         pa.setColor(QPalette::HighlightedText, sfg);
         setPalette(pa);
-        ui->tabWidget->setPalette(pa);
-
         setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
         ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
     });
