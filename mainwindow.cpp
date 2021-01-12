@@ -1292,7 +1292,7 @@ void MainWindow::initWS()
     socket = new QWebSocket();
 
     connect(socket, &QWebSocket::connected, this, [=]{
-        qDebug() << "socket connected";
+        SOCKET_DEB << "socket connected";
         ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
@@ -1345,7 +1345,7 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        qDebug() << "stateChanged" << state;
+        SOCKET_DEB << "stateChanged" << state;
         QString str = "未知";
         if (state == QAbstractSocket::UnconnectedState)
             str = "未连接";
@@ -1465,6 +1465,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         if (error.error != QJsonParseError::NoError)
         {
             qDebug() << "获取房间信息出错：" << error.errorString();
+            ui->connectStateLabel->setText("无法获取房间信息");
             return ;
         }
         QJsonObject json = document.object();
@@ -1775,7 +1776,7 @@ void MainWindow::getDanmuInfo()
                                 o.value("ws_port").toInt(),
                             });
         }
-        qDebug() << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << token;
+        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << token;
 
         startMsgLoop();
     });
@@ -1902,7 +1903,7 @@ void MainWindow::startMsgLoop()
     int hostRetry = 0; // 循环测试连接（意思一下，暂时未使用，否则应当设置为成员变量）
     HostInfo hostServer = hostList.at(hostRetry);
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
-    qDebug() << "hostServer:" << host;
+    SOCKET_DEB << "hostServer:" << host;
 
     // 设置安全套接字连接模式（不知道有啥用）
     QSslConfiguration config = socket->sslConfiguration();
