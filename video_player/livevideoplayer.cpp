@@ -67,7 +67,6 @@ void LiveVideoPlayer::refreshPlayUrl()
 {
     if (roomId.isEmpty())
         return ;
-    qDebug() << "TEST video 刷新url";
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
     QNetworkAccessManager* manager = new QNetworkAccessManager;

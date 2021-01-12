@@ -643,11 +643,13 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         }
         else
         {
-            text += nameText + " 进入";
+            text += nameText + " ";
             if (danmaku.getNumber() > 0) // 不包括这一次的
-                text += QString("<font color='gray'> %1次</font>").arg(danmaku.getNumber());
+                text += QString("进入<font color='gray'> %1次</font>").arg(danmaku.getNumber());
+            else if (!danmaku.getSpreadDesc().isEmpty())
+                text += "<font color='gray'>进入</font>";
             else
-                text += "直播间";
+                text += "<font color='gray'>进入直播间</font>";
         }
 
         // 推广
@@ -683,7 +685,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_ATTENTION)
     {
-        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
+//        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
         text = QString("<font color='gray'>[关注]</font> %1 %2")
                 .arg(nameText)
                 .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播");

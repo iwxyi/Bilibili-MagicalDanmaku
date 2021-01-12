@@ -3550,10 +3550,6 @@ void MainWindow::handleMessage(QJsonObject json)
             if (dailySettings)
                 dailySettings->setValue("newbie_msg", dailyNewbieMsg);
         }
-        if (opposite)
-        {
-            qDebug() << "xxxxxxxxxxxxxxxxxxxx大乱斗对面观众：" << username;
-        }
 
         // 新人小号禁言
         bool blocked = false;
@@ -3925,6 +3921,13 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             danmaku.transToAttention(timestamp);
             appendNewLiveDanmaku(danmaku);
+
+            if (!justStart && ui->autoSendAttentionCheck->isChecked())
+            {
+                sendAttentionThankIfNotRobot(danmaku);
+            }
+            else
+                judgeRobotAndMark(danmaku);
         }
         else if (msgType == 3) // 分享直播间
         {
