@@ -983,16 +983,16 @@ void LiveDanmakuWindow::showMenu()
 
 #else
     QMenu* menu = new QMenu(this);
-    QAction* actionAddCare = new QAction("添加特别关心", this);
-    QAction* actionStrongNotify = new QAction("添加强提醒", this);
-    QAction* actionSetName = new QAction("设置专属昵称", this);
-
-    QMenu* userMenu = new QMenu("用户", this);
     QAction* actionUserInfo = new QAction("用户主页", this);
     QAction* actionMedal = new QAction("粉丝牌子", this);
     QAction* actionHistory = new QAction("消息记录", this);
     QAction* actionFollow = new QAction("粉丝数", this);
     QAction* actionView = new QAction("浏览量", this);
+
+    QAction* actionAddCare = new QAction("添加特别关心", this);
+    QAction* actionStrongNotify = new QAction("添加强提醒", this);
+    QAction* actionSetName = new QAction("设置专属昵称", this);
+    QAction* actionSetGiftName = new QAction("设置礼物别名", this);
 
     QAction* actionAddBlock = new QAction("禁言720小时", this);
     QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
@@ -1086,6 +1086,8 @@ void LiveDanmakuWindow::showMenu()
         if (danmaku.getMsgType() == MSG_GIFT)
         {
             actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
+            if (giftNames.contains(danmaku.getGiftId()))
+                actionSetGiftName->setText("礼物别名：" + giftNames.value(danmaku.getGiftId()));
         }
 
         if (careUsers.contains(uid))
@@ -1107,7 +1109,6 @@ void LiveDanmakuWindow::showMenu()
     }
     else // 包括 item == nullptr
     {
-        userMenu->setEnabled(false);
         actionUserInfo->setEnabled(false);
         actionHistory->setEnabled(false);
         actionAddBlock->setEnabled(false);
@@ -1161,6 +1162,8 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
     menu->addAction(actionNotWelcome);
+    if (danmaku.is(MSG_GIFT))
+        menu->addAction(actionSetGiftName);
     menu->addSeparator();
     menu->addMenu(operMenu);
     menu->addMenu(settingMenu);
@@ -1357,6 +1360,46 @@ void LiveDanmakuWindow::showMenu()
         foreach (qint64 uid, notWelcomeUsers)
             ress << QString::number(uid);
         settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
+    });
+    connect(actionSetGiftName, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+
+        // 设置别名
+        int giftId = danmaku.getGiftId();
+        bool ok = false;
+        QString name;
+        if (giftNames.contains(giftId))
+            name = giftNames.value(giftId);
+        else
+            name = danmaku.getGiftName();
+        QString tip = "设置【" + danmaku.getGiftName() + "】的别名\n只影响机器人的感谢弹幕";
+        if (giftNames.contains(giftId))
+        {
+            tip += "\n清空则取消别名，还原礼物原始名字";
+        }
+        name = QInputDialog::getText(this, "礼物别名", tip, QLineEdit::Normal, name, &ok);
+        if (!ok)
+            return ;
+        if (name.isEmpty())
+        {
+            if (giftNames.contains(giftId))
+                giftNames.remove(giftId);
+        }
+        else
+        {
+            giftNames[giftId] = name;
+        }
+
+        // 保存本地昵称
+        QStringList ress;
+        auto it = giftNames.begin();
+        while (it != giftNames.end())
+        {
+            ress << QString("%1=>%2").arg(it.key()).arg(it.value());
+            it++;
+        }
+        settings.setValue("danmaku/giftNames", ress.join(";"));
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

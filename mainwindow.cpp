@@ -13,6 +13,7 @@ QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
+QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -170,6 +171,17 @@ MainWindow::MainWindow(QWidget *parent)
             continue;
 
         localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+    }
+
+    // 礼物别名
+    namePares = settings.value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString pare, namePares)
+    {
+        QStringList sl = pare.split("=>");
+        if (sl.size() < 2)
+            continue;
+
+        giftNames.insert(sl.at(0).toInt(), sl.at(1));
     }
 
     // 特别关心
@@ -715,7 +727,7 @@ void MainWindow::sendMsg(QString msg)
 void MainWindow::sendAutoMsg(QString msgs)
 {
     msgs = processTimeVariants(msgs);
-//    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
+    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     const int cd = 1500;
     int delay = 0;
@@ -893,8 +905,8 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         QString username = "测试用户";
         QString giftName = "测试礼物";
-        int giftId = 0;
-        int num = qrand() % 3;
+        int giftId = 123;
+        int num = qrand() % 3 + 1;
         qint64 uid = 123;
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         QString coinType = qrand()%2 ? "gold" : "silver";
@@ -2292,7 +2304,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 本次送礼名字
     if (msg.contains("%gift_name%"))
-        msg.replace("%gift_name%", danmaku.getGiftName());
+        msg.replace("%gift_name%", giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName());
+
+    if (msg.contains("%origin_gift_name%")) // 原始礼物名字
+        msg.replace("%origin_gift_name%", danmaku.getGiftName());
 
     // 本次送礼数量
     if (msg.contains("%gift_num%"))
@@ -2342,11 +2357,11 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 礼物名字长度
     if (msg.contains("%giftname_len%"))
-        msg.replace("%giftname_len%", snum(danmaku.getGiftName().length()));
+        msg.replace("%giftname_len%", snum((giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
 
     // 昵称+礼物名字长度
     if (msg.contains("%name_sum_len%"))
-        msg.replace("%name_sum_len%", snum(danmaku.getNickname().length() + danmaku.getGiftName().length()));
+        msg.replace("%name_sum_len%", snum(danmaku.getNickname().length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
 
     if (msg.contains("%ainame_sum_len%"))
     {
@@ -2355,7 +2370,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
             local = nicknameSimplify(danmaku.getNickname());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        msg.replace("%ainame_sum_len%", snum(local.length() + danmaku.getGiftName().length()));
+        msg.replace("%ainame_sum_len%", snum(local.length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
     }
 
     // 是否新关注
@@ -3623,7 +3638,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << s8("接收到送礼：") << username << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        qDebug() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
