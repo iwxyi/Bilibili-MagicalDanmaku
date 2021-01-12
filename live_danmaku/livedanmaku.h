@@ -298,14 +298,16 @@ public:
         return "未知消息类型";
     }
 
-    void setType(MessageType type)
-    {
-        this->msgType = type;
-    }
-
     bool is(MessageType type) const
     {
         return this->msgType == type;
+    }
+
+    void transToAttention(qint64 attentionTime)
+    {
+        this->msgType = MSG_ATTENTION;
+        prev_timestamp = attentionTime;
+        attention = true;
     }
 
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")

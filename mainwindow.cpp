@@ -3264,7 +3264,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
-                qDebug() << "消息命令0：" << cmd;
+                qDebug() << ">消息命令UNZC：" << cmd;
 
                 if (cmd == "ROOM_RANK")
                 {
@@ -3430,7 +3430,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
 void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
-    qDebug() << s8(">消息命令：") << cmd;
+    qDebug() << s8(">消息命令ZCOM：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
         emit signalLiveStart(roomId);
@@ -3790,8 +3790,12 @@ void MainWindow::handleMessage(QJsonObject json)
         QStringList results = QRegularExpression("欢迎(?:舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
         if (results.size() < 2)
         {
-            qDebug() << "识别舰长进入失败：" << copy_writing;
-            qDebug() << data;
+            QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
+            if (results.size() < 2)
+            {
+                qDebug() << "识别舰长进入失败：" << copy_writing;
+                qDebug() << data;
+            }
             return ;
         }
         QString uname = results.at(1); // 这个昵称会被系统自动省略（太长后面会是两个点）
@@ -3868,9 +3872,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
-        qDebug() << s8("观众进入：") << username << msgType << (isSpread ? spreadDesc : "");
-        if (msgType != 1)
-            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
+        qDebug() << s8("观众进入：") << username << msgType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -3919,16 +3921,19 @@ void MainWindow::handleMessage(QJsonObject json)
                 judgeRobotAndMark(danmaku);
             }
         }
-        else if (msgType == 2 || msgType == 5) // 关注 5不知道是啥啊
+        else if (msgType == 2) // 关注 5不知道是啥啊
         {
-            qDebug() << json;
-            danmaku.setType(MSG_ATTENTION);
+            danmaku.transToAttention(timestamp);
             appendNewLiveDanmaku(danmaku);
         }
         else if (msgType == 3) // 分享直播间
         {
             qDebug() << json;
             showLocalNotify(username + "分享了直播间", uid);
+        }
+        else
+        {
+            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG")
@@ -6181,14 +6186,12 @@ void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
     switch(reason)
     {
     case QSystemTrayIcon::Trigger:
-        qDebug() << "单击托盘";
         if (!this->isHidden())
             this->hide();
         else
             this->showNormal();
         break;
     case QSystemTrayIcon::MiddleClick:
-        qDebug() << "中击托盘";
         on_actionShow_Live_Danmaku_triggered();
         break;
     default:

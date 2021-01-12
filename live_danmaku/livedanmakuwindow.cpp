@@ -684,10 +684,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_ATTENTION)
     {
         qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
-        text = QString("<font color='gray'>[关注]</font> %1 %2 <font color='gray'>%3s前</font>")
+        text = QString("<font color='gray'>[关注]</font> %1 %2")
                 .arg(nameText)
-                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
-                .arg(second);
+                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播");
     }
     else if (msgType == MSG_BLOCK)
     {

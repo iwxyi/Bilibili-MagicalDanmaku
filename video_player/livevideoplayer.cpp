@@ -52,12 +52,12 @@ void LiveVideoPlayer::setPlayUrl(QString url)
 {
     this->playUrl = url;
 
-    player->setVideoOutput(ui->videoWidget);
     QNetworkRequest req((QUrl(url)));
     QMediaContent c(req);
     playList->clear();
-    playList->addMedia(c);
-//    player->setMedia(c);
+//    playList->addMedia(c);
+    player->setMedia(c);
+    player->setVideoOutput(ui->videoWidget);
 //    player->play();
     if (player->state() == QMediaPlayer::StoppedState)
         player->play();
@@ -67,6 +67,7 @@ void LiveVideoPlayer::refreshPlayUrl()
 {
     if (roomId.isEmpty())
         return ;
+    qDebug() << "TEST video 刷新url";
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
