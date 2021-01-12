@@ -730,7 +730,7 @@ void MainWindow::sendMsg(QString msg)
 void MainWindow::sendAutoMsg(QString msgs)
 {
     msgs = processTimeVariants(msgs);
-    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
+//    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     const int cd = 1500;
     int delay = 0;
@@ -2708,11 +2708,13 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QRegularExpressionMatch match;
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
-        simp = match.capturedTexts().at(2);
+        QRegularExpression blank("(名字|^确)");
+        if (match.capturedTexts().at(2).indexOf(blank) == -1) // 不包含黑名单
+            simp = match.capturedTexts().at(2);
     }
 
     // 一大串 中文enen
-    // 日语[\u0800-\u4e00] ，实测“一”也会算在里面……？
+    // 日语正则 [\u0800-\u4e00] ，实测“一”也会算在里面……？
     QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4dff]+)$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*3 >= match.capturedTexts().at(2).length())
     {
@@ -3431,6 +3433,7 @@ void MainWindow::handleMessage(QJsonObject json)
     qDebug() << s8(">消息命令：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
+        emit signalLiveStart(roomId);
         if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
@@ -3696,15 +3699,14 @@ void MainWindow::handleMessage(QJsonObject json)
 
 //        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
 //            return ;
-        QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-        showLocalNotify("TEST送礼：" + words.join(";"));
-        if (!words.size())
-            return ;
-        int r = qrand() % words.size();
-        QString msg = words.at(r);
         if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
-            showLocalNotify("TEST送礼答谢：" + msg);
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+//            showLocalNotify("TEST送礼：" + words.join(";"));
+            if (!words.size())
+                return ;
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
             if (strongNotifyUsers.contains(uid))
             {
                 if (ui->sendGiftTextCheck->isChecked())
@@ -3732,7 +3734,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         qDebug() << "删除醒目留言：" << json;
     }
-    else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发）
+    else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发），通过guard_level=1/2/3分辨总督/提督/舰长
     {
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -3802,7 +3804,7 @@ void MainWindow::handleMessage(QJsonObject json)
             sendWelcome(danmaku);
         }
     }
-    else if (cmd == "WELCOME") // 进入（偶尔能触发？）
+    else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
     {
         QJsonObject data = json.value("data").toObject();
         qDebug() << data;
@@ -3830,7 +3832,7 @@ void MainWindow::handleMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         qDebug() << s8("观众进入：") << username << msgType << (isSpread ? spreadDesc : "");
         if (msgType != 1)
-            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType;
+            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -3879,7 +3881,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 judgeRobotAndMark(danmaku);
             }
         }
-        else if (msgType == 2) // 关注
+        else if (msgType == 5) // 关注
         {
             qDebug() << json;
             danmaku.setType(MSG_ATTENTION);
@@ -4321,7 +4323,9 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
-    if (notWelcomeUsers.contains(danmaku.getUid())) // 不自动欢迎
+    if (notWelcomeUsers.contains(danmaku.getUid())
+            && !ui->sendWelcomeTextCheck->isChecked()
+            && !ui->sendWelcomeVoiceCheck->isChecked()) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (strongNotifyUsers.contains(danmaku.getUid()))
@@ -5796,7 +5800,7 @@ void MainWindow::pkStart(QJsonObject json)
         text += "  PK过" + QString::number(pkCount) + "次";
     showLocalNotify(text, pkUid.toLongLong());
 
-    if (pkChuanmenEnable)
+    if (pkChuanmenEnable && battle_type == 2)
     {
         connectPkRoom();
     }
@@ -5969,7 +5973,6 @@ void MainWindow::pkEnd(QJsonObject json)
         }
         pkSocket = nullptr;
     }
-    qDebug() << "关闭PKSocket结束，正常退出";
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -6027,7 +6030,7 @@ void MainWindow::connectPkRoom()
     pkSocket = new QWebSocket();
 
     connect(pkSocket, &QWebSocket::connected, this, [=]{
-        qDebug() << "pkSocket connected";
+        SOCKET_DEB << "pkSocket connected";
         // 5秒内发送认证包
         sendVeriPacket(pkSocket, pkRoomId, pkToken);
     });
@@ -6076,7 +6079,7 @@ void MainWindow::connectPkRoom()
         QString link = hostArray.first().toObject().value("host").toString();
         int port = hostArray.first().toObject().value("wss_port").toInt();
         QString host = QString("wss://%1:%2/sub").arg(link).arg(port);
-        qDebug() << "pk.socket.host:" << host;
+        SOCKET_DEB << "pk.socket.host:" << host;
 
         // ========== 连接Socket ==========
         QSslConfiguration config = pkSocket->sslConfiguration();
@@ -6720,8 +6723,6 @@ void MainWindow::on_pkMelonValButton_clicked()
  */
 void MainWindow::slotStartWork()
 {
-    emit signalLiveStart(roomId);
-
     // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
     {
