@@ -339,6 +339,8 @@ private slots:
 
     void on_autoSwitchMedalCheck_clicked();
 
+    void on_sendAutoOnlyLiveCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

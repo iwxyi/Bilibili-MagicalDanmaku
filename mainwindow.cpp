@@ -205,6 +205,9 @@ MainWindow::MainWindow(QWidget *parent)
         notWelcomeUsers.append(s.toLongLong());
     }
 
+    // 仅开播发送
+    ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/sendAutoOnlyLive", true).toBool());
+
     // 弹幕次数
     danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
 
@@ -747,7 +750,7 @@ void MainWindow::sendAutoMsg(QString msgs)
 
 void MainWindow::sendWelcomeGuard(QString msg)
 {
-    if (!liveStatus) // 不在直播中
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -771,7 +774,7 @@ void MainWindow::sendWelcomeGuard(QString msg)
 
 void MainWindow::sendWelcomeMsg(QString msg)
 {
-    if (!liveStatus) // 不在直播中
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -795,7 +798,7 @@ void MainWindow::sendWelcomeMsg(QString msg)
 
 void MainWindow::sendOppositeMsg(QString msg)
 {
-    if (!liveStatus) // 不在直播中
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -819,7 +822,7 @@ void MainWindow::sendOppositeMsg(QString msg)
 
 void MainWindow::sendGiftMsg(QString msg)
 {
-    if (!liveStatus) // 不在直播中
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -843,7 +846,7 @@ void MainWindow::sendGiftMsg(QString msg)
 
 void MainWindow::sendAttentionMsg(QString msg)
 {
-    if (!liveStatus) // 不在直播中
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -1037,7 +1040,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl){
-        if (!liveStatus) // 没有开播，不进行定时任务
+        if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行定时任务
             return ;
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
         if (msgs.size())
@@ -6720,4 +6723,9 @@ void MainWindow::on_autoSwitchMedalCheck_clicked()
     {
         switchMedalTo(roomId.toLongLong());
     }
+}
+
+void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
+{
+    settings.setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
 }
