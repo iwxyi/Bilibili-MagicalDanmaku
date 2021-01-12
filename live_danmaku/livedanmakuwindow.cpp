@@ -1948,8 +1948,8 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action)
             return ;
         }
         QJsonObject json = document.object();
-        qDebug() << url;
-        qDebug() << json;
+//        qDebug() << url;
+//        qDebug() << json;
 
         int code = json.value("code").toInt();
         if (code != 0)

@@ -3815,6 +3815,44 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "INTERACT_WORD")
     {
+        /*{
+            "cmd": "INTERACT_WORD",
+            "data": {
+                "contribution": {
+                    "grade": 0
+                },
+                "fans_medal": {
+                    "anchor_roomid": 0,
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 0,
+                    "medal_color": 0,
+                    "medal_color_border": 12632256,
+                    "medal_color_end": 12632256,
+                    "medal_color_start": 12632256,
+                    "medal_level": 0,
+                    "medal_name": "",
+                    "score": 0,
+                    "special": "",
+                    "target_id": 0
+                },
+                "identities": [
+                    1
+                ],
+                "is_spread": 0,
+                "msg_type": 2,
+                "roomid": 22532956,
+                "score": 1610445087293,
+                "spread_desc": "",
+                "spread_info": "",
+                "tail_icon": 0,
+                "timestamp": 1610445087,
+                "uid": 7696257,
+                "uname": "黑心帝王瓜",
+                "uname_color": ""
+            }
+        }*/
+
         QJsonObject data = json.value("data").toObject();
         int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -3881,7 +3919,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 judgeRobotAndMark(danmaku);
             }
         }
-        else if (msgType == 5) // 关注
+        else if (msgType == 2 || msgType == 5) // 关注 5不知道是啥啊
         {
             qDebug() << json;
             danmaku.setType(MSG_ATTENTION);
