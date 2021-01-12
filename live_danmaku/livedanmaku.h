@@ -34,8 +34,8 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, QString gift, int num, qint64 uid, QDateTime time, QString coinType, int totalCoin)
-        : msgType(MSG_GIFT), nickname(nickname), giftName(gift), number(num), uid(uid), timeline(time),
+    LiveDanmaku(QString nickname, int giftId, QString gift, int num, qint64 uid, QDateTime time, QString coinType, int totalCoin)
+        : msgType(MSG_GIFT), nickname(nickname), giftId(giftId), giftName(gift), number(num), uid(uid), timeline(time),
           coin_type(coinType), total_coin(totalCoin)
     {
 
@@ -116,6 +116,7 @@ public:
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
         }
+        danmaku.giftId = object.value("giftId").toInt();
         danmaku.giftName = object.value("gift_name").toString();
         danmaku.number = object.value("number").toInt();
         danmaku.coin_type = object.value("coin_type").toString();
@@ -161,6 +162,7 @@ public:
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
+            object.insert("giftId", giftId);
             object.insert("gift_name", giftName);
             object.insert("number", number);
             object.insert("coin_type", coin_type);
@@ -424,6 +426,11 @@ public:
         return msgType;
     }
 
+    int getGiftId() const
+    {
+        return giftId;
+    }
+
     QString getGiftName() const
     {
         return giftName;
@@ -571,6 +578,7 @@ private:
     QString check_info_ct;
     int lpl = 0;
 
+    int giftId = 0;
     QString giftName;
     int number = 0;
     QString coin_type;

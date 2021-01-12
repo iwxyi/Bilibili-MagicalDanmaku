@@ -893,12 +893,13 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         QString username = "测试用户";
         QString giftName = "测试礼物";
+        int giftId = 0;
         int num = qrand() % 3;
         qint64 uid = 123;
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         QString coinType = qrand()%2 ? "gold" : "silver";
         int totalCoin = qrand() % 20 * 100;
-        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         appendNewLiveDanmaku(danmaku);
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
@@ -3612,6 +3613,8 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
         QJsonObject data = json.value("data").toObject();
+        int giftId = data.value("giftId").toInt();
+        int giftType = data.value("giftType").toInt();
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -3624,7 +3627,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
-        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
         if (!merged)
         {
@@ -4474,7 +4477,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
 
     // 判断，同人 && 礼物同名 && 3秒内
     qint64 uid = danmaku.getUid();
-    QString gift = danmaku.getGiftName();
+    int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
     LiveDanmaku* merged = nullptr;
 
@@ -4489,7 +4492,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
-                || dm.getGiftName() != gift)
+                || dm.getGiftId() != giftId)
             continue;
 
         // 是这个没错了
