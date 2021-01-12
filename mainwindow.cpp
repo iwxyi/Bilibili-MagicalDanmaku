@@ -3317,7 +3317,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     int trend = data.value("trend").toInt(); // 趋势：1上升，2下降
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
-                    showLocalNotify(msg);
+                    ui->connectStateLabel->setToolTip(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
                 {
