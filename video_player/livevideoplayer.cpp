@@ -41,6 +41,13 @@ void LiveVideoPlayer::setRoomId(QString roomId)
     refreshPlayUrl();
 }
 
+void LiveVideoPlayer::slotLiveStart(QString roomId)
+{
+    if (this->roomId != roomId)
+        return ;
+    refreshPlayUrl();
+}
+
 void LiveVideoPlayer::setPlayUrl(QString url)
 {
     this->playUrl = url;

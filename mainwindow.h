@@ -116,6 +116,7 @@ protected:
 
 signals:
     void signalRoomChanged(QString roomId);
+    void signalLiveStart(QString roomId);
     void signalNewDanmaku(LiveDanmaku danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
 

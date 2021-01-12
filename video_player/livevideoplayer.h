@@ -26,6 +26,7 @@ public:
 
 public slots:
     void setRoomId(QString roomId);
+    void slotLiveStart(QString roomId);
     void setPlayUrl(QString url);
     void refreshPlayUrl();
 

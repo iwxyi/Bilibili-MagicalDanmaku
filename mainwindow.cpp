@@ -5586,6 +5586,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
         return ;
 
     LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->show();
@@ -6719,6 +6720,9 @@ void MainWindow::on_pkMelonValButton_clicked()
  */
 void MainWindow::slotStartWork()
 {
+    emit signalLiveStart(roomId);
+
+    // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
     {
         switchMedalTo(roomId.toLongLong());
