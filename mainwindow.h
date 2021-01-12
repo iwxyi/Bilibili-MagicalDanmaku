@@ -363,6 +363,7 @@ private:
     void getRoomCover(QString url);
     void getUpPortrait(QString uid);
     void getDanmuInfo();
+    void updateFansCount();
     void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);

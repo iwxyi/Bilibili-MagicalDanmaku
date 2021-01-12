@@ -296,6 +296,11 @@ public:
         return "未知消息类型";
     }
 
+    void setType(MessageType type)
+    {
+        this->msgType = type;
+    }
+
     bool is(MessageType type) const
     {
         return this->msgType == type;

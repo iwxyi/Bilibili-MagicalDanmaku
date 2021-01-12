@@ -1782,6 +1782,48 @@ void MainWindow::getDanmuInfo()
     ui->connectStateLabel->setText("获取弹幕信息...");
 }
 
+void MainWindow::updateFansCount()
+{
+    // 网络判断
+    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + upUid;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取用户粉丝出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        // int following = obj.value("following").toInt(); // 关注
+        int follower = obj.value("follower").toInt();   // 粉丝数量
+
+        if (follower != currentFans) // 数量变更
+        {
+            getFansAndUpdate();
+        }
+    });
+    manager->get(*request);
+}
+
 void MainWindow::getFansAndUpdate()
 {
     QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + upUid;
@@ -3220,9 +3262,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (dailySettings)
                         dailySettings->setValue("new_fans", dailyNewFans);
 
-
-                    if (delta_fans)
-                        getFansAndUpdate();
+//                    if (delta_fans) // 如果有变动，实时更新
+//                        getFansAndUpdate();
                 }
                 else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
                 {}
@@ -3421,9 +3462,15 @@ void MainWindow::handleMessage(QJsonObject json)
             QMessageBox::information(this, "弹幕数据 user", QString(QJsonDocument(user).toJson()));
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
+//        int manager = user[2].toInt(); // 是否为房管（主播也属于房管）
+//        int vip = user[3].toInt(); // 是否为老爷
+//        int svip = user[4].toInt(); // 是否为年费老爷
+//        int uidentity = user[5].toInt(); // 是否为非正式会员或正式会员（5000非，10000正）
+//        int iphone = user[6].toInt(); // 是否绑定手机
         QString unameColor = user[7].toString();
         int level = info[4].toArray()[0].toInt();
         QJsonArray medal = info[3].toArray();
+        int uguard = info[7].toInt(); // 用户本房间舰队身份：0非，1总督，2提督，3舰长
         int medal_level = 0;
 
         bool opposite = pking &&
@@ -3641,11 +3688,19 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
-
+        qDebug() << "醒目留言：" << json;
+    }
+    else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
+    {
+        qDebug() << "删除醒目留言：" << json;
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
-
+        qDebug() << "删除醒目留言：" << json;
+    }
+    else if (cmd == "SPECIAL_GIFT") // 节奏风暴
+    {
+        qDebug() << "删除醒目留言：" << json;
     }
     else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发）
     {
@@ -3729,6 +3784,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "INTERACT_WORD")
     {
         QJsonObject data = json.value("data").toObject();
+        int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
@@ -3742,9 +3798,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
-        qDebug() << s8("观众进入：") << username;
-        if (isSpread)
-            qDebug() << s8("    来源：") << spreadDesc;
+        qDebug() << s8("观众进入：") << username << msgType << (isSpread ? spreadDesc : "");
+        if (msgType != 1)
+            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -3757,38 +3813,52 @@ void MainWindow::handleMessage(QJsonObject json)
                          "");
         danmaku.setOpposite(opposite);
 
-        // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
-        // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-        int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
-        danmaku.setNumber(userCome);
-        danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
-        appendNewLiveDanmaku(danmaku);
-
-        userCome++;
-        danmakuCounts->setValue("come/"+snum(uid), userCome);
-        danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
-
-        dailyCome++;
-        if (dailySettings)
-            dailySettings->setValue("come", dailyCome);
-        if (opposite)
+        if (msgType == 1) // 进入直播间
         {
-            // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
+            // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
+            // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
+            int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
+            danmaku.setNumber(userCome);
+            danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+            appendNewLiveDanmaku(danmaku);
+
+            userCome++;
+            danmakuCounts->setValue("come/"+snum(uid), userCome);
+            danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
+
+            dailyCome++;
+            if (dailySettings)
+                dailySettings->setValue("come", dailyCome);
+            if (opposite)
+            {
+                // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
+            }
+
+            qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+            if (!justStart && ui->autoSendWelcomeCheck->isChecked())
+            {
+                int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
+                if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
+                    return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
+                userComeTimes[uid] = currentTime;
+                sendWelcomeIfNotRobot(danmaku);
+            }
+            else
+            {
+                userComeTimes[uid] = currentTime; // 直接更新了
+                judgeRobotAndMark(danmaku);
+            }
         }
-
-        qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-        if (!justStart && ui->autoSendWelcomeCheck->isChecked())
+        else if (msgType == 2) // 关注
         {
-            int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
-            if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
-                return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
-            userComeTimes[uid] = currentTime;
-            sendWelcomeIfNotRobot(danmaku);
+            qDebug() << json;
+            danmaku.setType(MSG_ATTENTION);
+            appendNewLiveDanmaku(danmaku);
         }
-        else
+        else if (msgType == 3) // 分享直播间
         {
-            userComeTimes[uid] = currentTime; // 直接更新了
-            judgeRobotAndMark(danmaku);
+            qDebug() << json;
+            showLocalNotify(username + "分享了直播间", uid);
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG")
