@@ -351,6 +351,8 @@ private slots:
 
     void on_actionRoom_Status_triggered();
 
+    void on_autoLOTCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

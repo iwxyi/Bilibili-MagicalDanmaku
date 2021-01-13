@@ -461,6 +461,9 @@ MainWindow::MainWindow(QWidget *parent)
         doSignTimer->start();
     }
 
+    // 自动参与天选
+    ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
+
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 }
 
@@ -4269,6 +4272,61 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
     }
+    else if (cmd == "ANCHOR_LOT_CHECKSTATUS") //  开启天选前检测状态
+    {
+
+    }
+    else if (cmd == "ANCHOR_LOT_START") // 开启天选
+    {
+        /*{
+            "cmd": "ANCHOR_LOT_START",
+            "data": {
+                "asset_icon": "https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png",
+                "award_image": "",
+                "award_name": "5.2元红包",
+                "award_num": 1,
+                "cur_gift_num": 0,
+                "current_time": 1610529938,
+                "danmu": "娇娇赛高",
+                "gift_id": 0,
+                "gift_name": "",
+                "gift_num": 1,
+                "gift_price": 0,
+                "goaway_time": 180,
+                "goods_id": -99998,
+                "id": 773667,
+                "is_broadcast": 1,
+                "join_type": 0,
+                "lot_status": 0,
+                "max_time": 600,
+                "require_text": "关注主播",
+                "require_type": 1,
+                "require_value": 0,
+                "room_id": 22532956,
+                "send_gift_ensure": 0,
+                "show_panel": 1,
+                "status": 1,
+                "time": 599,
+                "url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1",
+                "web_url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html"
+            }
+        }*/
+        QJsonObject data = json.value("data").toObject();
+        QString danmu = json.value("danmu").toString();
+        if (!danmu.isEmpty() && ui->autoLOTCheck->isChecked())
+        {
+            qDebug() << "天选弹幕：" << danmu;
+            sendMsg(danmu);
+        }
+    }
+    else if (cmd == "ANCHOR_LOT_END") // 天选结束
+    {
+
+    }
+    else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送
+    {
+
+    }
     else
     {
         qDebug() << "未处理的命令：" << cmd << json;
@@ -6979,4 +7037,9 @@ void MainWindow::on_actionRoom_Status_triggered()
 {
     RoomStatusDialog* rsd = new RoomStatusDialog(settings, nullptr);
     rsd->show();
+}
+
+void MainWindow::on_autoLOTCheck_clicked()
+{
+    settings.setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
 }

@@ -1254,13 +1254,23 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，主播未在直播时，将不发送任何自动弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕将不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，主播未在直播时，将自动不发送任何弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>仅在直播时发送欢迎/答谢/定时/回复弹幕</string>
+             <string>仅在直播时自动发送弹幕</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="autoLOTCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖&lt;/p&gt;&lt;p&gt;只发送弹幕&lt;/p&gt;&lt;p&gt;如果需要先关注，则参与无效（白发了）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>自动参与天选</string>
             </property>
            </widget>
           </item>
@@ -1290,7 +1300,7 @@ margin: 6px;</string>
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>自动签到</string>
+             <string>每日自动签到</string>
             </property>
            </widget>
           </item>
