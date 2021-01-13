@@ -28,6 +28,8 @@ private:
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
+    void showEvent(QShowEvent *e) override;
+    void closeEvent(QCloseEvent *e) override;
 
 private:
     Ui::RoomStatusDialog *ui;

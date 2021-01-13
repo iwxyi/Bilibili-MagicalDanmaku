@@ -1267,7 +1267,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="autoLOTCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖&lt;/p&gt;&lt;p&gt;只发送弹幕&lt;/p&gt;&lt;p&gt;如果需要先关注，则参与无效（白发了）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖&lt;/p&gt;&lt;p&gt;只发送弹幕，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>自动参与天选</string>

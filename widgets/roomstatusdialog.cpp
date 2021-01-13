@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QKeyEvent>
+#include <QDesktopServices>
 #include "roomstatusdialog.h"
 #include "ui_roomstatusdialog.h"
 
@@ -67,6 +68,8 @@ void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &po
     int row = ui->roomsTable->currentRow();
 
     QMenu* menu = new QMenu(this);
+    QAction* actionRoom = new QAction("前往直播间", this);
+    QAction* actionPage = new QAction("用户主页", this);
     QAction* actionDelete = new QAction("删除", this);
 
     if (row < 0)
@@ -74,7 +77,16 @@ void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &po
         actionDelete->setEnabled(false);
     }
 
+    menu->addAction(actionRoom);
+//    menu->addAction(actionPage);
     menu->addAction(actionDelete);
+
+    connect(actionRoom, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomIds.at(row)));
+    });
+    connect(actionPage, &QAction::triggered, this, [=]{
+        //QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + uid));
+    });
 
     connect(actionDelete, &QAction::triggered, this, [=]{
         roomIds.removeAt(row);
@@ -125,11 +137,11 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         QString roomTitle = roomInfo.value("title").toString();
         int liveStatus = roomInfo.value("live_status").toInt();
         int pkStatus = roomInfo.value("pk_status").toInt();
-        qDebug() << "getRoomInfo: roomid=" << roomId
+        /*qDebug() << "getRoomInfo: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << upUid
                  << "  liveStatus=" << liveStatus
-                 << "  pkStatus=" << pkStatus;
+                 << "  pkStatus=" << pkStatus;*/
 
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         QString upName = anchorInfo.value("base_info").toObject().value("uname").toString();
@@ -149,9 +161,9 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
 
         QString pkStr = "";
         if (pkStatus == 1)
-            pkStr = "PKing";
+            pkStr = "PK中";
         else if (pkStatus == 2)
-            pkStr = "视频PKing";
+            pkStr = "视频PK中";
 
         ui->roomsTable->setItem(index, 1, new QTableWidgetItem(upName));
         ui->roomsTable->setItem(index, 2, new QTableWidgetItem(roomTitle));
@@ -168,4 +180,18 @@ void RoomStatusDialog::keyPressEvent(QKeyEvent *e)
         on_refreshStatusButton_clicked();
     }
     return QDialog::keyPressEvent(e);
+}
+
+void RoomStatusDialog::showEvent(QShowEvent *e)
+{
+    QDialog::showEvent(e);
+
+    restoreGeometry(settings.value("rooms/geometry").toByteArray());
+}
+
+void RoomStatusDialog::closeEvent(QCloseEvent *e)
+{
+    settings.setValue("rooms/geometry", this->saveGeometry());
+
+    QDialog::closeEvent(e);
 }

@@ -208,7 +208,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/sendAutoOnlyLive", true).toBool());
-    ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/autoDoSign", false).toBool());
+    ui->autoDoSignCheck->setChecked(settings.value("danmaku/autoDoSign", false).toBool());
 
     // 弹幕次数
     danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
@@ -898,13 +898,14 @@ void MainWindow::sendAttentionMsg(QString msg)
 void MainWindow::sendNotifyMsg(QString msg)
 {
     if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus)
+        return ;
     if (msg.trimmed().isEmpty())
         return ;
 
     // 避免太频繁发消息
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = 2000; // 最快2秒
+    int cd = 1000; // 最快1秒
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -1159,7 +1160,6 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
         if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
             return ;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
-        qDebug() << "TEST~~~~~~~~~~~~~~~~~~~" << msgs;
         if (msgs.size())
         {
             int r = qrand() % msgs.size();
@@ -1684,7 +1684,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
         qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
         fansLabel->setText("粉丝:" + snum(currentFans));
-        getFansAndUpdate();
+        // getFansAndUpdate();
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
@@ -2308,7 +2308,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     {
         QString line = lines.at(i);
         line = processVariantConditions(line);
-//        qDebug() << "骚操作后：" << line;
+//        qDebug() << "骚操作后：" << line << "    原始：" << lines.at(i);
         if (!line.isEmpty())
             result.append(line.trimmed());
     }
@@ -2632,8 +2632,10 @@ QString MainWindow::processVariantConditions(QString msg) const
     {
         isTrue = true;
         QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+//        qDebug() << "表达式or内：" << andExps;
         foreach (QString exp, andExps)
         {
+//            qDebug() << "表达式and内：" << exp;
             if (exp.indexOf(compRe, 0, &match) == -1) // 非比较
             {
                 exp = exp.trimmed();
@@ -2663,10 +2665,12 @@ QString MainWindow::processVariantConditions(QString msg) const
                 continue;
             }
 
+            // 比较类型
             QStringList caps = match.capturedTexts();
             QString s1 = caps.at(1);
             QString op = caps.at(2);
             QString s2 = caps.at(3);
+//            qDebug() << "比较：" << s1 << op << s2;
             if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
             {
                 qint64 i1 = calcIntExpression(s1);
@@ -2796,7 +2800,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "我就是", "可是", "叫我", "请叫我", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
+    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
     QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢"};
     starts += special;
     ends += special;
@@ -2851,7 +2855,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
-                         "^.+(?:要|我就是)(.+)$", "^.*还.+就(.{2})$",
+                         "^.+(?:要|我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2})(不是|有点|才是|敲|很).+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -3817,7 +3821,6 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-//            showLocalNotify("TEST送礼：" + words.join(";"));
             if (!words.size())
                 return ;
             int r = qrand() % words.size();
@@ -4272,7 +4275,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
     }
-    else if (cmd == "ANCHOR_LOT_CHECKSTATUS") //  开启天选前检测状态
+    else if (cmd == "ANCHOR_LOT_CHECKSTATUS") //  开启天选前的审核，审核过了才是真正开启
     {
 
     }
@@ -4300,7 +4303,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 "lot_status": 0,
                 "max_time": 600,
                 "require_text": "关注主播",
-                "require_type": 1,
+                "require_type": 1, // 1是关注？
                 "require_value": 0,
                 "room_id": 22532956,
                 "send_gift_ensure": 0,
@@ -4311,14 +4314,49 @@ void MainWindow::handleMessage(QJsonObject json)
                 "web_url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html"
             }
         }*/
+
+        /*{
+            "cmd": "ANCHOR_LOT_START",
+            "data": {
+                "asset_icon": "https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png",
+                "award_image": "",
+                "award_name": "5.2元红包",
+                "award_num": 1,
+                "cur_gift_num": 0,
+                "current_time": 1610535661,
+                "danmu": "我就是天选之人！", // 送礼物的话也是需要发弹幕的（自动发送+自动送礼）
+                "gift_id": 20008, // 冰阔落ID
+                "gift_name": "冰阔落",
+                "gift_num": 1,
+                "gift_price": 1000,
+                "goaway_time": 180,
+                "goods_id": 15, // 物品ID？
+                "id": 773836,
+                "is_broadcast": 1,
+                "join_type": 1,
+                "lot_status": 0,
+                "max_time": 600,
+                "require_text": "无",
+                "require_type": 0,
+                "require_value": 0,
+                "room_id": 22532956,
+                "send_gift_ensure": 0,
+                "show_panel": 1,
+                "status": 1,
+                "time": 599,
+                "url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1",
+                "web_url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html"
+            }
+        }*/
+
         qDebug() << "天选时刻：" << json;
         QJsonObject data = json.value("data").toObject();
         qint64 id = static_cast<qint64>(data.value("id").toDouble());
-        QString danmu = json.value("danmu").toString();
-        int goodsId = json.value("goods_id").toInt();
-        if (!danmu.isEmpty() && goodsId <= 0 && ui->autoLOTCheck->isChecked())
+        QString danmu = data.value("danmu").toString();
+        int giftId = data.value("gift_id").toInt();
+        qDebug() << "天选弹幕：" << danmu;
+        if (!danmu.isEmpty() && giftId <= 0 && ui->autoLOTCheck->isChecked())
         {
-            qDebug() << "天选弹幕：" << danmu;
             int requireType = data.value("require_type").toInt();
             joinLOT(id, requireType);
         }
@@ -4339,8 +4377,6 @@ void MainWindow::handleMessage(QJsonObject json)
 
 void MainWindow::sendWelcomeIfNotRobot(LiveDanmaku danmaku)
 {
-    if (strongNotifyUsers.contains(danmaku.getUid()))
-        showLocalNotify("TEST强提醒sendWelcomeIfNotRobot：" + danmaku.getNickname());
     if (!judgeRobot)
     {
         sendWelcome(danmaku);
@@ -4560,7 +4596,7 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
-        qDebug() << "强提醒用户：" << danmaku.getNickname();
+        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
         // 这里要特别判断一下语音，因为 sendNotifyMsg 是不会发送语音的
         if (ui->sendWelcomeTextCheck->isChecked())
             sendNotifyMsg(msg);
@@ -4935,6 +4971,30 @@ bool MainWindow::handlePK(QJsonObject json)
             "pk_status": 401,
             "settle_status": 1,
             "timestamp": 1605748006
+        }*/
+    }
+    else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的恭喜，实测在大乱斗送天空之翼后有，大概率更高礼物也有
+    {
+        /*{
+            "cmd": "PK_LOTTERY_START",
+            "data": {
+                "asset_animation_pic": "https://i0.hdslb.com/bfs/vc/03be4c2912a4bd9f29eca3dac059c0e3e3fc69ce.gif",
+                "asset_icon": "https://i0.hdslb.com/bfs/vc/44c367b09a8271afa22853785849e65797e085a1.png",
+                "from_user": {
+                    "face": "http://i2.hdslb.com/bfs/face/f25b706762e00a9adfe13e6147650891dd6f69a0.jpg",
+                    "uid": 688893202,
+                    "uname": "娇娇子er"
+                },
+                "id": 200105856,
+                "max_time": 120,
+                "pk_id": 200105856,
+                "room_id": 22532956,
+                "thank_text": "恭喜<%娇娇子er%>赢得大乱斗PK胜利",
+                "time": 120,
+                "time_wait": 0,
+                "title": "恭喜主播大乱斗胜利",
+                "weight": 0
+            }
         }*/
     }
     else
@@ -5543,7 +5603,7 @@ bool MainWindow::isConditionTrue(T a, T b, QString op) const
     if (op == "<")
         return a < b;
     if (op == "<=")
-        return a < b;
+        return a <= b;
     qDebug() << "无法识别的比较模板类型：" << a << op << b;
     return false;
 }
@@ -6787,8 +6847,8 @@ void MainWindow::joinLOT(qint64 id, bool follow)
     }
 
     QUrl url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
-             "id="+QString::number(id)+"&follow="+(follow?"true":"false")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
-    qDebug() << "参与天选：" << id << follow;
+             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
+    qDebug() << "参与天选：" << id << follow << url;
 
     // 建立对象
     QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -6819,7 +6879,10 @@ void MainWindow::joinLOT(qint64 id, bool follow)
             ui->autoLOTCheck->setText(msg);
         }
         else
+        {
             ui->autoLOTCheck->setText("参与成功");
+            qDebug() << "参与天选成功！";
+        }
         QTimer::singleShot(10000, [=]{
             ui->autoLOTCheck->setText("自动参与天选");
         });
