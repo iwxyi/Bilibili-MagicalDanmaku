@@ -2026,6 +2026,7 @@ margin: 6px;</string>
     </property>
     <addaction name="actionCreate_Video_LRC"/>
     <addaction name="actionGet_Play_Url"/>
+    <addaction name="actionRoom_Status"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionGitHub"/>
@@ -2060,7 +2061,7 @@ margin: 6px;</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>视频歌词字幕</string>
+    <string>投稿歌词字幕</string>
    </property>
   </action>
   <action name="actionCookie_Help">
@@ -2130,6 +2131,11 @@ margin: 6px;</string>
   <action name="actionAdd_Room_To_List">
    <property name="text">
     <string>增删房间列表</string>
+   </property>
+  </action>
+  <action name="actionRoom_Status">
+   <property name="text">
+    <string>直播间状态查询</string>
    </property>
   </action>
  </widget>

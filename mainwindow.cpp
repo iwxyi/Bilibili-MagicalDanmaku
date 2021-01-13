@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
+#include "roomstatusdialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -5961,7 +5962,7 @@ void MainWindow::pkStart(QJsonObject json)
         text += "  PK过" + QString::number(pkCount) + "次";
     showLocalNotify(text, pkUid.toLongLong());
 
-    if (pkChuanmenEnable && battle_type == 2)
+    if (pkChuanmenEnable /*&& battle_type == 2*/)
     {
         connectPkRoom();
     }
@@ -6972,4 +6973,10 @@ void MainWindow::on_autoDoSignCheck_clicked()
     }
     else
         doSignTimer->stop();
+}
+
+void MainWindow::on_actionRoom_Status_triggered()
+{
+    RoomStatusDialog* rsd = new RoomStatusDialog(settings, nullptr);
+    rsd->show();
 }

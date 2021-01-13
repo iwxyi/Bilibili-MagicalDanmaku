@@ -46,6 +46,7 @@ SOURCES += \
     widgets/conditioneditor.cpp \
     widgets/mytabwidget.cpp \
     widgets/replywidget.cpp \
+    widgets/roomstatusdialog.cpp \
     widgets/taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     widgets/conditioneditor.h \
     widgets/mytabwidget.h \
     widgets/replywidget.h \
+    widgets/roomstatusdialog.h \
     widgets/taskwidget.h \
     utils/dlog.h \
     utils/fileutil.h \
@@ -90,6 +92,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \
+    widgets/roomstatusdialog.ui \
     widgets/videolyricscreator.ui
 
 # Default rules for deployment.
