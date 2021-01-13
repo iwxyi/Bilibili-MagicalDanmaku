@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1259,7 +1259,7 @@ margin: 6px;</string>
 手动发送弹幕将不受影响</string>
             </property>
             <property name="text">
-             <string>仅在直播时发送欢迎/答谢/定时弹幕</string>
+             <string>仅在直播时发送欢迎/答谢/定时/回复弹幕</string>
             </property>
            </widget>
           </item>

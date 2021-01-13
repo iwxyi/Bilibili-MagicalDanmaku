@@ -375,7 +375,6 @@ private:
     void getUpFace(QString uid);
     void getUpPortrait(QString face);
     void getDanmuInfo();
-    void updateFansCount();
     void getFansAndUpdate();
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
@@ -492,6 +491,8 @@ private:
     // 控件
     QTimer* sendMsgTimer;
     QLabel* statusLabel;
+    QLabel* fansLabel;
+    QLabel* rankLabel;
 
     // 连接信息
     QString cookieUid; // 自己的UID

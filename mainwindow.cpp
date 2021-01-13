@@ -213,7 +213,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 状态栏
     statusLabel = new QLabel(this);
-    this->statusBar()->addWidget(statusLabel);
+    fansLabel = new QLabel(this);
+    rankLabel = new QLabel(this);
+    this->statusBar()->addWidget(statusLabel, 1);
+    this->statusBar()->addWidget(fansLabel, 1);
+    this->statusBar()->addWidget(rankLabel, 1);
+    statusLabel->setAlignment(Qt::AlignLeft);
+    fansLabel->setAlignment(Qt::AlignCenter);
+    rankLabel->setAlignment(Qt::AlignRight);
 
     // 托盘
     tray = new QSystemTrayIcon(this);//初始化托盘对象tray
@@ -1464,7 +1471,7 @@ void MainWindow::initWS()
             connectServerTimer->setInterval(10000);
         }
 
-        qDebug() << "disconnected";
+        SOCKET_DEB << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
         ui->popularityLabel->setText("人气值：0");
 
@@ -1659,6 +1666,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
         qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
+        fansLabel->setText("粉丝:" + snum(currentFans));
         getFansAndUpdate();
 
         // 异步获取房间封面
@@ -1937,48 +1945,6 @@ void MainWindow::getDanmuInfo()
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取弹幕信息...");
-}
-
-void MainWindow::updateFansCount()
-{
-    // 网络判断
-    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + upUid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取用户粉丝出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject obj = json.value("data").toObject();
-        // int following = obj.value("following").toInt(); // 关注
-        int follower = obj.value("follower").toInt();   // 粉丝数量
-
-        if (follower != currentFans) // 数量变更
-        {
-            getFansAndUpdate();
-        }
-    });
-    manager->get(*request);
 }
 
 void MainWindow::getFansAndUpdate()
@@ -3426,6 +3392,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
 //                    if (delta_fans) // 如果有变动，实时更新
 //                        getFansAndUpdate();
+                    fansLabel->setText("粉丝:" + snum(fans));
+                    fansLabel->setToolTip("粉丝数量：" + snum(fans) + "，粉丝团：" + snum(fans_club));
                 }
                 else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
                 {}
@@ -3452,7 +3420,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     int trend = data.value("trend").toInt(); // 趋势：1上升，2下降
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
-                    ui->connectStateLabel->setToolTip(msg);
+                    rankLabel->setText(area_name + "榜 " + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
+                    rankLabel->setToolTip(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
                 {
@@ -5705,7 +5674,7 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionGitHub_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/iwxyi/BilibiliLiveDanmaku"));
+    QDesktopServices::openUrl(QUrl("https://github.com/iwxyi/Bilibili-MagicalDanmaku"));
 }
 
 void MainWindow::on_actionCustom_Variant_triggered()
@@ -6499,6 +6468,11 @@ void MainWindow::releaseLiveData()
 
     diangeHistory.clear();
     ui->diangeHistoryListWidget->clear();
+
+    statusLabel->setText("");
+    rankLabel->setText("");
+    rankLabel->setToolTip("");
+    fansLabel->setText("");
 
     if (danmakuWindow)
     {
