@@ -25,6 +25,7 @@
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
+#include "replywidget.h"
 #include "commonvalues.h"
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
@@ -147,7 +148,11 @@ private slots:
 
     void on_taskListWidget_customContextMenuRequested(const QPoint &);
 
+    void on_replyListWidget_customContextMenuRequested(const QPoint &);
+
     void on_addTaskButton_clicked();
+
+    void on_addReplyButton_clicked();
 
     void slotDiange(LiveDanmaku danmaku);
 
@@ -354,6 +359,9 @@ private:
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();
     void restoreTaskList();
+    void addAutoReply(bool enable, QString key, QString reply);
+    void saveReplyList();
+    void restoreReplyList();
 
     QVariant getCookies();
     void getUserInfo();

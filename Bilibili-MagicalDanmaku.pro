@@ -45,6 +45,7 @@ SOURCES += \
     order_player/orderplayerwindow.cpp \
     widgets/conditioneditor.cpp \
     widgets/mytabwidget.cpp \
+    widgets/replywidget.cpp \
     widgets/taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
     order_player/songbeans.h \
     widgets/conditioneditor.h \
     widgets/mytabwidget.h \
+    widgets/replywidget.h \
     widgets/taskwidget.h \
     utils/dlog.h \
     utils/fileutil.h \

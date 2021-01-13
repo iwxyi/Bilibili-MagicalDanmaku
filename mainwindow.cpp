@@ -277,6 +277,9 @@ MainWindow::MainWindow(QWidget *parent)
     srand((unsigned)time(0));
     restoreTaskList();
 
+    // 自动回复
+    restoreReplyList();
+
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendGiftCheck->setChecked(settings.value("danmaku/sendGift", false).toBool());
@@ -1095,6 +1098,96 @@ void MainWindow::restoreTaskList()
     }
 }
 
+void MainWindow::addAutoReply(bool enable, QString key, QString reply)
+{
+    ReplyWidget* rw = new ReplyWidget(this);
+    QListWidgetItem* item = new QListWidgetItem(ui->replyListWidget);
+
+    ui->replyListWidget->addItem(item);
+    ui->replyListWidget->setItemWidget(item, rw);
+    ui->replyListWidget->setCurrentRow(ui->replyListWidget->count()-1);
+    ui->replyListWidget->scrollToBottom();
+
+    // 连接信号
+    connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
+        bool enable = rw->check->isChecked();
+        int row = ui->replyListWidget->row(item);
+        settings.setValue("reply/r"+QString::number(row)+"Enable", enable);
+    });
+
+    connect(rw->keyEdit, &QLineEdit::textEdited, this, [=]{
+        QString content = rw->keyEdit->text();
+        int row = ui->replyListWidget->row(item);
+        settings.setValue("reply/r"+QString::number(row)+"Key", content);
+    });
+
+    connect(rw->replyEdit, &QPlainTextEdit::textChanged, this, [=]{
+        item->setSizeHint(rw->sizeHint());
+
+        QString content = rw->replyEdit->toPlainText();
+        int row = ui->replyListWidget->row(item);
+        settings.setValue("reply/r"+QString::number(row)+"Reply", content);
+    });
+
+    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
+
+    connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
+            return ;
+        QStringList msgs = getEditConditionStringList(sl, danmaku);
+        qDebug() << "TEST~~~~~~~~~~~~~~~~~~~" << msgs;
+        if (msgs.size())
+        {
+            int r = qrand() % msgs.size();
+            QString s = msgs.at(r);
+            if (!s.trimmed().isEmpty())
+            {
+                if (QString::number(danmaku.getUid()) == this->cookieUid)
+                    s = "\\n" + s; // 延迟一次发送的时间
+                sendAutoMsg(s);
+            }
+        }
+    });
+
+    connect(rw, &ReplyWidget::signalResized, rw, [=]{
+        item->setSizeHint(rw->size());
+    });
+
+    remoteControl = settings.value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    rw->check->setChecked(enable);
+    rw->keyEdit->setText(key);
+    rw->replyEdit->setPlainText(reply);
+    rw->adjustSize();
+    item->setSizeHint(rw->sizeHint());
+}
+
+void MainWindow::saveReplyList()
+{
+    settings.setValue("reply/count", ui->replyListWidget->count());
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
+        auto tw = static_cast<ReplyWidget*>(widget);
+        settings.setValue("reply/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings.setValue("reply/r"+QString::number(row)+"Key", tw->keyEdit->text());
+        settings.setValue("reply/r"+QString::number(row)+"Reply", tw->replyEdit->toPlainText());
+    }
+}
+
+void MainWindow::restoreReplyList()
+{
+    int count = settings.value("reply/count", 0).toInt();
+    for (int row = 0; row < count; row++)
+    {
+        bool enable = settings.value("reply/r"+QString::number(row)+"Enable", true).toBool();
+        QString key = settings.value("reply/r"+QString::number(row)+"Key").toString();
+        QString reply = settings.value("reply/r"+QString::number(row)+"Reply").toString();
+        addAutoReply(enable, key, reply);
+    }
+}
+
 QVariant MainWindow::getCookies()
 {
     QList<QNetworkCookie> cookies;
@@ -1234,6 +1327,37 @@ void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
     actionDelete->deleteLater();
 }
 
+void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
+{
+    QListWidgetItem* item = ui->taskListWidget->currentItem();
+
+    QMenu* menu = new QMenu(this);
+    QAction* actionDelete = new QAction("删除", this);
+
+    if (!item)
+    {
+        actionDelete->setEnabled(false);
+    }
+
+    menu->addAction(actionDelete);
+
+    connect(actionDelete, &QAction::triggered, this, [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<ReplyWidget*>(widget);
+
+        ui->taskListWidget->removeItemWidget(item);
+        ui->taskListWidget->takeItem(ui->taskListWidget->currentRow());
+
+        saveReplyList();
+
+        tw->deleteLater();
+    });
+
+    menu->exec(QCursor::pos());
+
+    actionDelete->deleteLater();
+}
+
 void MainWindow::on_addTaskButton_clicked()
 {
     addTimerTask(true, 1800, "");
@@ -1241,6 +1365,15 @@ void MainWindow::on_addTaskButton_clicked()
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto tw = static_cast<TaskWidget*>(widget);
     tw->edit->setFocus();
+}
+
+void MainWindow::on_addReplyButton_clicked()
+{
+    addAutoReply(true, "", "");
+    saveReplyList();
+    auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
+    auto rw = static_cast<ReplyWidget*>(widget);
+    rw->keyEdit->setFocus();
 }
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
@@ -3533,10 +3666,10 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        if (noReplyMsgs.contains(msg))
+        if (snum(uid) == cookieUid && noReplyMsgs.contains(msg))
         {
             danmaku.setNoReply();
-            noReplyMsgs.clear();
+            noReplyMsgs.removeOne(msg);
         }
         else
             minuteDanmuPopular++;
