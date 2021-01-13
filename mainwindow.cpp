@@ -4311,12 +4311,16 @@ void MainWindow::handleMessage(QJsonObject json)
                 "web_url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html"
             }
         }*/
+        qDebug() << "天选时刻：" << json;
         QJsonObject data = json.value("data").toObject();
+        qint64 id = static_cast<qint64>(data.value("id").toDouble());
         QString danmu = json.value("danmu").toString();
-        if (!danmu.isEmpty() && ui->autoLOTCheck->isChecked())
+        int goodsId = json.value("goods_id").toInt();
+        if (!danmu.isEmpty() && goodsId <= 0 && ui->autoLOTCheck->isChecked())
         {
             qDebug() << "天选弹幕：" << danmu;
-            sendMsg(danmu);
+            int requireType = data.value("require_type").toInt();
+            joinLOT(id, requireType);
         }
     }
     else if (cmd == "ANCHOR_LOT_END") // 天选结束
@@ -6724,7 +6728,7 @@ void MainWindow::doSign()
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("自动签到");
+            ui->autoDoSignCheck->setText("每日自动签到");
         });
         return ;
     }
@@ -6748,7 +6752,7 @@ void MainWindow::doSign()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "设置Medal出错：" << error.errorString();
+            qDebug() << "签到出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -6762,7 +6766,62 @@ void MainWindow::doSign()
         else
             ui->autoDoSignCheck->setText("签到成功");
         QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("自动签到");
+            ui->autoDoSignCheck->setText("每日自动签到");
+        });
+    });
+
+    manager->get(*request);
+}
+
+void MainWindow::joinLOT(qint64 id, bool follow)
+{
+    if (!id )
+        return ;
+    if (csrf_token.isEmpty())
+    {
+        ui->autoDoSignCheck->setText("未设置Cookie");
+        QTimer::singleShot(10000, [=]{
+            ui->autoDoSignCheck->setText("自动参与天选");
+        });
+        return ;
+    }
+
+    QUrl url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
+             "id="+QString::number(id)+"&follow="+(follow?"true":"false")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
+    qDebug() << "参与天选：" << id << follow;
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "参加天选出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qDebug() << s8("返回结果不为0：") << msg;
+            ui->autoLOTCheck->setText(msg);
+        }
+        else
+            ui->autoLOTCheck->setText("参与成功");
+        QTimer::singleShot(10000, [=]{
+            ui->autoLOTCheck->setText("自动参与天选");
         });
     });
 

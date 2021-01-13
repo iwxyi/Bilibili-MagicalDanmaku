@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>408</height>
+    <height>479</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1260,7 +1260,7 @@ margin: 6px;</string>
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>仅在直播时自动发送弹幕</string>
+             <string>仅直播时发送弹幕</string>
             </property>
            </widget>
           </item>
@@ -2004,7 +2004,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>420</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

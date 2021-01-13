@@ -450,6 +450,7 @@ private:
     void switchMedalTo(qint64 targetRoomId);
     void wearMedal(qint64 medalId);
     void doSign();
+    void joinLOT(qint64 id, bool follow = true);
 
 private:
     Ui::MainWindow *ui;
