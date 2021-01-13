@@ -347,6 +347,8 @@ private slots:
 
     void on_sendAutoOnlyLiveCheck_clicked();
 
+    void on_autoDoSignCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -443,6 +445,7 @@ private:
 
     void switchMedalTo(qint64 targetRoomId);
     void wearMedal(qint64 medalId);
+    void doSign();
 
 private:
     Ui::MainWindow *ui;
@@ -585,5 +588,8 @@ private:
     QFont screenDanmakuFont;
     QColor screenDanmakuColor;
     QList<QLabel*> screenLabels;
+
+    // 自动签到
+    QTimer* doSignTimer;
 };
 #endif // MAINWINDOW_H

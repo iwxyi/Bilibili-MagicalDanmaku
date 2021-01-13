@@ -207,6 +207,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/sendAutoOnlyLive", true).toBool());
+    ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/autoDoSign", false).toBool());
 
     // 弹幕次数
     danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
@@ -446,6 +447,18 @@ MainWindow::MainWindow(QWidget *parent)
         if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
             speekText(danmaku.getText());
     });
+
+    // 自动签到
+    doSignTimer = new QTimer(this);
+    doSignTimer->setInterval(24 * 60 * 60 * 1000);
+    connect(doSignTimer, &QTimer::timeout, this, [=]{
+        doSign();
+    });
+    if (settings.value("danmaku/autoDoSign", false).toBool())
+    {
+        ui->autoDoSignCheck->setChecked(true);
+        doSignTimer->start();
+    }
 
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 }
@@ -6643,6 +6656,60 @@ void MainWindow::wearMedal(qint64 medalId)
     manager->post(*request, ba);
 }
 
+/**
+ * 自动签到
+ */
+void MainWindow::doSign()
+{
+    if (csrf_token.isEmpty())
+    {
+        ui->autoDoSignCheck->setText("未设置Cookie");
+        QTimer::singleShot(10000, [=]{
+            ui->autoDoSignCheck->setText("自动签到");
+        });
+        return ;
+    }
+
+    QUrl url("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "设置Medal出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qDebug() << s8("返回结果不为0：") << msg;
+            ui->autoDoSignCheck->setText(msg);
+        }
+        else
+            ui->autoDoSignCheck->setText("签到成功");
+        QTimer::singleShot(10000, [=]{
+            ui->autoDoSignCheck->setText("自动签到");
+        });
+    });
+
+    manager->get(*request);
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -6893,4 +6960,16 @@ void MainWindow::on_autoSwitchMedalCheck_clicked()
 void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
 {
     settings.setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
+}
+
+void MainWindow::on_autoDoSignCheck_clicked()
+{
+    settings.setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
+    if (ui->autoDoSignCheck->isChecked())
+    {
+        doSign();
+        doSignTimer->start();
+    }
+    else
+        doSignTimer->stop();
 }

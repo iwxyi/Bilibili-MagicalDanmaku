@@ -1253,10 +1253,11 @@ margin: 6px;</string>
           </property>
           <item>
            <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，主播未在直播时，将不发送任何自动弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕将不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="styleSheet">
-             <string notr="true">开启后，主播未在直播时，将不发送任何自动弹幕
-包括：自动欢迎、答谢送礼、答谢关注、定时任务、自动禁言的通知
-手动发送弹幕将不受影响</string>
+             <string notr="true"/>
             </property>
             <property name="text">
              <string>仅在直播时发送欢迎/答谢/定时/回复弹幕</string>
@@ -1273,10 +1274,23 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="autoSwitchMedalCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接并开播后，自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开播后自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>开播更换粉丝勋章</string>
+             <string>自动更换粉丝勋章</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="autoDoSignCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，每次自动签到打开的时间&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>自动签到</string>
             </property>
            </widget>
           </item>
