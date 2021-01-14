@@ -4636,8 +4636,8 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
     if (notWelcomeUsers.contains(danmaku.getUid())
-            && !ui->sendWelcomeTextCheck->isChecked()
-            && !ui->sendWelcomeVoiceCheck->isChecked()) // 不自动欢迎
+            || (!ui->sendWelcomeTextCheck->isChecked()
+            && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (strongNotifyUsers.contains(danmaku.getUid()))
