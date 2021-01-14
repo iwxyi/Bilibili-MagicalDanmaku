@@ -563,6 +563,7 @@ private:
     QSet<qint64> oppositeAudience; // 对面的观众
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
     QString pkToken;
+    QHash<qint64, int> cmAudience; // 自己这边跑过去串门了: 1串门，0已经回来/提示
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

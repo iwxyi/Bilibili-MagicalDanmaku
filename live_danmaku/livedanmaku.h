@@ -137,6 +137,7 @@ public:
         danmaku.no_reply = object.value("no_reply").toBool();
         danmaku.opposite = object.value("opposite").toBool();
         danmaku.to_view = object.value("to_view").toBool();
+        danmaku.view_return = object.value("view_return").toBool();
         danmaku.pk_link = object.value("pk_link").toBool();
         danmaku.robot = object.value("robot").toBool();
         danmaku.guard = object.value("guard").toInt();
@@ -214,6 +215,8 @@ public:
             object.insert("opposite", opposite);
         if (to_view)
             object.insert("to_view", to_view);
+        if (view_return)
+            object.insert("view_return", view_return);
         if (pk_link)
             object.insert("pk_link", pk_link);
         if (robot)
@@ -342,6 +345,11 @@ public:
     void setToView(bool to)
     {
         this->to_view = to;
+    }
+
+    void setViewReturn(bool re)
+    {
+        this->view_return = re;
     }
 
     void setPkLink(bool link)
@@ -528,6 +536,11 @@ public:
         return to_view;
     }
 
+    bool isViewReturn() const
+    {
+        return view_return;
+    }
+
     bool isPkLink() const
     {
         return pk_link;
@@ -597,6 +610,7 @@ private:
 
     bool opposite = false; // 是否是大乱斗对面的
     bool to_view = false; // 是否是自己这边过去串门的
+    bool view_return = false; // 自己这边过去串门回来的
     bool pk_link = false; // 是否是PK连接的
 
     bool robot = false;

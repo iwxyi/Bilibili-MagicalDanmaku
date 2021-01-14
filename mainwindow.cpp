@@ -2548,6 +2548,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%pk_opposite%"))
         msg.replace("%pk_opposite%", danmaku.isOpposite() ? "1" : "0");
 
+    // 是否是己方串门回来
+    if (msg.contains("%pk_view_return%"))
+        msg.replace("%pk_view_return%", danmaku.isViewReturn() ? "1" : "0");
+
     // 本次进来人次
     if (msg.contains("%today_come%"))
         msg.replace("%today_come%", snum(dailyCome));
@@ -3949,6 +3953,15 @@ void MainWindow::handleMessage(QJsonObject json)
         QString uname = results.at(1); // 这个昵称会被系统自动省略（太长后面会是两个点）
 
         LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
+        if (cmAudience.contains(uid)) // 去了对面串门
+        {
+            if (cmAudience.value(uid) == 1) // 去对面串门回来
+            {
+                cmAudience[uid] = 0;
+                danmaku.setViewReturn(true);
+                showLocalNotify(uname + " 去对面串门回来");
+            }
+        }
         appendNewLiveDanmaku(danmaku);
 
         if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
@@ -4052,6 +4065,15 @@ void MainWindow::handleMessage(QJsonObject json)
             if (opposite)
             {
                 // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
+            }
+            else if (cmAudience.contains(uid))
+            {
+                if (cmAudience.value(uid) == 1)
+                {
+                    cmAudience[uid] = 0;
+                    danmaku.setViewReturn(true);
+                    showLocalNotify(username + " 去对面串门回来");
+                }
             }
 
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();
@@ -6033,6 +6055,7 @@ void MainWindow::pkStart(QJsonObject json)
     QString roomId = this->roomId;
     oppositeTouta = false;
     pkToLive = currentTime;
+    cmAudience.clear();
     int battle_type = data.value("battle_type").toInt();
     if (battle_type == 1) // 普通大乱斗
         pkVideo = false;
@@ -6255,6 +6278,11 @@ void MainWindow::pkEnd(QJsonObject json)
     myVotes = 0;
     matchVotes = 0;
     qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
 
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
@@ -6593,6 +6621,8 @@ void MainWindow::handlePkMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
         if (!toView) // 不是自己方过去串门的
             return ;
+        if (!cmAudience.contains(uid))
+            cmAudience.insert(uid, 1);
         showLocalNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
 
         /*qDebug() << s8("pk观众进入：") << username;

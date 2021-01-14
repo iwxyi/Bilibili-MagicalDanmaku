@@ -279,6 +279,7 @@
 | ainame_sum_len   | 短昵称长度+礼物名字长度 |                                              |
 | new_attention    | 是否是新关注            | 最近50个关注内                               |
 | pk_opposite      | 大乱斗对面进来          | 需开启串门提示                               |
+| pk_view_return   | 大乱斗去对面串门并回来  | 需开启串门提示                               |
 | today_come       | 今日进来人次            | 每个人可能重复进入                           |
 | today_newbie_msg | 今日新人人数            |                                              |
 | today_danmaku    | 今日弹幕总数            |                                              |
