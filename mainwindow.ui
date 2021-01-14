@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -918,6 +918,9 @@ QTabBar::tab:selected
           </property>
           <item>
            <widget class="QCheckBox" name="diangeNeedMedalCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;带有主播粉丝勋章的点歌弹幕才有效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="styleSheet">
              <string notr="true">要求带粉丝勋章才能点歌</string>
             </property>
@@ -950,6 +953,9 @@ QTabBar::tab:selected
         </item>
         <item>
          <widget class="QListWidget" name="diangeHistoryListWidget">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌历史&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="styleSheet">
            <string notr="true">QListWidget
 {
@@ -1402,6 +1408,9 @@ margin: 6px;</string>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <widget class="QPushButton" name="addTaskButton">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加定时发送弹幕的任务&lt;/p&gt;&lt;p&gt;针对每一项定时任务，如果有多行，则随机发送其中一行&lt;/p&gt;&lt;p&gt;多项定时任务互不影响&lt;/p&gt;&lt;p&gt;也可以用来存放常用弹幕，一键发送&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string> 添加定时任务</string>
           </property>
@@ -1468,6 +1477,9 @@ margin: 6px;</string>
        <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
          <widget class="QPushButton" name="addReplyButton">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
            <string>添加自动回复</string>
           </property>

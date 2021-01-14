@@ -1188,7 +1188,14 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                if (QString::number(danmaku.getUid()) == this->cookieUid)
+                static qint64 prevTimestamp = 0;
+                qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+                int cd = 1500;
+                if (timestamp - prevTimestamp < cd)
+                    return ;
+                prevTimestamp = timestamp;
+
+                if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                     s = "\\n" + s; // 延迟一次发送的时间
                 sendAutoMsg(s);
             }
@@ -1376,7 +1383,7 @@ void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
 {
-    QListWidgetItem* item = ui->taskListWidget->currentItem();
+    QListWidgetItem* item = ui->replyListWidget->currentItem();
 
     QMenu* menu = new QMenu(this);
     QAction* actionDelete = new QAction("删除", this);
@@ -1389,15 +1396,15 @@ void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
     menu->addAction(actionDelete);
 
     connect(actionDelete, &QAction::triggered, this, [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<ReplyWidget*>(widget);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        auto rw = static_cast<ReplyWidget*>(widget);
 
-        ui->taskListWidget->removeItemWidget(item);
-        ui->taskListWidget->takeItem(ui->taskListWidget->currentRow());
+        ui->replyListWidget->removeItemWidget(item);
+        ui->replyListWidget->takeItem(ui->replyListWidget->currentRow());
 
         saveReplyList();
 
-        tw->deleteLater();
+        rw->deleteLater();
     });
 
     menu->exec(QCursor::pos());
