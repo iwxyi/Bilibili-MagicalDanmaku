@@ -72,9 +72,11 @@ void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &)
     QAction* actionPaoSao = new QAction("匿名跑骚", this);
     QAction* actionRoom = new QAction("前往直播间", this);
     QAction* actionPage = new QAction("用户主页", this);
+    QAction* actionPk = new QAction("PK进度", this);
     QAction* actionDelete = new QAction("删除", this);
 
-    if (row < 0)
+    bool pking = false;
+    if (row < 0) // 未选中
     {
         actionPaoSao->setEnabled(false);
         actionRoom->setEnabled(false);
@@ -87,11 +89,20 @@ void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &)
         {
             actionPaoSao->setEnabled(false);
         }
+        else // 直播中
+        {
+            if ((pking = roomStatus.at(row).pkStatus))
+            {
+                getInfoByPkId(roomStatus.at(row).roomId, roomStatus.at(row).pkId, actionPk);
+            }
+        }
     }
 
     menu->addAction(actionPaoSao);
     menu->addAction(actionRoom);
     menu->addAction(actionPage);
+    if (pking)
+        menu->addAction(actionPk);
     menu->addSeparator();
     menu->addAction(actionDelete);
 
@@ -165,6 +176,8 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
 
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         QString upName = anchorInfo.value("base_info").toObject().value("uname").toString();
+        QJsonObject battleInfo = dataObj.value("battle_info").toObject();
+        QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
 
         int index = roomStatus.indexOf(roomId);
         if (index == -1)
@@ -179,6 +192,7 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         rs.uname = upName;
         rs.liveStatus = liveStatus;
         rs.pkStatus = pkStatus;
+        rs.pkId = pkId;
 
         QString liveStr = "";
         if (liveStatus == 1)
@@ -206,6 +220,44 @@ void RoomStatusDialog::openRoomVideo(QString roomId)
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->show();
+}
+
+void RoomStatusDialog::getInfoByPkId(QString roomId, QString pkId, QAction* action)
+{
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/getInfoById?pk_id="+pkId+"&roomid=" + roomId;\
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action ? (QObject*)action : (QObject*)this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取PK信息出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qDebug() << "PK查询结果不为0：" << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        qint64 endTime = static_cast<qint64>(json.value("data").toObject().value("pk_end_time").toDouble());
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString text = timestamp < endTime ? "剩余" + QString::number(endTime - timestamp) + "秒" : "PK已结束";
+        if (action)
+        {
+            action->setText(text);
+        }
+    });
+    manager->get(*request);
 }
 
 void RoomStatusDialog::keyPressEvent(QKeyEvent *e)

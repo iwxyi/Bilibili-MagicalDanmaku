@@ -26,6 +26,7 @@ struct RoomStatus
     QString uname;
     int liveStatus = 0;
     int pkStatus = 0;
+    QString pkId;
 };
 
 class RoomStatusDialog : public QDialog
@@ -48,6 +49,7 @@ private slots:
 private:
     void refreshRoomStatus(QString roomId);
     void openRoomVideo(QString roomId);
+    void getInfoByPkId(QString roomId, QString pkId, QAction *action = nullptr);
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
