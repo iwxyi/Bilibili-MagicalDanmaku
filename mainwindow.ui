@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>420</width>
-    <height>479</height>
+    <height>408</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1254,7 +1254,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，主播未在直播时，将自动不发送任何弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true"/>
@@ -2004,7 +2004,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>420</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

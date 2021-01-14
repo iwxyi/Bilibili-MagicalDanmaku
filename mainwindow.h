@@ -446,6 +446,7 @@ private:
 
     void releaseLiveData();
     QRect getScreenRect();
+    QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
     void switchMedalTo(qint64 targetRoomId);
     void wearMedal(qint64 medalId);

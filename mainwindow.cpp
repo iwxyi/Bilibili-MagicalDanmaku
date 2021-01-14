@@ -520,6 +520,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
+//        int h = ui->tabWidget->contentsRect().height() - ui->roomCoverLabel->geometry().top();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
         ui->roomCoverLabel->setPixmap(pixmap);
         ui->roomCoverLabel->setMinimumSize(1, 1);
@@ -1661,7 +1662,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         liveStatus = roomInfo.value("live_status").toInt();
         if (danmakuWindow)
             danmakuWindow->setUpUid(upUid.toLongLong());
-        qDebug() << "getRoomInfo: roomid=" << roomId
+        qDebug() << "房间信息: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << upUid;
 
@@ -1682,7 +1683,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-        qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
+//        qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
         fansLabel->setText("粉丝:" + snum(currentFans));
         // getFansAndUpdate();
 
@@ -6632,6 +6633,20 @@ QRect MainWindow::getScreenRect()
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenRect = screen->availableVirtualGeometry();
     return screenRect;
+}
+
+QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
+{
+    QPixmap tmp(pixmap.size());
+    tmp.fill(Qt::transparent);
+    QPainter painter(&tmp);
+    painter.setRenderHints(QPainter::Antialiasing, true);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    QPainterPath path;
+    path.addRoundedRect(0, 0, tmp.width(), tmp.height(), radius, radius);
+    painter.setClipPath(path);
+    painter.drawPixmap(0, 0, tmp.width(), tmp.height(), pixmap);
+    return tmp;
 }
 
 void MainWindow::switchMedalTo(qint64 targetRoomId)
