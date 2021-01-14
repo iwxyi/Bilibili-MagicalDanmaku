@@ -1,3 +1,4 @@
+#include <QMessageBox>
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
 
@@ -94,6 +95,11 @@ void LiveVideoPlayer::refreshPlayUrl()
 
         // 获取链接
         QJsonArray array = json.value("data").toObject().value("durl").toArray();
+        if (!array.size())
+        {
+            QMessageBox::warning(this, "播放视频", "未找到可用的链接\n" + data);
+            return ;
+        }
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
         playUrl = url;
         playList->clear();

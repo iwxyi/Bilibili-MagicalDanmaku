@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1300,7 +1300,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="autoDoSignCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，每次自动签到打开的时间&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，按打开自动签到/启动程序的时间来算&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true"/>
