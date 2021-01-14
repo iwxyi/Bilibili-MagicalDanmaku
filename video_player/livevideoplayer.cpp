@@ -102,41 +102,9 @@ void LiveVideoPlayer::refreshPlayUrl()
         }
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
         playUrl = url;
+        qDebug() << "playUrl:" << url;
         playList->clear();
         setPlayUrl(url);
-        /*for (int i = 0; i < array.size(); i++)
-        {
-            QString url = array.at(i).toObject().value("url").toString();
-            addPlayUrl(url);
-        }*/
-    });
-    manager->get(*request);
-}
-
-void LiveVideoPlayer::downloadFlv(QString url)
-{
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray baData = reply->readAll();
-        manager->deleteLater();
-        delete request;
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(baData, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-        if (json.value("code").toInt() != 200)
-        {
-            qDebug() << ("返回结果不为200：") << json.value("message").toString();
-            return ;
-        }
     });
     manager->get(*request);
 }

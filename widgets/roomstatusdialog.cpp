@@ -11,6 +11,7 @@
 #include <QDesktopServices>
 #include "roomstatusdialog.h"
 #include "ui_roomstatusdialog.h"
+#include "livevideoplayer.h"
 
 RoomStatusDialog::RoomStatusDialog(QSettings &settings, QWidget *parent) :
     QDialog(parent),
@@ -27,7 +28,7 @@ RoomStatusDialog::RoomStatusDialog(QSettings &settings, QWidget *parent) :
     for (int i = 0; i < count; i++)
     {
         QString id = settings.value("rooms/r" + QString::number(i)).toString();
-        roomIds.append(id);
+        roomStatus.append(RoomStatus(id));
         ui->roomsTable->setItem(i, 0, new QTableWidgetItem(id));
     }
 
@@ -45,60 +46,79 @@ void RoomStatusDialog::on_addRoomButton_clicked()
     QString id = QInputDialog::getText(this, "添加房间", "请输入房间ID", QLineEdit::Normal);
     if (id.isEmpty())
         return ;
-    if (roomIds.contains(id))
+    if (roomStatus.contains(id))
         return ;
 
-    roomIds.append(id);
-    ui->roomsTable->setRowCount(roomIds.size());
-    ui->roomsTable->setItem(roomIds.size()-1, 0, new QTableWidgetItem(id));
+    roomStatus.append(id);
+    ui->roomsTable->setRowCount(roomStatus.size());
+    ui->roomsTable->setItem(roomStatus.size()-1, 0, new QTableWidgetItem(id));
     refreshRoomStatus(id);
 
-    settings.setValue("rooms/count", roomIds.size());
-    settings.setValue("rooms/r" + QString::number(roomIds.size()-1), id);
+    settings.setValue("rooms/count", roomStatus.size());
+    settings.setValue("rooms/r" + QString::number(roomStatus.size()-1), id);
 }
 
 void RoomStatusDialog::on_refreshStatusButton_clicked()
 {
-    for (int i = 0; i < roomIds.size(); i++)
-        refreshRoomStatus(roomIds.at(i));
+    for (int i = 0; i < roomStatus.size(); i++)
+        refreshRoomStatus(roomStatus.at(i).roomId);
 }
 
-void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &pos)
+void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &)
 {
     int row = ui->roomsTable->currentRow();
 
     QMenu* menu = new QMenu(this);
+    QAction* actionPaoSao = new QAction("匿名跑骚", this);
     QAction* actionRoom = new QAction("前往直播间", this);
     QAction* actionPage = new QAction("用户主页", this);
     QAction* actionDelete = new QAction("删除", this);
 
     if (row < 0)
     {
+        actionPaoSao->setEnabled(false);
+        actionRoom->setEnabled(false);
+        actionPage->setEnabled(false);
         actionDelete->setEnabled(false);
     }
+    else
+    {
+        if (!roomStatus.at(row).liveStatus)
+        {
+            actionPaoSao->setEnabled(false);
+        }
+    }
 
+    menu->addAction(actionPaoSao);
     menu->addAction(actionRoom);
-//    menu->addAction(actionPage);
+    menu->addAction(actionPage);
+    menu->addSeparator();
     menu->addAction(actionDelete);
 
+    connect(actionPaoSao, &QAction::triggered, this, [=]{
+        openRoomVideo(roomStatus.at(row).roomId);
+    });
     connect(actionRoom, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomIds.at(row)));
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomStatus.at(row).roomId));
     });
     connect(actionPage, &QAction::triggered, this, [=]{
-        //QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + uid));
+        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + roomStatus.at(row).uid));
     });
 
     connect(actionDelete, &QAction::triggered, this, [=]{
-        roomIds.removeAt(row);
+        roomStatus.removeAt(row);
         ui->roomsTable->removeRow(row);
 
-        settings.setValue("rooms/count", roomIds.size());
-        for (int i = row; i < roomIds.size(); i++)
-            settings.setValue("rooms/r" + QString::number(roomIds.size()-1), roomIds.at(i));
+        settings.setValue("rooms/count", roomStatus.size());
+        for (int i = row; i < roomStatus.size(); i++)
+            settings.setValue("rooms/r" + QString::number(roomStatus.size()-1), roomStatus.at(i).roomId);
     });
 
     menu->exec(QCursor::pos());
 
+    actionPaoSao->deleteLater();
+    actionRoom->deleteLater();
+    actionPage->deleteLater();
     actionDelete->deleteLater();
 }
 
@@ -146,12 +166,19 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
         QString upName = anchorInfo.value("base_info").toObject().value("uname").toString();
 
-        int index = roomIds.indexOf(roomId);
+        int index = roomStatus.indexOf(roomId);
         if (index == -1)
         {
             qDebug() << "未找到对应的ID：" << roomId;
             return ;
         }
+
+        RoomStatus& rs = roomStatus[index];
+        rs.roomTitle = roomTitle;
+        rs.uid = upUid;
+        rs.uname = upName;
+        rs.liveStatus = liveStatus;
+        rs.pkStatus = pkStatus;
 
         QString liveStr = "";
         if (liveStatus == 1)
@@ -171,6 +198,14 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         ui->roomsTable->setItem(index, 4, new QTableWidgetItem(pkStr));
     });
     manager->get(*request);
+}
+
+void RoomStatusDialog::openRoomVideo(QString roomId)
+{
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(roomId);
+    player->show();
 }
 
 void RoomStatusDialog::keyPressEvent(QKeyEvent *e)
@@ -194,4 +229,15 @@ void RoomStatusDialog::closeEvent(QCloseEvent *e)
     settings.setValue("rooms/geometry", this->saveGeometry());
 
     QDialog::closeEvent(e);
+}
+
+void RoomStatusDialog::on_roomsTable_cellDoubleClicked(int row, int)
+{
+    if (row < 0)
+        return ;
+
+    if (!roomStatus.at(row).liveStatus)
+        return ;
+
+    openRoomVideo(roomStatus.at(row).roomId);
 }
