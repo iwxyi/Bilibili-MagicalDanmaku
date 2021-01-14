@@ -6942,6 +6942,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         if (error.error != QJsonParseError::NoError)
         {
             qDebug() << "参加天选出错：" << error.errorString();
+            qDebug() << QString(data);
             return ;
         }
         QJsonObject object = document.object();
@@ -6962,7 +6963,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         });
     });
 
-    manager->get(*request);
+    manager->post(*request, QByteArray());
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
