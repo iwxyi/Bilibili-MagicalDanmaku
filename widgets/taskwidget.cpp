@@ -30,7 +30,7 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     edit->setMinimumHeight(h);
     edit->setMaximumHeight(h*5);
     edit->setFixedHeight(h);
-
+    edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     edit->setStyleSheet("QPlainTextEdit{background: transparent;}");
 
     auto sendMsgs = [=](bool manual){
@@ -56,9 +56,7 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     });
 
     connect(edit, &QPlainTextEdit::textChanged, this, [=]{
-        int hh = edit->document()->size().height(); // 应当是高度，但为什么是1？
-        QFontMetrics fm(edit->font());
-        edit->setFixedHeight(fm.lineSpacing() * (hh + 1));
+        autoResizeEdit();
     });
 }
 
@@ -68,16 +66,22 @@ void TaskWidget::slotSpinChanged(int val)
     emit spinChanged(val);
 }
 
-void TaskWidget::showEvent(QShowEvent *event)
+void TaskWidget::autoResizeEdit()
 {
-    QWidget::showEvent(event);
-
+    edit->document()->setPageSize(QSize(this->width(), edit->document()->size().height()));
+    edit->document()->adjustSize();
+    int hh = edit->document()->size().height(); // 应该是高度，为啥是行数？
+    QFontMetrics fm(edit->font());
+    int he = fm.lineSpacing() * (hh + 1);
+    int w = this->width();
+    this->setFixedHeight(edit->pos().y() + he + 9);
+//    this->resize(w, edit->pos().y() + he + 9);
+    edit->setFixedHeight(he);
     emit signalResized();
 }
 
-void TaskWidget::resizeEvent(QResizeEvent *event)
+void TaskWidget::showEvent(QShowEvent *event)
 {
-    QWidget::resizeEvent(event);
-
-    emit signalResized();
+    QWidget::showEvent(event);
+//    autoResizeEdit();
 }

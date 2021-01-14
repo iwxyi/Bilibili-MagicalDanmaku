@@ -527,17 +527,37 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     }
 
     // 自动调整任务列表大小
-    /*for (int row = 0; row < ui->taskListWidget->count(); row++)
+    for (int row = 0; row < ui->taskListWidget->count(); row++)
     {
         auto item = ui->taskListWidget->item(row);
         auto widget = ui->taskListWidget->itemWidget(item);
         if (!widget)
             continue;
-        widget->setMinimumWidth(ui->taskListWidget->contentsRect().width());
-        widget->resize(ui->taskListWidget->contentsRect().width(), widget->height());
-        widget->adjustSize();
-        item->setSizeHint(widget->size());
-    }*/
+        QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
+        auto taskWidget = static_cast<TaskWidget*>(widget);
+//        taskWidget->resize(size.width(), size.height());
+//        taskWidget->setFixedWidth(size.width());
+        taskWidget->resize(size);
+        taskWidget->autoResizeEdit();
+//        taskWidget->adjustSize(); // autoResizeEdit 的时候会自动resize
+//        item->setSizeHint(taskWidget->size()); // taskWidget内部信号会触发item->setSizeHint
+    }
+
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto item = ui->replyListWidget->item(row);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
+        auto replyWidget = static_cast<ReplyWidget*>(widget);
+//        replyWidget->resize(size.width(), size.height());
+//        replyWidget->setFixedWidth(size.width());
+        replyWidget->resize(size);
+        replyWidget->autoResizeEdit();
+//        replyWidget->adjustSize();
+//        item->setSizeHint(replyWidget->size()); // replyWidget内部信号会触发item->setSizeHint
+    }
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -1095,8 +1115,9 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     tw->spin->setValue(second);
     tw->slotSpinChanged(second);
     tw->edit->setPlainText(text);
+    tw->autoResizeEdit();
     tw->adjustSize();
-    item->setSizeHint(tw->sizeHint());
+//    item->setSizeHint(tw->sizeHint());
 }
 
 void MainWindow::saveTaskList()
@@ -1184,6 +1205,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     rw->check->setChecked(enable);
     rw->keyEdit->setText(key);
     rw->replyEdit->setPlainText(reply);
+    rw->autoResizeEdit();
     rw->adjustSize();
     item->setSizeHint(rw->sizeHint());
 }

@@ -27,10 +27,10 @@ signals:
 
 public slots:
     void slotSpinChanged(int val);
+    void autoResizeEdit();
 
 protected:
     void showEvent(QShowEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
 
 public:
     QTimer* timer;

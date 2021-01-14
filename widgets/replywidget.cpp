@@ -28,6 +28,7 @@ ReplyWidget::ReplyWidget(QWidget *parent) : QWidget(parent)
     replyEdit->setMinimumHeight(h);
     replyEdit->setMaximumHeight(h*5);
     replyEdit->setFixedHeight(h);
+    replyEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     replyEdit->setStyleSheet("QPlainTextEdit{background: transparent;}");
 
     auto sendMsgs = [=](bool manual){
@@ -44,9 +45,7 @@ ReplyWidget::ReplyWidget(QWidget *parent) : QWidget(parent)
     });
 
     connect(replyEdit, &QPlainTextEdit::textChanged, this, [=]{
-        int hh = replyEdit->document()->size().height(); // 应当是高度，但为什么是1？
-        QFontMetrics fm(replyEdit->font());
-        replyEdit->setFixedHeight(fm.lineSpacing() * (hh + 1));
+        autoResizeEdit();
     });
 }
 
@@ -70,16 +69,22 @@ void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
 }
 
-void ReplyWidget::showEvent(QShowEvent *event)
+void ReplyWidget::autoResizeEdit()
 {
-    QWidget::showEvent(event);
-
+    replyEdit->document()->setPageSize(QSize(this->width(), replyEdit->document()->size().height()));
+    replyEdit->document()->adjustSize();
+    int hh = replyEdit->document()->size().height(); // 应该是高度，为啥是行数？
+    QFontMetrics fm(replyEdit->font());
+    int he = fm.lineSpacing() * (hh + 1);
+    int w = this->width();
+    this->setFixedHeight(replyEdit->pos().y() + he + 9);
+//    this->resize(w, replyEdit->pos().y() + he + 9);
+    replyEdit->setFixedHeight(he);
     emit signalResized();
 }
 
-void ReplyWidget::resizeEvent(QResizeEvent *event)
+void ReplyWidget::showEvent(QShowEvent *event)
 {
-    QWidget::resizeEvent(event);
-
-    emit signalResized();
+    QWidget::showEvent(event);
+//    autoResizeEdit();
 }
