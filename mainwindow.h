@@ -36,12 +36,16 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (0) qDebug()
-#define SOCKET_INF if (0) qDebug()
+#define LOCAL_MODE true // 本地调试
+#define SOCKET_DEB if (0) qDebug() // 输出调试信息
+#define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
+#define NOTIFY_CD 1000
+
+#define CD_CHANNEL_COUNT 100
 #define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
 #define WELCOME_CD_CN 1    // 送礼冷却通道
 #define GIFT_CD_CN 2       // 礼物冷却通道
@@ -575,7 +579,7 @@ private:
     QHash<qint64, int> cmAudience; // 自己这边跑过去串门了: 1串门，0已经回来/提示
 
     // 欢迎
-    qint64 msgCds[100] = {}; // 冷却通道
+    qint64 msgCds[CD_CHANNEL_COUNT] = {}; // 冷却通道
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;

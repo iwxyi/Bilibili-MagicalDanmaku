@@ -268,6 +268,7 @@
 | gift_name        | 当前礼物名字            | 如果设置了别名，则使用别名                   |
 | origin_gift_name | 原始礼物名字(非别名)    |                                              |
 | gift_num         | 当前礼物数量            |                                              |
+| guard_buy        | 购买舰长                | 没有瓜子，gift_name为舰长/提督/总督          |
 | total_gold       | 用户总共金瓜子          | 该用户一直以来赠送的所有金瓜子数量           |
 | total_silver     | 用户总共银瓜子          | 同上                                         |
 | anchor_roomid    | 粉丝牌房间ID            | 进入、弹幕才有粉丝牌                         |

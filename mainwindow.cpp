@@ -721,6 +721,12 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
 
+    if (LOCAL_MODE)
+    {
+        showLocalNotify("发送弹幕 -> " + msg);
+        return ;
+    }
+
     QUrl url("https://api.live.bilibili.com/msg/send");
 
     // 建立对象
@@ -807,13 +813,17 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
         return ;
     if (msg.trimmed().isEmpty())
         return ;
-
+    
     analyzeMsgAndCd(msg, cd, channel);
 
     // 避免太频繁发消息
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+//    qDebug() << "TEST发送冷却弹幕：" << msg << cd << channel << "cd:" << timestamp - msgCds[channel]
+//             << "时间：" << timestamp << msgCds[channel] << cd;
     if (timestamp - msgCds[channel] < cd)
+    {
         return ;
+    }
     msgCds[channel] = timestamp;
 
     if (enableText)
@@ -838,7 +848,7 @@ void MainWindow::sendAttentionMsg(QString msg)
 
 void MainWindow::sendNotifyMsg(QString msg)
 {
-    sendCdMsg(msg, 1000, NOTIFY_CD_CN,
+    sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
               true, false);
 }
 
@@ -2394,6 +2404,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%total_silver%"))
         msg.replace("%total_silver%", snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toInt()));
 
+    // 购买舰长
+    if (msg.contains("%guard_buy%"))
+        msg.replace("%guard_buy%", danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
+
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
@@ -2746,7 +2760,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // 特殊字符
-    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷"), "");
+    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
@@ -3777,10 +3791,8 @@ void MainWindow::handleMessage(QJsonObject json)
             QString msg = words.at(r);
             if (strongNotifyUsers.contains(uid))
             {
-                if (ui->sendGiftTextCheck->isChecked())
-                    sendAutoMsg(msg);
-                if (ui->sendGiftVoiceCheck->isChecked())
-                    speekVariantText(msg);
+                sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
             else
                 sendGiftMsg(msg);
@@ -4050,7 +4062,8 @@ void MainWindow::handleMessage(QJsonObject json)
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+        LiveDanmaku danmaku(username, uid, giftName, num);
+        appendNewLiveDanmaku(danmaku);
 
         int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
         userGold += price;
@@ -4062,11 +4075,13 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
-            QString localName = getLocalNickname(uid);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
-            if (nick.isEmpty())
-                nick = username;
-            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (!words.size())
+                return ;
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
+            sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
         }
     }
     else if (cmd == "USER_TOAST_MSG") // 续费舰长会附带的；购买不知道
@@ -4339,7 +4354,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else
     {
-        qDebug() << "未处理的命令：" << cmd << json;
+        qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
     }
 }
 
@@ -6583,6 +6598,9 @@ void MainWindow::releaseLiveData()
     rankLabel->setText("");
     rankLabel->setToolTip("");
     fansLabel->setText("");
+
+    for (int i = 0; i < CD_CHANNEL_COUNT; i++)
+        msgCds[i] = 0;
 
     if (danmakuWindow)
     {
