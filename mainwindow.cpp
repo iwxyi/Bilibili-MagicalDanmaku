@@ -860,6 +860,7 @@ void MainWindow::sendOppositeMsg(QString msg)
     static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     int cd = ui->sendWelcomeCDSpin->value() * 1000 / 4; // 四分之一的欢迎冷却时间
+    cd = qMax(2000, cd);
     if (timestamp - prevTimestamp < cd)
         return ;
     prevTimestamp = timestamp;
@@ -2907,7 +2908,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+)小?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友)$");
+    QRegularExpression gegeRe("^(.+)(大|小)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -4645,15 +4646,15 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
             && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
-    if (strongNotifyUsers.contains(danmaku.getUid()))
-        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
+//    if (strongNotifyUsers.contains(danmaku.getUid()))
+//        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
     if (!words.size())
         return ;
     int r = qrand() % words.size();
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
-        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
+//        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
         // 这里要特别判断一下语音，因为 sendNotifyMsg 是不会发送语音的
         if (ui->sendWelcomeTextCheck->isChecked())
             sendNotifyMsg(msg);
@@ -6911,7 +6912,10 @@ void MainWindow::doSign()
             ui->autoDoSignCheck->setText(msg);
         }
         else
+        {
             ui->autoDoSignCheck->setText("签到成功");
+            ui->autoDoSignCheck->setToolTip("最近签到时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        }
         QTimer::singleShot(10000, [=]{
             ui->autoDoSignCheck->setText("每日自动签到");
         });
@@ -6970,6 +6974,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         {
             ui->autoLOTCheck->setText("参与成功");
             qDebug() << "参与天选成功！";
+            ui->autoDoSignCheck->setToolTip("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         }
         QTimer::singleShot(10000, [=]{
             ui->autoLOTCheck->setText("自动参与天选");
