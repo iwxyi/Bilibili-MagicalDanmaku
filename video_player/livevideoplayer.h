@@ -31,7 +31,6 @@ public slots:
     void refreshPlayUrl();
 
 private:
-    void downloadFlv(QString url);
 
 protected:
     void showEvent(QShowEvent *) override;

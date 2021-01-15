@@ -4636,8 +4636,8 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
     if (notWelcomeUsers.contains(danmaku.getUid())
-            && !ui->sendWelcomeTextCheck->isChecked()
-            && !ui->sendWelcomeVoiceCheck->isChecked()) // 不自动欢迎
+            || (!ui->sendWelcomeTextCheck->isChecked()
+            && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (strongNotifyUsers.contains(danmaku.getUid()))
@@ -6942,6 +6942,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         if (error.error != QJsonParseError::NoError)
         {
             qDebug() << "参加天选出错：" << error.errorString();
+            qDebug() << QString(data);
             return ;
         }
         QJsonObject object = document.object();
@@ -6962,7 +6963,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         });
     });
 
-    manager->get(*request);
+    manager->post(*request, QByteArray());
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
