@@ -67,6 +67,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
 #endif
     };
     lineEdit->setPlaceholderText("回车发送弹幕");
+    lineEdit->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(lineEdit, &QLineEdit::returnPressed, this, [=]{
         QString text = lineEdit->text();
         if (!text.trimmed().isEmpty())
@@ -79,6 +80,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
             lineEdit->setPlaceholderText("");
         }
     });
+    connect(lineEdit, &QLineEdit::customContextMenuRequested, this, &LiveDanmakuWindow::showEditMenu);
     if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 
@@ -1653,6 +1655,29 @@ void LiveDanmakuWindow::showMenu()
     actionPictureBlur->deleteLater();
     actionCancelPicture->deleteLater();
 #endif
+}
+
+void LiveDanmakuWindow::showEditMenu()
+{
+    QString text = lineEdit->text();
+    QMenu* menu = new QMenu(this);
+    QAction* actionSendMsgToPk = new QAction("发送至PK对面直播间", this);
+
+    if (text.isEmpty())
+    {
+        actionSendMsgToPk->setEnabled(false);
+    }
+
+    menu->addAction(actionSendMsgToPk);
+
+    connect(actionSendMsgToPk, &QAction::triggered, this, [=]{
+        if (text.isEmpty())
+            return;
+        emit signalSendMsgToPk(text);
+    });
+
+    menu->exec(QCursor::pos());
+    menu->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)

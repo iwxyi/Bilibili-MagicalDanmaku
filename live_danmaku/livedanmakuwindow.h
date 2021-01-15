@@ -75,6 +75,7 @@ protected:
 
 signals:
     void signalSendMsg(QString msg);
+    void signalSendMsgToPk(QString msg);
     void signalAddBlockUser(qint64 uid, int hour);
     void signalDelBlockUser(qint64 uid);
     void signalChangeWindowMode();
@@ -90,6 +91,7 @@ public slots:
     void mergeGift(LiveDanmaku danmaku);
 
     void showMenu();
+    void showEditMenu();
 
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
