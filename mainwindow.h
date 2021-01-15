@@ -157,6 +157,7 @@ private slots:
     void slotDiange(LiveDanmaku danmaku);
 
     void sendMsg(QString msg);
+    void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
     void sendWelcomeGuard(QString msg);
     void sendWelcomeMsg(QString msg);

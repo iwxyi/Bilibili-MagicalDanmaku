@@ -105,6 +105,7 @@ public slots:
 
     void showFastBlock(qint64 uid, QString msg);
 
+    void setPkStatus(int status);
     void showStatusText();
     void setStatusText(QString text);
     void setStatusTooltip(QString tooltip);
@@ -167,6 +168,7 @@ private:
     QPoint pressPos;
     int listItemSpacing = 6;
 
+    int pkStatus = 0;
     QLabel* statusLabel = nullptr;
 
     QPixmap originPixmap;

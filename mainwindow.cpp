@@ -708,6 +708,11 @@ void MainWindow::showLocalNotify(QString text, qint64 uid)
  */
 void MainWindow::sendMsg(QString msg)
 {
+    sendRoomMsg(roomId, msg);
+}
+
+void MainWindow::sendRoomMsg(QString roomId, QString msg)
+{
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
         statusLabel->setText("未设置Cookie信息");
@@ -5692,6 +5697,12 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             danmakuWindow = nullptr;
             on_actionShow_Live_Danmaku_triggered(); // 重新加载
         });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalSendMsgToPk, this, [=](QString msg){
+            if (!pking || pkRoomId.isEmpty())
+                return ;
+            qDebug() << "发送PK对面消息：" << pkRoomId << msg;
+            sendRoomMsg(pkRoomId, msg);
+        });
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
@@ -6120,6 +6131,7 @@ void MainWindow::pkStart(QJsonObject json)
     {
         danmakuWindow->showStatusText();
         danmakuWindow->setToolTip(pkUname);
+        danmakuWindow->setPkStatus(1);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
     qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
@@ -6256,6 +6268,7 @@ void MainWindow::pkEnd(QJsonObject json)
     {
         danmakuWindow->hideStatusText();
         danmakuWindow->setToolTip("");
+        danmakuWindow->setPkStatus(0);
     }
     bool ping = winnerType1 == winnerType2;
     bool result = (winnerType1 > 0 && snum(thisRoomId) == roomId)

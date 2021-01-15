@@ -1663,7 +1663,7 @@ void LiveDanmakuWindow::showEditMenu()
     QMenu* menu = new QMenu(this);
     QAction* actionSendMsgToPk = new QAction("发送至PK对面直播间", this);
 
-    if (text.isEmpty())
+    if (!pkStatus || text.isEmpty())
     {
         actionSendMsgToPk->setEnabled(false);
     }
@@ -1889,6 +1889,11 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     moveAni(label, label->pos(), QPoint(label->x(), labelTop), 300, QEasingCurve::OutBack);
     moveAni(btn, btn->pos(), QPoint(btn->x(), labelTop + (label->height()-btn->height())/2), 600, QEasingCurve::OutBounce);
     timer->start();
+}
+
+void LiveDanmakuWindow::setPkStatus(int status)
+{
+    this->pkStatus = status;
 }
 
 void LiveDanmakuWindow::showStatusText()
