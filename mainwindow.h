@@ -42,12 +42,14 @@ QT_END_NAMESPACE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
-#define DEFAULT_CD_CN 0    // 默认送礼通道
+#define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
 #define WELCOME_CD_CN 1    // 送礼冷却通道
 #define GIFT_CD_CN 2       // 礼物冷却通道
 #define ATTENTION_CD_CN 3  // 关注冷却通道
-#define GUARD_CD_CN 6      // 欢迎舰长冷却通道
-#define CHUANMEN_CD_CN 8   // 欢迎串门冷却通道
+#define TASK_CD_CN 4       // 定时任务冷却通道
+#define REPLY_CD_CN 5      // 自动回复冷却通道
+#define GUARD_CD_CN 10     // 欢迎舰长冷却通道
+#define CHUANMEN_CD_CN 11  // 欢迎串门冷却通道
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -167,9 +169,6 @@ private slots:
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice);
-    void sendWelcomeGuard(QString msg);
-    void sendWelcomeMsg(QString msg);
-    void sendOppositeMsg(QString msg);
     void sendGiftMsg(QString msg);
 
     void sendAttentionMsg(QString msg);

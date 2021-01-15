@@ -824,126 +824,22 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
         speekVariantText(msg);
 }
 
-void MainWindow::sendWelcomeGuard(QString msg)
-{
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 10; // 十分之一的冷却，并且独立发送
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekVariantText(msg);
-}
-
-void MainWindow::sendWelcomeMsg(QString msg)
-{
-    sendCdMsg(msg, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
-              ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
-}
-
-void MainWindow::sendOppositeMsg(QString msg)
-{
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 4; // 四分之一的欢迎冷却时间
-    cd = qMax(2000, cd);
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekVariantText(msg);
-}
-
 void MainWindow::sendGiftMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendGiftCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendGiftTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendGiftVoiceCheck->isChecked())
-        speekVariantText(msg);
+    sendCdMsg(msg, ui->sendGiftCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendAttentionCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendAttentionTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendAttentionVoiceCheck->isChecked())
-        speekVariantText(msg);
+    sendCdMsg(msg, ui->sendAttentionCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendAttentionTextCheck->isChecked(), ui->sendAttentionVoiceCheck->isChecked());
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus)
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = 1000; // 最快1秒
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    sendCdMsg(msg, 1000, NOTIFY_CD_CN,
+              true, false);
 }
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
@@ -1199,16 +1095,10 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                static qint64 prevTimestamp = 0;
-                qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-                int cd = 1500;
-                if (timestamp - prevTimestamp < cd)
-                    return ;
-                prevTimestamp = timestamp;
-
                 if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                     s = "\\n" + s; // 延迟一次发送的时间
-                sendAutoMsg(s);
+
+                sendCdMsg(s, 1500, REPLY_CD_CN, true, false);
             }
         }
     });
@@ -2220,17 +2110,17 @@ QString MainWindow::getLocalNickname(qint64 uid) const
 
 void MainWindow::analyzeMsgAndCd(QString& msg, int &cd, int &channel) const
 {
-    QRegularExpression re("\\(cd(\\d{1,2}):(\\d+)\\)");
+    QRegularExpression re("^\\s*\\(cd(\\d{1,2}):(\\d+)\\)");
     QRegularExpressionMatch match;
     if (msg.indexOf(re, 0, &match) == -1)
         return ;
     QStringList caps = match.capturedTexts();
     QString full = caps.at(0);
-    QString chann = caps.at(1);
     QString val = caps.at(2);
-    channel = chann.toInt();
-    cd = val.toInt();
+    QString chann = caps.at(1);
     msg = msg.right(msg.length() - full.length());
+    cd = val.toInt() * 1000;
+    channel = chann.toInt();
 }
 
 /**
@@ -4675,23 +4565,13 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
 //        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
-        // 这里要特别判断一下语音，因为 sendNotifyMsg 是不会发送语音的
-        if (ui->sendWelcomeTextCheck->isChecked())
-            sendNotifyMsg(msg);
-        if (ui->sendWelcomeVoiceCheck->isChecked())
-            speekVariantText(msg);
+        sendCdMsg(msg, 2000, NOTIFY_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
     else
     {
-        if (danmaku.isOpposite())
-            sendOppositeMsg(msg);
-        else
-        {
-            if (danmaku.isGuard()) // 是舰长
-                sendWelcomeGuard(msg);
-            else
-                sendWelcomeMsg(msg);
-        }
+        sendCdMsg(msg, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
 }
 
