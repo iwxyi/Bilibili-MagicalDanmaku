@@ -801,6 +801,29 @@ void MainWindow::sendAutoMsg(QString msgs)
     }
 }
 
+void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice)
+{
+    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
+        return ;
+    if (msg.trimmed().isEmpty())
+        return ;
+
+    analyzeMsgAndCd(msg, cd, channel);
+
+    // 避免太频繁发消息
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    if (timestamp - msgCds[channel] < cd)
+        return ;
+    msgCds[channel] = timestamp;
+
+    if (enableText)
+    {
+        sendAutoMsg(msgToShort(msg));
+    }
+    if (enableVoice)
+        speekVariantText(msg);
+}
+
 void MainWindow::sendWelcomeGuard(QString msg)
 {
     if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
@@ -827,26 +850,8 @@ void MainWindow::sendWelcomeGuard(QString msg)
 
 void MainWindow::sendWelcomeMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekVariantText(msg);
+    sendCdMsg(msg, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
+              ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
 }
 
 void MainWindow::sendOppositeMsg(QString msg)
@@ -2211,6 +2216,21 @@ QString MainWindow::getLocalNickname(qint64 uid) const
     if (localNicknames.contains(uid))
         return localNicknames.value(uid);
     return "";
+}
+
+void MainWindow::analyzeMsgAndCd(QString& msg, int &cd, int &channel) const
+{
+    QRegularExpression re("\\(cd(\\d{1,2}):(\\d+)\\)");
+    QRegularExpressionMatch match;
+    if (msg.indexOf(re, 0, &match) == -1)
+        return ;
+    QStringList caps = match.capturedTexts();
+    QString full = caps.at(0);
+    QString chann = caps.at(1);
+    QString val = caps.at(2);
+    channel = chann.toInt();
+    cd = val.toInt();
+    msg = msg.right(msg.length() - full.length());
 }
 
 /**

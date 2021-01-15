@@ -42,6 +42,13 @@ QT_END_NAMESPACE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
+#define DEFAULT_CD_CN 0    // 默认送礼通道
+#define WELCOME_CD_CN 1    // 送礼冷却通道
+#define GIFT_CD_CN 2       // 礼物冷却通道
+#define ATTENTION_CD_CN 3  // 关注冷却通道
+#define GUARD_CD_CN 6      // 欢迎舰长冷却通道
+#define CHUANMEN_CD_CN 8   // 欢迎串门冷却通道
+
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
@@ -159,6 +166,7 @@ private slots:
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
+    void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice);
     void sendWelcomeGuard(QString msg);
     void sendWelcomeMsg(QString msg);
     void sendOppositeMsg(QString msg);
@@ -397,6 +405,7 @@ private:
     void getRoomLiveVideoUrl(StringFunc func = nullptr);
 
     QString getLocalNickname(qint64 name) const;
+    void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
     QString processDanmakuVariants(QString msg, LiveDanmaku danmaku) const;
@@ -565,6 +574,9 @@ private:
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
     QString pkToken;
     QHash<qint64, int> cmAudience; // 自己这边跑过去串门了: 1串门，0已经回来/提示
+
+    // 欢迎
+    qint64 msgCds[100] = {}; // 冷却通道
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;
