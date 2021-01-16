@@ -464,6 +464,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动参与天选
     ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
 
+    // 本地调试模式
+    localDebug = settings.value("danmaku/localDebug", false).toBool();
+    ui->localDebugCheck->setChecked(localDebug);
+
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 }
 
@@ -721,7 +725,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
 
-    if (LOCAL_MODE)
+    if (localDebug)
     {
         showLocalNotify("发送弹幕 -> " + msg);
         return ;
@@ -2539,6 +2543,26 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 大乱斗
     if (msg.contains("%pking%"))
         msg.replace("%pking%", snum(pking ? 1 : 0));
+    if (msg.contains("%pk_room_id%"))
+        msg.replace("%pk_room_id%", pkRoomId);
+    if (msg.contains("%pk_uid%"))
+        msg.replace("%pk_uid%", pkUid);
+    if (msg.contains("%pk_uname%"))
+        msg.replace("%pk_uname%", pkUname);
+    if (msg.contains("%pk_count%"))
+        msg.replace("%pk_count%", snum(pking && !pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0));
+    if (msg.contains("%pk_touta_prob%"))
+    {
+        int prob = 0;
+        if (pking && !pkRoomId.isEmpty())
+        {
+            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+            if (totalCount > 1)
+                prob = toutaCount * 100 / totalCount;
+        }
+        msg.replace("%pk_touta_prob%", snum(prob));
+    }
 
     // 房间属性
     if (msg.contains("%living%"))
@@ -2819,7 +2843,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
-                         "^.+(?:要|我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
+                         "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2})(不是|有点|才是|敲|很).+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -2832,7 +2856,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+)(大|小)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
+    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -3521,7 +3545,7 @@ void MainWindow::handleMessage(QJsonObject json)
     if (cmd == "LIVE") // 开播？
     {
         emit signalLiveStart(roomId);
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
         if (roomId.isEmpty())
@@ -3542,7 +3566,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "PREPARING") // 下播
     {
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
@@ -6032,8 +6056,8 @@ void MainWindow::pkStart(QJsonObject json)
             if (!pkRoomId.isEmpty())
             {
                 int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-                if (totalCount > 1) // 开始的时候就已经+1了
+                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+                if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                     text += QString("  偷塔概率:%1/%2")
                                     .arg(toutaCount).arg(totalCount);
             }
@@ -6113,6 +6137,18 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        // 显示偷塔情况
+        if (prevMyVotes < myVotes)
+        {
+            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+        }
+        if (prevMatchVotes < matchVotes)
+        {
+            if (!oppositeTouta)
+                oppositeTouta = true;
+            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+        }
+
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
@@ -6128,17 +6164,6 @@ void MainWindow::pkProcess(QJsonObject json)
             toutaCount++;
             chiguaCount += num;
             saveTouta();
-        }
-        // 显示偷塔情况
-        if (prevMyVotes < myVotes)
-        {
-            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
-        }
-        if (prevMatchVotes < matchVotes)
-        {
-            if (!oppositeTouta)
-                oppositeTouta = true;
-            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
         }
     }
     else
@@ -6261,7 +6286,6 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         }
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-        audiences.clear();
 //        qDebug() << "初始化房间" << roomId << "观众：";
         for (int i = 0; i < danmakus.size(); i++)
         {
@@ -6279,6 +6303,8 @@ void MainWindow::connectPkRoom()
         return ;
 
     // 根据弹幕消息
+    myAudience.clear();
+    oppositeAudience.clear();
     getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
@@ -7175,4 +7201,9 @@ void MainWindow::on_actionRoom_Status_triggered()
 void MainWindow::on_autoLOTCheck_clicked()
 {
     settings.setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
+}
+
+void MainWindow::on_localDebugCheck_clicked()
+{
+    settings.setValue("danmaku/localDebug", localDebug = ui->localDebugCheck->isChecked());
 }

@@ -36,7 +36,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define LOCAL_MODE true // 本地调试
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define SOCKET_MODE
@@ -52,8 +51,6 @@ QT_END_NAMESPACE
 #define ATTENTION_CD_CN 3  // 关注冷却通道
 #define TASK_CD_CN 4       // 定时任务冷却通道
 #define REPLY_CD_CN 5      // 自动回复冷却通道
-#define GUARD_CD_CN 10     // 欢迎舰长冷却通道
-#define CHUANMEN_CD_CN 11  // 欢迎串门冷却通道
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -365,6 +362,8 @@ private slots:
 
     void on_autoLOTCheck_clicked();
 
+    void on_localDebugCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -519,6 +518,7 @@ private:
     // 连接信息
     QString cookieUid; // 自己的UID
     QString cookieUname; // 自己的昵称
+    bool localDebug = false; // 本地调试模式
 
     QString shortId; // 房间短号（有些没有，也没什么用）
     QString upUid; // 主播的UID

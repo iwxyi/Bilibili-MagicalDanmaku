@@ -280,8 +280,14 @@
 | name_sum_len     | 昵称长度+礼物名字长度   |                                              |
 | ainame_sum_len   | 短昵称长度+礼物名字长度 |                                              |
 | new_attention    | 是否是新关注            | 最近50个关注内                               |
-| pk_opposite      | 大乱斗对面进来          | 需开启串门提示                               |
-| pk_view_return   | 大乱斗去对面串门并回来  | 需开启串门提示                               |
+| pking            | 当前是否在大乱斗        | 是：1，否：0                                 |
+| pk_room_id       | pk对面房间号            | 未在PK中则为空，下同                         |
+| pk_uid           | pk对面主播ID            |                                              |
+| pk_uname         | pk对面主播昵称          |                                              |
+| pk_opposite      | pk对面进来              | 需开启串门提示                               |
+| pk_view_return   | pk去对面串门并回来      | 需开启串门提示                               |
+| pk_count         | pk次数                  | 未在PK中为0，下同                            |
+| pk_touta_prob    | 对面偷塔概率百分比      | 数值部分，例如概率为50%，则为50。初次PK为0   |
 | today_come       | 今日进来人次            | 每个人可能重复进入                           |
 | today_newbie_msg | 今日新人人数            |                                              |
 | today_danmaku    | 今日弹幕总数            |                                              |
@@ -303,7 +309,6 @@
 | time_day_year    | 当前一年中第几天        |                                              |
 | timestamp        | 当前10位时间戳          | 可用于比较进入时间、多久没来等               |
 | timestamp13      | 当前13位时间戳          |                                              |
-| pking            | 当前是否在大乱斗        | 是：1，否：0                                 |
 | living           | 当前是否已开播          | 是：1，否：0                                 |
 | room_id          | 直播间ID                |                                              |
 | room_name        | 直播间标题              |                                              |
