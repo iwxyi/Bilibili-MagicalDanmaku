@@ -11,6 +11,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       expandPlayingButton(new InteractiveButtonBase(this)),
       playingPositionTimer(new QTimer(this))
 {
+    starting = true;
     ui->setupUi(this);
 
     QHeaderView* header = ui->searchResultTable->horizontalHeader();
@@ -249,6 +250,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         if (player->state() == QMediaPlayer::PlayingState)
             slotPlayerPositionChanged();
     });
+    starting = false;
 }
 
 OrderPlayerWindow::~OrderPlayerWindow()
@@ -1448,6 +1450,8 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
  */
 void OrderPlayerWindow::on_listTabWidget_currentChanged(int index)
 {
+    if (starting)
+        return ;
     settings.setValue("orderplayerwindow/tabIndex", index);
 }
 
