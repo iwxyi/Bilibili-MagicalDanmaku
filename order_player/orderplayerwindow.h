@@ -255,6 +255,7 @@ signals:
 
 private:
     Ui::OrderPlayerWindow *ui;
+    bool starting = true;
     QSettings settings;
     QDir musicsFileDir;
     const QString API_DOMAIN = "http://iwxyi.com:3000/";

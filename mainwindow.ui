@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>408</height>
+    <width>423</width>
+    <height>479</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -370,7 +370,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QCheckBox" name="judgeRobotCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;p&gt;根据关注、粉丝、投稿、作品点赞等数据智能分析，有一定几率存在误判情况，但不影响整体效果&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>机器人判断</string>
@@ -1387,6 +1387,16 @@ margin: 6px;</string>
          </layout>
         </item>
         <item>
+         <widget class="QCheckBox" name="localDebugCheck">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>本地调试模式</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_4">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -2015,8 +2025,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>420</width>
-     <height>23</height>
+     <width>423</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -2039,6 +2049,7 @@ margin: 6px;</string>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="actionCookie_Help"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Room_To_List"/>
     <addaction name="separator"/>
    </widget>

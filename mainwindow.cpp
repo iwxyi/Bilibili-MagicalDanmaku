@@ -464,6 +464,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动参与天选
     ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
 
+    // 本地调试模式
+    localDebug = settings.value("danmaku/localDebug", false).toBool();
+    ui->localDebugCheck->setChecked(localDebug);
+
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 }
 
@@ -721,6 +725,12 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
 
+    if (localDebug)
+    {
+        showLocalNotify("发送弹幕 -> " + msg);
+        return ;
+    }
+
     QUrl url("https://api.live.bilibili.com/msg/send");
 
     // 建立对象
@@ -801,144 +811,49 @@ void MainWindow::sendAutoMsg(QString msgs)
     }
 }
 
-void MainWindow::sendWelcomeGuard(QString msg)
+void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice)
 {
     if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
+    
+    analyzeMsgAndCd(msg, cd, channel);
 
     // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 10; // 十分之一的冷却，并且独立发送
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
+//    qDebug() << "TEST发送冷却弹幕：" << msg << cd << channel << "cd:" << timestamp - msgCds[channel]
+//             << "时间：" << timestamp << msgCds[channel] << cd;
+    if (timestamp - msgCds[channel] < cd)
     {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
+        return ;
     }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekVariantText(msg);
-}
+    msgCds[channel] = timestamp;
 
-void MainWindow::sendWelcomeMsg(QString msg)
-{
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
+    if (enableText)
     {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
+        sendAutoMsg(msgToShort(msg));
     }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
-        speekVariantText(msg);
-}
-
-void MainWindow::sendOppositeMsg(QString msg)
-{
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendWelcomeCDSpin->value() * 1000 / 4; // 四分之一的欢迎冷却时间
-    cd = qMax(2000, cd);
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendWelcomeTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendWelcomeVoiceCheck->isChecked())
+    if (enableVoice)
         speekVariantText(msg);
 }
 
 void MainWindow::sendGiftMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendGiftCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendGiftTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendGiftVoiceCheck->isChecked())
-        speekVariantText(msg);
+    sendCdMsg(msg, ui->sendGiftCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
 }
 
 void MainWindow::sendAttentionMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = ui->sendAttentionCDSpin->value() * 1000;
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    if (ui->sendAttentionTextCheck->isChecked())
-    {
-        msg = msgToShort(msg);
-        sendAutoMsg(msg);
-    }
-    if (ui->sendAttentionVoiceCheck->isChecked())
-        speekVariantText(msg);
+    sendCdMsg(msg, ui->sendAttentionCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendAttentionTextCheck->isChecked(), ui->sendAttentionVoiceCheck->isChecked());
 }
 
 void MainWindow::sendNotifyMsg(QString msg)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus)
-        return ;
-    if (msg.trimmed().isEmpty())
-        return ;
-
-    // 避免太频繁发消息
-    static qint64 prevTimestamp = 0;
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    int cd = 1000; // 最快1秒
-    if (timestamp - prevTimestamp < cd)
-        return ;
-    prevTimestamp = timestamp;
-
-    msg = msgToShort(msg);
-    sendAutoMsg(msg);
+    sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+              true, false);
 }
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
@@ -1194,16 +1109,10 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                static qint64 prevTimestamp = 0;
-                qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-                int cd = 1500;
-                if (timestamp - prevTimestamp < cd)
-                    return ;
-                prevTimestamp = timestamp;
-
                 if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                     s = "\\n" + s; // 延迟一次发送的时间
-                sendAutoMsg(s);
+
+                sendCdMsg(s, 1500, REPLY_CD_CN, true, false);
             }
         }
     });
@@ -2213,6 +2122,21 @@ QString MainWindow::getLocalNickname(qint64 uid) const
     return "";
 }
 
+void MainWindow::analyzeMsgAndCd(QString& msg, int &cd, int &channel) const
+{
+    QRegularExpression re("^\\s*\\(cd(\\d{1,2}):(\\d+)\\)");
+    QRegularExpressionMatch match;
+    if (msg.indexOf(re, 0, &match) == -1)
+        return ;
+    QStringList caps = match.capturedTexts();
+    QString full = caps.at(0);
+    QString val = caps.at(2);
+    QString chann = caps.at(1);
+    msg = msg.right(msg.length() - full.length());
+    cd = val.toInt() * 1000;
+    channel = chann.toInt();
+}
+
 /**
  * 支持变量名
  */
@@ -2484,6 +2408,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%total_silver%"))
         msg.replace("%total_silver%", snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toInt()));
 
+    // 购买舰长
+    if (msg.contains("%guard_buy%"))
+        msg.replace("%guard_buy%", danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
+
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
@@ -2615,6 +2543,26 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 大乱斗
     if (msg.contains("%pking%"))
         msg.replace("%pking%", snum(pking ? 1 : 0));
+    if (msg.contains("%pk_room_id%"))
+        msg.replace("%pk_room_id%", pkRoomId);
+    if (msg.contains("%pk_uid%"))
+        msg.replace("%pk_uid%", pkUid);
+    if (msg.contains("%pk_uname%"))
+        msg.replace("%pk_uname%", pkUname);
+    if (msg.contains("%pk_count%"))
+        msg.replace("%pk_count%", snum(pking && !pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0));
+    if (msg.contains("%pk_touta_prob%"))
+    {
+        int prob = 0;
+        if (pking && !pkRoomId.isEmpty())
+        {
+            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+            if (totalCount > 1)
+                prob = toutaCount * 100 / totalCount;
+        }
+        msg.replace("%pk_touta_prob%", snum(prob));
+    }
 
     // 房间属性
     if (msg.contains("%living%"))
@@ -2836,7 +2784,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // 特殊字符
-    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷"), "");
+    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
@@ -2864,7 +2812,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx的xxx
-    QRegularExpression deRe("^(.+)[的の](.{2,})$");
+    QRegularExpression deRe("^(.+)[的の]([\u4e00-\u9fa5]{2,})$");
     QRegularExpressionMatch match;
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
@@ -2895,7 +2843,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
-                         "^.+(?:要|我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
+                         "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2})(不是|有点|才是|敲|很).+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -2908,7 +2856,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+)(大|小)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
+    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -3597,7 +3545,7 @@ void MainWindow::handleMessage(QJsonObject json)
     if (cmd == "LIVE") // 开播？
     {
         emit signalLiveStart(roomId);
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
         if (roomId.isEmpty())
@@ -3618,7 +3566,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "PREPARING") // 下播
     {
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
@@ -3867,10 +3815,8 @@ void MainWindow::handleMessage(QJsonObject json)
             QString msg = words.at(r);
             if (strongNotifyUsers.contains(uid))
             {
-                if (ui->sendGiftTextCheck->isChecked())
-                    sendAutoMsg(msg);
-                if (ui->sendGiftVoiceCheck->isChecked())
-                    speekVariantText(msg);
+                sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
             else
                 sendGiftMsg(msg);
@@ -4140,7 +4086,8 @@ void MainWindow::handleMessage(QJsonObject json)
         int num = data.value("num").toInt();
         qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
         qDebug() << username << s8("购买") << giftName << num;
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, giftName, num));
+        LiveDanmaku danmaku(username, uid, giftName, num);
+        appendNewLiveDanmaku(danmaku);
 
         int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
         userGold += price;
@@ -4152,11 +4099,13 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
-            QString localName = getLocalNickname(uid);
-            QString nick = localName.isEmpty() ? nicknameSimplify(username) : localName;
-            if (nick.isEmpty())
-                nick = username;
-            sendNotifyMsg("哇塞，感谢"+nick+"开通"+giftName+"！"); // 不好发，因为后期大概率是续费
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (!words.size())
+                return ;
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
+            sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
         }
     }
     else if (cmd == "USER_TOAST_MSG") // 续费舰长会附带的；购买不知道
@@ -4427,9 +4376,77 @@ void MainWindow::handleMessage(QJsonObject json)
     {
 
     }
+    else if (cmd == "VOICE_JOIN_ROOM_COUNT_INFO") // 等待连麦队列数量变化
+    {
+        /*{
+            "cmd": "VOICE_JOIN_ROOM_COUNT_INFO",
+            "data": {
+                "apply_count": 1, // 猜测：1的话就是添加申请连麦，0是取消申请连麦
+                "notify_count": 0,
+                "red_point": 0,
+                "room_id": 22532956,
+                "room_status": 1,
+                "root_status": 1
+            },
+            "roomid": 22532956
+        }*/
+    }
+    else if (cmd == "VOICE_JOIN_LIST") // 连麦申请、取消连麦申请；和VOICE_JOIN_ROOM_COUNT_INFO一起收到
+    {
+        /*{
+            "cmd": "VOICE_JOIN_LIST",
+            "data": {
+                "apply_count": 1, // 等同于VOICE_JOIN_ROOM_COUNT_INFO的apply_count
+                "category": 1,
+                "red_point": 1,
+                "refresh": 1,
+                "room_id": 22532956
+            },
+            "roomid": 22532956
+        }*/
+
+    }
+    else if (cmd == "VOICE_JOIN_STATUS") // 连麦状态，连麦开始/结束
+    {
+        /*{
+            "cmd": "VOICE_JOIN_STATUS",
+            "data": {
+                "channel": "voice320168",
+                "channel_type": "voice",
+                "current_time": 1610802781,
+                "guard": 3,
+                "head_pic": "http://i1.hdslb.com/bfs/face/5bbf173c5cf4f70481e5814e34bbdf6db564ef80.jpg",
+                "room_id": 22532956,
+                "start_at": 1610802781,
+                "status": 1,                   // 1是开始连麦
+                "uid": 1324369,
+                "user_name":"\xE6\xB0\xB8\xE8\xBF\x9C\xE5\x8D\x95\xE6\x8E\xA8\xE5\xA8\x87\xE5\xA8\x87\xE7\x9A\x84\xE8\x82\x89\xE5\xA4\xB9\xE9\xA6\x8D",
+                "web_share_link": "https://live.bilibili.com/h5/22532956"
+            },
+            "roomid": 22532956
+        }*/
+        /*{
+            "cmd": "VOICE_JOIN_STATUS",
+            "data": {
+                "channel": "",
+                "channel_type": "voice",
+                "current_time": 1610802959,
+                "guard": 0,
+                "head_pic": "",
+                "room_id": 22532956,
+                "start_at": 0,
+                "status": 0,                   // 0是取消连麦
+                "uid": 0,
+                "user_name": "",
+                "web_share_link": "https://live.bilibili.com/h5/22532956"
+            },
+            "roomid": 22532956
+        }*/
+
+    }
     else
     {
-        qDebug() << "未处理的命令：" << cmd << json;
+        qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
     }
 }
 
@@ -4655,23 +4672,13 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
 //        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
-        // 这里要特别判断一下语音，因为 sendNotifyMsg 是不会发送语音的
-        if (ui->sendWelcomeTextCheck->isChecked())
-            sendNotifyMsg(msg);
-        if (ui->sendWelcomeVoiceCheck->isChecked())
-            speekVariantText(msg);
+        sendCdMsg(msg, 2000, NOTIFY_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
     else
     {
-        if (danmaku.isOpposite())
-            sendOppositeMsg(msg);
-        else
-        {
-            if (danmaku.isGuard()) // 是舰长
-                sendWelcomeGuard(msg);
-            else
-                sendWelcomeMsg(msg);
-        }
+        sendCdMsg(msg, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
 }
 
@@ -6117,8 +6124,8 @@ void MainWindow::pkStart(QJsonObject json)
             if (!pkRoomId.isEmpty())
             {
                 int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-                if (totalCount > 1) // 开始的时候就已经+1了
+                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+                if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                     text += QString("  偷塔概率:%1/%2")
                                     .arg(toutaCount).arg(totalCount);
             }
@@ -6198,6 +6205,18 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        // 显示偷塔情况
+        if (prevMyVotes < myVotes)
+        {
+            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+        }
+        if (prevMatchVotes < matchVotes)
+        {
+            if (!oppositeTouta)
+                oppositeTouta = true;
+            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+        }
+
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
@@ -6213,17 +6232,6 @@ void MainWindow::pkProcess(QJsonObject json)
             toutaCount++;
             chiguaCount += num;
             saveTouta();
-        }
-        // 显示偷塔情况
-        if (prevMyVotes < myVotes)
-        {
-            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
-        }
-        if (prevMatchVotes < matchVotes)
-        {
-            if (!oppositeTouta)
-                oppositeTouta = true;
-            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
         }
     }
     else
@@ -6346,7 +6354,6 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         }
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-        audiences.clear();
 //        qDebug() << "初始化房间" << roomId << "观众：";
         for (int i = 0; i < danmakus.size(); i++)
         {
@@ -6364,6 +6371,8 @@ void MainWindow::connectPkRoom()
         return ;
 
     // 根据弹幕消息
+    myAudience.clear();
+    oppositeAudience.clear();
     getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
@@ -6683,6 +6692,9 @@ void MainWindow::releaseLiveData()
     rankLabel->setText("");
     rankLabel->setToolTip("");
     fansLabel->setText("");
+
+    for (int i = 0; i < CD_CHANNEL_COUNT; i++)
+        msgCds[i] = 0;
 
     if (danmakuWindow)
     {
@@ -7257,4 +7269,9 @@ void MainWindow::on_actionRoom_Status_triggered()
 void MainWindow::on_autoLOTCheck_clicked()
 {
     settings.setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
+}
+
+void MainWindow::on_localDebugCheck_clicked()
+{
+    settings.setValue("danmaku/localDebug", localDebug = ui->localDebugCheck->isChecked());
 }

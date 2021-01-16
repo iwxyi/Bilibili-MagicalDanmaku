@@ -249,6 +249,7 @@ void RoomStatusDialog::getInfoByPkId(QString roomId, QString pkId, QAction* acti
         }
 
         // 获取用户信息
+        // pk_pre_time  pk_start_time  pk_end_time  pk_frozen_time
         qint64 endTime = static_cast<qint64>(json.value("data").toObject().value("pk_end_time").toDouble());
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         QString text = timestamp < endTime ? "剩余" + QString::number(endTime - timestamp) + "秒" : "PK已结束";

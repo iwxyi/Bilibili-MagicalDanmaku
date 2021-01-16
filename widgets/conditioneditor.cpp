@@ -33,6 +33,8 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         QSSRule{QRegularExpression("(?<=\\])\\s*(\\*)+"), getTCF(QColor(82, 165, 190))},
         // 标签 <h1>
         QSSRule{QRegularExpression("(<.+?>|\\\\n)"), getTCF(QColor(216, 167, 9))},
+        // 冷却通道 (cd5:10)
+        QSSRule{QRegularExpression("\\(cd\\d{1,2}:\\d+\\)"), getTCF(QColor(216, 167, 9))},
     };
 
     foreach (auto rule, qss_rules)
