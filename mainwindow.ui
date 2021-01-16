@@ -2049,6 +2049,7 @@ margin: 6px;</string>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="actionCookie_Help"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Room_To_List"/>
     <addaction name="separator"/>
    </widget>

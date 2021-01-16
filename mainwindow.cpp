@@ -2812,7 +2812,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx的xxx
-    QRegularExpression deRe("^(.+)[的の](.{2,})$");
+    QRegularExpression deRe("^(.+)[的の]([\u4e00-\u9fa5]{2,})$");
     QRegularExpressionMatch match;
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
@@ -4374,6 +4374,74 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送
     {
+
+    }
+    else if (cmd == "VOICE_JOIN_ROOM_COUNT_INFO") // 等待连麦队列数量变化
+    {
+        /*{
+            "cmd": "VOICE_JOIN_ROOM_COUNT_INFO",
+            "data": {
+                "apply_count": 1, // 猜测：1的话就是添加申请连麦，0是取消申请连麦
+                "notify_count": 0,
+                "red_point": 0,
+                "room_id": 22532956,
+                "room_status": 1,
+                "root_status": 1
+            },
+            "roomid": 22532956
+        }*/
+    }
+    else if (cmd == "VOICE_JOIN_LIST") // 连麦申请、取消连麦申请；和VOICE_JOIN_ROOM_COUNT_INFO一起收到
+    {
+        /*{
+            "cmd": "VOICE_JOIN_LIST",
+            "data": {
+                "apply_count": 1, // 等同于VOICE_JOIN_ROOM_COUNT_INFO的apply_count
+                "category": 1,
+                "red_point": 1,
+                "refresh": 1,
+                "room_id": 22532956
+            },
+            "roomid": 22532956
+        }*/
+
+    }
+    else if (cmd == "VOICE_JOIN_STATUS") // 连麦状态，连麦开始/结束
+    {
+        /*{
+            "cmd": "VOICE_JOIN_STATUS",
+            "data": {
+                "channel": "voice320168",
+                "channel_type": "voice",
+                "current_time": 1610802781,
+                "guard": 3,
+                "head_pic": "http://i1.hdslb.com/bfs/face/5bbf173c5cf4f70481e5814e34bbdf6db564ef80.jpg",
+                "room_id": 22532956,
+                "start_at": 1610802781,
+                "status": 1,                   // 1是开始连麦
+                "uid": 1324369,
+                "user_name":"\xE6\xB0\xB8\xE8\xBF\x9C\xE5\x8D\x95\xE6\x8E\xA8\xE5\xA8\x87\xE5\xA8\x87\xE7\x9A\x84\xE8\x82\x89\xE5\xA4\xB9\xE9\xA6\x8D",
+                "web_share_link": "https://live.bilibili.com/h5/22532956"
+            },
+            "roomid": 22532956
+        }*/
+        /*{
+            "cmd": "VOICE_JOIN_STATUS",
+            "data": {
+                "channel": "",
+                "channel_type": "voice",
+                "current_time": 1610802959,
+                "guard": 0,
+                "head_pic": "",
+                "room_id": 22532956,
+                "start_at": 0,
+                "status": 0,                   // 0是取消连麦
+                "uid": 0,
+                "user_name": "",
+                "web_share_link": "https://live.bilibili.com/h5/22532956"
+            },
+            "roomid": 22532956
+        }*/
 
     }
     else
