@@ -104,6 +104,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->notOnlyNewbieCheck->setChecked(settings.value("block/notOnlyNewbie", false).toBool());
     ui->blockNotOnlyNewbieCheck->setChecked(settings.value("block/blockNotOnlyNewbieCheck", false).toBool());
 
+    ui->autoBlockTimeSpin->setValue(settings.value("block/autoTime", 1).toInt());
+
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
          on_actionShow_Live_Danmaku_triggered();
@@ -804,8 +806,25 @@ void MainWindow::sendAutoMsg(QString msgs)
         {
             QTimer::singleShot(delay, [=]{
                 QString msg = sl.at(i);
-                addNoReplyDanmakuText(msg);
-                sendMsg(msg);
+                CmdResponse res = NullRes;
+                int resVal = 0;
+                if (!execCmd(msg, res, resVal)) // 先判断能否执行命令
+                {
+                    addNoReplyDanmakuText(msg);
+                    sendMsg(msg);
+                }
+                else
+                {
+                    // TODO: 使用发送队列，从而使得可以控制
+                    if (res == AbortRes) // 终止这一轮后面的弹幕
+                    {
+
+                    }
+                    else if (res == DelayRes) // 修改延迟
+                    {
+
+                    }
+                }
             });
             delay += cd;
         }
@@ -2557,8 +2576,8 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         int prob = 0;
         if (pking && !pkRoomId.isEmpty())
         {
-            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             if (totalCount > 1)
                 prob = toutaCount * 100 / totalCount;
         }
@@ -3104,26 +3123,28 @@ void MainWindow::finishLiveRecord()
     recordLoop = nullptr;
 }
 
-void MainWindow::processDanmakuCmd(QString msg)
+void MainWindow::processRemoteCmd(QString msg, bool response)
 {
     if (!remoteControl)
         return ;
 
     if (msg == "关闭功能")
     {
-        sendNotifyMsg(">已暂停自动弹幕");
-        processDanmakuCmd("关闭欢迎");
-        processDanmakuCmd("关闭关注答谢");
-        processDanmakuCmd("关闭送礼答谢");
-        processDanmakuCmd("关闭禁言");
+        processRemoteCmd("关闭欢迎", false);
+        processRemoteCmd("关闭关注答谢", false);
+        processRemoteCmd("关闭送礼答谢", false);
+        processRemoteCmd("关闭禁言", false);
+        if (response)
+            sendNotifyMsg(">已暂停自动弹幕");
     }
     else if (msg == "开启功能")
     {
-        sendNotifyMsg(">已开启自动弹幕");
-        processDanmakuCmd("开启欢迎");
-        processDanmakuCmd("开启关注答谢");
-        processDanmakuCmd("开启送礼答谢");
-        processDanmakuCmd("开启禁言");
+        processRemoteCmd("开启欢迎", false);
+        processRemoteCmd("开启关注答谢", false);
+        processRemoteCmd("开启送礼答谢", false);
+        processRemoteCmd("开启禁言", false);
+        if (response)
+            sendNotifyMsg(">已开启自动弹幕");
     }
     else if (msg == "关闭机器人")
     {
@@ -3133,90 +3154,106 @@ void MainWindow::processDanmakuCmd(QString msg)
     else if (msg == "关闭欢迎")
     {
         ui->autoSendWelcomeCheck->setChecked(false);
-        sendNotifyMsg(">已暂停自动欢迎");
+        if (response)
+            sendNotifyMsg(">已暂停自动欢迎");
     }
     else if (msg == "开启欢迎")
     {
         ui->autoSendWelcomeCheck->setChecked(true);
-        sendNotifyMsg(">已开启自动欢迎");
+        if (response)
+            sendNotifyMsg(">已开启自动欢迎");
     }
     else if (msg == "关闭关注答谢")
     {
         ui->autoSendAttentionCheck->setChecked(false);
-        sendNotifyMsg(">已暂停自动答谢关注");
+        if (response)
+            sendNotifyMsg(">已暂停自动答谢关注");
     }
     else if (msg == "开启关注答谢")
     {
         ui->autoSendAttentionCheck->setChecked(true);
-        sendNotifyMsg(">已开启自动答谢关注");
+        if (response)
+            sendNotifyMsg(">已开启自动答谢关注");
     }
     else if (msg == "关闭送礼答谢")
     {
         ui->autoSendGiftCheck->setChecked(false);
-        sendNotifyMsg(">已暂停自动答谢送礼");
+        if (response)
+            sendNotifyMsg(">已暂停自动答谢送礼");
     }
     else if (msg == "开启送礼答谢")
     {
         ui->autoSendGiftCheck->setChecked(true);
-        sendNotifyMsg(">已开启自动答谢送礼");
+        if (response)
+            sendNotifyMsg(">已开启自动答谢送礼");
     }
     else if (msg == "关闭禁言")
     {
         ui->autoBlockNewbieCheck->setChecked(false);
         on_autoBlockNewbieCheck_clicked();
-        sendNotifyMsg(">已暂停新人关键词自动禁言");
+        if (response)
+            sendNotifyMsg(">已暂停新人关键词自动禁言");
     }
     else if (msg == "开启禁言")
     {
         ui->autoBlockNewbieCheck->setChecked(true);
         on_autoBlockNewbieCheck_clicked();
-        sendNotifyMsg(">已开启新人关键词自动禁言");
+        if (response)
+            sendNotifyMsg(">已开启新人关键词自动禁言");
     }
     else if (msg == "关闭偷塔")
     {
         ui->pkAutoMelonCheck->setChecked(false);
         on_pkAutoMelonCheck_clicked();
-        sendNotifyMsg(">已暂停自动偷塔");
+        if (response)
+            sendNotifyMsg(">已暂停自动偷塔");
     }
     else if (msg == "开启偷塔")
     {
         ui->pkAutoMelonCheck->setChecked(true);
         on_pkAutoMelonCheck_clicked();
-        sendNotifyMsg(">已开启自动偷塔");
+        if (response)
+            sendNotifyMsg(">已开启自动偷塔");
     }
     else if (msg == "关闭点歌")
     {
         ui->DiangeAutoCopyCheck->setChecked(false);
-        sendNotifyMsg(">已暂停自动点歌");
+        if (response)
+            sendNotifyMsg(">已暂停自动点歌");
     }
     else if (msg == "开启点歌")
     {
         ui->DiangeAutoCopyCheck->setChecked(true);
-        sendNotifyMsg(">已开启自动点歌");
+        if (response)
+            sendNotifyMsg(">已开启自动点歌");
     }
     else if (msg == "关闭点歌回复")
     {
         ui->diangeReplyCheck->setChecked(false);
         on_diangeReplyCheck_clicked();
-        sendNotifyMsg(">已暂停自动点歌回复");
+        if (response)
+            sendNotifyMsg(">已暂停自动点歌回复");
     }
     else if (msg == "开启点歌回复")
     {
         ui->diangeReplyCheck->setChecked(true);
         on_diangeReplyCheck_clicked();
-        sendNotifyMsg(">已开启自动点歌回复");
+        if (response)
+            sendNotifyMsg(">已开启自动点歌回复");
     }
     else if (msg == "关闭自动连接")
     {
         ui->timerConnectServerCheck->setChecked(false);
         on_timerConnectServerCheck_clicked();
-        sendNotifyMsg(">已暂停自动连接");
+        if (response)
+            sendNotifyMsg(">已暂停自动连接");
     }
     else if (msg == "开启自动连接")
     {
         ui->timerConnectServerCheck->setChecked(true);
         on_timerConnectServerCheck_clicked();
-        sendNotifyMsg(">已开启自动连接");
+        if (response)
+            sendNotifyMsg(">已开启自动连接");
     }
     else if (msg == "关闭定时任务")
     {
@@ -3228,7 +3265,8 @@ void MainWindow::processDanmakuCmd(QString msg)
             tw->check->setChecked(false);
         }
         saveTaskList();
-        sendNotifyMsg(">已关闭定时任务");
+        if (response)
+            sendNotifyMsg(">已关闭定时任务");
     }
     else if (msg == "开启定时任务")
     {
@@ -3240,18 +3278,91 @@ void MainWindow::processDanmakuCmd(QString msg)
             tw->check->setChecked(true);
         }
         saveTaskList();
-        sendNotifyMsg(">已开启定时任务");
+        if (response)
+            sendNotifyMsg(">已开启定时任务");
     }
     else if (msg == "开启录播")
     {
         startLiveRecord();
-        sendNotifyMsg(">已开启录播");
+        if (response)
+            sendNotifyMsg(">已开启录播");
     }
     else if (msg == "关闭录播")
     {
         finishLiveRecord();
-        sendNotifyMsg(">已关闭录播");
+        if (response)
+            sendNotifyMsg(">已关闭录播");
     }
+}
+
+bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
+{
+    qDebug() << "尝试执行命令：" << msg;
+    QRegularExpression re("^\\s*>");
+    QRegularExpressionMatch match;
+    if (msg.indexOf(re) == -1)
+        return false;
+
+    auto RE = [=](QString exp) -> QRegularExpression {
+        return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
+    };
+
+    // 禁言
+    re = RE("block\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        qint64 uid = caps.at(1).toLongLong();
+        int hour = caps.at(2).toInt();
+        addBlockUser(uid, hour);
+        return true;
+    }
+
+    // 解禁言
+    re = RE("unblock\\s*\\(\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        qint64 uid = caps.at(1).toLongLong();
+        delBlockUser(uid);
+        return true;
+    }
+
+    // 赠送礼物
+    re = RE("sendGift\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        int giftId = caps.at(1).toInt();
+        int num = caps.at(2).toInt();
+        sendGift(giftId, num);
+        return true;
+    }
+
+    // 终止
+    re = RE("abort\\s*(\\(\\s*\\))?");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        res = AbortRes;
+        return true;
+    }
+
+    // 延迟
+    re = RE("delay\\s*\\(\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        int delay = caps.at(1).toInt(); // 单位：秒
+        res = AbortRes;
+        resVal = delay;
+        return true;
+    }
+
+    return false;
 }
 
 void MainWindow::restoreCustomVariant(QString text)
@@ -3681,7 +3792,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
-            processDanmakuCmd(msg);
+            processRemoteCmd(msg);
         }
         else if (ui->blockNotOnlyNewbieCheck->isChecked() || (level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
@@ -3707,7 +3818,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
                     // 拉黑
-                    addBlockUser(uid, 720);
+                    addBlockUser(uid, ui->autoBlockTimeSpin->value());
                     blocked = true;
 
                     // 通知
@@ -6124,8 +6235,8 @@ void MainWindow::pkStart(QJsonObject json)
                     .arg(myVotes).arg(matchVotes);
             if (!pkRoomId.isEmpty())
             {
-                int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt() - 1;
+                int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+                int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
                 if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                     text += QString("  偷塔概率:%1/%2")
                                     .arg(toutaCount).arg(totalCount);
@@ -7281,4 +7392,9 @@ void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
 {
     bool enable = ui->blockNotOnlyNewbieCheck->isChecked();
     settings.setValue("block/blockNotOnlyNewbieCheck", enable);
+}
+
+void MainWindow::on_autoBlockTimeSpin_editingFinished()
+{
+    settings.setValue("block/autoTime", ui->autoBlockTimeSpin->value());
 }

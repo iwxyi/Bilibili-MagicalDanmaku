@@ -1903,7 +1903,7 @@ margin: 6px;</string>
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;发送的内容包含关键词，自动禁言1个月&lt;/p&gt;&lt;p&gt;多个关键词用“|”分隔（支持正则表达式）&lt;/p&gt;&lt;p&gt;新人规则：&lt;/p&gt;&lt;p&gt;等级=0：前三句话&lt;/p&gt;&lt;p&gt;等级&amp;gt;0：第一句话&lt;/p&gt;&lt;p&gt;可以在实时弹幕的右键菜单中设置禁言时长&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>新人关键词自动禁言（房管）</string>
+             <string>新人关键词禁言</string>
             </property>
            </widget>
           </item>
@@ -1919,6 +1919,37 @@ margin: 6px;</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="autoBlockTimeSpin">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;禁言时长，到时间后系统会自动解禁&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>小时</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>720</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QCheckBox" name="blockNotOnlyNewbieCheck">
@@ -1959,7 +1990,7 @@ margin: 6px;</string>
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;检测到关键词后，发送对应通知/警告/规则等&lt;/p&gt;&lt;p&gt;多行则随机发送一行&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>关键词禁言后发送通知</string>
+             <string>自动禁言后发送通知</string>
             </property>
            </widget>
           </item>

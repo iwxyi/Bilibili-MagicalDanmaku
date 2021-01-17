@@ -118,6 +118,13 @@ public:
         UNREGISTER_REPLY = 17
     };
 
+    enum CmdResponse
+    {
+        NullRes,
+        AbortRes,
+        DelayRes,
+    };
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -366,6 +373,8 @@ private slots:
 
     void on_blockNotOnlyNewbieCheck_clicked();
 
+    void on_autoBlockTimeSpin_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -444,7 +453,8 @@ private:
     void startRecordUrl(QString url);
     void finishLiveRecord();
 
-    void processDanmakuCmd(QString msg);
+    void processRemoteCmd(QString msg, bool response = true);
+    bool execCmd(QString msg, CmdResponse& res, int& resVal);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
@@ -504,6 +514,10 @@ private:
     QTextStream* danmuLogStream = nullptr;
     qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
+
+    // 发送弹幕队列
+    QStringList danmakuQueue; // 待发送的自动弹幕
+    QTimer* delaySendTimer;
 
     // 点歌
     bool diangeAutoCopy = false;
