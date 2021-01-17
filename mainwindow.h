@@ -364,6 +364,8 @@ private slots:
 
     void on_localDebugCheck_clicked();
 
+    void on_blockNotOnlyNewbieCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

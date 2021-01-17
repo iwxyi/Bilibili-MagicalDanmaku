@@ -102,6 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->promptBlockNewbieKeysEdit->setPlainText(settings.value("block/promptBlockNewbieKeys").toString());
 
     ui->notOnlyNewbieCheck->setChecked(settings.value("block/notOnlyNewbie", false).toBool());
+    ui->blockNotOnlyNewbieCheck->setChecked(settings.value("block/blockNotOnlyNewbieCheck", false).toBool());
 
     // 实时弹幕
     if (settings.value("danmaku/liveWindow", false).toBool())
@@ -3682,7 +3683,7 @@ void MainWindow::handleMessage(QJsonObject json)
             // 不仅不屏蔽，反而支持主播特权
             processDanmakuCmd(msg);
         }
-        else if ((level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
+        else if (ui->blockNotOnlyNewbieCheck->isChecked() || (level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
             // 自动拉黑
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
@@ -7274,4 +7275,10 @@ void MainWindow::on_autoLOTCheck_clicked()
 void MainWindow::on_localDebugCheck_clicked()
 {
     settings.setValue("danmaku/localDebug", localDebug = ui->localDebugCheck->isChecked());
+}
+
+void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
+{
+    bool enable = ui->blockNotOnlyNewbieCheck->isChecked();
+    settings.setValue("block/blockNotOnlyNewbieCheck", enable);
 }

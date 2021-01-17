@@ -500,13 +500,12 @@ tips：
 > 参考资料：
 >
 > - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
->
-> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
->
+>- 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
 > - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
->
-> - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
->
+>- 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
->
+>- 实时关注：https://github.com/BanqiJane/Bilibili_Danmuji
+> - 点歌姬网易云源：https://github.com/Binaryify/NeteaseCloudMusicApi
+>- 点歌姬QQ音乐源：https://github.com/rain120/qq-music-api
+> 
 
