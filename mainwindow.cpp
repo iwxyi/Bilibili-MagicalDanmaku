@@ -4636,6 +4636,35 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
 
     }
+    else if (cmd == "WARNING") // 被警告
+    {
+        /*{
+            "cmd": "WARNING",
+            "msg":"违反直播分区规范，未摄像头露脸",
+            "roomid": 22532956
+        }*/
+        QString msg = json.value("msg").toString();
+        showLocalNotify(msg);
+    }
+    else if (cmd == "room_admin_entrance")
+    {
+        /*{
+            "cmd": "room_admin_entrance",
+            "msg":"系统提示：你已被主播设为房管",
+            "uid": 20285041
+        }*/
+        QString msg = json.value("msg").toString();
+        showLocalNotify(msg);
+    }
+    else if (cmd == "ROOM_ADMINS")
+    {
+        /*{
+            "cmd": "ROOM_ADMINS",
+            "uids": [
+                36272011, 145884036, 10823381, 67756641, 35001804, 64494330, 295742464, 250439508, 90400995, 384733451, 632481, 41090958, 691018830, 33283612, 13381878, 1324369, 49912988, 2852700, 26472148, 415374297, 20285041
+            ]
+        }*/
+    }
     else
     {
         qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
