@@ -21,6 +21,8 @@ void ConditionHighlighter::highlightBlock(const QString &text)
     static QList<QSSRule> qss_rules = {
         // [condition]
         QSSRule{QRegularExpression("^(\\[.*\\])"), getTCF(QColor(128, 34, 172))},
+        // 执行函数 func(args)
+        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)"), getTCF(QColor(136, 80, 80))},
         // 变量 %val%
         QSSRule{QRegularExpression("%\\S+?%"), getTCF(QColor(204, 85, 0))},
         // 名字类变量 %xxx_name%
