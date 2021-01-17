@@ -2614,6 +2614,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%not_welcome%"))
         msg.replace("%noe_welcome%", notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0");
 
+    // 游戏用户
+    if (msg.contains("%in_game_users%"))
+        msg.replace("%in_game_users%", gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
+
     return msg;
 }
 
@@ -3318,6 +3322,16 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         addBlockUser(uid, hour);
         return true;
     }
+    re = RE("block\\s*\\(\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        qint64 uid = caps.at(1).toLongLong();
+        int hour = ui->autoBlockTimeSpin->value();
+        addBlockUser(uid, hour);
+        return true;
+    }
 
     // 解禁言
     re = RE("unblock\\s*\\(\\s*(\\d+)\\s*\\)");
@@ -3359,6 +3373,72 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         int delay = caps.at(1).toInt(); // 单位：秒
         res = AbortRes;
         resVal = delay;
+        return true;
+    }
+
+    // 添加到游戏用户
+    re = RE("addGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        int chan = caps.at(1).toInt();
+        qint64 uid = caps.at(2).toLongLong();
+        gameUsers[chan].append(uid);
+        qDebug() << "执行命令：" << caps << gameUsers[0].size();
+        return true;
+    }
+
+    re = RE("addGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qint64 uid = caps.at(1).toLongLong();
+        gameUsers[0].append(uid);
+        qDebug() << "执行命令：" << caps << gameUsers[0].size();
+        return true;
+    }
+
+    // 从游戏用户中移除
+    re = RE("removeGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        int chan = caps.at(1).toInt();
+        qint64 uid = caps.at(2).toLongLong();
+        gameUsers[chan].removeOne(uid);
+        qDebug() << "执行命令：" << caps << gameUsers[0].size();
+        return true;
+    }
+
+    re = RE("removeGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qint64 uid = caps.at(1).toLongLong();
+        gameUsers[0].removeOne(uid);
+        qDebug() << "执行命令：" << caps << gameUsers[0].size();
+        return true;
+    }
+
+    // 执行远程命令
+    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        QString cmd = caps.at(1);
+        int response = caps.at(2).toInt();
+        qDebug() << "执行命令：" << caps;
+        processRemoteCmd(cmd, response);
+        return true;
+    }
+
+    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        QString cmd = caps.at(1);
+        qDebug() << "执行命令：" << caps;
+        processRemoteCmd(cmd);
         return true;
     }
 
@@ -6805,7 +6885,7 @@ void MainWindow::releaseLiveData()
     rankLabel->setToolTip("");
     fansLabel->setText("");
 
-    for (int i = 0; i < CD_CHANNEL_COUNT; i++)
+    for (int i = 0; i < CHANNEL_COUNT; i++)
         msgCds[i] = 0;
 
     if (danmakuWindow)

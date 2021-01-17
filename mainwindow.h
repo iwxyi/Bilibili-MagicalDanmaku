@@ -44,7 +44,8 @@ QT_END_NAMESPACE
 
 #define NOTIFY_CD 1000
 
-#define CD_CHANNEL_COUNT 100
+#define CHANNEL_COUNT 100
+
 #define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
 #define WELCOME_CD_CN 1    // 送礼冷却通道
 #define GIFT_CD_CN 2       // 礼物冷却通道
@@ -595,7 +596,7 @@ private:
     QHash<qint64, int> cmAudience; // 自己这边跑过去串门了: 1串门，0已经回来/提示
 
     // 欢迎
-    qint64 msgCds[CD_CHANNEL_COUNT] = {}; // 冷却通道
+    qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道
 
     // 弹幕人气判断
     QTimer* danmuPopularTimer;
@@ -630,5 +631,8 @@ private:
 
     // 自动签到
     QTimer* doSignTimer;
+
+    // 游戏列表
+    QList<qint64> gameUsers[CHANNEL_COUNT];
 };
 #endif // MAINWINDOW_H
