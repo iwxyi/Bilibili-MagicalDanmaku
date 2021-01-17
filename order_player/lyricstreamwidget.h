@@ -41,10 +41,10 @@ public:
         if (text.lastIndexOf(re10, -1, &match10) != -1)
         {
             int val = match10.captured(1).toInt();
-            qDebug() << " 匹配项：" << val;
+//            qDebug() << " 匹配项：" << val;
             if (val > 0) // 存在不为0的三位数
             {
-                qDebug() << "检测到勉强受支持的歌词格式：第三位是毫秒";
+//                qDebug() << "检测到勉强受支持的歌词格式：第三位是毫秒";
                 ms10x = 1;
             }
         }

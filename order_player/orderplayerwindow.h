@@ -43,6 +43,9 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
+#define NETEASE_SERVER QString("http://iwxyi.com:3000")
+#define QQMUSIC_SERVER QString("http://iwxyi.com:3200")
+
 struct BFSColor
 {
     int v[12] = {0};
@@ -185,6 +188,8 @@ private slots:
 
     void on_settingsButton_clicked();
 
+    void on_musicSourceButton_clicked();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
@@ -226,6 +231,8 @@ private:
 
     void readMp3Data(const QByteArray& array);
 
+    void setMusicIconBySource();
+
 protected:
     void showEvent(QShowEvent*e) override;
     void closeEvent(QCloseEvent*) override;
@@ -258,7 +265,8 @@ private:
     bool starting = true;
     QSettings settings;
     QDir musicsFileDir;
-    const QString API_DOMAIN = "http://iwxyi.com:3000/";
+    const QString API_DOMAIN = "http://iwxyi.com:3000";
+    MusicSource musicSource = NeteaseCloudMusic;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 

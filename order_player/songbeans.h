@@ -13,10 +13,18 @@
 #define JVAL_INT(x) json.value(#x).toInt()
 #define JVAL_STR(x) json.value(#x).toString()
 #define snum(x) QString::number(x)
+#define cast(x,y)  static_cast<x>(y)
+
+enum MusicSource
+{
+    NeteaseCloudMusic,
+    QQMusic
+};
 
 struct Artist
 {
     qint64 id = 0;
+    QString mid;
     QString name;
     QString faceUrl;
 
@@ -24,8 +32,20 @@ struct Artist
     {
         Artist artist;
         artist.id = JVAL_LONG(id);
+        if (json.contains("mid"))
+            artist.mid = JVAL_STR(mid);
         artist.name = JVAL_STR(name);
         artist.faceUrl = JVAL_STR(img1v1Url);
+        return artist;
+    }
+
+    static Artist fromQQMusicJson(QJsonObject json)
+    {
+        Artist artist;
+        artist.id = JVAL_LONG(id);
+        artist.mid = JVAL_STR(mid);
+        artist.name = JVAL_STR(name);
+//        artist.faceUrl = JVAL_STR(img1v1Url);
         return artist;
     }
 
@@ -33,6 +53,7 @@ struct Artist
     {
         QJsonObject json;
         json.insert("id", id);
+        json.insert("mid", mid);
         json.insert("name", name);
         json.insert("faceUrl", faceUrl);
         return json;
@@ -42,6 +63,7 @@ struct Artist
 struct Album
 {
     qint64 id = 0;
+    QString mid;
     QString name;
     int size = 0;
     int mark = 0;
@@ -50,9 +72,22 @@ struct Album
     {
         Album album;
         album.id = JVAL_LONG(id);
+        if (json.contains("mid"))
+            album.mid = JVAL_STR(mid);
         album.name = JVAL_STR(name);
         album.size = JVAL_INT(size);
         album.mark = JVAL_INT(mark);
+        return album;
+    }
+
+    static Album fromQQMusicJson(QJsonObject json)
+    {
+        Album album;
+        album.id = JVAL_LONG(id);
+        album.mid = JVAL_STR(mid);
+        album.name = JVAL_STR(name);
+//        album.size = JVAL_INT(size);
+//        album.mark = JVAL_INT(mark);
         return album;
     }
 
@@ -60,6 +95,7 @@ struct Album
     {
         QJsonObject json;
         json.insert("id", id);
+        json.insert("mid", mid);
         json.insert("name", name);
         json.insert("size", size);
         json.insert("mark", mark);
@@ -70,6 +106,7 @@ struct Album
 struct Song
 {
     qint64 id = 0;
+    QString mid;
     QString name;
     int duration = 0;
     int mark = 0;
@@ -78,11 +115,13 @@ struct Song
     QString artistNames;
     qint64 addTime;
     QString addBy;
+    MusicSource source = NeteaseCloudMusic;
 
     static Song fromJson(QJsonObject json)
     {
         Song song;
         song.id = JVAL_LONG(id);
+        song.mid = JVAL_STR(mid);
         song.name = JVAL_STR(name);
         QJsonArray array = json.value("artists").toArray();
         QStringList artistNameList;
@@ -94,12 +133,41 @@ struct Song
         }
         song.artistNames = artistNameList.join("/");
         song.album = Album::fromJson(json.value("album").toObject());
-        song.duration = JVAL_INT(duration);
+        song.duration = JVAL_INT(duration); // 毫秒
         song.mark = JVAL_INT(mark);
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
         if (json.contains("addBy"))
             song.addBy = JVAL_STR(addBy);
+        if (json.contains("source"))
+            song.source = static_cast<MusicSource>(JVAL_INT(source));
+        return song;
+    }
+
+    static Song fromQQMusicJson(QJsonObject json)
+    {
+        Song song;
+        song.id = JVAL_LONG(id);
+        if (json.contains("mid"))
+            song.mid = JVAL_STR(mid);
+        song.name = JVAL_STR(name);
+        QJsonArray array = json.value("singer").toArray();
+        QStringList artistNameList;
+        foreach (QJsonValue val, array)
+        {
+            Artist artist = Artist::fromQQMusicJson(val.toObject());
+            song.artists.append(artist);
+            artistNameList.append(artist.name);
+        }
+        song.artistNames = artistNameList.join("/");
+        song.album = Album::fromQQMusicJson(json.value("album").toObject());
+        song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
+        song.mark = JVAL_INT(mark);
+        if (json.contains("addTime"))
+            song.addTime = JVAL_LONG(addTime);
+        if (json.contains("addBy"))
+            song.addBy = JVAL_STR(addBy);
+        song.source = QQMusic;
         return song;
     }
 
@@ -107,6 +175,7 @@ struct Song
     {
         QJsonObject json;
         json.insert("id", id);
+        json.insert("mid", mid);
         json.insert("name", name);
         json.insert("duration", duration);
         json.insert("mark", mark);
@@ -119,6 +188,7 @@ struct Song
             json.insert("addTime", addTime);
         if (!addBy.isEmpty())
             json.insert("addBy", addBy);
+        json.insert("source", static_cast<int>(source));
         return json;
     }
 
@@ -127,7 +197,7 @@ struct Song
         return id;
     }
 
-    bool operator==(const Song& song)
+    bool operator==(const Song& song) const
     {
         return this->id == song.id;
     }
@@ -141,6 +211,11 @@ struct Song
     {
         this->addBy = by;
         this->addTime = QDateTime::currentSecsSinceEpoch();
+    }
+
+    bool is(MusicSource source) const
+    {
+        return this->source == source;
     }
 };
 
@@ -159,6 +234,7 @@ struct PlayList
     QStringList tags;
     int playCount;
     PlayListCreator creator;
+    MusicSource source = NeteaseCloudMusic;
 };
 
 typedef QList<Song> SongList;

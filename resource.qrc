@@ -30,4 +30,8 @@
         <file alias="bowknot2">resources/icons/bowknot2.png</file>
         <file alias="bowknot3">resources/icons/bowknot3.png</file>
     </qresource>
+    <qresource prefix="/musics">
+        <file alias="netease">resources/musics/netease-cloud-music.png</file>
+        <file alias="qq">resources/musics/QQ-music.png</file>
+    </qresource>
 </RCC>
