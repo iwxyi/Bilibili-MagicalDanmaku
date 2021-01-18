@@ -188,10 +188,10 @@
 
 懒，所以没有做登录功能，如果要发送弹幕，直接使用浏览器Cookie进行登录。
 
-**步骤**：
+**方式一步骤**：
 
-1. 浏览器上按`F12`打开【开发者工具】，Network-XHR
-2. 进入或刷新B站主页（没登录的需登录），Name多了一排，点其中任意一个（若找不到Cookie就换个）
+1. 浏览器上按`F12`打开【开发者工具】，Network - XHR
+2. 进入或刷新[B站主页](https://www.bilibili.com/)（没登录的需登录），Name多了一排，点其中任意一个（若找不到Cookie就换个）
 3. 复制如下图的cookie至菜单“账号”中的“设置Cookie”，即可进行发送。
 
 ![1606054818666](pictures/cookie.png)
@@ -429,6 +429,7 @@ tips：
 - `removeGameUser(uid)`  从游戏队列中移除用户
 - `execRemoteCommand(cmd)`  执行远程控制（见下面）
 - `execRemoteCommand(cmd, 0)`  执行远程控制，不发送回馈通知
+- `sendPrivateMsg(uid, msg)`  发送私信
 
 在自动回复中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
 

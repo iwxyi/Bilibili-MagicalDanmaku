@@ -477,6 +477,7 @@ private:
     void wearMedal(qint64 medalId);
     void doSign();
     void joinLOT(qint64 id, bool follow = true);
+    void sendPrivateMsg(qint64 uid, QString msg);
 
 private:
     Ui::MainWindow *ui;

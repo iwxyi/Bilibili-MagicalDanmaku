@@ -3421,7 +3421,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     }
 
     // 执行远程命令
-    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\)");
+    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\s*\\)");
     if (msg.indexOf(re, 0, &match) > -1)
     {
         QStringList caps = match.capturedTexts();
@@ -3439,6 +3439,18 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         QString cmd = caps.at(1);
         qDebug() << "执行命令：" << caps;
         processRemoteCmd(cmd);
+        return true;
+    }
+
+    // 发送私信
+    re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qint64 uid = caps.at(1).toLongLong();
+        QString msg = caps.at(2);
+        qDebug() << "执行命令：" << caps;
+        sendPrivateMsg(uid, msg);
         return true;
     }
 
@@ -7215,6 +7227,67 @@ void MainWindow::joinLOT(qint64 id, bool follow)
     });
 
     manager->post(*request, QByteArray());
+}
+
+void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
+{
+    if (csrf_token.isEmpty())
+    {
+        return ;
+    }
+
+    QUrl url("https://api.vc.bilibili.com/web_im/v1/web_im/send_msg");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    QStringList params;
+    params << "msg%5Bsender_uid%5D=" + cookieUid;
+    params << "msg%5Breceiver_id%5D=" + snum(uid);
+    params << "msg%5Breceiver_type%5D=1";
+    params << "msg%5Bmsg_type%5D=1";
+    params << "msg%5Bmsg_status%5D=0";
+    params << "msg%5Bcontent%5D=" + QUrl::toPercentEncoding("{\"content\":\"" + msg + "\"}");
+    params << "msg%5Btimestamp%5D="+snum(QDateTime::currentSecsSinceEpoch());
+    params << "msg%5Bnew_face_version%5D=0";
+    params << "msg%5Bdev_id%5D=81872DC0-FBC0-4CF8-8E93-093DE2083F51";
+    params << "from_firework=0";
+    params << "build=0";
+    params << "mobi_app=web";
+    params << "csrf_token=" + csrf_token;
+    params << "csrf=" + csrf_token;
+    QByteArray ba(params.join("&").toStdString().data());
+    qDebug() << ba;
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        qDebug() << "私信发送结果：" << QString(data);
+        manager->deleteLater();
+        delete request;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "发送出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qDebug() << s8("发送消息出错，返回结果不为0：") << msg;
+            return ;
+        }
+    });
+
+    manager->post(*request, ba);
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
