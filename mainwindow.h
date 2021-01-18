@@ -42,7 +42,8 @@ QT_END_NAMESPACE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
-#define NOTIFY_CD 1000
+#define AUTO_MSG_CD 1500
+#define NOTIFY_CD 2000
 
 #define CHANNEL_COUNT 100
 
@@ -177,6 +178,7 @@ private slots:
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
+    void slotSendAutoMsg();
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice);
     void sendGiftMsg(QString msg);
 
@@ -384,8 +386,8 @@ private:
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void addNoReplyDanmakuText(QString text);
-    void showLocalNotify(QString text);
-    void showLocalNotify(QString text, qint64 uid);
+    void localNotify(QString text);
+    void localNotify(QString text, qint64 uid);
 
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();
@@ -520,8 +522,8 @@ private:
     QStringList noReplyMsgs;
 
     // 发送弹幕队列
-    QStringList danmakuQueue; // 待发送的自动弹幕
-    QTimer* delaySendTimer;
+    QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
+    QTimer* autoMsgTimer;
 
     // 点歌
     bool diangeAutoCopy = false;

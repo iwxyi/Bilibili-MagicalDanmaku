@@ -290,6 +290,11 @@
 | pk_view_return   | pk去对面串门并回来      | 需开启串门提示                               |
 | pk_count         | pk次数                  | 未在PK中为0，下同                            |
 | pk_touta_prob    | 对面偷塔概率百分比      | 数值部分，例如概率为50%，则为50。初次PK为0   |
+| pk_my_votes      | 本次pk己方积分          |                                              |
+| pk_match_votes   | 本次pk对方积分          |                                              |
+| pk_ending        | 是否大乱斗快结束了      | 根据设置中的大乱斗【提前】值判断             |
+| pk_trans_gold    | pk的1分等于多少金瓜子   | 按照设置来                                   |
+| pk_max_gold      | pk最大偷塔金瓜子        |                                              |
 | today_come       | 今日进来人次            | 每个人可能重复进入                           |
 | today_newbie_msg | 今日新人人数            |                                              |
 | today_danmaku    | 今日弹幕总数            |                                              |
@@ -429,7 +434,9 @@ tips：
 - `removeGameUser(uid)`  从游戏队列中移除用户
 - `execRemoteCommand(cmd)`  执行远程控制（见下面）
 - `execRemoteCommand(cmd, 0)`  执行远程控制，不发送回馈通知
-- `sendPrivateMsg(uid, msg)`  发送私信
+- `sendPrivateMsg(uid, msg)`  向指定用户发送私信
+- `timerShot(ms, msg)`  定时ms**毫秒**后发送弹幕msg（支持递归命令）
+- `locaNotify(msg)`  发送本地消息通知（非弹幕）
 
 在自动回复中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
 

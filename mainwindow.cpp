@@ -65,6 +65,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuTipInterval = removeIv * 1000;
 
+    // 发送队列
+    autoMsgTimer = new QTimer(this) ;
+    autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
+    connect(autoMsgTimer, SIGNAL(timeout()), this, SLOT(slotSendAutoMsg()));
+
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
@@ -698,12 +703,12 @@ void MainWindow::addNoReplyDanmakuText(QString text)
     noReplyMsgs.append(text);
 }
 
-void MainWindow::showLocalNotify(QString text)
+void MainWindow::localNotify(QString text)
 {
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
-void MainWindow::showLocalNotify(QString text, qint64 uid)
+void MainWindow::localNotify(QString text, qint64 uid)
 {
     LiveDanmaku danmaku(text);
     danmaku.setUid(uid);
@@ -730,7 +735,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 
     if (localDebug)
     {
-        showLocalNotify("发送弹幕 -> " + msg);
+        localNotify("发送弹幕 -> " + msg);
         return ;
     }
 
@@ -782,7 +787,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         {
             statusLabel->setText(errorMsg);
             qDebug() << s8("warning: 发送失败：") << errorMsg << msg;
-            showLocalNotify(errorMsg + " -> " + msg);
+            localNotify(errorMsg + " -> " + msg);
         }
     });
 
@@ -798,7 +803,14 @@ void MainWindow::sendAutoMsg(QString msgs)
     msgs = processTimeVariants(msgs);
 //    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
-    const int cd = 1500;
+    autoMsgQueues.append(sl);
+    if (!autoMsgTimer->isActive())
+    {
+        slotSendAutoMsg(); // 先运行一次
+        autoMsgTimer->start();
+    }
+
+    /*const int cd = 1500;
     int delay = 0;
     if (sl.size())
     {
@@ -827,6 +839,63 @@ void MainWindow::sendAutoMsg(QString msgs)
                 }
             });
             delay += cd;
+        }
+    }*/
+}
+
+/**
+ * 执行发送队列中的发送弹幕，或者函数操作
+ * // @return 是否是执行函数。为空或发送弹幕为false
+ */
+void MainWindow::slotSendAutoMsg()
+{
+    if (autoMsgQueues.isEmpty())
+    {
+        autoMsgTimer->stop();
+        return ;
+    }
+    if (autoMsgTimer->interval() != AUTO_MSG_CD)
+        autoMsgTimer->setInterval(AUTO_MSG_CD);
+
+    QStringList& sl = autoMsgQueues[0];
+    QString msg = sl.takeFirst();
+    if (sl.isEmpty())
+        autoMsgQueues.removeFirst();
+    if (!autoMsgQueues.size())
+        autoMsgTimer->stop();
+
+    CmdResponse res = NullRes;
+    int resVal = 0;
+    if (!execCmd(msg, res, resVal)) // 先判断能否执行命令
+    {
+        addNoReplyDanmakuText(msg);
+        sendMsg(msg);
+    }
+    else // 是执行命令，发送下一条弹幕就不需要延迟了
+    {
+        if (res == AbortRes) // 终止这一轮后面的弹幕
+        {
+            if (!sl.isEmpty()) // 如果为空，则自动为终止
+                autoMsgQueues.removeFirst();
+            return ;
+        }
+        else if (res == DelayRes) // 修改延迟
+        {
+            if (resVal < 0)
+                qDebug() << "设置延时时间出错";
+            autoMsgTimer->setInterval(resVal);
+            return ;
+        }
+    }
+
+    // 如果后面是命令的话，尝试立刻执行
+    if (autoMsgQueues.size())
+    {
+        QString nextMsg = autoMsgQueues.first().first();
+        QRegularExpression re("^\\s*>");
+        if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
+        {
+            slotSendAutoMsg();
         }
     }
 }
@@ -913,7 +982,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试消息")
     {
-        showLocalNotify("测试通知消息");
+        localNotify("测试通知消息");
     }
     else
     {
@@ -1401,7 +1470,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     {
         if (ui->diangeShuaCheck->isChecked() && playerWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
         {
-            showLocalNotify("已阻止频繁点歌");
+            localNotify("已阻止频繁点歌");
         }
         else
         {
@@ -2584,6 +2653,17 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%pk_touta_prob%", snum(prob));
     }
 
+    if (msg.contains("%pk_my_votes%"))
+        msg.replace("%pk_my_votes%", snum(myVotes));
+    if (msg.contains("%pk_match_votes%"))
+        msg.replace("%pk_match_votes%", snum(matchVotes));
+    if (msg.contains("%pk_ending%"))
+        msg.replace("%pk_ending%", snum(pkEnding ? 1 : 0));
+    if (msg.contains("%pk_trans_gold%"))
+        msg.replace("%pk_trans_gold%", snum(goldTransPk));
+    if (msg.contains("%pk_max_gold%"))
+        msg.replace("%pk_max_gold%", snum(pkMaxGold));
+
     // 房间属性
     if (msg.contains("%living%"))
         msg.replace("%living%", snum(liveStatus ? 1 : 0));
@@ -3301,7 +3381,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
 bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
 {
-    qDebug() << "尝试执行命令：" << msg;
+    qDebug() << "尝试执行函数：" << msg;
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
     if (msg.indexOf(re) == -1)
@@ -3454,6 +3534,40 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         return true;
     }
 
+    // 定时操作
+    re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        qDebug() << "执行命令：" << caps;
+        int time = caps.at(1).toInt();
+        QString msg = caps.at(2);
+        QTimer::singleShot(time, this, [=]{
+            QString nextMsg = autoMsgQueues.first().first();
+            QRegularExpression re("^\\s*>");
+            if (msg.indexOf(re) > -1)
+            {
+                CmdResponse res;
+                int resVal;
+                execCmd(msg, res, resVal);
+            }
+            else
+                sendAutoMsg(msg);
+        });
+        return true;
+    }
+
+    // 发送本地通知
+    re = RE("localNotify\\s*\\(\\s*(\\S+)\\s*\\)");
+    if (msg.indexOf(re, 0, &match) > -1)
+    {
+        QStringList caps = match.capturedTexts();
+        QString msg = caps.at(1);
+        qDebug() << "执行命令：" << caps;
+        localNotify(msg);
+        return true;
+    }
+
     return false;
 }
 
@@ -3552,7 +3666,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             ui->roomRankLabel->setText(desc);
             ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
             if (desc != ui->roomRankLabel->text()) // 排名有更新
-                showLocalNotify("当前排名：" + desc);
+                localNotify("当前排名：" + desc);
 
             slotCmdEvent(cmd, LiveDanmaku());
         }
@@ -3659,7 +3773,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
-                    showLocalNotify(msg);
+                    localNotify(msg);
                 }
                 else
                 {
@@ -3912,7 +4026,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     if (match.capturedTexts().size() > 1)
                     {
                         QString blockKey = match.captured(1); // 第一个括号的
-                        showLocalNotify("检测到新人说【" + blockKey + "】，自动禁言");
+                        localNotify("检测到新人说【" + blockKey + "】，自动禁言");
                     }
                     qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
@@ -4132,7 +4246,7 @@ void MainWindow::handleMessage(QJsonObject json)
             {
                 cmAudience[uid] = 0;
                 danmaku.setViewReturn(true);
-                showLocalNotify(uname + " 去对面串门回来");
+                localNotify(uname + " 去对面串门回来");
             }
         }
         appendNewLiveDanmaku(danmaku);
@@ -4249,7 +4363,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 {
                     cmAudience[uid] = 0;
                     danmaku.setViewReturn(true);
-                    showLocalNotify(username + " 去对面串门回来");
+                    localNotify(username + " 去对面串门回来");
                 }
             }
 
@@ -4287,7 +4401,7 @@ void MainWindow::handleMessage(QJsonObject json)
         else if (msgType == 3) // 分享直播间
         {
             qDebug() << json;
-            showLocalNotify(username + "分享了直播间", uid);
+            localNotify(username + "分享了直播间", uid);
 
             slotCmdEvent("SHARE", danmaku);
         }
@@ -4708,7 +4822,7 @@ void MainWindow::handleMessage(QJsonObject json)
             "roomid": 22532956
         }*/
         QString msg = json.value("msg").toString();
-        showLocalNotify(msg);
+        localNotify(msg);
 
         slotCmdEvent(cmd, LiveDanmaku(msg));
     }
@@ -4720,7 +4834,7 @@ void MainWindow::handleMessage(QJsonObject json)
             "uid": 20285041
         }*/
         QString msg = json.value("msg").toString();
-        showLocalNotify(msg);
+        localNotify(msg);
 
         slotCmdEvent(cmd, LiveDanmaku(msg));
     }
@@ -6121,7 +6235,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             if (latency < 180000) // 小于3分钟
             {
                 QString tip = "成功点歌：【" + song.simpleString() + "】";
-                showLocalNotify(tip);
+                localNotify(tip);
                 if (ui->diangeReplyCheck->isChecked())
                 {
                     if (waiting == 1 && latency > 20000)
@@ -6135,13 +6249,13 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             else // 超过3分钟
             {
                 int minute = (latency+20000) / 60000;
-                showLocalNotify(snum(minute) + "分钟后播放【" + song.simpleString() + "】");
+                localNotify(snum(minute) + "分钟后播放【" + song.simpleString() + "】");
                 if (ui->diangeReplyCheck->isChecked())
                     sendNotifyMsg("成功点歌，" + snum(minute) + "分钟后播放");
             }
         });
         connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
-            showLocalNotify("开始播放：" + song.simpleString());
+            localNotify("开始播放：" + song.simpleString());
         });
         connect(playerWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
             QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
@@ -6407,7 +6521,7 @@ void MainWindow::pkStart(QJsonObject json)
             int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
             int num = static_cast<int>((matchVotes-myVotes+melon)/melon);
             sendGift(20004, num);
-            showLocalNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
+            localNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
             pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
             qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             toutaCount++;
@@ -6427,7 +6541,7 @@ void MainWindow::pkStart(QJsonObject json)
                                     .arg(toutaCount).arg(totalCount);
             }
 
-            showLocalNotify(text);
+            localNotify(text);
         }
     });
 
@@ -6452,7 +6566,7 @@ void MainWindow::pkStart(QJsonObject json)
     QString text = "开启大乱斗：" + pkUname;
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
-    showLocalNotify(text, pkUid.toLongLong());
+    localNotify(text, pkUid.toLongLong());
 
     if (pkChuanmenEnable /*&& battle_type == 2*/)
     {
@@ -6505,13 +6619,13 @@ void MainWindow::pkProcess(QJsonObject json)
         // 显示偷塔情况
         if (prevMyVotes < myVotes)
         {
-            showLocalNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+            localNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
         }
         if (prevMatchVotes < matchVotes)
         {
             if (!oppositeTouta)
                 oppositeTouta = true;
-            showLocalNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+            localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
         }
 
         // 反偷塔，防止对方也在最后几秒刷礼物
@@ -6523,7 +6637,7 @@ void MainWindow::pkProcess(QJsonObject json)
             int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
             int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
             sendGift(20004, num);
-            showLocalNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
+            localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
             pkVoting += melon * num;
             qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             toutaCount++;
@@ -6590,7 +6704,7 @@ void MainWindow::pkEnd(QJsonObject json)
         myVotes = data.value("match_info").toObject().value("votes").toInt();
     }
 
-    showLocalNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
+    localNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
                                      .arg(matchVotes));
@@ -6943,7 +7057,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
             return ;
         if (!cmAudience.contains(uid))
             cmAudience.insert(uid, 1);
-        showLocalNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
+        localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
 
         /*qDebug() << s8("pk观众进入：") << username;
         if (isSpread)
