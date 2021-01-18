@@ -420,7 +420,7 @@ tips：
 
 >  注意：B站连续发送弹幕的冷却时间为1秒，与本程序的弹幕冷却系统无关。
 
-### 本地命令
+### 函数操作
 
 有一些自定义的函数，如下：
 
@@ -428,15 +428,15 @@ tips：
 - `block(uid)`  同上，默认使用自动禁言的时间
 - `unblock(uid)`  解除禁言
 - `sendGift(giftId, num)`  赠送礼物，只支持 id 的方式
-- ~~`abort()`  终止本流程后面弹幕~~
-- ~~`delay(second)`  延迟执行后面的操作~~
+- `abort()`  终止本流程后面弹幕
+- `delay(second)`  延迟执行后面的操作
 - `addGameUser(uid)`  添加用户至游戏队列
 - `removeGameUser(uid)`  从游戏队列中移除用户
 - `execRemoteCommand(cmd)`  执行远程控制（见下面）
 - `execRemoteCommand(cmd, 0)`  执行远程控制，不发送回馈通知
 - `sendPrivateMsg(uid, msg)`  向指定用户发送私信
-- `timerShot(ms, msg)`  定时ms**毫秒**后发送弹幕msg（支持递归命令）
-- `locaNotify(msg)`  发送本地消息通知（非弹幕）
+- `timerShot(ms, msg)`  定时ms**毫秒**后发送弹幕msg（支持递归函数）
+- `locaNotify(msg)`  发送本地消息通知（非弹幕，只有自己看得到）
 
 在自动回复中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
 

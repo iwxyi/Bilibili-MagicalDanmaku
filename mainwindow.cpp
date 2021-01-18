@@ -809,38 +809,6 @@ void MainWindow::sendAutoMsg(QString msgs)
         slotSendAutoMsg(); // 先运行一次
         autoMsgTimer->start();
     }
-
-    /*const int cd = 1500;
-    int delay = 0;
-    if (sl.size())
-    {
-        for (int i = 0; i < sl.size(); i++)
-        {
-            QTimer::singleShot(delay, [=]{
-                QString msg = sl.at(i);
-                CmdResponse res = NullRes;
-                int resVal = 0;
-                if (!execCmd(msg, res, resVal)) // 先判断能否执行命令
-                {
-                    addNoReplyDanmakuText(msg);
-                    sendMsg(msg);
-                }
-                else
-                {
-                    // TODO: 使用发送队列，从而使得可以控制
-                    if (res == AbortRes) // 终止这一轮后面的弹幕
-                    {
-
-                    }
-                    else if (res == DelayRes) // 修改延迟
-                    {
-
-                    }
-                }
-            });
-            delay += cd;
-        }
-    }*/
 }
 
 /**
@@ -3450,8 +3418,8 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     {
         QStringList caps = match.capturedTexts();
         qDebug() << "执行命令：" << caps;
-        int delay = caps.at(1).toInt(); // 单位：秒
-        res = AbortRes;
+        int delay = caps.at(1).toInt(); // 单位：毫秒
+        res = DelayRes;
         resVal = delay;
         return true;
     }
