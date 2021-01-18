@@ -9,6 +9,7 @@
 
 enum MessageType
 {
+    MSG_DEF,
     MSG_DANMAKU,
     MSG_GIFT,
     MSG_WELCOME,
@@ -18,13 +19,22 @@ enum MessageType
     MSG_FANS,
     MSG_ATTENTION,
     MSG_BLOCK,
-    MSG_MSG
+    MSG_MSG,
 };
 
 class LiveDanmaku
 {
 public:
-    LiveDanmaku()
+    LiveDanmaku() : msgType(MSG_DEF)
+    {}
+
+    LiveDanmaku(qint64 uid) : msgType(MSG_DEF), uid(uid)
+    {}
+
+    LiveDanmaku(qint64 uid, QString text) : msgType(MSG_DEF), uid(uid), text(text)
+    {}
+
+    LiveDanmaku(qint64 uid, QString nickname, QString text) : msgType(MSG_DEF), uid(uid), nickname(nickname), text(text)
     {}
 
     LiveDanmaku(QString nickname, QString text, qint64 uid, int level, QDateTime time, QString unameColor, QString textColor)

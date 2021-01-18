@@ -3553,6 +3553,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             ui->roomRankLabel->setToolTip(QDateTime::currentDateTime().toString("更新时间：hh:mm:ss"));
             if (desc != ui->roomRankLabel->text()) // 排名有更新
                 showLocalNotify("当前排名：" + desc);
+
+            slotCmdEvent(cmd, LiveDanmaku());
         }
         else if (handlePK(json))
         {
@@ -3663,6 +3665,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 {
                     qDebug() << "未处理的命令=" << cmd << "   正文=" << QString(body);
                 }
+
+                slotCmdEvent(cmd, LiveDanmaku());
             }
             else
             {
@@ -3767,6 +3771,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 startLiveRecord();
             slotStartWork();
         }
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "PREPARING") // 下播
     {
@@ -3786,10 +3791,12 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         releaseLiveData();
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ROOM_CHANGE")
     {
         getRoomInfo(false);
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "DANMU_MSG") // 收到弹幕
     {
@@ -3949,6 +3956,8 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!blocked)
             markNotRobot(uid);
+
+        slotCmdEvent(cmd, danmaku);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -4008,39 +4017,44 @@ void MainWindow::handleMessage(QJsonObject json)
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
 
-//        if (coinType == "silver" && totalCoin < 1000 && num < 6 && !strongNotifyUsers.contains(uid)) // 银瓜子，而且还是小于1000，就不感谢了
-//            return ;
         if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (!words.size())
-                return ;
-            int r = qrand() % words.size();
-            QString msg = words.at(r);
-            if (strongNotifyUsers.contains(uid))
+            if (words.size())
             {
-                sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (strongNotifyUsers.contains(uid))
+                {
+                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                }
+                else
+                    sendGiftMsg(msg);
             }
-            else
-                sendGiftMsg(msg);
         }
+
+        slotCmdEvent(cmd, danmaku);
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
         qDebug() << "醒目留言：" << json;
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
     {
         qDebug() << "删除醒目留言：" << json;
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
         qDebug() << "删除醒目留言：" << json;
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SPECIAL_GIFT") // 节奏风暴
     {
         qDebug() << "删除醒目留言：" << json;
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发），通过guard_level=1/2/3分辨总督/提督/舰长
     {
@@ -4057,8 +4071,11 @@ void MainWindow::handleMessage(QJsonObject json)
         /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;*/
-        appendNewLiveDanmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
-                                         , true, unameColor, spreadDesc, spreadInfo));
+        LiveDanmaku danmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
+                                        , true, unameColor, spreadDesc, spreadInfo));
+        appendNewLiveDanmaku(danmaku);
+
+        slotCmdEvent(cmd, danmaku);
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入、高能榜（不知道到榜几）的同时会出现
     {
@@ -4124,6 +4141,8 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             sendWelcome(danmaku);
         }
+
+        slotCmdEvent(cmd, danmaku);
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
     {
@@ -4133,6 +4152,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
         qDebug() << s8("欢迎观众：") << username << isAdmin;
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -4246,6 +4267,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 userComeTimes[uid] = currentTime; // 直接更新了
                 judgeRobotAndMark(danmaku);
             }
+
+            slotCmdEvent(cmd, danmaku);
         }
         else if (msgType == 2) // 关注 5不知道是啥啊
         {
@@ -4258,11 +4281,15 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else
                 judgeRobotAndMark(danmaku);
+
+            slotCmdEvent("ATTENTION", danmaku); // !这个是单独修改的
         }
         else if (msgType == 3) // 分享直播间
         {
             qDebug() << json;
             showLocalNotify(username + "分享了直播间", uid);
+
+            slotCmdEvent("SHARE", danmaku);
         }
         else
         {
@@ -4273,11 +4300,13 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
-        appendNewLiveDanmaku(LiveDanmaku(nickname, uid));
+        LiveDanmaku danmaku(LiveDanmaku(nickname, uid));
+        appendNewLiveDanmaku(danmaku);
+
+        slotCmdEvent(cmd, danmaku);
     }
     else if (handlePK2(json)) // 太多了，换到单独一个方法里面
     {
-
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
@@ -4304,13 +4333,16 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (!words.size())
-                return ;
-            int r = qrand() % words.size();
-            QString msg = words.at(r);
-            sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
-                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+            if (words.size())
+            {
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+            }
         }
+
+        slotCmdEvent(cmd, danmaku);
     }
     else if (cmd == "USER_TOAST_MSG") // 续费舰长会附带的；购买不知道
     {
@@ -4337,6 +4369,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 "username": "分说的佛酱"
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ONLINE_RANK_V2") // 礼物榜（高能榜）更新
     {
@@ -4365,6 +4399,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 "rank_type": "gold-rank"
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ONLINE_RANK_TOP3") // 高能榜
     {
@@ -4379,6 +4415,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 ]
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ONLINE_RANK_COUNT")
     {
@@ -4388,6 +4426,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 "count": 9
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "NOTICE_MSG") // 为什么压缩的消息还有一遍？
     {
@@ -4433,6 +4473,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 "highlight": "#D54900FF"
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "COMBO_SEND") // 连击礼物
     {
@@ -4473,6 +4515,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 "uname": "南酱的可露儿"
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SPECIAL_GIFT")
     {
@@ -4485,10 +4529,12 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ANCHOR_LOT_CHECKSTATUS") //  开启天选前的审核，审核过了才是真正开启
     {
-
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ANCHOR_LOT_START") // 开启天选
     {
@@ -4571,14 +4617,16 @@ void MainWindow::handleMessage(QJsonObject json)
             int requireType = data.value("require_type").toInt();
             joinLOT(id, requireType);
         }
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ANCHOR_LOT_END") // 天选结束
     {
-
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送
     {
-
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "VOICE_JOIN_ROOM_COUNT_INFO") // 等待连麦队列数量变化
     {
@@ -4594,6 +4642,8 @@ void MainWindow::handleMessage(QJsonObject json)
             },
             "roomid": 22532956
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "VOICE_JOIN_LIST") // 连麦申请、取消连麦申请；和VOICE_JOIN_ROOM_COUNT_INFO一起收到
     {
@@ -4609,6 +4659,7 @@ void MainWindow::handleMessage(QJsonObject json)
             "roomid": 22532956
         }*/
 
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "VOICE_JOIN_STATUS") // 连麦状态，连麦开始/结束
     {
@@ -4647,6 +4698,7 @@ void MainWindow::handleMessage(QJsonObject json)
             "roomid": 22532956
         }*/
 
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "WARNING") // 被警告
     {
@@ -4657,6 +4709,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QString msg = json.value("msg").toString();
         showLocalNotify(msg);
+
+        slotCmdEvent(cmd, LiveDanmaku(msg));
     }
     else if (cmd == "room_admin_entrance")
     {
@@ -4667,6 +4721,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QString msg = json.value("msg").toString();
         showLocalNotify(msg);
+
+        slotCmdEvent(cmd, LiveDanmaku(msg));
     }
     else if (cmd == "ROOM_ADMINS")
     {
@@ -4676,10 +4732,13 @@ void MainWindow::handleMessage(QJsonObject json)
                 36272011, 145884036, 10823381, 67756641, 35001804, 64494330, 295742464, 250439508, 90400995, 384733451, 632481, 41090958, 691018830, 33283612, 13381878, 1324369, 49912988, 2852700, 26472148, 415374297, 20285041
             ]
         }*/
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else
     {
         qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
+        slotCmdEvent(cmd, LiveDanmaku());
     }
 }
 
@@ -5271,7 +5330,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605748006
         }*/
     }
-    else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的恭喜，实测在大乱斗送天空之翼后有，大概率更高礼物也有
+    else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的抽奖，触发未知，实测在某次大乱斗送天空之翼后有
     {
         /*{
             "cmd": "PK_LOTTERY_START",
@@ -5300,6 +5359,7 @@ bool MainWindow::handlePK(QJsonObject json)
         return false;
     }
 
+    slotCmdEvent(cmd, LiveDanmaku());
     return true;
 }
 
@@ -5325,11 +5385,15 @@ bool MainWindow::handlePK2(QJsonObject json)
             "roomid": "22532956"
         }*/
         // result_type: 2赢，-1输
+
+        slotCmdEvent(cmd, LiveDanmaku());
     }
     else
     {
         return false;
     }
+
+    slotCmdEvent(cmd, LiveDanmaku());
 
     return true;
 }
@@ -7579,4 +7643,9 @@ void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
 void MainWindow::on_autoBlockTimeSpin_editingFinished()
 {
     settings.setValue("block/autoTime", ui->autoBlockTimeSpin->value());
+}
+
+void MainWindow::slotCmdEvent(QString cmd, LiveDanmaku danmaku)
+{
+
 }

@@ -376,6 +376,8 @@ private slots:
 
     void on_autoBlockTimeSpin_editingFinished();
 
+    void slotCmdEvent(QString cmd, LiveDanmaku danmaku);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
