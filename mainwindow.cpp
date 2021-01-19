@@ -481,7 +481,10 @@ MainWindow::MainWindow(QWidget *parent)
     xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
                         settings.value("xfytts/apikey").toString(),
                         settings.value("xfytts/apisecret").toString(), this);
-    xfyTTS->speakText("这是一个很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长的测试文本");
+//    xfyTTS->speakText("这是一个语音合成示例");
+    QTimer::singleShot(1000, [=]{
+        xfyTTS->playFile("C:/Users/tom/Downloads/tts_ws_python3_demo/tts_ws_python3_demo/demo.pcm");
+    });
 }
 
 MainWindow::~MainWindow()

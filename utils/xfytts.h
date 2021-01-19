@@ -6,8 +6,10 @@
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
 #include <QtConcurrent/QtConcurrent>
+#include <QAudioFormat>
+#include <QAudioOutput>
 
-#define AUTH_DEB if (1) qDebug()
+#define AUTH_DEB if (0) qDebug()
 
 class XfyTTS : public QObject
 {
@@ -16,6 +18,7 @@ public:
     XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject* parent = nullptr);
 
     void speakText(QString text);
+    void playFile(QString filePath, bool deleteAfterPlay = false);
 
 private:
     void startConnect();
@@ -43,7 +46,7 @@ private:
     int speed = 50; // 音速
 
     QStringList speakQueue;
-    QString receivedData;
+    QByteArray receivedBytes;
 };
 
 #endif // XFYTTS_H
