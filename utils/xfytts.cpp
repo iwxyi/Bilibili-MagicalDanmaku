@@ -12,6 +12,13 @@ XfyTTS::XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject *parent
     savedDir = QApplication::applicationDirPath() + "/audios/";
     QDir dir(savedDir);
     dir.mkpath(savedDir);
+
+    fmt.setSampleRate(16000);  //设定播放采样频率为44100Hz的音频文件
+    fmt.setSampleSize(16);     //设定播放采样格式（采样位数）为16位(bit)的音频文件。QAudioFormat支持的有8/16bit，即将声音振幅化为256/64k个等级
+    fmt.setChannelCount(1);    //设定播放声道数目为2通道（立体声）的音频文件。mono(平声道)的声道数目是1，stero(立体声)的声道数目是2
+    fmt.setCodec("audio/pcm"); //播放PCM数据（裸流）得设置编码器为"audio/pcm"。"audio/pcm"在所有的平台都支持，也就相当于音频格式的WAV,以线性方式无压缩的记录捕捉到的数据。如想使用其他编码格式 ，可以通过QAudioDeviceInfo::supportedCodecs()来获取当前平台支持的编码格式
+    fmt.setByteOrder(QAudioFormat::LittleEndian); //设定字节序，以小端模式播放音频文件
+    fmt.setSampleType(QAudioFormat::UnSignedInt); //设定采样类型。根据采样位数来设定。采样位数为8或16位则设置为QAudioFormat::UnSignedInt
 }
 
 void XfyTTS::speakText(QString text)
@@ -75,6 +82,7 @@ void XfyTTS::startConnect()
         QString audio = data.value("audio").toString();
 
         QByteArray ba = QByteArray::fromBase64(audio.toUtf8());
+//        qDebug() << "~~~~~~~~~~" << ba.length() << ba.left(200).toHex();
         receivedBytes.append(ba);
 
         if (status == 2) // 结束了
@@ -164,8 +172,12 @@ void XfyTTS::generalAudio()
 
     QFile file(filePath);
     file.open(QFile::WriteOnly);
-    QTextStream stream(&file);
+    QDataStream stream(&file);
+//    int len = receivedBytes.size();
+//    for(int i=0;i<len;i++)
+//        stream << (uint8_t)receivedBytes[i];      //把数组中的数据写到数据流，即写入文件中
     stream << receivedBytes;
+    file.flush();
     file.close();
 
     emit signalTTSPrepared(filePath);
@@ -174,29 +186,19 @@ void XfyTTS::generalAudio()
 
 void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
 {
-    QFile *inputFile = new QFile;
-    inputFile->setFileName(filePath);
+    QFile *inputFile = new QFile(filePath);
     inputFile->open(QIODevice::ReadOnly);
-
-    QAudioFormat fmt; //通过fmt设定音频数据格式。只有明确知道音频数据的声道数、采样率、采样位数，才可以正常地播放
-    fmt.setSampleRate(16000);  //设定播放采样频率为44100Hz的音频文件
-    fmt.setSampleSize(16);     //设定播放采样格式（采样位数）为16位(bit)的音频文件。QAudioFormat支持的有8/16bit，即将声音振幅化为256/64k个等级
-    fmt.setChannelCount(1);    //设定播放声道数目为2通道（立体声）的音频文件。mono(平声道)的声道数目是1，stero(立体声)的声道数目是2
-    fmt.setCodec("audio/pcm"); //播放PCM数据（裸流）得设置编码器为"audio/pcm"。"audio/pcm"在所有的平台都支持，也就相当于音频格式的WAV,以线性方式无压缩的记录捕捉到的数据。如想使用其他编码格式 ，可以通过QAudioDeviceInfo::supportedCodecs()来获取当前平台支持的编码格式
-    fmt.setByteOrder(QAudioFormat::LittleEndian); //设定字节序，以小端模式播放音频文件
-    fmt.setSampleType(QAudioFormat::UnSignedInt); //设定采样类型。根据采样位数来设定。采样位数为8或16位则设置为QAudioFormat::UnSignedInt
 
     QAudioOutput *audio = new QAudioOutput(fmt);
     connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
-        if (state == QAudio::StoppedState)
+        if (state == QAudio::IdleState)
         {
+            audio->stop();
             audio->deleteLater();
-            inputFile->deleteLater();
+            inputFile->close();
             if (deleteAfterPlay)
-            {
-                QFile file(filePath);
-                file.remove();
-            }
+                inputFile->remove();
+            inputFile->deleteLater();
         }
     });
     audio->start(inputFile);

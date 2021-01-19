@@ -45,6 +45,7 @@ private:
     int pitch = 50; // 音调
     int speed = 50; // 音速
 
+    QAudioFormat fmt;
     QStringList speakQueue;
     QByteArray receivedBytes;
 };
