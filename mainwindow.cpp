@@ -478,9 +478,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
 
-    xfyTTS = new XfyTTS(settings.value("xfytts/apikey").toString(),
+    xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
+                        settings.value("xfytts/apikey").toString(),
                         settings.value("xfytts/apisecret").toString(), this);
-    xfyTTS->startConnect();
+    xfyTTS->speakText("这是一个很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长的测试文本");
 }
 
 MainWindow::~MainWindow()

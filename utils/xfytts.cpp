@@ -1,46 +1,68 @@
-#include <QOAuth1Signature>
 #include <QApplication>
-#include <QClipboard>
 #include "xfytts.h"
 
-XfyTTS::XfyTTS(QString APIKey, QString APISecret, QObject *parent)
-    : QObject(parent), APIKey(APIKey), APISecret(APISecret)
+XfyTTS::XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject *parent)
+    : QObject(parent), APPID(APPID), APIKey(APIKey), APISecret(APISecret)
 {
     AUTH_DEB << APIKey << APISecret;
+    savedDir = QApplication::applicationDirPath() + "/audios/";
+    QDir dir(savedDir);
+    dir.mkpath(savedDir);
+}
+
+void XfyTTS::speakText(QString text)
+{
+    if (socket) // 表示正在连接
+        return ;
+
+    speakQueue.append(text);
+    startConnect();
 }
 
 void XfyTTS::startConnect()
 {
     if (APIKey.isEmpty() || APISecret.isEmpty())
     {
-        qDebug() << "请输入APIKey 和 APISecret";
+        qCritical() << "请输入APIKey 和 APISecret";
         return ;
     }
+    if (socket)
+        return ;
 
-    if (!socket)
-    {
-        socket = new QWebSocket();
-        connect(socket, &QWebSocket::connected, this, [=]{
-            qDebug() << "tts connected";
-        });
-        connect(socket, &QWebSocket::disconnected, this, [=]{
-            qDebug() << "tts disconnected" << socket->closeCode() << socket->closeReason();
-        });
-        connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-            qDebug() << "tts stateChanged" << state;
-        });
-        connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-            qDebug() << "tts binaryMessageReceived" << message;
-        });
-        connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
-            qDebug() << "textFrameReceived";
-        });
+    socket = new QWebSocket();
+    connect(socket, &QWebSocket::connected, this, [=]{
+        AUTH_DEB << "tts connected";
+        if (!speakQueue.size())
+        {
+            socket->close();
+            return ;
+        }
 
-        connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-            qDebug() << "textMessageReceived";
-        });
-    }
+        sendText(speakQueue.takeFirst());
+    });
+    connect(socket, &QWebSocket::disconnected, this, [=]{
+        AUTH_DEB << "tts disconnected" << socket->closeCode() << socket->closeReason();
+        socket->deleteLater();
+        socket = nullptr;
+        generalAudio();
+    });
+    connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        AUTH_DEB << "tts stateChanged" << state;
+    });
+    connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+        AUTH_DEB << "tts binaryMessageReceived" << message;
+    });
+    connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
+        AUTH_DEB << "textFrameReceived" << frame.size() << isLastFrame;
+        receivedData += frame;
+    });
 
+    connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+        AUTH_DEB << "textMessageReceived" << message.size();
+        // 实测讯飞返回的数据，这里textFrame和textMessage都会收到，数据一样，并且isLastFrame都是true
+    });
+
+    // 开始连接
     QString url = hostUrl + "?authorization=" + getAuthorization().toLocal8Bit().toPercentEncoding()
             + "&date=" + getDate().toLocal8Bit().toPercentEncoding().replace("%20", "+")
             + "&host=ws-api.xfyun.cn";
@@ -52,10 +74,8 @@ void XfyTTS::startConnect()
     config.setProtocol(QSsl::TlsV1SslV3);
     socket->setSslConfiguration(config);
 
-    QNetworkRequest* request = new QNetworkRequest(url);
-
-    socket->open(*request);
-
+    receivedData.clear();
+    socket->open(url);
 }
 
 QString XfyTTS::getAuthorization() const
@@ -87,28 +107,38 @@ QString XfyTTS::getDate() const
     return localeTime + " GMT";
 }
 
-/// https://blog.csdn.net/qiangzi4646/article/details/73565070
-QString XfyTTS::toHmacSha1Base64(QByteArray key, QByteArray baseString) const
+void XfyTTS::sendText(QString text)
 {
-    int blockSize = 64; // HMAC-SHA-1 block size, defined in SHA-1 standard
-    if (key.length() > blockSize) { // if key is longer than block size (64), reduce key length with SHA-1 compression
-        key = QCryptographicHash::hash(key, QCryptographicHash::Sha1);
-    }
-    QByteArray innerPadding(blockSize, char(0x36)); // initialize inner padding with char"6"
-    QByteArray outerPadding(blockSize, char(0x5c)); // initialize outer padding with char"/"
-    // ascii characters 0x36 ("6") and 0x5c ("/") are selected because they have large
-    // Hamming distance (http://en.wikipedia.org/wiki/Hamming_distance)
-    for (int i = 0; i < key.length(); i++) {
-        innerPadding[i] = innerPadding[i] ^ key.at(i); // XOR operation between every byte in key and innerpadding, of key length
-        outerPadding[i] = outerPadding[i] ^ key.at(i); // XOR operation between every byte in key and outerpadding, of key length
-    }
-    // result = hash ( outerPadding CONCAT hash ( innerPadding CONCAT baseString ) ).toBase64
-    QByteArray total = outerPadding;
-    QByteArray part = innerPadding;
-    part.append(baseString);
-    total.append(QCryptographicHash::hash(part, QCryptographicHash::Sha1));
-    QByteArray hashed = QCryptographicHash::hash(total, QCryptographicHash::Sha1);
-    AUTH_DEB << "signature.sha1:" << hashed.toHex();
-    AUTH_DEB << "signature.sha1.base64:" << hashed.toBase64();
-    return hashed.toBase64();
+    QString param = QString("{"
+                            "  \"common\": {"
+                            "    \"app_id\": \"%1\""
+                            "  },"
+                            "  \"business\": {"
+                            "    \"aue\": \"%2\","
+                            "    \"vcn\": \"%3\","
+                            "    \"pitch\": %4,"
+                            "    \"speed\": %5"
+                            "  },"
+                            "  \"data\": {"
+                            "    \"status\": 2,"
+                            "    \"text\": \"%6\""
+                            "  }"
+                            "}").arg(APPID).arg("raw").arg("xiaoyan").arg(pitch).arg(speed)
+            .arg(QString::fromLocal8Bit(text.toLocal8Bit().toBase64()));
+    AUTH_DEB << param;
+    socket->sendTextMessage(param);
+}
+
+void XfyTTS::generalAudio()
+{
+    QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".pcm";
+    AUTH_DEB << "saveFile:" << filePath;
+
+    QFile file(filePath);
+    file.open(QFile::WriteOnly | QFile::Text);
+    QTextStream stream(&file);
+    stream << receivedData;
+    file.close();
+
+    emit signalTTSPrepared(filePath);
 }

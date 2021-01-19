@@ -11,24 +11,39 @@
 
 class XfyTTS : public QObject
 {
+    Q_OBJECT
 public:
-    XfyTTS(QString APIKey, QString APISecret, QObject* parent = nullptr);
+    XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject* parent = nullptr);
 
-    void startConnect();
+    void speakText(QString text);
 
 private:
+    void startConnect();
     QString getAuthorization() const;
     QString getSignature() const;
     QString getDate() const;
 
-    QString toHmacSha1Base64(QByteArray key, QByteArray baseString) const;
+    void sendText(QString text);
+    void generalAudio();
+
+signals:
+    void signalTTSPrepared(QString filePath);
 
 private:
+    QString APPID;
     QString APIKey;
     QString APISecret;
-    QWebSocket* socket = nullptr;
 
+    QString savedDir;
+    QWebSocket* socket = nullptr;
     QString hostUrl = "wss://tts-api.xfyun.cn/v2/tts";
+
+    QString vcn = "xiaoyan"; // 发音人
+    int pitch = 50; // 音调
+    int speed = 50; // 音速
+
+    QStringList speakQueue;
+    QString receivedData;
 };
 
 #endif // XFYTTS_H
