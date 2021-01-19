@@ -1,9 +1,12 @@
 #include <QOAuth1Signature>
+#include <QApplication>
+#include <QClipboard>
 #include "xfytts.h"
 
 XfyTTS::XfyTTS(QString APIKey, QString APISecret, QObject *parent)
     : QObject(parent), APIKey(APIKey), APISecret(APISecret)
 {
+    AUTH_DEB << APIKey << APISecret;
 }
 
 void XfyTTS::startConnect()
@@ -39,8 +42,8 @@ void XfyTTS::startConnect()
     }
 
     QString url = hostUrl + "?authorization=" + getAuthorization().toLocal8Bit().toPercentEncoding()
-            + "&date=" + getDate().toLocal8Bit().toPercentEncoding()
-            + "&host=tts-api.xfyun.cn";
+            + "&date=" + getDate().toLocal8Bit().toPercentEncoding().replace("%20", "+")
+            + "&host=ws-api.xfyun.cn";
     AUTH_DEB << "wss:" << url;
 
     // 设置安全套接字连接模式（不知道有啥用）
@@ -57,7 +60,7 @@ void XfyTTS::startConnect()
 
 QString XfyTTS::getAuthorization() const
 {
-    QString auth = QString("api_key=\"%1\",algorithm=\"hmac-sha256\",headers=\"host date request-line\",signature=\"%2\"")
+    QString auth = QString("api_key=\"%1\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"%2\"")
             .arg(APIKey).arg(getSignature());
     AUTH_DEB << "authorization:" << auth;
     AUTH_DEB << "authorization.base64:" << auth.toLocal8Bit().toBase64();
@@ -66,22 +69,26 @@ QString XfyTTS::getAuthorization() const
 
 QString XfyTTS::getSignature() const
 {
-    QString sign = QString("host: %1\ndate: %2\nGET /v2/tts HTTP/1.1")
-            .arg(hostUrl).arg(getDate());
+    QString sign = QString("host: ws-api.xfyun.cn\ndate: %1\nGET /v2/tts HTTP/1.1").arg(getDate());
     AUTH_DEB << "signature:" << sign;
-    return toHmacSha1Base64(sign.toLocal8Bit(), APISecret.toLocal8Bit()); // 不带中文的话 toUTF8() 也行
+    QByteArray sign_sha256 = QMessageAuthenticationCode::hash(sign.toLocal8Bit(), APISecret.toLocal8Bit(), QCryptographicHash::Sha256);
+    AUTH_DEB << "signature.sha256:" << sign_sha256.toHex();
+    AUTH_DEB << "signature.sha256.base64:" << sign_sha256.toBase64();
+    return sign_sha256.toBase64();
+//    return toHmacSha1Base64(APISecret.toLocal8Bit(), sign.toLocal8Bit()); // 不带中文的话 toUTF8() 也行
 }
 
 /// https://blog.csdn.net/itas109/article/details/79362293
 QString XfyTTS::getDate() const
 {
+//    return "Tue, 19 Jan 2021 07:07:28 GMT";
     QLocale locale = QLocale::English;
-    QString localeTime = locale.toString(QDateTime::currentDateTime().toLocalTime(),"ddd, dd MMM yyyy hh:mm:ss");
+    QString localeTime = locale.toString(QDateTime::currentDateTime().toUTC(),"ddd, dd MMM yyyy hh:mm:ss");
     return localeTime + " GMT";
 }
 
 /// https://blog.csdn.net/qiangzi4646/article/details/73565070
-QString XfyTTS::toHmacSha1Base64(QByteArray baseString, QByteArray key) const
+QString XfyTTS::toHmacSha1Base64(QByteArray key, QByteArray baseString) const
 {
     int blockSize = 64; // HMAC-SHA-1 block size, defined in SHA-1 standard
     if (key.length() > blockSize) { // if key is longer than block size (64), reduce key length with SHA-1 compression
@@ -102,6 +109,6 @@ QString XfyTTS::toHmacSha1Base64(QByteArray baseString, QByteArray key) const
     total.append(QCryptographicHash::hash(part, QCryptographicHash::Sha1));
     QByteArray hashed = QCryptographicHash::hash(total, QCryptographicHash::Sha1);
     AUTH_DEB << "signature.sha1:" << hashed.toHex();
-    AUTH_DEB << "signature.sha1.base64:" << hashed.toHex().toBase64();
+    AUTH_DEB << "signature.sha1.base64:" << hashed.toBase64();
     return hashed.toBase64();
 }

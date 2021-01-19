@@ -21,7 +21,7 @@ private:
     QString getSignature() const;
     QString getDate() const;
 
-    QString toHmacSha1Base64(QByteArray baseString, QByteArray key) const;
+    QString toHmacSha1Base64(QByteArray key, QByteArray baseString) const;
 
 private:
     QString APIKey;
