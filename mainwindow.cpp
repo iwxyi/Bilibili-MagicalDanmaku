@@ -3360,180 +3360,213 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     };
 
     // 禁言
-    re = RE("block\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("block"))
     {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        qint64 uid = caps.at(1).toLongLong();
-        int hour = caps.at(2).toInt();
-        addBlockUser(uid, hour);
-        return true;
-    }
-    re = RE("block\\s*\\(\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
-    {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        qint64 uid = caps.at(1).toLongLong();
-        int hour = ui->autoBlockTimeSpin->value();
-        addBlockUser(uid, hour);
-        return true;
+        re = RE("block\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            int hour = caps.at(2).toInt();
+            addBlockUser(uid, hour);
+            return true;
+        }
+        re = RE("block\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            int hour = ui->autoBlockTimeSpin->value();
+            addBlockUser(uid, hour);
+            return true;
+        }
     }
 
     // 解禁言
-    re = RE("unblock\\s*\\(\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("unblock"))
     {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        qint64 uid = caps.at(1).toLongLong();
-        delBlockUser(uid);
-        return true;
+        re = RE("unblock\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            delBlockUser(uid);
+            return true;
+        }
     }
 
     // 赠送礼物
-    re = RE("sendGift\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("sendGift"))
     {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        int giftId = caps.at(1).toInt();
-        int num = caps.at(2).toInt();
-        sendGift(giftId, num);
-        return true;
+        re = RE("sendGift\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            int giftId = caps.at(1).toInt();
+            int num = caps.at(2).toInt();
+            sendGift(giftId, num);
+            return true;
+        }
     }
 
     // 终止
-    re = RE("abort\\s*(\\(\\s*\\))?");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("abort"))
     {
-        res = AbortRes;
-        return true;
+        re = RE("abort\\s*(\\(\\s*\\))?");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            res = AbortRes;
+            return true;
+        }
     }
 
     // 延迟
-    re = RE("delay\\s*\\(\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("delay"))
     {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        int delay = caps.at(1).toInt(); // 单位：毫秒
-        res = DelayRes;
-        resVal = delay;
-        return true;
+        re = RE("delay\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            int delay = caps.at(1).toInt(); // 单位：毫秒
+            res = DelayRes;
+            resVal = delay;
+            return true;
+        }
     }
 
     // 添加到游戏用户
-    re = RE("addGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("addGameUser"))
     {
-        QStringList caps = match.capturedTexts();
-        int chan = caps.at(1).toInt();
-        qint64 uid = caps.at(2).toLongLong();
-        gameUsers[chan].append(uid);
-        qDebug() << "执行命令：" << caps << gameUsers[0].size();
-        return true;
-    }
+        re = RE("addGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            int chan = caps.at(1).toInt();
+            qint64 uid = caps.at(2).toLongLong();
+            gameUsers[chan].append(uid);
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            return true;
+        }
 
-    re = RE("addGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
-    {
-        QStringList caps = match.capturedTexts();
-        qint64 uid = caps.at(1).toLongLong();
-        gameUsers[0].append(uid);
-        qDebug() << "执行命令：" << caps << gameUsers[0].size();
-        return true;
+        re = RE("addGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            gameUsers[0].append(uid);
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            return true;
+        }
     }
 
     // 从游戏用户中移除
-    re = RE("removeGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("removeGameUser"))
     {
-        QStringList caps = match.capturedTexts();
-        int chan = caps.at(1).toInt();
-        qint64 uid = caps.at(2).toLongLong();
-        gameUsers[chan].removeOne(uid);
-        qDebug() << "执行命令：" << caps << gameUsers[0].size();
-        return true;
-    }
+        re = RE("removeGameUser\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            int chan = caps.at(1).toInt();
+            qint64 uid = caps.at(2).toLongLong();
+            gameUsers[chan].removeOne(uid);
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            return true;
+        }
 
-    re = RE("removeGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
-    {
-        QStringList caps = match.capturedTexts();
-        qint64 uid = caps.at(1).toLongLong();
-        gameUsers[0].removeOne(uid);
-        qDebug() << "执行命令：" << caps << gameUsers[0].size();
-        return true;
+        re = RE("removeGameUser\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            gameUsers[0].removeOne(uid);
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            return true;
+        }
     }
 
     // 执行远程命令
-    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("execRemoteCommand"))
     {
-        QStringList caps = match.capturedTexts();
-        QString cmd = caps.at(1);
-        int response = caps.at(2).toInt();
-        qDebug() << "执行命令：" << caps;
-        processRemoteCmd(cmd, response);
-        return true;
-    }
+        re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            int response = caps.at(2).toInt();
+            qDebug() << "执行命令：" << caps;
+            processRemoteCmd(cmd, response);
+            return true;
+        }
 
-    re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
-    {
-        QStringList caps = match.capturedTexts();
-        QString cmd = caps.at(1);
-        qDebug() << "执行命令：" << caps;
-        processRemoteCmd(cmd);
-        return true;
+        re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            processRemoteCmd(cmd);
+            return true;
+        }
     }
 
     // 发送私信
-    re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("sendPrivateMsg"))
     {
-        QStringList caps = match.capturedTexts();
-        qint64 uid = caps.at(1).toLongLong();
-        QString msg = caps.at(2);
-        qDebug() << "执行命令：" << caps;
-        sendPrivateMsg(uid, msg);
-        return true;
+        re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            QString msg = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            sendPrivateMsg(uid, msg);
+            return true;
+        }
     }
 
     // 定时操作
-    re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("timerShot"))
     {
-        QStringList caps = match.capturedTexts();
-        qDebug() << "执行命令：" << caps;
-        int time = caps.at(1).toInt();
-        QString msg = caps.at(2);
-        QTimer::singleShot(time, this, [=]{
-            QString nextMsg = autoMsgQueues.first().first();
-            QRegularExpression re("^\\s*>");
-            if (msg.indexOf(re) > -1)
-            {
-                CmdResponse res;
-                int resVal;
-                execCmd(msg, res, resVal);
-            }
-            else
-                sendAutoMsg(msg);
-        });
-        return true;
+        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            int time = caps.at(1).toInt();
+            QString msg = caps.at(2);
+            QTimer::singleShot(time, this, [=]{
+                QString nextMsg = autoMsgQueues.first().first();
+                QRegularExpression re("^\\s*>");
+                if (msg.indexOf(re) > -1)
+                {
+                    CmdResponse res;
+                    int resVal;
+                    execCmd(msg, res, resVal);
+                }
+                else
+                    sendAutoMsg(msg);
+            });
+            return true;
+        }
     }
 
     // 发送本地通知
-    re = RE("localNotify\\s*\\(\\s*(\\S+)\\s*\\)");
-    if (msg.indexOf(re, 0, &match) > -1)
+    if (msg.contains("localNotify"))
     {
-        QStringList caps = match.capturedTexts();
-        QString msg = caps.at(1);
-        qDebug() << "执行命令：" << caps;
-        localNotify(msg);
-        return true;
+        re = RE("localNotify\\s*\\(\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString msg = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            localNotify(msg);
+            return true;
+        }
     }
 
     return false;
