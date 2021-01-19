@@ -454,7 +454,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
         if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
-            speekText(danmaku.getText());
+            speakText(danmaku.getText());
     });
 
     // 自动签到
@@ -477,6 +477,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->localDebugCheck->setChecked(localDebug);
 
 //    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
+
+    xfyTTS = new XfyTTS(settings.value("xfytts/apikey").toString(),
+                        settings.value("xfytts/apisecret").toString(), this);
+    xfyTTS->startConnect();
 }
 
 MainWindow::~MainWindow()
@@ -800,6 +804,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
  */
 void MainWindow::sendAutoMsg(QString msgs)
 {
+    if (msgs.trimmed().isEmpty())
+        return ;
     msgs = processTimeVariants(msgs);
 //    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
@@ -3569,6 +3575,21 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 朗读文本
+    if (msg.contains("speakText"))
+    {
+        re = RE("speakText\\s*\\(\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            speakText(text);
+            return true;
+        }
+    }
+
+
     return false;
 }
 
@@ -5128,10 +5149,10 @@ void MainWindow::speekVariantText(QString text)
     text = processTimeVariants(text);
 
     // 开始播放
-    speekText(text);
+    speakText(text);
 }
 
-void MainWindow::speekText(QString text)
+void MainWindow::speakText(QString text)
 {
     if(!tts || tts->state() != QTextToSpeech::Ready)
         return ;
@@ -6313,6 +6334,8 @@ void MainWindow::on_actionSend_Long_Text_triggered()
     bool ok;
     QString text = QInputDialog::getText(this, "发送长文本", "请输入长文本（支持变量），分割为每次20字发送\n注意带有敏感词或特殊字符的部分将无法发送", QLineEdit::Normal, "", &ok);
     text = text.trimmed();
+    if (!ok || text.isEmpty())
+        return ;
 
     QStringList sl;
     int len = text.length();

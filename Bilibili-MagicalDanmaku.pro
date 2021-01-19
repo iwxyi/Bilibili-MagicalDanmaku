@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets texttospeech
+QT       += core gui network websockets multimedia multimediawidgets texttospeech networkauth
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -43,6 +43,7 @@ SOURCES += \
     order_player/desktoplyricwidget.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
+    utils/xfytts.cpp \
     widgets/conditioneditor.cpp \
     widgets/mytabwidget.cpp \
     widgets/replywidget.cpp \
@@ -72,6 +73,7 @@ HEADERS += \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
+    utils/xfytts.h \
     widgets/conditioneditor.h \
     widgets/mytabwidget.h \
     widgets/replywidget.h \

@@ -31,6 +31,7 @@
 #include "textinputdialog.h"
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
+#include "xfytts.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -446,7 +447,7 @@ private:
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
     void speekVariantText(QString text);
-    void speekText(QString text);
+    void speakText(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
@@ -628,6 +629,7 @@ private:
 
     // 文字转语音
     QTextToSpeech *tts = nullptr;
+    XfyTTS* xfyTTS = nullptr;
 
     // 全屏弹幕
     QFont screenDanmakuFont;
