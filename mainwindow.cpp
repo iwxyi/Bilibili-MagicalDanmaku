@@ -2623,6 +2623,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%guard_buy%"))
         msg.replace("%guard_buy%", danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
 
+    if (msg.contains("%guard_count%"))
+        msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()))
+
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
@@ -4267,6 +4270,23 @@ void MainWindow::handleMessage(QJsonObject json)
             appendNewLiveDanmaku(danmaku);
         }
 
+        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
+        {
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (words.size())
+            {
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (strongNotifyUsers.contains(uid))
+                {
+                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                }
+                else
+                    sendGiftMsg(msg);
+            }
+        }
+
         if (coinType == "silver")
         {
             int userSilver = danmakuCounts->value("silver/" + snum(uid)).toInt();
@@ -4300,23 +4320,6 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
-
-        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
-        {
-            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (words.size())
-            {
-                int r = qrand() % words.size();
-                QString msg = words.at(r);
-                if (strongNotifyUsers.contains(uid))
-                {
-                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
-                }
-                else
-                    sendGiftMsg(msg);
-            }
-        }
 
         slotCmdEvent(cmd, danmaku);
     }
@@ -4606,14 +4609,6 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, uid, giftName, num);
         appendNewLiveDanmaku(danmaku);
 
-        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
-        userGold += price;
-        danmakuCounts->setValue("gold/"+snum(uid), userGold);
-
-        dailyGuard += num;
-        if (dailySettings)
-            dailySettings->setValue("guard", dailyGuard);
-
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
@@ -4625,6 +4620,25 @@ void MainWindow::handleMessage(QJsonObject json)
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
         }
+
+        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+        userGold += price;
+        danmakuCounts->setValue("gold/"+snum(uid), userGold);
+
+        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int addition = 1;
+        if (giftName == "舰长")
+            addition = 1;
+        else if (giftName == "提督")
+            addition = 10;
+        else if (giftName == "总督")
+            addition = 100;
+        guardCount += addition;
+        danmakuCounts->setValue("guard/" + snum(uid), guardCount);
+
+        dailyGuard += num;
+        if (dailySettings)
+            dailySettings->setValue("guard", dailyGuard);
 
         slotCmdEvent(cmd, danmaku);
     }
