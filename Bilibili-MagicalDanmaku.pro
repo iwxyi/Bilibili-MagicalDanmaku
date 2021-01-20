@@ -45,6 +45,9 @@ SOURCES += \
     order_player/orderplayerwindow.cpp \
     utils/xfytts.cpp \
     widgets/conditioneditor.cpp \
+    widgets/eternalblockdialog.cpp \
+    widgets/eventwidget.cpp \
+    widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
     widgets/replywidget.cpp \
     widgets/roomstatusdialog.cpp \
@@ -75,6 +78,9 @@ HEADERS += \
     order_player/songbeans.h \
     utils/xfytts.h \
     widgets/conditioneditor.h \
+    widgets/eternalblockdialog.h \
+    widgets/eventwidget.h \
+    widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/replywidget.h \
     widgets/roomstatusdialog.h \
@@ -94,6 +100,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \
+    widgets/eternalblockdialog.ui \
     widgets/roomstatusdialog.ui \
     widgets/videolyricscreator.ui
 

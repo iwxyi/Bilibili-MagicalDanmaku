@@ -159,7 +159,7 @@ void XfyTTS::sendText(QString text)
                             "    \"status\": 2,"
                             "    \"text\": \"%6\""
                             "  }"
-                            "}").arg(APPID).arg("raw").arg("xiaoyan").arg(pitch).arg(speed)
+                            "}").arg(APPID).arg("raw").arg(vcn).arg(pitch).arg(speed)
             .arg(QString::fromUtf8(text.toUtf8().toBase64()));
     AUTH_DEB << param;
     socket->sendTextMessage(param);
@@ -190,6 +190,7 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
     inputFile->open(QIODevice::ReadOnly);
 
     QAudioOutput *audio = new QAudioOutput(fmt);
+//    audio->setVolume(volume / 100.0); // 设置音量没有效果，1正常，0静音，但是0.x会呲呲呲的响
     connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
         if (state == QAudio::IdleState)
         {
@@ -202,4 +203,39 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
         }
     });
     audio->start(inputFile);
+}
+
+void XfyTTS::setAppId(QString s)
+{
+    this->APPID = s;
+}
+
+void XfyTTS::setApiKey(QString s)
+{
+    this->APIKey = s;
+}
+
+void XfyTTS::setApiSecret(QString s)
+{
+    this->APISecret = s;
+}
+
+void XfyTTS::setName(QString name)
+{
+    this->vcn = name;
+}
+
+void XfyTTS::setPitch(int pitch)
+{
+    this->pitch = pitch;
+}
+
+void XfyTTS::setSpeed(int speed)
+{
+    this->speed = speed;
+}
+
+void XfyTTS::setVolume(int volume)
+{
+    this->volume = volume;
 }

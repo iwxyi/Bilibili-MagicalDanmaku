@@ -32,6 +32,7 @@
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
 #include "xfytts.h"
+#include "eternalblockdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -54,6 +55,7 @@ QT_END_NAMESPACE
 #define ATTENTION_CD_CN 3  // 关注冷却通道
 #define TASK_CD_CN 4       // 定时任务冷却通道
 #define REPLY_CD_CN 5      // 自动回复冷却通道
+#define EVENT_CD_CN 6      // 事件动作冷却通道
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -128,6 +130,13 @@ public:
         DelayRes,
     };
 
+    enum VoicePlatform
+    {
+        VoiceLocal,
+        VoiceXfy,
+        VoiceCustom
+    };
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -140,6 +149,7 @@ signals:
     void signalLiveStart(QString roomId);
     void signalNewDanmaku(LiveDanmaku danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
+    void signalCmdEvent(QString cmd, LiveDanmaku danmaku);
 
 public slots:
     void pullLiveDanmaku();
@@ -170,9 +180,13 @@ private slots:
 
     void on_replyListWidget_customContextMenuRequested(const QPoint &);
 
+    void on_eventListWidget_customContextMenuRequested(const QPoint &pos);
+
     void on_addTaskButton_clicked();
 
     void on_addReplyButton_clicked();
+
+    void on_addEventButton_clicked();
 
     void slotDiange(LiveDanmaku danmaku);
 
@@ -226,6 +240,16 @@ private slots:
     void delBlockUser(qint64 upUid);
 
     void delRoomBlockUser(qint64 id);
+
+    void eternalBlockUser(qint64 uid, QString uname);
+
+    void cancelEternalBlockUser(qint64 uid);
+
+    void cancelEternalBlockUserAndUnblock(qint64 uid);
+
+    void saveEternalBlockUsers();
+
+    void detectEternalBlockUsers();
 
     void on_enableBlockCheck_clicked();
 
@@ -381,6 +405,42 @@ private slots:
 
     void slotCmdEvent(QString cmd, LiveDanmaku danmaku);
 
+    void on_voiceLocalRadio_toggled(bool checked);
+
+    void on_voiceXfyRadio_toggled(bool checked);
+
+    void on_voiceCustomRadio_toggled(bool checked);
+
+    void on_voiceNameEdit_editingFinished();
+
+    void on_voiceNameSelectButton_clicked();
+
+    void on_voicePitchSlider_valueChanged(int value);
+
+    void on_voiceSpeedSlider_valueChanged(int value);
+
+    void on_voiceVolumeSlider_valueChanged(int value);
+
+    void on_voicePreviewButton_clicked();
+
+    void on_voiceLocalRadio_clicked();
+
+    void on_voiceXfyRadio_clicked();
+
+    void on_voiceCustomRadio_clicked();
+
+    void on_label_10_linkActivated(const QString &link);
+
+    void on_xfyAppIdEdit_editingFinished();
+
+    void on_xfyApiSecretEdit_editingFinished();
+
+    void on_xfyApiKeyEdit_editingFinished();
+
+    void on_voiceCustomUrlEdit_editingFinished();
+
+    void on_eternalBlockListButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -393,9 +453,14 @@ private:
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();
     void restoreTaskList();
+
     void addAutoReply(bool enable, QString key, QString reply);
     void saveReplyList();
     void restoreReplyList();
+
+    void addEventAction(bool enable, QString cmd, QString action);
+    void saveEventList();
+    void restoreEventList();
 
     QVariant getCookies();
     void getUserInfo();
@@ -446,8 +511,10 @@ private:
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
+    void initTTS();
     void speekVariantText(QString text);
     void speakText(QString text);
+    void downloadAndSpeak(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
@@ -628,8 +695,13 @@ private:
     QAction *quitAction;//托盘图标右键点击时弹出选项
 
     // 文字转语音
+    VoicePlatform voicePlatform = VoiceLocal;
     QTextToSpeech *tts = nullptr;
     XfyTTS* xfyTTS = nullptr;
+    int voicePitch = 50;
+    int voiceSpeed = 50;
+    int voiceVolume = 50;
+    QString voiceName;
 
     // 全屏弹幕
     QFont screenDanmakuFont;

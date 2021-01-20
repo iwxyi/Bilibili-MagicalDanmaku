@@ -20,6 +20,15 @@ public:
     void speakText(QString text);
     void playFile(QString filePath, bool deleteAfterPlay = false);
 
+    void setAppId(QString s);
+    void setApiKey(QString s);
+    void setApiSecret(QString s);
+
+    void setName(QString name);
+    void setPitch(int pitch);
+    void setSpeed(int speed);
+    void setVolume(int volume);
+
 private:
     void startConnect();
     QString getAuthorization() const;
@@ -42,8 +51,9 @@ private:
     QString hostUrl = "wss://tts-api.xfyun.cn/v2/tts";
 
     QString vcn = "xiaoyan"; // 发音人
-    int pitch = 50; // 音调
-    int speed = 50; // 音速
+    int pitch = 50;  // 音调
+    int speed = 50;  // 音速
+    int volume = 50; // 音量
 
     QAudioFormat fmt;
     QStringList speakQueue;

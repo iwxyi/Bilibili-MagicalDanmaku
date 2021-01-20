@@ -1,8 +1,10 @@
 #include <zlib.h>
+#include <QListView>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
 #include "roomstatusdialog.h"
+#include "eventwidget.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -15,6 +17,7 @@ QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
+QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -297,6 +300,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动回复
     restoreReplyList();
 
+    // 事件动作
+    restoreEventList();
+
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendGiftCheck->setChecked(settings.value("danmaku/sendGift", false).toBool());
@@ -324,7 +330,31 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoSpeekDanmakuCheck->setChecked(settings.value("danmaku/autoSpeek", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck)
-        tts = new QTextToSpeech(this);
+        initTTS();
+
+    voicePlatform = static_cast<VoicePlatform>(settings.value("voice/platform", 0).toInt());
+    if (voicePlatform == VoiceLocal)
+    {
+        ui->voiceLocalRadio->setChecked(true);
+        ui->voiceNameEdit->setText(settings.value("voice/localName").toString());
+    }
+    else if (voicePlatform == VoiceXfy)
+    {
+        ui->voiceXfyRadio->setChecked(true);
+        ui->voiceNameEdit->setText(settings.value("xfytts/name").toString());
+        ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
+        ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
+        ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
+    }
+    else if (voicePlatform == VoiceCustom)
+    {
+        ui->voiceCustomRadio->setChecked(true);
+        ui->voiceNameEdit->setText(settings.value("voice/customName").toString());
+    }
+
+    ui->voicePitchSlider->setSliderPosition(settings.value("voice/pitch", 50).toInt());
+    ui->voiceSpeedSlider->setSliderPosition(settings.value("voice/speed", 50).toInt());
+    ui->voiceCustomUrlEdit->setText(settings.value("voice/customUrl", "").toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -472,19 +502,19 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动参与天选
     ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
 
+    // 永久禁言
+    QJsonArray eternalBlockArray = settings.value("danmaku/eternalBlockUsers").toJsonArray();
+    int eternalBlockSize = eternalBlockArray.size();
+    for (int i = 0; i < eternalBlockSize; i++)
+    {
+        eternalBlockUsers.append(EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject()));
+    }
+
     // 本地调试模式
     localDebug = settings.value("danmaku/localDebug", false).toBool();
     ui->localDebugCheck->setChecked(localDebug);
 
-//    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
-
-    xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
-                        settings.value("xfytts/apikey").toString(),
-                        settings.value("xfytts/apisecret").toString(), this);
-    xfyTTS->speakText("这是一个语音合成示例");
-    QTimer::singleShot(1000, [=]{
-//        xfyTTS->playFile("C:/Users/tom/Downloads/tts_ws_python3_demo/tts_ws_python3_demo/demo.pcm");
-    });
+    slotCmdEvent("START_UP", LiveDanmaku());
 }
 
 MainWindow::~MainWindow()
@@ -540,7 +570,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
-//        int h = ui->tabWidget->contentsRect().height() - ui->roomCoverLabel->geometry().top();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
         ui->roomCoverLabel->setPixmap(pixmap);
         ui->roomCoverLabel->setMinimumSize(1, 1);
@@ -555,12 +584,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
             continue;
         QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
         auto taskWidget = static_cast<TaskWidget*>(widget);
-//        taskWidget->resize(size.width(), size.height());
-//        taskWidget->setFixedWidth(size.width());
         taskWidget->resize(size);
         taskWidget->autoResizeEdit();
-//        taskWidget->adjustSize(); // autoResizeEdit 的时候会自动resize
-//        item->setSizeHint(taskWidget->size()); // taskWidget内部信号会触发item->setSizeHint
     }
 
     for (int row = 0; row < ui->replyListWidget->count(); row++)
@@ -571,12 +596,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
             continue;
         QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
         auto replyWidget = static_cast<ReplyWidget*>(widget);
-//        replyWidget->resize(size.width(), size.height());
-//        replyWidget->setFixedWidth(size.width());
         replyWidget->resize(size);
         replyWidget->autoResizeEdit();
-//        replyWidget->adjustSize();
-//        item->setSizeHint(replyWidget->size()); // replyWidget内部信号会触发item->setSizeHint
     }
 }
 
@@ -603,8 +624,8 @@ void MainWindow::pullLiveDanmaku()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qDebug() << result;
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
             return ;
         }
         QJsonObject json = document.object();
@@ -771,8 +792,6 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     s.replace(posl, posr-posl, roomId);
 
     QByteArray ba(s.toStdString().data());
-//    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
-//    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -780,12 +799,11 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         manager->deleteLater();
         delete request;
 
-//        qDebug() << data;
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "发送弹幕：" << error.errorString();
+            qCritical() << "发送弹幕：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -794,7 +812,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         if (!errorMsg.isEmpty())
         {
             statusLabel->setText(errorMsg);
-            qDebug() << s8("warning: 发送失败：") << errorMsg << msg;
+            qCritical() << s8("warning: 发送失败：") << errorMsg << msg;
             localNotify(errorMsg + " -> " + msg);
         }
     });
@@ -860,7 +878,7 @@ void MainWindow::slotSendAutoMsg()
         else if (res == DelayRes) // 修改延迟
         {
             if (resVal < 0)
-                qDebug() << "设置延时时间出错";
+                qCritical() << "设置延时时间出错";
             autoMsgTimer->setInterval(resVal);
             return ;
         }
@@ -889,8 +907,6 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
 
     // 避免太频繁发消息
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-//    qDebug() << "TEST发送冷却弹幕：" << msg << cd << channel << "cd:" << timestamp - msgCds[channel]
-//             << "时间：" << timestamp << msgCds[channel] << cd;
     if (timestamp - msgCds[channel] < cd)
     {
         return ;
@@ -1224,6 +1240,94 @@ void MainWindow::restoreReplyList()
     }
 }
 
+void MainWindow::addEventAction(bool enable, QString cmd, QString action)
+{
+    EventWidget* rw = new EventWidget(this);
+    QListWidgetItem* item = new QListWidgetItem(ui->eventListWidget);
+
+    ui->eventListWidget->addItem(item);
+    ui->eventListWidget->setItemWidget(item, rw);
+    ui->eventListWidget->setCurrentRow(ui->eventListWidget->count()-1);
+    ui->eventListWidget->scrollToBottom();
+
+    // 连接信号
+    connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
+        bool enable = rw->check->isChecked();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Enable", enable);
+    });
+
+    connect(rw->eventEdit, &QLineEdit::textEdited, this, [=]{
+        QString content = rw->eventEdit->text();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Cmd", content);
+    });
+
+    connect(rw->actionEdit, &QPlainTextEdit::textChanged, this, [=]{
+        item->setSizeHint(rw->sizeHint());
+
+        QString content = rw->actionEdit->toPlainText();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Action", content);
+    });
+
+    connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(slotCmdEvent(QString,LiveDanmaku)));
+
+    connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
+            return ;
+        QStringList msgs = getEditConditionStringList(sl, danmaku);
+        if (msgs.size())
+        {
+            int r = qrand() % msgs.size();
+            QString s = msgs.at(r);
+            if (!s.trimmed().isEmpty())
+            {
+                sendCdMsg(s, 1, EVENT_CD_CN, true, false);
+            }
+        }
+    });
+
+    connect(rw, &EventWidget::signalResized, rw, [=]{
+        item->setSizeHint(rw->size());
+    });
+
+    remoteControl = settings.value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    rw->check->setChecked(enable);
+    rw->eventEdit->setText(cmd);
+    rw->actionEdit->setPlainText(action);
+    rw->autoResizeEdit();
+    rw->adjustSize();
+    item->setSizeHint(rw->sizeHint());
+}
+
+void MainWindow::saveEventList()
+{
+    settings.setValue("event/count", ui->eventListWidget->count());
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+        auto tw = static_cast<EventWidget*>(widget);
+        settings.setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings.setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
+        settings.setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
+    }
+}
+
+void MainWindow::restoreEventList()
+{
+    int count = settings.value("event/count", 0).toInt();
+    for (int row = 0; row < count; row++)
+    {
+        bool enable = settings.value("event/r"+QString::number(row)+"Enable", true).toBool();
+        QString key = settings.value("event/r"+QString::number(row)+"Cmd").toString();
+        QString event = settings.value("event/r"+QString::number(row)+"Action").toString();
+        addEventAction(enable, key, event);
+    }
+}
+
 QVariant MainWindow::getCookies()
 {
     QList<QNetworkCookie> cookies;
@@ -1269,13 +1373,13 @@ void MainWindow::getUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户信息出错：" << error.errorString();
+            qCritical() << "获取用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1312,13 +1416,13 @@ void MainWindow::getRoomUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间用户信息出错：" << error.errorString();
+            qCritical() << "获取房间用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1394,6 +1498,37 @@ void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
     actionDelete->deleteLater();
 }
 
+void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &pos)
+{
+    QListWidgetItem* item = ui->eventListWidget->currentItem();
+
+    QMenu* menu = new QMenu(this);
+    QAction* actionDelete = new QAction("删除", this);
+
+    if (!item)
+    {
+        actionDelete->setEnabled(false);
+    }
+
+    menu->addAction(actionDelete);
+
+    connect(actionDelete, &QAction::triggered, this, [=]{
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto rw = static_cast<EventWidget*>(widget);
+
+        ui->eventListWidget->removeItemWidget(item);
+        ui->eventListWidget->takeItem(ui->eventListWidget->currentRow());
+
+        saveEventList();
+
+        rw->deleteLater();
+    });
+
+    menu->exec(QCursor::pos());
+
+    actionDelete->deleteLater();
+}
+
 void MainWindow::on_addTaskButton_clicked()
 {
     addTimerTask(true, 1800, "");
@@ -1410,6 +1545,15 @@ void MainWindow::on_addReplyButton_clicked()
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto rw = static_cast<ReplyWidget*>(widget);
     rw->keyEdit->setFocus();
+}
+
+void MainWindow::on_addEventButton_clicked()
+{
+    addEventAction(true, "", "");
+    saveEventList();
+    auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
+    auto ew = static_cast<EventWidget*>(widget);
+    ew->eventEdit->setFocus();
 }
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
@@ -1429,7 +1573,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     {
         if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
         {
-            qDebug() << "点歌未带粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
+            qWarning() << "点歌未带粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
             return ;
         }
     }
@@ -1470,7 +1614,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 {
-    qDebug() << "error" << socket->errorString();
+    qCritical() << "error" << socket->errorString();
     statusLabel->setText(socket->errorString());
 }
 
@@ -1494,7 +1638,7 @@ void MainWindow::initWS()
         // 正在直播的时候突然断开了
         if (liveStatus)
         {
-            qDebug() << "正在直播的时候突然断开，10秒后重连...";
+            qWarning() << "正在直播的时候突然断开，10秒后重连...";
             liveStatus = false;
             // 尝试10秒钟后重连
             connectServerTimer->setInterval(10000);
@@ -1518,7 +1662,7 @@ void MainWindow::initWS()
         try {
             slotBinaryMessageReceived(message);
         } catch (...) {
-            qDebug() << "!!!!!!!error:slotBinaryMessageReceived";
+            qCritical() << "!!!!!!!error:slotBinaryMessageReceived";
         }
 
     });
@@ -1619,13 +1763,13 @@ void MainWindow::getRoomInit()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间初始化出错：" << error.errorString();
+            qCritical() << "获取房间初始化出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            qCritical() << "返回结果不为0：" << json.value("message").toString();
             return ;
         }
 
@@ -1651,14 +1795,14 @@ void MainWindow::getRoomInfo(bool reconnect)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间信息出错：" << error.errorString();
+            qCritical() << "获取房间信息出错：" << error.errorString();
             ui->connectStateLabel->setText("无法获取房间信息");
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1880,13 +2024,13 @@ void MainWindow::getUpFace(QString uid)
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取主播头像出错：" << error.errorString();
+            qCritical() << "获取主播头像出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1944,13 +2088,13 @@ void MainWindow::getDanmuInfo()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取弹幕信息出错：" << error.errorString();
+            qCritical() << "获取弹幕信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1994,7 +2138,7 @@ void MainWindow::getFansAndUpdate()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取粉丝出错：" << error.errorString();
+            qCritical() << "获取粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2479,6 +2623,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%guard_buy%"))
         msg.replace("%guard_buy%", danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
 
+    if (msg.contains("%guard_count%"))
+        msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
+
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
@@ -2773,8 +2920,8 @@ QString MainWindow::processVariantConditions(QString msg) const
             }
             /*else
             {
-                qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
-                qDebug() << "    原始语句：" << msg;
+                qCritical() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+                qCritical() << "    原始语句：" << msg;
             }*/
         }
         if (isTrue)
@@ -2810,7 +2957,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     }
     if (valss.size() != ops.size() + 1)
     {
-        qDebug() << "错误的表达式：" << valss << ops << exp;
+        qCritical() << "错误的表达式：" << valss << ops << exp;
         return 0;
     }
 
@@ -2824,7 +2971,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
         {
             if (vals[i+1] == 0)
             {
-                qDebug() << "警告：被除数是0 ：" << exp;
+                qWarning() << "警告：被除数是0 ：" << exp;
                 vals[i+1] = 1;
             }
             vals[i] /= vals[i+1];
@@ -3150,7 +3297,7 @@ void MainWindow::startRecordUrl(QString url)
     QFile file(path);
     if (!file.open(QFile::WriteOnly))
     {
-        qDebug() << "写入文件失败" << path;
+        qCritical() << "写入文件失败" << path;
         reply->deleteLater();
         return ;
     }
@@ -3160,7 +3307,7 @@ void MainWindow::startRecordUrl(QString url)
         qint64 write_bytes = file.write(data);
         file.flush();
         if (write_bytes != data.size())
-            qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
+            qCritical() << "写入文件大小错误" << write_bytes << "/" << data.size();
     }
 
     reply->deleteLater();
@@ -3359,12 +3506,12 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
 bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
 {
-    qDebug() << "尝试执行函数：" << msg;
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
     if (msg.indexOf(re) == -1)
         return false;
 
+    qDebug() << "尝试执行函数：" << msg;
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };
@@ -3542,15 +3689,13 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 定时操作
     if (msg.contains("timerShot"))
     {
-        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*?(.+)\\s*?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
             int time = caps.at(1).toInt();
             QString msg = caps.at(2);
             QTimer::singleShot(time, this, [=]{
-                QString nextMsg = autoMsgQueues.first().first();
                 QRegularExpression re("^\\s*>");
                 if (msg.indexOf(re) > -1)
                 {
@@ -3612,7 +3757,7 @@ void MainWindow::restoreCustomVariant(QString text)
             customVariant.insert(key, val);
         }
         else
-            qDebug() << "自定义变量读取失败：" << s;
+            qCritical() << "自定义变量读取失败：" << s;
     }
 }
 
@@ -3645,7 +3790,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("认证出错");
+            qCritical() << s8("认证出错");
         }
     }
     else if (operation == HEARTBEAT_REPLY) // 心跳包回复（人气值）
@@ -3713,7 +3858,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QJsonDocument document = QJsonDocument::fromJson(body, &error);
                 if (error.error != QJsonParseError::NoError)
                 {
-                    qDebug() << s8("body转json出错：") << error.errorString();
+                    qCritical() << s8("body转json出错：") << error.errorString();
                     return ;
                 }
                 QJsonObject json = document.object();
@@ -3803,14 +3948,14 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 else
                 {
-                    qDebug() << "未处理的命令=" << cmd << "   正文=" << QString(body);
+                    qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
                 }
 
                 slotCmdEvent(cmd, LiveDanmaku());
             }
             else
             {
-                qDebug() << s8("未知协议：") << protover << s8("，若有必要请处理");
+                qWarning() << s8("未知协议：") << protover << s8("，若有必要请处理");
                 qDebug() << s8("未知正文：") << body;
             }
         }
@@ -3861,10 +4006,10 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << s8("解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("包数值：") << offset << packSize << "  解压后大小：" << unc.size();
-            qDebug() << s8(">>当前JSON") << jsonBa;
-            qDebug() << s8(">>解压正文") << unc;
+            qCritical() << s8("解析解压后的JSON出错：") << error.errorString();
+            qCritical() << s8("包数值：") << offset << packSize << "  解压后大小：" << unc.size();
+            qCritical() << s8(">>当前JSON") << jsonBa;
+            qCritical() << s8(">>解压正文") << unc;
             return ;
         }
         QJsonObject json = document.object();
@@ -3876,7 +4021,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         try {
             handleMessage(json);
         } catch (...) {
-            qDebug() << s8("出错啦") << jsonBa;
+            qCritical() << s8("出错啦") << jsonBa;
         }
 
         offset += packSize;
@@ -4123,6 +4268,23 @@ void MainWindow::handleMessage(QJsonObject json)
             appendNewLiveDanmaku(danmaku);
         }
 
+        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
+        {
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (words.size())
+            {
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (strongNotifyUsers.contains(uid))
+                {
+                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                }
+                else
+                    sendGiftMsg(msg);
+            }
+        }
+
         if (coinType == "silver")
         {
             int userSilver = danmakuCounts->value("silver/" + snum(uid)).toInt();
@@ -4156,23 +4318,6 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
-
-        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
-        {
-            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (words.size())
-            {
-                int r = qrand() % words.size();
-                QString msg = words.at(r);
-                if (strongNotifyUsers.contains(uid))
-                {
-                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
-                }
-                else
-                    sendGiftMsg(msg);
-            }
-        }
 
         slotCmdEvent(cmd, danmaku);
     }
@@ -4258,8 +4403,8 @@ void MainWindow::handleMessage(QJsonObject json)
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
-                qDebug() << "识别舰长进入失败：" << copy_writing;
-                qDebug() << data;
+                qWarning() << "识别舰长进入失败：" << copy_writing;
+                qWarning() << data;
             }
             return ;
         }
@@ -4462,14 +4607,6 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, uid, giftName, num);
         appendNewLiveDanmaku(danmaku);
 
-        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
-        userGold += price;
-        danmakuCounts->setValue("gold/"+snum(uid), userGold);
-
-        dailyGuard += num;
-        if (dailySettings)
-            dailySettings->setValue("guard", dailyGuard);
-
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
@@ -4481,6 +4618,25 @@ void MainWindow::handleMessage(QJsonObject json)
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
         }
+
+        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+        userGold += price;
+        danmakuCounts->setValue("gold/"+snum(uid), userGold);
+
+        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int addition = 1;
+        if (giftName == "舰长")
+            addition = 1;
+        else if (giftName == "提督")
+            addition = 10;
+        else if (giftName == "总督")
+            addition = 100;
+        guardCount += addition;
+        danmakuCounts->setValue("guard/" + snum(uid), guardCount);
+
+        dailyGuard += num;
+        if (dailySettings)
+            dailySettings->setValue("guard", dailyGuard);
 
         slotCmdEvent(cmd, danmaku);
     }
@@ -4877,7 +5033,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else
     {
-        qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
+        qWarning() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
         slotCmdEvent(cmd, LiveDanmaku());
     }
 }
@@ -4951,7 +5107,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户粉丝出错：" << error.errorString();
+            qCritical() << "获取用户粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5003,7 +5159,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户数据出错：" << error.errorString();
+            qCritical() << "获取用户数据出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5056,7 +5212,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户投稿出错：" << error.errorString();
+            qCritical() << "获取用户投稿出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5144,11 +5300,41 @@ void MainWindow::markNotRobot(qint64 uid)
         robotRecord.setValue("robot/" + snum(uid), -1);
 }
 
+void MainWindow::initTTS()
+{
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (!tts)
+        {
+            tts = new QTextToSpeech(this);
+            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
+        }
+        break;
+    case VoiceXfy:
+        if (!xfyTTS)
+        {
+            xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
+                                settings.value("xfytts/apikey").toString(),
+                                settings.value("xfytts/apisecret").toString(),
+                                this);
+            ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
+            ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
+            ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
+            xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
+        }
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
 void MainWindow::speekVariantText(QString text)
 {
-    if(!tts || tts->state() != QTextToSpeech::Ready)
-        return ;
-
     // 处理带变量的内容
     text = processTimeVariants(text);
 
@@ -5158,14 +5344,72 @@ void MainWindow::speekVariantText(QString text)
 
 void MainWindow::speakText(QString text)
 {
-    if(!tts || tts->state() != QTextToSpeech::Ready)
-        return ;
-
     // 处理特殊字符
     text.replace("_", " ");
 
-    // 开始播放
-    tts->say(text);
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (!tts)
+            initTTS();
+        else if (tts->state() != QTextToSpeech::Ready)
+            return ;
+        tts->say(text);
+        break;
+    case VoiceXfy:
+        if (!xfyTTS)
+            initTTS();
+        xfyTTS->speakText(text);
+        break;
+    case VoiceCustom:
+        downloadAndSpeak(text);
+        break;
+    }
+}
+
+void MainWindow::downloadAndSpeak(QString text)
+{
+    QString url = ui->voiceCustomUrlEdit->text();
+    if (url.isEmpty())
+        return ;
+    url = url.replace("%1", text);
+    const QString filePath = QApplication::applicationDirPath() + "/audios";
+    QDir dir(filePath);
+    dir.mkpath(filePath);
+
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
+        // 保存文件
+        QByteArray fileData = reply1->readAll();
+        if (fileData.isEmpty())
+        {
+            qWarning() << "网络音频为空";
+            return ;
+        }
+        QString path = filePath + "/" + snum(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
+        QFile file(path);
+        file.open(QFile::WriteOnly);
+        QDataStream stream(&file);
+        stream << fileData;
+        file.flush();
+        file.close();
+
+        // 播放文件
+        QMediaPlayer *player = new QMediaPlayer(this);
+        player->setMedia(QUrl::fromLocalFile(path));
+        connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
+            if (state == QMediaPlayer::StoppedState)
+            {
+                player->deleteLater();
+
+                QFile file(path);
+                file.remove();
+            }
+        });
+        player->play();
+    });
+
+    manager->get(*request);
 }
 
 void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
@@ -5563,7 +5807,7 @@ void MainWindow::refreshBlockList()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间禁言出错：" << error.errorString();
+            qCritical() << "获取房间禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5606,7 +5850,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
 {
     if (roomId.isEmpty() || browserCookie.isEmpty())
     {
-        qDebug() << "房间为空，或未登录";
+        qWarning() << "房间为空，或未登录";
         return ;
     }
 
@@ -5652,7 +5896,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "赠送礼物出错：" << error.errorString();
+            qCritical() << "赠送礼物出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -5661,7 +5905,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         if (message != "success")
         {
             statusLabel->setText(message);
-            qDebug() << s8("warning: 发送失败：") << message << datas.join("&");
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
 
@@ -5689,13 +5933,13 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取视频流网址出错：" << error.errorString();
+            qCritical() << "获取视频流网址出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -5820,7 +6064,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "添加禁言出错：" << error.errorString();
+            qCritical() << "添加禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5870,7 +6114,7 @@ void MainWindow::delBlockUser(qint64 uid)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "解除屏蔽出错：" << error.errorString();
+            qCritical() << "解除屏蔽出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5923,7 +6167,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "解除禁言出错：" << error.errorString();
+            qCritical() << "解除禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5938,6 +6182,75 @@ void MainWindow::delRoomBlockUser(qint64 id)
         //    userBlockIds.remove(userBlockIds.key(id));
     });
     manager->post(*request, data.toStdString().data());
+}
+
+void MainWindow::eternalBlockUser(qint64 uid, QString uname)
+{
+    if (eternalBlockUsers.contains(EternalBlockUser(uid)))
+    {
+        localNotify("该用户已经在永久禁言中");
+        return ;
+    }
+
+    addBlockUser(uid, 720);
+
+    eternalBlockUsers.append(EternalBlockUser(uid, uname, QDateTime::currentSecsSinceEpoch()));
+    saveEternalBlockUsers();
+}
+
+void MainWindow::cancelEternalBlockUser(qint64 uid)
+{
+    EternalBlockUser user(uid);
+    if (!eternalBlockUsers.contains(user))
+        return ;
+
+    eternalBlockUsers.removeOne(user);
+    saveEternalBlockUsers();
+}
+
+void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
+{
+    cancelEternalBlockUser(uid);
+
+    delBlockUser(uid);
+}
+
+void MainWindow::saveEternalBlockUsers()
+{
+    QJsonArray array;
+    int size = eternalBlockUsers.size();
+    for (int i = 0; i < size; i++)
+        array.append(eternalBlockUsers.at(i).toJson());
+    settings.setValue("danmaku/eternalBlockUsers", array);
+}
+
+/**
+ * 检测需要重新禁言的用户，越前面时间越早
+ */
+void MainWindow::detectEternalBlockUsers()
+{
+    qint64 currentSecond = QDateTime::currentSecsSinceEpoch();
+    const int MAX_BLOCK_HOUR = 720;
+    qint64 maxBlockSecond = MAX_BLOCK_HOUR * 3600;
+    const int netDelay = 5; // 5秒的屏蔽时长
+    bool blocked = false;
+    for (int i = 0; i < eternalBlockUsers.size(); i++)
+    {
+        EternalBlockUser user = eternalBlockUsers.first();
+        if (user.time + maxBlockSecond + netDelay >= currentSecond) // 仍在冷却中
+            break;
+
+        // 该补上禁言啦
+        blocked = true;
+        qDebug() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
+        addBlockUser(user.uid, MAX_BLOCK_HOUR);
+
+        user.time = currentSecond;
+        eternalBlockUsers.removeFirst();
+        eternalBlockUsers.append(user);
+    }
+    if (blocked)
+        saveEternalBlockUsers();
 }
 
 void MainWindow::on_enableBlockCheck_clicked()
@@ -6106,7 +6419,7 @@ bool MainWindow::isConditionTrue(T a, T b, QString op) const
         return a < b;
     if (op == "<=")
         return a <= b;
-    qDebug() << "无法识别的比较模板类型：" << a << op << b;
+    qWarning() << "无法识别的比较模板类型：" << a << op << b;
     return false;
 }
 
@@ -6137,6 +6450,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
         connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
+        connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
         connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
             danmakuWindow->deleteLater();
             danmakuWindow = nullptr;
@@ -6772,7 +7087,7 @@ void MainWindow::pkEnd(QJsonObject json)
                 pkSocket->close(); // 会自动deleterLater
             // pkSocket->deleteLater();
         } catch (...) {
-            qDebug() << "delete pkSocket failed";
+            qCritical() << "delete pkSocket failed";
         }
         pkSocket = nullptr;
     }
@@ -6787,8 +7102,8 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qDebug() << result;
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
             return ;
         }
         QJsonObject json = document.object();
@@ -6867,13 +7182,13 @@ void MainWindow::connectPkRoom()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "连接PK房间出错：" << error.errorString();
+            qCritical() << "连接PK房间出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("pk返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("pk返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -6976,10 +7291,10 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
         QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << s8("pk解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
-            qDebug() << s8(">>pk当前JSON") << jsonBa;
-            qDebug() << s8(">>pk解压正文") << unc;
+            qCritical() << s8("pk解析解压后的JSON出错：") << error.errorString();
+            qCritical() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
+            qCritical() << s8(">>pk当前JSON") << jsonBa;
+            qCritical() << s8(">>pk解压正文") << unc;
             return ;
         }
         QJsonObject json = document.object();
@@ -7191,13 +7506,13 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户信息出错：" << error.errorString();
+            qCritical() << "获取用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -7302,14 +7617,14 @@ void MainWindow::wearMedal(qint64 medalId)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "设置Medal出错：" << error.errorString();
+            qCritical() << "设置Medal出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
         qDebug() << "佩戴主播粉丝勋章成功";
@@ -7351,7 +7666,7 @@ void MainWindow::doSign()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "签到出错：" << error.errorString();
+            qCritical() << "签到出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -7359,7 +7674,7 @@ void MainWindow::doSign()
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("返回结果不为0：") << msg;
+            qCritical() << s8("返回结果不为0：") << msg;
             ui->autoDoSignCheck->setText(msg);
         }
         else
@@ -7409,8 +7724,8 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "参加天选出错：" << error.errorString();
-            qDebug() << QString(data);
+            qCritical() << "参加天选出错：" << error.errorString();
+            qCritical() << QString(data);
             return ;
         }
         QJsonObject object = document.object();
@@ -7418,7 +7733,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("返回结果不为0：") << msg;
+            qCritical() << s8("返回结果不为0：") << msg;
             ui->autoLOTCheck->setText(msg);
         }
         else
@@ -7467,7 +7782,6 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     params << "csrf_token=" + csrf_token;
     params << "csrf=" + csrf_token;
     QByteArray ba(params.join("&").toStdString().data());
-    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -7480,7 +7794,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "发送出错：" << error.errorString();
+            qCritical() << "发送出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -7488,7 +7802,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("发送消息出错，返回结果不为0：") << msg;
+            qCritical() << s8("发送消息出错，返回结果不为0：") << msg;
             return ;
         }
     });
@@ -7598,7 +7912,7 @@ void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
     if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_sendGiftTextCheck_clicked()
@@ -7610,7 +7924,7 @@ void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
     if (!tts && ui->sendGiftVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
@@ -7622,7 +7936,7 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
@@ -7687,7 +8001,7 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 {
     settings.setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
@@ -7787,7 +8101,255 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
     settings.setValue("block/autoTime", ui->autoBlockTimeSpin->value());
 }
 
+/**
+ * 所有事件的槽都在这里触发
+ */
 void MainWindow::slotCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
+    emit signalCmdEvent(cmd, danmaku);
+}
 
+void MainWindow::on_voiceLocalRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceLocal;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("voice/localName").toString());
+    }
+}
+
+void MainWindow::on_voiceXfyRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceXfy;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("xfytts/name", "xiaoyan").toString());
+    }
+}
+
+void MainWindow::on_voiceCustomRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceCustom;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("voice/customName").toString());
+    }
+}
+
+void MainWindow::on_voiceNameEdit_editingFinished()
+{
+    voiceName = ui->voiceNameEdit->text();
+    switch (voicePlatform) {
+    case VoiceLocal:
+        settings.setValue("voice/localName", voiceName);
+        break;
+    case VoiceXfy:
+        settings.setValue("xfytts/name", voiceName);
+        if (xfyTTS)
+        {
+            xfyTTS->setName(voiceName);
+        }
+        break;
+    case VoiceCustom:
+        settings.setValue("voice/customName", voiceName);
+        break;
+    }
+}
+
+void MainWindow::on_voiceNameSelectButton_clicked()
+{
+    if (voicePlatform == VoiceXfy)
+    {
+        QStringList names{"讯飞小燕<xiaoyan>",
+                         "讯飞许久<aisjiuxu>",
+                         "讯飞小萍<aisxping>",
+                         "讯飞小婧<aisjinger>",
+                         "讯飞许小宝<aisbabyxu>"};
+        QStringListModel* model = new QStringListModel(names);
+        QListView* view = new QListView(nullptr);
+        view->setModel(model);
+        view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        connect(view, &QListView::activated, this, [=](const QModelIndex &index){
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString text = names.at(row);
+            QRegularExpression re("<(.+)>");
+            QRegularExpressionMatch match;
+            if (text.indexOf(re, 0, &match) > -1)
+                text = match.capturedTexts().at(1);
+            this->ui->voiceNameEdit->setText(text);
+            if (xfyTTS)
+                xfyTTS->setName(text);
+            view->deleteLater();
+            model->deleteLater();
+        });
+        view->show();
+    }
+}
+
+void MainWindow::on_voicePitchSlider_valueChanged(int value)
+{
+    settings.setValue("voice/pitch", voicePitch = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setPitch((voicePitch - 50) / 50.0);
+        }
+        break;
+    case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setPitch(voicePitch);
+        }
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
+{
+    settings.setValue("voice/speed", voiceSpeed = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setRate((voiceSpeed - 50) / 50.0);
+        }
+        break;
+    case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setSpeed(voiceSpeed);
+        }
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
+{
+    settings.setValue("voice/volume", voiceVolume = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setVolume((voiceVolume) / 100.0);
+        }
+        break;
+    case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setVolume(voiceVolume);
+        }
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voicePreviewButton_clicked()
+{
+    speakText("这是一个语音合成示例");
+}
+
+void MainWindow::on_voiceLocalRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        if (!tts)
+        {
+            initTTS();
+        }
+        else
+        {
+            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
+        }
+    });
+}
+
+void MainWindow::on_voiceXfyRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        if (!xfyTTS)
+        {
+            initTTS();
+        }
+        else
+        {
+            xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
+        }
+    });
+}
+
+void MainWindow::on_voiceCustomRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        initTTS();
+    });
+}
+
+void MainWindow::on_label_10_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(link);
+}
+
+void MainWindow::on_xfyAppIdEdit_editingFinished()
+{
+    QString text = ui->xfyAppIdEdit->text();
+    settings.setValue("xfytts/appid", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setAppId(text);
+    }
+}
+
+void MainWindow::on_xfyApiSecretEdit_editingFinished()
+{
+    QString text = ui->xfyApiKeyEdit->text();
+    settings.setValue("xfytts/apikey", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setApiKey(text);
+    }
+}
+
+void MainWindow::on_xfyApiKeyEdit_editingFinished()
+{
+    QString text = ui->xfyApiSecretEdit->text();
+    settings.setValue("xfytts/apisecret", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setApiSecret(text);
+    }
+}
+
+void MainWindow::on_voiceCustomUrlEdit_editingFinished()
+{
+    settings.setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
+}
+
+
+void MainWindow::on_eternalBlockListButton_clicked()
+{
+    EternalBlockDialog* dialog = new EternalBlockDialog(&eternalBlockUsers, this);
+    connect(dialog, SIGNAL(signalCancelEternalBlock(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
+    connect(dialog, SIGNAL(signalCancelBlock(qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64)));
+    dialog->exec();
 }

@@ -997,9 +997,11 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSetName = new QAction("设置专属昵称", this);
     QAction* actionSetGiftName = new QAction("设置礼物别名", this);
 
-    QAction* actionAddBlock = new QAction("禁言720小时", this);
     QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
+    QAction* actionAddBlock = new QAction("禁言720小时", this);
     QAction* actionDelBlock = new QAction("取消禁言", this);
+    QAction* actionEternalBlock = new QAction("永久禁言", this);
+    QAction* actionCancelEternalBlock = new QAction("取消永久禁言", this);
     QAction* actionNotWelcome = new QAction("不自动欢迎", this);
 
     QMenu* operMenu = new QMenu("文字", this);
@@ -1109,6 +1111,9 @@ void LiveDanmakuWindow::showMenu()
 
         showFollowCountInAction(uid, actionFollow);
         showViewCountInAction(uid, actionView);
+
+        if (danmaku.getNickname().isEmpty())
+            actionEternalBlock->setEnabled(false);
     }
     else // 包括 item == nullptr
     {
@@ -1117,6 +1122,8 @@ void LiveDanmakuWindow::showMenu()
         actionAddBlock->setEnabled(false);
         actionAddBlockTemp->setEnabled(false);
         actionDelBlock->setEnabled(false);
+        actionEternalBlock->setEnabled(false);
+        actionCancelEternalBlock->setEnabled(false);
         actionMedal->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
@@ -1151,8 +1158,12 @@ void LiveDanmakuWindow::showMenu()
         menu->addSeparator();
         if (uid && !userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
         {
-            menu->addAction(actionAddBlock);
             menu->addAction(actionAddBlockTemp);
+            menu->addAction(actionAddBlock);
+            if (eternalBlockUsers.contains(EternalBlockUser(uid)))
+                menu->addAction(actionCancelEternalBlock);
+            else
+                menu->addAction(actionEternalBlock);
         }
         else
         {
@@ -1258,7 +1269,7 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionFont, &QAction::triggered, this, [=]{
         bool ok;
-        QFont font = QFontDialog::getFont(&ok,this);
+        QFont font = QFontDialog::getFont(&ok, danmakuFont, this, "设置弹幕字体");
         if (!ok)
             return ;
         this->danmakuFont = font;
@@ -1529,11 +1540,17 @@ void LiveDanmakuWindow::showMenu()
     connect(actionView, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(uid)+"/video"));
     });
+    connect(actionAddBlockTemp, &QAction::triggered, this, [=]{
+        emit signalAddBlockUser(uid, 1);
+    });
     connect(actionAddBlock, &QAction::triggered, this, [=]{
         emit signalAddBlockUser(uid, 720);
     });
-    connect(actionAddBlockTemp, &QAction::triggered, this, [=]{
-        emit signalAddBlockUser(uid, 1);
+    connect(actionEternalBlock, &QAction::triggered, this, [=]{
+        emit signalEternalBlockUser(uid, danmaku.getNickname());
+    });
+    connect(actionEternalBlock, &QAction::triggered, this, [=]{
+        emit signalCancelEternalBlockUser(uid);
     });
     connect(actionDelBlock, &QAction::triggered, this, [=]{
         emit signalDelBlockUser(uid);
