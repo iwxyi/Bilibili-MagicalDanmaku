@@ -1,4 +1,5 @@
 #include <zlib.h>
+#include <QListView>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -7964,7 +7965,34 @@ void MainWindow::on_voiceNameEdit_editingFinished()
 
 void MainWindow::on_voiceNameSelectButton_clicked()
 {
-
+    if (voicePlatform == VoiceXfy)
+    {
+        QStringList names{"讯飞小燕<xiaoyan>",
+                         "讯飞许久<aisjiuxu>",
+                         "讯飞小萍<aisxping>",
+                         "讯飞小婧<aisjinger>",
+                         "讯飞许小宝<aisbabyxu>"};
+        QStringListModel* model = new QStringListModel(names);
+        QListView* view = new QListView(nullptr);
+        view->setModel(model);
+        view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        connect(view, &QListView::activated, this, [=](const QModelIndex &index){
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString text = names.at(row);
+            QRegularExpression re("<(.+)>");
+            QRegularExpressionMatch match;
+            if (text.indexOf(re, 0, &match) > -1)
+                text = match.capturedTexts().at(1);
+            this->ui->voiceNameEdit->setText(text);
+            if (xfyTTS)
+                xfyTTS->setName(text);
+            view->deleteLater();
+            model->deleteLater();
+        });
+        view->show();
+    }
 }
 
 void MainWindow::on_voicePitchSlider_valueChanged(int value)
