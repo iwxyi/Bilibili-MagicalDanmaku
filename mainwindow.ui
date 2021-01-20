@@ -1613,7 +1613,7 @@ margin: 6px;</string>
           <item>
            <widget class="QRadioButton" name="voiceCustomRadio">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="text">
              <string>自定义</string>
@@ -1781,7 +1781,7 @@ margin: 6px;</string>
         <item>
          <widget class="QStackedWidget" name="voiceStack">
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="voiceLocalPage"/>
           <widget class="QWidget" name="voiceXfyPage">

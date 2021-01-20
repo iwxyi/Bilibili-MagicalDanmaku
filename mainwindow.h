@@ -424,6 +424,8 @@ private slots:
 
     void on_xfyApiKeyEdit_editingFinished();
 
+    void on_voiceCustomUrlEdit_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -492,6 +494,7 @@ private:
     void initTTS();
     void speekVariantText(QString text);
     void speakText(QString text);
+    void downloadAndSpeak(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();

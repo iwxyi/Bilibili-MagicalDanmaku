@@ -348,6 +348,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->voicePitchSlider->setSliderPosition(settings.value("voice/pitch", 50).toInt());
     ui->voiceSpeedSlider->setSliderPosition(settings.value("voice/speed", 50).toInt());
+    ui->voiceCustomUrlEdit->setText(settings.value("voice/customUrl", "").toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -5176,9 +5177,9 @@ void MainWindow::initTTS()
         if (!tts)
         {
             tts = new QTextToSpeech(this);
-//            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
-//            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
-//            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
+            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
         }
         break;
     case VoiceXfy:
@@ -5188,6 +5189,9 @@ void MainWindow::initTTS()
                                 settings.value("xfytts/apikey").toString(),
                                 settings.value("xfytts/apisecret").toString(),
                                 this);
+            ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
+            ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
+            ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
             xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
             xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
             xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
@@ -5227,8 +5231,55 @@ void MainWindow::speakText(QString text)
         xfyTTS->speakText(text);
         break;
     case VoiceCustom:
+        downloadAndSpeak(text);
         break;
     }
+}
+
+void MainWindow::downloadAndSpeak(QString text)
+{
+    QString url = ui->voiceCustomUrlEdit->text();
+    if (url.isEmpty())
+        return ;
+    url = url.replace("%1", text);
+    const QString filePath = QApplication::applicationDirPath() + "/audios";
+    QDir dir(filePath);
+    dir.mkpath(filePath);
+
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
+        // 保存文件
+        QByteArray fileData = reply1->readAll();
+        if (fileData.isEmpty())
+        {
+            qWarning() << "网络音频为空";
+            return ;
+        }
+        QString path = filePath + "/" + snum(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
+        QFile file(path);
+        file.open(QFile::WriteOnly);
+        QDataStream stream(&file);
+        stream << fileData;
+        file.flush();
+        file.close();
+
+        // 播放文件
+        QMediaPlayer *player = new QMediaPlayer(this);
+        player->setMedia(QUrl::fromLocalFile(path));
+        connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
+            if (state == QMediaPlayer::StoppedState)
+            {
+                player->deleteLater();
+
+                QFile file(path);
+                file.remove();
+            }
+        });
+        player->play();
+    });
+
+    manager->get(*request);
 }
 
 void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
@@ -7990,18 +8041,34 @@ void MainWindow::on_voicePreviewButton_clicked()
 void MainWindow::on_voiceLocalRadio_clicked()
 {
     QTimer::singleShot(100, [=]{
-        initTTS();
+        if (!tts)
+        {
+            initTTS();
+        }
+        else
+        {
+            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
+        }
     });
 }
 
 void MainWindow::on_voiceXfyRadio_clicked()
 {
     QTimer::singleShot(100, [=]{
-        initTTS();
+        if (!xfyTTS)
+        {
+            initTTS();
+        }
+        else
+        {
+            xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
+        }
     });
-    ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
-    ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
-    ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
 }
 
 void MainWindow::on_voiceCustomRadio_clicked()
@@ -8044,4 +8111,9 @@ void MainWindow::on_xfyApiKeyEdit_editingFinished()
     {
         xfyTTS->setApiSecret(text);
     }
+}
+
+void MainWindow::on_voiceCustomUrlEdit_editingFinished()
+{
+    settings.setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
 }
