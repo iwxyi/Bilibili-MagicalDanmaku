@@ -239,6 +239,16 @@ private slots:
 
     void delRoomBlockUser(qint64 id);
 
+    void eternalBlockUser(qint64 uid, QString uname);
+
+    void cancelEternalBlockUser(qint64 uid);
+
+    void cancelEternalBlockUserAndUnblock(qint64 uid);
+
+    void saveEternalBlockUsers();
+
+    void detectEternalBlockUsers();
+
     void on_enableBlockCheck_clicked();
 
     void on_newbieTipCheck_clicked();
@@ -426,6 +436,8 @@ private slots:
     void on_xfyApiKeyEdit_editingFinished();
 
     void on_voiceCustomUrlEdit_editingFinished();
+
+    void on_eternalBlockListButton_clicked();
 
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
@@ -694,8 +706,5 @@ private:
 
     // 游戏列表
     QList<qint64> gameUsers[CHANNEL_COUNT];
-
-    // 永久禁言
-    QList<EternalBlockUser> eternalBlockUsers;
 };
 #endif // MAINWINDOW_H

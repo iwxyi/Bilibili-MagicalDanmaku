@@ -16,6 +16,7 @@ QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
+QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -6058,6 +6059,75 @@ void MainWindow::delRoomBlockUser(qint64 id)
     manager->post(*request, data.toStdString().data());
 }
 
+void MainWindow::eternalBlockUser(qint64 uid, QString uname)
+{
+    if (eternalBlockUsers.contains(EternalBlockUser(uid)))
+    {
+        localNotify("该用户已经在永久禁言中");
+        return ;
+    }
+
+    addBlockUser(uid, 720);
+
+    eternalBlockUsers.append(EternalBlockUser(uid, uname, QDateTime::currentSecsSinceEpoch()));
+    saveEternalBlockUsers();
+}
+
+void MainWindow::cancelEternalBlockUser(qint64 uid)
+{
+    EternalBlockUser user(uid);
+    if (!eternalBlockUsers.contains(user))
+        return ;
+
+    eternalBlockUsers.removeOne(user);
+    saveEternalBlockUsers();
+}
+
+void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
+{
+    cancelEternalBlockUser(uid);
+
+    delBlockUser(uid);
+}
+
+void MainWindow::saveEternalBlockUsers()
+{
+    QJsonArray array;
+    int size = eternalBlockUsers.size();
+    for (int i = 0; i < size; i++)
+        array.append(eternalBlockUsers.at(i).toJson());
+    settings.setValue("danmaku/eternalBlockUsers", array);
+}
+
+/**
+ * 检测需要重新禁言的用户，越前面时间越早
+ */
+void MainWindow::detectEternalBlockUsers()
+{
+    qint64 currentSecond = QDateTime::currentSecsSinceEpoch();
+    const int MAX_BLOCK_HOUR = 720;
+    qint64 maxBlockSecond = MAX_BLOCK_HOUR * 3600;
+    const int netDelay = 5; // 5秒的屏蔽时长
+    bool blocked = false;
+    for (int i = 0; i < eternalBlockUsers.size(); i++)
+    {
+        EternalBlockUser user = eternalBlockUsers.first();
+        if (user.time + maxBlockSecond + netDelay >= currentSecond) // 仍在冷却中
+            break;
+
+        // 该补上禁言啦
+        blocked = true;
+        qDebug() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
+        addBlockUser(user.uid, MAX_BLOCK_HOUR);
+
+        user.time = currentSecond;
+        eternalBlockUsers.removeFirst();
+        eternalBlockUsers.append(user);
+    }
+    if (blocked)
+        saveEternalBlockUsers();
+}
+
 void MainWindow::on_enableBlockCheck_clicked()
 {
     bool enable = ui->enableBlockCheck->isChecked();
@@ -6255,6 +6325,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
         connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
+        connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
         connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
             danmakuWindow->deleteLater();
             danmakuWindow = nullptr;
@@ -8146,4 +8218,13 @@ void MainWindow::on_xfyApiKeyEdit_editingFinished()
 void MainWindow::on_voiceCustomUrlEdit_editingFinished()
 {
     settings.setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
+}
+
+
+void MainWindow::on_eternalBlockListButton_clicked()
+{
+    EternalBlockDialog* dialog = new EternalBlockDialog(&eternalBlockUsers, this);
+    connect(dialog, SIGNAL(signalCancelEternalBlock(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
+    connect(dialog, SIGNAL(signalCancelBlock(qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64)));
+    dialog->exec();
 }

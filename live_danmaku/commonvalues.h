@@ -5,6 +5,7 @@
 #include "livedanmaku.h"
 
 class QSettings;
+class EternalBlockUser;
 
 #if true
 #define s8(x) QString(x)
@@ -28,6 +29,7 @@ protected:
     static QHash<QString, QString> customVariant; // 自定义变量
     static QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
     static QHash<int, QString> giftNames; // 礼物名字
+    static QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
 
     // 登陆信息
     static QString browserCookie;

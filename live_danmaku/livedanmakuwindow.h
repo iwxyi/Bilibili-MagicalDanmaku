@@ -41,6 +41,7 @@
 #include "qxtglobalshortcut.h"
 #include "portraitlabel.h"
 #include "commonvalues.h"
+#include "eternalblockdialog.h"
 
 #define DANMAKU_ANIMATION_ENABLED true
 
@@ -78,6 +79,8 @@ signals:
     void signalSendMsgToPk(QString msg);
     void signalAddBlockUser(qint64 uid, int hour);
     void signalDelBlockUser(qint64 uid);
+    void signalEternalBlockUser(qint64 uid, QString uname);
+    void signalCancelEternalBlockUser(qint64 uid);
     void signalChangeWindowMode();
 
 public slots:
