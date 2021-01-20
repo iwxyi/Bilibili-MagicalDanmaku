@@ -1258,7 +1258,7 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionFont, &QAction::triggered, this, [=]{
         bool ok;
-        QFont font = QFontDialog::getFont(&ok,this);
+        QFont font = QFontDialog::getFont(&ok, danmakuFont, this, "设置弹幕字体");
         if (!ok)
             return ;
         this->danmakuFont = font;

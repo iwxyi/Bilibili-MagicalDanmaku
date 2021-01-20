@@ -32,6 +32,7 @@
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
 #include "xfytts.h"
+#include "eternalblockdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -693,5 +694,8 @@ private:
 
     // 游戏列表
     QList<qint64> gameUsers[CHANNEL_COUNT];
+
+    // 永久禁言
+    QList<EternalBlockUser> eternalBlockUsers;
 };
 #endif // MAINWINDOW_H

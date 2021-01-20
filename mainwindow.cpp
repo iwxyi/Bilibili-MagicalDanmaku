@@ -497,6 +497,14 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动参与天选
     ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
 
+    // 永久禁言
+    QJsonArray eternalBlockArray = settings.value("danmaku/eternalBlockUsers").toJsonArray();
+    int eternalBlockSize = eternalBlockArray.size();
+    for (int i = 0; i < eternalBlockSize; i++)
+    {
+        eternalBlockUsers.append(EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject()));
+    }
+
     // 本地调试模式
     localDebug = settings.value("danmaku/localDebug", false).toBool();
     ui->localDebugCheck->setChecked(localDebug);
@@ -620,8 +628,8 @@ void MainWindow::pullLiveDanmaku()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qDebug() << result;
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
             return ;
         }
         QJsonObject json = document.object();
@@ -788,8 +796,6 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     s.replace(posl, posr-posl, roomId);
 
     QByteArray ba(s.toStdString().data());
-//    QByteArray ba("color=16777215&fontsize=25&mode=1&msg=thist&rnd=1604144057&roomid=11584296&bubble=0&csrf_token=13ddba7f6f0ad582fecef801d40b3abf&csrf=13ddba7f6f0ad582fecef801d40b3abf");
-//    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -797,12 +803,11 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         manager->deleteLater();
         delete request;
 
-//        qDebug() << data;
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "发送弹幕：" << error.errorString();
+            qCritical() << "发送弹幕：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -811,7 +816,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         if (!errorMsg.isEmpty())
         {
             statusLabel->setText(errorMsg);
-            qDebug() << s8("warning: 发送失败：") << errorMsg << msg;
+            qCritical() << s8("warning: 发送失败：") << errorMsg << msg;
             localNotify(errorMsg + " -> " + msg);
         }
     });
@@ -877,7 +882,7 @@ void MainWindow::slotSendAutoMsg()
         else if (res == DelayRes) // 修改延迟
         {
             if (resVal < 0)
-                qDebug() << "设置延时时间出错";
+                qCritical() << "设置延时时间出错";
             autoMsgTimer->setInterval(resVal);
             return ;
         }
@@ -906,8 +911,6 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
 
     // 避免太频繁发消息
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-//    qDebug() << "TEST发送冷却弹幕：" << msg << cd << channel << "cd:" << timestamp - msgCds[channel]
-//             << "时间：" << timestamp << msgCds[channel] << cd;
     if (timestamp - msgCds[channel] < cd)
     {
         return ;
@@ -1286,13 +1289,13 @@ void MainWindow::getUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户信息出错：" << error.errorString();
+            qCritical() << "获取用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1329,13 +1332,13 @@ void MainWindow::getRoomUserInfo()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间用户信息出错：" << error.errorString();
+            qCritical() << "获取房间用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1456,7 +1459,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     {
         if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
         {
-            qDebug() << "点歌未带粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
+            qWarning() << "点歌未带粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
             return ;
         }
     }
@@ -1497,7 +1500,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 {
-    qDebug() << "error" << socket->errorString();
+    qCritical() << "error" << socket->errorString();
     statusLabel->setText(socket->errorString());
 }
 
@@ -1521,7 +1524,7 @@ void MainWindow::initWS()
         // 正在直播的时候突然断开了
         if (liveStatus)
         {
-            qDebug() << "正在直播的时候突然断开，10秒后重连...";
+            qWarning() << "正在直播的时候突然断开，10秒后重连...";
             liveStatus = false;
             // 尝试10秒钟后重连
             connectServerTimer->setInterval(10000);
@@ -1545,7 +1548,7 @@ void MainWindow::initWS()
         try {
             slotBinaryMessageReceived(message);
         } catch (...) {
-            qDebug() << "!!!!!!!error:slotBinaryMessageReceived";
+            qCritical() << "!!!!!!!error:slotBinaryMessageReceived";
         }
 
     });
@@ -1646,13 +1649,13 @@ void MainWindow::getRoomInit()
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间初始化出错：" << error.errorString();
+            qCritical() << "获取房间初始化出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            qCritical() << "返回结果不为0：" << json.value("message").toString();
             return ;
         }
 
@@ -1678,14 +1681,14 @@ void MainWindow::getRoomInfo(bool reconnect)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间信息出错：" << error.errorString();
+            qCritical() << "获取房间信息出错：" << error.errorString();
             ui->connectStateLabel->setText("无法获取房间信息");
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1907,13 +1910,13 @@ void MainWindow::getUpFace(QString uid)
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取主播头像出错：" << error.errorString();
+            qCritical() << "获取主播头像出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -1971,13 +1974,13 @@ void MainWindow::getDanmuInfo()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取弹幕信息出错：" << error.errorString();
+            qCritical() << "获取弹幕信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -2021,7 +2024,7 @@ void MainWindow::getFansAndUpdate()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取粉丝出错：" << error.errorString();
+            qCritical() << "获取粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2800,8 +2803,8 @@ QString MainWindow::processVariantConditions(QString msg) const
             }
             /*else
             {
-                qDebug() << "error: 无法比较的表达式:" << match.capturedTexts().first();
-                qDebug() << "    原始语句：" << msg;
+                qCritical() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+                qCritical() << "    原始语句：" << msg;
             }*/
         }
         if (isTrue)
@@ -2837,7 +2840,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     }
     if (valss.size() != ops.size() + 1)
     {
-        qDebug() << "错误的表达式：" << valss << ops << exp;
+        qCritical() << "错误的表达式：" << valss << ops << exp;
         return 0;
     }
 
@@ -2851,7 +2854,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
         {
             if (vals[i+1] == 0)
             {
-                qDebug() << "警告：被除数是0 ：" << exp;
+                qWarning() << "警告：被除数是0 ：" << exp;
                 vals[i+1] = 1;
             }
             vals[i] /= vals[i+1];
@@ -3177,7 +3180,7 @@ void MainWindow::startRecordUrl(QString url)
     QFile file(path);
     if (!file.open(QFile::WriteOnly))
     {
-        qDebug() << "写入文件失败" << path;
+        qCritical() << "写入文件失败" << path;
         reply->deleteLater();
         return ;
     }
@@ -3187,7 +3190,7 @@ void MainWindow::startRecordUrl(QString url)
         qint64 write_bytes = file.write(data);
         file.flush();
         if (write_bytes != data.size())
-            qDebug() << "写入文件大小错误" << write_bytes << "/" << data.size();
+            qCritical() << "写入文件大小错误" << write_bytes << "/" << data.size();
     }
 
     reply->deleteLater();
@@ -3639,7 +3642,7 @@ void MainWindow::restoreCustomVariant(QString text)
             customVariant.insert(key, val);
         }
         else
-            qDebug() << "自定义变量读取失败：" << s;
+            qCritical() << "自定义变量读取失败：" << s;
     }
 }
 
@@ -3672,7 +3675,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     {
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("认证出错");
+            qCritical() << s8("认证出错");
         }
     }
     else if (operation == HEARTBEAT_REPLY) // 心跳包回复（人气值）
@@ -3740,7 +3743,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QJsonDocument document = QJsonDocument::fromJson(body, &error);
                 if (error.error != QJsonParseError::NoError)
                 {
-                    qDebug() << s8("body转json出错：") << error.errorString();
+                    qCritical() << s8("body转json出错：") << error.errorString();
                     return ;
                 }
                 QJsonObject json = document.object();
@@ -3830,14 +3833,14 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 else
                 {
-                    qDebug() << "未处理的命令=" << cmd << "   正文=" << QString(body);
+                    qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
                 }
 
                 slotCmdEvent(cmd, LiveDanmaku());
             }
             else
             {
-                qDebug() << s8("未知协议：") << protover << s8("，若有必要请处理");
+                qWarning() << s8("未知协议：") << protover << s8("，若有必要请处理");
                 qDebug() << s8("未知正文：") << body;
             }
         }
@@ -3888,10 +3891,10 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << s8("解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("包数值：") << offset << packSize << "  解压后大小：" << unc.size();
-            qDebug() << s8(">>当前JSON") << jsonBa;
-            qDebug() << s8(">>解压正文") << unc;
+            qCritical() << s8("解析解压后的JSON出错：") << error.errorString();
+            qCritical() << s8("包数值：") << offset << packSize << "  解压后大小：" << unc.size();
+            qCritical() << s8(">>当前JSON") << jsonBa;
+            qCritical() << s8(">>解压正文") << unc;
             return ;
         }
         QJsonObject json = document.object();
@@ -3903,7 +3906,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         try {
             handleMessage(json);
         } catch (...) {
-            qDebug() << s8("出错啦") << jsonBa;
+            qCritical() << s8("出错啦") << jsonBa;
         }
 
         offset += packSize;
@@ -4285,8 +4288,8 @@ void MainWindow::handleMessage(QJsonObject json)
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
-                qDebug() << "识别舰长进入失败：" << copy_writing;
-                qDebug() << data;
+                qWarning() << "识别舰长进入失败：" << copy_writing;
+                qWarning() << data;
             }
             return ;
         }
@@ -4904,7 +4907,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else
     {
-        qDebug() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
+        qWarning() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
         slotCmdEvent(cmd, LiveDanmaku());
     }
 }
@@ -4978,7 +4981,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户粉丝出错：" << error.errorString();
+            qCritical() << "获取用户粉丝出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5030,7 +5033,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户数据出错：" << error.errorString();
+            qCritical() << "获取用户数据出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5083,7 +5086,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户投稿出错：" << error.errorString();
+            qCritical() << "获取用户投稿出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5678,7 +5681,7 @@ void MainWindow::refreshBlockList()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取房间禁言出错：" << error.errorString();
+            qCritical() << "获取房间禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5721,7 +5724,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
 {
     if (roomId.isEmpty() || browserCookie.isEmpty())
     {
-        qDebug() << "房间为空，或未登录";
+        qWarning() << "房间为空，或未登录";
         return ;
     }
 
@@ -5767,7 +5770,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "赠送礼物出错：" << error.errorString();
+            qCritical() << "赠送礼物出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -5776,7 +5779,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         if (message != "success")
         {
             statusLabel->setText(message);
-            qDebug() << s8("warning: 发送失败：") << message << datas.join("&");
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
 
@@ -5804,13 +5807,13 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取视频流网址出错：" << error.errorString();
+            qCritical() << "获取视频流网址出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -5935,7 +5938,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "添加禁言出错：" << error.errorString();
+            qCritical() << "添加禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -5985,7 +5988,7 @@ void MainWindow::delBlockUser(qint64 uid)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "解除屏蔽出错：" << error.errorString();
+            qCritical() << "解除屏蔽出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -6038,7 +6041,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "解除禁言出错：" << error.errorString();
+            qCritical() << "解除禁言出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -6221,7 +6224,7 @@ bool MainWindow::isConditionTrue(T a, T b, QString op) const
         return a < b;
     if (op == "<=")
         return a <= b;
-    qDebug() << "无法识别的比较模板类型：" << a << op << b;
+    qWarning() << "无法识别的比较模板类型：" << a << op << b;
     return false;
 }
 
@@ -6887,7 +6890,7 @@ void MainWindow::pkEnd(QJsonObject json)
                 pkSocket->close(); // 会自动deleterLater
             // pkSocket->deleteLater();
         } catch (...) {
-            qDebug() << "delete pkSocket failed";
+            qCritical() << "delete pkSocket failed";
         }
         pkSocket = nullptr;
     }
@@ -6902,8 +6905,8 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qDebug() << result;
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
             return ;
         }
         QJsonObject json = document.object();
@@ -6982,13 +6985,13 @@ void MainWindow::connectPkRoom()
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "连接PK房间出错：" << error.errorString();
+            qCritical() << "连接PK房间出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("pk返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("pk返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -7091,10 +7094,10 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
         QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << s8("pk解析解压后的JSON出错：") << error.errorString();
-            qDebug() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
-            qDebug() << s8(">>pk当前JSON") << jsonBa;
-            qDebug() << s8(">>pk解压正文") << unc;
+            qCritical() << s8("pk解析解压后的JSON出错：") << error.errorString();
+            qCritical() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
+            qCritical() << s8(">>pk当前JSON") << jsonBa;
+            qCritical() << s8(">>pk解压正文") << unc;
             return ;
         }
         QJsonObject json = document.object();
@@ -7306,13 +7309,13 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "获取用户信息出错：" << error.errorString();
+            qCritical() << "获取用户信息出错：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -7417,14 +7420,14 @@ void MainWindow::wearMedal(qint64 medalId)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "设置Medal出错：" << error.errorString();
+            qCritical() << "设置Medal出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
         qDebug() << "佩戴主播粉丝勋章成功";
@@ -7466,7 +7469,7 @@ void MainWindow::doSign()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "签到出错：" << error.errorString();
+            qCritical() << "签到出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -7474,7 +7477,7 @@ void MainWindow::doSign()
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("返回结果不为0：") << msg;
+            qCritical() << s8("返回结果不为0：") << msg;
             ui->autoDoSignCheck->setText(msg);
         }
         else
@@ -7524,8 +7527,8 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "参加天选出错：" << error.errorString();
-            qDebug() << QString(data);
+            qCritical() << "参加天选出错：" << error.errorString();
+            qCritical() << QString(data);
             return ;
         }
         QJsonObject object = document.object();
@@ -7533,7 +7536,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("返回结果不为0：") << msg;
+            qCritical() << s8("返回结果不为0：") << msg;
             ui->autoLOTCheck->setText(msg);
         }
         else
@@ -7582,7 +7585,6 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     params << "csrf_token=" + csrf_token;
     params << "csrf=" + csrf_token;
     QByteArray ba(params.join("&").toStdString().data());
-    qDebug() << ba;
 
     // 连接槽
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -7595,7 +7597,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "发送出错：" << error.errorString();
+            qCritical() << "发送出错：" << error.errorString();
             return ;
         }
         QJsonObject object = document.object();
@@ -7603,7 +7605,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
-            qDebug() << s8("发送消息出错，返回结果不为0：") << msg;
+            qCritical() << s8("发送消息出错，返回结果不为0：") << msg;
             return ;
         }
     });
