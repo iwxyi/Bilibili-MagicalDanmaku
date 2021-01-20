@@ -331,7 +331,7 @@
 | not_welcome      | 不自动欢迎               | 不欢迎：1，欢迎：0                            |
 | blocked          | 被禁言中                 | 禁言：1，未禁言0                              |
 
-### 招呼变量列表
+### 招呼变量
 
 | 变量      | 描述           | 示例                                              |
 | --------- | -------------- | ------------------------------------------------- |
@@ -522,6 +522,84 @@ tips：
 - 关闭/开启定时任务
 - 关闭/开启自动连接
 - 关闭机器人：全局关闭（将无法远程唤醒）
+
+
+
+### 事件动作
+
+收到服务器CMD消息、一些程序的运行状态的改变，都会触发本程序中的“事件”。
+
+部分数据可直接用 `%uid%`、`%uname%` 等变量获得，部分CMD未读取数据，返回为空。
+
+大部分CMD等同于B站后台CMD，也有一些是自创的。可用事件CMD如下：
+
+| 事件命令                      | 说明                       |
+| ----------------------------- | -------------------------- |
+| START_UP                      | 程序启动                   |
+| LIVE                          | 开播                       |
+| PREPARING                     | 下播                       |
+| ROOM_CHANGE                   | 房间信息改变               |
+| ROOM_RANK                     | 排名改变                   |
+| DANMU_MSG                     | 接收到弹幕                 |
+| SEND_GIFT                     | 有人送礼                   |
+| WELCOME_GUARD                 | 舰长进入（不会触发）       |
+| ENTRY_EFFECT                  | 舰长、热门榜、老爷进入     |
+| WELCOME                       | 老爷进入                   |
+| INTERACT_WORD                 | 用户进入                   |
+| ATTENTION                     | 用户关注                   |
+| SHARE                         | 用户分享直播间             |
+| ROOM_REAL_TIME_MESSAGE_UPDATE | 粉丝数量改变               |
+| SUPER_CHAT_MESSAGE            | 醒目留言                   |
+| SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译           |
+| SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言               |
+| SPECIAL_GIFT                  | 节奏风暴                   |
+| ROOM_BLOCK_MSG                | 用户被禁言                 |
+| PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始     |
+| PK_BATTLE_SETTLE              |                            |
+| PK_BATTLE_START               | 大乱斗开始                 |
+| PK_BATTLE_PROCESS             | 大乱斗双方送礼             |
+| PK_BATTLE_END                 | 大乱斗结束                 |
+| PK_BATTLE_SETTLE_USER         |                            |
+| PK_BATTLE_SETTLE_V2           |                            |
+| PK_LOTTERY_START              | 大乱斗胜利后的抽奖         |
+| GUARD_BUY                     | 有人上船                   |
+| USER_TOAST_MSG                | 上船附带的通知             |
+| HOT_RANK_CHANGED              | 热门榜排名改变             |
+| HOT_RANK_SETTLEMENT           | 荣登热门榜topX             |
+| ONLINE_RANK_V2                | 礼物榜（高能榜）刷新       |
+| ONLINE_RANK_TOP3              | 高能榜TOP3改变             |
+| ONLINE_RANK_COUNT             | 高能榜改变                 |
+| NOTICE_MSG                    | 上船等带的通知             |
+| COMBO_SEND                    | 礼物连击                   |
+| SPECIAL_GIFT                  | 定制的专属礼物             |
+| ANCHOR_LOT_CHECKSTATUS        | 天选时刻前的审核           |
+| ANCHOR_LOT_START              | 开启天选                   |
+| ANCHOR_LOT_END                | 天选结束                   |
+| ANCHOR_LOT_AWARD              | 天选结果推送               |
+| VOICE_JOIN_ROOM_COUNT_INFO    | 申请连麦队列变化           |
+| VOICE_JOIN_LIST               | 连麦申请、取消连麦申请     |
+| VOICE_JOIN_STATUS             | 开始连麦、结束连麦         |
+| WARNING                       | 被警告，`%text%`可获取内容 |
+| room_admin_entrance           | 设置房管                   |
+| ROOM_ADMINS                   | 房管数量改变               |
+
+> 考虑到发送弹幕的限制，如果同一个事件添加多个响应的动作，那么会按队列顺序执行，而不会同时一口气执行完。
+
+#### 示例：大乱斗提醒
+
+大乱斗结束前30秒提醒：一次大乱斗为5分钟，开始后4分半发送弹幕，270秒=270000毫秒。
+
+添加 `事件`：
+
+```
+PK_BATTLE_START
+```
+
+添加 `动作`：
+
+```
+>timerShot(270000, 大乱斗即将结束)
+```
 
 
 

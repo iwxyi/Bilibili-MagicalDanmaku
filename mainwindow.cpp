@@ -2624,7 +2624,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%guard_buy%", danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
 
     if (msg.contains("%guard_count%"))
-        msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()))
+        msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
 
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
@@ -3689,15 +3689,13 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 定时操作
     if (msg.contains("timerShot"))
     {
-        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*?(.+)\\s*?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
             int time = caps.at(1).toInt();
             QString msg = caps.at(2);
             QTimer::singleShot(time, this, [=]{
-                QString nextMsg = autoMsgQueues.first().first();
                 QRegularExpression re("^\\s*>");
                 if (msg.indexOf(re) > -1)
                 {
