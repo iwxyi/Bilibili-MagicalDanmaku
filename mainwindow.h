@@ -563,6 +563,7 @@ private:
     QPixmap roomCover;
     QPixmap upFace;
     bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+    QTimer* hourTimer = nullptr;
 
     // 动画
     double paletteProg = 0;
@@ -707,9 +708,6 @@ private:
     QFont screenDanmakuFont;
     QColor screenDanmakuColor;
     QList<QLabel*> screenLabels;
-
-    // 自动签到
-    QTimer* doSignTimer;
 
     // 游戏列表
     QList<qint64> gameUsers[CHANNEL_COUNT];

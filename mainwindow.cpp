@@ -488,15 +488,9 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 自动签到
-    doSignTimer = new QTimer(this);
-    doSignTimer->setInterval(24 * 60 * 60 * 1000);
-    connect(doSignTimer, &QTimer::timeout, this, [=]{
-        doSign();
-    });
     if (settings.value("danmaku/autoDoSign", false).toBool())
     {
         ui->autoDoSignCheck->setChecked(true);
-        doSignTimer->start();
     }
 
     // 自动参与天选
@@ -509,6 +503,25 @@ MainWindow::MainWindow(QWidget *parent)
     {
         eternalBlockUsers.append(EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject()));
     }
+
+    // 每小时的事件
+    hourTimer = new QTimer(this);
+    hourTimer->setInterval(3600000);
+    connect(hourTimer, &QTimer::timeout, this, [=]{
+        // 永久禁言
+        detectEternalBlockUsers();
+
+        // 自动签到
+        if (ui->autoDoSignCheck->isChecked())
+        {
+            int hour = QTime::currentTime().hour();
+            if (hour == 0)
+            {
+                doSign();
+            }
+        }
+    });
+    hourTimer->start();
 
     // 本地调试模式
     localDebug = settings.value("danmaku/localDebug", false).toBool();
@@ -3946,6 +3959,58 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
                     localNotify(msg);
                 }
+                else if (cmd == "PK_BATTLE_START_NEW")
+                {
+                    /*{
+                        "cmd": "PK_BATTLE_START_NEW",
+                        "pk_id": 200271102,
+                        "pk_status": 201,
+                        "timestamp": 1611152129,
+                        "data": {
+                            "battle_type": 1,
+                            "final_hit_votes": 0,
+                            "pk_start_time": 1611152129,
+                            "pk_frozen_time": 1611152429,
+                            "pk_end_time": 1611152439,
+                            "pk_votes_type": 0,
+                            "pk_votes_add": 0,
+                            "pk_votes_name": "\\u4e71\\u6597\\u503c"
+                        }
+                    }*/
+                }
+                else if (cmd == "PK_BATTLE_PROCESS_NEW")
+                {
+                    /*{
+                        "cmd": "PK_BATTLE_PROCESS_NEW",
+                        "pk_id": 200270835,
+                        "pk_status": 201,
+                        "timestamp": 1611151874,
+                        "data": {
+                            "battle_type": 1,
+                            "init_info": {
+                                "room_id": 2603963,
+                                "votes": 55,
+                                "best_uname": "\\u963f\\u5179\\u963f\\u5179\\u7684\\u77db"
+                            },
+                            "match_info": {
+                                "room_id": 22532956,
+                                "votes": 184,
+                                "best_uname": "\\u591c\\u7a7a\\u3001"
+                            }
+                        }
+                    }*/
+                }
+                else if (cmd == "PK_BATTLE_RANK_CHANGE")
+                {
+                    /*{
+                        "cmd": "PK_BATTLE_RANK_CHANGE",
+                        "timestamp": 1611152461,
+                        "data": {
+                            "first_rank_img_url": "https:\\/\\/i0.hdslb.com\\/bfs\\/live\\/078e242c4e2bb380554d55d0ac479410d75a0efc.png",
+                            "rank_name": "\\u767d\\u94f6\\u6597\\u58ebx1\\u661f"
+                        }
+                    }*/
+                }
                 else
                 {
                     qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
@@ -5323,9 +5388,9 @@ void MainWindow::initTTS()
             ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
             ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
             xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
-            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
-            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed", 50).toInt() );
         }
         break;
     case VoiceCustom:
@@ -5507,7 +5572,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
     if (danmaku.getMsgType() != MSG_GIFT)
         return false;
 
-    // 判断，同人 && 礼物同名 && 3秒内
+    // 判断，同人 && 礼物同名 && 6秒内
     qint64 uid = danmaku.getUid();
     int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
@@ -5520,7 +5585,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0) // 有些是没带时间的
             continue;
-        if (t + 3 < time) // 3秒以内
+        if (t + 6 < time) // 3秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
@@ -5771,6 +5836,28 @@ bool MainWindow::handlePK2(QJsonObject json)
         // result_type: 2赢，-1输
 
         slotCmdEvent(cmd, LiveDanmaku());
+    }
+    else if (cmd == "PK_BATTLE_PRE_NEW")
+    {
+        /*{
+            "cmd": "PK_BATTLE_PRE_NEW",
+            "data": {
+                "battle_type": 1,
+                "end_win_task": null,
+                "face": "http://i0.hdslb.com/bfs/face/4c0e444dbabe86a3c4a3c47b72e2e63bd4a96684.jpg",
+                "match_type": 1,
+                "pk_votes_name":"\xE4\xB9\xB1\xE6\x96\x97\xE5\x80\xBC",
+                "pre_timer": 10,
+                "room_id": 4857111,
+                "season_id": 31,
+                "uid": 14833326,
+                "uname":"\xE5\x8D\x83\xE9\xAD\x82\xE5\x8D\xB0"
+            },
+            "pk_id": 200271102,
+            "pk_status": 101,
+            "roomid": 22532956,
+            "timestamp": 1611152119
+        }*/
     }
     else
     {
@@ -8065,13 +8152,6 @@ void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
 void MainWindow::on_autoDoSignCheck_clicked()
 {
     settings.setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
-    if (ui->autoDoSignCheck->isChecked())
-    {
-        doSign();
-        doSignTimer->start();
-    }
-    else
-        doSignTimer->stop();
 }
 
 void MainWindow::on_actionRoom_Status_triggered()
@@ -8291,9 +8371,9 @@ void MainWindow::on_voiceXfyRadio_clicked()
         else
         {
             xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
-            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
-            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed", 50).toInt() );
         }
     });
 }
