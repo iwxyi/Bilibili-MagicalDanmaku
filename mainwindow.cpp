@@ -327,16 +327,27 @@ MainWindow::MainWindow(QWidget *parent)
         initTTS();
 
     voicePlatform = static_cast<VoicePlatform>(settings.value("voice/platform", 0).toInt());
-    if (voicePlatform == 0)
+    if (voicePlatform == VoiceLocal)
+    {
         ui->voiceLocalRadio->setChecked(true);
-    else if (voicePlatform == 1)
+        ui->voiceNameEdit->setText(settings.value("voice/localName").toString());
+    }
+    else if (voicePlatform == VoiceXfy)
+    {
         ui->voiceXfyRadio->setChecked(true);
-    else if (voicePlatform == 2)
+        ui->voiceNameEdit->setText(settings.value("xfytts/name").toString());
+        ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
+        ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
+        ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
+    }
+    else if (voicePlatform == VoiceCustom)
+    {
         ui->voiceCustomRadio->setChecked(true);
+        ui->voiceNameEdit->setText(settings.value("voice/customName").toString());
+    }
 
     ui->voicePitchSlider->setSliderPosition(settings.value("voice/pitch", 50).toInt());
     ui->voiceSpeedSlider->setSliderPosition(settings.value("voice/speed", 50).toInt());
-    ui->voiceNameEdit->setText(settings.value("voice/name").toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -5165,9 +5176,9 @@ void MainWindow::initTTS()
         if (!tts)
         {
             tts = new QTextToSpeech(this);
-            tts->setRate( (settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
-            tts->setPitch( (settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            tts->setVolume( (settings.value("voice/volume", 50).toInt() - 50) / 50.0 );
+//            tts->setRate( (voiceSpeed = settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+//            tts->setPitch( (voicePitch = settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+//            tts->setVolume( (voiceVolume = settings.value("voice/volume", 50).toInt()) / 100.0 );
         }
         break;
     case VoiceXfy:
@@ -5177,6 +5188,10 @@ void MainWindow::initTTS()
                                 settings.value("xfytts/apikey").toString(),
                                 settings.value("xfytts/apisecret").toString(),
                                 this);
+            xfyTTS->setName( voiceName = settings.value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings.value("voice/pitch").toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings.value("voice/speed").toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings.value("voice/speed").toInt() );
         }
         break;
     case VoiceCustom:
@@ -5186,9 +5201,6 @@ void MainWindow::initTTS()
 
 void MainWindow::speekVariantText(QString text)
 {
-    if(!tts || tts->state() != QTextToSpeech::Ready)
-        return ;
-
     // 处理带变量的内容
     text = processTimeVariants(text);
 
@@ -5198,14 +5210,25 @@ void MainWindow::speekVariantText(QString text)
 
 void MainWindow::speakText(QString text)
 {
-    if(!tts || tts->state() != QTextToSpeech::Ready)
-        return ;
-
     // 处理特殊字符
     text.replace("_", " ");
 
-    // 开始播放
-    tts->say(text);
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (!tts)
+            initTTS();
+        else if (tts->state() != QTextToSpeech::Ready)
+            return ;
+        tts->say(text);
+        break;
+    case VoiceXfy:
+        if (!xfyTTS)
+            initTTS();
+        xfyTTS->speakText(text);
+        break;
+    case VoiceCustom:
+        break;
+    }
 }
 
 void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
@@ -7842,6 +7865,7 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
         voicePlatform = VoiceLocal;
         settings.setValue("voice/platform", voicePlatform);
         ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("voice/localName").toString());
     }
 }
 
@@ -7852,6 +7876,7 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
         voicePlatform = VoiceXfy;
         settings.setValue("voice/platform", voicePlatform);
         ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("xfytts/name", "xiaoyan").toString());
     }
 }
 
@@ -7862,12 +7887,28 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
         voicePlatform = VoiceCustom;
         settings.setValue("voice/platform", voicePlatform);
         ui->voiceStack->setCurrentIndex(voicePlatform);
+        ui->voiceNameEdit->setText(settings.value("voice/customName").toString());
     }
 }
 
 void MainWindow::on_voiceNameEdit_editingFinished()
 {
-
+    voiceName = ui->voiceNameEdit->text();
+    switch (voicePlatform) {
+    case VoiceLocal:
+        settings.setValue("voice/localName", voiceName);
+        break;
+    case VoiceXfy:
+        settings.setValue("xfytts/name", voiceName);
+        if (xfyTTS)
+        {
+            xfyTTS->setName(voiceName);
+        }
+        break;
+    case VoiceCustom:
+        settings.setValue("voice/customName", voiceName);
+        break;
+    }
 }
 
 void MainWindow::on_voiceNameSelectButton_clicked()
@@ -7887,6 +7928,10 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
         }
         break;
     case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setPitch(voicePitch);
+        }
         break;
     case VoiceCustom:
         break;
@@ -7905,6 +7950,10 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
         }
         break;
     case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setSpeed(voiceSpeed);
+        }
         break;
     case VoiceCustom:
         break;
@@ -7913,16 +7962,20 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 
 void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 {
-    settings.setValue("voice/speed", voiceVolume = value);
+    settings.setValue("voice/volume", voiceVolume = value);
 
     switch (voicePlatform) {
     case VoiceLocal:
         if (tts)
         {
-            tts->setVolume((voiceVolume - 50) / 50.0);
+            tts->setVolume((voiceVolume) / 100.0);
         }
         break;
     case VoiceXfy:
+        if (xfyTTS)
+        {
+            xfyTTS->setVolume(voiceVolume);
+        }
         break;
     case VoiceCustom:
         break;
@@ -7931,7 +7984,64 @@ void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 
 void MainWindow::on_voicePreviewButton_clicked()
 {
-    initTTS();
-
     speakText("这是一个语音合成示例");
+}
+
+void MainWindow::on_voiceLocalRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        initTTS();
+    });
+}
+
+void MainWindow::on_voiceXfyRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        initTTS();
+    });
+    ui->xfyAppIdEdit->setText(settings.value("xfytts/appid").toString());
+    ui->xfyApiKeyEdit->setText(settings.value("xfytts/apikey").toString());
+    ui->xfyApiSecretEdit->setText(settings.value("xfytts/apisecret").toString());
+}
+
+void MainWindow::on_voiceCustomRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        initTTS();
+    });
+}
+
+void MainWindow::on_label_10_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(link);
+}
+
+void MainWindow::on_xfyAppIdEdit_editingFinished()
+{
+    QString text = ui->xfyAppIdEdit->text();
+    settings.setValue("xfytts/appid", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setAppId(text);
+    }
+}
+
+void MainWindow::on_xfyApiSecretEdit_editingFinished()
+{
+    QString text = ui->xfyApiKeyEdit->text();
+    settings.setValue("xfytts/apikey", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setApiKey(text);
+    }
+}
+
+void MainWindow::on_xfyApiKeyEdit_editingFinished()
+{
+    QString text = ui->xfyApiSecretEdit->text();
+    settings.setValue("xfytts/apisecret", text);
+    if (xfyTTS)
+    {
+        xfyTTS->setApiSecret(text);
+    }
 }

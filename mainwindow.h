@@ -410,6 +410,20 @@ private slots:
 
     void on_voicePreviewButton_clicked();
 
+    void on_voiceLocalRadio_clicked();
+
+    void on_voiceXfyRadio_clicked();
+
+    void on_voiceCustomRadio_clicked();
+
+    void on_label_10_linkActivated(const QString &link);
+
+    void on_xfyAppIdEdit_editingFinished();
+
+    void on_xfyApiSecretEdit_editingFinished();
+
+    void on_xfyApiKeyEdit_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -664,6 +678,7 @@ private:
     int voicePitch = 50;
     int voiceSpeed = 50;
     int voiceVolume = 50;
+    QString voiceName;
 
     // 全屏弹幕
     QFont screenDanmakuFont;
