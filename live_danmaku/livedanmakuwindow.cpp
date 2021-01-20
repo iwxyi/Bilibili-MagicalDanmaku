@@ -841,7 +841,7 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0)
             continue;
-        if (t + 6 < time)
+        if (t + 10 < time)
             return ;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
@@ -1549,7 +1549,7 @@ void LiveDanmakuWindow::showMenu()
     connect(actionEternalBlock, &QAction::triggered, this, [=]{
         emit signalEternalBlockUser(uid, danmaku.getNickname());
     });
-    connect(actionEternalBlock, &QAction::triggered, this, [=]{
+    connect(actionCancelEternalBlock, &QAction::triggered, this, [=]{
         emit signalCancelEternalBlockUser(uid);
     });
     connect(actionDelBlock, &QAction::triggered, this, [=]{

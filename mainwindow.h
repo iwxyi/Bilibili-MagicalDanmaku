@@ -431,11 +431,11 @@ private slots:
 
     void on_label_10_linkActivated(const QString &link);
 
-    void on_xfyAppIdEdit_editingFinished();
+    void on_xfyAppIdEdit_textEdited(const QString &text);
 
-    void on_xfyApiSecretEdit_editingFinished();
+    void on_xfyApiSecretEdit_textEdited(const QString &text);
 
-    void on_xfyApiKeyEdit_editingFinished();
+    void on_xfyApiKeyEdit_textEdited(const QString &text);
 
     void on_voiceCustomUrlEdit_editingFinished();
 

@@ -5572,7 +5572,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
     if (danmaku.getMsgType() != MSG_GIFT)
         return false;
 
-    // 判断，同人 && 礼物同名 && 6秒内
+    // 判断，同人 && 礼物同名 && 10秒内
     qint64 uid = danmaku.getUid();
     int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
@@ -5585,7 +5585,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0) // 有些是没带时间的
             continue;
-        if (t + 6 < time) // 3秒以内
+        if (t + 10 < time) // 110秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
@@ -6283,6 +6283,7 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     eternalBlockUsers.append(EternalBlockUser(uid, uname, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
+    qDebug() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
@@ -6293,6 +6294,7 @@ void MainWindow::cancelEternalBlockUser(qint64 uid)
 
     eternalBlockUsers.removeOne(user);
     saveEternalBlockUsers();
+    qDebug() << "移除永久禁言：" << uid << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
@@ -6309,6 +6311,7 @@ void MainWindow::saveEternalBlockUsers()
     for (int i = 0; i < size; i++)
         array.append(eternalBlockUsers.at(i).toJson());
     settings.setValue("danmaku/eternalBlockUsers", array);
+    qDebug() << "保存永久禁言，当前人数：" << eternalBlockUsers.size();
 }
 
 /**
@@ -8390,9 +8393,8 @@ void MainWindow::on_label_10_linkActivated(const QString &link)
     QDesktopServices::openUrl(link);
 }
 
-void MainWindow::on_xfyAppIdEdit_editingFinished()
+void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 {
-    QString text = ui->xfyAppIdEdit->text();
     settings.setValue("xfytts/appid", text);
     if (xfyTTS)
     {
@@ -8400,9 +8402,8 @@ void MainWindow::on_xfyAppIdEdit_editingFinished()
     }
 }
 
-void MainWindow::on_xfyApiSecretEdit_editingFinished()
+void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 {
-    QString text = ui->xfyApiKeyEdit->text();
     settings.setValue("xfytts/apikey", text);
     if (xfyTTS)
     {
@@ -8410,9 +8411,8 @@ void MainWindow::on_xfyApiSecretEdit_editingFinished()
     }
 }
 
-void MainWindow::on_xfyApiKeyEdit_editingFinished()
+void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 {
-    QString text = ui->xfyApiSecretEdit->text();
     settings.setValue("xfytts/apisecret", text);
     if (xfyTTS)
     {
