@@ -55,6 +55,7 @@ QT_END_NAMESPACE
 #define ATTENTION_CD_CN 3  // 关注冷却通道
 #define TASK_CD_CN 4       // 定时任务冷却通道
 #define REPLY_CD_CN 5      // 自动回复冷却通道
+#define EVENT_CD_CN 6      // 事件动作冷却通道
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -148,6 +149,7 @@ signals:
     void signalLiveStart(QString roomId);
     void signalNewDanmaku(LiveDanmaku danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
+    void signalCmdEvent(QString cmd, LiveDanmaku danmaku);
 
 public slots:
     void pullLiveDanmaku();
@@ -451,9 +453,14 @@ private:
     void addTimerTask(bool enable, int second, QString text);
     void saveTaskList();
     void restoreTaskList();
+
     void addAutoReply(bool enable, QString key, QString reply);
     void saveReplyList();
     void restoreReplyList();
+
+    void addEventAction(bool enable, QString cmd, QString action);
+    void saveEventList();
+    void restoreEventList();
 
     QVariant getCookies();
     void getUserInfo();

@@ -4,6 +4,7 @@
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
 #include "roomstatusdialog.h"
+#include "eventwidget.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -299,6 +300,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动回复
     restoreReplyList();
 
+    // 事件动作
+    restoreEventList();
+
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
     ui->autoSendGiftCheck->setChecked(settings.value("danmaku/sendGift", false).toBool());
@@ -566,7 +570,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
-//        int h = ui->tabWidget->contentsRect().height() - ui->roomCoverLabel->geometry().top();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
         ui->roomCoverLabel->setPixmap(pixmap);
         ui->roomCoverLabel->setMinimumSize(1, 1);
@@ -581,12 +584,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
             continue;
         QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
         auto taskWidget = static_cast<TaskWidget*>(widget);
-//        taskWidget->resize(size.width(), size.height());
-//        taskWidget->setFixedWidth(size.width());
         taskWidget->resize(size);
         taskWidget->autoResizeEdit();
-//        taskWidget->adjustSize(); // autoResizeEdit 的时候会自动resize
-//        item->setSizeHint(taskWidget->size()); // taskWidget内部信号会触发item->setSizeHint
     }
 
     for (int row = 0; row < ui->replyListWidget->count(); row++)
@@ -597,12 +596,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
             continue;
         QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
         auto replyWidget = static_cast<ReplyWidget*>(widget);
-//        replyWidget->resize(size.width(), size.height());
-//        replyWidget->setFixedWidth(size.width());
         replyWidget->resize(size);
         replyWidget->autoResizeEdit();
-//        replyWidget->adjustSize();
-//        item->setSizeHint(replyWidget->size()); // replyWidget内部信号会触发item->setSizeHint
     }
 }
 
@@ -1245,6 +1240,94 @@ void MainWindow::restoreReplyList()
     }
 }
 
+void MainWindow::addEventAction(bool enable, QString cmd, QString action)
+{
+    EventWidget* rw = new EventWidget(this);
+    QListWidgetItem* item = new QListWidgetItem(ui->eventListWidget);
+
+    ui->eventListWidget->addItem(item);
+    ui->eventListWidget->setItemWidget(item, rw);
+    ui->eventListWidget->setCurrentRow(ui->eventListWidget->count()-1);
+    ui->eventListWidget->scrollToBottom();
+
+    // 连接信号
+    connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
+        bool enable = rw->check->isChecked();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Enable", enable);
+    });
+
+    connect(rw->eventEdit, &QLineEdit::textEdited, this, [=]{
+        QString content = rw->eventEdit->text();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Cmd", content);
+    });
+
+    connect(rw->actionEdit, &QPlainTextEdit::textChanged, this, [=]{
+        item->setSizeHint(rw->sizeHint());
+
+        QString content = rw->actionEdit->toPlainText();
+        int row = ui->eventListWidget->row(item);
+        settings.setValue("event/r"+QString::number(row)+"Action", content);
+    });
+
+    connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(slotCmdEvent(QString,LiveDanmaku)));
+
+    connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
+            return ;
+        QStringList msgs = getEditConditionStringList(sl, danmaku);
+        if (msgs.size())
+        {
+            int r = qrand() % msgs.size();
+            QString s = msgs.at(r);
+            if (!s.trimmed().isEmpty())
+            {
+                sendCdMsg(s, 1, EVENT_CD_CN, true, false);
+            }
+        }
+    });
+
+    connect(rw, &EventWidget::signalResized, rw, [=]{
+        item->setSizeHint(rw->size());
+    });
+
+    remoteControl = settings.value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    rw->check->setChecked(enable);
+    rw->eventEdit->setText(cmd);
+    rw->actionEdit->setPlainText(action);
+    rw->autoResizeEdit();
+    rw->adjustSize();
+    item->setSizeHint(rw->sizeHint());
+}
+
+void MainWindow::saveEventList()
+{
+    settings.setValue("event/count", ui->eventListWidget->count());
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+        auto tw = static_cast<EventWidget*>(widget);
+        settings.setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings.setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
+        settings.setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
+    }
+}
+
+void MainWindow::restoreEventList()
+{
+    int count = settings.value("event/count", 0).toInt();
+    for (int row = 0; row < count; row++)
+    {
+        bool enable = settings.value("event/r"+QString::number(row)+"Enable", true).toBool();
+        QString key = settings.value("event/r"+QString::number(row)+"Cmd").toString();
+        QString event = settings.value("event/r"+QString::number(row)+"Action").toString();
+        addEventAction(enable, key, event);
+    }
+}
+
 QVariant MainWindow::getCookies()
 {
     QList<QNetworkCookie> cookies;
@@ -1417,7 +1500,33 @@ void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &pos)
 {
+    QListWidgetItem* item = ui->eventListWidget->currentItem();
 
+    QMenu* menu = new QMenu(this);
+    QAction* actionDelete = new QAction("删除", this);
+
+    if (!item)
+    {
+        actionDelete->setEnabled(false);
+    }
+
+    menu->addAction(actionDelete);
+
+    connect(actionDelete, &QAction::triggered, this, [=]{
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto rw = static_cast<EventWidget*>(widget);
+
+        ui->eventListWidget->removeItemWidget(item);
+        ui->eventListWidget->takeItem(ui->eventListWidget->currentRow());
+
+        saveEventList();
+
+        rw->deleteLater();
+    });
+
+    menu->exec(QCursor::pos());
+
+    actionDelete->deleteLater();
 }
 
 void MainWindow::on_addTaskButton_clicked()
@@ -1440,7 +1549,11 @@ void MainWindow::on_addReplyButton_clicked()
 
 void MainWindow::on_addEventButton_clicked()
 {
-
+    addEventAction(true, "", "");
+    saveEventList();
+    auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
+    auto ew = static_cast<EventWidget*>(widget);
+    ew->eventEdit->setFocus();
 }
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
@@ -3390,12 +3503,12 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
 bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
 {
-    qDebug() << "尝试执行函数：" << msg;
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
     if (msg.indexOf(re) == -1)
         return false;
 
+    qDebug() << "尝试执行函数：" << msg;
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };
@@ -7981,7 +8094,7 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
  */
 void MainWindow::slotCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
-
+    emit signalCmdEvent(cmd, danmaku);
 }
 
 void MainWindow::on_voiceLocalRadio_toggled(bool checked)

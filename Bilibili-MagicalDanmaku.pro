@@ -46,6 +46,7 @@ SOURCES += \
     utils/xfytts.cpp \
     widgets/conditioneditor.cpp \
     widgets/eternalblockdialog.cpp \
+    widgets/eventwidget.cpp \
     widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
     widgets/replywidget.cpp \
@@ -78,6 +79,7 @@ HEADERS += \
     utils/xfytts.h \
     widgets/conditioneditor.h \
     widgets/eternalblockdialog.h \
+    widgets/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/replywidget.h \

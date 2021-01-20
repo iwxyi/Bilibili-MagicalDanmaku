@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>11</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1512,13 +1512,13 @@ margin: 6px;</string>
         <item>
          <widget class="QPushButton" name="addEventButton">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>添加事件触发器</string>
+           <string>添加事件动作</string>
           </property>
           <property name="flat">
            <bool>true</bool>

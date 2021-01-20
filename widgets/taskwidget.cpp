@@ -73,9 +73,8 @@ void TaskWidget::autoResizeEdit()
     int hh = edit->document()->size().height(); // 应该是高度，为啥是行数？
     QFontMetrics fm(edit->font());
     int he = fm.lineSpacing() * (hh + 1);
-    int w = this->width();
-    this->setFixedHeight(edit->pos().y() + he + 9);
-//    this->resize(w, edit->pos().y() + he + 9);
+    int top = check->sizeHint().height();
+    this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     edit->setFixedHeight(he);
     emit signalResized();
 }

@@ -76,9 +76,8 @@ void ReplyWidget::autoResizeEdit()
     int hh = replyEdit->document()->size().height(); // 应该是高度，为啥是行数？
     QFontMetrics fm(replyEdit->font());
     int he = fm.lineSpacing() * (hh + 1);
-    int w = this->width();
-    this->setFixedHeight(replyEdit->pos().y() + he + 9);
-//    this->resize(w, replyEdit->pos().y() + he + 9);
+    int top = keyEdit->sizeHint().height() + check->sizeHint().height();
+    this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     replyEdit->setFixedHeight(he);
     emit signalResized();
 }
