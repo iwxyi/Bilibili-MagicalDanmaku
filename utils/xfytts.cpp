@@ -30,6 +30,14 @@ void XfyTTS::speakText(QString text)
     startConnect();
 }
 
+void XfyTTS::speakNext()
+{
+    if (socket || !speakQueue.size()) // 表示正在连接
+        return ;
+
+    startConnect();
+}
+
 void XfyTTS::startConnect()
 {
     if (APIKey.isEmpty() || APISecret.isEmpty())
@@ -41,6 +49,7 @@ void XfyTTS::startConnect()
         return ;
 
     socket = new QWebSocket();
+    QByteArray* receivedBytes = new QByteArray;
     connect(socket, &QWebSocket::connected, this, [=]{
         AUTH_DEB << "tts connected";
         if (!speakQueue.size())
@@ -83,11 +92,11 @@ void XfyTTS::startConnect()
 
         QByteArray ba = QByteArray::fromBase64(audio.toUtf8());
 //        qDebug() << "~~~~~~~~~~" << ba.length() << ba.left(200).toHex();
-        receivedBytes.append(ba);
+        receivedBytes->append(ba);
 
         if (status == 2) // 结束了
         {
-            generalAudio();
+            generalAudio(receivedBytes);
             socket->close();
         }
     });
@@ -109,7 +118,6 @@ void XfyTTS::startConnect()
     config.setProtocol(QSsl::TlsV1SslV3);
     socket->setSslConfiguration(config);
 
-    receivedBytes.clear();
     socket->open(url);
 }
 
@@ -165,7 +173,7 @@ void XfyTTS::sendText(QString text)
     socket->sendTextMessage(param);
 }
 
-void XfyTTS::generalAudio()
+void XfyTTS::generalAudio(QByteArray* ba)
 {
     QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".pcm";
     AUTH_DEB << "saveFile:" << filePath;
@@ -173,10 +181,9 @@ void XfyTTS::generalAudio()
     QFile file(filePath);
     file.open(QFile::WriteOnly);
     QDataStream stream(&file);
-//    int len = receivedBytes.size();
-//    for(int i=0;i<len;i++)
-//        stream << (uint8_t)receivedBytes[i];      //把数组中的数据写到数据流，即写入文件中
-    stream << receivedBytes;
+    stream << *ba;
+    ba->clear();
+    delete ba;
     file.flush();
     file.close();
 
@@ -200,6 +207,8 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
             if (deleteAfterPlay)
                 inputFile->remove();
             inputFile->deleteLater();
+
+            speakNext();
         }
     });
     audio->start(inputFile);

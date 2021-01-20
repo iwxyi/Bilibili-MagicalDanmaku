@@ -18,6 +18,7 @@ public:
     XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject* parent = nullptr);
 
     void speakText(QString text);
+    void speakNext();
     void playFile(QString filePath, bool deleteAfterPlay = false);
 
     void setAppId(QString s);
@@ -36,7 +37,7 @@ private:
     QString getDate() const;
 
     void sendText(QString text);
-    void generalAudio();
+    void generalAudio(QByteArray* ba);
 
 signals:
     void signalTTSPrepared(QString filePath);
@@ -57,7 +58,6 @@ private:
 
     QAudioFormat fmt;
     QStringList speakQueue;
-    QByteArray receivedBytes;
 };
 
 #endif // XFYTTS_H
