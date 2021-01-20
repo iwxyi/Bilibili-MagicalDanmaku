@@ -45,6 +45,7 @@ SOURCES += \
     order_player/orderplayerwindow.cpp \
     utils/xfytts.cpp \
     widgets/conditioneditor.cpp \
+    widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
     widgets/replywidget.cpp \
     widgets/roomstatusdialog.cpp \
@@ -75,6 +76,7 @@ HEADERS += \
     order_player/songbeans.h \
     utils/xfytts.h \
     widgets/conditioneditor.h \
+    widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/replywidget.h \
     widgets/roomstatusdialog.h \

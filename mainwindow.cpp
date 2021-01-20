@@ -324,7 +324,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoSpeekDanmakuCheck->setChecked(settings.value("danmaku/autoSpeek", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck)
-        tts = new QTextToSpeech(this);
+        initTTS();
+
+    voicePlatform = static_cast<VoicePlatform>(settings.value("voice/platform", 0).toInt());
+    if (voicePlatform == 0)
+        ui->voiceLocalRadio->setChecked(true);
+    else if (voicePlatform == 1)
+        ui->voiceXfyRadio->setChecked(true);
+    else if (voicePlatform == 2)
+        ui->voiceCustomRadio->setChecked(true);
+
+    ui->voicePitchSlider->setSliderPosition(settings.value("voice/pitch", 50).toInt());
+    ui->voiceSpeedSlider->setSliderPosition(settings.value("voice/speed", 50).toInt());
+    ui->voiceNameEdit->setText(settings.value("voice/name").toString());
 
     // 开播
     ui->startLiveWordsEdit->setText(settings.value("live/startWords").toString());
@@ -476,15 +488,7 @@ MainWindow::MainWindow(QWidget *parent)
     localDebug = settings.value("danmaku/localDebug", false).toBool();
     ui->localDebugCheck->setChecked(localDebug);
 
-//    qDebug() << nicknameSimplify("修改昵称需要6个币"); // 昵称调试
-
-    xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
-                        settings.value("xfytts/apikey").toString(),
-                        settings.value("xfytts/apisecret").toString(), this);
-    xfyTTS->speakText("这是一个语音合成示例");
-    QTimer::singleShot(1000, [=]{
-//        xfyTTS->playFile("C:/Users/tom/Downloads/tts_ws_python3_demo/tts_ws_python3_demo/demo.pcm");
-    });
+    slotCmdEvent("START_UP", LiveDanmaku());
 }
 
 MainWindow::~MainWindow()
@@ -1394,6 +1398,11 @@ void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
     actionDelete->deleteLater();
 }
 
+void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &pos)
+{
+
+}
+
 void MainWindow::on_addTaskButton_clicked()
 {
     addTimerTask(true, 1800, "");
@@ -1410,6 +1419,11 @@ void MainWindow::on_addReplyButton_clicked()
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto rw = static_cast<ReplyWidget*>(widget);
     rw->keyEdit->setFocus();
+}
+
+void MainWindow::on_addEventButton_clicked()
+{
+
 }
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
@@ -5144,6 +5158,32 @@ void MainWindow::markNotRobot(qint64 uid)
         robotRecord.setValue("robot/" + snum(uid), -1);
 }
 
+void MainWindow::initTTS()
+{
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (!tts)
+        {
+            tts = new QTextToSpeech(this);
+            tts->setRate( (settings.value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (settings.value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (settings.value("voice/volume", 50).toInt() - 50) / 50.0 );
+        }
+        break;
+    case VoiceXfy:
+        if (!xfyTTS)
+        {
+            xfyTTS = new XfyTTS(settings.value("xfytts/appid").toString(),
+                                settings.value("xfytts/apikey").toString(),
+                                settings.value("xfytts/apisecret").toString(),
+                                this);
+        }
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
 void MainWindow::speekVariantText(QString text)
 {
     if(!tts || tts->state() != QTextToSpeech::Ready)
@@ -7598,7 +7638,7 @@ void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
     if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_sendGiftTextCheck_clicked()
@@ -7610,7 +7650,7 @@ void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
     if (!tts && ui->sendGiftVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
@@ -7622,7 +7662,7 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
     settings.setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
@@ -7687,7 +7727,7 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 {
     settings.setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
-        tts = new QTextToSpeech(this);
+        initTTS();
 }
 
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
@@ -7787,7 +7827,111 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
     settings.setValue("block/autoTime", ui->autoBlockTimeSpin->value());
 }
 
+/**
+ * 所有事件的槽都在这里触发
+ */
 void MainWindow::slotCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
 
+}
+
+void MainWindow::on_voiceLocalRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceLocal;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+    }
+}
+
+void MainWindow::on_voiceXfyRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceXfy;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+    }
+}
+
+void MainWindow::on_voiceCustomRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceCustom;
+        settings.setValue("voice/platform", voicePlatform);
+        ui->voiceStack->setCurrentIndex(voicePlatform);
+    }
+}
+
+void MainWindow::on_voiceNameEdit_editingFinished()
+{
+
+}
+
+void MainWindow::on_voiceNameSelectButton_clicked()
+{
+
+}
+
+void MainWindow::on_voicePitchSlider_valueChanged(int value)
+{
+    settings.setValue("voice/pitch", voicePitch = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setPitch((voicePitch - 50) / 50.0);
+        }
+        break;
+    case VoiceXfy:
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
+{
+    settings.setValue("voice/speed", voiceSpeed = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setRate((voiceSpeed - 50) / 50.0);
+        }
+        break;
+    case VoiceXfy:
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
+{
+    settings.setValue("voice/speed", voiceVolume = value);
+
+    switch (voicePlatform) {
+    case VoiceLocal:
+        if (tts)
+        {
+            tts->setVolume((voiceVolume - 50) / 50.0);
+        }
+        break;
+    case VoiceXfy:
+        break;
+    case VoiceCustom:
+        break;
+    }
+}
+
+void MainWindow::on_voicePreviewButton_clicked()
+{
+    initTTS();
+
+    speakText("这是一个语音合成示例");
 }

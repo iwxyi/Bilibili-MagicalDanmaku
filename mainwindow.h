@@ -128,6 +128,13 @@ public:
         DelayRes,
     };
 
+    enum VoicePlatform
+    {
+        VoiceLocal,
+        VoiceXfy,
+        VoiceCustom
+    };
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -170,9 +177,13 @@ private slots:
 
     void on_replyListWidget_customContextMenuRequested(const QPoint &);
 
+    void on_eventListWidget_customContextMenuRequested(const QPoint &pos);
+
     void on_addTaskButton_clicked();
 
     void on_addReplyButton_clicked();
+
+    void on_addEventButton_clicked();
 
     void slotDiange(LiveDanmaku danmaku);
 
@@ -381,6 +392,24 @@ private slots:
 
     void slotCmdEvent(QString cmd, LiveDanmaku danmaku);
 
+    void on_voiceLocalRadio_toggled(bool checked);
+
+    void on_voiceXfyRadio_toggled(bool checked);
+
+    void on_voiceCustomRadio_toggled(bool checked);
+
+    void on_voiceNameEdit_editingFinished();
+
+    void on_voiceNameSelectButton_clicked();
+
+    void on_voicePitchSlider_valueChanged(int value);
+
+    void on_voiceSpeedSlider_valueChanged(int value);
+
+    void on_voiceVolumeSlider_valueChanged(int value);
+
+    void on_voicePreviewButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -446,6 +475,7 @@ private:
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
+    void initTTS();
     void speekVariantText(QString text);
     void speakText(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
@@ -628,8 +658,12 @@ private:
     QAction *quitAction;//托盘图标右键点击时弹出选项
 
     // 文字转语音
+    VoicePlatform voicePlatform = VoiceLocal;
     QTextToSpeech *tts = nullptr;
     XfyTTS* xfyTTS = nullptr;
+    int voicePitch = 50;
+    int voiceSpeed = 50;
+    int voiceVolume = 50;
 
     // 全屏弹幕
     QFont screenDanmakuFont;
