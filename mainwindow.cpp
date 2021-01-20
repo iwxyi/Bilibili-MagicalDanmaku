@@ -4336,7 +4336,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
 
         QJsonObject data = json.value("data").toObject();
-        int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间
+        int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
