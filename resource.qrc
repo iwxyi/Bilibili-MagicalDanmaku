@@ -30,6 +30,8 @@
         <file alias="bowknot2">resources/icons/bowknot2.png</file>
         <file alias="bowknot3">resources/icons/bowknot3.png</file>
         <file alias="dotdotdot">resources/icons/dotdotdot.png</file>
+        <file alias="star_gif">resources/icons/star.gif</file>
+        <file alias="star">resources/icons/star.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

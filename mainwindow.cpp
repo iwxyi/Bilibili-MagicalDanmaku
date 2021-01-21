@@ -1,5 +1,6 @@
 #include <zlib.h>
 #include <QListView>
+#include <QMovie>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -237,7 +238,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 托盘
     tray = new QSystemTrayIcon(this);//初始化托盘对象tray
-    tray->setIcon(QIcon(QPixmap(":/icons/bowknot")));//设定托盘图标，引号内是自定义的png图片路径
+    tray->setIcon(QIcon(QPixmap(":/icons/star")));//设定托盘图标，引号内是自定义的png图片路径
     tray->setToolTip("神奇弹幕");
     tray->show();//让托盘图标显示在系统托盘上
     QString title="APP Message";
@@ -562,6 +563,13 @@ void MainWindow::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
     restoreGeometry(settings.value("mainwindow/geometry").toByteArray());
+
+    static bool firstShow = true;
+    if (firstShow)
+    {
+        firstShow = false;
+        startSplash();
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -7897,6 +7905,44 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     });
 
     manager->post(*request, ba);
+}
+
+void MainWindow::startSplash()
+{
+    QLabel* label = new QLabel(this);
+    QMovie* movie = new QMovie(":/icons/star_gif");
+    movie->setBackgroundColor(Qt::white);
+    label->setMovie(movie);
+    label->setStyleSheet("background-color: white;");
+    label->setGeometry(this->rect());
+    label->setAlignment(Qt::AlignCenter);
+    int minSize = qMin(label->width(), label->height());
+    movie->setScaledSize(QSize(minSize, minSize));
+    int lastFrame = movie->frameCount()-1;
+    connect(movie, &QMovie::frameChanged, label, [=](int frameNumber){
+        if (frameNumber < lastFrame)
+            return ;
+
+        movie->stop();
+        QPixmap pixmap(label->size());
+        label->render(&pixmap);
+        movie->deleteLater();
+
+        // 开始隐藏
+        label->setPixmap(pixmap);
+        label->setScaledContents(true);
+        label->setStyleSheet("background-color: white; border-radius: 5px;");
+        QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");
+        ani->setStartValue(label->rect());
+        ani->setEndValue(QRect(label->rect().center(), QSize(1,1)));
+        ani->setEasingCurve(QEasingCurve::InCubic);
+        ani->setDuration(500);
+        connect(ani, SIGNAL(finished()), label, SLOT(deleteLater()));
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        ani->start();
+    });
+    label->show();
+    movie->start();
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

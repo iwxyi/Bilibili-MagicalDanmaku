@@ -551,6 +551,8 @@ private:
     void joinLOT(qint64 id, bool follow = true);
     void sendPrivateMsg(qint64 uid, QString msg);
 
+    void startSplash();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;

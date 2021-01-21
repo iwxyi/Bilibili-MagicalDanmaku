@@ -13,6 +13,7 @@ EternalBlockDialog::EternalBlockDialog(QList<EternalBlockUser> *users, QWidget *
 
     this->setModal(true);
     setAttribute(Qt::WA_DeleteOnClose, true);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
     QStringList sl;
     for (int i = 0; i < users->size(); i++)

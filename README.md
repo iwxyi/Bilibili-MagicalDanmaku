@@ -450,16 +450,15 @@ tips：
 | locaNotify(msg)           | 发送本地消息通知（非弹幕，只有自己看得到）         |
 | speakText(msg)            | 朗读文本                                           |
 
-在自动回复中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地命令，而不发送弹幕（若不是上述命令，或格式错误，将改为弹幕发送）。
-=======
-在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
+
+在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。
 
 > 注意：不支持一条弹幕同时操作多个命令，若有需要，可用用 `\n` 隔开
->>>>>>> Stashed changes
+>
 
 #### 示例：禁言小游戏
 
-示例小游戏：扣1禁言、关注主播或赠送小心心解除禁言（需要房管或主播）
+扣1禁言、关注主播或赠送小心心解除禁言（需要房管或主播）
 
 **回复**中添加一栏，**关键词**为 `^1$`，**回复**：
 
@@ -602,7 +601,7 @@ PK_BATTLE_START
 添加 `动作`：
 
 ```
->timerShot(270000, 大乱斗即将结束)
+>timerShot(270000, 离大乱斗结束还有30秒)
 ```
 
 
@@ -674,12 +673,13 @@ PK_BATTLE_START
 > 参考资料：
 >
 > - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
->- 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
+> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
 > - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
->- 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
+> - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
->- 实时关注：https://github.com/BanqiJane/Bilibili_Danmuji
+> - 实时关注：https://github.com/BanqiJane/Bilibili_Danmuji
 > - 点歌姬网易云源：https://github.com/Binaryify/NeteaseCloudMusicApi
->- 点歌姬QQ音乐源：https://github.com/rain120/qq-music-api
-> 
+> - 点歌姬QQ音乐源：https://github.com/rain120/qq-music-api
+> - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
+
 

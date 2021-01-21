@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resource.qrc">
-    <normaloff>:/icons/bowknot2</normaloff>:/icons/bowknot2</iconset>
+    <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -2523,7 +2523,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>500</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
