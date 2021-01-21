@@ -6916,7 +6916,7 @@ void MainWindow::pkStart(QJsonObject json)
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
     qint64 deltaEnd = pkEndTime - currentTime;
     QString roomId = this->roomId;
-    oppositeTouta = false;
+    oppositeTouta = 0;
     pkToLive = currentTime;
     cmAudience.clear();
     int battle_type = data.value("battle_type").toInt();
@@ -7056,15 +7056,14 @@ void MainWindow::pkProcess(QJsonObject json)
         }
         if (prevMatchVotes < matchVotes)
         {
-            if (!oppositeTouta)
-                oppositeTouta = true;
+            oppositeTouta++;
             localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
         }
 
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
-                && !oppositeTouta) // 对面之前未偷塔（可能是连刷，这时候几个吃瓜偷塔没用）
+                && oppositeTouta < 3) // 对面之前未连续偷塔（允许偷塔两次）（可能是连刷，这时候几个吃瓜偷塔没用）
         {
             // 调用送礼
             int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
