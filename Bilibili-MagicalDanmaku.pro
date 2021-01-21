@@ -77,6 +77,7 @@ HEADERS += \
     order_player/orderplayerwindow.h \
     order_player/songbeans.h \
     utils/xfytts.h \
+    widgets/RoundedAnimationLabel.h \
     widgets/conditioneditor.h \
     widgets/eternalblockdialog.h \
     widgets/eventwidget.h \

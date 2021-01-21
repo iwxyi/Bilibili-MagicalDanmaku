@@ -6,6 +6,7 @@
 #include "videolyricscreator.h"
 #include "roomstatusdialog.h"
 #include "eventwidget.h"
+#include "RoundedAnimationLabel.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -7909,7 +7910,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 
 void MainWindow::startSplash()
 {
-    QLabel* label = new QLabel(this);
+    RoundedAnimationLabel* label = new RoundedAnimationLabel(this);
     QMovie* movie = new QMovie(":/icons/star_gif");
     movie->setBackgroundColor(Qt::white);
     label->setMovie(movie);
@@ -7926,20 +7927,10 @@ void MainWindow::startSplash()
         movie->stop();
         QPixmap pixmap(label->size());
         label->render(&pixmap);
-        movie->deleteLater();
 
         // 开始隐藏
-        label->setPixmap(pixmap);
-        label->setScaledContents(true);
-        label->setStyleSheet("background-color: white; border-radius: 5px;");
-        QPropertyAnimation* ani = new QPropertyAnimation(label, "geometry");
-        ani->setStartValue(label->rect());
-        ani->setEndValue(QRect(label->rect().center(), QSize(1,1)));
-        ani->setEasingCurve(QEasingCurve::InCubic);
-        ani->setDuration(500);
-        connect(ani, SIGNAL(finished()), label, SLOT(deleteLater()));
-        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
-        ani->start();
+        label->startHide();
+        movie->deleteLater();
     });
     label->show();
     movie->start();
