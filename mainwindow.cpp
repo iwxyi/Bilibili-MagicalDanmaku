@@ -4103,7 +4103,7 @@ void MainWindow::handleMessage(QJsonObject json)
     if (cmd == "LIVE") // 开播？
     {
         emit signalLiveStart(roomId);
-        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
         if (roomId.isEmpty())
@@ -4125,7 +4125,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "PREPARING") // 下播
     {
-        if (pking || pkToLive + 330 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
