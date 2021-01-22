@@ -751,6 +751,20 @@ QTableCornerButton::section
        </widget>
       </item>
       <item>
+       <widget class="InteractiveButtonBase" name="nextSongButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="resources.qrc">
+          <normaloff>:/icons/next_song</normaloff>:/icons/next_song</iconset>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="playingCurrentTimeLabel">
         <property name="text">
          <string>0:0</string>
@@ -865,7 +879,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

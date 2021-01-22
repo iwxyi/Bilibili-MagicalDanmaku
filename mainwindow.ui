@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -892,7 +892,7 @@ QTabBar::tab:selected
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;触发弹幕点歌的正则表达式&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>点歌格式</string>
+             <string>点歌表达式</string>
             </property>
            </widget>
           </item>

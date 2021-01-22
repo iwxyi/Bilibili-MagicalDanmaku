@@ -200,6 +200,8 @@ private slots:
 
     void on_musicSourceButton_clicked();
 
+    void on_nextSongButton_clicked();
+
 private:
     void searchMusic(QString key);
     void setSearchResultTable(SongList songs);
@@ -232,6 +234,7 @@ private:
     void downloadSongLyric(Song song);
     void downloadSongCover(Song song);
     void setCurrentLyric(QString lyric);
+    void openPlayList(QString shareUrl);
 
     void adjustExpandPlayingButton();
     void connectDesktopLyricSignals();

@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
     ui->diangeNeedMedalCheck->setChecked(settings.value("danmaku/diangeNeedMedal", true).toBool());
-    QString defaultDiangeFormat = "^点歌[ :：,，]*(.+)";
+    QString defaultDiangeFormat = "^点歌[ :：,，]*([^机姬].*)";
     diangeFormatString = settings.value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
@@ -3272,14 +3272,15 @@ void MainWindow::startLiveRecord()
         // B站下载会有302重定向的，需要获取headers里面的Location值
         if (recordUrl.isEmpty())
         {
-            auto headers = reply->rawHeaderPairs();
+            recordUrl = reply->rawHeader("location");
+            /*auto headers = reply->rawHeaderPairs();
             for (int i = 0; i < headers.size(); i++)
                 if (headers.at(i).first.toLower() == "location")
                 {
                     recordUrl = headers.at(i).second;
                     qDebug() << "重定向下载地址：" << recordUrl;
                     break;
-                }
+                }*/
             reply->deleteLater();
         }
         delete request;

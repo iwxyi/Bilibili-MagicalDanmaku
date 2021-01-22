@@ -171,6 +171,27 @@ struct Song
         return song;
     }
 
+    static Song fromNeteaseShareJson(QJsonObject json)
+    {
+        Song song;
+        song.id = JVAL_LONG(id);
+        song.name = JVAL_STR(name);
+        QJsonArray array = json.value("ar").toArray();
+        QStringList artistNameList;
+        foreach (QJsonValue val, array)
+        {
+            Artist artist = Artist::fromJson(val.toObject());
+            song.artists.append(artist);
+            artistNameList.append(artist.name);
+        }
+        song.artistNames = artistNameList.join("/");
+        song.album = Album::fromJson(json.value("al").toObject());
+        song.duration = JVAL_INT(dt); // 毫秒
+        song.mark = JVAL_INT(mark);
+        song.source = NeteaseCloudMusic;
+        return song;
+    }
+
     QJsonObject toJson() const
     {
         QJsonObject json;

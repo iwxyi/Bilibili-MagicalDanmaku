@@ -32,6 +32,7 @@
         <file alias="dotdotdot">resources/icons/dotdotdot.png</file>
         <file alias="star_gif">resources/icons/star.gif</file>
         <file alias="star">resources/icons/star.png</file>
+        <file alias="next_song">resources/icons/next_song.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
