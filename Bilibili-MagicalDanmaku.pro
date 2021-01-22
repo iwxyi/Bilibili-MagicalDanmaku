@@ -71,10 +71,12 @@ HEADERS += \
     live_danmaku/portraitlabel.h \
     lucky_draw/luckydrawwindow.h \
     mainwindow.h \
+    order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
     order_player/lyricstreamwidget.h \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
+    order_player/roundedpixmaplabel.h \
     order_player/songbeans.h \
     utils/xfytts.h \
     widgets/RoundedAnimationLabel.h \

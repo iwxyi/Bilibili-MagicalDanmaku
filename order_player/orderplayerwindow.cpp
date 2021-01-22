@@ -118,6 +118,16 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->listTabWidget->removeTab(LISTTAB_PLAYLIST); // TOOD: 歌单部分没做好，先隐藏
     ui->titleButton->setText(settings.value("music/title", "Lazy点歌姬").toString());
 
+    const int btnR = 5;
+    ui->titleButton->setRadius(btnR);
+    ui->settingsButton->setRadius(btnR);
+    ui->playButton->setRadius(btnR);
+    ui->nextSongButton->setRadius(btnR);
+    ui->volumeButton->setRadius(btnR);
+    ui->circleModeButton->setRadius(btnR);
+    ui->desktopLyricButton->setRadius(btnR);
+    expandPlayingButton->setRadius(btnR);
+
     if (settings.value("music/hideTab", false).toBool())
         ui->listTabWidget->tabBar()->hide();
 
@@ -167,6 +177,14 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     });
 
     connect(ui->lyricWidget, SIGNAL(signalAdjustLyricTime(QString)), this, SLOT(adjustCurrentLyricTime(QString)));
+
+    connect(ui->playProgressSlider, &ClickSlider::signalClickMove, this, [=](int position){
+        player->setPosition(position);
+    });
+    connect(ui->volumeSlider, &ClickSlider::signalClickMove, this, [=](int position){
+        player->setVolume(position);
+        settings.setValue("music/volume", position);
+    });
 
     musicsFileDir.mkpath(musicsFileDir.absolutePath());
     QTime time;

@@ -226,6 +226,11 @@ QTabWidget::pane
 QTabBar::tab
 {
 	background: transparent;
+	border-radius: 5px;
+	padding: 0px;
+	padding-left:16px;
+	padding-top: 6px;
+	padding-bottom: 4px;
 }
 
 QTabBar::tab:hover
@@ -235,7 +240,7 @@ QTabBar::tab:hover
 
 QTabBar::tab:selected
 {
-	background: rgba(255,255,255,128);
+	background: rgba(255,255,255,128);	
 }
 
 QTabBar::tab:disabled
@@ -249,7 +254,7 @@ QTabBar::tab:disabled
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="styleSheet">
@@ -546,7 +551,7 @@ QTabBar::tab:disabled
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,1">
           <item>
-           <widget class="QLabel" name="playingCoverLabel">
+           <widget class="RoundedPixmapLabel" name="playingCoverLabel">
             <property name="minimumSize">
              <size>
               <width>50</width>
@@ -772,7 +777,7 @@ QTableCornerButton::section
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="playProgressSlider">
+       <widget class="ClickSlider" name="playProgressSlider">
         <property name="styleSheet">
          <string notr="true">QSlider{ border-color: #bcbcbc; }
 QSlider::groove:horizontal { border: 1px solid #999999; height: 1px; margin: 0px 0; left: 5px; right: 5px; }
@@ -807,7 +812,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="volumeSlider">
+       <widget class="ClickSlider" name="volumeSlider">
         <property name="maximumSize">
          <size>
           <width>120</width>
@@ -895,6 +900,16 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
    <class>InteractiveButtonBase</class>
    <extends>QPushButton</extends>
    <header>interactivebuttonbase.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ClickSlider</class>
+   <extends>QSlider</extends>
+   <header>clickslider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RoundedPixmapLabel</class>
+   <extends>QLabel</extends>
+   <header>roundedpixmaplabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>
