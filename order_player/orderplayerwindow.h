@@ -46,6 +46,16 @@ QT_END_NAMESPACE
 #define NETEASE_SERVER QString("http://iwxyi.com:3000")
 #define QQMUSIC_SERVER QString("http://iwxyi.com:3200")
 
+#define MUSIC_DEB if (0) qDebug()
+
+enum MusicQuality
+{
+    NormalQuality, // MP3普通品质
+    HightQuality, // MP3高品质
+    ApeQuality, // 高品无损
+    FlacQuality // 无损
+};
+
 struct BFSColor
 {
     int v[12] = {0};

@@ -60,6 +60,10 @@ public:
             QRegularExpressionMatch match;
             if (line.indexOf(re, 0, &match) == -1)
             {
+                re = QRegularExpression("^\\s*\\[.+:.*\\]\\s*$");
+                if (line.indexOf(re) > -1) // 是标签，无视掉
+                    continue;
+
                 LyricBean lyric;
                 lyric.start = currentTime;
                 lyric.end = 0;

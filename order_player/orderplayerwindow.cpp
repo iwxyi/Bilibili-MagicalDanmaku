@@ -244,7 +244,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     connect(expandPlayingButton, SIGNAL(clicked()), this, SLOT(slotExpandPlayingButtonClicked()));
     expandPlayingButton->show();
 
-    // searchMusic("司夏"); // 测试用的
+    searchMusic("司夏"); // 测试用的
 
     prevBlurBg = QPixmap(32, 32);
     prevBlurBg.fill(QColor(245, 245, 247));
@@ -587,7 +587,12 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
 
 QString OrderPlayerWindow::coverPath(const Song &song) const
 {
-    return musicsFileDir.absoluteFilePath(snum(song.id) + ".jpg");
+    switch (song.source) {
+    case NeteaseCloudMusic:
+        return musicsFileDir.absoluteFilePath("netease_" + snum(song.id) + ".jpg");
+    case QQMusic:
+        return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".jpg");
+    }
 }
 
 /**
@@ -1035,70 +1040,156 @@ void OrderPlayerWindow::downloadSong(Song song)
     if (isSongDownloaded(song))
         return ;
     downloadingSong = song;
-    QString url = API_DOMAIN + "/song/url?id=" + snum(song.id);
-    qDebug() << "获取歌曲信息：" << song.simpleString();
+    QString url;
+    switch (musicSource) {
+    case NeteaseCloudMusic:
+        url = NETEASE_SERVER + "/song/url?id=" + snum(song.id);
+        break;
+    case QQMusic:
+        url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
+        break;
+    }
+
+    MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray baData = reply->readAll();
+
+        if (song.source == QQMusic)
+        {
+            // 这个API是野生找的，需要额外处理
+            baData.replace("\\\"", "\"").replace("\\\\", "\\").replace("\\/", "/");
+            if (baData.startsWith("\""))
+                baData.replace(0, 1, "");
+            if (baData.endsWith("\""))
+                baData.replace(baData.length()-1, 1, "");
+        }
+
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(baData, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qWarning() << "解析歌曲信息出错" << error.errorString() << baData << url;
             return ;
         }
         QJsonObject json = document.object();
-        if (json.value("code").toInt() != 200)
+        QString fileUrl;
+        switch (musicSource) {
+        case NeteaseCloudMusic:
         {
-            qDebug() << ("返回结果不为200：") << json.value("message").toString();
-            return ;
-        }
-
-        QJsonArray array = json.value("data").toArray();
-        if (!array.size())
-        {
-            qDebug() << "未找到歌曲：" << song.simpleString();
-            downloadingSong = Song();
-            downloadNext();
-            return ;
-        }
-
-        json = array.first().toObject();
-        QString url = JVAL_STR(url);
-        int br = JVAL_INT(br); // 比率320000
-        int size = JVAL_INT(size);
-        QString type = JVAL_STR(type); // mp3
-        QString encodeType = JVAL_STR(encodeType); // mp3
-        qDebug() << "    信息：" << br << size << type << url;
-        if (size == 0)
-        {
-            qDebug() << "无法下载，可能没有版权" << song.simpleString();
-            if (playAfterDownloaded == song)
+            if (json.value("code").toInt() != 200)
             {
-                if (orderSongs.contains(song))
-                {
-                    orderSongs.removeOne(song);
-                }
-                playNext();
+                qDebug() << ("歌曲信息返回结果不为200：") << json.value("message").toString();
+                return ;
             }
 
-            downloadingSong = Song();
-            downloadNext();
-            return ;
+            QJsonArray array = json.value("data").toArray();
+            if (!array.size())
+            {
+                qDebug() << "未找到歌曲：" << song.simpleString();
+                downloadingSong = Song();
+                downloadNext();
+                return ;
+            }
+            json = array.first().toObject();
+            fileUrl = JVAL_STR(url);
+            int br = JVAL_INT(br); // 比率320000
+            int size = JVAL_INT(size);
+            QString type = JVAL_STR(type); // mp3
+            QString encodeType = JVAL_STR(encodeType); // mp3
+            qDebug() << "    信息：" << br << size << type << fileUrl;
+            if (size == 0)
+            {
+                qDebug() << "无法下载，可能没有版权" << song.simpleString();
+                if (playAfterDownloaded == song)
+                {
+                    if (orderSongs.contains(song))
+                    {
+                        orderSongs.removeOne(song);
+                    }
+                    playNext();
+                }
+
+                downloadingSong = Song();
+                downloadNext();
+                return ;
+            }
+            break;
         }
+        case QQMusic:
+        {
+            /*{
+                "mid": "001fApzM4Rymgq",
+                "m4a": "http:\/\/aqqmusic.tc.qq.com\/amobile.music.tc.qq.com\/C400001fApzM4Rymgq.m4a?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=38",
+                "mp3_l": "http:\/\/mobileoc.music.tc.qq.com\/M500001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                "mp3_h": "http:\/\/mobileoc.music.tc.qq.com\/M800001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                "ape": "http:\/\/mobileoc.music.tc.qq.com\/A000001fApzM4Rymgq.ape?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                "flac": "http:\/\/mobileoc.music.tc.qq.com\/F000001fApzM4Rymgq.flac?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                "songname": "\u6000\u74a7\u8d74\u524d\u5c18",
+                "albumname": "\u603b\u507f\u76f8\u601d",
+                "singername": "\u53f8\u590f",
+                "pic": "https:\/\/y.gtimg.cn\/music\/photo_new\/T002R300x300M0000022qglb0tOda5_1.jpg?max_age=2592000",
+                "mv": "\u6682\u65e0MV",
+                "lrc": "[ti:]\n[ar:]\n[al:]\n[by:\u65f6\u95f4\u6233\u5de5\u5177V2.0_20200505]\n[offset:0]\n[00:00.00]\u6000\u74a7\u8d74\u524d\u5c18\n[00:01.50]\u4f5c\u8bcd\uff1a\u6d41\u5149\n[00:03.01]\u4f5c\/\u7f16\u66f2\uff1a\u4e00\u53ea\u9c7c\u5361\n[00:04.51]\u6f14\u5531\uff1a\u53f8\u590f\n[00:06.02]\u4fee\u97f3\uff1a\u6c64\u5706w\n[00:07.53]\u6df7\u97f3\uff1aWuli\u5305\u5b50\n[00:09.03]\u6587\u6848\uff1a\u8c22\u77e5\u8a00\n[00:10.54]\u7f8e\u5de5\uff1a\u4f5c\u8086\n[00:12.04]\u5236\u4f5c\u4eba\uff1a\u6c90\u4e88\n[00:13.55]\u51fa\u54c1\uff1a\u7c73\u6f2b\u4f20\u5a92\n[00:15.06]\u5236\u4f5c\uff1a\u8d4f\u4e50\u8ba1\u5212\n[00:16.56]\u827a\u672f\u7edf\u7b79\uff1a\u697c\u5c0f\u6728\n[00:18.07]\u53d1\u884c\uff1a\u7396\u8bb8\n[00:19.59]\u9879\u76ee\u76d1\u7763\uff1a\u5b59\u534e\u5b81\n[00:27.51]\u522b\u6765\u5df2\u662f\u767e\u5e74\u8eab\n[00:33.39]\u788c\u788c\u7ea2\u5c18\u8001\u82b1\u6708\u60c5\u6839\n[00:40.08]\u9752\u9752\u9b02\u4ed8\u9752\u9752\u575f\n[00:43.56]\u76f8\u601d\u4e24\u5904\u5173\u5c71\u963b\u68a6\u9b42\n[00:52.77]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[00:58.71]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[01:05.34]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[01:11.28]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[01:15.15]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[01:23.76]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[01:30.30]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[01:36.15]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:08.52]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[02:14.46]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[02:21.12]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[02:27.03]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[02:32.67]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[02:39.00]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[02:46.08]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[02:51.99]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:56.13]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[03:05.04]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[03:11.37]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[03:17.22]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[04:00.00]"
+            }*/
+            QString m4a = json.value("m4a").toString(); // 视频？但好像能直接播放
+            QString mp3_l = json.value("mp3_l").toString(); // 普通品质
+            QString mp3_h = json.value("mp3_h").toString(); // 高品质
+            QString ape = json.value("ape").toString(); // 高品无损
+            QString flac = json.value("flac").toString(); // 无损音频
+
+            // 实测只有 m4a 能播放……
+            if (!m4a.isEmpty())
+                fileUrl = m4a;
+            else if (!mp3_h.isEmpty())
+                fileUrl = mp3_h;
+            else if (!mp3_l.isEmpty())
+                fileUrl = mp3_l;
+            else if (!ape.isEmpty())
+                fileUrl = ape;
+            else if (!flac.isEmpty())
+                fileUrl = flac;
+            else
+            {
+                qDebug() << "无法下载，歌曲不存在或没有版权" << song.simpleString();
+                if (playAfterDownloaded == song)
+                {
+                    if (orderSongs.contains(song))
+                    {
+                        orderSongs.removeOne(song);
+                    }
+                    playNext();
+                }
+
+                downloadingSong = Song();
+                downloadNext();
+                return ;
+            }
+
+            break;
+        }
+        }
+        MUSIC_DEB << "歌曲下载直链：" << fileUrl;
 
         // 开始下载歌曲本身
         QNetworkAccessManager manager;
         QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(fileUrl)));
         //请求结束并下载完成后，退出子事件循环
         connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         //开启子事件循环
-        loop.exec();
+        loop.exec(QEventLoop::ExcludeUserInputEvents);
         QByteArray mp3Ba = reply1->readAll();
+        if (mp3Ba.isEmpty())
+        {
+            qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString();
+            downloadingSong = Song();
+            downloadNext();
+            return ;
+        }
 
         // 解析MP3标签
         /*try {
@@ -1133,8 +1224,18 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     if (QFileInfo(lyricPath(song)).exists())
         return ;
 
-    downloadingSong = song;
-    QString url = API_DOMAIN + "/lyric?id=" + snum(song.id);
+//    downloadingSong = song; // 忘了为什么要加这句了？
+
+    QString url;
+    switch (musicSource) {
+    case NeteaseCloudMusic:
+        url = NETEASE_SERVER + "/lyric?id=" + snum(song.id);
+        break;
+    case QQMusic:
+        url = QQMUSIC_SERVER + "/getLyric?songmid=" + song.mid;
+        break;
+    }
+
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -1149,13 +1250,21 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             return ;
         }
         QJsonObject json = document.object();
-        if (json.value("code").toInt() != 200)
-        {
-            qDebug() << ("返回结果不为200：") << json.value("message").toString();
-            return ;
-        }
 
-        QString lrc = json.value("lrc").toObject().value("lyric").toString();
+        QString lrc;
+        switch (musicSource) {
+        case NeteaseCloudMusic:
+            if (json.value("code").toInt() != 200)
+            {
+                qDebug() << ("返回结果不为200：") << json.value("message").toString();
+                return ;
+            }
+            lrc = json.value("lrc").toObject().value("lyric").toString();
+            break;
+        case QQMusic:
+            lrc = json.value("response").toObject().value("lyric").toString();
+            break;
+        }
         if (!lrc.isEmpty())
         {
             QFile file(lyricPath(song));
@@ -1165,7 +1274,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             file.flush();
             file.close();
 
-            qDebug() << "下载歌词完成：" << song.simpleString();
+            MUSIC_DEB << "下载歌词完成：" << song.simpleString();
             if (playAfterDownloaded == song || playingSong == song)
             {
                 setCurrentLyric(lrc);
@@ -1175,7 +1284,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         }
         else
         {
-            qDebug() << "warning: 下载的歌词是空的" << song.simpleString();
+            qWarning() << "warning: 下载的歌词是空的" << song.simpleString() << url;
         }
     });
     manager->get(*request);
@@ -1185,8 +1294,19 @@ void OrderPlayerWindow::downloadSongCover(Song song)
 {
     if (QFileInfo(coverPath(song)).exists())
         return ;
-    downloadingSong = song;
-    QString url = API_DOMAIN + "/song/detail?ids=" + snum(song.id);
+//    downloadingSong = song; // 忘了为什么要加这句了？
+
+    QString url;
+    switch (musicSource) {
+    case NeteaseCloudMusic:
+        url = NETEASE_SERVER + "/song/detail?ids=" + snum(song.id);
+        break;
+    case QQMusic:
+        url = QQMUSIC_SERVER + "/getImageUrl?id=" + song.album.mid;
+        break;
+    }
+
+    MUSIC_DEB << "封面信息url:" << url;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -1201,33 +1321,51 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             return ;
         }
         QJsonObject json = document.object();
-        if (json.value("code").toInt() != 200)
+
+        QString url;
+        switch (musicSource) {
+        case NeteaseCloudMusic:
         {
-            qDebug() << ("返回结果不为200：") << json.value("message").toString();
-            return ;
+            if (json.value("code").toInt() != 200)
+            {
+                qDebug() << ("返回结果不为200：") << json.value("message").toString();
+                return ;
+            }
+            QJsonArray array = json.value("songs").toArray();
+            if (!array.size())
+            {
+                qDebug() << "未找到歌曲：" << song.simpleString();
+//                downloadingSong = Song();
+//                downloadNext();
+                return ;
+            }
+
+            json = array.first().toObject();
+            url = json.value("al").toObject().value("picUrl").toString();
+            break;
+        }
+        case QQMusic:
+            if (json.value("code").toInt() != 0)
+            {
+                qDebug() << ("封面返回结果不为0：") << json.value("message").toString();
+//                downloadingSong = Song();
+//                downloadNext();
+                return ;
+            }
+            url = json.value("response").toObject().value("data").toObject().value("imageUrl").toString();
+            break;
         }
 
-        QJsonArray array = json.value("songs").toArray();
-        if (!array.size())
-        {
-            qDebug() << "未找到歌曲：" << song.simpleString();
-            downloadingSong = Song();
-            downloadNext();
-            return ;
-        }
+        MUSIC_DEB << "封面地址：" << url;
 
-        json = array.first().toObject();
-        QString url = json.value("al").toObject().value("picUrl").toString();
-        qDebug() << "封面地址：" << url;
-
-        // 开始下载歌曲本身
+        // 开始下载封面数据
         QNetworkAccessManager manager;
         QEventLoop loop;
         QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
         //请求结束并下载完成后，退出子事件循环
         connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         //开启子事件循环
-        loop.exec();
+        loop.exec(QEventLoop::ExcludeUserInputEvents);
         QByteArray baData1 = reply1->readAll();
         QPixmap pixmap;
         pixmap.loadFromData(baData1);
@@ -2095,7 +2233,6 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
 void OrderPlayerWindow::on_musicSourceButton_clicked()
 {
-    return ;
     musicSource = (MusicSource)(((int)musicSource + 1) % 2);
     settings.setValue("music/source", musicSource);
 

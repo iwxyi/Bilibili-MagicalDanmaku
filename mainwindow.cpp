@@ -4383,7 +4383,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
             {
                 pkVoting -= totalCoin;
-                if (pkVoting < 0) // 自己在其他地方送了更大的礼物
+                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
                 {
                     pkVoting = 0;
                 }
@@ -7067,6 +7067,20 @@ void MainWindow::pkProcess(QJsonObject json)
         {
             oppositeTouta++;
             localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+
+            // TODO: 偷塔调试
+            {
+                int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+                int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
+                QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, pkMaxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
+                            .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(pkMaxGold).arg(goldTransPk).arg(oppositeTouta)
+                            .arg(num);
+                if (danmuLogStream)
+                {
+                    (*danmuLogStream) << s;
+                    (*danmuLogStream).flush(); // 立刻刷新到文件里
+                }
+            }
         }
 
         // 反偷塔，防止对方也在最后几秒刷礼物

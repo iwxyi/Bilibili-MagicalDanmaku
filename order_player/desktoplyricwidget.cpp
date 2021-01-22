@@ -60,8 +60,12 @@ void DesktopLyricWidget::setLyric(QString text)
     {
         QRegularExpression re("^\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\](\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\])?(.*)$");
         QRegularExpressionMatch match;
-        if (line.indexOf(re, 0, &match) == -1)
+        if (line.indexOf(re, 0, &match) == -1) // 不是时间格式的，可能是其他标签
         {
+            re = QRegularExpression("^\\s*\\[.+:.*\\]\\s*$");
+            if (line.indexOf(re) > -1) // 是标签，无视掉
+                continue;
+
             LyricBean lyric;
             lyric.start = currentTime;
             lyric.end = 0;
