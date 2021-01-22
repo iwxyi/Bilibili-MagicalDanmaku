@@ -4616,12 +4616,12 @@ void MainWindow::handleMessage(QJsonObject json)
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();
             if (!justStart && ui->autoSendWelcomeCheck->isChecked())
             {
-                int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
+                /*int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
                 if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
                 {
                     qDebug() << "屏蔽连续进入：" << username << uid;
                     return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
-                }
+                }*/
                 userComeTimes[uid] = currentTime;
                 sendWelcomeIfNotRobot(danmaku);
             }
