@@ -4383,11 +4383,11 @@ void MainWindow::handleMessage(QJsonObject json)
             // 正在偷塔阶段
             if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
             {
-                pkVoting -= totalCoin;
-                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
-                {
-                    pkVoting = 0;
-                }
+//                pkVoting -= totalCoin;
+//                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
+//                {
+//                    pkVoting = 0;
+//                }
             }
         }
 
@@ -4618,7 +4618,10 @@ void MainWindow::handleMessage(QJsonObject json)
             {
                 int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
                 if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
+                {
+                    qDebug() << "屏蔽连续进入：" << username << uid;
                     return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
+                }
                 userComeTimes[uid] = currentTime;
                 sendWelcomeIfNotRobot(danmaku);
             }
@@ -4670,14 +4673,14 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
+        // {"end_time":1611343771,"gift_id":10003,"gift_name":"舰长","guard_level":3,"num":1,"price":198000,"start_time":1611343771,"uid":67756641,"username":"31119657605_bili"}
         QJsonObject data = json.value("data").toObject();
-        qDebug() << data;
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
         int price = data.value("price").toInt();
         int num = data.value("num").toInt();
-        qint64 timestamp = static_cast <qint64>(data.value("timestamp").toDouble());
+        // start_time和end_time都是当前时间？
         qDebug() << username << s8("购买") << giftName << num;
         LiveDanmaku danmaku(username, uid, giftName, num);
         appendNewLiveDanmaku(danmaku);
@@ -4995,7 +4998,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         slotCmdEvent(cmd, LiveDanmaku());
     }
-    else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送
+    else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送，在结束后的不到一秒左右
     {
         slotCmdEvent(cmd, LiveDanmaku());
     }
@@ -7062,7 +7065,13 @@ void MainWindow::pkProcess(QJsonObject json)
         // 显示偷塔情况
         if (prevMyVotes < myVotes)
         {
-            localNotify("[己方偷塔] + " + snum(myVotes - prevMyVotes));
+            int delta = myVotes - prevMyVotes;
+            localNotify("[己方偷塔] + " + snum(delta));
+
+            // B站返回的规则改了，偷塔的时候获取不到礼物了
+            pkVoting -= delta;
+            if (pkVoting < 0)
+                pkVoting = 0;
         }
         if (prevMatchVotes < matchVotes)
         {
@@ -7076,9 +7085,10 @@ void MainWindow::pkProcess(QJsonObject json)
                 QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, pkMaxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
                             .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(pkMaxGold).arg(goldTransPk).arg(oppositeTouta)
                             .arg(num);
+                qDebug() << s;
                 if (danmuLogStream)
                 {
-                    (*danmuLogStream) << s;
+                    (*danmuLogStream) << s << "\n";
                     (*danmuLogStream).flush(); // 立刻刷新到文件里
                 }
             }
@@ -7087,7 +7097,7 @@ void MainWindow::pkProcess(QJsonObject json)
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
-                && oppositeTouta < 3) // 对面之前未连续偷塔（允许偷塔两次）（可能是连刷，这时候几个吃瓜偷塔没用）
+                && oppositeTouta < 6) // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用）
         {
             // 调用送礼
             int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
