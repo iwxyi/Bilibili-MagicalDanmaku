@@ -418,6 +418,8 @@ void OrderPlayerWindow::searchMusic(QString key)
             // 添加到点歌列表
             if (searchResultSongs.size()) // 有搜索结果
             {
+                if (playingSong == song || orderSongs.contains(song)) // 重复点歌
+                    return ;
                 appendOrderSongs(SongList{song});
 
                 // 发送点歌成功的信号
@@ -2151,6 +2153,13 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         saveSongList("music/order", normalSongs);
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(songs.size() != 1 || row >= normalSongs.size()-1);
+
+    menu->addAction("打开分享的歌单", [=]{
+        QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
+        if (url.isEmpty())
+            return ;
+        openPlayList(url);
+    });
 
     menu->split()->addAction("移出固定播放", [=]{
         removeNormal(songs);

@@ -3040,7 +3040,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
     QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
-    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢"};
+    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)
@@ -4112,7 +4112,10 @@ void MainWindow::handleMessage(QJsonObject json)
     qDebug() << s8(">消息命令ZCOM：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
+        if (ui->recordCheck->isChecked())
+            startLiveRecord();
         emit signalLiveStart(roomId);
+
         if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
@@ -4127,14 +4130,14 @@ void MainWindow::handleMessage(QJsonObject json)
             liveStatus = true;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
-            if (ui->recordCheck->isChecked())
-                startLiveRecord();
-            slotStartWork();
+            slotStartWork(); // 每个房间第一次开始工作
         }
         slotCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "PREPARING") // 下播
     {
+        finishLiveRecord();
+
         if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
@@ -7858,6 +7861,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
             QString msg = json.value("message").toString();
             qCritical() << s8("返回结果不为0：") << msg;
             ui->autoLOTCheck->setText(msg);
+            ui->autoLOTCheck->setToolTip(msg);
         }
         else
         {
@@ -8189,6 +8193,7 @@ void MainWindow::on_pkMelonValButton_clicked()
 /**
  * 机器人开始工作
  * 开播时连接/连接后开播
+ * 不包括视频大乱斗的临时开启
  */
 void MainWindow::slotStartWork()
 {
