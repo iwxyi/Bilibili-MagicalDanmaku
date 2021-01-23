@@ -5097,9 +5097,12 @@ void MainWindow::handleMessage(QJsonObject json)
             "uid": 20285041
         }*/
         QString msg = json.value("msg").toString();
-        localNotify(msg);
-
-        slotCmdEvent(cmd, LiveDanmaku(msg));
+        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
+        if (snum(uid) == cookieUid) // 不是自己的话，不用理会
+        {
+            localNotify(msg);
+            slotCmdEvent(cmd, LiveDanmaku(msg));
+        }
     }
     else if (cmd == "ROOM_ADMINS")
     {
