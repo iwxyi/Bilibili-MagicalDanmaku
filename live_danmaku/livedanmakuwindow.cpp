@@ -1691,6 +1691,7 @@ void LiveDanmakuWindow::showEditMenu()
         if (text.isEmpty())
             return;
         emit signalSendMsgToPk(text);
+        lineEdit->clear();
     });
 
     menu->exec(QCursor::pos());
