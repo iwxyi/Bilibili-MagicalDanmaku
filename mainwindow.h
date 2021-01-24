@@ -447,6 +447,8 @@ private slots:
 
     void slotAIReplyed(QString reply);
 
+    void on_danmuLongestSpin_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -597,6 +599,7 @@ private:
     QTextStream* danmuLogStream = nullptr;
     qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
+    int danmuLongest = 20;
 
     // 发送弹幕队列
     QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！

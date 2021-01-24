@@ -70,6 +70,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuTipInterval = removeIv * 1000;
 
+    // 单条弹幕最长长度
+    danmuLongest = settings.value("danmaku/danmuLongest", 20).toInt();
+    ui->danmuLongestSpin->setValue(danmuLongest);
+
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
     autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
@@ -6800,7 +6804,7 @@ void MainWindow::on_actionSend_Long_Text_triggered()
 
     QStringList sl;
     int len = text.length();
-    const int maxOne = 20;
+    const int maxOne = danmuLongest;
     int count = (len + maxOne - 1) / maxOne;
     for (int i = 0; i < count; i++)
     {
@@ -8549,7 +8553,7 @@ void MainWindow::slotAIReplyed(QString reply)
     {
         QStringList sl;
         int len = reply.length();
-        const int maxOne = 20;
+        const int maxOne = danmuLongest;
         int count = (len + maxOne - 1) / maxOne;
         for (int i = 0; i < count; i++)
         {
@@ -8557,4 +8561,10 @@ void MainWindow::slotAIReplyed(QString reply)
         }
         sendAutoMsg(sl.join("\\n"));
     }
+}
+
+void MainWindow::on_danmuLongestSpin_editingFinished()
+{
+    danmuLongest = ui->danmuLongestSpin->value();
+    settings.setValue("danmaku/danmuLongest", danmuLongest);
 }

@@ -271,6 +271,69 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_40">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="danmuLongestSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一条弹幕最长可以发送多少字&lt;/p&gt;&lt;p&gt;当前规则：直播间中，舰长20字，提督30字，总督40字&lt;/p&gt;&lt;p&gt;另外会受到观众等级等其他氪金操作的影响。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string>字</string>
+            </property>
+            <property name="prefix">
+             <string>单条弹幕最长</string>
+            </property>
+            <property name="minimum">
+             <number>20</number>
+            </property>
+            <property name="maximum">
+             <number>40</number>
+            </property>
+            <property name="singleStep">
+             <number>10</number>
+            </property>
+            <property name="value">
+             <number>20</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_23">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_21">
           <property name="topMargin">
            <number>0</number>
