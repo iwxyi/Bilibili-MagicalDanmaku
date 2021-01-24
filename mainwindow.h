@@ -443,6 +443,10 @@ private slots:
 
     void on_eternalBlockListButton_clicked();
 
+    void on_AIReplyMsgCheck_clicked();
+
+    void slotAIReplyed(QString reply);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

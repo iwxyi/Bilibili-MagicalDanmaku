@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动回复
     bool reply = settings.value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
+    ui->AIReplyMsgCheck->setChecked(settings.value("danmaku/aiReplyMsg", false).toBool());
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings.value("block/enableBlock", false).toBool());
@@ -6592,6 +6593,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
         connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalAIReplyed(QString)), this, SLOT(slotAIReplyed(QString)));
         connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
             danmakuWindow->deleteLater();
             danmakuWindow = nullptr;
@@ -8534,4 +8536,25 @@ void MainWindow::on_eternalBlockListButton_clicked()
     connect(dialog, SIGNAL(signalCancelEternalBlock(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
     connect(dialog, SIGNAL(signalCancelBlock(qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64)));
     dialog->exec();
+}
+
+void MainWindow::on_AIReplyMsgCheck_clicked()
+{
+    settings.setValue("danmaku/aiReplyMsg", ui->AIReplyMsgCheck->isChecked());
+}
+
+void MainWindow::slotAIReplyed(QString reply)
+{
+    if (ui->AIReplyMsgCheck->isChecked())
+    {
+        QStringList sl;
+        int len = reply.length();
+        const int maxOne = 20;
+        int count = (len + maxOne - 1) / maxOne;
+        for (int i = 0; i < count; i++)
+        {
+            sl << reply.mid(i * maxOne, maxOne);
+        }
+        sendAutoMsg(sl.join("\\n"));
+    }
 }

@@ -1779,18 +1779,19 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "AI回复：" << error.errorString();
             return ;
         }
 
         QJsonObject json = document.object();
         if (json.value("ret").toInt() != 0)
         {
-            qDebug() << json.value("msg").toString();
+            qDebug() << "AI回复：" << json.value("msg").toString();
             return ;
         }
 
         QString answer = json.value("data").toObject().value("answer").toString();
+        emit signalAIReplyed(answer);
 
         if (!isItemExist(item))
             return ;
