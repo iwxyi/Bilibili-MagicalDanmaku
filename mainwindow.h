@@ -137,6 +137,8 @@ public:
         VoiceCustom
     };
 
+    bool debugToFile() const;
+
 protected:
     void showEvent(QShowEvent* event) override;
     void closeEvent(QCloseEvent* event) override;

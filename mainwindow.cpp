@@ -560,6 +560,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+bool MainWindow::debugToFile() const
+{
+    return settings.value("runtime/debugToFile", false).toBool();
+}
+
 void MainWindow::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);

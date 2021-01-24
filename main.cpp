@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("iwxyi.com");
     QCoreApplication::setApplicationName("神奇弹幕");
 
-//    qInstallMessageHandler(myMsgOutput);
-
     MainWindow w;
+    if (w.debugToFile())
+        qInstallMessageHandler(myMsgOutput);
     w.show();
     return a.exec();
 }
