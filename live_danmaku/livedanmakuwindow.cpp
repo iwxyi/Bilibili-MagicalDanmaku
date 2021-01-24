@@ -1088,7 +1088,7 @@ void LiveDanmakuWindow::showMenu()
             actionMedal->setEnabled(false);
         }
 
-        if (danmaku.getMsgType() == MSG_GIFT)
+        if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
         {
             actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
             if (giftNames.contains(danmaku.getGiftId()))

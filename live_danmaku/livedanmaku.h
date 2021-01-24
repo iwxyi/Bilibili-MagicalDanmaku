@@ -69,8 +69,9 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num)
-        : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime())
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard_level, int gift_id, int price)
+        : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime()),
+          giftId(gift_id), guard_level(guard_level), coin_type("gold"), total_coin(price)
     {
 
     }
@@ -178,6 +179,9 @@ public:
             object.insert("number", number);
             object.insert("coin_type", coin_type);
             object.insert("total_coin", total_coin);
+
+            if (msgType == MSG_GUARD_BUY)
+                object.insert("guard_level", guard_level);
         }
         else if (msgType == MSG_WELCOME)
         {

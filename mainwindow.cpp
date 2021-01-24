@@ -1005,6 +1005,30 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         localNotify("测试通知消息");
     }
+    else if (text == "测试舰长")
+    {
+        QString username = "测试用户";
+        QString giftName = "舰长";
+        int num = qrand() % 3 + 1;
+        int gift_id = 10003;
+        int guard_level = 3;
+        int price = 198000;
+        qint64 uid = 123;
+        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price);
+        appendNewLiveDanmaku(danmaku);
+
+        if (!justStart && ui->autoSendGiftCheck->isChecked())
+        {
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (words.size())
+            {
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+            }
+        }
+    }
     else
     {
         ui->testDanmakuEdit->setText("");
@@ -4687,10 +4711,12 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
         int price = data.value("price").toInt();
+        int gift_id = data.value("guard_id").toInt();
+        int guard_level = data.value("guard_level").toInt();
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
         qDebug() << username << s8("购买") << giftName << num;
-        LiveDanmaku danmaku(username, uid, giftName, num);
+        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price);
         appendNewLiveDanmaku(danmaku);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
@@ -7947,6 +7973,8 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 
 void MainWindow::startSplash()
 {
+    if (!settings.value("mainwindow/splash", true).toBool())
+        return ;
     RoundedAnimationLabel* label = new RoundedAnimationLabel(this);
     QMovie* movie = new QMovie(":/icons/star_gif");
     movie->setBackgroundColor(Qt::white);
