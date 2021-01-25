@@ -415,12 +415,15 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         setSearchResultTable(searchResultSongs);
 
+        // 没有搜索结果
+        if (!searchResultSongs.size())
+            return ;
+
         // 从点歌的槽进来的
-        if (!addBy.isEmpty() && searchResultSongs.size())
+        if (!addBy.isEmpty())
         {
-            QString by = addBy;
             Song song = getSuiableSong(key);
-            song.setAddDesc(by);
+            song.setAddDesc(addBy);
             prevOrderSong = song;
 
             // 添加到点歌列表
@@ -449,7 +452,14 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                 }
                 emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
             }
-
+        }
+        else if (insertOnce) // 强制播放啊
+        {
+            Song song = getSuiableSong(key);
+            if (isNotPlaying()) // 很可能是换源过来的
+                startPlaySong(song);
+            else
+                appendNextSongs(SongList{song});
         }
     });
     manager->get(*request);
@@ -1313,7 +1323,7 @@ void OrderPlayerWindow::downloadSong(Song song)
                         setSongModelToView(orderSongs, ui->orderSongsListView);
                     }
                     if (autoSwitchSource && song.source == musicSource
-                            && !song.addBy.isEmpty()) // 只有点歌才自动换源，普通播放自动跳过
+                            /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
                     {
                         slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
                         qDebug() << "无法播放：" << song.name << "，开始换源";

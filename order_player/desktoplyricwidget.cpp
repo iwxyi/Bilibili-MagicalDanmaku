@@ -62,9 +62,17 @@ void DesktopLyricWidget::setLyric(QString text)
         QRegularExpressionMatch match;
         if (line.indexOf(re, 0, &match) == -1) // 不是时间格式的，可能是其他标签
         {
-            re = QRegularExpression("^\\s*\\[.+:.*\\]\\s*$");
-            if (line.indexOf(re) > -1) // 是标签，无视掉
+            if (line.indexOf(QRegularExpression("^\\s*\\[.+:.*\\]\\s*$")) > -1) // 是标签，无视掉
                 continue;
+            else if (line.indexOf(QRegularExpression("\\[00:00:00\\](.+)"), 0, &match) > -1)
+            {
+                LyricBean lyric;
+                lyric.start = 0;
+                lyric.end = 0;
+                lyric.text = match.captured(1);
+                lyricStream.append(lyric);
+                continue;
+            }
 
             LyricBean lyric;
             lyric.start = currentTime;
