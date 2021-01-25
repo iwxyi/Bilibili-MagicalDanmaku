@@ -416,40 +416,38 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         setSearchResultTable(searchResultSongs);
 
         // 从点歌的槽进来的
-        if (!addBy.isEmpty())
+        if (!addBy.isEmpty() && searchResultSongs.size())
         {
             QString by = addBy;
-            Song song = searchResultSongs.first();
+            Song song = getSuiableSong(key);
             song.setAddDesc(by);
             prevOrderSong = song;
 
             // 添加到点歌列表
-            if (searchResultSongs.size()) // 有搜索结果
-            {
-                if (playingSong == song || orderSongs.contains(song)) // 重复点歌
-                    return ;
-                if (insertOnce) // 可能是换源过来的
-                {
-                    if (isNotPlaying()) // 很可能是换源过来的
-                        startPlaySong(song);
-                    else
-                        appendNextSongs(SongList{song});
-                }
-                else
-                    appendOrderSongs(SongList{song});
+            if (playingSong == song || orderSongs.contains(song)) // 重复点歌
+                return ;
 
-                // 发送点歌成功的信号
-                if (notify)
+            if (insertOnce) // 可能是换源过来的
+            {
+                if (isNotPlaying()) // 很可能是换源过来的
+                    startPlaySong(song);
+                else
+                    appendNextSongs(SongList{song});
+            }
+            else
+                appendOrderSongs(SongList{song});
+
+            // 发送点歌成功的信号
+            if (notify)
+            {
+                qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
+                for (int i = 0; i < orderSongs.size()-1; i++)
                 {
-                    qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
-                    for (int i = 0; i < orderSongs.size()-1; i++)
-                    {
-                        if (orderSongs.at(i).id == song.id) // 同一首歌，如果全都不同，那就是下一首
-                            break;
-                        sumLatency += orderSongs.at(i).duration;
-                    }
-                    emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
+                    if (orderSongs.at(i).id == song.id) // 同一首歌，如果全都不同，那就是下一首
+                        break;
+                    sumLatency += orderSongs.at(i).duration;
                 }
+                emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
             }
 
         }
@@ -685,6 +683,102 @@ bool OrderPlayerWindow::isNotPlaying() const
 {
     return player->state() != QMediaPlayer::PlayingState
             && (!playingSong.isValid() || player->position() == 0);
+}
+
+/**
+ * 从结果中获取最适合的歌曲
+ * 优先：歌名-歌手
+ * 其次：歌名 歌手
+ * 默认：搜索结果第一首歌
+ */
+Song OrderPlayerWindow::getSuiableSong(QString key) const
+{
+    Q_ASSERT(searchResultSongs.size());
+    key = key.trimmed();
+
+    // 歌名 - 歌手
+    if (key.indexOf("-"))
+    {
+        QRegularExpression re("^\\s*(.+?)\\s*-\\s*(.+?)\\s*$");
+        QRegularExpressionMatch match;
+        if (key.indexOf(re, 0, &match) > -1)
+        {
+            QString name = match.captured(1);   // 歌名
+            QString author = match.captured(2); // 歌手
+
+            // 歌名、歌手全匹配
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name == name && song.artistNames == author)
+                    return song;
+            }
+
+            // 歌名全匹配、歌手包含
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name == name && song.artistNames.contains(author))
+                    return song;
+            }
+
+            // 歌名包含、歌手全匹配
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name.contains(name) && song.artistNames == author)
+                    return song;
+            }
+
+            // 歌名包含、歌手包含
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name.contains(name) && song.artistNames.contains(author))
+                    return song;
+            }
+        }
+    }
+
+    // 歌 名 歌 手
+    if (key.contains(" "))
+    {
+        int pos = key.lastIndexOf(" ");
+        while (pos > -1)
+        {
+            QString name = key.left(pos).trimmed();
+            QString author = key.right(key.length() - pos - 1).trimmed();
+
+            // 歌名、歌手全匹配
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name == name && song.artistNames == author)
+                    return song;
+            }
+
+            // 歌名全匹配、歌手包含
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name == name && song.artistNames.contains(author))
+                    return song;
+            }
+
+            // 歌名包含(cover)、歌手全匹配
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name.contains(name) && song.artistNames == author)
+                    return song;
+            }
+
+            // 歌名包含、歌手包含
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.name.contains(name) && song.artistNames.contains(author))
+                    return song;
+            }
+
+            pos = key.lastIndexOf(" ", pos-1);
+        }
+    }
+
+    // 没指定歌手，随便来一个就行
+    return searchResultSongs.first();
 }
 
 void OrderPlayerWindow::showEvent(QShowEvent *e)

@@ -222,6 +222,7 @@ private:
     QString msecondToString(qint64 msecond);
     void activeSong(Song song);
     bool isNotPlaying() const;
+    Song getSuiableSong(QString key) const;
 
     void startPlaySong(Song song);
     void playNext();
