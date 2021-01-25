@@ -328,9 +328,18 @@ private:
 class NoFocusDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
-
 public:
     NoFocusDelegate(){}
+    NoFocusDelegate(QAbstractItemView* view, int columnCount = 1) : view(view), columnLast(columnCount-1)
+    {
+        if (view)
+        {
+            view->setItemDelegate(this);
+            // 下面代码开启选中项圆角，奈何太丑了，关掉了
+            // connect(view, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
+        }
+    }
+
     ~NoFocusDelegate(){}
 
     void paint(QPainter* painter, const QStyleOptionViewItem & option, const QModelIndex &index) const
@@ -338,17 +347,117 @@ public:
         QStyleOptionViewItem itemOption(option);
         if (itemOption.state & QStyle::State_Selected)
         {
-            painter->fillRect(option.rect, QApplication::palette().color(QPalette::Highlight));
-            /*int radius = option.rect.height() / 2;
-            QPainterPath path;
-            path.addRoundedRect(option.rect, radius, radius);
-            painter->fillPath(path, QColor(100, 149, 237, 128));*/
+            if (selectTop == -1) // 没有选中，或者判断失误？
+            {
+                painter->fillRect(option.rect, QApplication::palette().color(QPalette::Highlight));
+            }
+            else // 绘制圆角矩形
+            {
+                QRect rect = option.rect;
+                const int radius = qMin(5, qMin(rect.width(), rect.height())/3);
+                const int row = index.row();
+
+                QPainterPath path;
+                path.setFillRule(Qt::FillRule::WindingFill);
+                if (columnLast == 0)
+                {
+                    if (row == selectTop)
+                        path.addRoundedRect(rect.left(), rect.top(), rect.width()-1, radius*2, radius, radius);
+                    else
+                        path.addRect(rect.left(), rect.top(), rect.width()-1, radius*2);
+                    if (row == selectBottom)
+                        path.addRoundedRect(rect.left(), rect.bottom() - radius*2, rect.width()-1, radius*2, radius, radius);
+                    else
+                        path.addRect(rect.left(), rect.bottom() - radius*2, rect.width()-1, radius*2+1);
+                    path.addRect(rect.left(), rect.top()+radius, rect.width()-1, rect.height()-radius*2);
+                }
+                else
+                {
+                    path.addRect(rect);
+
+                    if (row == selectTop)
+                    {
+                        QPainterPath cornerPath;
+                        if (index.column() == 0)
+                        {
+                            QPainterPath path1, path2;
+                            path1.addRect(rect.left(), rect.top(), radius, radius);
+                            path2.addEllipse(rect.left(), rect.top(), radius*2+2, radius*2+2);
+                            path -= path1;
+                            path += path2;
+                        }
+                        if (index.column() == columnLast)
+                        {
+                            QPainterPath path1, path2;
+                            path1.addRect(rect.right()-radius, rect.top(), radius+1, radius);
+                            path2.addEllipse(rect.right()-radius*2, rect.top(), radius*2, radius*2);
+                            path -= path1;
+                            path += path2;
+                        }
+                    }
+                    if (row == selectBottom)
+                    {
+                        if (index.column() == 0)
+                        {
+                            QPainterPath path1, path2;
+                            path1.addRect(rect.left(), rect.bottom()-radius, radius, radius+1);
+                            path2.addEllipse(rect.left(), rect.bottom()-radius*2-2, radius*2+2, radius*2+2);
+                            path -= path1;
+                            path += path2;
+                        }
+                        if (index.column() == columnLast)
+                        {
+                            QPainterPath path1, path2;
+                            path1.addRect(rect.right()-radius, rect.bottom()-radius, radius+1, radius+1);
+                            path2.addEllipse(rect.right()-radius*2, rect.bottom()-radius*2, radius*2, radius*2);
+                            path -= path1;
+                            path += path2;
+                        }
+                    }
+                }
+                painter->setRenderHint(QPainter::Antialiasing);
+                painter->fillPath(path, QApplication::palette().color(QPalette::Highlight));
+            }
         }
+
         QRect rect = option.rect;
         rect.setLeft(rect.left() + 4);
         painter->setPen(QApplication::palette().color(QPalette::Text));
         painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, index.data(Qt::DisplayRole).toString());
     }
+
+private slots:
+    void selectionChanged()
+    {
+        QList<QModelIndex> indexes = view->selectionModel()->selectedRows(0);
+        if (!indexes.size())
+        {
+            selectTop = selectBottom = -1;
+            return ;
+        }
+        else if (indexes.size() == 1)
+        {
+            selectTop = selectBottom = indexes.first().row();
+            return ;
+        }
+
+        selectTop = view->model()->rowCount();
+        selectBottom = -1;
+        foreach (const QModelIndex index, indexes)
+        {
+            int row = index.row();
+            if (row < selectTop)
+                selectTop = row;
+            if (row > selectBottom)
+                selectBottom = row;
+        }
+    }
+
+private:
+    QAbstractItemView* view = nullptr;
+    int columnLast = 1;
+    int selectTop = -1;
+    int selectBottom = -1;
 };
 
 #endif // ORDERPLAYERWINDOW_H

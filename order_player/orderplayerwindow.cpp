@@ -20,12 +20,13 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     header->setStyleSheet("QHeaderView { background-color: transparent; }");
     ui->searchResultTable->verticalHeader()->setStyleSheet("QHeaderView { background-color: transparent; }");
-    ui->searchResultTable->setItemDelegate(new NoFocusDelegate());
-    ui->orderSongsListView->setItemDelegate(new NoFocusDelegate());
-    ui->normalSongsListView->setItemDelegate(new NoFocusDelegate());
-    ui->favoriteSongsListView->setItemDelegate(new NoFocusDelegate());
-    ui->listSongsListView->setItemDelegate(new NoFocusDelegate());
-    ui->historySongsListView->setItemDelegate(new NoFocusDelegate());
+
+    new NoFocusDelegate(ui->searchResultTable, 4);
+    new NoFocusDelegate(ui->orderSongsListView);
+    new NoFocusDelegate(ui->normalSongsListView);
+    new NoFocusDelegate(ui->favoriteSongsListView);
+    new NoFocusDelegate(ui->listSongsListView);
+    new NoFocusDelegate(ui->historySongsListView);
 
     QString vScrollBarSS("QScrollBar:vertical"
                          "{"

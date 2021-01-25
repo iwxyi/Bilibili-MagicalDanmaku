@@ -14,7 +14,7 @@
    <string>Lazy点歌姬</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset resource="../resource.qrc">
     <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
   </property>
   <property name="styleSheet">
@@ -36,7 +36,7 @@
          <string>Lazy点歌姬</string>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
         </property>
         <property name="flat">
@@ -85,7 +85,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/musics/netease</normaloff>:/musics/netease</iconset>
            </property>
            <property name="flat">
@@ -113,7 +113,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
            </property>
            <property name="flat">
@@ -161,7 +161,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/settings</normaloff>:/icons/settings</iconset>
            </property>
            <property name="flat">
@@ -254,7 +254,7 @@ QTabBar::tab:disabled
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="styleSheet">
@@ -265,7 +265,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/order</normaloff>:/icons/order</iconset>
            </attribute>
            <attribute name="title">
@@ -288,7 +288,7 @@ QTabBar::tab:disabled
              <number>0</number>
             </property>
             <item>
-             <widget class="QListView" name="orderSongsListView">
+             <widget class="ItemSelectionListView" name="orderSongsListView">
               <property name="contextMenuPolicy">
                <enum>Qt::CustomContextMenu</enum>
               </property>
@@ -321,7 +321,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/random</normaloff>:/icons/random</iconset>
            </attribute>
            <attribute name="title">
@@ -344,7 +344,7 @@ QTabBar::tab:disabled
              <number>0</number>
             </property>
             <item>
-             <widget class="QListView" name="normalSongsListView">
+             <widget class="ItemSelectionListView" name="normalSongsListView">
               <property name="contextMenuPolicy">
                <enum>Qt::CustomContextMenu</enum>
               </property>
@@ -377,7 +377,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/favorite</normaloff>:/icons/favorite</iconset>
            </attribute>
            <attribute name="title">
@@ -400,7 +400,7 @@ QTabBar::tab:disabled
              <number>0</number>
             </property>
             <item>
-             <widget class="QListView" name="favoriteSongsListView">
+             <widget class="ItemSelectionListView" name="favoriteSongsListView">
               <property name="contextMenuPolicy">
                <enum>Qt::CustomContextMenu</enum>
               </property>
@@ -440,7 +440,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/playlist</normaloff>:/icons/playlist</iconset>
            </attribute>
            <attribute name="title">
@@ -463,7 +463,7 @@ QTabBar::tab:disabled
              <number>0</number>
             </property>
             <item>
-             <widget class="QListView" name="listSongsListView">
+             <widget class="ItemSelectionListView" name="listSongsListView">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -499,7 +499,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset resource="resources.qrc">
+            <iconset resource="../resource.qrc">
              <normaloff>:/icons/history</normaloff>:/icons/history</iconset>
            </attribute>
            <attribute name="title">
@@ -522,7 +522,7 @@ QTabBar::tab:disabled
              <number>0</number>
             </property>
             <item>
-             <widget class="QListView" name="historySongsListView">
+             <widget class="ItemSelectionListView" name="historySongsListView">
               <property name="contextMenuPolicy">
                <enum>Qt::CustomContextMenu</enum>
               </property>
@@ -747,7 +747,7 @@ QTableCornerButton::section
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/play</normaloff>:/icons/play</iconset>
         </property>
         <property name="flat">
@@ -761,7 +761,7 @@ QTableCornerButton::section
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/next_song</normaloff>:/icons/next_song</iconset>
         </property>
         <property name="flat">
@@ -803,7 +803,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/volume</normaloff>:/icons/volume</iconset>
         </property>
         <property name="flat">
@@ -846,7 +846,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/order_list</normaloff>:/icons/order_list</iconset>
         </property>
         <property name="autoDefault">
@@ -866,7 +866,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="resources.qrc">
+         <iconset resource="../resource.qrc">
           <normaloff>:/icons/lyric_hide</normaloff>:/icons/lyric_hide</iconset>
         </property>
         <property name="flat">
@@ -911,9 +911,14 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
    <extends>QLabel</extends>
    <header>roundedpixmaplabel.h</header>
   </customwidget>
+  <customwidget>
+   <class>ItemSelectionListView</class>
+   <extends>QListView</extends>
+   <header>itemselectionlistview.h</header>
+  </customwidget>
  </customwidgets>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="../resource.qrc"/>
  </resources>
  <connections/>
 </ui>

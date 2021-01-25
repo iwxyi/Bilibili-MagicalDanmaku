@@ -73,6 +73,7 @@ HEADERS += \
     mainwindow.h \
     order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
+    order_player/itemselectionlistview.h \
     order_player/lyricstreamwidget.h \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
