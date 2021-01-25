@@ -374,6 +374,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->endLiveWordsEdit->setText(settings.value("live/endWords").toString());
     ui->startLiveSendCheck->setChecked(settings.value("live/startSend").toBool());
 
+    // 启动动画
+    ui->startupAnimationCheck->setChecked(settings.value("mainwindow/splash", true).toBool());
+
     // 弹幕人气
     danmuPopularTimer = new QTimer(this);
     danmuPopularTimer->setInterval(30000);
@@ -8590,3 +8593,8 @@ void MainWindow::on_danmuLongestSpin_editingFinished()
     settings.setValue("danmaku/danmuLongest", danmuLongest);
 }
 
+
+void MainWindow::on_startupAnimationCheck_clicked()
+{
+    settings.setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
+}

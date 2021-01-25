@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1422,7 +1422,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="recordCheck">
             <property name="text">
-             <string>录播</string>
+             <string>自动原画录播</string>
             </property>
            </widget>
           </item>
@@ -1444,7 +1444,10 @@ margin: 6px;</string>
              <bool>false</bool>
             </property>
             <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+            <property name="buttonSymbols">
+             <enum>QAbstractSpinBox::UpDownArrows</enum>
             </property>
             <property name="suffix">
              <string>分钟</string>
@@ -1469,14 +1472,31 @@ margin: 6px;</string>
          </layout>
         </item>
         <item>
-         <widget class="QCheckBox" name="localDebugCheck">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_41">
+          <property name="topMargin">
+           <number>0</number>
           </property>
-          <property name="text">
-           <string>本地调试模式</string>
-          </property>
-         </widget>
+          <item>
+           <widget class="QCheckBox" name="localDebugCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>本地调试模式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="startupAnimationCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>程序启动动画</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <spacer name="verticalSpacer_4">
