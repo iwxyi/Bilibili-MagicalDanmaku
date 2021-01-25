@@ -2164,6 +2164,13 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     FacileMenu* menu = new FacileMenu(this);
 
+    if (!currentSong.addBy.isEmpty())
+    {
+        currentSong.setAddDesc(currentSong.addBy);
+        menu->addAction(currentSong.addBy)->disable();
+        menu->split();
+    }
+
     menu->addAction("立即播放", [=]{
         Song song = orderSongs.takeAt(row);
         startPlaySong(song);
@@ -2360,6 +2367,13 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         currentSong = historySongs.at(row);
 
     FacileMenu* menu = new FacileMenu(this);
+
+    if (!currentSong.addBy.isEmpty())
+    {
+        currentSong.setAddDesc(currentSong.addBy);
+        menu->addAction(currentSong.addBy)->disable();
+        menu->split();
+    }
 
     menu->addAction("立即播放", [=]{
         Song song = historySongs.takeAt(row);
