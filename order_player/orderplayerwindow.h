@@ -46,7 +46,7 @@ QT_END_NAMESPACE
 #define NETEASE_SERVER QString("http://iwxyi.com:3000")
 #define QQMUSIC_SERVER QString("http://iwxyi.com:3200")
 
-#define MUSIC_DEB if (0) qDebug()
+#define MUSIC_DEB if (1) qDebug()
 
 enum MusicQuality
 {
@@ -203,7 +203,8 @@ private slots:
     void on_nextSongButton_clicked();
 
 private:
-    void searchMusic(QString key);
+    void searchMusic(QString key, QString addBy = QString(), bool notify = false);
+    void searchMusicBySource(QString key, MusicSource source, QString addBy = QString());
     void setSearchResultTable(SongList songs);
     void setSearchResultTable(PlayListList playLists);
     void addFavorite(SongList songs);
@@ -283,8 +284,6 @@ private:
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 
-    QStringList orderBys;
-
     SongList orderSongs;
     SongList favoriteSongs;
     SongList normalSongs;
@@ -318,6 +317,11 @@ private:
     BFSColor prevPa;
     BFSColor currentPa;
     double paletteAlpha;
+
+    QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
+    Song prevOrderSong;
+    bool autoSwitchSource = true; // 自动切换音源
+    bool insertOrderOnce = false; // 插入到前面
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

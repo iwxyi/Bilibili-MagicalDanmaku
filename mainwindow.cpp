@@ -1043,11 +1043,6 @@ void MainWindow::on_testDanmakuButton_clicked()
             }
         }
     }
-    else
-    {
-        ui->testDanmakuEdit->setText("");
-        ui->testDanmakuEdit->setFocus();
-    }
 }
 
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
@@ -1118,6 +1113,8 @@ void MainWindow::on_AIReplyCheck_stateChanged(int)
 void MainWindow::on_testDanmakuEdit_returnPressed()
 {
     on_testDanmakuButton_clicked();
+
+    ui->testDanmakuEdit->setText("");
 }
 
 void MainWindow::on_SendMsgEdit_returnPressed()
