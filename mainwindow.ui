@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
+    <width>429</width>
     <height>424</height>
    </rect>
   </property>
@@ -561,7 +561,10 @@ QTabBar::tab:selected
 [同步] 昵称 灰色弹幕</string>
             </property>
             <property name="text">
-             <string>视频PK同步消息</string>
+             <string>PK同步消息</string>
+            </property>
+            <property name="tristate">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -2595,8 +2598,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>500</width>
-     <height>26</height>
+     <width>429</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

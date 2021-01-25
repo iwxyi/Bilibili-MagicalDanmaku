@@ -174,8 +174,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
 
     // PK消息同步
-    pkMsgSync = settings.value("pk/msgSync", false).toBool();
-    ui->pkMsgSyncCheck->setChecked(pkMsgSync);
+    pkMsgSync = settings.value("pk/msgSync", 0).toInt();
+    if (pkMsgSync == 0)
+        ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
+    else if (pkMsgSync == 1)
+        ui->pkMsgSyncCheck->setCheckState(Qt::PartiallyChecked);
+    else if (pkMsgSync == 2)
+        ui->pkMsgSyncCheck->setCheckState(Qt::Checked);
+    ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
 
     // 判断机器人
     judgeRobot = settings.value("danmaku/judgeRobot", false).toBool();
@@ -6875,7 +6881,22 @@ void MainWindow::on_pkChuanmenCheck_clicked()
 
 void MainWindow::on_pkMsgSyncCheck_clicked()
 {
-    pkMsgSync = ui->pkMsgSyncCheck->isChecked();
+    if (pkMsgSync == 0)
+    {
+        pkMsgSync = 1;
+        ui->pkMsgSyncCheck->setCheckState(Qt::PartiallyChecked);
+    }
+    else if (pkMsgSync == 1)
+    {
+        pkMsgSync = 2;
+        ui->pkMsgSyncCheck->setCheckState(Qt::Checked);
+    }
+    else if (pkMsgSync == 2)
+    {
+        pkMsgSync = 0;
+        ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
+    }
+    ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
     settings.setValue("pk/msgSync", pkMsgSync);
 }
 
@@ -7481,7 +7502,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     qDebug() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG") // 收到弹幕
     {
-        if (!pkMsgSync || !pkVideo)
+        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
             return ;
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
@@ -8568,3 +8589,4 @@ void MainWindow::on_danmuLongestSpin_editingFinished()
     danmuLongest = ui->danmuLongestSpin->value();
     settings.setValue("danmaku/danmuLongest", danmuLongest);
 }
+

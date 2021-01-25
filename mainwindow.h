@@ -670,7 +670,7 @@ private:
 
     // 大乱斗串门
     bool pkChuanmenEnable = false;
-    bool pkMsgSync = false;
+    int pkMsgSync = 0;
     QString pkRoomId;
     QString pkUid;
     QString pkUname;
