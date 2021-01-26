@@ -28,6 +28,7 @@
 #include "desktoplyricwidget.h"
 #include "numberanimation.h"
 #include "imageutil.h"
+#include "logindialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class OrderPlayerWindow; }
@@ -43,10 +44,11 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define NETEASE_SERVER QString("http://iwxyi.com:3000")
-#define QQMUSIC_SERVER QString("http://iwxyi.com:3200")
-
 #define MUSIC_DEB if (1) qDebug()
+
+typedef std::function<void(QString)> const NetStringFunc;
+typedef std::function<void(QJsonObject)> const NetJsonFunc;
+typedef std::function<void(QNetworkReply*)> const NetReplyFunc;
 
 enum MusicQuality
 {
@@ -237,6 +239,8 @@ private:
     void downloadSongCover(Song song);
     void setCurrentLyric(QString lyric);
     void openPlayList(QString shareUrl);
+    void clearDownloadFiles();
+    void clearHoaryFiles();
 
     void adjustExpandPlayingButton();
     void connectDesktopLyricSignals();
@@ -247,6 +251,11 @@ private:
     void readMp3Data(const QByteArray& array);
 
     void setMusicIconBySource();
+
+    void fetch(QString url, NetStringFunc func);
+    void fetch(QString url, NetJsonFunc func);
+    void fetch(QString url, NetReplyFunc func);
+    QVariant getCookies(QString cookieString);
 
 protected:
     void showEvent(QShowEvent*e) override;
@@ -280,7 +289,6 @@ private:
     bool starting = true;
     QSettings settings;
     QDir musicsFileDir;
-    const QString API_DOMAIN = "http://iwxyi.com:3000";
     MusicSource musicSource = NeteaseCloudMusic;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
@@ -297,7 +305,6 @@ private:
     QMediaPlayer* player;
     PlayCircleMode circleMode = OrderList;
     Song playingSong;
-    QTimer* playingPositionTimer;
     int lyricScroll;
 
     bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
@@ -323,6 +330,13 @@ private:
     Song prevOrderSong;
     bool autoSwitchSource = true; // 自动切换音源
     bool insertOrderOnce = false; // 插入到前面
+
+    int songBr = 320000; // 码率，单位bps
+    QString neteaseCookies;
+    QVariant neteaseCookiesVariant;
+    QString qqmusicCookies;
+    QVariant qqmusicCookiesVariant;
+    bool unblockQQMusic = false;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

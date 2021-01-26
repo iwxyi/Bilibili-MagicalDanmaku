@@ -8,8 +8,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
       musicsFileDir(QApplication::applicationDirPath()+"/musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(settings, nullptr)),
-      expandPlayingButton(new InteractiveButtonBase(this)),
-      playingPositionTimer(new QTimer(this))
+      expandPlayingButton(new InteractiveButtonBase(this))
 {
     starting = true;
     ui->setupUi(this);
@@ -141,12 +140,14 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
 
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
+    player->setNotifyInterval(100);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
         ui->playingCurrentTimeLabel->setText(msecondToString(position));
         slotPlayerPositionChanged();
     });
     connect(player, &QMediaPlayer::durationChanged, this, [=](qint64 duration){
         ui->playProgressSlider->setMaximum(static_cast<int>(duration));
+        ui->playingAllTimeLabel->setText(msecondToString(duration));
         if (setPlayPositionAfterLoad)
         {
             player->setPosition(setPlayPositionAfterLoad);
@@ -167,12 +168,10 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
         if (state == QMediaPlayer::PlayingState)
         {
-            playingPositionTimer->start();
             ui->playButton->setIcon(QIcon(":/icons/pause"));
         }
         else
         {
-            playingPositionTimer->stop();
             ui->playButton->setIcon(QIcon(":/icons/play"));
         }
     });
@@ -245,6 +244,14 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
 
+    // 读取cookie
+    songBr = settings.value("music/br", 320000).toInt();
+    neteaseCookies = settings.value("music/neteaseCookies").toString();
+    neteaseCookiesVariant = getCookies(neteaseCookies);
+    qqmusicCookies = settings.value("music/qqmusicCookies").toString();
+    qqmusicCookiesVariant = getCookies(qqmusicCookies);
+    unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
+
     // 还原上次播放的歌曲
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
     if (currentSong.isValid())
@@ -281,12 +288,9 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
 
     prevBlurBg = QPixmap(32, 32);
     prevBlurBg.fill(QColor(245, 245, 247));
-    playingPositionTimer->setInterval(100);
-    connect(playingPositionTimer, &QTimer::timeout, this, [=]{
-        if (player->state() == QMediaPlayer::PlayingState)
-            slotPlayerPositionChanged();
-    });
     starting = false;
+
+    clearHoaryFiles();
 }
 
 OrderPlayerWindow::~OrderPlayerWindow()
@@ -346,28 +350,12 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         url = QQMUSIC_SERVER + "/getSearchByKey?key=" + key.toUtf8().toPercentEncoding() + "&limit=80";
         break;
     }
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-
+    fetch(url, [=](QJsonObject json){
         bool insertOnce = this->insertOrderOnce;
         this->insertOrderOnce = false;
         currentResultOrderBy = addBy;
         prevOrderSong = Song();
 
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
         QJsonObject response;
         switch (source) {
         case NeteaseCloudMusic:
@@ -463,7 +451,6 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                 appendNextSongs(SongList{song});
         }
     });
-    manager->get(*request);
 }
 
 void OrderPlayerWindow::searchMusicBySource(QString key, MusicSource source, QString addBy)
@@ -516,6 +503,7 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
         table->setItem(row, albumCol, createItem(song.album.name));
         table->setItem(row, durationCol, createItem(msecondToString(song.duration)));
     }
+    table->verticalScrollBar()->setSliderPosition(0); // 置顶
 
     QTimer::singleShot(0, [=]{
         table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
@@ -1161,7 +1149,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     };
     ui->playingNameLabel->setText(max16(song.name));
     ui->playingArtistLabel->setText(max16(song.artistNames));
-    ui->playingAllTimeLabel->setText(msecondToString(song.duration));
+
     // 设置封面
     if (QFileInfo(coverPath(song)).exists())
     {
@@ -1249,27 +1237,26 @@ void OrderPlayerWindow::downloadSong(Song song)
     if (isSongDownloaded(song))
         return ;
     downloadingSong = song;
+    bool unblockQQMusic = this->unblockQQMusic; // 保存状态，避免下载的时候改变
+
     QString url;
     switch (song.source) {
     case NeteaseCloudMusic:
-        url = NETEASE_SERVER + "/song/url?id=" + snum(song.id);
+        url = NETEASE_SERVER + "/song/url?id=" + snum(song.id) + "&br=" + snum(songBr);
         break;
     case QQMusic:
-        url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
+        if (unblockQQMusic)
+            url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
+        else
+            url = url = QQMUSIC_SERVER + "/getMusicPlay?songmid=" + song.mid;
         break;
     }
 
     MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+    fetch(url, [=](QNetworkReply* reply){
         QByteArray baData = reply->readAll();
-        manager->deleteLater();
-        delete request;
 
-        if (song.source == QQMusic)
+        if (song.source == QQMusic && unblockQQMusic)
         {
             // 这个API是野生找的，需要额外处理
             baData.replace("\\\"", "\"").replace("\\\\", "\\").replace("\\/", "/");
@@ -1346,38 +1333,53 @@ void OrderPlayerWindow::downloadSong(Song song)
         }
         case QQMusic:
         {
-            /*{
-                "mid": "001fApzM4Rymgq",
-                "m4a": "http:\/\/aqqmusic.tc.qq.com\/amobile.music.tc.qq.com\/C400001fApzM4Rymgq.m4a?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=38",
-                "mp3_l": "http:\/\/mobileoc.music.tc.qq.com\/M500001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
-                "mp3_h": "http:\/\/mobileoc.music.tc.qq.com\/M800001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
-                "ape": "http:\/\/mobileoc.music.tc.qq.com\/A000001fApzM4Rymgq.ape?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
-                "flac": "http:\/\/mobileoc.music.tc.qq.com\/F000001fApzM4Rymgq.flac?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
-                "songname": "\u6000\u74a7\u8d74\u524d\u5c18",
-                "albumname": "\u603b\u507f\u76f8\u601d",
-                "singername": "\u53f8\u590f",
-                "pic": "https:\/\/y.gtimg.cn\/music\/photo_new\/T002R300x300M0000022qglb0tOda5_1.jpg?max_age=2592000",
-                "mv": "\u6682\u65e0MV",
-                "lrc": "[ti:]\n[ar:]\n[al:]\n[by:\u65f6\u95f4\u6233\u5de5\u5177V2.0_20200505]\n[offset:0]\n[00:00.00]\u6000\u74a7\u8d74\u524d\u5c18\n[00:01.50]\u4f5c\u8bcd\uff1a\u6d41\u5149\n[00:03.01]\u4f5c\/\u7f16\u66f2\uff1a\u4e00\u53ea\u9c7c\u5361\n[00:04.51]\u6f14\u5531\uff1a\u53f8\u590f\n[00:06.02]\u4fee\u97f3\uff1a\u6c64\u5706w\n[00:07.53]\u6df7\u97f3\uff1aWuli\u5305\u5b50\n[00:09.03]\u6587\u6848\uff1a\u8c22\u77e5\u8a00\n[00:10.54]\u7f8e\u5de5\uff1a\u4f5c\u8086\n[00:12.04]\u5236\u4f5c\u4eba\uff1a\u6c90\u4e88\n[00:13.55]\u51fa\u54c1\uff1a\u7c73\u6f2b\u4f20\u5a92\n[00:15.06]\u5236\u4f5c\uff1a\u8d4f\u4e50\u8ba1\u5212\n[00:16.56]\u827a\u672f\u7edf\u7b79\uff1a\u697c\u5c0f\u6728\n[00:18.07]\u53d1\u884c\uff1a\u7396\u8bb8\n[00:19.59]\u9879\u76ee\u76d1\u7763\uff1a\u5b59\u534e\u5b81\n[00:27.51]\u522b\u6765\u5df2\u662f\u767e\u5e74\u8eab\n[00:33.39]\u788c\u788c\u7ea2\u5c18\u8001\u82b1\u6708\u60c5\u6839\n[00:40.08]\u9752\u9752\u9b02\u4ed8\u9752\u9752\u575f\n[00:43.56]\u76f8\u601d\u4e24\u5904\u5173\u5c71\u963b\u68a6\u9b42\n[00:52.77]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[00:58.71]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[01:05.34]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[01:11.28]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[01:15.15]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[01:23.76]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[01:30.30]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[01:36.15]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:08.52]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[02:14.46]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[02:21.12]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[02:27.03]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[02:32.67]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[02:39.00]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[02:46.08]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[02:51.99]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:56.13]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[03:05.04]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[03:11.37]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[03:17.22]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[04:00.00]"
-            }*/
-            QString m4a = json.value("m4a").toString(); // 视频？但好像能直接播放
-            QString mp3_l = json.value("mp3_l").toString(); // 普通品质
-            QString mp3_h = json.value("mp3_h").toString(); // 高品质
-            QString ape = json.value("ape").toString(); // 高品无损
-            QString flac = json.value("flac").toString(); // 无损音频
+            if (unblockQQMusic)
+            {
+                /*{
+                    "mid": "001fApzM4Rymgq",
+                    "m4a": "http:\/\/aqqmusic.tc.qq.com\/amobile.music.tc.qq.com\/C400001fApzM4Rymgq.m4a?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=38",
+                    "mp3_l": "http:\/\/mobileoc.music.tc.qq.com\/M500001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                    "mp3_h": "http:\/\/mobileoc.music.tc.qq.com\/M800001fApzM4Rymgq.mp3?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                    "ape": "http:\/\/mobileoc.music.tc.qq.com\/A000001fApzM4Rymgq.ape?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                    "flac": "http:\/\/mobileoc.music.tc.qq.com\/F000001fApzM4Rymgq.flac?guid=2095717240&vkey=23EB99E476D5EB7936AF440461D097689A00AE211B2D1725B9703A9459A1239301BF19E0A098B30CC9F4503C8DBDA65FD85E60E133944F13&uin=0&fromtag=53",
+                    "songname": "\u6000\u74a7\u8d74\u524d\u5c18",
+                    "albumname": "\u603b\u507f\u76f8\u601d",
+                    "singername": "\u53f8\u590f",
+                    "pic": "https:\/\/y.gtimg.cn\/music\/photo_new\/T002R300x300M0000022qglb0tOda5_1.jpg?max_age=2592000",
+                    "mv": "\u6682\u65e0MV",
+                    "lrc": "[ti:]\n[ar:]\n[al:]\n[by:\u65f6\u95f4\u6233\u5de5\u5177V2.0_20200505]\n[offset:0]\n[00:00.00]\u6000\u74a7\u8d74\u524d\u5c18\n[00:01.50]\u4f5c\u8bcd\uff1a\u6d41\u5149\n[00:03.01]\u4f5c\/\u7f16\u66f2\uff1a\u4e00\u53ea\u9c7c\u5361\n[00:04.51]\u6f14\u5531\uff1a\u53f8\u590f\n[00:06.02]\u4fee\u97f3\uff1a\u6c64\u5706w\n[00:07.53]\u6df7\u97f3\uff1aWuli\u5305\u5b50\n[00:09.03]\u6587\u6848\uff1a\u8c22\u77e5\u8a00\n[00:10.54]\u7f8e\u5de5\uff1a\u4f5c\u8086\n[00:12.04]\u5236\u4f5c\u4eba\uff1a\u6c90\u4e88\n[00:13.55]\u51fa\u54c1\uff1a\u7c73\u6f2b\u4f20\u5a92\n[00:15.06]\u5236\u4f5c\uff1a\u8d4f\u4e50\u8ba1\u5212\n[00:16.56]\u827a\u672f\u7edf\u7b79\uff1a\u697c\u5c0f\u6728\n[00:18.07]\u53d1\u884c\uff1a\u7396\u8bb8\n[00:19.59]\u9879\u76ee\u76d1\u7763\uff1a\u5b59\u534e\u5b81\n[00:27.51]\u522b\u6765\u5df2\u662f\u767e\u5e74\u8eab\n[00:33.39]\u788c\u788c\u7ea2\u5c18\u8001\u82b1\u6708\u60c5\u6839\n[00:40.08]\u9752\u9752\u9b02\u4ed8\u9752\u9752\u575f\n[00:43.56]\u76f8\u601d\u4e24\u5904\u5173\u5c71\u963b\u68a6\u9b42\n[00:52.77]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[00:58.71]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[01:05.34]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[01:11.28]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[01:15.15]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[01:23.76]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[01:30.30]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[01:36.15]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:08.52]\u541b\u5b50\u6380\u5e18\u773a\u6625\u6df1\n[02:14.46]\u6c49\u768b\u89e3\u4f69\u6000\u74a7\u9057\u4f73\u4eba\n[02:21.12]\u98de\u5149\u4e0d\u6765\u96ea\u76c8\u6a3d\n[02:27.03]\u4f73\u4eba\u53bb\u4e5f\u70df\u6708\u4ff1\u6c89\u6c89\n[02:32.67]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[02:39.00]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[02:46.08]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[02:51.99]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[02:56.13]\u5979\u6709\u51b0\u96ea\u9b42\u9b44\u4e03\u5e74\u9010\u70df\u6ce2\n[03:05.04]\u6f14\u4e00\u526f\u591a\u60c5\u8eab\u7ea2\u5c18\u91cc\u6d88\u78e8\n[03:11.37]\u6b4c\u6b7b\u751f\u5951\u9614\u5531\u4e0e\u5b50\u6210\u8bf4\n[03:17.22]\u5374\u5c06\u75f4\u5fc3\u4e00\u63e1\u6258\u4f53\u540c\u5c71\u963f\n[04:00.00]"
+                }*/
+                QString m4a = json.value("m4a").toString(); // 视频？但好像能直接播放
+                QString mp3_l = json.value("mp3_l").toString(); // 普通品质
+                QString mp3_h = json.value("mp3_h").toString(); // 高品质
+                QString ape = json.value("ape").toString(); // 高品无损
+                QString flac = json.value("flac").toString(); // 无损音频
 
-            // 实测只有 m4a 能播放……
-            if (!m4a.isEmpty())
-                fileUrl = m4a;
-            else if (!mp3_h.isEmpty())
-                fileUrl = mp3_h;
-            else if (!mp3_l.isEmpty())
-                fileUrl = mp3_l;
-            else if (!ape.isEmpty())
-                fileUrl = ape;
-            else if (!flac.isEmpty())
-                fileUrl = flac;
+                // 实测只有 m4a 能播放……
+                if (!m4a.isEmpty())
+                    fileUrl = m4a;
+                else if (!mp3_h.isEmpty())
+                    fileUrl = mp3_h;
+                else if (!mp3_l.isEmpty())
+                    fileUrl = mp3_l;
+                else if (!ape.isEmpty())
+                    fileUrl = ape;
+                else if (!flac.isEmpty())
+                    fileUrl = flac;
+            }
             else
+            {
+                QJsonObject playUrl = json.value("data").toObject().value("playUrl").toObject();
+                fileUrl = playUrl.value(song.mid).toObject().value("url").toString();
+                if (fileUrl.isEmpty())
+                {
+                    QString error = playUrl.value(song.mid).toObject().value("error").toString();
+                    if (!error.isEmpty())
+                        qDebug() << "无法播放音乐：" << song.simpleString() << error;
+                }
+            }
+
+            if (fileUrl.isEmpty())
             {
                 qDebug() << "无法下载，歌曲不存在或没有版权" << song.simpleString();
                 if (playAfterDownloaded == song)
@@ -1438,7 +1440,6 @@ void OrderPlayerWindow::downloadSong(Song song)
         downloadingSong = Song();
         downloadNext();
     });
-    manager->get(*request);
 
     downloadSongLyric(song);
     downloadSongCover(song);
@@ -1461,23 +1462,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         break;
     }
 
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray baData = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(baData, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    fetch(url, [=](QJsonObject json){
         QString lrc;
         switch (song.source) {
         case NeteaseCloudMusic:
@@ -1514,7 +1499,6 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             qWarning() << "warning: 下载的歌词是空的" << song.simpleString() << url;
         }
     });
-    manager->get(*request);
 }
 
 void OrderPlayerWindow::downloadSongCover(Song song)
@@ -1534,23 +1518,7 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     }
 
     MUSIC_DEB << "封面信息url:" << url;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray baData = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(baData, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    fetch(url, [=](QJsonObject json){
         QString url;
         switch (song.source) {
         case NeteaseCloudMusic:
@@ -1564,8 +1532,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             if (!array.size())
             {
                 qDebug() << "未找到歌曲：" << song.simpleString();
-//                downloadingSong = Song();
-//                downloadNext();
                 return ;
             }
 
@@ -1577,8 +1543,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             if (json.value("code").toInt() != 0)
             {
                 qDebug() << ("封面返回结果不为0：") << json.value("message").toString();
-//                downloadingSong = Song();
-//                downloadNext();
                 return ;
             }
             url = json.value("response").toObject().value("data").toObject().value("imageUrl").toString();
@@ -1621,7 +1585,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             qDebug() << "warning: 下载的封面是空的" << song.simpleString();
         }
     });
-    manager->get(*request);
 }
 
 /**
@@ -1659,17 +1622,10 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             shareUrl = "https://" + shareUrl;
 
         // 检测重定向
-        QNetworkAccessManager* manager = new QNetworkAccessManager;
-        QNetworkRequest* request = new QNetworkRequest(QUrl(shareUrl));
-        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        fetch(shareUrl, [=](QNetworkReply* reply){
             QString url = reply->rawHeader("Location");
-            manager->deleteLater();
-            delete request;
             return openPlayList(url);
         });
-        manager->get(*request);
         return ;
     }
     else if (shareUrl.contains("y.qq.com/w/taoge.html")) // QQ音乐短网址第一次重定向
@@ -1707,22 +1663,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
     }
 
     MUSIC_DEB << "歌单接口：" << playlistUrl;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(playlistUrl);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "解析歌单结果出错" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    fetch(playlistUrl, [=](QJsonObject json){
         QJsonObject response;
         SongList songs;
         switch (source) {
@@ -1763,8 +1704,31 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         }
         }
     });
-    manager->get(*request);
 
+}
+
+void OrderPlayerWindow::clearDownloadFiles()
+{
+    QList<QFileInfo> files = musicsFileDir.entryInfoList(QDir::Files);
+    foreach (QFileInfo info, files)
+    {
+        QFile f;
+        f.remove(info.absoluteFilePath());
+    }
+}
+
+void OrderPlayerWindow::clearHoaryFiles()
+{
+    qint64 current = QDateTime::currentSecsSinceEpoch();
+    QList<QFileInfo> files = musicsFileDir.entryInfoList(QDir::Files);
+    foreach (QFileInfo info, files)
+    {
+        if (info.lastModified().toSecsSinceEpoch() + 604800 < current) // 七天前的
+        {
+            QFile f;
+            f.remove(info.absoluteFilePath());
+        }
+    }
 }
 
 void OrderPlayerWindow::adjustExpandPlayingButton()
@@ -2016,6 +1980,69 @@ void OrderPlayerWindow::setMusicIconBySource()
         ui->musicSourceButton->setToolTip("当前播放源：QQ音乐\n点击切换");
         break;
     }
+}
+
+void OrderPlayerWindow::fetch(QString url, NetStringFunc func)
+{
+    fetch(url, [=](QNetworkReply* reply){
+        func(reply->readAll());
+    });
+}
+
+void OrderPlayerWindow::fetch(QString url, NetJsonFunc func)
+{
+    fetch(url, [=](QNetworkReply* reply){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        func(document.object());
+    });
+}
+
+void OrderPlayerWindow::fetch(QString url, NetReplyFunc func)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    if (!neteaseCookies.isEmpty() && url.startsWith(NETEASE_SERVER))
+        request->setHeader(QNetworkRequest::CookieHeader, neteaseCookiesVariant);
+    else if (!qqmusicCookies.isEmpty() && url.startsWith(QQMUSIC_SERVER))
+        request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        manager->deleteLater();
+        delete request;
+
+        func(reply);
+        reply->deleteLater();
+    });
+    manager->get(*request);
+}
+
+QVariant OrderPlayerWindow::getCookies(QString cookieString)
+{
+    QList<QNetworkCookie> cookies;
+
+    // 设置cookie
+    QString cookieText = cookieString;
+    QStringList sl = cookieText.split(";");
+    foreach (auto s, sl)
+    {
+        s = s.trimmed();
+        int pos = s.indexOf("=");
+        QString key = s.left(pos);
+        QString val = s.right(s.length() - pos - 1);
+        cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
+    }
+
+    // 请求头里面加入cookies
+    QVariant var;
+    var.setValue(cookies);
+    return var;
 }
 
 /**
@@ -2413,7 +2440,6 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
             path = lyricPath(song);
             if (QFileInfo(path).exists())
                 QFile(path).remove();
-
         }
     })->disable(!currentSong.isValid());
 
@@ -2585,20 +2611,84 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 {
     FacileMenu* menu = new FacileMenu(this);
 
-    menu->addAction("双击播放", [=]{
+    FacileMenu* accountMenu = menu->addMenu("账号");
+
+    accountMenu->addAction("添加账号", [=]{
+        LoginDialog* dialog = new LoginDialog(this);
+        connect(dialog, &LoginDialog::signalLogined, this, [=](MusicSource source, QString cookies){
+            switch (source) {
+            case NeteaseCloudMusic:
+                neteaseCookies = cookies;
+                settings.setValue("music/neteaseCookies", cookies);
+                neteaseCookiesVariant = getCookies(neteaseCookies);
+                break;
+            case QQMusic:
+                qqmusicCookies = cookies;
+                settings.setValue("music/qqmusicCookies", cookies);
+                qqmusicCookiesVariant = getCookies(qqmusicCookies);
+                if (unblockQQMusic)
+                    settings.setValue("music/unblockQQMusic", unblockQQMusic = false);
+                break;
+            }
+            clearDownloadFiles();
+        });
+        dialog->exec();
+    })->uncheck();
+
+    accountMenu->split();
+    accountMenu->addAction("网易云音乐", [=]{
+        if (QMessageBox::question(this, "网易云音乐", "是否退出网易云音乐账号？") == QMessageBox::Yes)
+        {
+            neteaseCookies = "";
+            neteaseCookiesVariant.clear();
+            settings.setValue("music/neteaseCookies", "");
+        }
+    })->check(!neteaseCookies.isEmpty())->disable(neteaseCookies.isEmpty());
+
+    accountMenu->addAction("QQ音乐", [=]{
+        if (QMessageBox::question(this, "QQ音乐", "是否退出QQ音乐账号？") == QMessageBox::Yes)
+        {
+            qqmusicCookies = "";
+            qqmusicCookiesVariant.clear();
+            settings.setValue("music/qqmusicCookies", "");
+        }
+    })->check(!qqmusicCookies.isEmpty())->disable(qqmusicCookies.isEmpty());
+
+    FacileMenu* playMenu = menu->addMenu("播放");
+
+    playMenu->addAction("音乐品质", [=]{
+        bool ok = false;
+        int br = QInputDialog::getInt(this, "设置码率", "请输入音乐码率，越高越清晰，体积也更大\n修改后将清理所有缓存，重新下载歌曲文件", songBr, 128000, 1280000, 10000, &ok);
+        if (!ok)
+            return ;
+        if (songBr != br)
+            clearDownloadFiles();
+        settings.setValue("music/br", songBr = br);
+    })->check(songBr >= 320000);
+
+    playMenu->addAction("双击播放", [=]{
         settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
     })->check(doubleClickToPlay);
 
-    bool h = settings.value("music/hideTab", false).toBool();
-    menu->addAction("隐藏Tab", [=]{
-        settings.setValue("music/hideTab", !h);
-        if (h)
-            ui->listTabWidget->tabBar()->show();
-        else
-            ui->listTabWidget->tabBar()->hide();
-    })->check(h);
+    playMenu->split()->addAction("自动换源", [=]{
+        settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
+    })->setChecked(autoSwitchSource);
 
-    menu->split()->addAction("模糊背景", [=]{
+    playMenu->addAction("特殊接口", [=]{
+        settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
+        if (unblockQQMusic)
+            QMessageBox::information(this, "特殊接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");
+    })->check(unblockQQMusic);
+
+    playMenu->split()->addAction("清理缓存", [=]{
+        clearDownloadFiles();
+    })->uncheck();
+
+    FacileMenu* stMenu = menu->addMenu("设置");
+
+    bool h = settings.value("music/hideTab", false).toBool();
+
+    stMenu->addAction("模糊背景", [=]{
         settings.setValue("music/blurBg", blurBg = !blurBg);
         if (blurBg)
             setBlurBackground(currentCover);
@@ -2606,24 +2696,28 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->setChecked(blurBg);
 
     QStringList sl{"32", "64", "96", "128"/*, "160", "192", "224", "256"*/};
-    auto blurAlphaMenu = menu->addMenu("模糊透明度");
-    menu->lastAction()->hide(!blurBg);
+    auto blurAlphaMenu = stMenu->addMenu("模糊透明");
+    stMenu->lastAction()->hide(!blurBg)->uncheck();
     blurAlphaMenu->addOptions(sl, blurAlpha / 32 - 1, [=](int index){
         blurAlpha = (index+1) * 32;
         settings.setValue("music/blurAlpha", blurAlpha);
         setBlurBackground(currentCover);
     });
 
-    menu->split()->addAction("主题变色", [=]{
+    stMenu->addAction("主题变色", [=]{
         settings.setValue("music/themeColor", themeColor = !themeColor);
         if (themeColor)
             setThemeColor(currentCover);
         update();
     })->setChecked(themeColor);
 
-    menu->split()->addAction("自动换源", [=]{
-        settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
-    })->setChecked(autoSwitchSource);
+    stMenu->split()->addAction("隐藏Tab", [=]{
+        settings.setValue("music/hideTab", !h);
+        if (h)
+            ui->listTabWidget->tabBar()->show();
+        else
+            ui->listTabWidget->tabBar()->hide();
+    })->check(h);
 
     menu->exec();
 }

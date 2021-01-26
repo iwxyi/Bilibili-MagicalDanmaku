@@ -41,6 +41,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
+    order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
     utils/xfytts.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
     order_player/itemselectionlistview.h \
+    order_player/logindialog.h \
     order_player/lyricstreamwidget.h \
     order_player/numberanimation.h \
     order_player/orderplayerwindow.h \
@@ -101,6 +103,7 @@ HEADERS += \
 FORMS += \
     lucky_draw/luckydrawwindow.ui \
     mainwindow.ui \
+    order_player/logindialog.ui \
     order_player/orderplayerwindow.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \

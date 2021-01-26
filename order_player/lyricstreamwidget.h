@@ -28,7 +28,7 @@ public:
         QFont font = this->font();
         font.setPointSize(pointSize);
         QFontMetrics fm(font);
-        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height())*2; // 双倍行间距
+        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height()) * lineSpacingRatio; // 双倍行间距
         setFixedHeight((lyricStream.size()+verticalMargin*2) * lineSpacing);
     }
 
@@ -139,7 +139,7 @@ public:
 
     int getCurrentTop() const
     {
-        return (currentRow + verticalMargin + 0.5) * lineSpacing;
+        return (currentRow + verticalMargin + lineSpacingRatio / 2 - 1) * lineSpacing;
     }
 
     void setColors(QColor p, QColor w)
@@ -153,12 +153,13 @@ protected:
     void paintEvent(QPaintEvent *event) override
     {
         QPainter painter(this);
+        painter.setRenderHint(QPainter::TextAntialiasing, true);
         QFont font(painter.font());
         font.setPointSize(pointSize);
         painter.setFont(font);
         painter.setPen(waitingColor);
         QFontMetrics fm(font);
-        int lineSpacing = fm.height() + (fm.lineSpacing() - fm.height()) * 2;
+        int lineSpacing = fm.height() + (fm.lineSpacing() - fm.height()) * lineSpacingRatio;
         double rowOffset = verticalMargin;
         qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
         qint64 aniDelta = currentTimestamp - switchRowTimestamp;
@@ -338,6 +339,7 @@ private:
     int lineSpacing = 30;
     int verticalMargin = 5; // 上下间距5行
 
+    const int lineSpacingRatio = 8;
     int pointSize = 12;
     QColor playingColor = QColor(155, 80, 255);
     QColor waitingColor = Qt::black;
