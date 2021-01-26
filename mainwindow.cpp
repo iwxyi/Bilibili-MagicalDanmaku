@@ -990,9 +990,19 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
+    qint64 uid = 123;
     int r = qrand() % 7 + 1;
+    if (text.startsWith("$"))
+    {
+        text.replace(0, 1, "");
+        uid = cookieUid.toLongLong();
+    }
+    else
+    {
+        uid = 10000 + r;
+    }
     appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
-                            10000+r, 12,
+                            uid, 12,
                              QDateTime::currentDateTime(), "", ""));
 
     if (text == "赠送吃瓜")
@@ -1005,7 +1015,6 @@ void MainWindow::on_testDanmakuButton_clicked()
         QString giftName = "测试礼物";
         int giftId = 123;
         int num = qrand() % 3 + 1;
-        qint64 uid = 123;
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         QString coinType = qrand()%2 ? "gold" : "silver";
         int totalCoin = qrand() % 20 * 100;
@@ -1027,7 +1036,6 @@ void MainWindow::on_testDanmakuButton_clicked()
         int gift_id = 10003;
         int guard_level = 3;
         int price = 198000;
-        qint64 uid = 123;
         LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price);
         appendNewLiveDanmaku(danmaku);
 
@@ -1042,6 +1050,10 @@ void MainWindow::on_testDanmakuButton_clicked()
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
         }
+    }
+    else if (text.startsWith(">"))
+    {
+        processRemoteCmd(text.replace(0, 1, ""));
     }
 }
 
@@ -3565,6 +3577,87 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             sendNotifyMsg(">已关闭录播");
     }
+    else if (msg == "撤销禁言")
+    {
+        if (!blockedQueue.size())
+        {
+            sendNotifyMsg(">没有可撤销的禁言用户");
+            return ;
+        }
+
+        LiveDanmaku danmaku = blockedQueue.takeLast();
+        delBlockUser(danmaku.getUid());
+        if (response)
+            sendNotifyMsg(">已解除禁言：" + danmaku.getNickname());
+    }
+    else if (msg.startsWith("禁言 "))
+    {
+        QRegularExpression re("^禁言\\s*(\\S+)\\s*(\\d+)?$");
+        QRegularExpressionMatch match;
+        if (msg.indexOf(re, 0, &match) == -1)
+            return ;
+        QString nickname = match.captured(1);
+        QString hours = match.captured(2);
+        int hour = ui->autoBlockTimeSpin->value();
+        if (!hours.isEmpty())
+            hour = hours.toInt();
+        for (int i = roomDanmakus.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = roomDanmakus.at(i);
+            if (!danmaku.is(MSG_DANMAKU))
+                continue;
+
+            QString nick = danmaku.getNickname();
+            if (nick.contains(nickname))
+            {
+                addBlockUser(danmaku.getUid(), hour);
+                sendNotifyMsg(">已禁言：" + nick);
+                return ;
+            }
+        }
+    }
+    else if (msg.startsWith("解禁 "))
+    {
+        QRegularExpression re("^解禁\\s*(.+)\\s*$");
+        QRegularExpressionMatch match;
+        if (msg.indexOf(re, 0, &match) == -1)
+            return ;
+        QString nickname = match.captured(1);
+
+        // 优先遍历禁言的
+        for (int i = blockedQueue.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = blockedQueue.at(i);
+            if (!danmaku.is(MSG_DANMAKU))
+                continue;
+
+            QString nick = danmaku.getNickname();
+            if (nick.contains(nickname))
+            {
+                delBlockUser(danmaku.getUid());
+                sendNotifyMsg(">已解禁：" + nick);
+                blockedQueue.removeAt(i);
+                return ;
+            }
+        }
+
+        // 其次遍历弹幕的
+        for (int i = roomDanmakus.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = roomDanmakus.at(i);
+            if (danmaku.getUid() == 0)
+                continue;
+
+            QString nick = danmaku.getNickname();
+            if (nick.contains(nickname))
+            {
+                delBlockUser(danmaku.getUid());
+                sendNotifyMsg(">已解禁：" + nick);
+                blockedQueue.removeAt(i);
+                return ;
+            }
+        }
+    }
 }
 
 bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
@@ -4702,12 +4795,13 @@ void MainWindow::handleMessage(QJsonObject json)
             qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         }
     }
-    else if (cmd == "ROOM_BLOCK_MSG")
+    else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         LiveDanmaku danmaku(LiveDanmaku(nickname, uid));
         appendNewLiveDanmaku(danmaku);
+        blockedQueue.append(danmaku);
 
         slotCmdEvent(cmd, danmaku);
     }
@@ -6002,6 +6096,12 @@ void MainWindow::sendGift(int giftId, int giftNum)
         return ;
     }
 
+    if (localDebug)
+    {
+        localNotify("赠送礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
+    }
+
     QUrl url("https://api.live.bilibili.com/gift/v2/Live/send");
 
     // 建立对象
@@ -6192,6 +6292,12 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         return ;
     }
 
+    if (localDebug)
+    {
+        localNotify("禁言用户 -> " + snum(uid) + " " + snum(hour) + " 小时");
+        return ;
+    }
+
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
@@ -6234,6 +6340,12 @@ void MainWindow::delBlockUser(qint64 uid)
     if(browserData.isEmpty())
     {
         statusLabel->setText("请先设置登录信息");
+        return ;
+    }
+
+    if (localDebug)
+    {
+        localNotify("取消禁言 -> " + snum(uid));
         return ;
     }
 
@@ -6994,7 +7106,6 @@ void MainWindow::pkStart(QJsonObject json)
     qint64 deltaEnd = pkEndTime - currentTime;
     QString roomId = this->roomId;
     oppositeTouta = 0;
-    pkToLive = currentTime;
     cmAudience.clear();
     int battle_type = data.value("battle_type").toInt();
     if (battle_type == 1) // 普通大乱斗
@@ -7003,6 +7114,8 @@ void MainWindow::pkStart(QJsonObject json)
         pkVideo = true;
     else
         pkVideo = false;
+    if (pkVideo)
+        pkToLive = currentTime;
 
     // 结束后
     QTimer::singleShot(deltaEnd, [=]{
@@ -7208,7 +7321,8 @@ void MainWindow::pkEnd(QJsonObject json)
     // winner_type: 2赢，-1输，两边2平局
 
     QJsonObject data = json.value("data").toObject();
-    pkToLive = QDateTime::currentSecsSinceEpoch();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
     int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
