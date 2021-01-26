@@ -1742,6 +1742,7 @@ void LiveDanmakuWindow::setAIReply(bool reply)
     this->aiReply = reply;
 }
 
+/// 腾讯AI开放平台 https://ai.qq.com/console/home
 void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());

@@ -5238,7 +5238,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         if (snum(uid) == cookieUid) // 不是自己的话，不用理会
         {
-            localNotify(msg);
+            localNotify(msg, uid);
             slotCmdEvent(cmd, LiveDanmaku(msg));
         }
     }
@@ -8694,6 +8694,11 @@ void MainWindow::slotAIReplyed(QString reply)
 {
     if (ui->AIReplyMsgCheck->isChecked())
     {
+        // AI回复长度上限，以及过滤
+        if (reply.length() > ui->danmuLongestSpin->value())
+            return ;
+
+        // 自动 断句
         QStringList sl;
         int len = reply.length();
         const int maxOne = danmuLongest;
