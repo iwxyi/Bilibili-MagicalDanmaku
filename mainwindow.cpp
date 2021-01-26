@@ -939,7 +939,7 @@ void MainWindow::slotSendAutoMsg()
 
 void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice)
 {
-    if (ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 不在直播中
+    if (!shallAutoMsg()) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
         return ;
@@ -1168,7 +1168,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
-        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行定时任务
+        if (!manual && !shallAutoMsg()) // 没有开播，不进行定时任务
             return ;
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
         if (msgs.size())
@@ -1257,7 +1257,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
+        if (!manual && !shallAutoMsg()) // 没有开播，不进行自动回复
             return ;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
@@ -1348,7 +1348,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(slotCmdEvent(QString,LiveDanmaku)));
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if (!manual && ui->sendAutoOnlyLiveCheck->isChecked() && !liveStatus) // 没有开播，不进行自动回复
+        if (!manual && !shallAutoMsg()) // 没有开播，不进行自动回复
             return ;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
@@ -1357,7 +1357,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendCdMsg(s, 1, EVENT_CD_CN, true, false);
+                sendCdMsg(s, NOTIFY_CD_CN, EVENT_CD_CN, true, false);
             }
         }
     });
@@ -1805,6 +1805,7 @@ void MainWindow::startConnectRoom()
     // 初始化主播数据
     currentFans = 0;
     currentFansClub = 0;
+    popularVal = 2;
 
     // 准备房间数据
     if (danmakuCounts)
@@ -3956,6 +3957,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
+        this->popularVal = popularity;
         if (liveStatus)
             ui->popularityLabel->setText("人气值：" + QString::number(popularity));
     }
@@ -7720,6 +7722,11 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
 }
 
+bool MainWindow::shallAutoMsg() const
+{
+    return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveStatus && popularVal > 1);
+}
+
 void MainWindow::releaseLiveData()
 {
     ui->roomRankLabel->setText("");
@@ -7747,6 +7754,7 @@ void MainWindow::releaseLiveData()
     rankLabel->setText("");
     rankLabel->setToolTip("");
     fansLabel->setText("");
+    popularVal = 0;
 
     for (int i = 0; i < CHANNEL_COUNT; i++)
         msgCds[i] = 0;

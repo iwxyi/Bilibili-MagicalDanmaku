@@ -550,6 +550,7 @@ private:
     void connectPkRoom();
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
+    bool shallAutoMsg() const;
 
     void releaseLiveData();
     QRect getScreenRect();
@@ -586,6 +587,7 @@ private:
     int currentFans = 0;
     int currentFansClub = 0;
     QList<FanBean> fansList; // 最近的关注，按时间排序
+    int popularVal = 2;
 
     // 弹幕信息
     QList<LiveDanmaku> roomDanmakus;
