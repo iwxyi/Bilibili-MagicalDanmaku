@@ -866,125 +866,6 @@ void LiveDanmakuWindow::showMenu()
     qint64 uid = danmaku.getUid();
     MessageType type = danmaku.getMsgType();
 
-#ifdef false
-    FacileMenu* menu = new FacileMenu(this);
-
-    menu->addAction("用户主页", [=]{
-
-    })->text(type == MSG_DANMAKU, "用户主页：LV" + snum(danmaku.getLevel()))->disable(!uid);
-
-    menu->addAction("粉丝勋章", [=]{
-
-    })->ifer(!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())
-            ->text(true, danmaku.getMedalName() + " " + snum(danmaku.getMedalLevel()))
-            ->elser()
-            ->ifer(type == MSG_GIFT)
-            ->text(true, snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"))
-            ->disable();
-    menu->addAction("消息记录", [=]{
-
-    })->text(type == MSG_DANMAKU, "消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条")
-      ->text(type == MSG_GIFT || type == MSG_GUARD_BUY, "送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
-    menu->addAction("粉丝数量", [=]{
-
-    });
-    menu->addAction("投稿数据", [=]{
-
-    })->disable(!uid);
-    menu->addAction("禁言", [=]{
-
-    })->disable(!uid);
-
-
-    menu->split()->addAction("添加特别关心", [=]{
-
-    })->text(uid && careUsers.contains(uid), "移除特别关心");
-    menu->addAction("添加强提醒", [=]{
-
-    })->text(uid && strongNotifyUsers.contains(uid), "移除强提醒");
-    menu->addAction("设置专属昵称", [=]{
-
-    })->text(uid && localNicknames.contains(uid), "专属昵称：" + localNicknames.value(uid));
-    menu->addAction("不自动欢迎", [=]{
-
-    })->check(uid && notWelcomeUsers.contains(uid));
-
-
-    FacileMenu* operMenu = menu->addMenu("文字");
-    operMenu->addAction("复制", [=]{
-
-    });
-    operMenu->addAction("自由复制", [=]{
-
-    });
-    operMenu->split()->addAction("搜索", [=]{
-
-    });
-    operMenu->addAction("翻译", [=]{
-
-    });
-    operMenu->addAction("AI闲聊", [=]{
-
-    });
-    operMenu->split()->addAction("无视颜色", [=]{
-
-    });
-
-
-    FacileMenu* settingMenu = menu->addMenu("设置");
-    settingMenu->addAction("昵称颜色", [=]{
-
-    });
-    settingMenu->addAction("消息颜色", [=]{
-
-    });
-    settingMenu->addAction("背景颜色", [=]{
-
-    });
-    settingMenu->addAction("高亮颜色", [=]{
-
-    });
-    settingMenu->addAction("弹幕字体", [=]{
-
-    });
-
-
-    settingMenu->split()->addAction("发送框", [=]{
-
-    })->check(!lineEdit->isHidden());
-    settingMenu->addAction("快速触发", [=]{
-
-    })->tooltip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口")
-      ->check(settings.value("livedanmakuwindow/sendEditShortcut", false).toBool());
-    settingMenu->addAction("单次发送", [=]{
-
-    })->tooltip("发送后，返回原窗口（如果有）")
-      ->check(settings.value("livedanmakuwindow/sendOnce", false).toBool());
-    settingMenu->split()->addAction("简约模式", [=]{
-
-    })->check(simpleMode);
-    settingMenu->addAction("聊天模式", [=]{
-
-    })->check(chatMode);
-    settingMenu->addAction("直播姬捕获模式", [=]{
-
-    })->check(settings.value("livedanmakuwindow/jiWindow", false).toBool());
-    settingMenu->addAction("窗口置顶", [=]{
-
-    })->check(settings.value("livedanmakuwindow/onTop", true).toBool());
-
-
-    menu->split()->addAction("删除", [=]{
-
-    });
-    menu->addAction("隐藏", [=]{
-
-    });
-
-
-    menu->exec();
-
-#else
     QMenu* menu = new QMenu(this);
     QAction* actionUserInfo = new QAction("用户主页", this);
     QAction* actionMedal = new QAction("粉丝牌子", this);
@@ -1003,6 +884,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionEternalBlock = new QAction("永久禁言", this);
     QAction* actionCancelEternalBlock = new QAction("取消永久禁言", this);
     QAction* actionNotWelcome = new QAction("不自动欢迎", this);
+    QAction* actionNotReply = new QAction("不自动回复", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     QAction* actionCopy = new QAction("复制", this);
@@ -1041,6 +923,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionHide = new QAction("隐藏", this);
 
     actionNotWelcome->setCheckable(true);
+    actionNotReply->setCheckable(true);
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
@@ -1102,6 +985,7 @@ void LiveDanmakuWindow::showMenu()
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
         actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
+        actionNotReply->setChecked(notReplyUsers.contains(uid));
 
         if (!danmaku.getTextColor().isEmpty())
         {
@@ -1129,6 +1013,7 @@ void LiveDanmakuWindow::showMenu()
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
         actionNotWelcome->setEnabled(false);
+        actionNotReply->setEnabled(false);
         actionFollow->setEnabled(false);
         actionView->setEnabled(false);
     }
@@ -1176,6 +1061,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
     menu->addAction(actionNotWelcome);
+    menu->addAction(actionNotReply);
     if (danmaku.is(MSG_GIFT))
         menu->addAction(actionSetGiftName);
     menu->addSeparator();
@@ -1374,6 +1260,17 @@ void LiveDanmakuWindow::showMenu()
         foreach (qint64 uid, notWelcomeUsers)
             ress << QString::number(uid);
         settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
+    });
+    connect(actionNotReply, &QAction::triggered, this, [=]{
+        if (notReplyUsers.contains(uid))
+            notReplyUsers.removeOne(uid);
+        else
+            notReplyUsers.append(uid);
+
+        QStringList ress;
+        foreach (qint64 uid, notReplyUsers)
+            ress << QString::number(uid);
+        settings.setValue("danmaku/notReplyUsers", ress.join(";"));
     });
     connect(actionSetGiftName, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1671,7 +1568,6 @@ void LiveDanmakuWindow::showMenu()
     actionPictureRatio->deleteLater();
     actionPictureBlur->deleteLater();
     actionCancelPicture->deleteLater();
-#endif
 }
 
 void LiveDanmakuWindow::showEditMenu()
@@ -1746,6 +1642,9 @@ void LiveDanmakuWindow::setAIReply(bool reply)
 void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
+    qint64 uid = danmaku.getUid();
+    if (!uid || notReplyUsers.contains(uid))
+        return ;
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;

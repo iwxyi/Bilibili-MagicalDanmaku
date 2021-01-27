@@ -17,7 +17,8 @@ QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QHash<QString, QString> CommonValues::customVariant; // 自定义变量
-QList<qint64> CommonValues::notWelcomeUsers;         // 强提醒
+QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
+QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QString CommonValues::browserCookie;
@@ -228,6 +229,13 @@ MainWindow::MainWindow(QWidget *parent)
     foreach (QString s, usersNW)
     {
         notWelcomeUsers.append(s.toLongLong());
+    }
+
+    // 不自动回复
+    QStringList usersNR = settings.value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    foreach (QString s, usersNR)
+    {
+        notReplyUsers.append(s.toLongLong());
     }
 
     // 仅开播发送
@@ -2907,6 +2915,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 不自动欢迎
     if (msg.contains("%not_welcome%"))
         msg.replace("%noe_welcome%", notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0");
+    // 不自动欢迎
+    if (msg.contains("%not_reply%"))
+        msg.replace("%noe_reply%", notReplyUsers.contains(danmaku.getUid()) ? "1" : "0");
 
     // 游戏用户
     if (msg.contains("%in_game_users%"))
@@ -3679,6 +3690,16 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 return ;
             }
         }
+    }
+    else if (msg == "开启弹幕回复")
+    {
+        ui->AIReplyMsgCheck->setChecked(true);
+        on_AIReplyMsgCheck_clicked();
+    }
+    else if (msg == "关闭弹幕回复")
+    {
+        ui->AIReplyMsgCheck->setChecked(false);
+        on_AIReplyMsgCheck_clicked();
     }
 }
 
