@@ -3095,11 +3095,11 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QString simp = nickname;
 
     // 没有取名字的，就不需要欢迎了
-    QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
+    /*QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
     if (simp.indexOf(defaultRe) > -1)
     {
         return "";
-    }
+    }*/
 
     // 特殊字符
     simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
@@ -3197,6 +3197,13 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         QString ch = match.capturedTexts().at(1);
         QString all = match.capturedTexts().at(0);
         simp = simp.replace(all, QString("%1").arg(ch));
+    }
+
+    // 一长串数字
+    QRegularExpression numRe("(\\d{3})\\d{3,}");
+    if (simp.indexOf(numRe, 0, &match) > -1)
+    {
+        simp = simp.replace(match.captured(0), match.captured(1) + "…");
     }
 
     if (simp.isEmpty())
