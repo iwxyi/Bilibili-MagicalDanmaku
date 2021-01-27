@@ -1010,9 +1010,6 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         uid = 10000 + r;
     }
-    appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
-                            uid, 12,
-                             QDateTime::currentDateTime(), "", ""));
 
     if (text == "赠送吃瓜")
     {
@@ -1032,6 +1029,24 @@ void MainWindow::on_testDanmakuButton_clicked()
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         qDebug() << "条件替换结果：" << words;
+    }
+    else if (text == "测试礼物连击")
+    {
+        QString username = "测试用户";
+        QString giftName = "测试礼物";
+        int giftId = 123;
+        int num = qrand() % 3 + 1;
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString coinType = qrand()%2 ? "gold" : "silver";
+        int totalCoin = qrand() % 20 * 100;
+        uid = 123456;
+        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+
+        bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
+        if (!merged)
+        {
+            appendNewLiveDanmaku(danmaku);
+        }
     }
     else if (text == "测试消息")
     {
@@ -1063,6 +1078,12 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text.startsWith(">"))
     {
         processRemoteCmd(text.replace(0, 1, ""));
+    }
+    else
+    {
+        appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
+                             uid, 12,
+                             QDateTime::currentDateTime(), "", ""));
     }
 }
 
@@ -5778,7 +5799,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
     if (danmaku.getMsgType() != MSG_GIFT)
         return false;
 
-    // 判断，同人 && 礼物同名 && 10秒内
+    // 判断，同人 && 礼物同名 && x秒内
     qint64 uid = danmaku.getUid();
     int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
@@ -5791,7 +5812,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0) // 有些是没带时间的
             continue;
-        if (t + 10 < time) // 110秒以内
+        if (t + 6 < time) // x秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid

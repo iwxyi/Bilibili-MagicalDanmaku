@@ -841,7 +841,7 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0)
             continue;
-        if (t + 10 < time)
+        if (t + 6 < time)
             return ;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
