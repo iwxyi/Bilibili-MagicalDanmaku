@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动回复
     bool reply = settings.value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
-    ui->AIReplyMsgCheck->setChecked(settings.value("danmaku/aiReplyMsg", false).toBool());
+    ui->AIReplyMsgCheck->setCheckState((Qt::CheckState)settings.value("danmaku/aiReplyMsg", 0).toInt());
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings.value("block/enableBlock", false).toBool());
@@ -3714,12 +3714,12 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     }
     else if (msg == "开启弹幕回复")
     {
-        ui->AIReplyMsgCheck->setChecked(true);
+        ui->AIReplyMsgCheck->setCheckState(Qt::CheckState::Checked);
         on_AIReplyMsgCheck_clicked();
     }
     else if (msg == "关闭弹幕回复")
     {
-        ui->AIReplyMsgCheck->setChecked(false);
+        ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
     }
 }
@@ -8769,15 +8769,21 @@ void MainWindow::on_eternalBlockListButton_clicked()
 
 void MainWindow::on_AIReplyMsgCheck_clicked()
 {
-    settings.setValue("danmaku/aiReplyMsg", ui->AIReplyMsgCheck->isChecked());
+    Qt::CheckState state = ui->AIReplyMsgCheck->checkState();
+    settings.setValue("danmaku/aiReplyMsg", state);
+    if (state != Qt::PartiallyChecked)
+        ui->AIReplyMsgCheck->setText("回复弹幕");
+    else
+        ui->AIReplyMsgCheck->setText("回复弹幕(仅单条)");
 }
 
 void MainWindow::slotAIReplyed(QString reply)
 {
-    if (ui->AIReplyMsgCheck->isChecked())
+    if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
     {
         // AI回复长度上限，以及过滤
-        if (reply.length() > ui->danmuLongestSpin->value())
+        if (ui->AIReplyMsgCheck->checkState() == Qt::PartiallyChecked
+                && reply.length() > ui->danmuLongestSpin->value())
             return ;
 
         // 自动 断句
