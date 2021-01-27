@@ -839,6 +839,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1442,6 +1443,7 @@ void MainWindow::getUserInfo()
         SOCKET_INF << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1485,6 +1487,7 @@ void MainWindow::getRoomUserInfo()
         SOCKET_INF << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1865,6 +1868,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         SOCKET_INF << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -2029,6 +2033,10 @@ void MainWindow::getRoomCover(QString url)
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
         QByteArray jpegData = reply1->readAll();
+        manager->deleteLater();
+        delete request;
+        reply1->deleteLater();
+
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
         roomCover = pixmap; // 原图
@@ -2094,6 +2102,7 @@ void MainWindow::getUpFace(QString uid)
         QByteArray dataBa = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
@@ -2128,6 +2137,9 @@ void MainWindow::getUpPortrait(QString face)
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
         manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
 
@@ -2158,6 +2170,7 @@ void MainWindow::getDanmuInfo()
         QByteArray dataBa = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
@@ -2208,6 +2221,7 @@ void MainWindow::getFansAndUpdate()
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -5324,6 +5338,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -5376,6 +5391,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -5429,6 +5445,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -5603,6 +5620,10 @@ void MainWindow::downloadAndSpeak(QString text)
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
         // 保存文件
         QByteArray fileData = reply1->readAll();
+        manager->deleteLater();
+        delete request;
+        reply1->deleteLater();
+
         if (fileData.isEmpty())
         {
             qWarning() << "网络音频为空";
@@ -6046,6 +6067,7 @@ void MainWindow::refreshBlockList()
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -6141,6 +6163,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
 //        qDebug() << data;
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -6178,6 +6201,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         SOCKET_INF << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -6314,6 +6338,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         qDebug() << "拉黑用户：" << uid << hour << QString(data);
         QJsonParseError error;
@@ -6371,6 +6396,7 @@ void MainWindow::delBlockUser(qint64 uid)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -6423,6 +6449,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         qDebug() << "取消用户：" << id << QString(data);
         QJsonParseError error;
@@ -7480,6 +7507,7 @@ void MainWindow::connectPkRoom()
         QByteArray dataBa = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
@@ -7810,6 +7838,7 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
         SOCKET_INF << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -7921,6 +7950,7 @@ void MainWindow::wearMedal(qint64 medalId)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -7970,6 +8000,7 @@ void MainWindow::doSign()
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -8028,6 +8059,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -8099,6 +8131,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         qDebug() << "私信发送结果：" << QString(data);
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);

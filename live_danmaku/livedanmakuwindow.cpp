@@ -1950,6 +1950,7 @@ void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -1990,6 +1991,7 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
