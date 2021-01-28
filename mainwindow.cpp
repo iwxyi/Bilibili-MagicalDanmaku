@@ -2460,7 +2460,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         // 获取用户信息
         // pk_pre_time  pk_start_time  pk_end_time  pk_frozen_time
         QJsonObject pkData = json.value("data").toObject();
-        pkEndTime = static_cast<qint64>(pkData.value("pk_end_time").toDouble());
+        pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
 
         QJsonObject initInfo = pkData.value("init_info").toObject();
         QJsonObject matchInfo = pkData.value("match_info").toObject();
