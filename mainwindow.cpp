@@ -271,7 +271,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(liveDanmakuAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Live_Danmaku_triggered()));
     QAction *orderPlayerAction = new QAction(QIcon(":/icons/order_song"), "点歌姬", this);
     connect(orderPlayerAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Order_Player_Window_triggered()));
-    QAction *videoAction = new QAction(QIcon(":/icons/bowknot"), "视频流", this);
+    QAction *videoAction = new QAction(QIcon(":/icons/live"), "视频流", this);
     connect(videoAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Live_Video_triggered()));
     QAction *quitAction = new QAction(QIcon(":/icons/cry"), "退出", this);
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));

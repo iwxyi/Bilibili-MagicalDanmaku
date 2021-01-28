@@ -867,26 +867,27 @@ void LiveDanmakuWindow::showMenu()
     MessageType type = danmaku.getMsgType();
 
     QMenu* menu = new QMenu(this);
-    QAction* actionUserInfo = new QAction("用户主页", this);
-    QAction* actionMedal = new QAction("粉丝牌子", this);
-    QAction* actionHistory = new QAction("消息记录", this);
-    QAction* actionFollow = new QAction("粉丝数", this);
-    QAction* actionView = new QAction("浏览量", this);
+    QAction* actionUserInfo = new QAction(QIcon(":/danmaku/home"), "用户主页", this);
+    QAction* actionMedal = new QAction(QIcon(":/danmaku/medal"), "粉丝勋章", this);
+    QAction* actionHistory = new QAction(QIcon(":/danmaku/message"), "消息记录", this);
+    QAction* actionFollow = new QAction(QIcon(":/danmaku/fans"), "粉丝数", this);
+    QAction* actionView = new QAction(QIcon(":/danmaku/views"), "浏览量", this);
 
-    QAction* actionAddCare = new QAction("添加特别关心", this);
-    QAction* actionStrongNotify = new QAction("添加强提醒", this);
-    QAction* actionSetName = new QAction("设置专属昵称", this);
-    QAction* actionSetGiftName = new QAction("设置礼物别名", this);
+    QAction* actionAddCare = new QAction(QIcon(":/icons/heart"), "添加特别关心", this);
+    QAction* actionStrongNotify = new QAction(QIcon(":/danmaku/notify"), "添加强提醒", this);
+    QAction* actionSetName = new QAction(QIcon(":/danmaku/nick"), "设置专属昵称", this);
+    QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/"), "设置礼物别名", this);
 
-    QAction* actionAddBlockTemp = new QAction("禁言1小时", this);
-    QAction* actionAddBlock = new QAction("禁言720小时", this);
-    QAction* actionDelBlock = new QAction("取消禁言", this);
-    QAction* actionEternalBlock = new QAction("永久禁言", this);
-    QAction* actionCancelEternalBlock = new QAction("取消永久禁言", this);
-    QAction* actionNotWelcome = new QAction("不自动欢迎", this);
-    QAction* actionNotReply = new QAction("不自动回复", this);
+    QAction* actionAddBlockTemp = new QAction(QIcon(":/danmaku/block2"), "禁言1小时", this);
+    QAction* actionAddBlock = new QAction(QIcon(":/danmaku/block2"), "禁言720小时", this);
+    QAction* actionDelBlock = new QAction(QIcon(":/danmaku/block2"), "取消禁言", this);
+    QAction* actionEternalBlock = new QAction(QIcon(":/danmaku/block"), "永久禁言", this);
+    QAction* actionCancelEternalBlock = new QAction(QIcon(":/danmaku/block"), "取消永久禁言", this);
+    QAction* actionNotWelcome = new QAction(QIcon(":/danmaku/welcome"), "不自动欢迎", this);
+    QAction* actionNotReply = new QAction(QIcon(":/danmaku/reply"), "不自动回复", this);
 
     QMenu* operMenu = new QMenu("文字", this);
+    operMenu->setIcon(QIcon(":/danmaku/word"));
     QAction* actionCopy = new QAction("复制", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
     QAction* actionSearch = new QAction("百度", this);
@@ -895,6 +896,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionIgnoreColor = new QAction("忽视颜色", this);
 
     QMenu* settingMenu = new QMenu("设置", this);
+    settingMenu->setIcon(QIcon(":/danmaku/settings"));
     QAction* actionNameColor = new QAction("昵称颜色", this);
     QAction* actionMsgColor = new QAction("消息颜色", this);
     QAction* actionBgColor = new QAction("背景颜色", this);
@@ -919,8 +921,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionWindow = new QAction("窗口模式", this);
     QAction* actionOnTop = new QAction("置顶显示", this);
 
-    QAction* actionDelete = new QAction("删除", this);
-    QAction* actionHide = new QAction("隐藏", this);
+    QAction* actionDelete = new QAction(QIcon(":/danmaku/delete"), "删除", this);
+    QAction* actionHide = new QAction(QIcon(":/danmaku/hide"), "隐藏", this);
 
     actionNotWelcome->setCheckable(true);
     actionNotReply->setCheckable(true);
@@ -1038,10 +1040,10 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionHistory);
     menu->addAction(actionFollow);
     menu->addAction(actionView);
-    if (enableBlock)
+    if (enableBlock && uid)
     {
         menu->addSeparator();
-        if (uid && !userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
+        if (!userBlockIds.contains(uid) && danmaku.getMsgType() != MSG_BLOCK)
         {
             menu->addAction(actionAddBlockTemp);
             menu->addAction(actionAddBlock);

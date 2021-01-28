@@ -2689,7 +2689,7 @@ margin: 6px;</string>
   <action name="actionSet_Cookie">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
+     <normaloff>:/icons/cookie</normaloff>:/icons/cookie</iconset>
    </property>
    <property name="text">
     <string>设置Cookie</string>
@@ -2698,7 +2698,7 @@ margin: 6px;</string>
   <action name="actionSet_Danmaku_Data_Format">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/danmu</normaloff>:/icons/danmu</iconset>
+     <normaloff>:/icons/danmu2</normaloff>:/icons/danmu2</iconset>
    </property>
    <property name="text">
     <string>设置弹幕格式</string>
@@ -2710,7 +2710,7 @@ margin: 6px;</string>
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/playlist</normaloff>:/icons/playlist</iconset>
+     <normaloff>:/icons/subtitles</normaloff>:/icons/subtitles</iconset>
    </property>
    <property name="text">
     <string>投稿歌词字幕</string>
@@ -2719,7 +2719,7 @@ margin: 6px;</string>
   <action name="actionCookie_Help">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/heart2</normaloff>:/icons/heart2</iconset>
+     <normaloff>:/icons/cookie2</normaloff>:/icons/cookie2</iconset>
    </property>
    <property name="text">
     <string>Cookie帮助</string>
@@ -2746,7 +2746,7 @@ margin: 6px;</string>
   <action name="actionGitHub">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/heart</normaloff>:/icons/heart</iconset>
+     <normaloff>:/icons/github_logo</normaloff>:/icons/github_logo</iconset>
    </property>
    <property name="text">
     <string>GitHub</string>
@@ -2764,7 +2764,7 @@ margin: 6px;</string>
   <action name="actionSend_Long_Text">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
+     <normaloff>:/icons/long_text</normaloff>:/icons/long_text</iconset>
    </property>
    <property name="text">
     <string>发送长文本</string>
@@ -2785,7 +2785,7 @@ margin: 6px;</string>
   <action name="actionGet_Play_Url">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/random_circle</normaloff>:/icons/random_circle</iconset>
+     <normaloff>:/icons/video_stream</normaloff>:/icons/video_stream</iconset>
    </property>
    <property name="text">
     <string>拷贝视频流地址</string>
@@ -2797,7 +2797,7 @@ margin: 6px;</string>
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/bowknot</normaloff>:/icons/bowknot</iconset>
+     <normaloff>:/icons/live</normaloff>:/icons/live</iconset>
    </property>
    <property name="text">
     <string>显示实时视频</string>
@@ -2821,7 +2821,7 @@ margin: 6px;</string>
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/bowknot2</normaloff>:/icons/bowknot2</iconset>
+     <normaloff>:/icons/video</normaloff>:/icons/video</iconset>
    </property>
    <property name="text">
     <string>查看PK对面</string>
@@ -2839,7 +2839,7 @@ margin: 6px;</string>
   <action name="actionRoom_Status">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/list_circle</normaloff>:/icons/list_circle</iconset>
+     <normaloff>:/icons/video2</normaloff>:/icons/video2</iconset>
    </property>
    <property name="text">
     <string>直播间状态查询</string>

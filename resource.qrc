@@ -36,6 +36,17 @@
         <file alias="danmu">resources/icons/danmu.png</file>
         <file alias="order_song">resources/icons/order_song.png</file>
         <file alias="cry">resources/icons/cry.png</file>
+        <file alias="cookie">resources/icons/cookie.png</file>
+        <file alias="cookie2">resources/icons/cookie2.png</file>
+        <file alias="danmu2">resources/icons/danmu2.png</file>
+        <file alias="subtitles">resources/icons/subtitles.png</file>
+        <file alias="video">resources/icons/video.png</file>
+        <file alias="video_stream">resources/icons/video_stream.png</file>
+        <file alias="video2">resources/icons/video2.png</file>
+        <file alias="video3">resources/icons/video3.png</file>
+        <file alias="live">resources/icons/live.png</file>
+        <file alias="long_text">resources/icons/long_text.png</file>
+        <file alias="github_logo">resources/icons/github_logo.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
@@ -52,5 +63,23 @@
     </qresource>
     <qresource prefix="/bg">
         <file alias="bg">resources/bg/bg.png</file>
+    </qresource>
+    <qresource prefix="/danmaku">
+        <file alias="block">resources/danmaku/block.png</file>
+        <file alias="delete">resources/danmaku/delete.png</file>
+        <file alias="fans">resources/danmaku/fans.png</file>
+        <file alias="hide">resources/danmaku/hide.png</file>
+        <file alias="home">resources/danmaku/home.png</file>
+        <file alias="medal">resources/danmaku/medal.png</file>
+        <file alias="message">resources/danmaku/message.png</file>
+        <file alias="nick">resources/danmaku/nick.png</file>
+        <file alias="notify">resources/danmaku/notify.png</file>
+        <file alias="reply">resources/danmaku/reply.png</file>
+        <file alias="settings">resources/danmaku/settings.png</file>
+        <file alias="views">resources/danmaku/views.png</file>
+        <file alias="welcome">resources/danmaku/welcome.png</file>
+        <file alias="word">resources/danmaku/word.png</file>
+        <file alias="gift">resources/danmaku/gift.png</file>
+        <file alias="block2">resources/danmaku/block2.png</file>
     </qresource>
 </RCC>
