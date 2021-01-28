@@ -387,6 +387,8 @@ private slots:
 
     void on_pkMelonValButton_clicked();
 
+    void slotPkEnding();
+
     void slotStartWork();
 
     void on_autoSwitchMedalCheck_clicked();
@@ -485,6 +487,7 @@ private:
     void getUpPortrait(QString face);
     void getDanmuInfo();
     void getFansAndUpdate();
+    void getPkInfoById(QString roomId, QString pkId);
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
     void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
