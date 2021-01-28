@@ -582,9 +582,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-bool MainWindow::debugToFile() const
+const QSettings& MainWindow::getSettings() const
 {
-    return settings.value("runtime/debugToFile", false).toBool();
+    return settings;
 }
 
 void MainWindow::showEvent(QShowEvent *event)
@@ -598,6 +598,7 @@ void MainWindow::showEvent(QShowEvent *event)
         firstShow = false;
         startSplash();
     }
+    settings.setValue("mainwindow/autoShow", true);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -606,6 +607,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     event->ignore();
     this->hide();
+
+    QTimer::singleShot(5000, [=]{
+        settings.setValue("mainwindow/autoShow", false);
+    });
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
