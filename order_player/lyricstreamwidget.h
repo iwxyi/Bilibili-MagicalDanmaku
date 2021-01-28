@@ -36,7 +36,7 @@ public:
     {
         // 检测是不是全是毫秒还是10毫秒的
         int ms10x = 10;
-        QRegularExpression re10("\\[\\d{2}:\\d{2}\\.([1-9]\\d{2})\\]");
+        QRegularExpression re10("\\[\\d{2}:\\d{2}(\\.([1-9]\\d{2}))?\\]");
         QRegularExpressionMatch match10;
         if (text.lastIndexOf(re10, -1, &match10) != -1)
         {
@@ -56,7 +56,7 @@ public:
         lyricStream.clear();
         foreach (QString line, sl)
         {
-            QRegularExpression re("^\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\](\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\])?(.*)$");
+            QRegularExpression re("^\\[(\\d{2}):(\\d{2})(?:\\.(\\d{2,3}))?\\](\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})\\])?(.*)$");
             QRegularExpressionMatch match;
             if (line.indexOf(re, 0, &match) == -1)
             {

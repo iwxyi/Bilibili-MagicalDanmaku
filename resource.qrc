@@ -38,4 +38,16 @@
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
         <file alias="qq">resources/musics/QQ-music.png</file>
     </qresource>
+    <qresource prefix="/snow">
+        <file alias="neve_music">resources/snow/neve_music.png</file>
+        <file alias="snow1">resources/snow/snow1.png</file>
+        <file alias="snow2">resources/snow/snow2.png</file>
+        <file alias="snow3">resources/snow/snow3.png</file>
+        <file alias="snow4">resources/snow/snow4.png</file>
+        <file alias="snow5">resources/snow/snow5.png</file>
+        <file alias="snowman">resources/snow/snowman.png</file>
+    </qresource>
+    <qresource prefix="/bg">
+        <file alias="bg">resources/bg/bg.png</file>
+    </qresource>
 </RCC>

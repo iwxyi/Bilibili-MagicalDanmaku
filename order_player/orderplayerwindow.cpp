@@ -116,7 +116,7 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     ui->searchResultTable->verticalScrollBar()->setStyleSheet(vScrollBarSS);
     ui->searchResultTable->horizontalScrollBar()->setStyleSheet(hScrollBarSS);
     ui->listTabWidget->removeTab(LISTTAB_PLAYLIST); // TOOD: 歌单部分没做好，先隐藏
-    ui->titleButton->setText(settings.value("music/title", "Lazy点歌姬").toString());
+    ui->titleButton->setText(settings.value("music/title", "雪以音乐").toString());
 
     const int btnR = 5;
     ui->titleButton->setRadius(btnR);
@@ -252,6 +252,10 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     qqmusicCookiesVariant = getCookies(qqmusicCookies);
     unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
 
+    // 默认背景
+    prevBlurBg = QPixmap(32, 32);
+    prevBlurBg.fill(QColor(240, 248, 255)); // 窗口背景颜色
+
     // 还原上次播放的歌曲
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
     if (currentSong.isValid())
@@ -268,6 +272,28 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         // 不自动播放
         player->stop();
     }
+    else
+    {
+        // 设置默认封面
+        /*prevBlurBg = currentBlurBg = QPixmap(":/bg/bg");
+        prevBgAlpha = 255;
+        currentBgAlpha = qMin(blurAlpha, 255);
+        QTimer::singleShot(200, [=]{
+            startBgAnimation(3000);
+        });*/
+
+        prevBlurBg = currentBlurBg = QPixmap(":/bg/bg");
+        prevBgAlpha = 0;
+        currentBgAlpha = 255;
+        startBgAnimation(1500);
+        QTimer::singleShot(1800, this, [=]{
+            prevBlurBg = QPixmap(":/bg/bg");
+            prevBgAlpha = currentBgAlpha;
+            currentBgAlpha = qMin(blurAlpha, 255);
+            startBgAnimation(2500);
+        });
+    }
+    starting = false;
     settings.setValue("music/playPosition", 0);
 
     connect(expandPlayingButton, SIGNAL(clicked()), this, SLOT(slotExpandPlayingButtonClicked()));
@@ -286,9 +312,12 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
         });
     }
 
-    prevBlurBg = QPixmap(32, 32);
-    prevBlurBg.fill(QColor(245, 245, 247));
-    starting = false;
+
+    restoreGeometry(settings.value("orderplayerwindow/geometry").toByteArray());
+    restoreState(settings.value("orderplayerwindow/state").toByteArray());
+
+    if (settings.value("music/desktopLyric", false).toBool())
+        desktopLyric->show();
 
     clearHoaryFiles();
 }
@@ -783,15 +812,8 @@ Song OrderPlayerWindow::getSuiableSong(QString key) const
 void OrderPlayerWindow::showEvent(QShowEvent *e)
 {
     QMainWindow::showEvent(e);
+    repaint();
 
-    static bool firstShow = true;
-    if (firstShow)
-    {
-        firstShow = false;
-    }
-
-    restoreGeometry(settings.value("orderplayerwindow/geometry").toByteArray());
-    restoreState(settings.value("orderplayerwindow/state").toByteArray());
     ui->splitter->restoreState(settings.value("orderplayerwindow/splitterState").toByteArray());
     auto sizes = ui->splitter->sizes();
     if (sizes.at(0)+1 >= sizes.at(1))
@@ -802,9 +824,6 @@ void OrderPlayerWindow::showEvent(QShowEvent *e)
     }
 
     adjustExpandPlayingButton();
-
-    if (settings.value("music/desktopLyric", false).toBool())
-        desktopLyric->show();
 }
 
 void OrderPlayerWindow::closeEvent(QCloseEvent *)
@@ -863,6 +882,7 @@ int OrderPlayerWindow::getLyricScroll() const
 void OrderPlayerWindow::setAppearBgProg(int x)
 {
     this->currentBgAlpha = x;
+    update();
 }
 
 int OrderPlayerWindow::getAppearBgProg() const
@@ -873,6 +893,7 @@ int OrderPlayerWindow::getAppearBgProg() const
 void OrderPlayerWindow::setDisappearBgProg(int x)
 {
     this->prevBgAlpha = x;
+    update();
 }
 
 int OrderPlayerWindow::getDisappearBgProg() const
@@ -1156,9 +1177,13 @@ void OrderPlayerWindow::playLocalSong(Song song)
         QPixmap pixmap(coverPath(song), "1"); // 这里读取要加个参数，原因未知……
         if (pixmap.isNull())
             qDebug() << "warning: 本地封面是空的" << song.simpleString() << coverPath(song);
-        pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
-        ui->playingCoverLabel->setPixmap(pixmap);
-        setCurrentCover(pixmap);
+        else if (coveringSong != song)
+        {
+            pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
+            ui->playingCoverLabel->setPixmap(pixmap);
+            coveringSong = song;
+            setCurrentCover(pixmap);
+        }
     }
     else
     {
@@ -1298,7 +1323,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             int size = JVAL_INT(size);
             QString type = JVAL_STR(type); // mp3
             QString encodeType = JVAL_STR(encodeType); // mp3
-            qDebug() << "    信息：" << br << size << type << fileUrl;
+            MUSIC_DEB << "    信息：" << br << size << type << fileUrl;
             if (size == 0)
             {
                 qDebug() << "无法下载，可能没有版权" << song.simpleString();
@@ -1575,9 +1600,13 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             // 正是当前要播放的歌曲
             if (playAfterDownloaded == song || playingSong == song)
             {
-                pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
-                ui->playingCoverLabel->setPixmap(pixmap);
-                setCurrentCover(pixmap);
+                if (coveringSong != song)
+                {
+                    pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
+                    ui->playingCoverLabel->setPixmap(pixmap);
+                    coveringSong = song;
+                    setCurrentCover(pixmap);
+                }
             }
         }
         else
@@ -1779,6 +1808,19 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
 void OrderPlayerWindow::setCurrentCover(const QPixmap &pixmap)
 {
     currentCover = pixmap;
+    // 设置歌曲
+    int side = qMin(pixmap.width(), pixmap.height());
+    QPixmap appFace = QPixmap(side, side);
+    appFace.fill(Qt::transparent);
+    QPainter painter(&appFace);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    QPainterPath path;
+    path.addEllipse(0, 0, side, side);
+    painter.setClipPath(path);
+    painter.drawPixmap(0, 0, side, side, pixmap);
+    setWindowIcon(appFace);
+
+    // 设置主题
     if (themeColor)
         setThemeColor(currentCover);
     if (blurBg)
@@ -1826,15 +1868,17 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     currentBlurBg = clip;
     currentBgAlpha = qMin(255, blurAlpha + addin);
 
+    startBgAnimation();
+}
+
+void OrderPlayerWindow::startBgAnimation(int duration)
+{
     // 出现动画
     QPropertyAnimation* ani1 = new QPropertyAnimation(this, "appearBgProg");
     ani1->setStartValue(0);
     ani1->setEndValue(currentBgAlpha);
-    ani1->setDuration(1000);
+    ani1->setDuration(duration);
     ani1->setEasingCurve(QEasingCurve::OutCubic);
-    connect(ani1, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
-        update();
-    });
     connect(ani1, &QPropertyAnimation::finished, this, [=]{
         ani1->deleteLater();
     });
@@ -1845,12 +1889,8 @@ void OrderPlayerWindow::setBlurBackground(const QPixmap &bg)
     QPropertyAnimation* ani2 = new QPropertyAnimation(this, "disappearBgProg");
     ani2->setStartValue(prevBgAlpha);
     ani2->setEndValue(0);
-    ani2->setDuration(1000);
-    ani2->setEasingCurve(QEasingCurve::OutCubic);
-    connect(ani2, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
-        prevBgAlpha = val.toInt();
-        update();
-    });
+    ani2->setDuration(duration);
+    ani2->setEasingCurve(QEasingCurve::OutQuad);
     connect(ani2, &QPropertyAnimation::finished, this, [=]{
         prevBlurBg = QPixmap();
         ani2->deleteLater();
@@ -2166,10 +2206,24 @@ void OrderPlayerWindow::slotSongPlayEnd()
         ui->playingNameLabel->clear();
         ui->playingArtistLabel->clear();
         ui->playingCoverLabel->clear();
+        coveringSong = Song();
         setCurrentLyric("");
 
-        // 下一首歌，没有就不放
-        playNext();
+        // 没有歌了，真正清空
+        if (!orderSongs.size() && !normalSongs.size())
+        {
+            ui->playProgressSlider->setSliderPosition(0);
+            ui->playProgressSlider->setMaximum(0);
+            ui->playingCurrentTimeLabel->setText("00:00");
+            ui->playingAllTimeLabel->setText("05:20");
+
+            setCurrentCover(QPixmap(":bg/bg"));
+        }
+        else
+        {
+            // 还有下一首歌
+            playNext();
+        }
     }
     else if (circleMode == SingleCircle) // 单曲循环
     {
@@ -2581,7 +2635,7 @@ void OrderPlayerWindow::on_titleButton_clicked()
 {
     QString text = settings.value("music/title").toString();
     bool ok;
-    QString rst = QInputDialog::getText(this, "请输入名称", "显示在左上角，不影响其他任何效果", QLineEdit::Normal, text, &ok);
+    QString rst = QInputDialog::getText(this, "专属标志", "固定在左上角，乃个人定制", QLineEdit::Normal, text, &ok);
     if (!ok)
         return ;
     settings.setValue("music/title", rst);
@@ -2674,10 +2728,10 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
     })->setChecked(autoSwitchSource);
 
-    playMenu->addAction("特殊接口", [=]{
+    playMenu->addAction("试听接口", [=]{
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
         if (unblockQQMusic)
-            QMessageBox::information(this, "特殊接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");
+            QMessageBox::information(this, "试听接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");
     })->check(unblockQQMusic);
 
     playMenu->split()->addAction("清理缓存", [=]{

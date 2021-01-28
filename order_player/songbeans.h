@@ -223,6 +223,11 @@ struct Song
         return this->id == song.id;
     }
 
+    bool operator!=(const Song& song) const
+    {
+        return this->id != song.id;
+    }
+
     QString simpleString() const
     {
         return name + " - " + artistNames;
