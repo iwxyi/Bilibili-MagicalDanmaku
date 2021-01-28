@@ -4,7 +4,7 @@
 TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
 {
     timer = new QTimer(this);
-    check = new QCheckBox("启用定时", this);
+    check = new QCheckBox("启用", this);
     spin = new QSpinBox(this);
     btn = new QPushButton("发送", this);
     edit = new ConditionEditor(this);
@@ -23,7 +23,7 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     vlayout->activate();
 
     spin->setSuffix("秒");
-    spin->setRange(10, 86400);
+    spin->setRange(1, 86400);
     spin->setSingleStep(10);
     edit->setPlaceholderText("定时发送的文本，多行则随机发送一行");
     int h = btn->sizeHint().height();

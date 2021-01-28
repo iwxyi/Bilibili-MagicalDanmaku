@@ -453,6 +453,8 @@ tips：
 | timerShot(msecond, msg)   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
 | locaNotify(msg)           | 发送本地消息通知（非弹幕，只有自己看得到）         |
 | speakText(msg)            | 朗读文本                                           |
+| openUrl(url)              | 浏览器打开网址                                     |
+| connectNet(url)           | 后台连接网址                                       |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。

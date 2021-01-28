@@ -609,6 +609,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     this->hide();
 
     QTimer::singleShot(5000, [=]{
+        if (!this->isHidden())
+            return ;
         settings.setValue("mainwindow/autoShow", false);
     });
 }
@@ -3959,6 +3961,42 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
             QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
             speakText(text);
+            return true;
+        }
+    }
+
+    // 网络操作
+    if (msg.contains("openUrl"))
+    {
+        re = RE("openUrl\\s*\\(\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString url = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            QDesktopServices::openUrl(url);
+            return true;
+        }
+    }
+
+    // 后台网络操作
+    if (msg.contains("connectNet"))
+    {
+        re = RE("connectNet\\s*\\(\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString url = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            QNetworkAccessManager* manager = new QNetworkAccessManager;
+            QNetworkRequest* request = new QNetworkRequest(url);
+            connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+                qDebug() << QString(reply->readAll());
+                manager->deleteLater();
+                delete request;
+                reply->deleteLater();
+            });
+            manager->get(*request);
             return true;
         }
     }
