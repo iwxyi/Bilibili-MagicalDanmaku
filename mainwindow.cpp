@@ -265,13 +265,22 @@ MainWindow::MainWindow(QWidget *parent)
     QString text="神奇弹幕";
 //    tray->showMessage(title,text,QSystemTrayIcon::Information,3000); //最后一个参数为提示时长，默认10000，即10s
 
-    restoreAction = new QAction("显示", this);
-    connect(restoreAction, SIGNAL(triggered()), this, SLOT(show()));
-    quitAction = new QAction("退出", this);
+    QAction *windowAction = new QAction(QIcon(":/icons/star"), "主界面", this);
+    connect(windowAction, SIGNAL(triggered()), this, SLOT(show()));
+    QAction *liveDanmakuAction = new QAction(QIcon(":/icons/danmu"), "弹幕姬", this);
+    connect(liveDanmakuAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Live_Danmaku_triggered()));
+    QAction *orderPlayerAction = new QAction(QIcon(":/icons/order_song"), "点歌姬", this);
+    connect(orderPlayerAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Order_Player_Window_triggered()));
+    QAction *videoAction = new QAction(QIcon(":/icons/bowknot"), "视频流", this);
+    connect(videoAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Live_Video_triggered()));
+    QAction *quitAction = new QAction(QIcon(":/icons/cry"), "退出", this);
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 
     trayMenu = new QMenu(this);
-    trayMenu->addAction(restoreAction);
+    trayMenu->addAction(windowAction);
+    trayMenu->addAction(liveDanmakuAction);
+    trayMenu->addAction(orderPlayerAction);
+    trayMenu->addAction(videoAction);
     trayMenu->addSeparator();
     trayMenu->addAction(quitAction);
     tray->setContextMenu(trayMenu);
@@ -3991,7 +4000,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
             QNetworkAccessManager* manager = new QNetworkAccessManager;
             QNetworkRequest* request = new QNetworkRequest(url);
             connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-                qDebug() << QString(reply->readAll());
+                SOCKET_INF << QString(reply->readAll());
                 manager->deleteLater();
                 delete request;
                 reply->deleteLater();
@@ -7893,6 +7902,9 @@ void MainWindow::releaseLiveData()
         pkSocket = nullptr;
     }
 
+    ui->actionShow_Live_Video->setEnabled(false);
+    ui->actionShow_PK_Video->setEnabled(false);
+
     finishLiveRecord();
 }
 
@@ -8512,6 +8524,8 @@ void MainWindow::slotStartWork()
     {
         switchMedalTo(roomId.toLongLong());
     }
+
+    ui->actionShow_Live_Video->setEnabled(true);
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()

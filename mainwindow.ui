@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>429</width>
-    <height>424</height>
+    <width>322</width>
+    <height>387</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1351,7 +1351,7 @@ margin: 6px;</string>
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>仅直播时发送弹幕</string>
+             <string>仅直播时回复</string>
             </property>
            </widget>
           </item>
@@ -1378,7 +1378,7 @@ margin: 6px;</string>
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开播后自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>自动更换粉丝勋章</string>
+             <string>自动更换勋章</string>
             </property>
            </widget>
           </item>
@@ -1418,7 +1418,10 @@ margin: 6px;</string>
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -2621,7 +2624,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>429</width>
+     <width>322</width>
      <height>23</height>
     </rect>
    </property>
@@ -2666,21 +2669,37 @@ margin: 6px;</string>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionData_Path">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/egg</normaloff>:/icons/egg</iconset>
+   </property>
    <property name="text">
     <string>数据路径</string>
    </property>
   </action>
   <action name="actionShow_Live_Danmaku">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/danmu</normaloff>:/icons/danmu</iconset>
+   </property>
    <property name="text">
     <string>显示实时弹幕</string>
    </property>
   </action>
   <action name="actionSet_Cookie">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
+   </property>
    <property name="text">
     <string>设置Cookie</string>
    </property>
   </action>
   <action name="actionSet_Danmaku_Data_Format">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/danmu</normaloff>:/icons/danmu</iconset>
+   </property>
    <property name="text">
     <string>设置弹幕格式</string>
    </property>
@@ -2689,36 +2708,64 @@ margin: 6px;</string>
    <property name="enabled">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/playlist</normaloff>:/icons/playlist</iconset>
+   </property>
    <property name="text">
     <string>投稿歌词字幕</string>
    </property>
   </action>
   <action name="actionCookie_Help">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/heart2</normaloff>:/icons/heart2</iconset>
+   </property>
    <property name="text">
     <string>Cookie帮助</string>
    </property>
   </action>
   <action name="actionShow_Order_Player_Window">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/order_song</normaloff>:/icons/order_song</iconset>
+   </property>
    <property name="text">
     <string>显示点歌姬</string>
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
+   </property>
    <property name="text">
     <string>关于</string>
    </property>
   </action>
   <action name="actionGitHub">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/heart</normaloff>:/icons/heart</iconset>
+   </property>
    <property name="text">
     <string>GitHub</string>
    </property>
   </action>
   <action name="actionCustom_Variant">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/settings</normaloff>:/icons/settings</iconset>
+   </property>
    <property name="text">
     <string>自定义变量</string>
    </property>
   </action>
   <action name="actionSend_Long_Text">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
+   </property>
    <property name="text">
     <string>发送长文本</string>
    </property>
@@ -2727,21 +2774,40 @@ margin: 6px;</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/egg</normaloff>:/icons/egg</iconset>
+   </property>
    <property name="text">
     <string>显示抽奖机</string>
    </property>
   </action>
   <action name="actionGet_Play_Url">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/random_circle</normaloff>:/icons/random_circle</iconset>
+   </property>
    <property name="text">
     <string>拷贝视频流地址</string>
    </property>
   </action>
   <action name="actionShow_Live_Video">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/bowknot</normaloff>:/icons/bowknot</iconset>
+   </property>
    <property name="text">
     <string>显示实时视频</string>
    </property>
   </action>
   <action name="actionMany_Robots">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/cry</normaloff>:/icons/cry</iconset>
+   </property>
    <property name="text">
     <string>涨人气测试</string>
    </property>
@@ -2753,16 +2819,28 @@ margin: 6px;</string>
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/bowknot2</normaloff>:/icons/bowknot2</iconset>
+   </property>
    <property name="text">
     <string>查看PK对面</string>
    </property>
   </action>
   <action name="actionAdd_Room_To_List">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/bowknot3</normaloff>:/icons/bowknot3</iconset>
+   </property>
    <property name="text">
     <string>增删房间列表</string>
    </property>
   </action>
   <action name="actionRoom_Status">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/list_circle</normaloff>:/icons/list_circle</iconset>
+   </property>
    <property name="text">
     <string>直播间状态查询</string>
    </property>

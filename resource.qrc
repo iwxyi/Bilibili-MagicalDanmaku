@@ -33,6 +33,9 @@
         <file alias="star_gif">resources/icons/star.gif</file>
         <file alias="star">resources/icons/star.png</file>
         <file alias="next_song">resources/icons/next_song.png</file>
+        <file alias="danmu">resources/icons/danmu.png</file>
+        <file alias="order_song">resources/icons/order_song.png</file>
+        <file alias="cry">resources/icons/cry.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

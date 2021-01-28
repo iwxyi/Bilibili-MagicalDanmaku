@@ -710,8 +710,6 @@ private:
     // 托盘
     QMenu *trayMenu;//托盘菜单
     QSystemTrayIcon *tray;//托盘图标添加成员
-    QAction *restoreAction;//托盘图标右键点击时弹出选项
-    QAction *quitAction;//托盘图标右键点击时弹出选项
 
     // 文字转语音
     VoicePlatform voicePlatform = VoiceLocal;
