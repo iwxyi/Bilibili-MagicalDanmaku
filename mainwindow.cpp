@@ -4136,7 +4136,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
             QNetworkAccessManager* manager = new QNetworkAccessManager;
             QNetworkRequest* request = new QNetworkRequest(url);
             connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-                SOCKET_INF << QString(reply->readAll());
+                qDebug() << QString(reply->readAll());
                 manager->deleteLater();
                 delete request;
                 reply->deleteLater();
@@ -8361,6 +8361,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 
 void MainWindow::startSplash()
 {
+#ifndef Q_OS_ANDROID
     if (!settings.value("mainwindow/splash", true).toBool())
         return ;
     RoundedAnimationLabel* label = new RoundedAnimationLabel(this);
@@ -8387,6 +8388,7 @@ void MainWindow::startSplash()
     });
     label->show();
     movie->start();
+#endif
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

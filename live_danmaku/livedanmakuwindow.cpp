@@ -84,6 +84,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 
+#ifndef Q_OS_ANDROID
     editShortcut = new QxtGlobalShortcut(this);
     QString def_key = settings.value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
     editShortcut->setShortcut(QKeySequence(def_key));
@@ -115,6 +116,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     });
     if (!settings.value("livedanmakuwindow/sendEditShortcut", false).toBool())
         editShortcut->setEnabled(false);
+#endif
 
     // 颜色
     nameColor = qvariant_cast<QColor>(settings.value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
@@ -1097,8 +1099,10 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
+#ifndef Q_OS_ANDROID
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionShortCut);
+#endif
     settingMenu->addAction(actionSendOnce);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSimpleMode);
@@ -1372,6 +1376,7 @@ void LiveDanmakuWindow::showMenu()
             lineEdit->hide();
         settings.setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
     });
+#ifndef Q_OS_ANDROID
     connect(actionDialogSend, &QAction::triggered, this, [=]{
         bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", false).toBool();
         settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
@@ -1386,6 +1391,7 @@ void LiveDanmakuWindow::showMenu()
                 settings.setValue("livedanmakuwindow/shortcutKey", key);
         }
     });
+#endif
     connect(actionSendOnce, &QAction::triggered, this, [=]{
         bool enable = !settings.value("livedanmakuwindow/sendOnce", false).toBool();
         settings.setValue("livedanmakuwindow/sendOnce", enable);
@@ -1405,10 +1411,12 @@ void LiveDanmakuWindow::showMenu()
             this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
             this->setAttribute(Qt::WA_TranslucentBackground, true);
         }
+#ifndef Q_OS_ANDROID
         editShortcut->setShortcut(QKeySequence(""));
         editShortcut->setDisabled(true);
         delete editShortcut;
         editShortcut = nullptr;
+#endif
         emit signalChangeWindowMode();
     });
     connect(actionOnTop, &QAction::triggered, this, [=]{
