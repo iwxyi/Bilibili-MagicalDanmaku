@@ -1,5 +1,6 @@
 #include <QMessageBox>
 #include <QTimer>
+#include <QVBoxLayout>
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
 
@@ -12,29 +13,26 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
+//    videoWidget = new QVideoWidget(this);
+//    QVBoxLayout* vLayout = new QVBoxLayout(this);
+//    vLayout->addWidget(videoWidget);
+
     player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
 //        qDebug() << "position changed:" << position << player->duration();
     });
+    player->setVideoOutput(ui->videoWidget);
+//    player->setVideoOutput(videoWidget);
 
-    playList = new QMediaPlaylist;
-    player->setPlaylist(playList);
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
 //        qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime() << playList->currentIndex() << playList->mediaCount();
-        if (state == QMediaPlayer::StoppedState) // 播放完了
-        {
-            if (playList->mediaCount())
-            {
-                playList->setCurrentIndex(0);
-                player->play();
-            }
-        }
     });
+    connect(this, SIGNAL(signalPlayUrl(QString)), this, SLOT(setPlayUrl(QString)));
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
 {
-    delete ui;
+//    delete ui;
 }
 
 void LiveVideoPlayer::setRoomId(QString roomId)
@@ -54,15 +52,8 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 
 void LiveVideoPlayer::setPlayUrl(QString url)
 {
-    this->playUrl = url;
-
-    QNetworkRequest req((QUrl(url)));
-    QMediaContent c(req);
-    playList->clear();
-//    playList->addMedia(c);
+    QMediaContent c((QUrl(url)));
     player->setMedia(c);
-    player->setVideoOutput(ui->videoWidget);
-//    player->play();
     if (player->state() == QMediaPlayer::StoppedState)
         player->play();
 }
@@ -104,32 +95,38 @@ void LiveVideoPlayer::refreshPlayUrl()
             return ;
         }
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
-        playUrl = url;
         qDebug() << "playUrl:" << url;
-        playList->clear();
-        setPlayUrl(url);
+
+        QTimer::singleShot(0, [=]{
+            emit signalPlayUrl(url);
+        });
     });
     manager->get(*request);
 }
 
-void LiveVideoPlayer::showEvent(QShowEvent *)
+void LiveVideoPlayer::showEvent(QShowEvent *e)
 {
+    QDialog::showEvent(e);
     restoreGeometry(settings.value("videoplayer/geometry").toByteArray());
 
-    if (!playUrl.isEmpty() && player)
+    if (!player->media().isNull())
     {
-        player->setVideoOutput(ui->videoWidget);
         player->play();
     }
 }
 
-void LiveVideoPlayer::hideEvent(QHideEvent *)
+void LiveVideoPlayer::hideEvent(QHideEvent *e)
 {
+    QDialog::hideEvent(e);
     settings.setValue("videoplayer/geometry", this->saveGeometry());
 
     if (player->state() == QMediaPlayer::PlayingState)
     {
         player->pause();
     }
-    this->deleteLater();
+}
+
+void LiveVideoPlayer::resizeEvent(QResizeEvent *e)
+{
+    QDialog::resizeEvent(e);
 }

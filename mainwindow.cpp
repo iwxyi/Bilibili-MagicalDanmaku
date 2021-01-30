@@ -7006,7 +7006,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setUpUid(upUid.toLongLong());
         danmakuWindow->hide();
         danmakuWindow->setWindowIcon(this->windowIcon());
-        danmakuWindow->setWindowTitle("直播流-" + this->windowTitle());
+        danmakuWindow->setWindowTitle(this->windowTitle());
     }
 
     bool hidding = danmakuWindow->isHidden();
@@ -7238,6 +7238,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
     connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
+    player->setWindowTitle(roomTitle + " - " + upName);
     player->show();
 }
 

@@ -13,6 +13,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QVideoWidget>
 namespace Ui {
 class LiveVideoPlayer;
 }
@@ -30,19 +31,19 @@ public slots:
     void setPlayUrl(QString url);
     void refreshPlayUrl();
 
-private:
+signals:
+    void signalPlayUrl(QString url);
 
 protected:
-    void showEvent(QShowEvent *) override;
-    void hideEvent(QHideEvent *) override;
+    void showEvent(QShowEvent *e) override;
+    void hideEvent(QHideEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
 
 private:
     Ui::LiveVideoPlayer *ui;
     QSettings& settings;
-    QString playUrl;
     QString roomId;
     QMediaPlayer* player;
-    QMediaPlaylist* playList;
 };
 
 #endif // LIVEVIDEOPLAYER_H
