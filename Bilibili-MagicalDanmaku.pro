@@ -20,7 +20,7 @@ RC_FILE += resource.rc
 contains(DEFINES,ANDROID){
     message("shortcuts not support")
 }else{
-#    include($$PWD/qxtglobalshortcut5/qxt.pri)
+    include($$PWD/qxtglobalshortcut5/qxt.pri)
 }
 
 

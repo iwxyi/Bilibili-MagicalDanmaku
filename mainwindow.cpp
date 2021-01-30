@@ -473,6 +473,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkMaxGoldButton->hide();
         ui->pkMelonValButton->hide();
         ui->pkJudgeEarlyButton->hide();
+        ui->pkAutoMelonCheck->setChecked(false);
     }
 
     // 粉丝勋章
@@ -1960,9 +1961,12 @@ void MainWindow::getRoomInfo(bool reconnect)
         {
             QJsonObject battleInfo = dataObj.value("battle_info").toObject();
             QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
-            getPkInfoById(roomId, pkId);
-            pkVideo = pkStatus == 2;
-            qDebug() << "正在大乱斗：" << pkId << pkStatus;
+            if (pkId.toLongLong() > 0)
+            {
+                getPkInfoById(roomId, pkId);
+                pkVideo = pkStatus == 2;
+                qDebug() << "正在大乱斗：" << pkId << pkStatus;
+            }
         }
 
         // 判断房间，未开播则暂停连接，等待开播
@@ -4328,6 +4332,8 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     int rank = data.value("rank").toInt();
                     int trend = data.value("trend").toInt(); // 趋势：1上升，2下降
                     QString area_name = data.value("area_name").toString();
+                    if (area_name.endsWith("榜"))
+                        area_name.replace(area_name.length()-1, 1, "");
                     QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
                     rankLabel->setText(area_name + "榜 " + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
                     rankLabel->setToolTip(msg);

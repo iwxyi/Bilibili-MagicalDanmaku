@@ -1,4 +1,5 @@
 #include <QMessageBox>
+#include <QTimer>
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
 
@@ -46,7 +47,9 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 {
     if (this->roomId != roomId)
         return ;
-    refreshPlayUrl();
+    QTimer::singleShot(500, [=]{
+        refreshPlayUrl();
+    });
 }
 
 void LiveVideoPlayer::setPlayUrl(QString url)
