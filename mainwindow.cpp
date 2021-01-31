@@ -466,7 +466,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 隐藏偷塔
-    if (!QFileInfo(QApplication::applicationDirPath() + "/touta").exists())
+    if (!settings.value("danmaku/chigua", false).toBool())
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->pkAutoMelonCheck->hide();
@@ -554,6 +554,15 @@ MainWindow::MainWindow(QWidget *parent)
                 doSign();
             }
         }
+
+        // 版权声明
+        if (!QFileInfo(QApplication::applicationDirPath() + "/copyright").exists())
+        {
+            if (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())
+            {
+                sendMsg("答谢姬【神奇弹幕】为您服务~");
+            }
+        }
     });
     hourTimer->start();
 
@@ -562,6 +571,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->localDebugCheck->setChecked(localDebug);
 
     slotCmdEvent("START_UP", LiveDanmaku());
+
+    if (!settings.value("danmaku/copyright", false).toBool())
+    {
+        if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
+        {
+            localNotify("答谢姬【神奇弹幕】为您服务~");
+        }
+    }
 }
 
 MainWindow::~MainWindow()

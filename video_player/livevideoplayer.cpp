@@ -13,26 +13,25 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
-//    videoWidget = new QVideoWidget(this);
-//    QVBoxLayout* vLayout = new QVBoxLayout(this);
-//    vLayout->addWidget(videoWidget);
-
     player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
 //        qDebug() << "position changed:" << position << player->duration();
     });
     player->setVideoOutput(ui->videoWidget);
-//    player->setVideoOutput(videoWidget);
 
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
 //        qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime() << playList->currentIndex() << playList->mediaCount();
     });
     connect(this, SIGNAL(signalPlayUrl(QString)), this, SLOT(setPlayUrl(QString)));
+
+//    probe = new QVideoProbe(this);
+//    connect(probe, SIGNAL(videoFrameProbed(const QVideoFrame &)), this, SLOT(processFrame(const QVideoFrame &)));
+//    probe->setSource(player);
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
 {
-//    delete ui;
+    delete ui;
 }
 
 void LiveVideoPlayer::setRoomId(QString roomId)
@@ -52,8 +51,7 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 
 void LiveVideoPlayer::setPlayUrl(QString url)
 {
-    QMediaContent c((QUrl(url)));
-    player->setMedia(c);
+    player->setMedia(QMediaContent((QUrl(url))));
     if (player->state() == QMediaPlayer::StoppedState)
         player->play();
 }
@@ -72,6 +70,7 @@ void LiveVideoPlayer::refreshPlayUrl()
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
@@ -102,6 +101,12 @@ void LiveVideoPlayer::refreshPlayUrl()
         });
     });
     manager->get(*request);
+}
+
+void LiveVideoPlayer::processFrame(const QVideoFrame &frame)
+{
+//    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+//    qDebug() << frame.size();
 }
 
 void LiveVideoPlayer::showEvent(QShowEvent *e)

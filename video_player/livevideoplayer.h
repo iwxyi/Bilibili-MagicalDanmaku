@@ -14,6 +14,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVideoWidget>
+#include <QVideoProbe>
+
 namespace Ui {
 class LiveVideoPlayer;
 }
@@ -30,6 +32,7 @@ public slots:
     void slotLiveStart(QString roomId);
     void setPlayUrl(QString url);
     void refreshPlayUrl();
+    void processFrame(const QVideoFrame &frame);
 
 signals:
     void signalPlayUrl(QString url);
@@ -44,6 +47,7 @@ private:
     QSettings& settings;
     QString roomId;
     QMediaPlayer* player;
+    QVideoProbe *probe;
 };
 
 #endif // LIVEVIDEOPLAYER_H
