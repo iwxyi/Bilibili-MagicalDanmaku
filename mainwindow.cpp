@@ -985,8 +985,8 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     if (!shallAutoMsg()) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
-        return ;
-    
+        return
+
     analyzeMsgAndCd(msg, cd, channel);
 
     // 避免太频繁发消息
@@ -1986,10 +1986,6 @@ void MainWindow::getRoomInfo(bool reconnect)
             }
         }
 
-        // 判断房间，未开播则暂停连接，等待开播
-        if (!isLivingOrMayliving())
-            return ;
-
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
@@ -2002,6 +1998,10 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 获取主播头像
         getUpFace(upUid);
+
+        // 判断房间，未开播则暂停连接，等待开播
+        if (!isLivingOrMayliving())
+            return ;
 
         // 开始工作
         if (liveStatus)
@@ -3418,7 +3418,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
 QString MainWindow::msgToShort(QString msg) const
 {
-    if (msg.length() <= 20)
+    if (msg.startsWith(">") || msg.length() <= ui->danmuLongestSpin->value())
         return msg;
     if (msg.contains(" "))
     {
@@ -4042,7 +4042,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 执行远程命令
     if (msg.contains("execRemoteCommand"))
     {
-        re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*,\\s*(\\d)\\s*\\)");
+        re = RE("execRemoteCommand\\s*\\(\\s*(.+?)\\s*,\\s*(\\d)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4053,7 +4053,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
 
-        re = RE("execRemoteCommand\\s*\\(\\s*(\\S+)\\s*\\)");
+        re = RE("execRemoteCommand\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4106,7 +4106,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 发送本地通知
     if (msg.contains("localNotify"))
     {
-        re = RE("localNotify\\s*\\(\\s*(\\S+)\\s*\\)");
+        re = RE("localNotify\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4120,7 +4120,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 朗读文本
     if (msg.contains("speakText"))
     {
-        re = RE("speakText\\s*\\(\\s*(\\S+)\\s*\\)");
+        re = RE("speakText\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4134,7 +4134,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 网络操作
     if (msg.contains("openUrl"))
     {
-        re = RE("openUrl\\s*\\(\\s*(\\S+)\\s*\\)");
+        re = RE("openUrl\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4148,7 +4148,7 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
     // 后台网络操作
     if (msg.contains("connectNet"))
     {
-        re = RE("connectNet\\s*\\(\\s*(\\S+)\\s*\\)");
+        re = RE("connectNet\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -4167,6 +4167,45 @@ bool MainWindow::execCmd(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 命令行
+    if (msg.contains("runCommandLine"))
+    {
+        re = RE("runCommandLine\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            QProcess p(nullptr);
+            p.start(cmd);
+            p.waitForStarted();
+            p.waitForFinished();
+            qDebug() << QString::fromLocal8Bit(p.readAllStandardError());
+            return true;
+        }
+    }
+
+    // 打开文件
+    if (msg.contains("openFile"))
+    {
+        re = RE("openFile\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString path = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+#ifdef Q_OS_WIN32
+            path = QString("file:///") + path;
+            bool is_open = QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
+            if(!is_open)
+                qDebug() << "打开文件失败";
+#else
+            QString  cmd = QString("xdg-open ")+ path; //在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
+            system(cmd.toStdString().c_str());
+#endif
+            return true;
+        }
+    }
 
     return false;
 }
