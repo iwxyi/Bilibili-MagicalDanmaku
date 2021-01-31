@@ -949,7 +949,7 @@ void MainWindow::slotSendAutoMsg()
     if (!execCmd(msg, res, resVal)) // 先判断能否执行命令
     {
         addNoReplyDanmakuText(msg);
-        sendMsg(msg);
+        sendMsg(msgToShort(msg));
     }
     else // 是执行命令，发送下一条弹幕就不需要延迟了
     {
@@ -999,7 +999,7 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
 
     if (enableText)
     {
-        sendAutoMsg(msgToShort(msg));
+        sendAutoMsg(msg);
     }
     if (enableVoice)
         speekVariantText(msg);
