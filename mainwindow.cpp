@@ -556,9 +556,9 @@ MainWindow::MainWindow(QWidget *parent)
         }
 
         // 版权声明
-        if (!QFileInfo(QApplication::applicationDirPath() + "/copyright").exists())
+        if (liveStatus && !settings.value("danmaku/copyright", false).toBool())
         {
-            if (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())
+            if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
             {
                 sendMsg("答谢姬【神奇弹幕】为您服务~");
             }
@@ -985,7 +985,7 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     if (!shallAutoMsg()) // 不在直播中
         return ;
     if (msg.trimmed().isEmpty())
-        return
+        return ;
 
     analyzeMsgAndCd(msg, cd, channel);
 
@@ -1085,6 +1085,17 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text == "测试消息")
     {
         localNotify("测试通知消息");
+    }
+    else if (text == "测试舰长进入")
+    {
+        QString uname = "测试舰长";
+        LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
+        appendNewLiveDanmaku(danmaku);
+
+        if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
+        {
+            sendWelcome(danmaku);
+        }
     }
     else if (text == "测试舰长")
     {
