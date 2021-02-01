@@ -579,6 +579,13 @@ MainWindow::MainWindow(QWidget *parent)
             localNotify("答谢姬【神奇弹幕】为您服务~");
         }
     }
+
+    // 开启服务端
+    server = new QHttpServer;
+    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
+            this, SLOT(handle(QHttpRequest*, QHttpResponse*)));
+
+    server->listen(5520);
 }
 
 MainWindow::~MainWindow()
@@ -9083,4 +9090,12 @@ void MainWindow::on_danmuLongestSpin_editingFinished()
 void MainWindow::on_startupAnimationCheck_clicked()
 {
     settings.setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
+}
+
+void MainWindow::handle(QHttpRequest *req, QHttpResponse *resp)
+{
+    resp->setHeader("Content-Length", "12");
+    resp->writeHead(200); // everything is OK
+    resp->write("Hello World!");
+    resp->end();
 }

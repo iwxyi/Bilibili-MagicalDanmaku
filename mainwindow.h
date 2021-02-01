@@ -21,6 +21,9 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QtTextToSpeech/QTextToSpeech>
+#include <qhttpserver.h>
+#include <qhttprequest.h>
+#include <qhttpresponse.h>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -453,6 +456,8 @@ private slots:
 
     void on_startupAnimationCheck_clicked();
 
+    void handle(QHttpRequest *req, QHttpResponse *resp);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -730,5 +735,8 @@ private:
 
     // 游戏列表
     QList<qint64> gameUsers[CHANNEL_COUNT];
+
+    // 服务端
+    QHttpServer *server;
 };
 #endif // MAINWINDOW_H

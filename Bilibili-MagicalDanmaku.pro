@@ -23,7 +23,6 @@ contains(DEFINES,ANDROID){
     include($$PWD/qxtglobalshortcut5/qxt.pri)
 }
 
-
 INCLUDEPATH += \
     utils/ \
     live_danmaku/ \
@@ -86,6 +85,12 @@ HEADERS += \
     order_player/orderplayerwindow.h \
     order_player/roundedpixmaplabel.h \
     order_player/songbeans.h \
+    qhttpserver/qhttpconnection.h \
+    qhttpserver/qhttprequest.h \
+    qhttpserver/qhttpresponse.h \
+    qhttpserver/qhttpserver.h \
+    qhttpserver/qhttpserverapi.h \
+    qhttpserver/qhttpserverfwd.h \
     utils/xfytts.h \
     widgets/RoundedAnimationLabel.h \
     widgets/conditioneditor.h \
@@ -141,3 +146,10 @@ contains(ANDROID_TARGET_ARCH,) {
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
 }
+
+
+unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver
+
+INCLUDEPATH += $$PWD/libs \
+    qhttpserver/
+DEPENDPATH += $$PWD/libs
