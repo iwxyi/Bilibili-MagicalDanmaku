@@ -581,11 +581,14 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // 开启服务端
-    server = new QHttpServer;
-    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
-            this, SLOT(handle(QHttpRequest*, QHttpResponse*)));
-
-    server->listen(5520);
+    bool enableServer = settings.value("server/enabled", false).toBool();
+    ui->serverCheck->setChecked(enableServer);
+    int port = settings.value("server/port", 5520).toInt();
+    ui->serverPortSpin->setValue(port);
+    if (enableServer)
+    {
+        openServer();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -1746,15 +1749,15 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     if (!diangeAutoCopy) // 是否进行复制操作
         return ;
 
-    if (playerWindow && !playerWindow->isHidden()) // 自动播放
+    if (musicWindow && !musicWindow->isHidden()) // 自动播放
     {
-        if (ui->diangeShuaCheck->isChecked() && playerWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
+        if (ui->diangeShuaCheck->isChecked() && musicWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
         {
             localNotify("已阻止频繁点歌");
         }
         else
         {
-            playerWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
+            musicWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
         }
     }
     else
@@ -7178,10 +7181,10 @@ void MainWindow::on_actionCreate_Video_LRC_triggered()
 
 void MainWindow::on_actionShow_Order_Player_Window_triggered()
 {
-    if (!playerWindow)
+    if (!musicWindow)
     {
-        playerWindow = new OrderPlayerWindow(nullptr);
-        connect(playerWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
+        musicWindow = new OrderPlayerWindow(nullptr);
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qDebug() << "点歌成功" << song.simpleString() << latency;
             if (latency < 180000) // 小于3分钟
             {
@@ -7205,25 +7208,25 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                     sendNotifyMsg("成功点歌，" + snum(minute) + "分钟后播放");
             }
         });
-        connect(playerWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             localNotify("开始播放：" + song.simpleString());
         });
-        connect(playerWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
+        connect(musicWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
             QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
                 settings.setValue("danmaku/playerWindow", false);
             });
         });
     }
 
-    bool hidding = playerWindow->isHidden();
+    bool hidding = musicWindow->isHidden();
 
     if (hidding)
     {
-        playerWindow->show();
+        musicWindow->show();
     }
     else
     {
-        playerWindow->hide();
+        musicWindow->hide();
     }
     settings.setValue("danmaku/playerWindow", hidding);
 }
@@ -8472,6 +8475,33 @@ void MainWindow::startSplash()
 #endif
 }
 
+void MainWindow::openServer(int port)
+{
+    if (!port)
+        port = ui->serverPortSpin->value();
+    if (port < 1000 || port > 65535)
+        port = 5520;
+
+    server = new QHttpServer;
+    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
+            this, SLOT(handle(QHttpRequest*, QHttpResponse*)));
+
+    qDebug() << "开启服务端：" << port;
+    if (!server->listen(static_cast<quint16>(port)))
+    {
+        ui->serverCheck->setChecked(false);
+        statusLabel->setText("开启服务端失败！");
+    }
+}
+
+void MainWindow::closeServer()
+{
+    qDebug() << "关闭服务端";
+    // server->close(); // 这个不是关闭端口的……
+    server->deleteLater();
+    server = nullptr;
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -9092,10 +9122,62 @@ void MainWindow::on_startupAnimationCheck_clicked()
     settings.setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
 }
 
+void MainWindow::on_serverCheck_clicked()
+{
+    bool enabled = ui->serverCheck->isChecked();
+    settings.setValue("server/enabled", enabled);
+    if (enabled)
+        openServer();
+    else
+        closeServer();
+}
+
+void MainWindow::on_serverPortSpin_valueChanged(int arg1)
+{
+    settings.setValue("server/port", arg1);
+    if (server)
+    {
+        closeServer();
+        openServer();
+    }
+}
+
 void MainWindow::handle(QHttpRequest *req, QHttpResponse *resp)
 {
-    resp->setHeader("Content-Length", "12");
-    resp->writeHead(200); // everything is OK
-    resp->write("Hello World!");
+    QString path = req->path(); // 示例：/user/abc
+    resp->setHeader("Content-Type", "text/html;charset=utf-8");
+    QByteArray doc;
+
+    auto errorResp = [=](QByteArray err){
+        resp->setHeader("Content-Length", snum(err.size()));
+        resp->writeHead(400);
+        resp->write(err);
+        resp->end();
+    };
+
+    if (path.startsWith("/danmaku")) // 弹幕姬
+    {
+        if (!danmakuWindow)
+            return errorResp("弹幕姬未开启");
+    }
+    else if (path.startsWith("/order")) // 点歌姬
+    {
+        if (!musicWindow)
+            return errorResp("点歌姬未开启");
+    }
+    else if (path == "/favicon.ico")
+    {
+        QBuffer buffer(&doc);
+        buffer.open(QIODevice::WriteOnly);
+        QPixmap(":/icons/star").save(&buffer,"PNG");
+    }
+    else // 显示
+    {
+        doc = "<html><head><title>神奇弹幕</title></head><body><h1>服务开启成功！</h1></body></html>";
+    }
+
+    resp->setHeader("Content-Length", snum(doc.size()));
+    resp->writeHead(200);
+    resp->write(doc);
     resp->end();
 }

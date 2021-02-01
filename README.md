@@ -692,5 +692,6 @@ PK_BATTLE_START
 > - 点歌姬网易云源：https://github.com/Binaryify/NeteaseCloudMusicApi
 > - 点歌姬QQ音乐源：https://github.com/rain120/qq-music-api
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
+> - 跨播功能：https://github.com/nikhilm/qhttpserver
 
 

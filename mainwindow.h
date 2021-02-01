@@ -458,6 +458,10 @@ private slots:
 
     void handle(QHttpRequest *req, QHttpResponse *resp);
 
+    void on_serverCheck_clicked();
+
+    void on_serverPortSpin_valueChanged(int arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -572,6 +576,9 @@ private:
 
     void startSplash();
 
+    void openServer(int port = 0);
+    void closeServer();
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
@@ -621,7 +628,7 @@ private:
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
     QString diangeFormatString;
-    OrderPlayerWindow* playerWindow = nullptr;
+    OrderPlayerWindow* musicWindow = nullptr;
 
     // 控件
     QTimer* sendMsgTimer;
@@ -737,6 +744,6 @@ private:
     QList<qint64> gameUsers[CHANNEL_COUNT];
 
     // 服务端
-    QHttpServer *server;
+    QHttpServer *server = nullptr;
 };
 #endif // MAINWINDOW_H
