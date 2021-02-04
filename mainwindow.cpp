@@ -9162,19 +9162,19 @@ void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 
 void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 {
-    settings.setValue("xfytts/apikey", text);
+    settings.setValue("xfytts/apisecret", text);
     if (xfyTTS)
     {
-        xfyTTS->setApiKey(text);
+        xfyTTS->setApiSecret(text);
     }
 }
 
 void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 {
-    settings.setValue("xfytts/apisecret", text);
+    settings.setValue("xfytts/apikey", text);
     if (xfyTTS)
     {
-        xfyTTS->setApiSecret(text);
+        xfyTTS->setApiKey(text);
     }
 }
 
