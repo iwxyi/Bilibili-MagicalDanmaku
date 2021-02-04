@@ -464,6 +464,8 @@ private slots:
 
     void on_autoPauseOuterMusicCheck_clicked();
 
+    void on_outerMusicKeyEdit_textEdited(const QString &arg1);
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -552,6 +554,7 @@ private:
 
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, CmdResponse& res, int& resVal);
+    void simulateKeys(QString seq);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();

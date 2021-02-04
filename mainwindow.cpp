@@ -91,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->diangeReplyCheck->setChecked(settings.value("danmaku/diangeReply", false).toBool());
     ui->diangeShuaCheck->setChecked(settings.value("danmaku/diangeShua", true).toBool());
     ui->autoPauseOuterMusicCheck->setChecked(settings.value("danmaku/autoPauseOuterMusic", false).toBool());
+    ui->outerMusicKeyEdit->setText(settings.value("danmaku/outerMusicPauseKey").toString());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -4282,6 +4283,47 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     return false;
 }
 
+void MainWindow::simulateKeys(QString seq)
+{
+    // 模拟点击右键
+    // mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+    // mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+    // keybd_event(VK_CONTROL, (BYTE) 0, 0, 0);
+    // keybd_event('P', (BYTE)0, 0, 0);
+    // keybd_event('P', (BYTE)0, KEYEVENTF_KEYUP, 0);
+    // keybd_event(VK_CONTROL, (BYTE)0, KEYEVENTF_KEYUP, 0);
+
+    // 字符串转KEY
+    QList<int>keySeq;
+    QStringList keyStrs = seq.toLower().split("+", QString::SkipEmptyParts);
+    if (keyStrs.contains("ctrl"))
+        keySeq.append(VK_CONTROL);
+    if (keyStrs.contains("shift"))
+        keySeq.append(VK_SHIFT);
+    if (keyStrs.contains("alt"))
+        keySeq.append(VK_MENU);
+    keyStrs.removeOne("ctrl");
+    keyStrs.removeOne("shift");
+    keyStrs.removeOne("alt");
+    for (int i = 0; i < keyStrs.size(); i++)
+    {
+        QString ch = keyStrs.at(i);
+        if (ch.length() != 1)
+            continue ;
+        if (ch >= "0" && ch <= "9")
+            keySeq.append(0x30 + ch.toInt());
+        else if (ch >= "a" && ch <= "z")
+            keySeq.append(0x41 + ch.at(0).toLatin1() - 'a');
+    }
+
+    // 开始模拟
+    for (int i = 0; i < keySeq.size(); i++)
+        keybd_event(keySeq.at(i), (BYTE) 0, 0, 0);
+
+    for (int i = 0; i < keySeq.size(); i++)
+        keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+}
+
 void MainWindow::restoreCustomVariant(QString text)
 {
     customVariant.clear();
@@ -7274,21 +7316,8 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         });
         auto simulateMusicKey = [=]{
 #if defined (Q_OS_WIN)
-            // 模拟点击右键
-            // mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
-            // mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
-
-            // 模拟按下 CONTROL + ALT + P
-            keybd_event(VK_CONTROL, (BYTE) 0, 0, 0);
-            keybd_event(VK_MENU, (BYTE) 0, 0, 0);
-            keybd_event('P', (BYTE)0, 0, 0);
-
-            keybd_event('P', (BYTE)0, KEYEVENTF_KEYUP, 0);
-            keybd_event(VK_MENU, (BYTE)0, KEYEVENTF_KEYUP, 0);
-            keybd_event(VK_CONTROL, (BYTE)0, KEYEVENTF_KEYUP, 0);
+            simulateKeys(ui->outerMusicKeyEdit->text());
 #endif
-            /* QKeyEvent playPauseKey(QEvent::KeyPress, Qt::Key_P, Qt::ControlModifier);
-            QCoreApplication::sendEvent(this, &playPauseKey); */
         };
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongStarted, this, [=]{
             simulateMusicKey();
@@ -9270,4 +9299,9 @@ void MainWindow::handle(QHttpRequest *req, QHttpResponse *resp)
 void MainWindow::on_autoPauseOuterMusicCheck_clicked()
 {
     settings.setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
+}
+
+void MainWindow::on_outerMusicKeyEdit_textEdited(const QString &arg1)
+{
+    settings.setValue("danmaku/outerMusicPauseKey", arg1);
 }

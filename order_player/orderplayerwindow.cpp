@@ -360,7 +360,7 @@ void OrderPlayerWindow::on_searchButton_clicked()
  */
 void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 {
-    if (!playingSong.isValid() && !playAfterDownloaded.isValid())
+    if (!playingSong.isValid() && (!playAfterDownloaded.isValid() || !downloadingSong.isValid()))
         emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
     searchMusic(key, by, true);
@@ -2411,9 +2411,9 @@ void OrderPlayerWindow::slotSongPlayEnd()
         if (!orderSongs.size() && !normalSongs.size())
         {
             ui->playProgressSlider->setSliderPosition(0);
-            ui->playProgressSlider->setMaximum(0);
+            // ui->playProgressSlider->setMaximum(0);
             ui->playingCurrentTimeLabel->setText("00:00");
-            ui->playingAllTimeLabel->setText("05:20");
+            // ui->playingAllTimeLabel->setText("05:20");
 
             setCurrentCover(QPixmap(":bg/bg"));
             emit signalOrderSongEnded();

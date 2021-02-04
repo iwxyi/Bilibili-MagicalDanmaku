@@ -1049,12 +1049,18 @@ QTabBar::tab:selected
            </widget>
           </item>
           <item>
-           <widget class="QKeySequenceEdit" name="outerMusicKeyEdit">
+           <widget class="QLineEdit" name="outerMusicKeyEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;音乐播放器全局暂停快捷键&lt;/p&gt;&lt;p&gt;没有的话，需要在对应软件中设置&lt;/p&gt;&lt;p&gt;并填入到本输入框中，不分大小写&lt;/p&gt;&lt;p&gt;例如：ctrl+alt+p&lt;/p&gt;&lt;p&gt;暂时支持：ctrl、shift、alt、a-z、0-9&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="styleSheet">
-             <string notr="true">#outerMusicKeyEdit
+             <string notr="true">QLineEdit
 {
 	background: transparent;
 }</string>
+            </property>
+            <property name="placeholderText">
+             <string>音乐软件暂停快捷键：ctrl+p</string>
             </property>
            </widget>
           </item>
@@ -2746,7 +2752,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>394</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
