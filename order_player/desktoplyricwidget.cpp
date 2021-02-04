@@ -122,7 +122,6 @@ void DesktopLyricWidget::hideEvent(QHideEvent *event)
 
 bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
-#ifdef Q_OS_WIN
     Q_UNUSED(eventType)
     MSG* msg = static_cast<MSG*>(message);
     switch(msg->message)
@@ -151,7 +150,6 @@ bool DesktopLyricWidget::nativeEvent(const QByteArray &eventType, void *message,
            return false;
         return true;
     }
-#endif
     return false;         //此处返回false，留给其他事件处理器处理
 }
 
