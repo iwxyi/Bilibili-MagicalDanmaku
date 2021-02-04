@@ -437,24 +437,25 @@ tips：
 
 有一些自定义的函数，如下：
 
-| 函数                      | 说明                                               |
-| ------------------------- | -------------------------------------------------- |
-| abort()                   | 终止本流程后面弹幕                                 |
-| block(uid, hour)          | 禁言用户，`uid` 可使用参数 `%uid%` 获得            |
-| block(uid)                | 同上，默认使用自动禁言的时间                       |
-| unblock(uid)              | 解除禁言                                           |
-| delay(msecond)            | 延迟执行后面所有待执行的操作，单位毫秒             |
-| addGameUser(uid)          | 添加用户至游戏队列，使用`[%in_game_users%]`判断    |
-| removeGameUser(uid)       | 从游戏队列中移除用户                               |
-| sendGift(giftId, num)     | 赠送礼物，只支持 id 的方式                         |
-| execRemoteCommand(cmd)    | 执行远程控制（见下面）                             |
-| execRemoteCommand(cmd, 0) | 执行远程控制，不发送回馈通知                       |
-| sendPrivateMsg(uid, msg)  | 向指定用户发送私信                                 |
-| timerShot(msecond, msg)   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
-| locaNotify(msg)           | 发送本地消息通知（非弹幕，只有自己看得到）         |
-| speakText(msg)            | 朗读文本                                           |
-| openUrl(url)              | 浏览器打开网址                                     |
-| connectNet(url)           | 后台连接网址                                       |
+| 函数                              | 说明                                               |
+| --------------------------------- | -------------------------------------------------- |
+| abort()                           | 终止本流程后面弹幕                                 |
+| block(uid, hour)                  | 禁言用户，`uid` 可使用参数 `%uid%` 获得            |
+| block(uid)                        | 同上，默认使用自动禁言的时间                       |
+| unblock(uid)                      | 解除禁言                                           |
+| delay(msecond)                    | 延迟执行后面所有待执行的操作，单位毫秒             |
+| addGameUser(uid)                  | 添加用户至游戏队列，使用`[%in_game_users%]`判断    |
+| removeGameUser(uid)               | 从游戏队列中移除用户                               |
+| sendGift(giftId, num)             | 赠送礼物，只支持 id 的方式                         |
+| execRemoteCommand(cmd)            | 执行远程控制（见下面）                             |
+| execRemoteCommand(cmd, 0)         | 执行远程控制，不发送回馈通知                       |
+| sendPrivateMsg(uid, msg)          | 向指定用户发送私信                                 |
+| timerShot(msecond, msg)           | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
+| locaNotify(msg)                   | 发送本地消息通知（非弹幕，只有自己看得到）         |
+| speakText(msg)                    | 朗读文本                                           |
+| openUrl(url)                      | 浏览器打开网址                                     |
+| connectNet(url)                   | 后台连接网址                                       |
+| improveSongOrder(username, order) | 点歌提前播放，order为提升的索引值                  |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。
@@ -514,7 +515,15 @@ tips：
 
 > `%guard_count%` 只计算本程序时运行时购买舰长的用户，因此建议使用一个月后再开启该功能
 
+#### 示例：送礼优先点歌
 
+**答谢-感谢送礼**中添加：
+
+```
+[%gift_name%=喵娘]>improveSongOrder(%username%,5)
+```
+
+赠送一个喵娘则提前5首歌播放。可将`5`改为`999`表示无限大，或者 `%gift_gold% / 1000` 表示每1000金瓜子礼物可提前一首歌
 
 ### 远程控制
 
@@ -547,9 +556,41 @@ tips：
 
 大部分CMD等同于B站后台CMD，也有一些是自创的。可用事件CMD如下：
 
+#### 主程序事件
+
+| 事件命令 | 说明     |
+| -------- | -------- |
+| START_UP | 程序启动 |
+
+#### 点歌姬事件
+
+`%uname%`用户，`%text%`歌名
+
+| 事件命令                    | 说明                              |
+| --------------------------- | --------------------------------- |
+| ORDER_SONG_SUCCEED          | 点歌成功                          |
+| ORDER_SONG_PLAY             | 开始播放                          |
+| ORDER_SONG_FREQUENCY        | 点歌过于频繁                      |
+| ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                      |
+| ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）        |
+| ORDER_SONG_COPY             | 点歌已复制歌名                    |
+| ORDER_SONG_IMPROVED         | 提前播放                          |
+| ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong` |
+
+##### 示例：点歌提示未带勋章
+
+添加事件：`ORDER_SONG_NO_MEDAL`，动作：
+
+```
+(cd35:600)请戴粉丝牌点歌
+```
+
+加了**冷却通道**，最多十分钟提醒一次。
+
+#### 弹幕姬事件
+
 | 事件命令                      | 说明                       |
 | ----------------------------- | -------------------------- |
-| START_UP                      | 程序启动                   |
 | LIVE                          | 开播                       |
 | PREPARING                     | 下播                       |
 | ROOM_CHANGE                   | 房间信息改变               |
@@ -599,21 +640,35 @@ tips：
 
 > 考虑到发送弹幕的限制，如果同一个事件添加多个响应的动作，那么会按队列顺序执行，而不会同时一口气执行完。
 
-#### 示例：大乱斗提醒
+##### 示例：大乱斗结束前提醒
 
 大乱斗结束前30秒提醒：一次大乱斗为5分钟，开始后4分半发送弹幕，270秒=270000毫秒。
 
-添加 `事件`：
-
-```
-PK_BATTLE_START
-```
-
-添加 `动作`：
+添加事件：`PK_BATTLE_START`，动作：
 
 ```
 >timerShot(270000, 离大乱斗结束还有30秒)
 ```
+
+
+
+##### 示例：下播自动关机
+
+下播30秒后电脑自动关机
+
+添加下播事件：`PREPARE`，动作：
+
+```
+>timerShot(30000, >runCommandLine(shutdown -s -t 30))
+```
+
+添加开播事件：`LIVE`，动作：
+
+```
+>runCommandLine(shutdown -a)
+```
+
+多了延时30秒和响应开播事件，是排除主播意外掉线的情况。
 
 
 

@@ -365,6 +365,41 @@ void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 }
 
 /**
+ * 提升用户歌曲的序列
+ * 队列中的第一首歌除外
+ */
+void OrderPlayerWindow::improveUserSongByOrder(QString username, int promote)
+{
+    for (int i = 1; i < orderSongs.size(); i++)
+    {
+        Song song = orderSongs.at(i);
+        if (song.addBy != username)
+            continue;
+
+        // 提升这首歌
+        int newIndex = i - promote;
+        if (i < 0)
+            i = 0;
+        orderSongs.removeAt(i--);
+        orderSongs.insert(newIndex, song);
+        saveSongList("music/order", orderSongs);
+        setSongModelToView(orderSongs, ui->orderSongsListView);
+        emit signalOrderSongImproved(song, i, newIndex);
+        break;
+    }
+}
+
+void OrderPlayerWindow::cutSongIfUser(QString username)
+{
+    if (!playingSong.isValid())
+        return ;
+    if (playingSong.addBy != username)
+        return ;
+    emit signalOrderSongCutted(playingSong);
+    playNext();
+}
+
+/**
  * 搜索音乐
  */
 void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
@@ -1376,6 +1411,10 @@ void OrderPlayerWindow::downloadSong(Song song)
             MUSIC_DEB << "    信息：" << br << size << type << fileUrl;
             if (size == 0)
             {
+                if (!song.addBy.isEmpty())
+                {
+                    emit signalOrderSongNoCopyright(song);
+                }
                 qDebug() << "无法下载，可能没有版权" << song.simpleString();
                 if (playAfterDownloaded == song)
                 {

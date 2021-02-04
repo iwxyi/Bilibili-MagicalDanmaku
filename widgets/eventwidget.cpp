@@ -48,7 +48,7 @@ EventWidget::EventWidget(QWidget *parent) : QWidget(parent)
     });
 }
 
-void EventWidget::slotCmdEvent(QString cmd, LiveDanmaku danmaku)
+void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     if (!check->isChecked() || cmdKey != cmd)
         return ;

@@ -410,7 +410,7 @@ private slots:
 
     void on_autoBlockTimeSpin_editingFinished();
 
-    void slotCmdEvent(QString cmd, LiveDanmaku danmaku);
+    void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
 
     void on_voiceLocalRadio_toggled(bool checked);
 
@@ -549,7 +549,7 @@ private:
     void finishLiveRecord();
 
     void processRemoteCmd(QString msg, bool response = true);
-    bool execCmd(QString msg, CmdResponse& res, int& resVal);
+    bool execFunc(QString msg, CmdResponse& res, int& resVal);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();

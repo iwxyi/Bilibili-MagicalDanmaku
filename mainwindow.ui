@@ -2031,7 +2031,7 @@ margin: 6px;</string>
              <enum>Qt::NoContextMenu</enum>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早的开播时间&lt;/p&gt;&lt;p&gt;将在开播前半小时内预先连接B站弹幕服务器&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;跨播端口&lt;/p&gt;&lt;p&gt;本端口及后面最多10个端口将被本程序使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QAbstractSpinBox
