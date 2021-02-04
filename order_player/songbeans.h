@@ -17,8 +17,9 @@
 
 enum MusicSource
 {
-    NeteaseCloudMusic,
-    QQMusic
+    UnknowMusic = -1,
+    NeteaseCloudMusic = 0,
+    QQMusic = 1
 };
 
 struct Artist
@@ -27,6 +28,7 @@ struct Artist
     QString mid;
     QString name;
     QString faceUrl;
+    char m_padding1[4];
 
     static Artist fromJson(QJsonObject json)
     {
@@ -111,8 +113,10 @@ struct Song
     int duration = 0;
     int mark = 0;
     QList<Artist> artists;
+    char m_padding1[4];
     Album album;
     QString artistNames;
+    char m_padding2[4];
     qint64 addTime;
     QString addBy;
     MusicSource source = NeteaseCloudMusic;
