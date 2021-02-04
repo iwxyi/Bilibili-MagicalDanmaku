@@ -291,6 +291,8 @@ signals:
     void signalOrderSongNoCopyright(Song song);
     void signalOrderSongImproved(Song song, int previous, int current);
     void signalOrderSongCutted(Song song);
+    void signalOrderSongStarted();
+    void signalOrderSongEnded();
 
     void signalWindowClosed();
 

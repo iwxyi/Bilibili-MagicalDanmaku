@@ -462,6 +462,8 @@ private slots:
 
     void on_serverPortSpin_valueChanged(int arg1);
 
+    void on_autoPauseOuterMusicCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

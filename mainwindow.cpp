@@ -90,6 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
     ui->diangeReplyCheck->setChecked(settings.value("danmaku/diangeReply", false).toBool());
     ui->diangeShuaCheck->setChecked(settings.value("danmaku/diangeShua", true).toBool());
+    ui->autoPauseOuterMusicCheck->setChecked(settings.value("danmaku/autoPauseOuterMusic", false).toBool());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -7271,6 +7272,30 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             localNotify("已切歌");
             triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name));
         });
+        auto simulateMusicKey = [=]{
+#if defined (Q_OS_WIN)
+            // 模拟点击右键
+            // mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+            // mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+
+            // 模拟按下 CONTROL + ALT + P
+            keybd_event(VK_CONTROL, (BYTE) 0, 0, 0);
+            keybd_event(VK_MENU, (BYTE) 0, 0, 0);
+            keybd_event('P', (BYTE)0, 0, 0);
+
+            keybd_event('P', (BYTE)0, KEYEVENTF_KEYUP, 0);
+            keybd_event(VK_MENU, (BYTE)0, KEYEVENTF_KEYUP, 0);
+            keybd_event(VK_CONTROL, (BYTE)0, KEYEVENTF_KEYUP, 0);
+#endif
+            /* QKeyEvent playPauseKey(QEvent::KeyPress, Qt::Key_P, Qt::ControlModifier);
+            QCoreApplication::sendEvent(this, &playPauseKey); */
+        };
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongStarted, this, [=]{
+            simulateMusicKey();
+        });
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongEnded, this, [=]{
+            simulateMusicKey();
+        });
         connect(musicWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
             QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
                 settings.setValue("danmaku/playerWindow", false);
@@ -9240,4 +9265,9 @@ void MainWindow::handle(QHttpRequest *req, QHttpResponse *resp)
     resp->writeHead(200);
     resp->write(doc);
     resp->end();
+}
+
+void MainWindow::on_autoPauseOuterMusicCheck_clicked()
+{
+    settings.setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
 }

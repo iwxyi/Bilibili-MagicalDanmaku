@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>10</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1028,6 +1028,33 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>避免刷歌</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_43">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="autoPauseOuterMusicCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌开始播放时，自动调用外部播放器（例如网易云）快捷键，使其自动暂停&lt;/p&gt;&lt;p&gt;点的所有歌曲都播放结束后，再次自动调用外部播放器快捷键，恢复其播放&lt;/p&gt;&lt;p&gt;无法判断播放状态，例如播放器没有播放时，会误让它播放&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>自动开关外部播放器</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QKeySequenceEdit" name="outerMusicKeyEdit">
+            <property name="styleSheet">
+             <string notr="true">#outerMusicKeyEdit
+{
+	background: transparent;
+}</string>
             </property>
            </widget>
           </item>

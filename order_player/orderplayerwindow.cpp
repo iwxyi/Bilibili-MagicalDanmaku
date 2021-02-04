@@ -360,6 +360,8 @@ void OrderPlayerWindow::on_searchButton_clicked()
  */
 void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 {
+    if (!playingSong.isValid() && !playAfterDownloaded.isValid())
+        emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
     searchMusic(key, by, true);
 }
@@ -1144,7 +1146,7 @@ void OrderPlayerWindow::playNext()
     if (!orderSongs.size()) // 播放列表全部结束
     {
         // 查看固定列表
-        if (!normalSongs.size())
+        if (!normalSongs.size()) // 固定列表没有歌曲
             return ;
 
         int r = qrand() % normalSongs.size();
@@ -2414,6 +2416,7 @@ void OrderPlayerWindow::slotSongPlayEnd()
             ui->playingAllTimeLabel->setText("05:20");
 
             setCurrentCover(QPixmap(":bg/bg"));
+            emit signalOrderSongEnded();
         }
         else
         {
