@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>直播流</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,0">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -33,6 +33,16 @@
     <widget class="QVideoWidget" name="videoWidget" native="true">
      <property name="contextMenuPolicy">
       <enum>Qt::CustomContextMenu</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>

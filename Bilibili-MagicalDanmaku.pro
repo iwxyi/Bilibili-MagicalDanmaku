@@ -50,6 +50,7 @@ SOURCES += \
     order_player/orderplayerwindow.cpp \
     server.cpp \
     utils/xfytts.cpp \
+    video_player/videosurface.cpp \
     widgets/conditioneditor.cpp \
     widgets/eternalblockdialog.cpp \
     widgets/eventwidget.cpp \
@@ -93,6 +94,7 @@ HEADERS += \
     qhttpserver/qhttpserverapi.h \
     qhttpserver/qhttpserverfwd.h \
     utils/xfytts.h \
+    video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
     widgets/conditioneditor.h \
     widgets/eternalblockdialog.h \

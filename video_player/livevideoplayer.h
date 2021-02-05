@@ -16,6 +16,7 @@
 #include <QVideoWidget>
 #include <QVideoProbe>
 #include <QDir>
+#include "videosurface.h"
 
 namespace Ui {
 class LiveVideoPlayer;
@@ -37,7 +38,6 @@ public slots:
     void slotLiveStart(QString roomId);
     void setPlayUrl(QString url);
     void refreshPlayUrl();
-    void processFrame(QVideoFrame frame);
 
 protected:
     void showEvent(QShowEvent *e) override;
@@ -59,8 +59,11 @@ private slots:
 
     void on_saveCapture60sButton_clicked();
 
+    void switchFullScreen();
     void calcVideoRect();
     void slotSaveCurrentCapture();
+
+    void on_label_customContextMenuRequested(const QPoint &pos);
 
 private:
     void startCapture();
@@ -76,8 +79,10 @@ private:
     Ui::LiveVideoPlayer *ui;
     QSettings& settings;
     QString roomId;
+
     QMediaPlayer* player;
-    QVideoProbe *probe;
+    bool useVideoWidget = true;
+    VideoSurface *videoSurface;
 
     qint64 captureMaxLong = 600000;
     QDir captureDir;
