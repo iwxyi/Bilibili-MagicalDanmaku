@@ -456,7 +456,7 @@ private slots:
 
     void on_startupAnimationCheck_clicked();
 
-    void handle(QHttpRequest *req, QHttpResponse *resp);
+    void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
     void on_serverCheck_clicked();
 

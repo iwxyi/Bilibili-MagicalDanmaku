@@ -48,6 +48,7 @@ SOURCES += \
     order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
+    server.cpp \
     utils/xfytts.cpp \
     widgets/conditioneditor.cpp \
     widgets/eternalblockdialog.cpp \

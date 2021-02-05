@@ -3207,7 +3207,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
 {
     QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
     bool isTrue = false;
-    QRegularExpression compRe("^\\s*([^<>=!]+?)\\s*([<>=!]{1,2})\\s*([^<>=!]+?)\\s*$");
+    QRegularExpression compRe("^\\s*([^<>=!~]+?)\\s*([<>=!~]{1,2})\\s*([^<>=!~]+?)\\s*$");
     QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
     QRegularExpressionMatch match;
     foreach (QString orExp, orExps)
@@ -3277,7 +3277,15 @@ bool MainWindow::processVariantConditions(QString exprs) const
                 s1 = removeQuote(s1);
                 s2 = removeQuote(s2);
 //                qDebug() << "比较字符串" << s1 << op << s2;
-                if (!isConditionTrue<QString>(s1, s2, op))
+                if (op == "~")
+                {
+                    if (!s1.contains(QRegularExpression(s2)))
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                else if (!isConditionTrue<QString>(s1, s2, op))
                 {
                     isTrue = false;
                     break;
@@ -8680,7 +8688,7 @@ void MainWindow::openServer(int port)
 
     server = new QHttpServer;
     connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
-            this, SLOT(handle(QHttpRequest*, QHttpResponse*)));
+            this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
 
     qDebug() << "开启服务端：" << port;
     if (!server->listen(static_cast<quint16>(port)))
@@ -9339,46 +9347,6 @@ void MainWindow::on_serverPortSpin_valueChanged(int arg1)
         closeServer();
         openServer();
     }
-}
-
-void MainWindow::handle(QHttpRequest *req, QHttpResponse *resp)
-{
-    QString path = req->path(); // 示例：/user/abc
-    resp->setHeader("Content-Type", "text/html;charset=utf-8");
-    QByteArray doc;
-
-    auto errorResp = [=](QByteArray err){
-        resp->setHeader("Content-Length", snum(err.size()));
-        resp->writeHead(400);
-        resp->write(err);
-        resp->end();
-    };
-
-    if (path.startsWith("/danmaku")) // 弹幕姬
-    {
-        if (!danmakuWindow)
-            return errorResp("弹幕姬未开启");
-    }
-    else if (path.startsWith("/order")) // 点歌姬
-    {
-        if (!musicWindow)
-            return errorResp("点歌姬未开启");
-    }
-    else if (path == "/favicon.ico")
-    {
-        QBuffer buffer(&doc);
-        buffer.open(QIODevice::WriteOnly);
-        QPixmap(":/icons/star").save(&buffer,"PNG");
-    }
-    else // 显示
-    {
-        doc = "<html><head><title>神奇弹幕</title></head><body><h1>服务开启成功！</h1></body></html>";
-    }
-
-    resp->setHeader("Content-Length", snum(doc.size()));
-    resp->writeHead(200);
-    resp->write(doc);
-    resp->end();
 }
 
 void MainWindow::on_autoPauseOuterMusicCheck_clicked()
