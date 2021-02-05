@@ -62,6 +62,7 @@ private slots:
     void switchFullScreen();
     void calcVideoRect();
     void slotSaveCurrentCapture();
+    void slotSaveFrameCapture(const QPixmap& pixmap);
 
     void on_label_customContextMenuRequested(const QPoint &pos);
 
@@ -90,6 +91,8 @@ private:
     bool enablePrevCapture = false;
     QRect videoRect;
     QTimer* captureTimer;
+    bool captureRunning = false;
+    qint64 prevCaptureTimestamp = 0;
     QList<QPair<qint64, QPixmap*>> *capturePixmaps = nullptr;
 };
 

@@ -35,7 +35,10 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
             cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
             QImage recvImage(cloneFrame.bits(), cloneFrame.width(), cloneFrame.height(), QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
             cloneFrame.unmap();
-            ui->label->setPixmap(QPixmap::fromImage(recvImage).scaled(ui->label->size(), Qt::KeepAspectRatio));
+            QPixmap pixmap = QPixmap::fromImage(recvImage);
+            if (captureRunning)
+                slotSaveFrameCapture(pixmap);
+            ui->label->setPixmap(pixmap.scaled(ui->label->size(), Qt::KeepAspectRatio));
             ui->label->setMinimumSize(1, 1);
         });
     }
@@ -81,7 +84,10 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     captureTimer = new QTimer(this);
     captureTimer->setInterval(100);
     connect(captureTimer, SIGNAL(timeout()), this, SLOT(slotSaveCurrentCapture()));
-    if (!(enablePrevCapture = settings.value("videoplayer/capture", false).toBool()))
+    enablePrevCapture = settings.value("videoplayer/capture", false).toBool();
+    if (useVideoWidget)
+        enablePrevCapture = false;
+    if (!enablePrevCapture)
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/capture");
 }
@@ -250,7 +256,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             stopCapture(true);
         }
         showCaptureButtons(enablePrevCapture);
-    })->check(enablePrevCapture);
+    })->check(enablePrevCapture)->disable(useVideoWidget);
 
     menu->exec();
 }
@@ -265,7 +271,16 @@ void LiveVideoPlayer::on_playButton_clicked()
 
 void LiveVideoPlayer::on_saveCapture1Button_clicked()
 {
-    saveCapture();
+    if (!capturePixmaps->size())
+    {
+        saveCapture(); // 直接截图
+    }
+    else // 只保存第一张图
+    {
+        QPixmap *pixmap = capturePixmaps->last().second;
+        captureDir.mkpath(captureDir.absolutePath());
+        pixmap->save(timeToPath(QDateTime::currentMSecsSinceEpoch()));
+    }
 }
 
 void LiveVideoPlayer::on_saveCapture5sButton_clicked()
@@ -368,16 +383,37 @@ void LiveVideoPlayer::slotSaveCurrentCapture()
     }
 }
 
+void LiveVideoPlayer::slotSaveFrameCapture(const QPixmap &pixmap)
+{
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+    if (timestamp - prevCaptureTimestamp < 30) // 避免太过频繁
+        return ;
+    prevCaptureTimestamp = timestamp;
+    QPixmap* pp = new QPixmap(pixmap);
+    capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pp));
+    // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
+
+    while (capturePixmaps->size())
+    {
+        if (capturePixmaps->first().first + captureMaxLong < timestamp)
+            delete capturePixmaps->takeFirst().second;
+        else
+            break;
+    }
+}
+
 void LiveVideoPlayer::startCapture()
 {
     if (!capturePixmaps)
         capturePixmaps = new QList<QPair<qint64, QPixmap*>>();
-    captureTimer->start();
+    captureRunning = true;
+//    captureTimer->start();
 }
 
 void LiveVideoPlayer::stopCapture(bool clear)
 {
-    captureTimer->stop();
+    captureRunning = false;
+//    captureTimer->stop();
     if (clear && capturePixmaps)
     {
         foreach (auto pair, *capturePixmaps)
@@ -399,7 +435,6 @@ void LiveVideoPlayer::saveCapture()
 
     QPixmap pixmap = QPixmap(this->size());
     pixmap.fill(Qt::transparent);
-    // ui->videoWidget->render(pixmap, QPoint(0, 0), videoRect);
     this->render(&pixmap, QPoint(0, 0), QRect(0,0,width(), height()));
     captureDir.mkpath(captureDir.absolutePath());
     pixmap.save(timeToPath(QDateTime::currentMSecsSinceEpoch()));
