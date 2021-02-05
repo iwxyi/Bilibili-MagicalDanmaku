@@ -331,9 +331,12 @@ void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
 
 void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 {
-    if (chatMode) // 聊天模式：只显示弹幕
+    if (chatMode) // 聊天模式：只显示弹幕和礼物等
     {
-        if (danmaku.getMsgType() != MSG_DANMAKU)
+        if (!danmaku.is(MSG_DANMAKU)
+                && !danmaku.is(MSG_GIFT)
+                && !danmaku.is(MSG_GUARD_BUY)
+                && !danmaku.is(MSG_BLOCK))
             return ;
     }
 

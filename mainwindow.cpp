@@ -4549,8 +4549,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     currentFans = fans;
                     currentFansClub = fans_club;
                     qDebug() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
-                    appendNewLiveDanmaku(LiveDanmaku(fans, fans_club,
-                                                     delta_fans, delta_club));
+                    // appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
 
                     dailyNewFans += delta_fans;
                     if (dailySettings)
