@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>394</width>
+    <width>499</width>
     <height>387</height>
    </rect>
   </property>
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>10</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -726,6 +726,36 @@ QTabBar::tab:selected
           </property>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_41">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>仅直播时回复</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="localDebugCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>本地调试模式</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tab_4">
@@ -1376,15 +1406,12 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+           <widget class="QCheckBox" name="startupAnimationCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>仅直播时回复</string>
+             <string>程序启动动画</string>
             </property>
            </widget>
           </item>
@@ -1425,6 +1452,33 @@ margin: 6px;</string>
             </property>
             <property name="text">
              <string>每日自动签到</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_44">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="acquireHeartCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>挂机小心心</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="giveOverdueGiftCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有1天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>赠送到期礼物</string>
             </property>
            </widget>
           </item>
@@ -1505,33 +1559,6 @@ margin: 6px;</string>
             </property>
             <property name="value">
              <number>30</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_41">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="localDebugCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>本地调试模式</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="startupAnimationCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>程序启动动画</string>
             </property>
            </widget>
           </item>
@@ -1798,7 +1825,7 @@ margin: 6px;</string>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="0,4,1,0,4">
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="voicePitchLabel">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本地语音可能有点问题&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -1810,7 +1837,7 @@ margin: 6px;</string>
           <item>
            <widget class="QSlider" name="voicePitchSlider">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string/>
             </property>
             <property name="maximum">
              <number>100</number>
@@ -1840,7 +1867,7 @@ margin: 6px;</string>
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label_6">
+           <widget class="QLabel" name="voiceSpeedLabel">
             <property name="text">
              <string>音速</string>
             </property>
@@ -1870,7 +1897,7 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_13">
+           <widget class="QLabel" name="voiceVolumeLabel">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不支持讯飞语音&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -2111,7 +2138,7 @@ margin: 6px;</string>
              <string notr="true">color: gray;</string>
             </property>
             <property name="text">
-             <string>开发中</string>
+             <string>持续开发中</string>
             </property>
            </widget>
           </item>
@@ -2751,8 +2778,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>394</width>
-     <height>21</height>
+     <width>499</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

@@ -216,17 +216,17 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
 
 void XfyTTS::setAppId(QString s)
 {
-    this->APPID = s;
+    this->APPID = s.trimmed();
 }
 
 void XfyTTS::setApiKey(QString s)
 {
-    this->APIKey = s;
+    this->APIKey = s.trimmed();
 }
 
 void XfyTTS::setApiSecret(QString s)
 {
-    this->APISecret = s;
+    this->APISecret = s.trimmed();
 }
 
 void XfyTTS::setName(QString name)

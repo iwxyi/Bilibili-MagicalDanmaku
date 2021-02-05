@@ -466,6 +466,10 @@ private slots:
 
     void on_outerMusicKeyEdit_textEdited(const QString &arg1);
 
+    void on_acquireHeartCheck_clicked();
+
+    void on_giveOverdueGiftCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

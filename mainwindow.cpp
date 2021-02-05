@@ -468,7 +468,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 隐藏偷塔
-    if (!settings.value("danmaku/chigua", false).toBool())
+    if (!settings.value("danmaku/touta", false).toBool())
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->pkAutoMelonCheck->hide();
@@ -531,6 +531,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 自动参与天选
     ui->autoLOTCheck->setChecked(settings.value("danmaku/autoLOT", false).toBool());
+
+    // 自动获取小心心
+    ui->acquireHeartCheck->setChecked(settings.value("danmaku/acquireHeart", false).toBool());
+
+    // 自动赠送过期礼物
+    ui->giveOverdueGiftCheck->setChecked(settings.value("danmaku/giveOverdueGift", false).toBool());
 
     // 永久禁言
     QJsonArray eternalBlockArray = settings.value("danmaku/eternalBlockUsers").toJsonArray();
@@ -3144,6 +3150,20 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%in_game_users%"))
         msg.replace("%in_game_users%", gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
 
+    // 配置文件
+    QRegularExpression re("%\\{(\\S+)\\}%");
+    QRegularExpressionMatch match;
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        QString key = match.captured(1);
+        if (!key.contains("/"))
+            key = "heaps/" + key;
+        QVariant var = settings.value(key);
+        msg.replace(_var, var.toString()); // 默认使用变量类型吧
+        qDebug() << msg;
+    }
+
     return msg;
 }
 
@@ -4193,6 +4213,26 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
     }
+    if (msg.contains("postData"))
+    {
+        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString url = caps.at(1);
+            QString data = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            QNetworkAccessManager* manager = new QNetworkAccessManager;
+            QNetworkRequest* request = new QNetworkRequest(url);
+            connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+                manager->deleteLater();
+                delete request;
+                reply->deleteLater();
+            });
+            manager->post(*request, data.toStdString().data());
+            return true;
+        }
+    }
 
     // 命令行
     if (msg.contains("runCommandLine"))
@@ -4230,6 +4270,28 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString  cmd = QString("xdg-open ")+ path; //在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
             system(cmd.toStdString().c_str());
 #endif
+            return true;
+        }
+    }
+
+    // 保存到配置
+    if (msg.contains("setValue"))
+    {
+        re = RE("setValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            QString value = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            /* if (value.indexOf(QRegularExpression("^\\d+$")) > -1) // 整数型
+                settings.setValue(key, value.toInt());
+            else if (value.indexOf(QRegularExpression("^\\d+\\.\\d+$")) > -1) // 小数型
+                settings.setValue(key, value.toInt());
+            else // 字符串 */
+            settings.setValue(key, value);
             return true;
         }
     }
@@ -9038,6 +9100,7 @@ void MainWindow::on_voiceNameSelectButton_clicked()
 void MainWindow::on_voicePitchSlider_valueChanged(int value)
 {
     settings.setValue("voice/pitch", voicePitch = value);
+    ui->voicePitchLabel->setText("音调" + snum(value));
 
     switch (voicePlatform) {
     case VoiceLocal:
@@ -9060,6 +9123,7 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
 void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 {
     settings.setValue("voice/speed", voiceSpeed = value);
+    ui->voiceSpeedLabel->setText("音速" + snum(value));
 
     switch (voicePlatform) {
     case VoiceLocal:
@@ -9082,6 +9146,7 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 {
     settings.setValue("voice/volume", voiceVolume = value);
+    ui->voiceVolumeLabel->setText("音量" + snum(value));
 
     switch (voicePlatform) {
     case VoiceLocal:
@@ -9304,4 +9369,14 @@ void MainWindow::on_autoPauseOuterMusicCheck_clicked()
 void MainWindow::on_outerMusicKeyEdit_textEdited(const QString &arg1)
 {
     settings.setValue("danmaku/outerMusicPauseKey", arg1);
+}
+
+void MainWindow::on_acquireHeartCheck_clicked()
+{
+    settings.setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
+}
+
+void MainWindow::on_giveOverdueGiftCheck_clicked()
+{
+    settings.setValue("danmaku/giveOverdueGift", ui->giveOverdueGiftCheck->isChecked());
 }
