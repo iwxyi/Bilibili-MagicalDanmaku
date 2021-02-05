@@ -2013,7 +2013,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         {
             QJsonObject battleInfo = dataObj.value("battle_info").toObject();
             QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
-            if (pkId.toLongLong() > 0)
+            if (pkId.toLongLong() > 0 && reconnect)
             {
                 getPkInfoById(roomId, pkId);
                 pkVideo = pkStatus == 2;
@@ -2540,10 +2540,11 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
             danmakuWindow->setToolTip(pkUname);
             danmakuWindow->setPkStatus(1);
         }
+        ui->actionShow_PK_Video->setEnabled(true);
 
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         qint64 deltaEnd = pkEndTime - currentTime;
-        QTimer::singleShot(deltaEnd*1000 - pkJudgeEarly, [=]{
+        QTimer::singleShot(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)), [=]{
             if (!pking || roomId != this->roomId) // 比如换房间了
             {
                 qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
