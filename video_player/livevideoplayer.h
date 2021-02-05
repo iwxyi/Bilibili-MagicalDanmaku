@@ -15,12 +15,15 @@
 #include <QJsonArray>
 #include <QVideoWidget>
 #include <QVideoProbe>
+#include <QDir>
 
 namespace Ui {
 class LiveVideoPlayer;
 }
 
 #define newFacileMenu FacileMenu *menu = new FacileMenu(this)
+
+#define CAPTURE_PARAM_FILE "params.ini"
 
 class LiveVideoPlayer : public QDialog
 {
@@ -46,6 +49,8 @@ private slots:
 
     void on_playButton_clicked();
 
+    void on_saveCapture1Button_clicked();
+
     void on_saveCapture5sButton_clicked();
 
     void on_saveCapture13sButton_clicked();
@@ -54,10 +59,18 @@ private slots:
 
     void on_saveCapture60sButton_clicked();
 
+    void calcVideoRect();
+    void slotSaveCurrentCapture();
+
 private:
     void startCapture();
     void stopCapture(bool clear = false);
+    void saveCapture();
     void saveCapture(int second);
+    void showCaptureButtons(bool show);
+
+    QString timeToPath(const qint64& time);
+    QString timeToFileName(const qint64& time);
 
 private:
     Ui::LiveVideoPlayer *ui;
@@ -66,8 +79,13 @@ private:
     QMediaPlayer* player;
     QVideoProbe *probe;
 
+    qint64 captureMaxLong = 600000;
+    QDir captureDir;
+
+    bool enablePrevCapture = false;
+    QRect videoRect;
     QTimer* captureTimer;
-    QList<QPair<qint64, QPixmap*>> capturePixmaps;
+    QList<QPair<qint64, QPixmap*>> *capturePixmaps = nullptr;
 };
 
 #endif // LIVEVIDEOPLAYER_H

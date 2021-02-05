@@ -37,7 +37,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="prevCaptureCheck">
+    <layout class="QHBoxLayout" name="hlayout" stretch="0,1,0,0,0,0,0">
      <item>
       <widget class="InteractiveButtonBase" name="playButton">
        <property name="styleSheet">
@@ -53,17 +53,17 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <widget class="QWidget" name="widget" native="true"/>
+     </item>
+     <item>
+      <widget class="InteractiveButtonBase" name="saveCapture1Button">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
+       <property name="text">
+        <string>1</string>
        </property>
-      </spacer>
+      </widget>
      </item>
      <item>
       <widget class="InteractiveButtonBase" name="saveCapture5sButton">
