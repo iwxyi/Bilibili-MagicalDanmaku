@@ -55,11 +55,19 @@ private slots:
     void on_saveCapture60sButton_clicked();
 
 private:
+    void startCapture();
+    void stopCapture(bool clear = false);
+    void saveCapture(int second);
+
+private:
     Ui::LiveVideoPlayer *ui;
     QSettings& settings;
     QString roomId;
     QMediaPlayer* player;
     QVideoProbe *probe;
+
+    QTimer* captureTimer;
+    QList<QPair<qint64, QPixmap*>> capturePixmaps;
 };
 
 #endif // LIVEVIDEOPLAYER_H

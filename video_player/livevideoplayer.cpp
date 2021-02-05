@@ -207,3 +207,18 @@ void LiveVideoPlayer::on_saveCapture60sButton_clicked()
 {
 
 }
+
+void LiveVideoPlayer::startCapture()
+{
+
+}
+
+void LiveVideoPlayer::stopCapture(bool clear)
+{
+
+}
+
+void LiveVideoPlayer::saveCapture(int second)
+{
+
+}
