@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
+#include "facilemenu.h"
 
 LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     QDialog(parent),
@@ -23,6 +24,10 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
 //        qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime() << playList->currentIndex() << playList->mediaCount();
     });
     connect(this, SIGNAL(signalPlayUrl(QString)), this, SLOT(setPlayUrl(QString)));
+
+    player->setVolume(settings.value("videoplayer/volume", 50).toInt());
+    if (settings.value("videoplayer/fullScreen", false).toBool())
+        ui->videoWidget->setFullScreen(true);
 
 //    probe = new QVideoProbe(this);
 //    connect(probe, SIGNAL(videoFrameProbed(const QVideoFrame &)), this, SLOT(processFrame(const QVideoFrame &)));
@@ -134,4 +139,31 @@ void LiveVideoPlayer::hideEvent(QHideEvent *e)
 void LiveVideoPlayer::resizeEvent(QResizeEvent *e)
 {
     QDialog::resizeEvent(e);
+}
+
+void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
+{
+    newFacileMenu;
+    menu->addAction(QIcon(), "全屏", [=]{
+        bool fullScreen = !ui->videoWidget->isFullScreen();
+        ui->videoWidget->setFullScreen(fullScreen);
+        settings.setValue("videoplayer/fullScreen", fullScreen);
+    })->check(ui->videoWidget->isFullScreen());
+
+    FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/dotdotdot"), "音量");
+    volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
+        item->check(val == (player->volume()+5) / 10 * 10);
+    }, [=](int vol){
+        settings.setValue("videoplayer/volume", vol);
+        player->setVolume(vol);
+    }, 10);
+
+    menu->addAction("静音", [=]{
+        if (player->volume())
+            player->setVolume(0);
+        else
+            player->setVolume(settings.value("videoplayer/volume", 50).toInt());
+    })->check(!player->volume());
+
+    menu->exec();
 }

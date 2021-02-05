@@ -7520,6 +7520,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->setWindowTitle(roomTitle + " - " + upName);
+    player->setWindowIcon(upFace);
     player->show();
 }
 

@@ -34,7 +34,7 @@ public:
     template <class T>
     FacileMenuItem* addAction(QIcon icon, QString text, T *obj, void (T::*func)());
     FacileMenu* addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemType config = nullptr, FuncIntType clicked = nullptr);
-    FacileMenu* addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemIntType config, FuncIntType clicked = nullptr);
+    FacileMenu* addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemIntType config, FuncIntType clicked = nullptr, int step = 0);
     FacileMenu* addActions(QList<QAction*> actions);
 
     FacileMenu* addRow(FuncType addActions = []{});

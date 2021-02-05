@@ -30,7 +30,11 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QVideoWidget" name="videoWidget" native="true"/>
+    <widget class="QVideoWidget" name="videoWidget" native="true">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

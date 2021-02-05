@@ -20,6 +20,8 @@ namespace Ui {
 class LiveVideoPlayer;
 }
 
+#define newFacileMenu FacileMenu *menu = new FacileMenu(this)
+
 class LiveVideoPlayer : public QDialog
 {
     Q_OBJECT
@@ -41,6 +43,9 @@ protected:
     void showEvent(QShowEvent *e) override;
     void hideEvent(QHideEvent *e) override;
     void resizeEvent(QResizeEvent *e) override;
+
+private slots:
+    void on_videoWidget_customContextMenuRequested(const QPoint&);
 
 private:
     Ui::LiveVideoPlayer *ui;

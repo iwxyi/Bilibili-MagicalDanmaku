@@ -140,6 +140,7 @@ FacileMenuItem *FacileMenu::addAction(QIcon icon, QString text, T *obj, void (T:
 /**
  * 批量添加带数字（可以不带）的action
  * 相当于只是少了个for循环……
+ * @param pattern 例如 项目%1
  */
 FacileMenu *FacileMenu::addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemType config, FuncIntType clicked)
 {
@@ -160,9 +161,10 @@ FacileMenu *FacileMenu::addNumberedActions(QString pattern, int numberStart, int
  * 同上
  * @param config (Item*, int) 其中参数2表示number遍历的位置，不是当前item的index
  */
-FacileMenu *FacileMenu::addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemIntType config, FuncIntType clicked)
+FacileMenu *FacileMenu::addNumberedActions(QString pattern, int numberStart, int numberEnd, FuncItemIntType config, FuncIntType clicked, int step)
 {
-    int step = numberStart <= numberEnd ? 1 : -1;
+    if (!step)
+        step = numberStart <= numberEnd ? 1 : -1;
     for (int i = numberStart; i != numberEnd; i += step)
     {
         auto ac = addAction(pattern.arg(i), [=]{
