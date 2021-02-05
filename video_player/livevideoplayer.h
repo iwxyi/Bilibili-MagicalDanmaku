@@ -36,9 +36,6 @@ public slots:
     void refreshPlayUrl();
     void processFrame(const QVideoFrame &frame);
 
-signals:
-    void signalPlayUrl(QString url);
-
 protected:
     void showEvent(QShowEvent *e) override;
     void hideEvent(QHideEvent *e) override;
@@ -46,6 +43,16 @@ protected:
 
 private slots:
     void on_videoWidget_customContextMenuRequested(const QPoint&);
+
+    void on_playButton_clicked();
+
+    void on_saveCapture5sButton_clicked();
+
+    void on_saveCapture13sButton_clicked();
+
+    void on_saveCapture30sButton_clicked();
+
+    void on_saveCapture60sButton_clicked();
 
 private:
     Ui::LiveVideoPlayer *ui;

@@ -1,6 +1,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QStyle>
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
 #include "facilemenu.h"
@@ -14,24 +15,38 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
+    int uw = qMax(style()->pixelMetric(QStyle::PM_TitleBarHeight), 32);
+    ui->playButton->setFixedSize(uw, uw);
+    ui->saveCapture5sButton->setFixedSize(uw, uw);
+    ui->saveCapture13sButton->setFixedSize(uw, uw);
+    ui->saveCapture30sButton->setFixedSize(uw, uw);
+    ui->saveCapture60sButton->setFixedSize(uw, uw);
+
     player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
-//        qDebug() << "position changed:" << position << player->duration();
+        // 直播的话，一般都是 position=0, duration=0
+        // qDebug() << "position changed:" << position << player->duration();
     });
     player->setVideoOutput(ui->videoWidget);
 
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
-//        qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime() << playList->currentIndex() << playList->mediaCount();
+        if (state == QMediaPlayer::PlayingState)
+        {
+            ui->playButton->setIcon(QIcon(":/icons/pause"));
+        }
+        else if (state == QMediaPlayer::PausedState)
+        {
+            ui->playButton->setIcon(QIcon(":/icons/play"));
+        }
+        // qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime();
     });
-    connect(this, SIGNAL(signalPlayUrl(QString)), this, SLOT(setPlayUrl(QString)));
-
     player->setVolume(settings.value("videoplayer/volume", 50).toInt());
     if (settings.value("videoplayer/fullScreen", false).toBool())
         ui->videoWidget->setFullScreen(true);
 
-//    probe = new QVideoProbe(this);
-//    connect(probe, SIGNAL(videoFrameProbed(const QVideoFrame &)), this, SLOT(processFrame(const QVideoFrame &)));
-//    probe->setSource(player);
+    probe = new QVideoProbe(this);
+    connect(probe, SIGNAL(videoFrameProbed(const QVideoFrame &)), this, SLOT(processFrame(const QVideoFrame &)));
+    probe->setSource(player);
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -100,18 +115,15 @@ void LiveVideoPlayer::refreshPlayUrl()
         }
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
         qDebug() << "playUrl:" << url;
-
-        QTimer::singleShot(0, [=]{
-            emit signalPlayUrl(url);
-        });
+        setPlayUrl(url);
     });
     manager->get(*request);
 }
 
 void LiveVideoPlayer::processFrame(const QVideoFrame &frame)
 {
-//    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~";
-//    qDebug() << frame.size();
+    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+    qDebug() << frame.size();
 }
 
 void LiveVideoPlayer::showEvent(QShowEvent *e)
@@ -166,4 +178,32 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     })->check(!player->volume());
 
     menu->exec();
+}
+
+void LiveVideoPlayer::on_playButton_clicked()
+{
+    if (player->state() == QMediaPlayer::PlayingState)
+        player->pause();
+    else
+        player->play();
+}
+
+void LiveVideoPlayer::on_saveCapture5sButton_clicked()
+{
+
+}
+
+void LiveVideoPlayer::on_saveCapture13sButton_clicked()
+{
+
+}
+
+void LiveVideoPlayer::on_saveCapture30sButton_clicked()
+{
+
+}
+
+void LiveVideoPlayer::on_saveCapture60sButton_clicked()
+{
+
 }

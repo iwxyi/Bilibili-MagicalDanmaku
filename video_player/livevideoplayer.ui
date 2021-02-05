@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>直播流</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -36,6 +36,77 @@
      </property>
     </widget>
    </item>
+   <item>
+    <layout class="QHBoxLayout" name="prevCaptureCheck">
+     <item>
+      <widget class="InteractiveButtonBase" name="playButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../resource.qrc">
+         <normaloff>:/icons/play</normaloff>:/icons/play</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="InteractiveButtonBase" name="saveCapture5sButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
+       </property>
+       <property name="text">
+        <string>5s</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="InteractiveButtonBase" name="saveCapture13sButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
+       </property>
+       <property name="text">
+        <string>13s</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="InteractiveButtonBase" name="saveCapture30sButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
+       </property>
+       <property name="text">
+        <string>30s</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="InteractiveButtonBase" name="saveCapture60sButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;</string>
+       </property>
+       <property name="text">
+        <string>60s</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -45,7 +116,14 @@
    <header>QVideoWidget</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>InteractiveButtonBase</class>
+   <extends>QPushButton</extends>
+   <header>interactivebuttonbase.h</header>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

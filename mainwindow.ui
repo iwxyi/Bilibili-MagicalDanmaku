@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>10</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -449,7 +449,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QCheckBox" name="judgeRobotCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;p&gt;根据关注、粉丝、投稿、作品点赞等数据智能分析，有一定几率存在误判情况，但不影响整体效果&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;p&gt;根据关注、粉丝、投稿、作品点赞等数据智能分析，有一定几率存在误判情况，但不影响整体效果&lt;/p&gt;&lt;p&gt;进来的人很多时，不建议开启，容易出现“请求被拦截”&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>机器人判断</string>
