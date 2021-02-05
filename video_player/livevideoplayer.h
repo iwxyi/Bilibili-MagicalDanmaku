@@ -37,7 +37,7 @@ public slots:
     void slotLiveStart(QString roomId);
     void setPlayUrl(QString url);
     void refreshPlayUrl();
-    void processFrame(const QVideoFrame &frame);
+    void processFrame(QVideoFrame frame);
 
 protected:
     void showEvent(QShowEvent *e) override;

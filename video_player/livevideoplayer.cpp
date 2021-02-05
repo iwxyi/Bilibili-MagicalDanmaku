@@ -16,20 +16,12 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
-    int uw = qMax(style()->pixelMetric(QStyle::PM_TitleBarHeight), 32);
-    ui->playButton->setFixedSize(uw, uw);
-    ui->saveCapture1Button->setFixedSize(uw, uw);
-    ui->saveCapture5sButton->setFixedSize(uw, uw);
-    ui->saveCapture13sButton->setFixedSize(uw, uw);
-    ui->saveCapture30sButton->setFixedSize(uw, uw);
-    ui->saveCapture60sButton->setFixedSize(uw, uw);
-
-    player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
-    connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
-        // 直播的话，一般都是 position=0, duration=0
-        // qDebug() << "position changed:" << position << player->duration();
-    });
+    player = new QMediaPlayer(this);
     player->setVideoOutput(ui->videoWidget);
+
+//    probe = new QVideoProbe;
+//    connect(probe, SIGNAL(videoFrameProbed(QVideoFrame)), this, SLOT(processFrame(QVideoFrame)));
+//    probe->setSource(player);
 
     connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
         if (state == QMediaPlayer::PlayingState)
@@ -47,6 +39,19 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
         }
         // qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime();
     });
+    connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
+        // 直播的话，一般都是 position=0, duration=0
+        // qDebug() << "position changed:" << position << player->duration();
+    });
+
+    // 设置控件大小
+    int uw = qMax(style()->pixelMetric(QStyle::PM_TitleBarHeight), 32);
+    ui->playButton->setFixedSize(uw, uw);
+    ui->saveCapture1Button->setFixedSize(uw, uw);
+    ui->saveCapture5sButton->setFixedSize(uw, uw);
+    ui->saveCapture13sButton->setFixedSize(uw, uw);
+    ui->saveCapture30sButton->setFixedSize(uw, uw);
+    ui->saveCapture60sButton->setFixedSize(uw, uw);
 
     // 设置音量
     player->setVolume(settings.value("videoplayer/volume", 50).toInt());
@@ -62,10 +67,6 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     if (!(enablePrevCapture = settings.value("videoplayer/capture", false).toBool()))
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/capture");
-
-    probe = new QVideoProbe(this);
-    connect(probe, SIGNAL(videoFrameProbed(const QVideoFrame &)), this, SLOT(processFrame(const QVideoFrame &)));
-    probe->setSource(player);
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -141,10 +142,9 @@ void LiveVideoPlayer::refreshPlayUrl()
     manager->get(*request);
 }
 
-void LiveVideoPlayer::processFrame(const QVideoFrame &frame)
+void LiveVideoPlayer::processFrame(QVideoFrame frame)
 {
-    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~";
-    qDebug() << frame.size();
+    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~" << frame.size();
 }
 
 void LiveVideoPlayer::showEvent(QShowEvent *e)
@@ -295,6 +295,7 @@ void LiveVideoPlayer::calcVideoRect()
         videoRect = QRect((size.width() - size.height() * hintProb) / 2, 0,
                           size.height() * hintProb, size.height());
     }
+    videoRect.moveTopLeft(videoRect.topLeft() + ui->videoWidget->pos());
 }
 
 void LiveVideoPlayer::slotSaveCurrentCapture()
@@ -307,7 +308,8 @@ void LiveVideoPlayer::slotSaveCurrentCapture()
 
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     QPixmap* pixmap = new QPixmap(videoRect.size());
-    ui->videoWidget->render(pixmap, QPoint(0, 0), videoRect);
+    // ui->videoWidget->render(pixmap, QPoint(0, 0), videoRect);
+    this->render(pixmap, QPoint(0, 0), videoRect);
     if (!pixmap->isNull())
         capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pixmap));
     // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
@@ -350,10 +352,12 @@ void LiveVideoPlayer::saveCapture()
         return ;
     }
 
-    QPixmap* pixmap = new QPixmap(videoRect.size());
-    ui->videoWidget->render(pixmap, QPoint(0, 0), videoRect);
+    QPixmap pixmap = QPixmap(this->size());
+    pixmap.fill(Qt::transparent);
+    // ui->videoWidget->render(pixmap, QPoint(0, 0), videoRect);
+    this->render(&pixmap, QPoint(0, 0), QRect(0,0,width(), height()));
     captureDir.mkpath(captureDir.absolutePath());
-    pixmap->save(timeToPath(QDateTime::currentMSecsSinceEpoch()));
+    pixmap.save(timeToPath(QDateTime::currentMSecsSinceEpoch()));
 }
 
 void LiveVideoPlayer::saveCapture(int second)
@@ -407,8 +411,7 @@ void LiveVideoPlayer::saveCapture(int second)
             for (int i = start; i < maxSize; i++)
             {
                 auto cap = list->at(i);
-                cap.second->save(dir.absoluteFilePath(timeToFileName(cap.first)), "jpg");
-                qDebug() << "文件位置：" << dir.absoluteFilePath(timeToFileName(cap.first));
+                cap.second->save(dir.absoluteFilePath(timeToFileName(cap.first)) + ".jpg", "jpg");
                 delete cap.second;
             }
             qDebug() << "已保存" << (maxSize-start) << "张预先截图";
