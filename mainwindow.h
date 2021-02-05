@@ -523,7 +523,8 @@ private:
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
     QString processDanmakuVariants(QString msg, LiveDanmaku danmaku) const;
-    QString processVariantConditions(QString msg) const;
+    QString processMsgHeaderConditions(QString msg) const;
+    bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;

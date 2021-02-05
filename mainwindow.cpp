@@ -1081,6 +1081,8 @@ void MainWindow::on_testDanmakuButton_clicked()
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         qDebug() << "条件替换结果：" << words;
+
+        triggerCmdEvent("SEND_GIFT", danmaku);
     }
     else if (text == "测试礼物连击")
     {
@@ -2802,7 +2804,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     for (int i = 0; i < lines.size(); i++)
     {
         QString line = lines.at(i);
-        line = processVariantConditions(line);
+        line = processMsgHeaderConditions(line);
 //        qDebug() << "骚操作后：" << line << "    原始：" << lines.at(i);
         if (!line.isEmpty())
             result.append(line.trimmed());
@@ -3150,7 +3152,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%in_game_users%"))
         msg.replace("%in_game_users%", gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
 
-    // 配置文件
+    // 读取配置文件
     QRegularExpression re("%\\{(\\S+)\\}%");
     QRegularExpressionMatch match;
     while (msg.indexOf(re, 0, &match) > -1)
@@ -3161,7 +3163,16 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
             key = "heaps/" + key;
         QVariant var = settings.value(key);
         msg.replace(_var, var.toString()); // 默认使用变量类型吧
-        qDebug() << msg;
+    }
+
+    // 进行数学计算
+    re = QRegularExpression("%\\[(.+?)\\]%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        QString text = match.captured(1);
+        text = snum(calcIntExpression(text));
+        msg.replace(_var, text); // 默认使用变量类型吧
     }
 
     return msg;
@@ -3173,19 +3184,32 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
  * 要根据时间戳、字符串
  * @return 如果返回空字符串，则不符合；否则返回去掉表达式后的正文
  */
-QString MainWindow::processVariantConditions(QString msg) const
+QString MainWindow::processMsgHeaderConditions(QString msg) const
 {
     QRegularExpression re("^\\s*\\[(.+?)\\]\\s*");
-    QRegularExpression compRe("^\\s*([^<>=!]+?)\\s*([<>=!]{1,2})\\s*([^<>=!]+?)\\s*$");
-    QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
     QRegularExpressionMatch match;
     if (msg.indexOf(re, 0, &match) == -1) // 没有检测到表达式
         return msg;
 
     QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
     QString exprs = match.capturedTexts().at(1);
+
+    if (!processVariantConditions(exprs))
+        return "";
+    return msg.right(msg.length() - totalExp.length());
+}
+
+/**
+ * 判断逻辑条件是否成立
+ * exp1, exp2; exp3
+ */
+bool MainWindow::processVariantConditions(QString exprs) const
+{
     QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
     bool isTrue = false;
+    QRegularExpression compRe("^\\s*([^<>=!]+?)\\s*([<>=!]{1,2})\\s*([^<>=!]+?)\\s*$");
+    QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
+    QRegularExpressionMatch match;
     foreach (QString orExp, orExps)
     {
         isTrue = true;
@@ -3268,10 +3292,7 @@ QString MainWindow::processVariantConditions(QString msg) const
         if (isTrue)
             break;
     }
-
-    if (!isTrue)
-        return "";
-    return msg.right(msg.length() - totalExp.length());
+    return isTrue;
 }
 
 /**
