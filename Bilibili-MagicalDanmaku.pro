@@ -32,13 +32,17 @@ INCLUDEPATH += \
     color_octree/ \
     lucky_draw/ \
     video_player/ \
-    widgets/
+    widgets/ \
+    gif/ \
+    picture_browser/
 
 SOURCES += \
     color_octree/coloroctree.cpp \
     color_octree/imageutil.cpp \
     facile_menu/facilemenu.cpp \
     facile_menu/facilemenuitem.cpp \
+    gif/avilib.cpp \
+    gif/gif.cpp \
     interactive_buttons/interactivebuttonbase.cpp \
     live_danmaku/livedanmakuwindow.cpp \
     lucky_draw/luckydrawwindow.cpp \
@@ -48,6 +52,8 @@ SOURCES += \
     order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
+    picture_browser/picturebrowser.cpp \
+    picture_browser/resizablepicture.cpp \
     server.cpp \
     utils/xfytts.cpp \
     video_player/videosurface.cpp \
@@ -70,6 +76,8 @@ HEADERS += \
     color_octree/imageutil.h \
     facile_menu/facilemenu.h \
     facile_menu/facilemenuitem.h \
+    gif/avilib.h \
+    gif/gif.h \
     interactive_buttons/interactivebuttonbase.h \
     live_danmaku/commonvalues.h \
     live_danmaku/freecopyedit.h \
@@ -87,6 +95,9 @@ HEADERS += \
     order_player/orderplayerwindow.h \
     order_player/roundedpixmaplabel.h \
     order_player/songbeans.h \
+    picture_browser/ASCII_Art.h \
+    picture_browser/picturebrowser.h \
+    picture_browser/resizablepicture.h \
     qhttpserver/qhttpconnection.h \
     qhttpserver/qhttprequest.h \
     qhttpserver/qhttpresponse.h \
@@ -118,6 +129,7 @@ FORMS += \
     mainwindow.ui \
     order_player/logindialog.ui \
     order_player/orderplayerwindow.ui \
+    picture_browser/picturebrowser.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \
     widgets/eternalblockdialog.ui \

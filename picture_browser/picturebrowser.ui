@@ -1,0 +1,794 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PictureBrowser</class>
+ <widget class="QMainWindow" name="PictureBrowser">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>647</width>
+    <height>404</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>图片浏览</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <widget class="QListWidget" name="listWidget">
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="verticalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="horizontalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="movement">
+        <enum>QListView::Static</enum>
+       </property>
+       <property name="viewMode">
+        <enum>QListView::IconMode</enum>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="ResizablePicture" name="previewPicture" native="true"/>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>647</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionOpen_In_Explore"/>
+    <addaction name="actionBack_Prev_Directory"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpen_Directory"/>
+    <addaction name="actionCreate_Folder"/>
+    <addaction name="actionUndo_Delete_Command"/>
+    <addaction name="actionRefresh"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>列表</string>
+    </property>
+    <widget class="QMenu" name="menuSort_Type">
+     <property name="title">
+      <string>排序方式</string>
+     </property>
+     <addaction name="actionSort_By_Time"/>
+     <addaction name="actionSort_By_Name"/>
+     <addaction name="separator"/>
+     <addaction name="actionSort_AESC"/>
+     <addaction name="actionSort_DESC"/>
+    </widget>
+    <widget class="QMenu" name="menuIcon_Size">
+     <property name="title">
+      <string>图标大小</string>
+     </property>
+     <addaction name="actionIcon_Largest"/>
+     <addaction name="actionIcon_Large"/>
+     <addaction name="actionIcon_Middle"/>
+     <addaction name="actionIcon_Small"/>
+     <addaction name="separator"/>
+     <addaction name="actionIcon_Lager"/>
+     <addaction name="actionIcon_Smaller"/>
+    </widget>
+    <widget class="QMenu" name="menuSlide_Interval">
+     <property name="title">
+      <string>播放参数</string>
+     </property>
+     <addaction name="actionSlide_16ms"/>
+     <addaction name="actionSlide_33ms"/>
+     <addaction name="actionSlide_50ms"/>
+     <addaction name="actionSlide_100ms"/>
+     <addaction name="actionSlide_200ms"/>
+     <addaction name="actionSlide_500ms"/>
+     <addaction name="actionSlide_1000ms"/>
+     <addaction name="actionSlide_3000ms"/>
+     <addaction name="separator"/>
+     <addaction name="actionSlide_Return_First"/>
+    </widget>
+    <widget class="QMenu" name="menuGIF_Params">
+     <property name="title">
+      <string>参数设置</string>
+     </property>
+     <addaction name="actionCreate_To_Origin_Folder"/>
+     <addaction name="actionCreate_To_One_Folder"/>
+     <addaction name="separator"/>
+     <addaction name="actionGIF_Use_Record_Interval"/>
+     <addaction name="actionGIF_Use_Display_Interval"/>
+     <addaction name="separator"/>
+     <addaction name="actionGIF_Compress_None"/>
+     <addaction name="actionGIF_Compress_x2"/>
+     <addaction name="actionGIF_Compress_x4"/>
+     <addaction name="actionGIF_Compress_x8"/>
+     <addaction name="separator"/>
+     <addaction name="actionDither_Enabled"/>
+     <addaction name="actionDither_Disabled"/>
+    </widget>
+    <addaction name="menuIcon_Size"/>
+    <addaction name="menuSort_Type"/>
+    <addaction name="separator"/>
+    <addaction name="actionStart_Play_GIF"/>
+    <addaction name="menuSlide_Interval"/>
+    <addaction name="separator"/>
+    <addaction name="actionGeneral_GIF"/>
+    <addaction name="actionGeneral_AVI"/>
+    <addaction name="menuGIF_Params"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>工具</string>
+    </property>
+    <addaction name="actionUnpack_GIF_File"/>
+    <addaction name="actionGIF_ASCII_Art"/>
+    <addaction name="actionFind_Similar"/>
+    <addaction name="actionEmoji_Factory"/>
+    <addaction name="actionImage_Theme_Colors"/>
+    <addaction name="actionBatch_Clip"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>选择</string>
+    </property>
+    <addaction name="actionCopy_File"/>
+    <addaction name="actionOpen_Select_In_Explore"/>
+    <addaction name="separator"/>
+    <addaction name="actionExtra_And_Copy"/>
+    <addaction name="actionExtra_Selected"/>
+    <addaction name="actionExtra_And_Delete"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelect_Reverse"/>
+    <addaction name="actionDelete_Selected"/>
+    <addaction name="actionDelete_Unselected"/>
+    <addaction name="actionDelete_Up_Files"/>
+    <addaction name="actionDelete_Down_Files"/>
+   </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>预览</string>
+    </property>
+    <addaction name="actionZoom_In"/>
+    <addaction name="actionZoom_Out"/>
+    <addaction name="actionRestore_Size"/>
+    <addaction name="separator"/>
+    <addaction name="actionOrigin_Size"/>
+    <addaction name="actionFill_Size"/>
+    <addaction name="separator"/>
+    <addaction name="actionResize_Auto_Init"/>
+    <addaction name="separator"/>
+    <addaction name="actionClip_Selected"/>
+   </widget>
+   <widget class="QMenu" name="menu_6">
+    <property name="title">
+     <string>标记</string>
+    </property>
+    <addaction name="actionMark_Red"/>
+    <addaction name="actionMark_Green"/>
+    <addaction name="actionMark_None"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelect_Red_Marked"/>
+    <addaction name="actionSelect_Green_Marked"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlace_Red_Top"/>
+    <addaction name="actionPlace_Green_Top"/>
+    <addaction name="separator"/>
+    <addaction name="actionSort_Enabled"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_4"/>
+   <addaction name="menu_6"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_5"/>
+   <addaction name="menu_3"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>刷新</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
+  </action>
+  <action name="actionIcon_Largest">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>超大图标</string>
+   </property>
+  </action>
+  <action name="actionIcon_Large">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>大图标</string>
+   </property>
+   <property name="toolTip">
+    <string>Icon Large</string>
+   </property>
+  </action>
+  <action name="actionIcon_Middle">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>中图标</string>
+   </property>
+   <property name="toolTip">
+    <string>Icon Middle</string>
+   </property>
+  </action>
+  <action name="actionIcon_Small">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>小图标</string>
+   </property>
+  </action>
+  <action name="actionFind_Similar">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>检测相似图</string>
+   </property>
+  </action>
+  <action name="actionDelete_Selected">
+   <property name="text">
+    <string>删除选中</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="actionZoom_In">
+   <property name="text">
+    <string>放大图片</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+=</string>
+   </property>
+  </action>
+  <action name="actionZoom_Out">
+   <property name="text">
+    <string>缩小图片</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+-</string>
+   </property>
+  </action>
+  <action name="actionIcon_Lager">
+   <property name="text">
+    <string>更大的图标</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+=</string>
+   </property>
+  </action>
+  <action name="actionIcon_Smaller">
+   <property name="text">
+    <string>更小的图标</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+-</string>
+   </property>
+  </action>
+  <action name="actionFill_Size">
+   <property name="text">
+    <string>填充大小</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+0</string>
+   </property>
+  </action>
+  <action name="actionExtra_Selected">
+   <property name="text">
+    <string>提取到外层</string>
+   </property>
+   <property name="toolTip">
+    <string>提取到外层</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionDelete_Unselected">
+   <property name="text">
+    <string>删除未选中</string>
+   </property>
+  </action>
+  <action name="actionExtra_And_Delete">
+   <property name="text">
+    <string>提取选中并舍弃其他</string>
+   </property>
+   <property name="toolTip">
+    <string>提取选中并删除其他</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionOrigin_Size">
+   <property name="text">
+    <string>原始大小</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
+   </property>
+  </action>
+  <action name="actionOpen_Select_In_Explore">
+   <property name="text">
+    <string>显示在资源管理器</string>
+   </property>
+  </action>
+  <action name="actionOpen_In_Explore">
+   <property name="text">
+    <string>显示当前位置</string>
+   </property>
+  </action>
+  <action name="actionBack_Prev_Directory">
+   <property name="text">
+    <string>返回上一级</string>
+   </property>
+   <property name="shortcut">
+    <string>Backspace</string>
+   </property>
+  </action>
+  <action name="actionCopy_File">
+   <property name="text">
+    <string>复制选中文件</string>
+   </property>
+   <property name="toolTip">
+    <string>复制选中文件，可在资源管理器中粘贴</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionCut_File">
+   <property name="text">
+    <string>剪切选中文件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionDelete_Up_Files">
+   <property name="text">
+    <string>删除前面所有</string>
+   </property>
+  </action>
+  <action name="actionDelete_Down_Files">
+   <property name="text">
+    <string>删除后面所有</string>
+   </property>
+  </action>
+  <action name="actionRestore_Size">
+   <property name="text">
+    <string>还原大小</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+9</string>
+   </property>
+  </action>
+  <action name="actionSort_By_Time">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>按时间</string>
+   </property>
+  </action>
+  <action name="actionSort_By_Name">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>按名称</string>
+   </property>
+  </action>
+  <action name="actionSort_AESC">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>正序</string>
+   </property>
+  </action>
+  <action name="actionSort_DESC">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>反序</string>
+   </property>
+  </action>
+  <action name="actionStart_Play_GIF">
+   <property name="text">
+    <string>自动播放</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionSlide_100ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 0.1s</string>
+   </property>
+  </action>
+  <action name="actionSlide_200ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 0.2s</string>
+   </property>
+  </action>
+  <action name="actionSlide_500ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 0.5s</string>
+   </property>
+  </action>
+  <action name="actionSlide_1000ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 1s</string>
+   </property>
+  </action>
+  <action name="actionSlide_3000ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 3s</string>
+   </property>
+  </action>
+  <action name="actionSlide_Return_First">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>循环播放</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Shift+R</string>
+   </property>
+  </action>
+  <action name="actionSlide_16ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 16ms</string>
+   </property>
+  </action>
+  <action name="actionSlide_33ms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>每隔 33ms</string>
+   </property>
+  </action>
+  <action name="actionMark_Red">
+   <property name="text">
+    <string>红标记</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionMark_Green">
+   <property name="text">
+    <string>绿标记</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="actionMark_None">
+   <property name="text">
+    <string>取消标记</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionSelect_Green_Marked">
+   <property name="text">
+    <string>选中所有绿标记项</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+R</string>
+   </property>
+  </action>
+  <action name="actionSelect_Red_Marked">
+   <property name="text">
+    <string>选中所有红标记项</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+G</string>
+   </property>
+  </action>
+  <action name="actionPlace_Red_Top">
+   <property name="text">
+    <string>置顶所有红标记项</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+R</string>
+   </property>
+  </action>
+  <action name="actionPlace_Green_Top">
+   <property name="text">
+    <string>置顶所有绿标记项</string>
+   </property>
+   <property name="toolTip">
+    <string>置顶所有绿标记项</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+Shift+G</string>
+   </property>
+  </action>
+  <action name="actionEmoji_Factory">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>表情包制作</string>
+   </property>
+  </action>
+  <action name="actionBatch_Clip">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>批量裁剪边缘</string>
+   </property>
+   <property name="toolTip">
+    <string>批量裁剪尺寸</string>
+   </property>
+  </action>
+  <action name="actionImage_Theme_Colors">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>提取主题色</string>
+   </property>
+  </action>
+  <action name="actionOpen_Directory">
+   <property name="text">
+    <string>打开文件夹</string>
+   </property>
+  </action>
+  <action name="actionSelect_Reverse">
+   <property name="text">
+    <string>反向选择</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+I</string>
+   </property>
+  </action>
+  <action name="actionUndo_Delete_Command">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>撤销操作</string>
+   </property>
+   <property name="toolTip">
+    <string>撤销删除/裁剪等文件修改操作</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionGeneral_GIF">
+   <property name="text">
+    <string>生成动图.gif</string>
+   </property>
+  </action>
+  <action name="actionGIF_Use_Record_Interval">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>使用录制时间隔</string>
+   </property>
+  </action>
+  <action name="actionGIF_Use_Display_Interval">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>使用播放时间隔</string>
+   </property>
+  </action>
+  <action name="actionSlide_50ms">
+   <property name="text">
+    <string>每隔 50ms</string>
+   </property>
+  </action>
+  <action name="actionGIF_Compress_x2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>压缩至 1/2 边长</string>
+   </property>
+  </action>
+  <action name="actionGIF_Compress_x4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>压缩至 1/4 边长</string>
+   </property>
+  </action>
+  <action name="actionGIF_Compress_x8">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>压缩至 1/8 边长</string>
+   </property>
+  </action>
+  <action name="actionGIF_Compress_None">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>不压缩</string>
+   </property>
+  </action>
+  <action name="actionUnpack_GIF_File">
+   <property name="text">
+    <string>GIF 分解</string>
+   </property>
+  </action>
+  <action name="actionGIF_ASCII_Art">
+   <property name="text">
+    <string>GIF 字符画</string>
+   </property>
+  </action>
+  <action name="actionDither_Enabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GIF 抖动：开</string>
+   </property>
+  </action>
+  <action name="actionDither_Disabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GIF 抖动：关</string>
+   </property>
+  </action>
+  <action name="actionExtra_And_Copy">
+   <property name="text">
+    <string>复制到外层</string>
+   </property>
+   <property name="toolTip">
+    <string>复制到外层</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionGeneral_AVI">
+   <property name="text">
+    <string>生成视频.avi</string>
+   </property>
+  </action>
+  <action name="actionCreate_To_Origin_Folder">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>保存到源文件夹</string>
+   </property>
+  </action>
+  <action name="actionCreate_To_One_Folder">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>保存到根文件夹</string>
+   </property>
+   <property name="toolTip">
+    <string>保存到外层文件夹</string>
+   </property>
+  </action>
+  <action name="actionResize_Auto_Init">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>调整窗口恢复缩放</string>
+   </property>
+  </action>
+  <action name="actionClip_Selected">
+   <property name="text">
+    <string>按显示区域裁剪选中项</string>
+   </property>
+   <property name="toolTip">
+    <string>以显示部分来裁剪所有选中项</string>
+   </property>
+  </action>
+  <action name="actionSort_Enabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>快速分类</string>
+   </property>
+  </action>
+  <action name="actionCreate_Folder">
+   <property name="text">
+    <string>新建文件夹</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ResizablePicture</class>
+   <extends>QWidget</extends>
+   <header location="global">resizablepicture.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -6,6 +6,7 @@
 #include "livevideoplayer.h"
 #include "ui_livevideoplayer.h"
 #include "facilemenu.h"
+#include "picturebrowser.h"
 
 LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     QDialog(parent),
@@ -91,8 +92,6 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     if (!enablePrevCapture)
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/capture");
-
-    qDebug() << useVideoWidget << enablePrevCapture;
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -264,6 +263,12 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         showCaptureButtons(enablePrevCapture);
         settings.setValue("videoplayer/capture", enablePrevCapture);
     })->check(enablePrevCapture)->disable(useVideoWidget);
+
+    menu->addAction(QIcon(":/icons/dotdotdot"), "截图管理", [=]{
+        PictureBrowser *pb = new PictureBrowser(settings, nullptr);
+        pb->readDirectory(captureDir.absolutePath());
+        pb->show();
+    });
 
     menu->exec();
 }
