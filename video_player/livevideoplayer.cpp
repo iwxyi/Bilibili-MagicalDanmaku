@@ -33,13 +33,14 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
         connect(videoSurface, &VideoSurface::frameAvailable, this, [=](QVideoFrame &frame){
             QVideoFrame cloneFrame(frame);
             cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
-            QImage recvImage(cloneFrame.bits(), cloneFrame.width(), cloneFrame.height(), QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
+            videoSize = cloneFrame.size();
+            QImage recvImage(cloneFrame.bits(), videoSize.width(), videoSize.height(), QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
             cloneFrame.unmap();
             QPixmap pixmap = QPixmap::fromImage(recvImage);
             if (captureRunning)
                 slotSaveFrameCapture(pixmap);
             ui->label->setPixmap(pixmap.scaled(ui->label->size(), Qt::KeepAspectRatio));
-            ui->label->setMinimumSize(1, 1);
+            ui->label->setMinimumSize(QSize(1, 1));
         });
     }
 
@@ -90,6 +91,8 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     if (!enablePrevCapture)
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/capture");
+
+    qDebug() << useVideoWidget << enablePrevCapture;
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -178,13 +181,15 @@ void LiveVideoPlayer::showEvent(QShowEvent *e)
 
 void LiveVideoPlayer::hideEvent(QHideEvent *e)
 {
-    QDialog::hideEvent(e);
     settings.setValue("videoplayer/geometry", this->saveGeometry());
 
     if (player->state() == QMediaPlayer::PlayingState)
     {
         player->pause();
     }
+
+    qDebug() << "hideEvent";
+    QDialog::hideEvent(e);
 }
 
 void LiveVideoPlayer::resizeEvent(QResizeEvent *e)
@@ -213,16 +218,16 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             ->disable(!useVideoWidget);
 
     menu->addAction(QIcon(":/icons/favorite"), "适配缩放", [=]{
-        QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : QSize();
+        QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
         if (size.height() < 10 || size.width() < 10)
             return ;
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
-        QSize minSize = aw->minimumSize();
+        // QSize minSize = aw->minimumSize();
         aw->setFixedSize(size);
         this->layout()->activate();
         this->adjustSize();
-        aw->setMinimumSize(minSize);
-    })->disable(ui->videoWidget->isFullScreen() || !useVideoWidget);
+        aw->setMinimumSize(QSize(1, 1));
+    });
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
@@ -241,11 +246,12 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
 
     menu->split()->addAction(QIcon(), "截图模式", [=]{
         settings.setValue("videoplayer/useVideoWidget", !useVideoWidget);
+        this->close();
+        emit signalRestart();
     })->check(!useVideoWidget);
 
     menu->split()->addAction(QIcon(":/icons/history"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
-        settings.setValue("videoplayer/capture", enablePrevCapture);
         if (enablePrevCapture)
         {
             if (player->state() == QMediaPlayer::PlayingState)
@@ -256,6 +262,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             stopCapture(true);
         }
         showCaptureButtons(enablePrevCapture);
+        settings.setValue("videoplayer/capture", enablePrevCapture);
     })->check(enablePrevCapture)->disable(useVideoWidget);
 
     menu->exec();
@@ -386,7 +393,7 @@ void LiveVideoPlayer::slotSaveCurrentCapture()
 void LiveVideoPlayer::slotSaveFrameCapture(const QPixmap &pixmap)
 {
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    if (timestamp - prevCaptureTimestamp < 30) // 避免太过频繁
+    if (timestamp - prevCaptureTimestamp < 33) // 避免太过频繁，因为是截图，最大30帧就可以了
         return ;
     prevCaptureTimestamp = timestamp;
     QPixmap* pp = new QPixmap(pixmap);
@@ -504,7 +511,7 @@ void LiveVideoPlayer::saveCapture(int second)
 
 void LiveVideoPlayer::showCaptureButtons(bool show)
 {
-    static QList<QWidget*> ws {
+    QList<QWidget*> ws {
         ui->playButton,
                 ui->saveCapture1Button,
                 ui->saveCapture5sButton,

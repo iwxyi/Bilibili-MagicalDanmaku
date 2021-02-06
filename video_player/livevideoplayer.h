@@ -66,6 +66,9 @@ private slots:
 
     void on_label_customContextMenuRequested(const QPoint &pos);
 
+signals:
+    void signalRestart();
+
 private:
     void startCapture();
     void stopCapture(bool clear = false);
@@ -84,6 +87,7 @@ private:
     QMediaPlayer* player;
     bool useVideoWidget = true;
     VideoSurface *videoSurface;
+    QSize videoSize;
 
     qint64 captureMaxLong = 600000;
     QDir captureDir;

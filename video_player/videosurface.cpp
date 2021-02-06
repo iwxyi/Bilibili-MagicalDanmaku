@@ -52,7 +52,7 @@ QList<QVideoFrame::PixelFormat> VideoSurface::supportedPixelFormats(QAbstractVid
     return listPixelFormats;
 }
 
-bool  VideoSurface::present(const QVideoFrame &frame)
+bool VideoSurface::present(const QVideoFrame &frame)
 {
     // Handle the frame and do your processing
     if (frame.isValid())

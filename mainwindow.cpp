@@ -7518,6 +7518,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
 
     LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
     connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
+    connect(player, SIGNAL(signalRestart()), this, SLOT(on_actionShow_Live_Video_triggered()));
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->setWindowTitle(roomTitle + " - " + upName);
