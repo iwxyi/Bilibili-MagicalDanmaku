@@ -9371,3 +9371,13 @@ void MainWindow::on_giveOverdueGiftCheck_clicked()
 {
     settings.setValue("danmaku/giveOverdueGift", ui->giveOverdueGiftCheck->isChecked());
 }
+
+void MainWindow::on_actionPicture_Browser_triggered()
+{
+    if (!pictureBrowser)
+    {
+        pictureBrowser = new PictureBrowser(settings, nullptr);
+        pictureBrowser->readDirectory(QApplication::applicationDirPath() + "/captures");
+    }
+    pictureBrowser->show();
+}

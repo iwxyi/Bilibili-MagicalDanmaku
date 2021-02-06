@@ -36,6 +36,7 @@
 #include "livevideoplayer.h"
 #include "xfytts.h"
 #include "eternalblockdialog.h"
+#include "picturebrowser.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -470,6 +471,8 @@ private slots:
 
     void on_giveOverdueGiftCheck_clicked();
 
+    void on_actionPicture_Browser_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -755,5 +758,8 @@ private:
 
     // 服务端
     QHttpServer *server = nullptr;
+
+    // 截图管理
+    PictureBrowser* pictureBrowser = nullptr;
 };
 #endif // MAINWINDOW_H

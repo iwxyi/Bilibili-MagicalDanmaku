@@ -17,6 +17,7 @@
 #include <QVideoProbe>
 #include <QDir>
 #include "videosurface.h"
+#include "picturebrowser.h"
 
 namespace Ui {
 class LiveVideoPlayer;
@@ -96,8 +97,11 @@ private:
     QRect videoRect;
     QTimer* captureTimer;
     bool captureRunning = false;
+    int captureInterval = 100; // 每秒10帧
     qint64 prevCaptureTimestamp = 0;
     QList<QPair<qint64, QPixmap*>> *capturePixmaps = nullptr;
+
+    PictureBrowser* pictureBrowser = nullptr;
 };
 
 #endif // LIVEVIDEOPLAYER_H

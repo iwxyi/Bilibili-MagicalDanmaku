@@ -49,6 +49,7 @@
         <file alias="github_logo">resources/icons/github_logo.png</file>
         <file alias="cd_up">resources/icons/cd_up.png</file>
         <file alias="directory">resources/icons/directory.png</file>
+        <file alias="fullscreen">resources/icons/fullscreen.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

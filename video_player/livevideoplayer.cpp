@@ -86,12 +86,13 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     captureTimer = new QTimer(this);
     captureTimer->setInterval(100);
     connect(captureTimer, SIGNAL(timeout()), this, SLOT(slotSaveCurrentCapture()));
+    captureInterval = settings.value("videoplayer/captureInterval", 100).toInt();
     enablePrevCapture = settings.value("videoplayer/capture", false).toBool();
     if (useVideoWidget)
         enablePrevCapture = false;
     if (!enablePrevCapture)
         showCaptureButtons(false);
-    captureDir = QDir(QApplication::applicationDirPath() + "/capture");
+    captureDir = QDir(QApplication::applicationDirPath() + "/captures");
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -211,12 +212,12 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         refreshPlayUrl();
     });
 
-    menu->split()->addAction(QIcon(), "全屏播放", [=]{
+    menu->split()->addAction(QIcon(":/icons/fullscreen"), "全屏播放", [=]{
         switchFullScreen();
     })->check(!ui->videoWidget->isHidden() && ui->videoWidget->isFullScreen())
             ->disable(!useVideoWidget);
 
-    menu->addAction(QIcon(":/icons/favorite"), "适配缩放", [=]{
+    menu->addAction(QIcon(":/icons/favorite"), "原画尺寸", [=]{
         QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
         if (size.height() < 10 || size.width() < 10)
             return ;
@@ -226,6 +227,13 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         this->layout()->activate();
         this->adjustSize();
         aw->setMinimumSize(QSize(1, 1));
+    });
+
+    menu->addAction(QIcon(), "适配缩放", [=]{
+        QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
+        if (size.height() < 10 || size.width() < 10)
+            return ;
+        // 根据宽高自动修改窗口大小
     });
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume"), "调节音量");
@@ -249,7 +257,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         emit signalRestart();
     })->check(!useVideoWidget);
 
-    menu->split()->addAction(QIcon(":/icons/history"), "预先截图", [=]{
+    menu->addAction(QIcon(":/icons/history"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
         if (enablePrevCapture)
         {
@@ -264,10 +272,43 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         settings.setValue("videoplayer/capture", enablePrevCapture);
     })->check(enablePrevCapture)->disable(useVideoWidget);
 
+    FacileMenu* frameMenu = menu->addMenu(QIcon(), "捕获帧率");
+    QStringList frameText{"10帧", "30帧", "60帧", "自定义"};
+    int state = 3;
+    if (captureInterval == 100)
+        state = 0;
+    else if (captureInterval == 33)
+        state = 1;
+    else if (captureInterval == 16)
+        state = 2;
+    frameMenu->addOptions(frameText, state, [=](int index){
+        if (index == 0)
+            captureInterval = 100;
+        else if (index == 1)
+            captureInterval = 33;
+        else if (index == 2)
+            captureInterval = 16;
+        else // 自己输入帧率
+        {
+            bool ok = false;
+            double input = QInputDialog::getDouble(this, "设置帧率", "设置每秒钟截图多少次", 1000.0 / captureInterval, 0.0001, 1000, 1, &ok);
+            if (!ok)
+                return ;
+            if (input < 0.0001)
+                input = 0.0001;
+            captureInterval = int(1000.0 / input);
+        }
+        settings.setValue("videoplayer/captureInterval", captureInterval);
+    });
+
     menu->addAction(QIcon(":/icons/dotdotdot"), "截图管理", [=]{
-        PictureBrowser *pb = new PictureBrowser(settings, nullptr);
-        pb->readDirectory(captureDir.absolutePath());
-        pb->show();
+        if (!pictureBrowser)
+        {
+            pictureBrowser = new PictureBrowser(settings, nullptr);
+            pictureBrowser->readDirectory(captureDir.absolutePath());
+        }
+
+        pictureBrowser->show();
     });
 
     menu->exec();
@@ -398,17 +439,19 @@ void LiveVideoPlayer::slotSaveCurrentCapture()
 void LiveVideoPlayer::slotSaveFrameCapture(const QPixmap &pixmap)
 {
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    if (timestamp - prevCaptureTimestamp < 33) // 避免太过频繁，因为是截图，最大30帧就可以了
+    if (timestamp - prevCaptureTimestamp < captureInterval) // 避免太过频繁，因为是截图，最大30帧就可以了
         return ;
     prevCaptureTimestamp = timestamp;
-    QPixmap* pp = new QPixmap(pixmap);
+    QPixmap* pp = new QPixmap(pixmap.copy(pixmap.rect()));
     capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pp));
     // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
 
     while (capturePixmaps->size())
     {
         if (capturePixmaps->first().first + captureMaxLong < timestamp)
+        {
             delete capturePixmaps->takeFirst().second;
+        }
         else
             break;
     }
@@ -503,7 +546,8 @@ void LiveVideoPlayer::saveCapture(int second)
             for (int i = start; i < maxSize; i++)
             {
                 auto cap = list->at(i);
-                cap.second->save(dir.absoluteFilePath(timeToFileName(cap.first)) + ".jpg", "jpg");
+                QString fileName = dir.absoluteFilePath(timeToFileName(cap.first));
+                cap.second->save(fileName + ".jpg", "jpg");
                 delete cap.second;
             }
             qDebug() << "已保存" << (maxSize-start) << "张预先截图";

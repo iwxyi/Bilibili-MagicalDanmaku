@@ -2779,7 +2779,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>499</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -2810,6 +2810,7 @@ margin: 6px;</string>
     <property name="title">
      <string>工具</string>
     </property>
+    <addaction name="actionPicture_Browser"/>
     <addaction name="actionCreate_Video_LRC"/>
     <addaction name="actionGet_Play_Url"/>
     <addaction name="actionRoom_Status"/>
@@ -2997,6 +2998,15 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>直播间状态查询</string>
+   </property>
+  </action>
+  <action name="actionPicture_Browser">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
+   </property>
+   <property name="text">
+    <string>视频截图管理</string>
    </property>
   </action>
  </widget>
