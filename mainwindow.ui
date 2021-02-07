@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1473,7 +1473,7 @@ margin: 6px;</string>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="giveOverdueGiftCheck">
+           <widget class="QCheckBox" name="sendExpireGiftCheck">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有1天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
@@ -2779,7 +2779,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>499</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

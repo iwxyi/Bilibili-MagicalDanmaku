@@ -469,7 +469,7 @@ private slots:
 
     void on_acquireHeartCheck_clicked();
 
-    void on_giveOverdueGiftCheck_clicked();
+    void on_sendExpireGiftCheck_clicked();
 
     void on_actionPicture_Browser_triggered();
 
@@ -519,7 +519,11 @@ private:
     void refreshBlockList();
     bool isInFans(qint64 upUid);
     void sendGift(int giftId, int giftNum);
+    void sendBagGift(int giftId, int giftNum, qint64 bagId);
     void getRoomLiveVideoUrl(StringFunc func = nullptr);
+    void roomEntryAction();
+    void sendExpireGift();
+    void getBagList(qint64 sendExpire = 0);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

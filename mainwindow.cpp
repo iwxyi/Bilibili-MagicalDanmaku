@@ -536,7 +536,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->acquireHeartCheck->setChecked(settings.value("danmaku/acquireHeart", false).toBool());
 
     // 自动赠送过期礼物
-    ui->giveOverdueGiftCheck->setChecked(settings.value("danmaku/giveOverdueGift", false).toBool());
+    ui->sendExpireGiftCheck->setChecked(settings.value("danmaku/sendExpireGift", false).toBool());
 
     // 永久禁言
     QJsonArray eternalBlockArray = settings.value("danmaku/eternalBlockUsers").toJsonArray();
@@ -6689,6 +6689,78 @@ void MainWindow::sendGift(int giftId, int giftNum)
     manager->post(*request, ba);
 }
 
+void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
+{
+    if (roomId.isEmpty() || browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    if (localDebug)
+    {
+//        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+//        return ;
+    }
+
+    QUrl url("https://api.live.bilibili.com/gift/v2/live/bag_send");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "bag_id=" + snum(bagId);
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+//        qDebug() << data;
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "赠送礼物出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        QString message = object.value("message").toString();
+        statusLabel->setText("");
+        if (message != "success")
+        {
+            statusLabel->setText(message);
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+        }
+    });
+
+    manager->post(*request, ba);
+}
+
 void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
     if (roomId.isEmpty())
@@ -6731,6 +6803,147 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         QString url = array.first().toObject().value("url").toString();
         if (func)
             func(url);
+    });
+    manager->get(*request);
+}
+
+/**
+ * 触发进入直播间事件
+ * 偶然看到的，未经测试
+ */
+void MainWindow::roomEntryAction()
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(QUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction"));
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "获取视频流网址出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+    });
+    manager->post(*request, QByteArray());
+}
+
+void MainWindow::sendExpireGift()
+{
+    getBagList(24 * 3600); // 默认赠送一天内过期的
+}
+
+void MainWindow::getBagList(qint64 sendExpire)
+{
+    if (roomId.isEmpty() || browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + roomId;
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        SOCKET_INF << QString(data);
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "获取视频流网址出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        /*{
+            "code": 0,
+            "message": "0",
+            "ttl": 1,
+            "data": {
+                "list": [
+                    {
+                        "bag_id": 232151929,
+                        "gift_id": 30607,
+                        "gift_name": "小心心",
+                        "gift_num": 12,
+                        "gift_type": 5,
+                        "expire_at": 1612972800,
+                        "corner_mark": "4天",
+                        "corner_color": "",
+                        "count_map": [
+                            {
+                                "num": 1,
+                                "text": ""
+                            },
+                            {
+                                "num": 12,
+                                "text": "全部"
+                            }
+                        ],
+                        "bind_roomid": 0,
+                        "bind_room_text": "",
+                        "type": 1,
+                        "card_image": "",
+                        "card_gif": "",
+                        "card_id": 0,
+                        "card_record_id": 0,
+                        "is_show_send": false
+                    },
+                    ......
+        }*/
+
+        QJsonArray bagArray = json.value("data").toObject().value("list").toArray();
+
+        if (sendExpire) // 赠送过期礼物
+        {
+            QList<int> whiteList{1, 6, 30607}; // 辣条、亿圆、小心心
+
+            qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+            qint64 expireTs = timestamp + sendExpire; // 超过这个时间的都送
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                qint64 expire = qint64(bag.value("expire_at").toDouble());
+                int giftId = bag.value("gift_id").toInt();
+                if (!whiteList.contains(giftId) || expire == 0 || expire > expireTs)
+                    continue ;
+
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                qDebug() << "赠送过期礼物：" << giftName << giftId << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
+                sendBagGift(giftId, giftNum, bagId);
+            }
+        }
     });
     manager->get(*request);
 }
@@ -8987,6 +9200,12 @@ void MainWindow::slotStartWork()
     }
 
     ui->actionShow_Live_Video->setEnabled(true);
+
+    // 赠送过期礼物
+    if (ui->sendExpireGiftCheck->isChecked())
+    {
+        sendExpireGift();
+    }
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -9367,9 +9586,15 @@ void MainWindow::on_acquireHeartCheck_clicked()
     settings.setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
 }
 
-void MainWindow::on_giveOverdueGiftCheck_clicked()
+void MainWindow::on_sendExpireGiftCheck_clicked()
 {
-    settings.setValue("danmaku/giveOverdueGift", ui->giveOverdueGiftCheck->isChecked());
+    bool enable = ui->sendExpireGiftCheck->isChecked();
+    settings.setValue("danmaku/sendExpireGift", enable);
+
+    if (enable)
+    {
+        sendExpireGift();
+    }
 }
 
 void MainWindow::on_actionPicture_Browser_triggered()
