@@ -188,7 +188,6 @@ void LiveVideoPlayer::hideEvent(QHideEvent *e)
         player->pause();
     }
 
-    qDebug() << "hideEvent";
     QDialog::hideEvent(e);
 }
 
@@ -218,23 +217,45 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             ->disable(!useVideoWidget);
 
     menu->addAction(QIcon(":/icons/favorite"), "原画尺寸", [=]{
-        QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
-        if (size.height() < 10 || size.width() < 10)
+        QSize hint = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
+        if (hint.height() < 10 || hint.width() < 10)
             return ;
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
         // QSize minSize = aw->minimumSize();
-        aw->setFixedSize(size);
+        aw->setFixedSize(hint);
         this->layout()->activate();
         this->adjustSize();
         aw->setMinimumSize(QSize(1, 1));
     });
 
-    menu->addAction(QIcon(), "适配缩放", [=]{
-        QSize size = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
-        if (size.height() < 10 || size.width() < 10)
+    menu->addAction(QIcon(":/icons/scale"), "适配缩放", [=]{
+        QSize hint = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
+        if (hint.height() < 10 || hint.width() < 10)
             return ;
         // 根据宽高自动修改窗口大小
+        QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
+        int w = aw->width(), h = aw->height();
+        double prob = double(hint.width()) / hint.height(); // 宽高比
+        double p = double(w) / h;
+        int addin = !ui->playButton->isHidden() ? ui->playButton->height() : 0;
+        if (p >= prob) // 更宽，调节宽度
+        {
+            this->resize(h * prob +addin, h);
+        }
+        else // 更高，调节高度
+        {
+            this->resize(w, w / prob);
+        }
     });
+
+    menu->addAction(QIcon(":/icons/on_top"), "窗口置顶", [=]{
+        Qt::WindowFlags flags = windowFlags();
+        if (flags & Qt::WindowStaysOnTopHint)
+            setWindowFlag(Qt::WindowStaysOnTopHint, false);
+        else
+            setWindowFlag(Qt::WindowStaysOnTopHint, true);
+        show();
+    })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
@@ -251,7 +272,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             player->setVolume(settings.value("videoplayer/volume", 50).toInt());
     })->check(!player->volume());
 
-    menu->split()->addAction(QIcon(), "截图模式", [=]{
+    menu->split()->addAction(QIcon(":/icons/capture"), "截图模式", [=]{
         settings.setValue("videoplayer/useVideoWidget", !useVideoWidget);
         this->close();
         emit signalRestart();
@@ -272,7 +293,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         settings.setValue("videoplayer/capture", enablePrevCapture);
     })->check(enablePrevCapture)->disable(useVideoWidget);
 
-    FacileMenu* frameMenu = menu->addMenu(QIcon(), "捕获帧率");
+    FacileMenu* frameMenu = menu->addMenu(QIcon(":/icons/frame"), "捕获帧率");
     QStringList frameText{"10帧", "30帧", "60帧", "自定义"};
     int state = 3;
     if (captureInterval == 100)
@@ -300,6 +321,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
         settings.setValue("videoplayer/captureInterval", captureInterval);
     });
+    frameMenu->lastAction()->disable(useVideoWidget);
 
     menu->addAction(QIcon(":/icons/dotdotdot"), "截图管理", [=]{
         if (!pictureBrowser)

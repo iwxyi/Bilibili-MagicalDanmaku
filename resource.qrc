@@ -50,6 +50,10 @@
         <file alias="cd_up">resources/icons/cd_up.png</file>
         <file alias="directory">resources/icons/directory.png</file>
         <file alias="fullscreen">resources/icons/fullscreen.png</file>
+        <file alias="frame">resources/icons/frame.png</file>
+        <file alias="scale">resources/icons/scale.png</file>
+        <file alias="capture">resources/icons/capture.png</file>
+        <file alias="on_top">resources/icons/on_top.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
