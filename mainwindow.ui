@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>11</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1468,7 +1468,7 @@ margin: 6px;</string>
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>挂机小心心</string>
+             <string>挂机领小心心</string>
             </property>
            </widget>
           </item>

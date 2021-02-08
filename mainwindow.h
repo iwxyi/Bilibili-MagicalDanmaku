@@ -618,8 +618,9 @@ private:
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
 
+    QTimer* xliveHeartBeatTimer = nullptr;
     int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
-    qint64 xliveHeatBeatEts = 0;         // 上次心跳时间戳
+    qint64 xliveHeartBeatEts = 0;        // 上次心跳时间戳
     int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
     QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）

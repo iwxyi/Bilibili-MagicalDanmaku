@@ -1892,12 +1892,6 @@ void MainWindow::initWS()
         else if (socket->state() == QAbstractSocket::UnconnectedState)
             startConnectRoom();
 
-        // 发送获取小心心的心跳包
-        if (!roomId.isEmpty() && !cookieUid.isEmpty() && ui->acquireHeartCheck->isChecked())
-        {
-            sendXliveHeartBeatX();
-        }
-
         // PK Socket
         if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
         {
@@ -1919,6 +1913,12 @@ void MainWindow::initWS()
                 socket->sendBinaryMessage(ba);
             }
         }
+    });
+
+    xliveHeartBeatTimer = new QTimer(this);
+    xliveHeartBeatTimer->setInterval(60000);
+    connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
+        sendXliveHeartBeatX();
     });
 }
 
@@ -1953,9 +1953,10 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::sendXliveHeartBeatE()
 {
+    if (roomId.isEmpty() || cookieUid.isEmpty())
+        return ;
     xliveHeartBeatIndex = 0;
 
-    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~获取小心心E";
     QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
 
     // 建立对象
@@ -1985,7 +1986,7 @@ void MainWindow::sendXliveHeartBeatE()
         manager->deleteLater();
         delete request;
         reply->deleteLater();
-        qDebug() << repBa;
+        // qDebug() << repBa;
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
@@ -2016,9 +2017,12 @@ void MainWindow::sendXliveHeartBeatE()
         }*/
         QJsonObject data = object.value("data").toObject();
         xliveHeartBeatBenchmark = data.value("secret_key").toString();
-        xliveHeatBeatEts = qint64(data.value("timestamp").toDouble());
+        xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+
+        xliveHeartBeatTimer->start();
+        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000);
     });
 
     manager->post(*request, ba);
@@ -2026,8 +2030,6 @@ void MainWindow::sendXliveHeartBeatE()
 
 void MainWindow::sendXliveHeartBeatX()
 {
-    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~获取小心心X";
-
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
@@ -2035,7 +2037,7 @@ void MainWindow::sendXliveHeartBeatX()
                     .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
     postData.insert("ts", timestamp);
-    postData.insert("ets", xliveHeatBeatEts);
+    postData.insert("ets", xliveHeartBeatEts);
     postData.insert("benchmark", xliveHeartBeatBenchmark);
     postData.insert("time", xliveHeartBeatInterval);
     postData.insert("ua", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36");
@@ -2077,7 +2079,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     datas << "id=" + QString("[%1,%2,%3,%4]")
              .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
-    datas << "ets=" + snum(xliveHeatBeatEts);
+    datas << "ets=" + snum(xliveHeartBeatEts);
     datas << "benchmark=" + xliveHeartBeatBenchmark;
     datas << "time=" + snum(xliveHeartBeatInterval);
     datas << "ts=" + snum(timestamp);
@@ -2124,7 +2126,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         }*/
         QJsonObject data = object.value("data").toObject();
         xliveHeartBeatBenchmark = data.value("secret_key").toString();
-        xliveHeatBeatEts = qint64(data.value("timestamp").toDouble());
+        xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
     });
@@ -2744,6 +2746,8 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         // pk_pre_time  pk_start_time  pk_end_time  pk_frozen_time
         QJsonObject pkData = json.value("data").toObject();
         pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
+        qDebug() << static_cast<qint64>(pkData.value("pk_end_time").toDouble())
+                 << static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
 
         QJsonObject initInfo = pkData.value("init_info").toObject();
         QJsonObject matchInfo = pkData.value("match_info").toObject();
@@ -5138,7 +5142,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else if (ui->blockNotOnlyNewbieCheck->isChecked() || (level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
         {
-            // 自动拉黑
+            // 尝试自动拉黑
             if (ui->autoBlockNewbieCheck->isChecked() && !ui->autoBlockNewbieKeysEdit->toPlainText().trimmed().isEmpty())
             {
                 QString reStr = ui->autoBlockNewbieKeysEdit->toPlainText();
@@ -5187,13 +5191,14 @@ void MainWindow::handleMessage(QJsonObject json)
             }
 
             // 提示拉黑
-            if (!blocked)
+            if (!blocked && ui->promptBlockNewbieCheck->isChecked())
             {
                 testTipBlock();
             }
         }
-        else if (ui->notOnlyNewbieCheck->isChecked())
+        else if (ui->promptBlockNewbieCheck->isChecked() && ui->notOnlyNewbieCheck->isChecked())
         {
+            // 提示拉黑
             testTipBlock();
         }
 
@@ -8112,7 +8117,7 @@ void MainWindow::pkStart(QJsonObject json)
     QJsonObject data = json.value("data").toObject();
     pking = true;
     qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
-    qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
+    // qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
     pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
     qint64 deltaEnd = pkEndTime - currentTime;
@@ -8140,7 +8145,7 @@ void MainWindow::pkStart(QJsonObject json)
         if (!pking || roomId != this->roomId) // 比如换房间了
         {
             qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
-                     << QDateTime::currentSecsSinceEpoch() << endTime;
+                     << QDateTime::currentSecsSinceEpoch() << pkEndTime;
             return ;
         }
         slotPkEnding();
@@ -8732,6 +8737,8 @@ void MainWindow::releaseLiveData()
     rankLabel->setToolTip("");
     fansLabel->setText("");
     popularVal = 0;
+
+    xliveHeartBeatTimer->stop();
 
     for (int i = 0; i < CHANNEL_COUNT; i++)
         msgCds[i] = 0;
