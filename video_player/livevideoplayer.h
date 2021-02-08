@@ -100,6 +100,7 @@ private:
     int captureInterval = 100; // 每秒10帧
     qint64 prevCaptureTimestamp = 0;
     QList<QPair<qint64, QPixmap*>> *capturePixmaps = nullptr;
+    Qt::TransformationMode transformation = Qt::FastTransformation;
 
     PictureBrowser* pictureBrowser = nullptr;
 };

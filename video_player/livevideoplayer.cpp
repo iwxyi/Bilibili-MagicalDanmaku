@@ -40,7 +40,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
             QPixmap pixmap = QPixmap::fromImage(recvImage);
             if (captureRunning)
                 slotSaveFrameCapture(pixmap);
-            ui->label->setPixmap(pixmap.scaled(ui->label->size(), Qt::KeepAspectRatio));
+            ui->label->setPixmap(pixmap.scaled(ui->label->size(), Qt::KeepAspectRatio, transformation));
             ui->label->setMinimumSize(QSize(1, 1));
         });
     }
@@ -88,6 +88,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     connect(captureTimer, SIGNAL(timeout()), this, SLOT(slotSaveCurrentCapture()));
     captureInterval = settings.value("videoplayer/captureInterval", 100).toInt();
     enablePrevCapture = settings.value("videoplayer/capture", false).toBool();
+    transformation = (Qt::TransformationMode)settings.value("videoplayer/transformation", 0).toInt();
     if (useVideoWidget)
         enablePrevCapture = false;
     if (!enablePrevCapture)
@@ -199,24 +200,7 @@ void LiveVideoPlayer::resizeEvent(QResizeEvent *e)
 
 void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
 {
-    newFacileMenu;
-    menu->addAction(QIcon(":/icons/play"), "播放", [=]{
-        player->play();
-    })->hide(player->state() == QMediaPlayer::PlayingState);
-    menu->addAction(QIcon(":/icons/pause"), "暂停", [=]{
-        player->pause();
-    })->hide(player->state() != QMediaPlayer::PlayingState);
-
-    menu->addAction(QIcon(":icons/list_circle"), "刷新", [=]{
-        refreshPlayUrl();
-    });
-
-    menu->split()->addAction(QIcon(":/icons/fullscreen"), "全屏播放", [=]{
-        switchFullScreen();
-    })->check(!ui->videoWidget->isHidden() && ui->videoWidget->isFullScreen())
-            ->disable(!useVideoWidget);
-
-    menu->addAction(QIcon(":/icons/favorite"), "原画尺寸", [=]{
+    auto setHd = [=]{
         QSize hint = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
         if (hint.height() < 10 || hint.width() < 10)
             return ;
@@ -226,9 +210,9 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         this->layout()->activate();
         this->adjustSize();
         aw->setMinimumSize(QSize(1, 1));
-    });
+    };
 
-    menu->addAction(QIcon(":/icons/scale"), "适配缩放", [=]{
+    auto setScale = [=]{
         QSize hint = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
         if (hint.height() < 10 || hint.width() < 10)
             return ;
@@ -246,7 +230,28 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         {
             this->resize(w, w / prob);
         }
+    };
+
+    newFacileMenu;
+    menu->addAction(QIcon(":/icons/play2"), "播放", [=]{
+        player->play();
+    })->hide(player->state() == QMediaPlayer::PlayingState);
+    menu->addAction(QIcon(":/icons/pause2"), "暂停", [=]{
+        player->pause();
+    })->hide(player->state() != QMediaPlayer::PlayingState);
+
+    menu->addAction(QIcon(":icons/refresh2"), "刷新", [=]{
+        refreshPlayUrl();
     });
+
+    menu->split()->addAction(QIcon(":/icons/fullscreen"), "全屏播放", [=]{
+        switchFullScreen();
+    })->check((useVideoWidget&& ui->videoWidget->isFullScreen())
+              || (!useVideoWidget && ui->label->isFullScreen()));
+
+    menu->addAction(QIcon(":/icons/hd"), "原画尺寸", setHd);
+
+    menu->addAction(QIcon(":/icons/scale"), "适配缩放", setScale);
 
     menu->addAction(QIcon(":/icons/on_top"), "窗口置顶", [=]{
         Qt::WindowFlags flags = windowFlags();
@@ -257,7 +262,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         show();
     })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
-    FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume"), "调节音量");
+    FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume2"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
         item->check(val == (player->volume()+5) / 10 * 10);
     }, [=](int vol){
@@ -265,7 +270,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         player->setVolume(vol);
     }, 10);
 
-    menu->addAction(QIcon(":/icons/mute"), "一键静音", [=]{
+    menu->addAction(QIcon(":/icons/mute2"), "一键静音", [=]{
         if (player->volume())
             player->setVolume(0);
         else
@@ -278,7 +283,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         emit signalRestart();
     })->check(!useVideoWidget);
 
-    menu->addAction(QIcon(":/icons/history"), "预先截图", [=]{
+    menu->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
         if (enablePrevCapture)
         {
@@ -291,7 +296,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
         showCaptureButtons(enablePrevCapture);
         settings.setValue("videoplayer/capture", enablePrevCapture);
-    })->check(enablePrevCapture)->disable(useVideoWidget);
+    })->check(enablePrevCapture)->hide(useVideoWidget);
 
     FacileMenu* frameMenu = menu->addMenu(QIcon(":/icons/frame"), "捕获帧率");
     QStringList frameText{"10帧", "30帧", "60帧", "自定义"};
@@ -312,7 +317,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         else // 自己输入帧率
         {
             bool ok = false;
-            double input = QInputDialog::getDouble(this, "设置帧率", "设置每秒钟截图多少次", 1000.0 / captureInterval, 0.0001, 1000, 1, &ok);
+            double input = QInputDialog::getDouble(this, "设置帧率", "设置每秒钟截图多少次，越大所占内存越高", 1000.0 / captureInterval, 0.0001, 1000, 1, &ok);
             if (!ok)
                 return ;
             if (input < 0.0001)
@@ -321,9 +326,14 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
         settings.setValue("videoplayer/captureInterval", captureInterval);
     });
-    frameMenu->lastAction()->disable(useVideoWidget);
+    frameMenu->lastAction()->hide(useVideoWidget);
 
-    menu->addAction(QIcon(":/icons/dotdotdot"), "截图管理", [=]{
+    menu->addAction(QIcon(":/icons/linear"), "线性缩放", [=]{
+        transformation = transformation ? Qt::FastTransformation : Qt::SmoothTransformation;
+        settings.setValue("videoplayer/transformation", transformation);
+    })->check(!transformation)->hide(useVideoWidget);
+
+    menu->addAction(QIcon(":/icons/capture_manager"), "截图管理", [=]{
         if (!pictureBrowser)
         {
             pictureBrowser = new PictureBrowser(settings, nullptr);
@@ -331,7 +341,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
 
         pictureBrowser->show();
-    });
+    })->hide(useVideoWidget);
 
     menu->exec();
 }
@@ -388,20 +398,17 @@ void LiveVideoPlayer::switchFullScreen()
     }
     else
     {
-        bool fullScreen = ui->videoWidget->isHidden() || !ui->videoWidget->isFullScreen();
-        if (fullScreen)
+        bool fullScreen = !ui->label->isFullScreen();
+        if (fullScreen) // 切换到fullScreen
         {
-            ui->videoWidget->show();
-            ui->label->hide();
-            player->setVideoOutput(ui->videoWidget);
-            ui->videoWidget->setFullScreen(true);
+            this->layout()->removeWidget(ui->label);
+            ui->label->setWindowFlag(Qt::Window);
+            ui->label->showFullScreen();
         }
         else
         {
-            ui->videoWidget->setFullScreen(false);
-            ui->videoWidget->hide();
-            ui->label->show();
-            player->setVideoOutput(videoSurface);
+            ui->label->setWindowFlag(Qt::Window, false);
+            static_cast<QVBoxLayout*>(this->layout())->insertWidget(1, ui->label, 1);
         }
         settings.setValue("videoplayer/fullScreen", fullScreen);
     }

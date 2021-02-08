@@ -54,6 +54,15 @@
         <file alias="scale">resources/icons/scale.png</file>
         <file alias="capture">resources/icons/capture.png</file>
         <file alias="on_top">resources/icons/on_top.png</file>
+        <file alias="capture_manager">resources/icons/capture_manager.png</file>
+        <file alias="linear">resources/icons/linear.png</file>
+        <file alias="previous">resources/icons/previous.png</file>
+        <file alias="hd">resources/icons/hd.png</file>
+        <file alias="pause2">resources/icons/pause2.png</file>
+        <file alias="play2">resources/icons/play2.png</file>
+        <file alias="refresh2">resources/icons/refresh2.png</file>
+        <file alias="mute2">resources/icons/mute2.png</file>
+        <file alias="volume2">resources/icons/volume2.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
