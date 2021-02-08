@@ -6871,7 +6871,7 @@ void MainWindow::roomEntryAction()
 
 void MainWindow::sendExpireGift()
 {
-    getBagList(24 * 3600); // 默认赠送一天内过期的
+    getBagList(24 * 3600 * 2); // 默认赠送两天内过期的
 }
 
 void MainWindow::getBagList(qint64 sendExpire)
