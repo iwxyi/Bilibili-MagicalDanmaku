@@ -503,6 +503,7 @@ private:
     void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
     void getRoomCover(QString url);
+    QPixmap getRoundedPixmap(QPixmap pixmap) const;
     void getUpFace(QString uid);
     void getUpPortrait(QString face);
     void getDanmuInfo();

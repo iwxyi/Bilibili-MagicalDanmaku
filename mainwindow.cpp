@@ -672,7 +672,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(pixmap);
+        ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
         ui->roomCoverLabel->setMinimumSize(1, 1);
     }
 
@@ -700,6 +700,18 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         replyWidget->resize(size);
         replyWidget->autoResizeEdit();
     }
+
+    /*for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto item = ui->eventListWidget->item(row);
+        auto widget = ui->eventListWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+        auto eventWidget = static_cast<EventWidget*>(widget);
+        eventWidget->resize(size);
+        eventWidget->autoResizeEdit();
+    }*/
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -2158,7 +2170,7 @@ void MainWindow::getRoomCover(QString url)
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(pixmap);
+        ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
         ui->roomCoverLabel->setMinimumSize(1, 1);
 
         // 设置程序主题
@@ -2202,6 +2214,21 @@ void MainWindow::getRoomCover(QString url)
     });
 
     manager->get(*request);
+}
+
+QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
+{
+    QPixmap dest(pixmap.size());
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QRect rect = QRect(0, 0, pixmap.width(), pixmap.height());
+    QPainterPath path;
+    path.addRoundedRect(rect, 5, 5);
+    painter.setClipPath(path);
+    painter.drawPixmap(rect, pixmap);
+    return dest;
 }
 
 void MainWindow::getUpFace(QString uid)

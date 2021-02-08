@@ -61,6 +61,8 @@ private slots:
     void on_saveCapture60sButton_clicked();
 
     void switchFullScreen();
+    void switchOnTop();
+
     void calcVideoRect();
     void slotSaveCurrentCapture();
     void slotSaveFrameCapture(const QPixmap& pixmap);

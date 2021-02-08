@@ -78,6 +78,10 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     // 设置音量
     player->setVolume(settings.value("videoplayer/volume", 50).toInt());
 
+    // 设置置顶
+    if (settings.value("videoplayer/top", false).toBool())
+        switchOnTop();
+
     // 设置全屏
     if (settings.value("videoplayer/fullScreen", false).toBool())
         switchFullScreen();
@@ -244,22 +248,17 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         refreshPlayUrl();
     });
 
-    menu->split()->addAction(QIcon(":/icons/fullscreen"), "全屏播放", [=]{
+    menu->split()->addAction(QIcon(":/icons/hd"), "原画尺寸", setHd);
+
+    menu->addAction(QIcon(":/icons/scale"), "适配缩放", setScale);
+
+    menu->addAction(QIcon(":/icons/fullscreen"), "全屏播放", [=]{
         switchFullScreen();
     })->check((useVideoWidget&& ui->videoWidget->isFullScreen())
               || (!useVideoWidget && ui->label->isFullScreen()));
 
-    menu->addAction(QIcon(":/icons/hd"), "原画尺寸", setHd);
-
-    menu->addAction(QIcon(":/icons/scale"), "适配缩放", setScale);
-
     menu->addAction(QIcon(":/icons/on_top"), "窗口置顶", [=]{
-        Qt::WindowFlags flags = windowFlags();
-        if (flags & Qt::WindowStaysOnTopHint)
-            setWindowFlag(Qt::WindowStaysOnTopHint, false);
-        else
-            setWindowFlag(Qt::WindowStaysOnTopHint, true);
-        show();
+        switchOnTop();
     })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume2"), "调节音量");
@@ -283,8 +282,15 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         emit signalRestart();
     })->check(!useVideoWidget);
 
+    menu->addAction(QIcon(":/icons/linear"), "线性缩放", [=]{
+        transformation = transformation ? Qt::FastTransformation : Qt::SmoothTransformation;
+        settings.setValue("videoplayer/transformation", transformation);
+    })->check(!transformation)->hide(useVideoWidget);
+
     menu->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
+        QSize sz = this->size();
+        int deltaHeight = ui->playButton->height();
         if (enablePrevCapture)
         {
             if (player->state() == QMediaPlayer::PlayingState)
@@ -296,9 +302,13 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
         showCaptureButtons(enablePrevCapture);
         settings.setValue("videoplayer/capture", enablePrevCapture);
+        sz.setHeight(sz.height() + (enablePrevCapture ? deltaHeight : -deltaHeight));
+        if (!this->isMaximized() && !this->isFullScreen())
+            this->resize(sz);
     })->check(enablePrevCapture)->hide(useVideoWidget);
 
     FacileMenu* frameMenu = menu->addMenu(QIcon(":/icons/frame"), "捕获帧率");
+    menu->lastAction()->hide(useVideoWidget);
     QStringList frameText{"10帧", "30帧", "60帧", "自定义"};
     int state = 3;
     if (captureInterval == 100)
@@ -326,12 +336,6 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         }
         settings.setValue("videoplayer/captureInterval", captureInterval);
     });
-    frameMenu->lastAction()->hide(useVideoWidget);
-
-    menu->addAction(QIcon(":/icons/linear"), "线性缩放", [=]{
-        transformation = transformation ? Qt::FastTransformation : Qt::SmoothTransformation;
-        settings.setValue("videoplayer/transformation", transformation);
-    })->check(!transformation)->hide(useVideoWidget);
 
     menu->addAction(QIcon(":/icons/capture_manager"), "截图管理", [=]{
         if (!pictureBrowser)
@@ -393,25 +397,59 @@ void LiveVideoPlayer::switchFullScreen()
     if (useVideoWidget)
     {
         bool fullScreen = !ui->videoWidget->isFullScreen();
+        if (fullScreen && (windowFlags() & Qt::WindowStaysOnTopHint))
+        {
+            switchOnTop();
+            settings.setValue("videoplayer/top", true);
+        }
+        else if (!fullScreen && settings.value("videoplayer/top", false).toBool()
+                  && !(windowFlags() & Qt::WindowStaysOnTopHint))
+        {
+            switchOnTop();
+        }
         ui->videoWidget->setFullScreen(fullScreen);
         settings.setValue("videoplayer/fullScreen", fullScreen);
+
     }
     else
     {
         bool fullScreen = !ui->label->isFullScreen();
         if (fullScreen) // 切换到fullScreen
         {
+            if (windowFlags() & Qt::WindowStaysOnTopHint)
+            {
+                switchOnTop();
+                settings.setValue("videoplayer/top", true);
+            }
+
             this->layout()->removeWidget(ui->label);
             ui->label->setWindowFlag(Qt::Window);
             ui->label->showFullScreen();
         }
         else
         {
+            if (settings.value("videoplayer/top", false).toBool() && !(windowFlags() & Qt::WindowStaysOnTopHint))
+            {
+                switchOnTop();
+            }
+
             ui->label->setWindowFlag(Qt::Window, false);
             static_cast<QVBoxLayout*>(this->layout())->insertWidget(1, ui->label, 1);
         }
         settings.setValue("videoplayer/fullScreen", fullScreen);
     }
+}
+
+void LiveVideoPlayer::switchOnTop()
+{
+    Qt::WindowFlags flags = windowFlags();
+    bool toTop = !(flags & Qt::WindowStaysOnTopHint);
+    if (!toTop)
+        setWindowFlag(Qt::WindowStaysOnTopHint, false);
+    else
+        setWindowFlag(Qt::WindowStaysOnTopHint, true);
+    show();
+    settings.setValue("videoplayer/top", toTop);
 }
 
 /**
