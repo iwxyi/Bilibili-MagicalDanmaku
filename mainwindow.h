@@ -499,6 +499,9 @@ private:
     void getRoomUserInfo();
     void initWS();
     void startConnectRoom();
+    void sendXliveHeartBeatE();
+    void sendXliveHeartBeatX();
+    void sendXliveHeartBeatX(QString s);
     void getRoomInit();
     void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
@@ -608,8 +611,19 @@ private:
     QString roomTitle;
     QPixmap roomCover;
     QPixmap upFace;
-    bool justStart = true; // 启动10秒内不进行发送，避免一些误会
+    QString areaId; // 例：21（整型，为了方便用字符串）
+    QString areaName; // 例：视频唱见
+    QString parentAreaId; // 例：1（整型，为了方便用字符串）
+    QString parentAreaName; // 例：娱乐
+    bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
+
+    int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
+    qint64 xliveHeatBeatEts = 0;         // 上次心跳时间戳
+    int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
+    QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
+    QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
+    QString encServer = "https://1578907340179965.cn-shanghai.fc.aliyuncs.com/2016-08-15/proxy/bili_server/heartbeat/";
 
     // 动画
     double paletteProg = 0;

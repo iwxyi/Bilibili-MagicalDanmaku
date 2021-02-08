@@ -1819,6 +1819,10 @@ void MainWindow::initWS()
         // 定时发送心跳包
         heartTimer->start();
         danmuPopularTimer->start();
+
+        // 发送获取小心心的心跳包
+        if (ui->acquireHeartCheck->isChecked())
+            sendXliveHeartBeatE();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -1888,6 +1892,13 @@ void MainWindow::initWS()
         else if (socket->state() == QAbstractSocket::UnconnectedState)
             startConnectRoom();
 
+        // 发送获取小心心的心跳包
+        if (!roomId.isEmpty() && !cookieUid.isEmpty() && ui->acquireHeartCheck->isChecked())
+        {
+            sendXliveHeartBeatX();
+        }
+
+        // PK Socket
         if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
         {
             QByteArray ba;
@@ -1896,6 +1907,7 @@ void MainWindow::initWS()
             pkSocket->sendBinaryMessage(ba);
         }
 
+        // 机器人 Socket
         for (int i = 0; i < robots_sockets.size(); i++)
         {
             QWebSocket* socket = robots_sockets.at(i);
@@ -1937,6 +1949,185 @@ void MainWindow::startConnectRoom()
     getRoomInfo(true);
     if (ui->enableBlockCheck->isChecked())
         refreshBlockList();
+}
+
+void MainWindow::sendXliveHeartBeatE()
+{
+    xliveHeartBeatIndex = 0;
+
+    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~获取小心心E";
+    QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "id=" + QString("[%1,%2,%3,%4]")
+             .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
+    datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
+    datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
+    datas << "is_patch=0";
+    datas << "heart_beat=[]";
+    datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
+    datas << "visit_id=";
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray repBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+        qDebug() << repBa;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "发送直播心跳出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        if (object.value("code").toInt() != 0)
+        {
+            QString message = object.value("message").toString();
+            statusLabel->setText(message);
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+        }
+
+        /*{
+            "code": 0,
+            "message": "0",
+            "ttl": 1,
+            "data": {
+                "timestamp": 1612765538,
+                "heartbeat_interval": 60,
+                "secret_key": "seacasdgyijfhofiuxoannn",
+                "secret_rule": [2,5,1,4],
+                "patch_status": 2
+            }
+        }*/
+        QJsonObject data = object.value("data").toObject();
+        xliveHeartBeatBenchmark = data.value("secret_key").toString();
+        xliveHeatBeatEts = qint64(data.value("timestamp").toDouble());
+        xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
+        xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+    });
+
+    manager->post(*request, ba);
+}
+
+void MainWindow::sendXliveHeartBeatX()
+{
+    qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~获取小心心X";
+
+    // 获取加密的数据
+    QJsonObject postData;
+    postData.insert("id",  QString("[%1,%2,%3,%4]")
+                    .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
+    postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
+    postData.insert("ts", QDateTime::currentMSecsSinceEpoch());
+    postData.insert("ets", xliveHeatBeatEts);
+    postData.insert("benchmark", xliveHeartBeatBenchmark);
+    postData.insert("time", xliveHeartBeatInterval);
+    postData.insert("ua", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36");
+    postData.insert("csrf_token", csrf_token);
+    postData.insert("csrf", csrf_token);
+    QJsonObject calcText;
+    calcText.insert("t", postData);
+    calcText.insert("r", xliveHeartBeatSecretRule);
+
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(encServer);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray repBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+        qDebug() << "加密直播心跳包数据返回：" << repBa;
+        sendXliveHeartBeatX(QString(repBa));
+    });
+    manager->post(*request, QJsonDocument(calcText).toJson());
+}
+
+void MainWindow::sendXliveHeartBeatX(QString s)
+{
+    QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/X");
+
+    // 建立对象
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "s=" + s;
+    datas << "id=" + QString("[%1,%2,%3,%4]")
+             .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId);
+    datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
+    datas << "ets=" + snum(xliveHeatBeatEts);
+    datas << "benchmark=" + xliveHeartBeatBenchmark;
+    datas << "time=" + snum(xliveHeartBeatInterval);
+    datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
+    datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
+    datas << "visit_id=";
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray repBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+        qDebug() << repBa;
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "发送直播心跳出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject object = document.object();
+        if (object.value("code").toInt() != 0)
+        {
+            QString message = object.value("message").toString();
+            statusLabel->setText(message);
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+        }
+
+        /*{
+            "code": 0,
+            "message": "0",
+            "ttl": 1,
+            "data": {
+                "heartbeat_interval": 60,
+                "timestamp": 1612765598,
+                "secret_rule": [2,5,1,4],
+                "secret_key": "seacasdgyijfhofiuxoannn"
+            }
+        }*/
+        QJsonObject data = object.value("data").toObject();
+        xliveHeartBeatBenchmark = data.value("secret_key").toString();
+        xliveHeatBeatEts = qint64(data.value("timestamp").toDouble());
+        xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
+        xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+    });
+
+    manager->post(*request, ba);
 }
 
 /**
@@ -1995,11 +2186,13 @@ void MainWindow::getRoomInfo(bool reconnect)
             return ;
         }
 
-        // 获取房间信息
         QJsonObject dataObj = json.value("data").toObject();
         QJsonObject roomInfo = dataObj.value("room_info").toObject();
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
-        roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样
+
+
+        // 获取房间信息
+        roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
         ui->roomIdEdit->setText(roomId);
         shortId = QString::number(roomInfo.value("short_id").toInt());
         upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
@@ -2032,6 +2225,11 @@ void MainWindow::getRoomInfo(bool reconnect)
                 qDebug() << "正在大乱斗：" << pkId << pkStatus;
             }
         }
+
+        areaId = snum(roomInfo.value("area_id").toInt());
+        areaName = roomInfo.value("area_name").toString();
+        parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
+        parentAreaName = roomInfo.value("parent_area_name").toString();
 
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -6948,6 +7146,21 @@ void MainWindow::getBagList(qint64 sendExpire)
 
         QJsonArray bagArray = json.value("data").toObject().value("list").toArray();
 
+        if (true)
+        {
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftId = bag.value("gift_id").toInt();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                qDebug() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
+            }
+        }
+
         if (sendExpire) // 赠送过期礼物
         {
             QList<int> whiteList{1, 6, 30607}; // 辣条、亿圆、小心心
@@ -9611,6 +9824,9 @@ void MainWindow::on_outerMusicKeyEdit_textEdited(const QString &arg1)
 void MainWindow::on_acquireHeartCheck_clicked()
 {
     settings.setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
+
+    if (ui->acquireHeartCheck->isChecked())
+        sendXliveHeartBeatE();
 }
 
 void MainWindow::on_sendExpireGiftCheck_clicked()
