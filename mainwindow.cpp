@@ -2028,12 +2028,13 @@ void MainWindow::sendXliveHeartBeatX()
 {
     qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~获取小心心X";
 
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
     postData.insert("id",  QString("[%1,%2,%3,%4]")
                     .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
-    postData.insert("ts", QDateTime::currentMSecsSinceEpoch());
+    postData.insert("ts", timestamp);
     postData.insert("ets", xliveHeatBeatEts);
     postData.insert("benchmark", xliveHeartBeatBenchmark);
     postData.insert("time", xliveHeartBeatInterval);
@@ -2053,13 +2054,13 @@ void MainWindow::sendXliveHeartBeatX()
         manager->deleteLater();
         delete request;
         reply->deleteLater();
-        qDebug() << "加密直播心跳包数据返回：" << repBa;
-        sendXliveHeartBeatX(QString(repBa));
+        // qDebug() << "加密直播心跳包数据返回：" << repBa;
+        sendXliveHeartBeatX(QString(repBa), timestamp);
     });
     manager->post(*request, QJsonDocument(calcText).toJson());
 }
 
-void MainWindow::sendXliveHeartBeatX(QString s)
+void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
 {
     QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/X");
 
@@ -2074,12 +2075,12 @@ void MainWindow::sendXliveHeartBeatX(QString s)
     QStringList datas;
     datas << "s=" + s;
     datas << "id=" + QString("[%1,%2,%3,%4]")
-             .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId);
+             .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ets=" + snum(xliveHeatBeatEts);
     datas << "benchmark=" + xliveHeartBeatBenchmark;
     datas << "time=" + snum(xliveHeartBeatInterval);
-    datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
+    datas << "ts=" + snum(timestamp);
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
     datas << "csrf_token=" + csrf_token;
     datas << "csrf=" + csrf_token;
@@ -2092,7 +2093,7 @@ void MainWindow::sendXliveHeartBeatX(QString s)
         manager->deleteLater();
         delete request;
         reply->deleteLater();
-        qDebug() << repBa;
+        // qDebug() << "心跳包返回：" << repBa;
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
@@ -2106,7 +2107,8 @@ void MainWindow::sendXliveHeartBeatX(QString s)
         {
             QString message = object.value("message").toString();
             statusLabel->setText(message);
-            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+            qCritical() << s8("warning: 发送直播心跳失败：") << message << datas.join("&");
+            return ;
         }
 
         /*{

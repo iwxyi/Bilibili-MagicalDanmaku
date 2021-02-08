@@ -501,7 +501,7 @@ private:
     void startConnectRoom();
     void sendXliveHeartBeatE();
     void sendXliveHeartBeatX();
-    void sendXliveHeartBeatX(QString s);
+    void sendXliveHeartBeatX(QString s, qint64 timestamp);
     void getRoomInit();
     void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
