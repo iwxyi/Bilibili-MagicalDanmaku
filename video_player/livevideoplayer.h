@@ -92,7 +92,7 @@ private:
     VideoSurface *videoSurface;
     QSize videoSize;
 
-    qint64 captureMaxLong = 600000;
+    qint64 captureMaxLong = 60000;
     QDir captureDir;
 
     bool enablePrevCapture = false;

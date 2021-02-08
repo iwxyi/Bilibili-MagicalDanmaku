@@ -2224,8 +2224,9 @@ void MainWindow::getRoomInfo(bool reconnect)
             QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
             if (pkId.toLongLong() > 0 && reconnect)
             {
-                getPkInfoById(roomId, pkId);
+                pking = true;
                 pkVideo = pkStatus == 2;
+                getPkInfoById(roomId, pkId);
                 qDebug() << "正在大乱斗：" << pkId << pkStatus;
             }
         }
@@ -2743,11 +2744,9 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         }
 
         // 获取用户信息
-        // pk_pre_time  pk_start_time  pk_end_time  pk_frozen_time
+        // pk_pre_time  pk_start_time  pk_frozen_time  pk_end_time
         QJsonObject pkData = json.value("data").toObject();
         pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
-        qDebug() << static_cast<qint64>(pkData.value("pk_end_time").toDouble())
-                 << static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
 
         QJsonObject initInfo = pkData.value("init_info").toObject();
         QJsonObject matchInfo = pkData.value("match_info").toObject();
@@ -7164,7 +7163,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                 int giftNum = bag.value("gift_num").toInt();
                 qint64 bagId = qint64(bag.value("bag_id").toDouble());
                 QString cornerMark = bag.value("corner_mark").toString();
-                qDebug() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
+                // qDebug() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
             }
         }
 

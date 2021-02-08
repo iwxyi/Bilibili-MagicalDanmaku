@@ -509,7 +509,8 @@ void LiveVideoPlayer::slotSaveFrameCapture(const QPixmap &pixmap)
     if (timestamp - prevCaptureTimestamp < captureInterval) // 避免太过频繁，因为是截图，最大30帧就可以了
         return ;
     prevCaptureTimestamp = timestamp;
-    QPixmap* pp = new QPixmap(pixmap.copy(pixmap.rect()));
+    QPixmap p = pixmap.copy(pixmap.rect());
+    QPixmap* pp = new QPixmap(p);
     capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pp));
     // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
 
