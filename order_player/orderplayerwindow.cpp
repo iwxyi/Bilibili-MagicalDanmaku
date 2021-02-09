@@ -330,6 +330,11 @@ OrderPlayerWindow::~OrderPlayerWindow()
     desktopLyric->deleteLater();
 }
 
+const SongList &OrderPlayerWindow::getOrderSongs() const
+{
+    return orderSongs;
+}
+
 bool OrderPlayerWindow::hasSongInOrder(QString by)
 {
     foreach (Song song, orderSongs)

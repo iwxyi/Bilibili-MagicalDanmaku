@@ -477,6 +477,10 @@ private slots:
 
     void on_orderSongsToFileCheck_clicked();
 
+    void on_orderSongsToFileFormatEdit_textEdited(const QString &arg1);
+
+    void on_orderSongsToFileMaxSpin_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -578,6 +582,7 @@ private:
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
+    void saveOrderSongs(const SongList& songs);
 
     void pkPre(QJsonObject json);
     void pkStart(QJsonObject json);

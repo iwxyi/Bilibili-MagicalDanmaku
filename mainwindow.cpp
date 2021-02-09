@@ -96,6 +96,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->autoPauseOuterMusicCheck->setChecked(settings.value("danmaku/autoPauseOuterMusic", false).toBool());
     ui->outerMusicKeyEdit->setText(settings.value("danmaku/outerMusicPauseKey").toString());
     ui->orderSongsToFileCheck->setChecked(settings.value("danmaku/orderSongsToFile", false).toBool());
+    ui->orderSongsToFileFormatEdit->setText(settings.value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
+    ui->orderSongsToFileMaxSpin->setValue(settings.value("danmaku/orderSongsToFileMax", 99).toInt());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -4679,6 +4681,39 @@ QString MainWindow::saveCustomVariant()
     return sl.join("\n");
 }
 
+void MainWindow::saveOrderSongs(const SongList &songs)
+{
+    int count = qMin(songs.size(), ui->orderSongsToFileMaxSpin->value());
+    QString format = ui->orderSongsToFileFormatEdit->text();
+
+    // 组合成长文本
+    QStringList sl;
+    for (int i = 0; i < count; i++)
+    {
+        Song song = songs.at(i);
+        QString text = format;
+        text = text.replace("{序号}", snum(i+1))
+                .replace("{歌名}", song.name)
+                .replace("{歌手}", song.artistNames)
+                .replace("{用户}", song.addBy)
+                .replace("{时长}", snum(song.duration/60) + ":" + snum(song.duration%60))
+                .replace("{专辑}", song.album.name);
+        sl.append(text);
+    }
+
+    // 获取路径
+    QDir dir(wwwDir.absoluteFilePath("music"));
+    dir.mkpath(dir.absolutePath());
+
+    // 保存到文件
+    QFile file(dir.absoluteFilePath("songs.txt"));
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+    stream << sl.join("\n");
+    file.flush();
+    file.close();
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = ((uchar)message[8] << 24)
@@ -7871,22 +7906,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongModified, this, [=](const SongList& songs){
             if (ui->orderSongsToFileCheck->isChecked())
             {
-                // 组合成长文本
-                QStringList sl;
-                foreach (Song song, songs)
-                    sl.append(song.name);
-
-                // 获取路径
-                QDir dir(wwwDir.absoluteFilePath("music"));
-                dir.mkpath(dir.absolutePath());
-
-                // 保存到文件
-                QFile file(dir.absoluteFilePath("songs.txt"));
-                file.open(QIODevice::WriteOnly);
-                QTextStream stream(&file);
-                stream << sl.join("\n");
-                file.flush();
-                file.close();
+                saveOrderSongs(songs);
             }
         });
         auto simulateMusicKey = [=]{
@@ -9861,4 +9881,29 @@ void MainWindow::on_actionPicture_Browser_triggered()
 void MainWindow::on_orderSongsToFileCheck_clicked()
 {
     settings.setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
+
+    if (musicWindow && ui->orderSongsToFileCheck->isChecked())
+    {
+        saveOrderSongs(musicWindow->getOrderSongs());
+    }
+}
+
+void MainWindow::on_orderSongsToFileFormatEdit_textEdited(const QString &arg1)
+{
+    settings.setValue("danmaku/orderSongsToFileFormat", arg1);
+
+    if (musicWindow && ui->orderSongsToFileCheck->isChecked())
+    {
+        saveOrderSongs(musicWindow->getOrderSongs());
+    }
+}
+
+void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
+{
+    settings.setValue("danmaku/orderSongsToFileMax", ui->orderSongsToFileMaxSpin->value());
+
+    if (musicWindow && ui->orderSongsToFileCheck->isChecked())
+    {
+        saveOrderSongs(musicWindow->getOrderSongs());
+    }
 }

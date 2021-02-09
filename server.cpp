@@ -130,6 +130,10 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     {
         doc = "<html><head><title>神奇弹幕</title></head><body><h1>服务开启成功！</h1></body></html>";
     }
+    else if (suffix.isEmpty()) // 没有后缀名，也没有特判的
+    {
+        return toIndex();
+    }
     else // 设置文件
     {
         QString filePath = wwwDir.absoluteFilePath(urlPath);

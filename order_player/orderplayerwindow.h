@@ -136,6 +136,7 @@ public:
         SingleCircle
     };
 
+    const SongList& getOrderSongs() const;
     bool hasSongInOrder(QString by);
 
 public slots:
