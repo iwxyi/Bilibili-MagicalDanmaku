@@ -1446,7 +1446,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendCdMsg(s, NOTIFY_CD, EVENT_CD_CN, true, false);
+                sendCdMsg(s, 0, EVENT_CD_CN, true, false);
             }
         }
     });
@@ -2697,8 +2697,8 @@ void MainWindow::analyzeMsgAndCd(QString& msg, int &cd, int &channel) const
         return ;
     QStringList caps = match.capturedTexts();
     QString full = caps.at(0);
-    QString val = caps.at(2);
     QString chann = caps.at(1);
+    QString val = caps.at(2);
     msg = msg.right(msg.length() - full.length());
     cd = val.toInt() * 1000;
     channel = chann.toInt();
