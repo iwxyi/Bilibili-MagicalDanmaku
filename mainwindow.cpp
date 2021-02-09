@@ -1178,9 +1178,9 @@ void MainWindow::on_roomIdEdit_editingFinished()
     // 关闭旧的
     if (socket)
     {
+        liveStatus = false;
         if (socket->state() != QAbstractSocket::UnconnectedState)
             socket->abort();
-        liveStatus = false;
     }
     roomId = ui->roomIdEdit->text();
     settings.setValue("danmaku/roomId", roomId);
@@ -7186,7 +7186,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                 int giftNum = bag.value("gift_num").toInt();
                 qint64 bagId = qint64(bag.value("bag_id").toDouble());
                 QString cornerMark = bag.value("corner_mark").toString();
-                qDebug() << "赠送过期礼物：" << giftName << giftId << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
+                qDebug() << "赠送过期礼物：" << giftId << giftName << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
                 sendBagGift(giftId, giftNum, bagId);
             }
         }
@@ -9153,6 +9153,9 @@ void MainWindow::openServer(int port)
     server = new QHttpServer;
     connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
             this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
+
+    // 设置服务端参数
+    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
 
     qDebug() << "开启服务端：" << port;
     if (!server->listen(static_cast<quint16>(port)))

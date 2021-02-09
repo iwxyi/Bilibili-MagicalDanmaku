@@ -778,6 +778,7 @@ private:
 
     // 服务端
     QHttpServer *server = nullptr;
+    QDir wwwDir;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;
