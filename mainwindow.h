@@ -42,8 +42,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (0) qDebug() // 输出调试信息
-#define SOCKET_INF if (0) qDebug() // 输出数据包信息
+#define SOCKET_DEB if (1) qDebug() // 输出调试信息
+#define SOCKET_INF if (1) qDebug() // 输出数据包信息
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -605,6 +605,13 @@ private:
     void sendPrivateMsg(qint64 uid, QString msg);
 
     void startSplash();
+
+    void get(QString url, NetStringFunc func);
+    void get(QString url, NetJsonFunc func);
+    void get(QString url, NetReplyFunc func);
+    void post(QString url, QStringList params, NetJsonFunc func);
+    void post(QString url, QByteArray ba, NetJsonFunc func);
+    void post(QString url, QByteArray ba, NetReplyFunc func);
 
     void openServer(int port = 0);
     void initServerData();

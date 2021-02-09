@@ -106,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 自动回复
     bool reply = settings.value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
-    ui->AIReplyMsgCheck->setCheckState((Qt::CheckState)settings.value("danmaku/aiReplyMsg", 0).toInt());
+    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(settings.value("danmaku/aiReplyMsg", 0).toInt()));
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings.value("block/enableBlock", false).toBool());
@@ -887,15 +887,6 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         return ;
     }
 
-    QUrl url("https://api.live.bilibili.com/msg/send");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
     // 设置数据（JSON的ByteArray）
     QString s = browserData;
     int posl = s.indexOf("msg=")+4;
@@ -913,21 +904,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     QByteArray ba(s.toStdString().data());
 
     // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "发送弹幕：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QString errorMsg = object.value("message").toString();
+    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
+        QString errorMsg = json.value("message").toString();
         statusLabel->setText("");
         if (!errorMsg.isEmpty())
         {
@@ -936,8 +914,6 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             localNotify(errorMsg + " -> " + msg);
         }
     });
-
-    manager->post(*request, ba);
 }
 
 /**
@@ -1544,27 +1520,7 @@ void MainWindow::getUserInfo()
 {
     if (browserCookie.isEmpty())
         return ;
-    QString url = "http://api.bilibili.com/x/member/web/account";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取用户信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -1577,7 +1533,6 @@ void MainWindow::getUserInfo()
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
     });
-    manager->get(*request);
 }
 
 /**
@@ -1589,26 +1544,7 @@ void MainWindow::getRoomUserInfo()
     if (browserCookie.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + roomId;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取房间用户信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -1622,7 +1558,6 @@ void MainWindow::getRoomUserInfo()
         QString uface = info.value("uface").toString(); // 头像地址
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
     });
-    manager->get(*request);
 }
 
 void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
@@ -1963,14 +1898,7 @@ void MainWindow::sendXliveHeartBeatE()
         return ;
     xliveHeartBeatIndex = 0;
 
-    QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
@@ -1987,24 +1915,10 @@ void MainWindow::sendXliveHeartBeatE()
     QByteArray ba(datas.join("&").toStdString().data());
 
     // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray repBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-        // qDebug() << repBa;
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
-        if (error.error != QJsonParseError::NoError)
+    post(url, ba, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
         {
-            qCritical() << "发送直播心跳出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        if (object.value("code").toInt() != 0)
-        {
-            QString message = object.value("message").toString();
+            QString message = json.value("message").toString();
             statusLabel->setText(message);
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
@@ -2021,7 +1935,7 @@ void MainWindow::sendXliveHeartBeatE()
                 "patch_status": 2
             }
         }*/
-        QJsonObject data = object.value("data").toObject();
+        QJsonObject data = json.value("data").toObject();
         xliveHeartBeatBenchmark = data.value("secret_key").toString();
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
@@ -2030,8 +1944,6 @@ void MainWindow::sendXliveHeartBeatE()
         xliveHeartBeatTimer->start();
         xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000);
     });
-
-    manager->post(*request, ba);
 }
 
 void MainWindow::sendXliveHeartBeatX()
@@ -2053,31 +1965,16 @@ void MainWindow::sendXliveHeartBeatX()
     calcText.insert("t", postData);
     calcText.insert("r", xliveHeartBeatSecretRule);
 
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(encServer);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+    post(encServer, QJsonDocument(calcText).toJson(), [=](QNetworkReply* reply){
         QByteArray repBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
         // qDebug() << "加密直播心跳包数据返回：" << repBa;
         sendXliveHeartBeatX(QString(repBa), timestamp);
     });
-    manager->post(*request, QJsonDocument(calcText).toJson());
 }
 
 void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
 {
-    QUrl url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/X");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/X");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
@@ -2096,24 +1993,10 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     QByteArray ba(datas.join("&").toStdString().data());
 
     // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray repBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-        // qDebug() << "心跳包返回：" << repBa;
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(repBa, &error);
-        if (error.error != QJsonParseError::NoError)
+    post(url, ba, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
         {
-            qCritical() << "发送直播心跳出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        if (object.value("code").toInt() != 0)
-        {
-            QString message = object.value("message").toString();
+            QString message = json.value("message").toString();
             statusLabel->setText(message);
             qCritical() << s8("warning: 发送直播心跳失败：") << message << datas.join("&");
             return ;
@@ -2130,14 +2013,12 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
                 "secret_key": "seacasdgyijfhofiuxoannn"
             }
         }*/
-        QJsonObject data = object.value("data").toObject();
+        QJsonObject data = json.value("data").toObject();
         xliveHeartBeatBenchmark = data.value("secret_key").toString();
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
     });
-
-    manager->post(*request, ba);
 }
 
 /**
@@ -2170,26 +2051,7 @@ void MainWindow::getRoomInit()
 void MainWindow::getRoomInfo(bool reconnect)
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取房间信息出错：" << error.errorString();
-            ui->connectStateLabel->setText("无法获取房间信息");
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -2273,7 +2135,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         if (ui->recordCheck->isChecked() && liveStatus)
             startLiveRecord();
     });
-    manager->get(*request);
+
     if (reconnect)
         ui->connectStateLabel->setText("获取房间信息...");
 }
@@ -2361,13 +2223,8 @@ bool MainWindow::isLivingOrMayliving()
 
 void MainWindow::getRoomCover(QString url)
 {
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
+    get(url, [=](QNetworkReply* reply1){
         QByteArray jpegData = reply1->readAll();
-        manager->deleteLater();
-        delete request;
-        reply1->deleteLater();
 
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
@@ -2421,8 +2278,6 @@ void MainWindow::getRoomCover(QString url)
         // 设置主要界面主题
         ui->tabWidget->setBg(roomCover);
     });
-
-    manager->get(*request);
 }
 
 QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
@@ -2443,22 +2298,7 @@ QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
 void MainWindow::getUpFace(QString uid)
 {
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取主播头像出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -2471,21 +2311,12 @@ void MainWindow::getUpFace(QString uid)
         // 开始下载头像
         getUpPortrait(face);
     });
-    manager->get(*request);
 }
 
 void MainWindow::getUpPortrait(QString face)
 {
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(face);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+    get(face, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
 
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
@@ -2505,28 +2336,12 @@ void MainWindow::getUpPortrait(QString face)
         setWindowIcon(upFace);
         tray->setIcon(upFace);
     });
-    manager->get(*request);
 }
 
 void MainWindow::getDanmuInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+roomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取弹幕信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -2551,33 +2366,13 @@ void MainWindow::getDanmuInfo()
 
         startMsgLoop();
     });
-    manager->get(*request);
     ui->connectStateLabel->setText("获取弹幕信息...");
 }
 
 void MainWindow::getFansAndUpdate()
 {
     QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + upUid;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取粉丝出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         QJsonArray list = json.value("data").toObject().value("list").toArray();
         QList<FanBean> newFans;
         foreach (QJsonValue val, list)
@@ -2667,7 +2462,6 @@ void MainWindow::getFansAndUpdate()
         }
 
     });
-    manager->get(*request);
 }
 
 void MainWindow::getPkInfoById(QString roomId, QString pkId)
@@ -2726,23 +2520,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
     }*/
 
     QString url = "https://api.live.bilibili.com/av/v1/Battle/getInfoById?pk_id="+pkId+"&roomid=" + roomId;\
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取PK信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qDebug() << "PK查询结果不为0：" << json.value("message").toString();
@@ -2794,7 +2572,6 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
             pkVoting = 0;
         });
     });
-    manager->get(*request);
 }
 
 void MainWindow::startMsgLoop()
@@ -4467,15 +4244,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
             qDebug() << "执行命令：" << caps;
-            QNetworkAccessManager* manager = new QNetworkAccessManager;
-            QNetworkRequest* request = new QNetworkRequest(url);
-            connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+            get(url, [=](QNetworkReply* reply){
                 qDebug() << QString(reply->readAll());
-                manager->deleteLater();
-                delete request;
-                reply->deleteLater();
             });
-            manager->get(*request);
             return true;
         }
     }
@@ -4488,14 +4259,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString url = caps.at(1);
             QString data = caps.at(2);
             qDebug() << "执行命令：" << caps;
-            QNetworkAccessManager* manager = new QNetworkAccessManager;
-            QNetworkRequest* request = new QNetworkRequest(url);
-            connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-                manager->deleteLater();
-                delete request;
-                reply->deleteLater();
+            post(url, data.toStdString().data(), [=](QNetworkReply* reply){
+                qDebug() << QString(reply->readAll());
             });
-            manager->post(*request, data.toStdString().data());
             return true;
         }
     }
@@ -6104,25 +5870,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
 
     // 网络判断
     QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取用户粉丝出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
         {
@@ -6150,32 +5898,12 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
                 ifNot(danmaku);
         }
     });
-    manager->get(*request);
 }
 
 void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
 {
     QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies()); // 这个好像需要cookies?
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取用户数据出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
         {
@@ -6205,31 +5933,12 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
             }
         }
     });
-    manager->get(*request);
 }
 
 void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
 {
     QString url = "http://api.vc.bilibili.com/link_draw/v1/doc/upload_count?uid=" + snum(danmaku.getUid());
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取用户投稿出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
         {
@@ -6254,7 +5963,6 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
                 ifNot(danmaku);
         }
     });
-    manager->get(*request);
 }
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
@@ -6389,20 +6097,15 @@ void MainWindow::downloadAndSpeak(QString text)
     QDir dir(filePath);
     dir.mkpath(filePath);
 
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply1){
-        // 保存文件
+    get(url, [=](QNetworkReply* reply1){
         QByteArray fileData = reply1->readAll();
-        manager->deleteLater();
-        delete request;
-        reply1->deleteLater();
-
         if (fileData.isEmpty())
         {
             qWarning() << "网络音频为空";
             return ;
         }
+
+        // 保存文件
         QString path = filePath + "/" + snum(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
         QFile file(path);
         file.open(QFile::WriteOnly);
@@ -6425,8 +6128,6 @@ void MainWindow::downloadAndSpeak(QString text)
         });
         player->play();
     });
-
-    manager->get(*request);
 }
 
 void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
@@ -6831,27 +6532,7 @@ void MainWindow::refreshBlockList()
 
     // 刷新被禁言的列表
     QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取房间禁言出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
         {
@@ -6873,7 +6554,6 @@ void MainWindow::refreshBlockList()
         }
 
     });
-    manager->get(*request);
 }
 
 bool MainWindow::isInFans(qint64 uid)
@@ -6900,14 +6580,6 @@ void MainWindow::sendGift(int giftId, int giftNum)
         return ;
     }
 
-    QUrl url("https://api.live.bilibili.com/gift/v2/Live/send");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
@@ -6931,23 +6603,9 @@ void MainWindow::sendGift(int giftId, int giftNum)
 
     QByteArray ba(datas.join("&").toStdString().data());
 
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-//        qDebug() << data;
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "赠送礼物出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QString message = object.value("message").toString();
+    QString url("https://api.live.bilibili.com/gift/v2/Live/send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
         statusLabel->setText("");
         if (message != "success")
         {
@@ -6955,8 +6613,6 @@ void MainWindow::sendGift(int giftId, int giftNum)
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
-
-    manager->post(*request, ba);
 }
 
 void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
@@ -6972,15 +6628,6 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 //        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
 //        return ;
     }
-
-    QUrl url("https://api.live.bilibili.com/gift/v2/live/bag_send");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
@@ -7003,23 +6650,9 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 
     QByteArray ba(datas.join("&").toStdString().data());
 
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-//        qDebug() << data;
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "赠送礼物出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QString message = object.value("message").toString();
+    QString url("https://api.live.bilibili.com/gift/v2/live/bag_send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
         statusLabel->setText("");
         if (message != "success")
         {
@@ -7027,8 +6660,6 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
-
-    manager->post(*request, ba);
 }
 
 void MainWindow::getRoomLiveVideoUrl(StringFunc func)
@@ -7037,26 +6668,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         return ;
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取视频流网址出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -7074,7 +6686,6 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
         if (func)
             func(url);
     });
-    manager->get(*request);
 }
 
 /**
@@ -7083,33 +6694,15 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
  */
 void MainWindow::roomEntryAction()
 {
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(QUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction"));
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取视频流网址出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction?room_id="
+            + roomId + "&platform=pc&csrf_token=" + csrf_token + "&csrf=" + csrf_token + "&visit_id=";
+    post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
     });
-    manager->post(*request, QByteArray());
 }
 
 void MainWindow::sendExpireGift()
@@ -7124,70 +6717,50 @@ void MainWindow::getBagList(qint64 sendExpire)
         qWarning() << "房间为空，或未登录";
         return ;
     }
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "list": [
+                {
+                    "bag_id": 232151929,
+                    "gift_id": 30607,
+                    "gift_name": "小心心",
+                    "gift_num": 12,
+                    "gift_type": 5,
+                    "expire_at": 1612972800,
+                    "corner_mark": "4天",
+                    "corner_color": "",
+                    "count_map": [
+                        {
+                            "num": 1,
+                            "text": ""
+                        },
+                        {
+                            "num": 12,
+                            "text": "全部"
+                        }
+                    ],
+                    "bind_roomid": 0,
+                    "bind_room_text": "",
+                    "type": 1,
+                    "card_image": "",
+                    "card_gif": "",
+                    "card_id": 0,
+                    "card_record_id": 0,
+                    "is_show_send": false
+                },
+                ......
+    }*/
 
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + roomId;
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取视频流网址出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
-
-        /*{
-            "code": 0,
-            "message": "0",
-            "ttl": 1,
-            "data": {
-                "list": [
-                    {
-                        "bag_id": 232151929,
-                        "gift_id": 30607,
-                        "gift_name": "小心心",
-                        "gift_num": 12,
-                        "gift_type": 5,
-                        "expire_at": 1612972800,
-                        "corner_mark": "4天",
-                        "corner_color": "",
-                        "count_map": [
-                            {
-                                "num": 1,
-                                "text": ""
-                            },
-                            {
-                                "num": 12,
-                                "text": "全部"
-                            }
-                        ],
-                        "bind_roomid": 0,
-                        "bind_room_text": "",
-                        "type": 1,
-                        "card_image": "",
-                        "card_gif": "",
-                        "card_id": 0,
-                        "card_record_id": 0,
-                        "is_show_send": false
-                    },
-                    ......
-        }*/
 
         QJsonArray bagArray = json.value("data").toObject().value("list").toArray();
 
@@ -7230,7 +6803,6 @@ void MainWindow::getBagList(qint64 sendExpire)
             }
         }
     });
-    manager->get(*request);
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -7327,31 +6899,10 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
     }
 
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
                     .arg(roomId).arg(uid).arg(hour).arg(csrf_token).arg(csrf_token);
 
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        qDebug() << "拉黑用户：" << uid << hour << QString(data);
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "添加禁言出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             statusLabel->setText(json.value("message").toString());
@@ -7361,7 +6912,6 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
         qint64 id = static_cast<qint64>(d.value("id").toDouble());
         userBlockIds[uid] = id;
     });
-    manager->post(*request, data.toStdString().data());
 }
 
 void MainWindow::delBlockUser(qint64 uid)
@@ -7388,27 +6938,7 @@ void MainWindow::delBlockUser(qint64 uid)
 
     // 获取直播间的网络ID，再取消屏蔽
     QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "解除屏蔽出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
         {
@@ -7429,17 +6959,12 @@ void MainWindow::delBlockUser(qint64 uid)
         }
 
     });
-    manager->get(*request);
 }
 
 void MainWindow::delRoomBlockUser(qint64 id)
 {
     QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
     int posl = browserData.indexOf("csrf_token=") + 11;
     int posr = browserData.indexOf("&", posl);
     if (posr == -1) posr = browserData.length();
@@ -7447,22 +6972,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
     QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
                     .arg(id).arg(roomId).arg(csrf).arg(csrf);
 
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        qDebug() << "取消用户：" << id << QString(data);
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "解除禁言出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             statusLabel->setText(json.value("message").toString());
@@ -7472,7 +6982,6 @@ void MainWindow::delRoomBlockUser(qint64 id)
         // if (userBlockIds.values().contains(id))
         //    userBlockIds.remove(userBlockIds.key(id));
     });
-    manager->post(*request, data.toStdString().data());
 }
 
 void MainWindow::eternalBlockUser(qint64 uid, QString uname)
@@ -8499,22 +8008,7 @@ void MainWindow::connectPkRoom()
     // ========== 开始连接 ==========
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
     url += "?id="+pkRoomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "连接PK房间出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("pk返回结果不为0：") << json.value("message").toString();
@@ -8536,7 +8030,6 @@ void MainWindow::connectPkRoom()
         pkSocket->setSslConfiguration(config);
         pkSocket->open(host);
     });
-    manager->get(*request);
 }
 
 void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
@@ -8831,26 +8324,7 @@ QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
 void MainWindow::switchMedalTo(qint64 targetRoomId)
 {
     QString url = "https://api.live.bilibili.com/fans_medal/v1/FansMedal/get_list_in_room";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        SOCKET_INF << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取用户信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -8925,45 +8399,20 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
         qDebug() << "未检测到粉丝勋章，无法自动切换";
 
     });
-    manager->get(*request);
 }
 
 void MainWindow::wearMedal(qint64 medalId)
 {
-    QUrl url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    // 设置数据（JSON的ByteArray）
+    QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
     QStringList datas;
     datas << "medal_id=" + QString::number(medalId);
     datas << "csrf_token=" + csrf_token;
     datas << "csrf=" + csrf_token;
     datas << "visit_id=";
-
     QByteArray ba(datas.join("&").toStdString().data());
 
     // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "设置Medal出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QJsonObject json = document.object();
+    post(url, ba, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
@@ -8971,8 +8420,6 @@ void MainWindow::wearMedal(qint64 medalId)
         }
         qDebug() << "佩戴主播粉丝勋章成功";
     });
-
-    manager->post(*request, ba);
 }
 
 /**
@@ -8989,31 +8436,10 @@ void MainWindow::doSign()
         return ;
     }
 
-    QUrl url("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign");
+    QString url("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign");
 
     // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "签到出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
@@ -9029,8 +8455,6 @@ void MainWindow::doSign()
             ui->autoDoSignCheck->setText("每日自动签到");
         });
     });
-
-    manager->get(*request);
 }
 
 void MainWindow::joinLOT(qint64 id, bool follow)
@@ -9046,34 +8470,11 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         return ;
     }
 
-    QUrl url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
+    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
              "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
     qDebug() << "参与天选：" << id << follow << url;
 
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "参加天选出错：" << error.errorString();
-            qCritical() << QString(data);
-            return ;
-        }
-        QJsonObject object = document.object();
-        QJsonObject json = document.object();
+    post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
@@ -9091,8 +8492,6 @@ void MainWindow::joinLOT(qint64 id, bool follow)
             ui->autoLOTCheck->setText("自动参与天选");
         });
     });
-
-    manager->post(*request, QByteArray());
 }
 
 void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
@@ -9102,14 +8501,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
         return ;
     }
 
-    QUrl url("https://api.vc.bilibili.com/web_im/v1/web_im/send_msg");
-
-    // 建立对象
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString url("https://api.vc.bilibili.com/web_im/v1/web_im/send_msg");
 
     QStringList params;
     params << "msg%5Bsender_uid%5D=" + cookieUid;
@@ -9129,22 +8521,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     QByteArray ba(params.join("&").toStdString().data());
 
     // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        qDebug() << "私信发送结果：" << QString(data);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "发送出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject object = document.object();
-        QJsonObject json = document.object();
+    post(url, ba, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             QString msg = json.value("message").toString();
@@ -9152,8 +8529,6 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
             return ;
         }
     });
-
-    manager->post(*request, ba);
 }
 
 void MainWindow::startSplash()
@@ -9188,7 +8563,94 @@ void MainWindow::startSplash()
 #endif
 }
 
+void MainWindow::get(QString url, NetStringFunc func)
+{
+    get(url, [=](QNetworkReply* reply){
+        func(reply->readAll());
+    });
+}
 
+void MainWindow::get(QString url, NetJsonFunc func)
+{
+    get(url, [=](QNetworkReply* reply){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << error.errorString();
+            return ;
+        }
+        func(document.object());
+    });
+}
+
+void MainWindow::get(QString url, NetReplyFunc func)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    if (url.contains("bilibili.com"))
+        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        func(reply);
+
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+    });
+    manager->get(*request);
+}
+
+void MainWindow::post(QString url, QStringList params, NetJsonFunc func)
+{
+    QString data;
+    for (int i = 0; i < params.size(); i++)
+    {
+        if (i & 1) // 用户数据
+            data += QUrl::toPercentEncoding(params.at(i));
+        else // 固定变量
+            data += (i==0?"":"&") + params.at(i) + "=";
+    }
+    QByteArray ba(data.toLatin1());
+    post(url, ba, func);
+}
+
+void MainWindow::post(QString url, QByteArray ba, NetJsonFunc func)
+{
+    post(url, ba, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url;
+            return ;
+        }
+        QJsonObject json = document.object();
+        func(json);
+    });
+}
+
+void MainWindow::post(QString url, QByteArray ba, NetReplyFunc func)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    if (url.contains("bilibili.com"))
+        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+    // 连接槽
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        func(reply);
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+    });
+
+    manager->post(*request, ba);
+}
 
 void MainWindow::on_actionMany_Robots_triggered()
 {
