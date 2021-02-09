@@ -37,6 +37,9 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
+    // 路径
+    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
+
     // 页面
     int tabIndex = settings.value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
@@ -92,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->diangeShuaCheck->setChecked(settings.value("danmaku/diangeShua", true).toBool());
     ui->autoPauseOuterMusicCheck->setChecked(settings.value("danmaku/autoPauseOuterMusic", false).toBool());
     ui->outerMusicKeyEdit->setText(settings.value("danmaku/outerMusicPauseKey").toString());
+    ui->orderSongsToFileCheck->setChecked(settings.value("danmaku/orderSongsToFile", false).toBool());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -7864,6 +7868,27 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             localNotify("已切歌");
             triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name));
         });
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongModified, this, [=](const SongList& songs){
+            if (ui->orderSongsToFileCheck->isChecked())
+            {
+                // 组合成长文本
+                QStringList sl;
+                foreach (Song song, songs)
+                    sl.append(song.name);
+
+                // 获取路径
+                QDir dir(wwwDir.absoluteFilePath("music"));
+                dir.mkpath(dir.absolutePath());
+
+                // 保存到文件
+                QFile file(dir.absoluteFilePath("songs.txt"));
+                file.open(QIODevice::WriteOnly);
+                QTextStream stream(&file);
+                stream << sl.join("\n");
+                file.flush();
+                file.close();
+            }
+        });
         auto simulateMusicKey = [=]{
 #if defined (Q_OS_WIN)
             simulateKeys(ui->outerMusicKeyEdit->text());
@@ -9831,4 +9856,9 @@ void MainWindow::on_actionPicture_Browser_triggered()
         pictureBrowser->readDirectory(QApplication::applicationDirPath() + "/captures");
     }
     pictureBrowser->show();
+}
+
+void MainWindow::on_orderSongsToFileCheck_clicked()
+{
+    settings.setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
 }

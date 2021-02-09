@@ -30,8 +30,6 @@ void MainWindow::initServerData()
         return ;
     first = true;
 
-    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
-
     // 读取Content-Type
     QFile suffixFile(":/documents/content_type");
     suffixFile.open(QIODevice::ReadOnly);

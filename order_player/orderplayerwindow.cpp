@@ -698,6 +698,9 @@ void OrderPlayerWindow::setSongModelToView(const SongList &songs, QListView *lis
         delete model;
     model = new QStringListModel(sl);
     listView->setModel(model);
+
+    if (listView == ui->orderSongsListView)
+        emit signalOrderSongModified(songs);
 }
 
 /**

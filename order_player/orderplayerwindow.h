@@ -288,6 +288,7 @@ signals:
     // 因为目标是作为插件，这些信号是给外面程序连接的
     void signalOrderSongSucceed(Song song, qint64 msecond, int waiting);
     void signalOrderSongPlayed(Song song);
+    void signalOrderSongModified(const SongList& songs);
     void signalOrderSongNoCopyright(Song song);
     void signalOrderSongImproved(Song song, int previous, int current);
     void signalOrderSongCutted(Song song);

@@ -475,6 +475,8 @@ private slots:
 
     void on_actionPicture_Browser_triggered();
 
+    void on_orderSongsToFileCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
