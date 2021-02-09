@@ -1446,7 +1446,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendCdMsg(s, NOTIFY_CD_CN, EVENT_CD_CN, true, false);
+                sendCdMsg(s, NOTIFY_CD, EVENT_CD_CN, true, false);
             }
         }
     });
