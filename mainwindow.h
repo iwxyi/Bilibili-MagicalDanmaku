@@ -42,8 +42,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (1) qDebug() // 输出调试信息
-#define SOCKET_INF if (1) qDebug() // 输出数据包信息
+#define SOCKET_DEB if (0) qDebug() // 输出调试信息
+#define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
