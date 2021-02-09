@@ -1,7 +1,4 @@
 <RCC>
-    <qresource prefix="/document">
-        <file alias="pinyin">document/pinyin.txt</file>
-    </qresource>
     <qresource prefix="/icons">
         <file alias="volume">resources/icons/volume.png</file>
         <file alias="list_circle">resources/icons/list_circle.png</file>
@@ -97,5 +94,9 @@
         <file alias="word">resources/danmaku/word.png</file>
         <file alias="gift">resources/danmaku/gift.png</file>
         <file alias="block2">resources/danmaku/block2.png</file>
+    </qresource>
+    <qresource prefix="/documents">
+        <file alias="content_type">resources/documents/content_type.txt</file>
+        <file alias="pinyin">resources/documents/pinyin.txt</file>
     </qresource>
 </RCC>

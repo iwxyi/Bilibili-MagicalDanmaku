@@ -600,6 +600,7 @@ private:
     void startSplash();
 
     void openServer(int port = 0);
+    void initServerData();
     void closeServer();
 
 private:
@@ -781,6 +782,7 @@ private:
     // 服务端
     QHttpServer *server = nullptr;
     QDir wwwDir;
+    QHash<QString, QString> contentTypeMap;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

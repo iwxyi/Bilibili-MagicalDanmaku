@@ -13,13 +13,41 @@ void MainWindow::openServer(int port)
             this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
 
     // 设置服务端参数
-    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
+    initServerData();
 
     qDebug() << "开启服务端：" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
         ui->serverCheck->setChecked(false);
         statusLabel->setText("开启服务端失败！");
+    }
+}
+
+void MainWindow::initServerData()
+{
+    static bool first = true;
+    if (!first) // 懒加载
+        return ;
+    first = true;
+
+    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
+
+    // 读取Content-Type
+    QFile suffixFile(":/documents/content_type");
+    suffixFile.open(QIODevice::ReadOnly);
+    QTextStream suffixIn(&suffixFile);
+    suffixIn.setCodec("UTF-8");
+    QString line = suffixIn.readLine();
+    while (!line.isNull())
+    {
+        QStringList sl = line.split(" ");
+        if (sl.size() == 2)
+        {
+            QString suffix = sl.at(0);
+            QString contentType = sl.at(1);
+            contentTypeMap.insert(suffix, contentType);
+        }
+        line = suffixIn.readLine();
     }
 }
 
@@ -45,7 +73,6 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 
 void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp)
 {
-    resp->setHeader("Content-Type", "text/html;charset=utf-8");
     QByteArray doc;
 
     auto errorResp = [=](QByteArray err, QHttpResponse::StatusCode code = QHttpResponse::STATUS_BAD_REQUEST) -> void {
@@ -71,20 +98,27 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     auto isFileType = [=](QString types) -> bool {
         if (suffix.isEmpty())
             return false;
-        return types.indexOf(suffix);
+        return types.indexOf(suffix) > -1;
     };
+
+    // 内容类型
+    QString contentType = suffix.isEmpty() ? "text/html"
+                                           : contentTypeMap.value(suffix, "application/octet-stream");
+    if (contentType.startsWith("text/"))
+        contentType += ";charset=utf-8";
+    resp->setHeader("Content-Type", contentType);
 
     // 开始特判
     if (urlPath == "danmaku") // 弹幕姬
     {
         if (!danmakuWindow)
-            return errorResp("弹幕姬未开启");
+            return errorResp("弹幕姬未开启", QHttpResponse::STATUS_SERVICE_UNAVAILABLE);
         return toIndex();
     }
     else if (urlPath == "music") // 点歌姬
     {
         if (!musicWindow)
-            return errorResp("点歌姬未开启");
+            return errorResp("点歌姬未开启", QHttpResponse::STATUS_SERVICE_UNAVAILABLE);
         return toIndex();
     }
     else if (urlPath == "favicon.ico")
@@ -107,7 +141,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
             qWarning() << "文件：" << filePath << "不存在";
             return errorStr("路径：" + urlPath + " 无法访问！", QHttpResponse::STATUS_NOT_FOUND);
         }
-        else if (isFileType("png|jpg|jpeg|bmp")) // 图片文件
+        else if (isFileType("png|jpg|jpeg|bmp|gif")) // 图片文件
         {
             QByteArray imageType = "png";
             if (suffix == "gif")
@@ -118,8 +152,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
             // 图片文件，需要特殊加载
             QBuffer buffer(&doc);
             buffer.open(QIODevice::WriteOnly);
-            QPixmap(filePath).save(&buffer);
-            resp->setHeader("Content-Type", "image/" + imageType);
+            QPixmap(filePath).save(&buffer, "png"); //  必须要加format，默认的无法显示
         }
         else // 不需要处理或者未知类型的文件
         {
@@ -127,16 +160,10 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
             file.open(QIODevice::ReadOnly | QIODevice::Text);
             doc = file.readAll();
             file.close();
-
-            if (isFileType("html|html"))
-                resp->setHeader("Content-Type", "text/html");
-            else if (isFileType("xml"))
-                resp->setHeader("Content-Type", "text/xml");
-            else if (isFileType("txt|js|css"))
-                resp->setHeader("Content-Type", "text/plain");
         }
     }
 
+    // 开始返回
     resp->setHeader("Content-Length", snum(doc.size()));
     resp->writeHead(QHttpResponse::STATUS_OK);
     resp->write(doc);

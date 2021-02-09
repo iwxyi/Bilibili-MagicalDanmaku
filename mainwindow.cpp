@@ -450,7 +450,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 读取拼音1
     QtConcurrent::run([=]{
-        QFile pinyinFile(":/document/pinyin");
+        QFile pinyinFile(":/documents/pinyin");
         pinyinFile.open(QIODevice::ReadOnly);
         QTextStream pinyinIn(&pinyinFile);
         pinyinIn.setCodec("UTF-8");
