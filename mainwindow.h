@@ -606,6 +606,13 @@ private:
 
     void startSplash();
 
+    void get(QString url, NetStringFunc func);
+    void get(QString url, NetJsonFunc func);
+    void get(QString url, NetReplyFunc func);
+    void post(QString url, QStringList params, NetJsonFunc func);
+    void post(QString url, QByteArray ba, NetJsonFunc func);
+    void post(QString url, QByteArray ba, NetReplyFunc func);
+
     void openServer(int port = 0);
     void initServerData();
     void closeServer();
