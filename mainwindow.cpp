@@ -9143,35 +9143,7 @@ void MainWindow::startSplash()
 #endif
 }
 
-void MainWindow::openServer(int port)
-{
-    if (!port)
-        port = ui->serverPortSpin->value();
-    if (port < 1000 || port > 65535)
-        port = 5520;
 
-    server = new QHttpServer;
-    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
-            this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
-
-    // 设置服务端参数
-    wwwDir = QDir(QApplication::applicationDirPath() + "/www");
-
-    qDebug() << "开启服务端：" << port;
-    if (!server->listen(static_cast<quint16>(port)))
-    {
-        ui->serverCheck->setChecked(false);
-        statusLabel->setText("开启服务端失败！");
-    }
-}
-
-void MainWindow::closeServer()
-{
-    qDebug() << "关闭服务端";
-    // server->close(); // 这个不是关闭端口的……
-    server->deleteLater();
-    server = nullptr;
-}
 
 void MainWindow::on_actionMany_Robots_triggered()
 {

@@ -459,6 +459,8 @@ private slots:
 
     void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
+    void serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp);
+
     void on_serverCheck_clicked();
 
     void on_serverPortSpin_valueChanged(int arg1);
