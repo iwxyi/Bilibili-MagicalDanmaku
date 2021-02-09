@@ -24,6 +24,7 @@
 #include <qhttpserver.h>
 #include <qhttprequest.h>
 #include <qhttpresponse.h>
+#include <QTcpServer>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -60,6 +61,10 @@ QT_END_NAMESPACE
 #define TASK_CD_CN 4       // 定时任务冷却通道
 #define REPLY_CD_CN 5      // 自动回复冷却通道
 #define EVENT_CD_CN 6      // 事件动作冷却通道
+
+#define SERVER_PORT 0
+#define DANMU_SERVER_PORT 1
+#define MUSIC_SERVER_PORT 2
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -617,6 +622,10 @@ private:
     void initServerData();
     void closeServer();
 
+    void initMusicServer();
+    QByteArray getOrderSongsByteArray(const SongList& songs);
+    void sendMusicList(const SongList& songs);
+
 private:
     Ui::MainWindow *ui;
     QSettings settings;
@@ -795,8 +804,12 @@ private:
 
     // 服务端
     QHttpServer *server = nullptr;
+    qint16 serverPort = 0;
     QDir wwwDir;
     QHash<QString, QString> contentTypeMap;
+
+    QTcpServer* musicServer = nullptr;
+    QList<QTcpSocket*> musicSockets;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

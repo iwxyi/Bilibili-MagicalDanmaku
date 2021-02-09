@@ -6448,30 +6448,6 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605748006
         }*/
     }
-    else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的抽奖，触发未知，实测在某次大乱斗送天空之翼后有
-    {
-        /*{
-            "cmd": "PK_LOTTERY_START",
-            "data": {
-                "asset_animation_pic": "https://i0.hdslb.com/bfs/vc/03be4c2912a4bd9f29eca3dac059c0e3e3fc69ce.gif",
-                "asset_icon": "https://i0.hdslb.com/bfs/vc/44c367b09a8271afa22853785849e65797e085a1.png",
-                "from_user": {
-                    "face": "http://i2.hdslb.com/bfs/face/f25b706762e00a9adfe13e6147650891dd6f69a0.jpg",
-                    "uid": 688893202,
-                    "uname": "娇娇子er"
-                },
-                "id": 200105856,
-                "max_time": 120,
-                "pk_id": 200105856,
-                "room_id": 22532956,
-                "thank_text": "恭喜<%娇娇子er%>赢得大乱斗PK胜利",
-                "time": 120,
-                "time_wait": 0,
-                "title": "恭喜主播大乱斗胜利",
-                "weight": 0
-            }
-        }*/
-    }
     else
     {
         return false;
@@ -6526,6 +6502,30 @@ bool MainWindow::handlePK2(QJsonObject json)
             "pk_status": 101,
             "roomid": 22532956,
             "timestamp": 1611152119
+        }*/
+    }
+    else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的抽奖，触发未知，实测在某次大乱斗送天空之翼后有
+    {
+        /*{
+            "cmd": "PK_LOTTERY_START",
+            "data": {
+                "asset_animation_pic": "https://i0.hdslb.com/bfs/vc/03be4c2912a4bd9f29eca3dac059c0e3e3fc69ce.gif",
+                "asset_icon": "https://i0.hdslb.com/bfs/vc/44c367b09a8271afa22853785849e65797e085a1.png",
+                "from_user": {
+                    "face": "http://i2.hdslb.com/bfs/face/f25b706762e00a9adfe13e6147650891dd6f69a0.jpg",
+                    "uid": 688893202,
+                    "uname": "娇娇子er"
+                },
+                "id": 200105856,
+                "max_time": 120,
+                "pk_id": 200105856,
+                "room_id": 22532956,
+                "thank_text": "恭喜<%娇娇子er%>赢得大乱斗PK胜利",
+                "time": 120,
+                "time_wait": 0,
+                "title": "恭喜主播大乱斗胜利",
+                "weight": 0
+            }
         }*/
     }
     else
@@ -7433,6 +7433,10 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             {
                 saveOrderSongs(songs);
             }
+            if (musicServer)
+            {
+                sendMusicList(songs);
+            }
         });
         auto simulateMusicKey = [=]{
 #if defined (Q_OS_WIN)
@@ -7450,6 +7454,9 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                 settings.setValue("danmaku/playerWindow", false);
             });
         });
+
+        if (ui->serverCheck->isChecked() && !musicServer)
+            initMusicServer();
     }
 
     bool hidding = musicWindow->isHidden();

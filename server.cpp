@@ -5,8 +5,9 @@ void MainWindow::openServer(int port)
 {
     if (!port)
         port = ui->serverPortSpin->value();
-    if (port < 1000 || port > 65535)
+    if (port < 1 || port > 65535)
         port = 5520;
+    serverPort = qint16(port);
 
     server = new QHttpServer;
     connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
@@ -15,7 +16,10 @@ void MainWindow::openServer(int port)
     // 设置服务端参数
     initServerData();
 
-    qDebug() << "开启服务端：" << port;
+    if (musicWindow && !musicServer)
+        initMusicServer();
+
+    qDebug() << "开启总服务器" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
         ui->serverCheck->setChecked(false);
@@ -55,6 +59,87 @@ void MainWindow::closeServer()
     // server->close(); // 这个不是关闭端口的……
     server->deleteLater();
     server = nullptr;
+
+    if (musicServer)
+    {
+        musicServer->close();
+        musicServer->deleteLater();
+        musicServer = nullptr;
+
+        foreach (QTcpSocket* socket, musicSockets) {
+            socket->close();
+            socket->deleteLater();
+        }
+        musicSockets.clear();
+    }
+}
+
+void MainWindow::initMusicServer()
+{
+    if (musicServer)
+        return ;
+
+    musicServer = new QTcpServer(this);
+    if (!musicServer->listen(QHostAddress::LocalHost, quint16(serverPort + MUSIC_SERVER_PORT)))
+    {
+        qWarning() << "点歌姬服务开启失败，端口：" << quint16(serverPort + MUSIC_SERVER_PORT);
+        delete musicServer;
+        musicServer = nullptr;
+        return ;
+    }
+    qDebug() << "开启点歌姬服务" << quint16(serverPort + MUSIC_SERVER_PORT);
+
+    connect(musicServer, &QTcpServer::newConnection, this, [=]{
+        QTcpSocket *clientSocket = musicServer->nextPendingConnection();
+        qDebug() << "music socket 接入" << clientSocket->peerName()
+                 << clientSocket->peerAddress() << clientSocket->peerPort();
+        musicSockets.append(clientSocket);
+
+        connect(clientSocket, &QTcpSocket::connected, this, [=]{
+            qDebug() << "client connected" << musicSockets.size();
+        });
+        connect(clientSocket, &QTcpSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+            qDebug() << "client state" << state;
+        });
+        connect(clientSocket, &QTcpSocket::readyRead, this, [=](){
+            qDebug() << "client readyRead";
+            QByteArray buffer;
+            //读取缓冲区数据
+            buffer = clientSocket->readAll();
+            if(!buffer.isEmpty())
+            {
+                QString command =  QString::fromLocal8Bit(buffer);
+                qDebug() << command;
+            }
+
+            clientSocket->write("OK");
+        });
+        connect(clientSocket, &QTcpSocket::disconnected, this, [=]{
+            musicSockets.removeOne(clientSocket);
+            clientSocket->deleteLater();
+            qDebug() << "music socket 关闭" << musicSockets.size();
+        });
+    });
+
+}
+
+QByteArray MainWindow::getOrderSongsByteArray(const SongList &songs)
+{
+    QJsonObject json;
+    QJsonArray array;
+    foreach (Song song, songs)
+        array.append(song.toJson());
+    json.insert("songs", array);
+    return QJsonDocument(json).toJson();
+}
+
+void MainWindow::sendMusicList(const SongList& songs)
+{
+    QByteArray ba = getOrderSongsByteArray(songs);
+    foreach (QTcpSocket* socket, musicSockets)
+    {
+       socket->write(ba);
+    }
 }
 
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
