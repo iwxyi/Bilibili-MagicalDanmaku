@@ -4843,10 +4843,13 @@ void MainWindow::handleMessage(QJsonObject json)
         emit signalLiveStart(roomId);
 
         if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        {
+            qDebug() << "忽视PK导致的开播情况";
             return ;
-        QString roomId = json.value("roomid").toString();
-        if (roomId.isEmpty())
-            roomId = QString::number(static_cast<qint64>(json.value("roomid").toDouble()));
+        }
+//        QString roomId = json.value("roomid").toString();
+//        if (roomId.isEmpty())
+//            roomId = QString::number(static_cast<qint64>(json.value("roomid").toDouble()));
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->startLiveWordsEdit->text();
@@ -8291,7 +8294,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
 bool MainWindow::shallAutoMsg() const
 {
-    return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveStatus && popularVal > 1);
+    return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveStatus /*&& popularVal > 1*/);
 }
 
 void MainWindow::releaseLiveData()
