@@ -301,9 +301,9 @@
 | guard_buy        | 是否为购买舰长的通知     | 没有瓜子，gift_name为舰长/提督/总督           |
 | total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量            |
 | total_silver     | 用户总共银瓜子           | 同上                                          |
-| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕、礼物才有粉丝牌                    |
-| medal_name       | 粉丝牌名称               |                                               |
-| medal_level      | 粉丝牌等级               |                                               |
+| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字  |
+| medal_name       | 粉丝牌名称               | 同上                                          |
+| medal_level      | 粉丝牌等级               | 同上                                          |
 | medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                |
 | nickname_len     | 昵称长度                 |                                               |
 | giftname_len     | 礼物名字长度             |                                               |

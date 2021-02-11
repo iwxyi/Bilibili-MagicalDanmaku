@@ -894,6 +894,7 @@ void LiveDanmakuWindow::showMenu()
 
     QMenu* operMenu = new QMenu("文字", this);
     operMenu->setIcon(QIcon(":/danmaku/word"));
+    QAction* actionRepeat = new QAction("+1", this);
     QAction* actionCopy = new QAction("复制", this);
     QAction* actionFreeCopy = new QAction("自由复制", this);
     QAction* actionSearch = new QAction("百度", this);
@@ -932,6 +933,7 @@ void LiveDanmakuWindow::showMenu()
 
     actionNotWelcome->setCheckable(true);
     actionNotReply->setCheckable(true);
+    actionRepeat->setDisabled(!danmaku.is(MSG_DANMAKU));
     actionSendMsg->setCheckable(true);
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
@@ -959,10 +961,20 @@ void LiveDanmakuWindow::showMenu()
 
     if (uid != 0)
     {
+        if (danmaku.isAdmin())
+            actionUserInfo->setText("房管主页");
+        else if (danmaku.getGuard() == 1)
+            actionUserInfo->setText("总督主页");
+        else if (danmaku.getGuard() == 2)
+            actionUserInfo->setText("提督主页");
+        else if (danmaku.getGuard() == 3)
+            actionUserInfo->setText("舰长主页");
+        else if (danmaku.isVip() || danmaku.isSvip())
+            actionUserInfo->setText("姥爷主页");
         // 弹幕的数据多一点，包含牌子、等级等
         if (danmaku.getMsgType() == MSG_DANMAKU)
         {
-            actionUserInfo->setText("用户主页：LV" + snum(danmaku.getLevel()));
+            actionUserInfo->setText(actionUserInfo->text() +  "：LV" + snum(danmaku.getLevel()));
             actionHistory->setText("消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条");
         }
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
@@ -1079,6 +1091,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addMenu(operMenu);
     menu->addMenu(settingMenu);
 
+    operMenu->addAction(actionRepeat);
     operMenu->addAction(actionCopy);
     operMenu->addAction(actionFreeCopy);
     operMenu->addSeparator();
@@ -1331,6 +1344,20 @@ void LiveDanmakuWindow::showMenu()
         // 复制
         QApplication::clipboard()->setText(msg);
     });
+    connect(actionRepeat, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        // 复制
+        QString text = danmaku.getText();
+        if (danmaku.isOpposite())
+        {
+            emit signalSendMsgToPk(text);
+        }
+        else
+        {
+            emit signalSendMsg(text);
+        }
+    });
     connect(actionSearch, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
@@ -1571,6 +1598,7 @@ void LiveDanmakuWindow::showMenu()
     actionValue->deleteLater();
     actionAddCare->deleteLater();
     actionSetName->deleteLater();
+    actionRepeat->deleteLater();
     actionCopy->deleteLater();
     actionSearch->deleteLater();
     actionTranslate->deleteLater();
