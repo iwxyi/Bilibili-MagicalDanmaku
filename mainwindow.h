@@ -205,7 +205,7 @@ private slots:
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
     void slotSendAutoMsg();
-    void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice);
+    void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
 
     void sendAttentionMsg(QString msg);

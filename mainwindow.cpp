@@ -992,12 +992,18 @@ void MainWindow::slotSendAutoMsg()
     }
 }
 
-void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice)
+void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual)
 {
-    if (!shallAutoMsg()) // 不在直播中
+    if (!manual && !shallAutoMsg()) // 不在直播中
+    {
+        qDebug() << "未开播，不做操作";
         return ;
+    }
     if (msg.trimmed().isEmpty())
+    {
+        qDebug() << "空字符串，已跳过";
         return ;
+    }
 
     analyzeMsgAndCd(msg, cd, channel);
 
@@ -1137,6 +1143,19 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text.startsWith(">"))
     {
         processRemoteCmd(text.replace(0, 1, ""));
+    }
+    else if (text == "测试开播")
+    {
+        QString text = ui->startLiveWordsEdit->text();
+        if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
+            sendAutoMsg(text);
+        ui->popularityLabel->setText("已开播");
+        liveStatus = true;
+        if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
+            connectServerTimer->stop();
+        slotStartWork(); // 每个房间第一次开始工作
+
+        triggerCmdEvent("LIVE", LiveDanmaku());
     }
     else
     {
@@ -1358,7 +1377,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
                 if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                     s = "\\n" + s; // 延迟一次发送的时间
 
-                sendCdMsg(s, 1500, REPLY_CD_CN, true, false);
+                sendCdMsg(s, 1500, REPLY_CD_CN, true, false, manual);
             }
         }
     });
@@ -1438,7 +1457,10 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
         if (!manual && !shallAutoMsg()) // 没有开播，不进行自动回复
+        {
+            qDebug() << "未开播，不做操作";
             return ;
+        }
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
         {
@@ -1446,7 +1468,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendCdMsg(s, 0, EVENT_CD_CN, true, false);
+                sendCdMsg(s, 0, EVENT_CD_CN, true, false, manual);
             }
         }
     });
@@ -7291,6 +7313,9 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->hide();
         danmakuWindow->setWindowIcon(this->windowIcon());
         danmakuWindow->setWindowTitle(this->windowTitle());
+
+        for (int i = 0; i < roomDanmakus.size(); i++)
+            danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
     }
 
     bool hidding = danmakuWindow->isHidden();
@@ -8611,7 +8636,7 @@ void MainWindow::get(QString url, NetReplyFunc func)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-    if (url.contains("bilibili.com"))
+    if (url.contains("bilibili.com") && !cookieUid.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
@@ -8659,7 +8684,7 @@ void MainWindow::post(QString url, QByteArray ba, NetReplyFunc func)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-    if (url.contains("bilibili.com"))
+    if (url.contains("bilibili.com") && !cookieUid.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
