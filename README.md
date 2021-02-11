@@ -246,7 +246,6 @@
 ```
 
 <div id='programing'/>
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -302,7 +301,7 @@
 | guard_buy        | 是否为购买舰长的通知     | 没有瓜子，gift_name为舰长/提督/总督           |
 | total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量            |
 | total_silver     | 用户总共银瓜子           | 同上                                          |
-| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌                          |
+| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕、礼物才有粉丝牌                    |
 | medal_name       | 粉丝牌名称               |                                               |
 | medal_level      | 粉丝牌等级               |                                               |
 | medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                |
@@ -333,9 +332,13 @@
 | today_gold       | 今日收到金瓜子总数       |                                               |
 | today_silver     | 今日收到银瓜子总数       |                                               |
 | today_guard      | 今日上船人次             | 续多个月算多次                                |
-| admin            | 是否是房管               |                                               |
-| guard            | 是否是舰长               |                                               |
-| admin_or_guard   | 是否是房管或舰长         |                                               |
+| admin            | 是否是房管               | 只有弹幕、进入才有                            |
+| guard            | 舰长                     | 只有弹幕消息有；普通0，舰长3，提督2，总督1    |
+| admin_or_guard   | 是否是房管或舰长         | 只有弹幕消息有，0或1                          |
+| vip              | 是否是姥爷               | 同上                                          |
+| svip             | 是否是年费姥爷           | 同上                                          |
+| uidentity        | 是否是正式会员           | 同上                                          |
+| iphone           | 是否手机号认证           | 同上                                          |
 | time_hour        | 当前小时                 |                                               |
 | time_minute      | 当前分钟                 |                                               |
 | time_second      | 当前秒                   |                                               |
@@ -433,7 +436,6 @@ tips：
 受于B站后台的限制，多条弹幕将调整为每隔1.5秒发送一次，数量无上限。
 
 <div id='cd_channel'/>
-
 ### 冷却通道
 
 >  `v2.9.0`版本新增

@@ -3024,15 +3024,31 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 房管
     if (msg.contains("%admin%"))
-        msg.replace("%admin%", danmaku.isGuard() ? "1" : "0");
+        msg.replace("%admin%", danmaku.isAdmin() ? "1" : "0");
 
     // 舰长
     if (msg.contains("%guard%"))
-        msg.replace("%guard%", danmaku.isGuard() ? "1" : "0");
+        msg.replace("%guard%", snum(danmaku.getGuard()));
 
     // 房管或舰长
     if (msg.contains("%admin_or_guard%"))
         msg.replace("%admin_or_guard%", (danmaku.isGuard() || danmaku.isAdmin()) ? "1" : "0");
+
+    // 是否是姥爷
+    if (msg.contains("%vip%"))
+        msg.replace("%vip%", danmaku.isVip() ? "1" : "0");
+
+    // 是否是年费姥爷
+    if (msg.contains("%svip%"))
+        msg.replace("%svip%", danmaku.isSvip() ? "1" : "0");
+
+    // 是否是正式会员
+    if (msg.contains("%uidentity%"))
+        msg.replace("%uidentity%", danmaku.isUidentity() ? "1" : "0");
+
+    // 是否有手机验证
+    if (msg.contains("%iphone%"))
+        msg.replace("%iphone%", danmaku.isIphone() ? "1" : "0");
 
     // 昵称长度
     if (msg.contains("%nickname_len%"))
@@ -4906,11 +4922,11 @@ void MainWindow::handleMessage(QJsonObject json)
             QMessageBox::information(this, "弹幕数据 user", QString(QJsonDocument(user).toJson()));
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
-//        int manager = user[2].toInt(); // 是否为房管（主播也属于房管）
-//        int vip = user[3].toInt(); // 是否为老爷
-//        int svip = user[4].toInt(); // 是否为年费老爷
-//        int uidentity = user[5].toInt(); // 是否为非正式会员或正式会员（5000非，10000正）
-//        int iphone = user[6].toInt(); // 是否绑定手机
+        int manager = user[2].toInt(); // 是否为房管（主播也属于房管）
+        int vip = user[3].toInt(); // 是否为老爷
+        int svip = user[4].toInt(); // 是否为年费老爷
+        int uidentity = user[5].toInt(); // 是否为非正式会员或正式会员（5000非，10000正）
+        int iphone = user[6].toInt(); // 是否绑定手机
         QString unameColor = user[7].toString();
         int level = info[4].toArray()[0].toInt();
         QJsonArray medal = info[3].toArray();
@@ -4941,6 +4957,7 @@ void MainWindow::handleMessage(QJsonObject json)
             cs = "0" + cs;
         LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                                  unameColor, "#"+cs);
+        danmaku.setUserInfo(manager, vip, svip, uidentity, iphone, uguard);
         if (medal.size() >= 4)
         {
             medal_level = medal[0].toInt();
@@ -5054,9 +5071,157 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
+        /*{
+            "cmd": "SEND_GIFT",
+            "data": {
+                "action": "投喂",
+                "batch_combo_id": "batch:gift:combo_id:441692891:389088:30607:1613123366.4287",
+                "batch_combo_send": null,
+                "beatId": "",
+                "biz_source": "Live",
+                "broadcast_id": 0,
+                "coin_type": "silver",
+                "combo_resources_id": 1,
+                "combo_send": null,
+                "combo_stay_time": 3,
+                "combo_total_coin": 1,
+                "crit_prob": 0,
+                "demarcation": 1,
+                "draw": 0,
+                "effect": 0,
+                "effect_block": 1,
+                "face": "http://i1.hdslb.com/bfs/face/a7396336b09261e70470c4e1de0278adf644771b.jpg",
+                "giftId": 30607,
+                "giftName": "小心心",
+                "giftType": 5,
+                "gold": 0,
+                "guard_level": 0,
+                "is_first": false,
+                "is_special_batch": 0,
+                "magnification": 1,
+                "medal_info": {
+                    "anchor_roomid": 0,
+                    "anchor_uname": "",
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 1,
+                    "medal_color": 12478086,
+                    "medal_color_border": 12478086,
+                    "medal_color_end": 12478086,
+                    "medal_color_start": 12478086,
+                    "medal_level": 13,
+                    "medal_name": "KKZ",
+                    "special": "",
+                    "target_id": 389088
+                },
+                "name_color": "",
+                "num": 1,
+                "price": 0,
+                "rcost": 330342818,
+                "remain": 1,
+                "rnd": "E962967F-9877-4C04-991A-8C6F0445321D",
+                "send_master": null,
+                "silver": 0,
+                "super": 0,
+                "super_batch_gift_num": 3,
+                "super_gift_num": 3,
+                "svga_block": 0,
+                "tag_image": "",
+                "tid": "1613123367130100001",
+                "timestamp": 1613123367,
+                "top_list": null,
+                "total_coin": 0,
+                "uid": 441692891,
+                "uname": "凯碧黛有岱"
+            }
+        }*/
+        /*{
+            "cmd": "SEND_GIFT",
+            "data": {
+                "action": "投喂",
+                "batch_combo_id": "batch:gift:combo_id:355198782:389088:30822:1613123369.8959",
+                "batch_combo_send": {
+                    "action": "投喂",
+                    "batch_combo_id": "batch:gift:combo_id:355198782:389088:30822:1613123369.8959",
+                    "batch_combo_num": 1,
+                    "gift_id": 30822,
+                    "gift_name": "牛气爆竹",
+                    "gift_num": 1,
+                    "send_master": null,
+                    "uid": 355198782,
+                    "uname": "玲之兰音"
+                },
+                "beatId": "",
+                "biz_source": "Live",
+                "broadcast_id": 0,
+                "coin_type": "gold",
+                "combo_resources_id": 1,
+                "combo_send": {
+                    "action": "投喂",
+                    "combo_id": "gift:combo_id:355198782:389088:30822:1613123369.8952",
+                    "combo_num": 1,
+                    "gift_id": 30822,
+                    "gift_name": "牛气爆竹",
+                    "gift_num": 1,
+                    "send_master": null,
+                    "uid": 355198782,
+                    "uname": "玲之兰音"
+                },
+                "combo_stay_time": 3,
+                "combo_total_coin": 100,
+                "crit_prob": 0,
+                "demarcation": 1,
+                "draw": 0,
+                "effect": 3,
+                "effect_block": 0,
+                "face": "http://i0.hdslb.com/bfs/face/b7095f5df522c2769fa329934bcd9a8ec9cb13c8.jpg",
+                "giftId": 30822,
+                "giftName": "牛气爆竹",
+                "giftType": 1,
+                "gold": 0,
+                "guard_level": 0,
+                "is_first": true,
+                "is_special_batch": 0,
+                "magnification": 1,
+                "medal_info": {
+                    "anchor_roomid": 0,
+                    "anchor_uname": "",
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 0,
+                    "medal_color": 0,
+                    "medal_color_border": 0,
+                    "medal_color_end": 0,
+                    "medal_color_start": 0,
+                    "medal_level": 0,
+                    "medal_name": "",
+                    "special": "",
+                    "target_id": 0
+                },
+                "name_color": "",
+                "num": 1,
+                "price": 100,
+                "rcost": 330342921,
+                "remain": 0,
+                "rnd": "291422544",
+                "send_master": null,
+                "silver": 0,
+                "super": 0,
+                "super_batch_gift_num": 1,
+                "super_gift_num": 1,
+                "svga_block": 0,
+                "tag_image": "",
+                "tid": "1613123369121200002",
+                "timestamp": 1613123369,
+                "top_list": null,
+                "total_coin": 100,
+                "uid": 355198782,
+                "uname": "玲之兰音"
+            }
+        }*/
         QJsonObject data = json.value("data").toObject();
         int giftId = data.value("giftId").toInt();
-        int giftType = data.value("giftType").toInt();
+        int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
@@ -5070,6 +5235,30 @@ void MainWindow::handleMessage(QJsonObject json)
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        if (!data.value("medal_info").isNull())
+        {
+            QJsonObject medalInfo = data.value("medal_info").toObject();
+            QString anchorRoomId = snum(qint64(medalInfo.value("anchor_room_id").toDouble())); // !注意：这个一直为0！
+            QString anchorUname = medalInfo.value("anchor_uname").toString(); // !注意：也是空的
+            int guardLevel = medalInfo.value("guard_level").toInt();
+            int isLighted = medalInfo.value("is_lighted").toInt();
+            int medalColor = medalInfo.value("medal_color").toInt();
+            int medalColorBorder = medalInfo.value("medal_color_border").toInt();
+            int medalColorEnd = medalInfo.value("medal_color_end").toInt();
+            int medalColorStart = medalInfo.value("medal_color_start").toInt();
+            int medalLevel = medalInfo.value("medal_level").toInt();
+            QString medalName = medalInfo.value("medal_name").toString();
+            QString spacial = medalInfo.value("special").toString();
+            QString targetId = snum(qint64(medalInfo.value("target_id").toDouble())); // 目标用户ID
+            if (!medalName.isEmpty())
+            {
+                QString cs = QString::number(medalColor, 16);
+                while (cs.size() < 6)
+                    cs = "0" + cs;
+                danmaku.setMedal(anchorRoomId, medalName, medalLevel, cs, anchorUname);
+            }
+        }
+
         bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
         if (!merged)
         {
@@ -5131,12 +5320,125 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
-        qDebug() << "醒目留言：" << json;
+        /*{
+            "cmd": "SUPER_CHAT_MESSAGE",
+            "data": {
+                "background_bottom_color": "#2A60B2",
+                "background_color": "#EDF5FF",
+                "background_color_end": "#405D85",
+                "background_color_start": "#3171D2",
+                "background_icon": "",
+                "background_image": "https://i0.hdslb.com/bfs/live/a712efa5c6ebc67bafbe8352d3e74b820a00c13e.png",
+                "background_price_color": "#7497CD",
+                "color_point": 0.7,
+                "end_time": 1613125905,
+                "gift": {
+                    "gift_id": 12000,
+                    "gift_name": "醒目留言",
+                    "num": 1
+                },
+                "id": 1278390,
+                "is_ranked": 0,
+                "is_send_audit": "0",
+                "medal_info": {
+                    "anchor_roomid": 1010,
+                    "anchor_uname": "KB呆又呆",
+                    "guard_level": 3,
+                    "icon_id": 0,
+                    "is_lighted": 1,
+                    "medal_color": "#6154c",
+                    "medal_color_border": 6809855,
+                    "medal_color_end": 6850801,
+                    "medal_color_start": 398668,
+                    "medal_level": 25,
+                    "medal_name": "KKZ",
+                    "special": "",
+                    "target_id": 389088
+                },
+                "message": "最右边可以爬上去",
+                "message_font_color": "#A3F6FF",
+                "message_trans": "",
+                "price": 30,
+                "rate": 1000,
+                "start_time": 1613125845,
+                "time": 60,
+                "token": "767AB474",
+                "trans_mark": 0,
+                "ts": 1613125845,
+                "uid": 35030958,
+                "user_info": {
+                    "face": "http://i0.hdslb.com/bfs/face/cdd8fbb13b2034dc3651096cbeef4b5e89765c35.jpg",
+                    "face_frame": "http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png",
+                    "guard_level": 3,
+                    "is_main_vip": 1,
+                    "is_svip": 0,
+                    "is_vip": 0,
+                    "level_color": "#61c05a",
+                    "manager": 0,
+                    "name_color": "#00D1F1",
+                    "title": "0",
+                    "uname": "么么么么么么么么句号",
+                    "user_level": 14
+                }
+            },
+            "roomid": "1010"
+        }*/
+
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
     {
-        qDebug() << "删除醒目留言：" << json;
+        /*{
+            "cmd": "SUPER_CHAT_MESSAGE_JPN",
+            "data": {
+                "background_bottom_color": "#2A60B2",
+                "background_color": "#EDF5FF",
+                "background_icon": "",
+                "background_image": "https://i0.hdslb.com/bfs/live/a712efa5c6ebc67bafbe8352d3e74b820a00c13e.png",
+                "background_price_color": "#7497CD",
+                "end_time": 1613125905,
+                "gift": {
+                    "gift_id": 12000,
+                    "gift_name": "醒目留言",
+                    "num": 1
+                },
+                "id": "1278390",
+                "is_ranked": 0,
+                "medal_info": {
+                    "anchor_roomid": 1010,
+                    "anchor_uname": "KB呆又呆",
+                    "icon_id": 0,
+                    "medal_color": "#6154c",
+                    "medal_level": 25,
+                    "medal_name": "KKZ",
+                    "special": "",
+                    "target_id": 389088
+                },
+                "message": "最右边可以爬上去",
+                "message_jpn": "",
+                "price": 30,
+                "rate": 1000,
+                "start_time": 1613125845,
+                "time": 60,
+                "token": "767AB474",
+                "ts": 1613125845,
+                "uid": "35030958",
+                "user_info": {
+                    "face": "http://i0.hdslb.com/bfs/face/cdd8fbb13b2034dc3651096cbeef4b5e89765c35.jpg",
+                    "face_frame": "http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png",
+                    "guard_level": 3,
+                    "is_main_vip": 1,
+                    "is_svip": 0,
+                    "is_vip": 0,
+                    "level_color": "#61c05a",
+                    "manager": 0,
+                    "title": "0",
+                    "uname": "么么么么么么么么句号",
+                    "user_level": 14
+                }
+            },
+            "roomid": "1010"
+        }*/
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
@@ -5848,9 +6150,23 @@ void MainWindow::handleMessage(QJsonObject json)
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
+    else if (cmd == "LIVE_INTERACTIVE_GAME")
+    {
+        /*{
+            "cmd": "LIVE_INTERACTIVE_GAME",
+            "data": {
+                "gift_name": "",
+                "gift_num": 0,
+                "msg": "哈哈哈哈哈哈哈哈哈",
+                "price": 0,
+                "type": 2,
+                "uname": "每天都要学习混凝土"
+            }
+        }*/
+    }
     else
     {
-        qWarning() << "未处理的命令：" << cmd << QJsonDocument(json).toJson(QJsonDocument::Compact);
+        qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
         triggerCmdEvent(cmd, LiveDanmaku());
     }
 }

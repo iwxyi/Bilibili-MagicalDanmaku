@@ -874,6 +874,7 @@ void LiveDanmakuWindow::showMenu()
     QMenu* menu = new QMenu(this);
     QAction* actionUserInfo = new QAction(QIcon(":/danmaku/home"), "用户主页", this);
     QAction* actionMedal = new QAction(QIcon(":/danmaku/medal"), "粉丝勋章", this);
+    QAction* actionValue = new QAction(QIcon(":/icons/egg"), "礼物价值", this);
     QAction* actionHistory = new QAction(QIcon(":/danmaku/message"), "消息记录", this);
     QAction* actionFollow = new QAction(QIcon(":/danmaku/fans"), "粉丝数", this);
     QAction* actionView = new QAction(QIcon(":/danmaku/views"), "浏览量", this);
@@ -980,7 +981,7 @@ void LiveDanmakuWindow::showMenu()
 
         if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
         {
-            actionMedal->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
+            actionValue->setText(snum(danmaku.getTotalCoin()) + " " + (danmaku.isGoldCoin() ? "金瓜子" : "银瓜子"));
             if (giftNames.contains(danmaku.getGiftId()))
                 actionSetGiftName->setText("礼物别名：" + giftNames.value(danmaku.getGiftId()));
         }
@@ -1016,6 +1017,7 @@ void LiveDanmakuWindow::showMenu()
         actionEternalBlock->setEnabled(false);
         actionCancelEternalBlock->setEnabled(false);
         actionMedal->setEnabled(false);
+        actionValue->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
@@ -1042,6 +1044,8 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addAction(actionUserInfo);
     menu->addAction(actionMedal);
+    if (danmaku.is(MSG_GIFT))
+        menu->addAction(actionValue);
     menu->addAction(actionHistory);
     menu->addAction(actionFollow);
     menu->addAction(actionView);
@@ -1441,6 +1445,9 @@ void LiveDanmakuWindow::showMenu()
     connect(actionMedal, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
     });
+    connect(actionValue, &QAction::triggered, this, [=]{
+
+    });
     connect(actionHistory, &QAction::triggered, this, [=]{
         showUserMsgHistory(uid, danmaku.getNickname());
     });
@@ -1560,6 +1567,8 @@ void LiveDanmakuWindow::showMenu()
     actionMsgColor->deleteLater();
     actionBgColor->deleteLater();
     actionHlColor->deleteLater();
+    actionMedal->deleteLater();
+    actionValue->deleteLater();
     actionAddCare->deleteLater();
     actionSetName->deleteLater();
     actionCopy->deleteLater();

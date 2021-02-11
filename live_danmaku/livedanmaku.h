@@ -51,8 +51,8 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QDateTime time, bool isAdmin, QString unameColor, QString spreadDesc, QString spreadInfo)
-        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time), isadmin(isAdmin),
+    LiveDanmaku(QString nickname, qint64 uid, QDateTime time, bool admin, QString unameColor, QString spreadDesc, QString spreadInfo)
+        : msgType(MSG_WELCOME), nickname(nickname), uid(uid), timeline(time), admin(admin),
           uname_color(unameColor), spread_desc(spreadDesc), spread_info(spreadInfo)
     {
 
@@ -69,9 +69,9 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard_level, int gift_id, int price)
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price)
         : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime()),
-          giftId(gift_id), guard_level(guard_level), coin_type("gold"), total_coin(price)
+          giftId(gift_id), guard(guard), coin_type("gold"), total_coin(price)
     {
 
     }
@@ -116,7 +116,7 @@ public:
         danmaku.timeline = QDateTime::fromString(
                     object.value("timeline").toString(),
                     "yyyy-MM-dd hh:mm:ss");
-        danmaku.isadmin = object.value("isadmin").toInt();
+        danmaku.admin = object.value("admin").toInt();
         danmaku.vip = object.value("vip").toInt();
         danmaku.svip = object.value("svip").toInt();
         danmaku.level = object.value("level").toInt();
@@ -151,6 +151,8 @@ public:
         danmaku.view_return = object.value("view_return").toBool();
         danmaku.pk_link = object.value("pk_link").toBool();
         danmaku.robot = object.value("robot").toBool();
+        danmaku.uidentity = object.value("uidentity").toInt();
+        danmaku.iphone = object.value("iphone").toInt();
         danmaku.guard = object.value("guard").toInt();
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         return danmaku;
@@ -166,10 +168,13 @@ public:
             object.insert("text", text);
             object.insert("uname_color", uname_color);
             object.insert("text_color", text_color);
-            object.insert("isadmin", isadmin);
+            object.insert("admin", admin);
             object.insert("vip", vip);
             object.insert("svip", svip);
             object.insert("level", level);
+            object.insert("uidentity", uidentity);
+            object.insert("iphone", iphone);
+            object.insert("guard", guard);
             object.insert("no_reply", no_reply);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
@@ -181,11 +186,11 @@ public:
             object.insert("total_coin", total_coin);
 
             if (msgType == MSG_GUARD_BUY)
-                object.insert("guard_level", guard_level);
+                object.insert("guard", guard);
         }
         else if (msgType == MSG_WELCOME)
         {
-            object.insert("isadmin", isadmin);
+            object.insert("admin", admin);
             object.insert("uname_color", uname_color);
             object.insert("spread_desc", spread_desc);
             object.insert("spread_info", spread_info);
@@ -193,7 +198,7 @@ public:
         }
         else if (msgType == MSG_WELCOME_GUARD)
         {
-            object.insert("isadmin", isadmin);
+            object.insert("admin", admin);
             object.insert("guard", guard);
         }
         else if (msgType == MSG_DIANGE)
@@ -336,6 +341,16 @@ public:
         this->medal_up = up;
     }
 
+    void setUserInfo(int admin, int vip, int svip, int uidentity, int iphone, int guard)
+    {
+        this->admin = admin;
+        this->vip = vip;
+        this->svip = svip;
+        this->uidentity = uidentity;
+        this->iphone = iphone;
+        this->guard = guard;
+    }
+
     void setUid(qint64 uid)
     {
         this->uid = uid;
@@ -426,7 +441,7 @@ public:
 
     bool isAdmin() const
     {
-        return isadmin;
+        return admin;
     }
 
     int getLevel() const
@@ -448,6 +463,31 @@ public:
     MessageType getMsgType() const
     {
         return msgType;
+    }
+
+    bool isVip() const
+    {
+        return vip;
+    }
+
+    bool isSvip() const
+    {
+        return svip;
+    }
+
+    bool isUidentity() const
+    {
+        return uidentity;
+    }
+
+    bool isIphone() const
+    {
+        return iphone;
+    }
+
+    int getGuard() const
+    {
+        return guard;
     }
 
     int getGiftId() const
@@ -584,10 +624,12 @@ private:
     QString uname_color; // 没有的话是空的
     QString text_color; // 没有的话是空的
     QDateTime timeline;
-    int isadmin = 0; // 房管
+    int admin = 0; // 房管
     int guard = 0; // 舰长
     int vip = 0;
     int svip = 0;
+    int uidentity = 0; // 正式会员
+    int iphone = 0; // 手机实名
     bool no_reply = false;
 
     QString anchor_roomid;
@@ -597,10 +639,9 @@ private:
     QString medal_color;
 
     int level = 0;
-    qint64 teamid;
+    qint64 teamid = 0;
     int rnd = 0;
     QString user_title;
-    int guard_level = 0;
     int bubble = 0;
     QString bubble_color;
     qint64 check_info_ts;
