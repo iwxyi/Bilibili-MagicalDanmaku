@@ -8955,7 +8955,7 @@ void MainWindow::get(QString url, NetReplyFunc func)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-    if (url.contains("bilibili.com") && !cookieUid.isEmpty())
+    if (url.contains("bilibili.com") && !browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
@@ -9003,7 +9003,7 @@ void MainWindow::post(QString url, QByteArray ba, NetReplyFunc func)
 {
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
-    if (url.contains("bilibili.com") && !cookieUid.isEmpty())
+    if (url.contains("bilibili.com") && !browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
