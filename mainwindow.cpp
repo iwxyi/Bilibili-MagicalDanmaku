@@ -1324,7 +1324,7 @@ void MainWindow::restoreTaskList()
     int count = settings.value("task/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings.value("task/r"+QString::number(row)+"Enable", true).toBool();
+        bool enable = settings.value("task/r"+QString::number(row)+"Enable", false).toBool();
         int interval = settings.value("task/r"+QString::number(row)+"Interval", 1800).toInt();
         QString msg = settings.value("task/r"+QString::number(row)+"Msg", "").toString();
         addTimerTask(enable, interval, msg);
@@ -1415,7 +1415,7 @@ void MainWindow::restoreReplyList()
     int count = settings.value("reply/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings.value("reply/r"+QString::number(row)+"Enable", true).toBool();
+        bool enable = settings.value("reply/r"+QString::number(row)+"Enable", false).toBool();
         QString key = settings.value("reply/r"+QString::number(row)+"Key").toString();
         QString reply = settings.value("reply/r"+QString::number(row)+"Reply").toString();
         addAutoReply(enable, key, reply);
@@ -1506,7 +1506,7 @@ void MainWindow::restoreEventList()
     int count = settings.value("event/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings.value("event/r"+QString::number(row)+"Enable", true).toBool();
+        bool enable = settings.value("event/r"+QString::number(row)+"Enable", false).toBool();
         QString key = settings.value("event/r"+QString::number(row)+"Cmd").toString();
         QString event = settings.value("event/r"+QString::number(row)+"Action").toString();
         addEventAction(enable, key, event);
@@ -1677,7 +1677,7 @@ void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &pos
 
 void MainWindow::on_addTaskButton_clicked()
 {
-    addTimerTask(true, 1800, "");
+    addTimerTask(false, 1800, "");
     saveTaskList();
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto tw = static_cast<TaskWidget*>(widget);
@@ -1686,7 +1686,7 @@ void MainWindow::on_addTaskButton_clicked()
 
 void MainWindow::on_addReplyButton_clicked()
 {
-    addAutoReply(true, "", "");
+    addAutoReply(false, "", "");
     saveReplyList();
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto rw = static_cast<ReplyWidget*>(widget);
@@ -1695,7 +1695,7 @@ void MainWindow::on_addReplyButton_clicked()
 
 void MainWindow::on_addEventButton_clicked()
 {
-    addEventAction(true, "", "");
+    addEventAction(false, "", "");
     saveEventList();
     auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
     auto ew = static_cast<EventWidget*>(widget);
@@ -8944,7 +8944,7 @@ void MainWindow::get(QString url, NetJsonFunc func)
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << error.errorString() << url;
             return ;
         }
         func(document.object());
