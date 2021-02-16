@@ -1690,7 +1690,7 @@ void MainWindow::on_addReplyButton_clicked()
 {
     addAutoReply(false, "", "");
     saveReplyList();
-    auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
+    auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(ui->replyListWidget->count()-1));
     auto rw = static_cast<ReplyWidget*>(widget);
     rw->keyEdit->setFocus();
 }
