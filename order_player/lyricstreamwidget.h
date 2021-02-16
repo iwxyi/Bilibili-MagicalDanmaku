@@ -36,12 +36,12 @@ public:
     {
         // 检测是不是全是毫秒还是10毫秒的
         int ms10x = 10;
-        QRegularExpression re10("\\[\\d{2}:\\d{2}(\\.([1-9]\\d{2}))?\\]");
+        QRegularExpression re10("\\[\\d{2}:\\d{2}(?:\\.([1-9]\\d{2}))?\\]");
         QRegularExpressionMatch match10;
         if (text.lastIndexOf(re10, -1, &match10) != -1)
         {
             int val = match10.captured(1).toInt();
-//            qDebug() << " 匹配项：" << val;
+//            qDebug() << " 匹配项：" << match10.capturedTexts() << val;
             if (val > 0) // 存在不为0的三位数
             {
 //                qDebug() << "检测到勉强受支持的歌词格式：第三位是毫秒";

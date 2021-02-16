@@ -40,7 +40,7 @@ void DesktopLyricWidget::setLyric(QString text)
 {
     // 检测是不是全是毫秒还是10毫秒的
     int ms10x = 10;
-    QRegularExpression re10("\\[\\d{2}:\\d{2}(\\.([1-9]\\d{2}))?\\]");
+    QRegularExpression re10("\\[\\d{2}:\\d{2}(?:\\.([1-9]\\d{2}))?\\]");
     QRegularExpressionMatch match10;
     if (text.lastIndexOf(re10, -1, &match10) != -1)
     {
