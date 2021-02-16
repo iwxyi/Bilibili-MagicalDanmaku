@@ -403,7 +403,7 @@ void OrderPlayerWindow::cutSongIfUser(QString username)
     if (playingSong.addBy != username)
         return ;
     emit signalOrderSongCutted(playingSong);
-    playNext();
+    on_nextSongButton_clicked();
 }
 
 void OrderPlayerWindow::cutSong()
@@ -411,7 +411,7 @@ void OrderPlayerWindow::cutSong()
     if (!playingSong.isValid())
         return ;
     emit signalOrderSongCutted(playingSong);
-    playNext();
+    on_nextSongButton_clicked();
 }
 
 /**

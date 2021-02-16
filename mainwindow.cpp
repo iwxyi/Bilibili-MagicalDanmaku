@@ -4470,9 +4470,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             }
             return true;
         }
-    }
-    if (msg.contains("cutOrderSong"))
-    {
+
         re = RE("cutOrderSong\\s*\\(\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
