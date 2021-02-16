@@ -486,6 +486,9 @@ tips：
 | setValue(key, val)                | 保存值到配置文件，通过%{key}%获取，重启后仍在      |
 | openFile(path)                    | 打开文件                                           |
 | improveSongOrder(username, order) | 点歌提前播放，order为提升的索引值                  |
+| cutOrderSong(username)            | 切歌，仅限正在播放该用户自己点的歌时               |
+| curOrderSong()                    | 立即切歌，无论是谁点的                             |
+| messageBox(text)                  | 弹窗提示                                           |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。
@@ -559,6 +562,19 @@ tips：
 [%gift_name%=喵娘]>improveSongOrder(%username%,%[%gift_gold%/1000]%)
 ```
 
+##### 示例：弹幕切歌
+
+每个用户可以切自己点的歌；房管可以切所有歌
+
+添加事件：`DANMU_MSG`
+
+设置动作：
+
+```
+[%admin%]*>cutOrderSong()
+>cutOrderSong(%username%)
+```
+
 ### 远程控制
 
 主播或者机器人账号在直播间内发送如`关闭欢迎`、`开启录播`等命令，可远程控制在服务器上的机器人（本地没必要使用远程命令）。
@@ -623,6 +639,10 @@ tips：
 
 #### 弹幕姬事件
 
+其中加粗事件表示程序中默认已用上（允许重复使用），并且能获得详细用户ID、昵称、粉丝勋章等信息。
+
+未加粗事件则只是接收数据，未进行解析。
+
 | 事件命令                      | 说明                               |
 | ----------------------------- | ---------------------------------- |
 | **LIVE**                      | 开播【欢迎语】                     |
@@ -632,7 +652,7 @@ tips：
 | **DANMU_MSG**                 | 接收到弹幕【自动回复】             |
 | **SEND_GIFT**                 | 有人送礼【答谢送礼】               |
 | WELCOME_GUARD                 | 舰长进入（不会触发）               |
-| ENTRY_EFFECT                  | 舰长、热门榜、老爷进入【欢迎舰长】 |
+| **ENTRY_EFFECT**              | 舰长、热门榜、老爷进入【欢迎舰长】 |
 | WELCOME                       | 老爷进入                           |
 | **INTERACT_WORD**             | 用户进入【欢迎】                   |
 | **ATTENTION**                 | 用户关注【答谢关注】               |
@@ -642,7 +662,7 @@ tips：
 | SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                   |
 | SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言                       |
 | SPECIAL_GIFT                  | 节奏风暴                           |
-| ROOM_BLOCK_MSG                | 用户被禁言                         |
+| **ROOM_BLOCK_MSG**            | 用户被禁言                         |
 | PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始             |
 | PK_BATTLE_SETTLE              |                                    |
 | PK_BATTLE_START               | 大乱斗开始                         |
@@ -651,7 +671,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                    |
 | PK_BATTLE_SETTLE_V2           |                                    |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                 |
-| GUARD_BUY                     | 有人上船                           |
+| **GUARD_BUY**                 | 有人上船                           |
 | USER_TOAST_MSG                | 上船附带的通知                     |
 | HOT_RANK_CHANGED              | 热门榜排名改变                     |
 | HOT_RANK_SETTLEMENT           | 荣登热门榜topX                     |

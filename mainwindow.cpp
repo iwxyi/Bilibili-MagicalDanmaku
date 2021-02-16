@@ -3964,6 +3964,11 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
         delBlockUser(danmaku.getUid());
+        if (eternalBlockUsers.contains(danmaku.getUid()))
+        {
+            eternalBlockUsers.removeOne(danmaku.getUid());
+            saveEternalBlockUsers();
+        }
         if (response)
             sendNotifyMsg(">已解除禁言：" + danmaku.getNickname());
     }
@@ -3993,9 +3998,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             }
         }
     }
-    else if (msg.startsWith("解禁 "))
+    else if (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 "))
     {
-        QRegularExpression re("^解禁\\s*(.+)\\s*$");
+        QRegularExpression re("^(?:解禁|解除禁言|取消禁言)\\s*(.+)\\s*$");
         QRegularExpressionMatch match;
         if (msg.indexOf(re, 0, &match) == -1)
             return ;
@@ -4011,6 +4016,12 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
+                if (eternalBlockUsers.contains(danmaku.getUid()))
+                {
+                    eternalBlockUsers.removeOne(danmaku.getUid());
+                    saveEternalBlockUsers();
+                }
+
                 delBlockUser(danmaku.getUid());
                 sendNotifyMsg(">已解禁：" + nick);
                 blockedQueue.removeAt(i);
@@ -4028,9 +4039,37 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
+                if (eternalBlockUsers.contains(danmaku.getUid()))
+                {
+                    eternalBlockUsers.removeOne(danmaku.getUid());
+                    saveEternalBlockUsers();
+                }
+
                 delBlockUser(danmaku.getUid());
                 sendNotifyMsg(">已解禁：" + nick);
                 blockedQueue.removeAt(i);
+                return ;
+            }
+        }
+    }
+    else if (msg.startsWith("永久禁言 "))
+    {
+        QRegularExpression re("^永久禁言\\s*(\\S+)\\s*$");
+        QRegularExpressionMatch match;
+        if (msg.indexOf(re, 0, &match) == -1)
+            return ;
+        QString nickname = match.captured(1);
+        for (int i = roomDanmakus.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = roomDanmakus.at(i);
+            if (!danmaku.is(MSG_DANMAKU))
+                continue;
+
+            QString nick = danmaku.getNickname();
+            if (nick.contains(nickname))
+            {
+                eternalBlockUser(danmaku.getUid(), danmaku.getNickname());
+                sendNotifyMsg(">已永久禁言：" + nick);
                 return ;
             }
         }
