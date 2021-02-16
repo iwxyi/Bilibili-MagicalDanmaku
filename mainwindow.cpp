@@ -4411,7 +4411,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
-    // 取消放歌
+    // 切歌
     if (msg.contains("cutOrderSong"))
     {
         re = RE("cutOrderSong\\s*\\(\\s*(.+?)\\s*\\)");
@@ -4423,6 +4423,25 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             if (musicWindow)
             {
                 musicWindow->cutSongIfUser(uname);
+            }
+            else
+            {
+                localNotify("未开启点歌姬");
+                qWarning() << "未开启点歌姬";
+            }
+            return true;
+        }
+    }
+    if (msg.contains("cutOrderSong"))
+    {
+        re = RE("cutOrderSong\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            if (musicWindow)
+            {
+                musicWindow->cutSong();
             }
             else
             {

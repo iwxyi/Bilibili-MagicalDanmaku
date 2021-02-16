@@ -143,6 +143,7 @@ public slots:
     void slotSearchAndAutoAppend(QString key, QString by = "");
     void improveUserSongByOrder(QString username, int promote);
     void cutSongIfUser(QString username);
+    void cutSong();
 
 private slots:
     void on_searchEdit_returnPressed();

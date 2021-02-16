@@ -406,6 +406,14 @@ void OrderPlayerWindow::cutSongIfUser(QString username)
     playNext();
 }
 
+void OrderPlayerWindow::cutSong()
+{
+    if (!playingSong.isValid())
+        return ;
+    emit signalOrderSongCutted(playingSong);
+    playNext();
+}
+
 /**
  * 搜索音乐
  */
