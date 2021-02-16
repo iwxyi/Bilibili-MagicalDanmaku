@@ -411,7 +411,9 @@ MainWindow::MainWindow(QWidget *parent)
         minuteDanmuPopular = 0;
         if (danmuPopularQueue.size() > 10)
             danmuPopularValue -= danmuPopularQueue.takeFirst();
-        ui->popularityLabel->setToolTip("弹幕人气：" + snum(danmuPopularValue));
+        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopularValue));
+
+        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
     });
 
     // 定时连接
@@ -3216,6 +3218,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%not_reply%"))
         msg.replace("%noe_reply%", notReplyUsers.contains(danmaku.getUid()) ? "1" : "0");
 
+    // 弹幕人气
+    if (msg.contains("%danmu_popularity%"))
+        msg.replace("%danmu_popularity%", snum(danmuPopularValue));
+
     // 游戏用户
     if (msg.contains("%in_game_users%"))
         msg.replace("%in_game_users%", gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
@@ -4423,6 +4429,20 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 localNotify("未开启点歌姬");
                 qWarning() << "未开启点歌姬";
             }
+            return true;
+        }
+    }
+
+    // 提醒框
+    if (msg.contains("messageBox"))
+    {
+        re = RE("messageBox\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            QMessageBox::information(this, "神奇弹幕", text);
             return true;
         }
     }
