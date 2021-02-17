@@ -2546,7 +2546,7 @@ void MainWindow::getDanmuInfo()
 
         startMsgLoop();
 
-        updateExistGuards(1);
+        updateExistGuards(0);
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取弹幕信息...");
@@ -4407,6 +4407,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString msg = caps.at(2);
             qDebug() << "执行命令：" << caps;
             sendPrivateMsg(uid, msg);
+            return true;
+        }
+    }
+
+    // 发送指定直播间弹幕
+    if (msg.contains("sendRoomMsg"))
+    {
+        re = RE("sendRoomMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString roomId = caps.at(1);
+            QString msg = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            sendRoomMsg(roomId, msg);
             return true;
         }
     }
@@ -7383,6 +7398,15 @@ void MainWindow::getBagList(qint64 sendExpire)
 
 void MainWindow::updateExistGuards(int page)
 {
+    if (page == 0)
+    {
+        page = 1;
+
+        // 参数是0的话，自动判断是否需要
+        if (browserCookie.isEmpty())
+            return ;
+    }
+
     const int pageSize = 29;
 
     auto judgeGuard = [=](QJsonObject user){

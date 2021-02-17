@@ -476,6 +476,7 @@ tips：
 | execRemoteCommand(cmd)            | 执行远程控制（见下面）                             |
 | execRemoteCommand(cmd, 0)         | 执行远程控制，不发送回馈通知                       |
 | sendPrivateMsg(uid, msg)          | 向指定用户发送私信                                 |
+| sendRoomMsg(roomId, msg)          | 向指定直播间发送弹幕                               |
 | timerShot(msecond, msg)           | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
 | locaNotify(msg)                   | 发送本地消息通知（非弹幕，只有自己看得到）         |
 | speakText(msg)                    | 朗读文本                                           |
@@ -495,6 +496,18 @@ tips：
 
 > 注意：不支持一条弹幕同时操作多个命令，若有需要，可用用 `\n` 隔开
 >
+
+##### 示例：自动打卡
+
+添加定时任务，设置时间为 `86400` （一天秒数）
+
+添加发送的文本：
+
+```
+>sendRoomMsg([直播间房号], 打卡)
+```
+
+注意：需要**关闭“仅直播时发送”**
 
 ##### 示例：禁言小游戏
 
