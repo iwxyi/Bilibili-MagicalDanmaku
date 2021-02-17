@@ -1556,6 +1556,7 @@ void MainWindow::getUserInfo()
         cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
+        ui->robotNameLabel->setText(cookieUname);
     });
 }
 
@@ -1565,6 +1566,143 @@ void MainWindow::getUserInfo()
  */
 void MainWindow::getRoomUserInfo()
 {
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "user_level": {
+                "level": 13,
+                "next_level": 14,
+                "color": 6406234,
+                "level_rank": ">50000"
+            },
+            "vip": {
+                "vip": 0,
+                "vip_time": "0000-00-00 00:00:00",
+                "svip": 0,
+                "svip_time": "0000-00-00 00:00:00"
+            },
+            "title": {
+                "title": ""
+            },
+            "badge": {
+                "is_room_admin": false
+            },
+            "privilege": {
+                "target_id": 0,
+                "privilege_type": 0,
+                "privilege_uname_color": "",
+                "buy_guard_notice": null,
+                "sub_level": 0,
+                "notice_status": 1,
+                "expired_time": "",
+                "auto_renew": 0,
+                "renew_remind": null
+            },
+            "info": {
+                "uid": 20285041,
+                "uname": "懒一夕智能科技",
+                "uface": "http://i1.hdslb.com/bfs/face/97ae8f0f0e09fbc22fa680c4f5ed93f92678c9eb.jpg",
+                "main_rank": 10000,
+                "bili_vip": 2,
+                "mobile_verify": 1,
+                "identification": 1
+            },
+            "property": {
+                "uname_color": "",
+                "bubble": 0,
+                "danmu": {
+                    "mode": 1,
+                    "color": 16777215,
+                    "length": 20,
+                    "room_id": 13328782
+                },
+                "bubble_color": ""
+            },
+            "recharge": {
+                "status": 0,
+                "type": 1,
+                "value": "",
+                "color": "fb7299",
+                "config_id": 0
+            },
+            "relation": {
+                "is_followed": false,
+                "is_fans": false,
+                "is_in_fansclub": false
+            },
+            "wallet": {
+                "gold": 6100,
+                "silver": 3294
+            },
+            "medal": {
+                "cnt": 16,
+                "is_weared": false,
+                "curr_weared": null,
+                "up_medal": {
+                    "uid": 358629230,
+                    "medal_name": "石乐志",
+                    "medal_color": 6067854,
+                    "level": 1
+                }
+            },
+            "extra_config": {
+                "show_bag": false,
+                "show_vip_broadcast": true
+            },
+            "mailbox": {
+                "switch_status": 0,
+                "red_notice": 0
+            },
+            "user_reward": {
+                "entry_effect": {
+                    "id": 0,
+                    "privilege_type": 0,
+                    "priority": 0,
+                    "web_basemap_url": "",
+                    "web_effective_time": 0,
+                    "web_effect_close": 0,
+                    "web_close_time": 0,
+                    "copy_writing": "",
+                    "copy_color": "",
+                    "highlight_color": "",
+                    "mock_effect": 0,
+                    "business": 0,
+                    "face": "",
+                    "basemap_url": "",
+                    "show_avatar": 0,
+                    "effective_time": 0
+                },
+                "welcome": {
+                    "allow_mock": 1
+                }
+            },
+            "shield_info": {
+                "shield_user_list": [],
+                "keyword_list": [],
+                "shield_rules": {
+                    "rank": 0,
+                    "verify": 0,
+                    "level": 0
+                }
+            },
+            "super_chat_message": {
+                "list": []
+            },
+            "lpl_info": {
+                "lpl": 0
+            },
+            "cd": {
+                "guide_free_medal_cost": 0,
+                "guide_light_medal": 0,
+                "guide_follow": 1,
+                "guard_compensate": 0,
+                "interact_toasts": []
+            }
+        }
+    }*/
+
     if (browserCookie.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + roomId;
@@ -2362,6 +2500,9 @@ void MainWindow::getUpPortrait(QString face)
     });
 }
 
+/**
+ * 这是真正开始连接的
+ */
 void MainWindow::getDanmuInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+roomId+"&type=0";
@@ -2404,6 +2545,8 @@ void MainWindow::getDanmuInfo()
         SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << token;
 
         startMsgLoop();
+
+        updateExistGuards(1);
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取弹幕信息...");
@@ -7238,6 +7381,59 @@ void MainWindow::getBagList(qint64 sendExpire)
     });
 }
 
+void MainWindow::updateExistGuards(int page)
+{
+    const int pageSize = 29;
+
+    auto judgeGuard = [=](QJsonObject user){
+        QString username = user.value("username").toString();
+        qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
+        int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        if (!count)
+        {
+            int guardLevel = user.value("guard_level").toInt();
+            int count = 1;
+            if (guardLevel == 3)
+                count = 1;
+            else if (guardLevel == 2)
+                count = 10;
+            else if (guardLevel == 1)
+                count = 100;
+            else
+                qWarning() << "错误舰长等级：" << username << uid << guardLevel;
+            danmakuCounts->setValue("guard/" + snum(uid), count);
+            qDebug() << "设置舰长：" << username << count;
+        }
+    };
+
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
+            +roomId+"&page="+snum(page)+"&ruid="+upUid+"&page_size="+snum(pageSize);
+    get(url, [=](QJsonObject json){
+        QJsonObject data = json.value("data").toObject();
+
+        if (page == 1)
+        {
+            QJsonArray top3 = data.value("top3").toArray();
+            foreach (QJsonValue val, top3)
+            {
+                judgeGuard(val.toObject());
+            }
+        }
+
+        QJsonArray list = data.value("list").toArray();
+        foreach (QJsonValue val, list)
+        {
+            judgeGuard(val.toObject());
+        }
+
+        // 下一页
+        QJsonObject info = data.value("info").toObject();
+        int num = info.value("num").toInt();
+        if (page * pageSize + 3 < num)
+            updateExistGuards(page + 1);
+    });
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings.setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -7709,8 +7905,10 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setWindowIcon(this->windowIcon());
         danmakuWindow->setWindowTitle(this->windowTitle());
 
-        for (int i = 0; i < roomDanmakus.size(); i++)
-            danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
+        QTimer::singleShot(0, [=]{
+            for (int i = 0; i < roomDanmakus.size(); i++)
+                danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
+        });
     }
 
     bool hidding = danmakuWindow->isHidden();

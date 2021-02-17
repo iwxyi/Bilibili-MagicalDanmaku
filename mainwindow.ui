@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>10</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -86,6 +86,13 @@ QTabBar::tab:selected
             </property>
             <property name="placeholderText">
              <string>可以是签约短房号</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="robotNameLabel">
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>
@@ -2846,7 +2853,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>501</width>
-     <height>23</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

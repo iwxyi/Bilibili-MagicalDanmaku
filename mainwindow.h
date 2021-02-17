@@ -541,6 +541,7 @@ private:
     void roomEntryAction();
     void sendExpireGift();
     void getBagList(qint64 sendExpire = 0);
+    void updateExistGuards(int page);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
