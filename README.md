@@ -686,6 +686,7 @@ tips：
 | PK_BATTLE_SETTLE_V2           |                                    |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                 |
 | **GUARD_BUY**                 | 有人上船                           |
+| FIRST_GUARD                   | 用户初次上船                       |
 | USER_TOAST_MSG                | 上船附带的通知                     |
 | HOT_RANK_CHANGED              | 热门榜排名改变                     |
 | HOT_RANK_SETTLEMENT           | 荣登热门榜topX                     |

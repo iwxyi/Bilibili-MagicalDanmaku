@@ -5957,6 +5957,12 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price);
         appendNewLiveDanmaku(danmaku);
 
+        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        if (!guardCount)
+        {
+            triggerCmdEvent("FIRST_GUARD", danmaku);
+        }
+
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
             QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
@@ -5973,7 +5979,6 @@ void MainWindow::handleMessage(QJsonObject json)
         userGold += price;
         danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
-        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         int addition = 1;
         if (giftName == "舰长")
             addition = 1;
