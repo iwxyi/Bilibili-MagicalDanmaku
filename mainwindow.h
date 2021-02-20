@@ -624,8 +624,7 @@ private:
     void closeServer();
 
     void initMusicServer();
-    QByteArray getOrderSongsByteArray(const SongList& songs);
-    void sendMusicList(const SongList& songs);
+    void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
 
 private:
     Ui::MainWindow *ui;

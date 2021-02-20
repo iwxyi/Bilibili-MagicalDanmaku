@@ -1,0 +1,43 @@
+<head>
+    <title>神奇弹幕点歌姬</title>
+    <link rel="stylesheet" href="../css/list.css" media="screen" type="text/css" />
+    <script src="../js/jquery-2.1.0.js"></script>
+</head>
+
+<body>
+    <ol id="songs" class="live numbers">
+        <li>
+            等待点歌
+        </li>
+    </ol>
+    <script type="text/javascript">
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://localhost:7002");
+            ws.onopen = function() {
+                console.log("connected");
+            };
+            ws.onmessage = function(e) {
+                // console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                var olText = '';
+                switch (cmd) {
+                    case 'SONG_LIST':
+                        var songs = json['data']; // 歌曲数组
+                        for (var i = 0; i < songs.length; i++) {
+                            var song = songs[i];
+                            olText += '<li>' + song['name'] + "</li>";
+                        }
+                        break;
+                }
+                $("#songs").html(olText);
+            };
+            ws.onclose = function() {
+
+            };
+        });
+    </script>
+</body>

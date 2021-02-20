@@ -96,11 +96,10 @@ void MainWindow::initMusicServer()
                  << clientSocket->peerAddress() << clientSocket->peerPort();
         musicSockets.append(clientSocket);
 
+        sendMusicList(musicWindow->getOrderSongs(), clientSocket);
+
         connect(clientSocket, &QWebSocket::connected, this, [=]{
-            qDebug() << "client connected" << musicSockets.size();
-        });
-        connect(clientSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-            qDebug() << "client state" << state;
+            // 一直都是连接状态，不会触发
         });
         connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
             qDebug() << "message received:" << message;
@@ -117,22 +116,30 @@ void MainWindow::initMusicServer()
 
 }
 
-QByteArray MainWindow::getOrderSongsByteArray(const SongList &songs)
+void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
 {
+    if (!socket && !musicSockets.size()) // 不需要发送，空着的
+        return ;
+
     QJsonObject json;
     QJsonArray array;
     foreach (Song song, songs)
         array.append(song.toJson());
-    json.insert("songs", array);
-    return QJsonDocument(json).toJson();
-}
+    json.insert("data", array);
+    json.insert("cmd", "SONG_LIST");
+    QByteArray ba = QJsonDocument(json).toJson();
 
-void MainWindow::sendMusicList(const SongList& songs)
-{
-    QByteArray ba = getOrderSongsByteArray(songs);
-    foreach (QWebSocket* socket, musicSockets)
+    if (socket)
     {
-       socket->sendTextMessage(ba);
+        socket->sendTextMessage(ba);
+    }
+    else
+    {
+        qDebug() << "更新列表" << musicSockets.size();
+        foreach (QWebSocket* socket, musicSockets)
+        {
+           socket->sendTextMessage(ba);
+        }
     }
 }
 
@@ -144,7 +151,7 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
     if (urlPath.endsWith("/"))
         urlPath = urlPath.left(urlPath.length() - 1);
     urlPath = urlPath.trimmed();
-    qDebug() << "request ->" << urlPath;
+//    qDebug() << "request ->" << urlPath;
     serverHandleUrl(urlPath, req, resp);
 }
 
