@@ -24,7 +24,7 @@
 #include <qhttpserver.h>
 #include <qhttprequest.h>
 #include <qhttpresponse.h>
-#include <QTcpServer>
+#include <QWebSocketServer>
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
@@ -468,7 +468,7 @@ private slots:
 
     void on_serverCheck_clicked();
 
-    void on_serverPortSpin_valueChanged(int arg1);
+    void on_serverPortSpin_editingFinished();
 
     void on_autoPauseOuterMusicCheck_clicked();
 
@@ -809,8 +809,8 @@ private:
     QDir wwwDir;
     QHash<QString, QString> contentTypeMap;
 
-    QTcpServer* musicServer = nullptr;
-    QList<QTcpSocket*> musicSockets;
+    QWebSocketServer* musicServer = nullptr;
+    QList<QWebSocket*> musicSockets;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

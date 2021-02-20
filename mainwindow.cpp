@@ -9961,9 +9961,9 @@ void MainWindow::on_serverCheck_clicked()
         closeServer();
 }
 
-void MainWindow::on_serverPortSpin_valueChanged(int arg1)
+void MainWindow::on_serverPortSpin_editingFinished()
 {
-    settings.setValue("server/port", arg1);
+    settings.setValue("server/port", ui->serverPortSpin->value());
     if (server)
     {
         closeServer();

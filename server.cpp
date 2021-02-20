@@ -16,15 +16,16 @@ void MainWindow::openServer(int port)
     // 设置服务端参数
     initServerData();
 
-    if (musicWindow && !musicServer)
-        initMusicServer();
-
     qDebug() << "开启总服务器" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
         ui->serverCheck->setChecked(false);
         statusLabel->setText("开启服务端失败！");
     }
+
+    // 点歌姬socket
+    if (musicWindow && !musicServer)
+        initMusicServer();
 }
 
 void MainWindow::initServerData()
@@ -66,7 +67,7 @@ void MainWindow::closeServer()
         musicServer->deleteLater();
         musicServer = nullptr;
 
-        foreach (QTcpSocket* socket, musicSockets) {
+        foreach (QWebSocket* socket, musicSockets) {
             socket->close();
             socket->deleteLater();
         }
@@ -79,7 +80,7 @@ void MainWindow::initMusicServer()
     if (musicServer)
         return ;
 
-    musicServer = new QTcpServer(this);
+    musicServer = new QWebSocketServer("OrderSong", QWebSocketServer::NonSecureMode, this);
     if (!musicServer->listen(QHostAddress::LocalHost, quint16(serverPort + MUSIC_SERVER_PORT)))
     {
         qWarning() << "点歌姬服务开启失败，端口：" << quint16(serverPort + MUSIC_SERVER_PORT);
@@ -89,32 +90,25 @@ void MainWindow::initMusicServer()
     }
     qDebug() << "开启点歌姬服务" << quint16(serverPort + MUSIC_SERVER_PORT);
 
-    connect(musicServer, &QTcpServer::newConnection, this, [=]{
-        QTcpSocket *clientSocket = musicServer->nextPendingConnection();
+    connect(musicServer, &QWebSocketServer::newConnection, this, [=]{
+        QWebSocket* clientSocket = musicServer->nextPendingConnection();
         qDebug() << "music socket 接入" << clientSocket->peerName()
                  << clientSocket->peerAddress() << clientSocket->peerPort();
         musicSockets.append(clientSocket);
 
-        connect(clientSocket, &QTcpSocket::connected, this, [=]{
+        connect(clientSocket, &QWebSocket::connected, this, [=]{
             qDebug() << "client connected" << musicSockets.size();
         });
-        connect(clientSocket, &QTcpSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        connect(clientSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
             qDebug() << "client state" << state;
         });
-        connect(clientSocket, &QTcpSocket::readyRead, this, [=](){
-            qDebug() << "client readyRead";
-            QByteArray buffer;
-            //读取缓冲区数据
-            buffer = clientSocket->readAll();
-            if(!buffer.isEmpty())
-            {
-                QString command =  QString::fromLocal8Bit(buffer);
-                qDebug() << command;
-            }
-
-            clientSocket->write("OK");
+        connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+            qDebug() << "message received:" << message;
         });
-        connect(clientSocket, &QTcpSocket::disconnected, this, [=]{
+        connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+            qDebug() << "text message received:" << message;
+        });
+        connect(clientSocket, &QWebSocket::disconnected, this, [=]{
             musicSockets.removeOne(clientSocket);
             clientSocket->deleteLater();
             qDebug() << "music socket 关闭" << musicSockets.size();
@@ -136,9 +130,9 @@ QByteArray MainWindow::getOrderSongsByteArray(const SongList &songs)
 void MainWindow::sendMusicList(const SongList& songs)
 {
     QByteArray ba = getOrderSongsByteArray(songs);
-    foreach (QTcpSocket* socket, musicSockets)
+    foreach (QWebSocket* socket, musicSockets)
     {
-       socket->write(ba);
+       socket->sendTextMessage(ba);
     }
 }
 
