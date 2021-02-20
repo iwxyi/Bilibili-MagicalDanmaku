@@ -8080,7 +8080,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             {
                 saveOrderSongs(songs);
             }
-            if (musicServer)
+            if (musicSocketServer)
             {
                 sendMusicList(songs);
             }
@@ -8102,7 +8102,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             });
         });
 
-        if (ui->serverCheck->isChecked() && !musicServer)
+        if (ui->serverCheck->isChecked() && !musicSocketServer)
             initMusicServer();
     }
 
@@ -9660,6 +9660,8 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
 void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     emit signalCmdEvent(cmd, danmaku);
+
+    sendSocketCmd(cmd, danmaku);
 }
 
 void MainWindow::on_voiceLocalRadio_toggled(bool checked)

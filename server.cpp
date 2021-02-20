@@ -16,6 +16,7 @@ void MainWindow::openServer(int port)
     // 设置服务端参数
     initServerData();
 
+    // 开启服务器
     qDebug() << "开启总服务器" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
@@ -23,8 +24,40 @@ void MainWindow::openServer(int port)
         statusLabel->setText("开启服务端失败！");
     }
 
+    // 弹幕socket
+    danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
+    if (danmakuSocketServer->listen(QHostAddress::LocalHost, quint16(serverPort + DANMAKU_SERVER_PORT)))
+    {
+        qDebug() << "开启弹幕服务" << serverPort + DANMAKU_SERVER_PORT;
+        connect(danmakuSocketServer, &QWebSocketServer::newConnection, this, [=]{
+            QWebSocket* clientSocket = danmakuSocketServer->nextPendingConnection();
+    //        qDebug() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
+            danmakuSockets.append(clientSocket);
+
+            connect(clientSocket, &QWebSocket::connected, this, [=]{
+                // 一直都是连接状态，不会触发
+            });
+            connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+                qDebug() << "danmaku message received:" << message;
+            });
+            connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+                qDebug() << "danmaku text message received:" << message;
+            });
+            connect(clientSocket, &QWebSocket::disconnected, this, [=]{
+                danmakuSockets.removeOne(clientSocket);
+                clientSocket->deleteLater();
+    //            qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
+            });
+        });
+    }
+    else
+    {
+        qWarning() << "弹幕服务开启失败，端口：" << quint16(serverPort + DANMAKU_SERVER_PORT);
+    }
+
+
     // 点歌姬socket
-    if (musicWindow && !musicServer)
+    if (musicWindow && !musicSocketServer)
         initMusicServer();
 }
 
@@ -60,12 +93,19 @@ void MainWindow::closeServer()
     // server->close(); // 这个不是关闭端口的……
     server->deleteLater();
     server = nullptr;
+    danmakuSocketServer->deleteLater();
+    danmakuSocketServer = nullptr;
+    foreach (QWebSocket* socket, danmakuSockets) {
+        socket->close();
+        socket->deleteLater();
+    }
+    danmakuSockets.clear();
 
-    if (musicServer)
+    if (musicSocketServer)
     {
-        musicServer->close();
-        musicServer->deleteLater();
-        musicServer = nullptr;
+        musicSocketServer->close();
+        musicSocketServer->deleteLater();
+        musicSocketServer = nullptr;
 
         foreach (QWebSocket* socket, musicSockets) {
             socket->close();
@@ -75,25 +115,40 @@ void MainWindow::closeServer()
     }
 }
 
-void MainWindow::initMusicServer()
+void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
 {
-    if (musicServer)
+    if (!danmakuSocketServer || !danmakuSockets.size()) // 不需要发送，空着的
         return ;
 
-    musicServer = new QWebSocketServer("OrderSong", QWebSocketServer::NonSecureMode, this);
-    if (!musicServer->listen(QHostAddress::LocalHost, quint16(serverPort + MUSIC_SERVER_PORT)))
+    QJsonObject json;
+    json.insert("data", danmaku.toJson());
+    json.insert("cmd", cmd);
+    QByteArray ba = QJsonDocument(json).toJson();
+
+    foreach (QWebSocket* socket, musicSockets)
+    {
+       socket->sendTextMessage(ba);
+    }
+}
+
+void MainWindow::initMusicServer()
+{
+    if (musicSocketServer)
+        return ;
+
+    musicSocketServer = new QWebSocketServer("OrderSong", QWebSocketServer::NonSecureMode, this);
+    if (!musicSocketServer->listen(QHostAddress::LocalHost, quint16(serverPort + MUSIC_SERVER_PORT)))
     {
         qWarning() << "点歌姬服务开启失败，端口：" << quint16(serverPort + MUSIC_SERVER_PORT);
-        delete musicServer;
-        musicServer = nullptr;
+        delete musicSocketServer;
+        musicSocketServer = nullptr;
         return ;
     }
     qDebug() << "开启点歌姬服务" << quint16(serverPort + MUSIC_SERVER_PORT);
 
-    connect(musicServer, &QWebSocketServer::newConnection, this, [=]{
-        QWebSocket* clientSocket = musicServer->nextPendingConnection();
-        qDebug() << "music socket 接入" << clientSocket->peerName()
-                 << clientSocket->peerAddress() << clientSocket->peerPort();
+    connect(musicSocketServer, &QWebSocketServer::newConnection, this, [=]{
+        QWebSocket* clientSocket = musicSocketServer->nextPendingConnection();
+//        qDebug() << "music socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
         musicSockets.append(clientSocket);
 
         sendMusicList(musicWindow->getOrderSongs(), clientSocket);
@@ -102,18 +157,17 @@ void MainWindow::initMusicServer()
             // 一直都是连接状态，不会触发
         });
         connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-            qDebug() << "message received:" << message;
+            qDebug() << "music message received:" << message;
         });
         connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-            qDebug() << "text message received:" << message;
+            qDebug() << "music text message received:" << message;
         });
         connect(clientSocket, &QWebSocket::disconnected, this, [=]{
             musicSockets.removeOne(clientSocket);
             clientSocket->deleteLater();
-            qDebug() << "music socket 关闭" << musicSockets.size();
+//            qDebug() << "music socket 关闭" << musicSockets.size();
         });
     });
-
 }
 
 void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
@@ -135,7 +189,6 @@ void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
     }
     else
     {
-        qDebug() << "更新列表" << musicSockets.size();
         foreach (QWebSocket* socket, musicSockets)
         {
            socket->sendTextMessage(ba);
@@ -203,6 +256,10 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     {
         if (!musicWindow)
             return errorResp("点歌姬未开启", QHttpResponse::STATUS_SERVICE_UNAVAILABLE);
+        return toIndex();
+    }
+    else if (urlPath == "gift") // 礼物专属
+    {
         return toIndex();
     }
     else if (urlPath == "favicon.ico")

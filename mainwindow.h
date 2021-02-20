@@ -63,7 +63,7 @@ QT_END_NAMESPACE
 #define EVENT_CD_CN 6      // 事件动作冷却通道
 
 #define SERVER_PORT 0
-#define DANMU_SERVER_PORT 1
+#define DANMAKU_SERVER_PORT 1
 #define MUSIC_SERVER_PORT 2
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
@@ -622,6 +622,7 @@ private:
     void openServer(int port = 0);
     void initServerData();
     void closeServer();
+    void sendSocketCmd(QString cmd, LiveDanmaku danmaku);
 
     void initMusicServer();
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
@@ -807,8 +808,10 @@ private:
     qint16 serverPort = 0;
     QDir wwwDir;
     QHash<QString, QString> contentTypeMap;
+    QWebSocketServer* danmakuSocketServer = nullptr;
+    QList<QWebSocket*> danmakuSockets;
 
-    QWebSocketServer* musicServer = nullptr;
+    QWebSocketServer* musicSocketServer = nullptr;
     QList<QWebSocket*> musicSockets;
 
     // 截图管理
