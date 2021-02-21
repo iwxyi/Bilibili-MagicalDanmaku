@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>669</width>
+    <width>652</width>
     <height>405</height>
    </rect>
   </property>
@@ -44,6 +44,14 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>仅关注的前250名用户开播时，并有最近10条弹幕或上高能榜才能检测到
+谨慎使用，容易被屏蔽（不影响发弹幕等）</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QTableWidget" name="tableWidget">
