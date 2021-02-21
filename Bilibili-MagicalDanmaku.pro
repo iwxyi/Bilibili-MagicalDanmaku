@@ -57,6 +57,7 @@ SOURCES += \
     server.cpp \
     utils/xfytts.cpp \
     video_player/videosurface.cpp \
+    widgets/catchyouwidget.cpp \
     widgets/conditioneditor.cpp \
     widgets/eternalblockdialog.cpp \
     widgets/eventwidget.cpp \
@@ -107,6 +108,7 @@ HEADERS += \
     utils/xfytts.h \
     video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
+    widgets/catchyouwidget.h \
     widgets/conditioneditor.h \
     widgets/eternalblockdialog.h \
     widgets/eventwidget.h \
@@ -132,6 +134,7 @@ FORMS += \
     picture_browser/picturebrowser.ui \
     utils/textinputdialog.ui \
     video_player/livevideoplayer.ui \
+    widgets/catchyouwidget.ui \
     widgets/eternalblockdialog.ui \
     widgets/roomstatusdialog.ui \
     widgets/videolyricscreator.ui

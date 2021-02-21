@@ -2853,7 +2853,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>501</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -2888,6 +2888,7 @@ margin: 6px;</string>
     <addaction name="actionCreate_Video_LRC"/>
     <addaction name="actionGet_Play_Url"/>
     <addaction name="actionRoom_Status"/>
+    <addaction name="actionCatch_You_Online"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionGitHub"/>
@@ -3081,6 +3082,11 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>视频截图管理</string>
+   </property>
+  </action>
+  <action name="actionCatch_You_Online">
+   <property name="text">
+    <string>跑骚抓人</string>
    </property>
   </action>
  </widget>

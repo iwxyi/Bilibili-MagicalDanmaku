@@ -7,6 +7,7 @@
 #include "roomstatusdialog.h"
 #include "eventwidget.h"
 #include "RoundedAnimationLabel.h"
+#include "catchyouwidget.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -10040,4 +10041,11 @@ void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
     {
         saveOrderSongs(musicWindow->getOrderSongs());
     }
+}
+
+void MainWindow::on_actionCatch_You_Online_triggered()
+{
+    CatchYouWidget* cyw = new CatchYouWidget(nullptr);
+    cyw->show();
+    cyw->catchUser(upUid);
 }
