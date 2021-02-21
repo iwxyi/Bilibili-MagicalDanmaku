@@ -620,16 +620,15 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GUARD_BUY)
     {
-        qDebug() << danmaku.getFirst();
         QString modify;
-        if (danmaku.getFirst() == 1)
+        if (danmaku.getFirst() == 1) // 初次
         {
             if (simpleMode)
                 modify = "<font color='gray'>[初]</font>";
             else
                 modify = "<font color='green'>[初]</font>";
         }
-        else if (danmaku.getFirst() == 2)
+        else if (danmaku.getFirst() == 2) // 新
         {
             if (simpleMode)
                 modify = "<font color='gray'>[新]</font>";

@@ -69,7 +69,7 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price, bool first)
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price, int first)
         : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime()),
           giftId(gift_id), guard(guard), coin_type("gold"), total_coin(price), first(first)
     {

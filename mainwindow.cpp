@@ -1133,7 +1133,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         int gift_id = 10003;
         int guard_level = 3;
         int price = 198000;
-        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price, 1);
+        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price, 2);
         appendNewLiveDanmaku(danmaku);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
@@ -5965,7 +5965,7 @@ void MainWindow::handleMessage(QJsonObject json)
         int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         qDebug() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price,
-                            guardCount == 0 ? 1 : currentGuards.contains(uid) ? 2 : 0);
+                            guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
 
         if (!guardCount)
