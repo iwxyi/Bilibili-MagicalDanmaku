@@ -4108,9 +4108,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
         delBlockUser(danmaku.getUid());
-        if (eternalBlockUsers.contains(danmaku.getUid()))
+        if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
         {
-            eternalBlockUsers.removeOne(danmaku.getUid());
+            eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
             saveEternalBlockUsers();
         }
         if (response)
@@ -4160,9 +4160,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (eternalBlockUsers.contains(danmaku.getUid()))
+                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    eternalBlockUsers.removeOne(danmaku.getUid());
+                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -4183,9 +4183,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (eternalBlockUsers.contains(danmaku.getUid()))
+                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    eternalBlockUsers.removeOne(danmaku.getUid());
+                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -7545,6 +7545,11 @@ void MainWindow::showDiangeHistory()
 
 void MainWindow::addBlockUser(qint64 uid, int hour)
 {
+    addBlockUser(uid, roomId.toLongLong(), hour);
+}
+
+void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
+{
     if(browserData.isEmpty())
     {
         statusLabel->setText("请先设置登录信息");
@@ -7575,6 +7580,11 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
 
 void MainWindow::delBlockUser(qint64 uid)
 {
+    delBlockUser(uid, roomId.toLongLong());
+}
+
+void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
+{
     if(browserData.isEmpty())
     {
         statusLabel->setText("请先设置登录信息");
@@ -7596,7 +7606,7 @@ void MainWindow::delBlockUser(qint64 uid)
     }
 
     // 获取直播间的网络ID，再取消屏蔽
-    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+snum(roomId)+"&page=1";
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
@@ -7645,7 +7655,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 
 void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 {
-    if (eternalBlockUsers.contains(EternalBlockUser(uid)))
+    if (eternalBlockUsers.contains(EternalBlockUser(uid, roomId.toLongLong())))
     {
         localNotify("该用户已经在永久禁言中");
         return ;
@@ -7653,14 +7663,14 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     addBlockUser(uid, 720);
 
-    eternalBlockUsers.append(EternalBlockUser(uid, uname, QDateTime::currentSecsSinceEpoch()));
+    eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
     qDebug() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
 {
-    EternalBlockUser user(uid);
+    EternalBlockUser user(uid, roomId.toLongLong());
     if (!eternalBlockUsers.contains(user))
         return ;
 
@@ -7705,7 +7715,7 @@ void MainWindow::detectEternalBlockUsers()
         // 该补上禁言啦
         blocked = true;
         qDebug() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
-        addBlockUser(user.uid, MAX_BLOCK_HOUR);
+        addBlockUser(user.uid, user.roomId, MAX_BLOCK_HOUR);
 
         user.time = currentSecond;
         eternalBlockUsers.removeFirst();

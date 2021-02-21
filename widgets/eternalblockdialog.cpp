@@ -39,7 +39,7 @@ void EternalBlockDialog::on_listWidget_activated(const QModelIndex &index)
     ui->listWidget->takeItem(row);
 }
 
-void EternalBlockDialog::on_listWidget_customContextMenuRequested(const QPoint &pos)
+void EternalBlockDialog::on_listWidget_customContextMenuRequested(const QPoint &)
 {
     QListWidgetItem* item = ui->listWidget->currentItem();
 

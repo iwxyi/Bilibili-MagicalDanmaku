@@ -246,9 +246,13 @@ private slots:
 
     void showDiangeHistory();
 
-    void addBlockUser(qint64 upUid, int hour);
+    void addBlockUser(qint64 uid, int hour);
 
-    void delBlockUser(qint64 upUid);
+    void addBlockUser(qint64 uid, qint64 roomId, int hour);
+
+    void delBlockUser(qint64 uid);
+
+    void delBlockUser(qint64 uid, qint64 roomId);
 
     void delRoomBlockUser(qint64 id);
 

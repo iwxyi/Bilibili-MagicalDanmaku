@@ -13,24 +13,26 @@ class EternalBlockDialog;
 
 struct EternalBlockUser
 {
-    qint64 uid = 0;
+    qint64 uid;
+    qint64 roomId;
     QString uname;
     qint64 time = 0; // 上次禁言的时间
 
     EternalBlockUser()
     {}
 
-    EternalBlockUser(qint64 uid) : uid(uid)
+    EternalBlockUser(qint64 uid, qint64 roomId) : uid(uid), roomId(roomId)
     {}
 
-    EternalBlockUser(qint64 uid, QString name, qint64 time)
-        : uid(uid), uname(name), time(time)
+    EternalBlockUser(qint64 uid, qint64 roomId, QString name, qint64 time)
+        : uid(uid), roomId(roomId), uname(name), time(time)
     {}
 
     static EternalBlockUser fromJson(QJsonObject json)
     {
         EternalBlockUser user;
-        user.uid = static_cast<qint64>(json.value("uid").toDouble());
+        user.uid = qint64(json.value("uid").toDouble());
+        user.roomId = qint64(json.value("roomId").toDouble());
         user.uname = json.value("uname").toString();
         user.time = static_cast<qint64>(json.value("time").toDouble());
         return user;
@@ -40,6 +42,7 @@ struct EternalBlockUser
     {
         QJsonObject json;
         json.insert("uid", uid);
+        json.insert("roomId", roomId);
         json.insert("uname", uname);
         json.insert("time", time);
         return json;
@@ -62,7 +65,7 @@ public:
 private slots:
     void on_listWidget_activated(const QModelIndex &index);
 
-    void on_listWidget_customContextMenuRequested(const QPoint &pos);
+    void on_listWidget_customContextMenuRequested(const QPoint &);
 
 signals:
     void signalCancelEternalBlock(qint64 uid);
