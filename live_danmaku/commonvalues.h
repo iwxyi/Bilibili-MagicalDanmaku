@@ -36,6 +36,7 @@ protected:
     static QString browserCookie;
     static QString browserData;
     static QString csrf_token;
+    static QVariant userCookies;
 };
 
 #endif // COMMANDVALUES_H

@@ -25,6 +25,7 @@ QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
+QVariant CommonValues::userCookies;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -163,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent)
     int posr = browserData.indexOf("&", posl);
     if (posr == -1) posr = browserData.length();
     csrf_token = browserData.mid(posl, posr - posl);
+    userCookies = getCookies();
     getUserInfo();
 
     // 保存弹幕
@@ -2234,7 +2236,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         liveStatus = roomInfo.value("live_status").toInt();
         int pkStatus = roomInfo.value("pk_status").toInt();
         if (danmakuWindow)
-            danmakuWindow->setUpUid(upUid.toLongLong());
+            danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         qDebug() << "房间信息: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  uid=" << upUid;
@@ -7940,7 +7942,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
-        danmakuWindow->setUpUid(upUid.toLongLong());
+        danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         danmakuWindow->hide();
         danmakuWindow->setWindowIcon(this->windowIcon());
         danmakuWindow->setWindowTitle(this->windowTitle());
@@ -7999,6 +8001,7 @@ void MainWindow::on_actionSet_Cookie_triggered()
         browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
     browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
     browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
+    userCookies = getCookies();
     settings.setValue("danmaku/browserData", browserData);
     qDebug() << "设置弹幕格式：" << browserData;
 }
@@ -8964,7 +8967,7 @@ void MainWindow::releaseLiveData()
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
-        danmakuWindow->setUpUid(0);
+        danmakuWindow->setIds(0, 0);
         danmakuWindow->releaseLiveData();
     }
 
@@ -9270,7 +9273,7 @@ void MainWindow::get(QString url, NetReplyFunc func)
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     if (url.contains("bilibili.com") && !browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+        request->setHeader(QNetworkRequest::CookieHeader, userCookies);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -10057,5 +10060,6 @@ void MainWindow::on_actionCatch_You_Online_triggered()
 {
     CatchYouWidget* cyw = new CatchYouWidget(nullptr);
     cyw->show();
-    cyw->catchUser(upUid);
+    // cyw->catchUser(upUid);
+    cyw->setDefaultUser(upUid);
 }

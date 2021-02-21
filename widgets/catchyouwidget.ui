@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>454</width>
+    <width>669</width>
     <height>405</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>跑骚抓人</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -30,10 +30,49 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item>
-    <widget class="QTableWidget" name="tableWidget"/>
+    <widget class="QTableWidget" name="tableWidget">
+     <column>
+      <property name="text">
+       <string>房号</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>房名</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>主播</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>时间</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>弹幕</string>
+      </property>
+     </column>
+    </widget>
    </item>
    <item>
     <widget class="QProgressBar" name="progressBar">

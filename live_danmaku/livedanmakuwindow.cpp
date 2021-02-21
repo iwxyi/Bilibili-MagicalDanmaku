@@ -1068,7 +1068,7 @@ void LiveDanmakuWindow::showMenu()
         {
             menu->addAction(actionAddBlockTemp);
             menu->addAction(actionAddBlock);
-            if (eternalBlockUsers.contains(EternalBlockUser(uid)))
+            if (eternalBlockUsers.contains(EternalBlockUser(uid, roomId)))
                 menu->addAction(actionCancelEternalBlock);
             else
                 menu->addAction(actionEternalBlock);
@@ -1768,9 +1768,10 @@ void LiveDanmakuWindow::setNewbieTip(bool tip)
     this->newbieTip = tip;
 }
 
-void LiveDanmakuWindow::setUpUid(qint64 uid)
+void LiveDanmakuWindow::setIds(qint64 uid, qint64 roomId)
 {
     this->upUid = uid;
+    this->roomId = roomId;
 }
 
 void LiveDanmakuWindow::markRobot(qint64 uid)
@@ -1984,7 +1985,7 @@ void LiveDanmakuWindow::releaseLiveData()
 {
     headPortraits.clear();
     hideStatusText();
-    setUpUid(0);
+    setIds(0, 0);
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

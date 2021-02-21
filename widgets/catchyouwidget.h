@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <functional>
+#include "commonvalues.h"
 
 namespace Ui {
 class CatchYouWidget;
@@ -10,7 +11,7 @@ class CatchYouWidget;
 
 class QNetworkReply;
 
-class CatchYouWidget : public QWidget
+class CatchYouWidget : public QWidget, public CommonValues
 {
     Q_OBJECT
 public:
@@ -18,13 +19,16 @@ public:
     ~CatchYouWidget();
 
     void catchUser(QString userId);
+    void setDefaultUser(QString userId);
 
     struct RoomInfo
     {
-        QString roomId;
+        qint64 roomId;
         QString roomName;
-        QString upId;
+        qint64 upUid;
         QString upName;
+        qint64 time = 0; // 秒
+        QStringList danmakus;
     };
 
     struct UserInfo
@@ -45,6 +49,11 @@ private slots:
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);
     void detectUserLiveStatus(qint64 taskTs, int index);
+    void detectRoomDanmaku(qint64 taskTs, QString roomId);
+    void addInRoom(qint64 taskTs, QString roomId, qint64 second, QStringList texts);
+    void detectRoomGift(qint64 taskTs, QString roomId);
+
+    void addToTable(RoomInfo room);
 
     void get(QString url, const std::function<void(QJsonObject)> func);
 
@@ -53,7 +62,7 @@ private:
 
     QString userId;
     QList<UserInfo> users;
-    QList<RoomInfo> rooms;
+    QList<RoomInfo> inRooms;
 
     qint64 currentTaskTs = 0; // 任务Id，允许中止
 };

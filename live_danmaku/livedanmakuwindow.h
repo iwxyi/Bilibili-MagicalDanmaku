@@ -106,7 +106,7 @@ public slots:
     void setEnableBlock(bool enable);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
-    void setUpUid(qint64 uid);
+    void setIds(qint64 uid, qint64 roomId);
     void markRobot(qint64 uid);
 
     void showFastBlock(qint64 uid, QString msg);
@@ -153,6 +153,7 @@ private:
     HWND prevWindow = nullptr;
 #endif
     QString myPrevSendMsg; // 上次发送的内容，没有发送成功的话自动填充
+    qint64 roomId = 0;
     qint64 upUid = 0; // 当前主播的UID，用来显示主播标志
 
     QColor nameColor;

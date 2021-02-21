@@ -50,7 +50,7 @@ struct EternalBlockUser
 
     bool operator==(const EternalBlockUser& another) const
     {
-        return this->uid == another.uid;
+        return this->uid == another.uid && this->roomId == another.roomId;
     }
 };
 
