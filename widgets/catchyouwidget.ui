@@ -47,6 +47,9 @@
    </item>
    <item>
     <widget class="QTableWidget" name="tableWidget">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <column>
       <property name="text">
        <string>房号</string>
@@ -70,6 +73,11 @@
      <column>
       <property name="text">
        <string>弹幕</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>贡献</string>
       </property>
      </column>
     </widget>

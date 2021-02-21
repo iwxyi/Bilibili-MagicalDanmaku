@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <functional>
+#include <QSettings>
 #include "commonvalues.h"
 
 namespace Ui {
@@ -15,7 +16,7 @@ class CatchYouWidget : public QWidget, public CommonValues
 {
     Q_OBJECT
 public:
-    explicit CatchYouWidget(QWidget *parent = nullptr);
+    explicit CatchYouWidget(QSettings& settings, QWidget *parent = nullptr);
     ~CatchYouWidget();
 
     void catchUser(QString userId);
@@ -29,6 +30,7 @@ public:
         QString upName;
         qint64 time = 0; // 秒
         QStringList danmakus;
+        int gold100 = 0;
     };
 
     struct UserInfo
@@ -46,19 +48,24 @@ private slots:
 
     void on_refreshButton_clicked();
 
+    void on_tableWidget_customContextMenuRequested(const QPoint &);
+
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);
     void detectUserLiveStatus(qint64 taskTs, int index);
-    void detectRoomDanmaku(qint64 taskTs, QString roomId);
-    void addInRoom(qint64 taskTs, QString roomId, qint64 second, QStringList texts);
-    void detectRoomGift(qint64 taskTs, QString roomId);
+    void detectRoomDanmaku(qint64 taskTs, QString upUid, QString roomId);
+    void detectRoomGift(qint64 taskTs, QString upUid, QString roomId, qint64 second, QStringList texts);
+    void addInRoom(qint64 taskTs, QString upUid, QString roomId, qint64 second, QStringList texts, int gold100);
+    void detectRoomGift(qint64 taskTs, QString upUid, QString roomId);
 
     void addToTable(RoomInfo room);
+    void openRoomVideo(QString roomId);
 
     void get(QString url, const std::function<void(QJsonObject)> func);
 
 private:
     Ui::CatchYouWidget *ui;
+    QSettings& settings;
 
     QString userId;
     QList<UserInfo> users;

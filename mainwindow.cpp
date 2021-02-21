@@ -10058,7 +10058,7 @@ void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
 
 void MainWindow::on_actionCatch_You_Online_triggered()
 {
-    CatchYouWidget* cyw = new CatchYouWidget(nullptr);
+    CatchYouWidget* cyw = new CatchYouWidget(settings, nullptr);
     cyw->show();
     // cyw->catchUser(upUid);
     cyw->setDefaultUser(upUid);

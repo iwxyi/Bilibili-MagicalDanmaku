@@ -13,14 +13,21 @@
 #include <QVideoWidget>
 #include <QVideoProbe>
 #include <QDir>
+#include <QMenu>
+#include <QAction>
+#include <QDesktopServices>
 #include "catchyouwidget.h"
 #include "ui_catchyouwidget.h"
+#include "livevideoplayer.h"
 
-CatchYouWidget::CatchYouWidget(QWidget *parent) :
+CatchYouWidget::CatchYouWidget(QSettings &settings, QWidget *parent) :
     QWidget(parent),
+    settings(settings),
     ui(new Ui::CatchYouWidget)
 {
     ui->setupUi(this);
+    userId = settings.value("paosao/userId").toString();
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
 CatchYouWidget::~CatchYouWidget()
@@ -44,7 +51,8 @@ void CatchYouWidget::catchUser(QString userId)
 
 void CatchYouWidget::setDefaultUser(QString userId)
 {
-    this->userId = userId;
+    if (this->userId.isEmpty())
+        this->userId = userId;
 }
 
 void CatchYouWidget::on_userButton_clicked()
@@ -53,6 +61,7 @@ void CatchYouWidget::on_userButton_clicked()
     QString id = QInputDialog::getText(this, "输入用户Id", "请输入要抓的用户Id", QLineEdit::Normal, userId, &ok);
     if (!ok)
         return ;
+    settings.setValue("paosao/userId", id);
     catchUser(id);
 }
 
@@ -127,7 +136,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
             QString roomId = QString::number(qint64(data.value("roomid").toDouble()));
 
             // 先检测弹幕
-            detectRoomDanmaku(taskTs, roomId);
+            detectRoomDanmaku(taskTs, user.userId, roomId);
         }
 
         // 检测下一个
@@ -136,7 +145,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
     });
 }
 
-void CatchYouWidget::detectRoomDanmaku(qint64 taskTs, QString roomId)
+void CatchYouWidget::detectRoomDanmaku(qint64 taskTs, QString upUid, QString roomId)
 {
     get("https://api.live.bilibili.com/ajax/msg?roomid=" + roomId, [=](QJsonObject json) {
         if (currentTaskTs != taskTs)
@@ -149,7 +158,7 @@ void CatchYouWidget::detectRoomDanmaku(qint64 taskTs, QString roomId)
 
         QJsonObject data = json.value("data").toObject();
 
-        qint64 uid = userId.toLongLong();
+        qint64 uid = this->userId.toLongLong();
         qint64 time = 0;
         QStringList texts;
         auto each = [&](QJsonObject danmaku) {
@@ -161,6 +170,7 @@ void CatchYouWidget::detectRoomDanmaku(qint64 taskTs, QString roomId)
                     time = t;
                 QString text = danmaku.value("text").toString();
                 texts.append(text);
+                qDebug() << "检测到弹幕：" << roomId << text << t;
             }
         };
         foreach (QJsonValue val, data.value("admin").toArray())
@@ -174,17 +184,36 @@ void CatchYouWidget::detectRoomDanmaku(qint64 taskTs, QString roomId)
 
         if (time) // 有弹幕
         {
-            qDebug() << "检测到弹幕：" << roomId << texts;
-            addInRoom(taskTs, roomId, time, texts);
+            detectRoomGift(taskTs, upUid, roomId,  time, texts);
         }
         else // 没有弹幕，检测送礼榜
         {
-            detectRoomGift(taskTs, roomId);
+            detectRoomGift(taskTs, upUid, roomId);
         }
     });
 }
 
-void CatchYouWidget::addInRoom(qint64 taskTs, QString roomId, qint64 second, QStringList texts)
+void CatchYouWidget::detectRoomGift(qint64 taskTs, QString upUid, QString roomId, qint64 second, QStringList texts)
+{
+    get("https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid="+upUid+"&roomId="+roomId+"&page=1&pageSize=50", [=](QJsonObject json){
+        int gold100 = 0;
+        QJsonArray array = json.value("data").toObject().value("OnlineRankItem").toArray();
+        qint64 uid = this->userId.toLongLong();
+        foreach (QJsonValue val, array)
+        {
+            QJsonObject item = val.toObject();
+            if (qint64(item.value("uid").toDouble()) == uid)
+            {
+                gold100 = item.value("score").toInt();
+                break;
+            }
+        }
+
+        addInRoom(taskTs, upUid, roomId, second, texts, gold100);
+    });
+}
+
+void CatchYouWidget::addInRoom(qint64 taskTs, QString upUid, QString roomId, qint64 second, QStringList texts, int gold100)
 {
     get("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId, [=](QJsonObject json){
         if (currentTaskTs != taskTs)
@@ -211,15 +240,30 @@ void CatchYouWidget::addInRoom(qint64 taskTs, QString roomId, qint64 second, QSt
         room.upName = upName;
         room.time = second;
         room.danmakus = texts;
+        room.gold100 = gold100;
         inRooms.append(room);
 
         addToTable(room);
     });
 }
 
-void CatchYouWidget::detectRoomGift(qint64 taskTs, QString roomId)
+void CatchYouWidget::detectRoomGift(qint64 taskTs, QString upUid, QString roomId)
 {
-
+    get("https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid="+upUid+"&roomId="+roomId+"&page=1&pageSize=50", [=](QJsonObject json){
+        QJsonArray array = json.value("data").toObject().value("OnlineRankItem").toArray();
+        qint64 uid = this->userId.toLongLong();
+        foreach (QJsonValue val, array)
+        {
+            QJsonObject item = val.toObject();
+            if (qint64(item.value("uid").toDouble()) == uid)
+            {
+                int gold100 = item.value("score").toInt();
+                RoomInfo room;
+                addInRoom(taskTs, upUid, roomId, 0, QStringList{}, gold100);
+                break;
+            }
+        }
+    });
 }
 
 void CatchYouWidget::addToTable(CatchYouWidget::RoomInfo room)
@@ -235,6 +279,16 @@ void CatchYouWidget::addToTable(CatchYouWidget::RoomInfo room)
     auto item = new QTableWidgetItem(room.danmakus.size() ? room.danmakus.last() : "");
     item->setToolTip(room.danmakus.join("\n"));
     table->setItem(row, 4, item);
+
+    table->setItem(row, 5, new QTableWidgetItem(room.gold100 ? QString::number(room.gold100) : ""));
+}
+
+void CatchYouWidget::openRoomVideo(QString roomId)
+{
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    player->setAttribute(Qt::WA_DeleteOnClose, true);
+    player->setRoomId(roomId);
+    player->show();
 }
 
 void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const func)
@@ -260,4 +314,41 @@ void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const fun
         reply->deleteLater();
     });
     manager->get(*request);
+}
+
+void CatchYouWidget::on_tableWidget_customContextMenuRequested(const QPoint &)
+{
+    int row = ui->tableWidget->currentRow();
+
+    QMenu* menu = new QMenu(this);
+    QAction* actionPaoSao = new QAction("匿名跑骚", this);
+    QAction* actionRoom = new QAction("前往直播间", this);
+    QAction* actionPage = new QAction("用户主页", this);
+
+    if (row < 0) // 未选中
+    {
+        actionPaoSao->setEnabled(false);
+        actionRoom->setEnabled(false);
+        actionPage->setEnabled(false);
+    }
+
+    menu->addAction(actionPaoSao);
+    menu->addAction(actionRoom);
+    menu->addAction(actionPage);
+
+    connect(actionPaoSao, &QAction::triggered, this, [=]{
+        openRoomVideo(QString::number(inRooms.at(row).roomId));
+    });
+    connect(actionRoom, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + QString::number(inRooms.at(row).roomId)));
+    });
+    connect(actionPage, &QAction::triggered, this, [=]{
+        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + QString::number(inRooms.at(row).upUid)));
+    });
+
+    menu->exec(QCursor::pos());
+
+    actionPaoSao->deleteLater();
+    actionRoom->deleteLater();
+    actionPage->deleteLater();
 }
