@@ -669,7 +669,6 @@ private:
     int currentFansClub = 0;
     QList<FanBean> fansList; // 最近的关注，按时间排序
     int popularVal = 2;
-    QSet<qint64> currentGuards;
 
     // 弹幕信息
     QList<LiveDanmaku> roomDanmakus;

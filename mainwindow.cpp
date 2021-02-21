@@ -22,6 +22,7 @@ QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
 QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
+QSet<qint64> CommonValues::currentGuards;           // 当前船员
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -5971,6 +5972,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku);
         }
+        currentGuards.insert(uid);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
