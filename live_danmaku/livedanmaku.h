@@ -69,9 +69,9 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price)
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price, bool first)
         : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime()),
-          giftId(gift_id), guard(guard), coin_type("gold"), total_coin(price)
+          giftId(gift_id), guard(guard), coin_type("gold"), total_coin(price), first(first)
     {
 
     }
@@ -155,6 +155,7 @@ public:
         danmaku.iphone = object.value("iphone").toInt();
         danmaku.guard = object.value("guard").toInt();
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
+        danmaku.first = object.value("first").toInt();
         return danmaku;
     }
 
@@ -186,7 +187,10 @@ public:
             object.insert("total_coin", total_coin);
 
             if (msgType == MSG_GUARD_BUY)
+            {
                 object.insert("guard", guard);
+                object.insert("first", first);
+            }
         }
         else if (msgType == MSG_WELCOME)
         {
@@ -615,6 +619,11 @@ public:
         return guard;
     }
 
+    int getFirst() const
+    {
+        return first;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -670,6 +679,7 @@ private:
 
     bool robot = false;
     qint64 prev_timestamp = 0;
+    int first = 0; // 初次：1；新的：2
 };
 
 #endif // LIVEDANMAKU_H

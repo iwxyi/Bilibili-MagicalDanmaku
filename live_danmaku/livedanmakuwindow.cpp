@@ -620,7 +620,23 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GUARD_BUY)
     {
-        text = QString("<font color='red'>[上船]</font> %1 开通 %2×%3")
+        qDebug() << danmaku.getFirst();
+        QString modify;
+        if (danmaku.getFirst() == 1)
+        {
+            if (simpleMode)
+                modify = "<font color='gray'>[初]</font>";
+            else
+                modify = "<font color='green'>[初]</font>";
+        }
+        else if (danmaku.getFirst() == 2)
+        {
+            if (simpleMode)
+                modify = "<font color='gray'>[新]</font>";
+            else
+                modify = "<font color='red'>[新]</font>";
+        }
+        text = QString("<font color='red'>[上船]</font>" + modify + " %1 开通 %2×%3")
                 .arg(nameText)
                 .arg(danmaku.getGiftName())
                 .arg(danmaku.getNumber());
