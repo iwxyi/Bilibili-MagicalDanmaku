@@ -554,7 +554,9 @@ MainWindow::MainWindow(QWidget *parent)
     int eternalBlockSize = eternalBlockArray.size();
     for (int i = 0; i < eternalBlockSize; i++)
     {
-        eternalBlockUsers.append(EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject()));
+        EternalBlockUser eb = EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject());
+        if (eb.uid && eb.roomId)
+            eternalBlockUsers.append(eb);
     }
 
     // 每小时的事件

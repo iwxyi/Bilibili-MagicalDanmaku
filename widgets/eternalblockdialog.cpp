@@ -59,9 +59,11 @@ void EternalBlockDialog::on_listWidget_customContextMenuRequested(const QPoint &
 
     connect(actionCancelEternalBlock, &QAction::triggered, this, [=]{
         emit signalCancelEternalBlock(users->at(row).uid);
+        ui->listWidget->takeItem(row);
     });
     connect(actionCancelBlock, &QAction::triggered, this, [=]{
         emit signalCancelBlock(users->at(row).uid);
+        ui->listWidget->takeItem(row);
     });
 
     menu->exec(QCursor::pos());

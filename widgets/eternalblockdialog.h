@@ -13,8 +13,8 @@ class EternalBlockDialog;
 
 struct EternalBlockUser
 {
-    qint64 uid;
-    qint64 roomId;
+    qint64 uid = 0;
+    qint64 roomId = 0;
     QString uname;
     qint64 time = 0; // 上次禁言的时间
 
