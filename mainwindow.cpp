@@ -3154,6 +3154,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%guard_count%"))
         msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
 
+    if (msg.contains("%guard_first%"))
+        msg.replace("%guard_first%", snum(danmaku.getFirst()));
+
     // 粉丝牌房间
     if (msg.contains("%anchor_roomid%"))
         msg.replace("%anchor_roomid%", danmaku.getAnchorRoomid());
@@ -5960,7 +5963,8 @@ void MainWindow::handleMessage(QJsonObject json)
         // start_time和end_time都是当前时间？
         int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         qDebug() << username << s8("购买") << giftName << num << guardCount;
-        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price, guardCount == 0 ? 1 : 0);
+        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price,
+                            guardCount == 0 ? 1 : currentGuards.contains(uid) ? 2 : 0);
         appendNewLiveDanmaku(danmaku);
 
         if (!guardCount)
@@ -7408,9 +7412,10 @@ void MainWindow::getBagList(qint64 sendExpire)
 
 void MainWindow::updateExistGuards(int page)
 {
-    if (page == 0)
+    if (page == 0) // 表示是入口
     {
         page = 1;
+        currentGuards.clear();
 
         // 参数是0的话，自动判断是否需要
         if (browserCookie.isEmpty())
@@ -7422,6 +7427,7 @@ void MainWindow::updateExistGuards(int page)
     auto judgeGuard = [=](QJsonObject user){
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
+        currentGuards.insert(uid);
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {
@@ -7436,7 +7442,7 @@ void MainWindow::updateExistGuards(int page)
             else
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
             danmakuCounts->setValue("guard/" + snum(uid), count);
-            qDebug() << "设置舰长：" << username << count;
+            qDebug() << "设置舰长：" << username << uid << count;
         }
     };
 
@@ -8947,6 +8953,7 @@ void MainWindow::releaseLiveData()
     myAudience.clear();
     oppositeAudience.clear();
     fansList.clear();
+    currentGuards.clear();
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
