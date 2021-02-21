@@ -3140,6 +3140,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%gift_num%"))
         msg.replace("%gift_num%", snum(danmaku.getNumber()));
 
+    if (msg.contains("%gift_multi_num%"))
+        msg.replace("%gift_multi_num%", danmaku.getNumber() > 0 ? snum(danmaku.getNumber()) + "个" : "");
+
     // 总共赠送金瓜子
     if (msg.contains("%total_gold%"))
         msg.replace("%total_gold%", snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toInt()));
@@ -5689,9 +5692,24 @@ void MainWindow::handleMessage(QJsonObject json)
         qDebug() << "删除醒目留言：" << json;
         triggerCmdEvent(cmd, LiveDanmaku());
     }
-    else if (cmd == "SPECIAL_GIFT") // 节奏风暴
+    else if (cmd == "SPECIAL_GIFT") // 节奏风暴（特殊礼物？）
     {
-        qDebug() << "删除醒目留言：" << json;
+        qDebug() << "特殊礼物：" << json;
+        /*{
+            "cmd": "SPECIAL_GIFT",
+            "data": {
+                "39": {
+                    "action": "start",
+                    "content": "你们城里人真会玩",
+                    "hadJoin": 0,
+                    "id": "3066862253926",
+                    "num": 1,
+                    "storm_gif": "http://static.hdslb.com/live-static/live-room/images/gift-section/mobilegift/2/jiezou.gif?2017011901",
+                    "time": 90
+                }
+            }
+        }*/
+
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发），通过guard_level=1/2/3分辨总督/提督/舰长
