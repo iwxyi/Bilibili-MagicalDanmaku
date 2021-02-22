@@ -8688,7 +8688,6 @@ void MainWindow::pkEnd(QJsonObject json)
     if (myVotes > 0)
     {
         LiveDanmaku danmaku(bestName, ping ? 0 : result, myVotes);
-        qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~pkBestUname" << bestName;
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 
