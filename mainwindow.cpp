@@ -3692,8 +3692,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // AAAA
-    QRegularExpression dieRe("(.)\\1{2,}");
-    if (simp.indexOf(dieRe, 0, &match) > -1)
+    QRegularExpression aaRe("(.)\\1{2,}");
+    if (simp.indexOf(aaRe, 0, &match) > -1)
     {
         QString ch = match.capturedTexts().at(1);
         QString all = match.capturedTexts().at(0);
@@ -3701,8 +3701,17 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // ABAB
-    dieRe = QRegularExpression("(.{2,})\\1{1,}");
-    if (simp.indexOf(dieRe, 0, &match) > -1)
+    QRegularExpression abRe = QRegularExpression("(.{2,})\\1{1,}");
+    if (simp.indexOf(abRe, 0, &match) > -1)
+    {
+        QString ch = match.capturedTexts().at(1);
+        QString all = match.capturedTexts().at(0);
+        simp = simp.replace(all, QString("%1").arg(ch));
+    }
+
+    // Name1Name2
+    QRegularExpression sunameRe = QRegularExpression("^([A-Z][a-z0-9]+)[-_A-Z0-9]([\\w_\\-])+$");
+    if (simp.indexOf(sunameRe, 0, &match) > -1)
     {
         QString ch = match.capturedTexts().at(1);
         QString all = match.capturedTexts().at(0);
@@ -5104,7 +5113,7 @@ void MainWindow::handleMessage(QJsonObject json)
             startLiveRecord();
         emit signalLiveStart(roomId);
 
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (liveStatus || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qDebug() << "忽视PK导致的开播情况";
             return ;
