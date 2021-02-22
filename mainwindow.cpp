@@ -7747,7 +7747,7 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     addBlockUser(uid, 720);
 
-    eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, QDateTime::currentSecsSinceEpoch()));
+    eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, upName, roomTitle, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
     qDebug() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
 }

@@ -19,8 +19,9 @@ EternalBlockDialog::EternalBlockDialog(QList<EternalBlockUser> *users, QWidget *
     for (int i = 0; i < users->size(); i++)
     {
         EternalBlockUser user = users->at(i);
-        QString text = QString("%1 %2 %3").arg(user.uid).arg(user.uname)
-                .arg(QDateTime::fromSecsSinceEpoch(user.time).toString("yy-MM-dd hh:mm"));
+        QString text = QString("%2 (%1) [%4] %3").arg(user.uid).arg(user.uname)
+                .arg(QDateTime::fromSecsSinceEpoch(user.time).toString("yy-MM-dd hh:mm"))
+                .arg(user.upName);
         ui->listWidget->addItem(text);
     }
 }
