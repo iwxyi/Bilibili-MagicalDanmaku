@@ -496,6 +496,8 @@ private slots:
 
     void on_actionUpdate_New_Version_triggered();
 
+    void on_startOnRebootCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

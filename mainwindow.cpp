@@ -561,6 +561,9 @@ MainWindow::MainWindow(QWidget *parent)
             eternalBlockUsers.append(eb);
     }
 
+    // 开机自启
+    if (settings.value("runtime/startOnReboot", false).toBool())
+        ui->startOnRebootCheck->setChecked(true);
     // 每小时的事件
     hourTimer = new QTimer(this);
     hourTimer->setInterval(3600000);
@@ -10265,4 +10268,20 @@ void MainWindow::on_actionUpdate_New_Version_triggered()
     {
         syncMagicalRooms();
     }
+}
+
+void MainWindow::on_startOnRebootCheck_clicked()
+{
+    bool enable = ui->startOnRebootCheck->isChecked();
+    settings.setValue("runtime/startOnReboot", enable);
+
+    QString appName = QApplication::applicationName();
+    QString appPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
+    QSettings *reg=new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    QString val = reg->value(appName).toString();// 如果此键不存在，则返回的是空字符串
+    if (enable)
+        reg->setValue(appName, appPath);// 如果移除的话
+    else
+        reg->remove(appName);
+    reg->deleteLater();
 }
