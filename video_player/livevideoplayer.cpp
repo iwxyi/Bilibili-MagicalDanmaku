@@ -16,6 +16,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     ui->setupUi(this);
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    setMinimumSize(32, 32);
 
     // 设置模式
     useVideoWidget = settings.value("videoplayer/useVideoWidget", true).toBool();
@@ -77,6 +78,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
 
     // 设置音量
     player->setVolume(settings.value("videoplayer/volume", 50).toInt());
+    setWindowOpacity(settings.value("videoplayer/opacity", 100).toInt() / 100.0);
 
     // 设置置顶
     if (settings.value("videoplayer/top", false).toBool())
@@ -275,6 +277,14 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         else
             player->setVolume(settings.value("videoplayer/volume", 50).toInt());
     })->check(!player->volume());
+
+    FacileMenu* opacityMenu = menu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
+    opacityMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
+        item->check(val == int(this->windowOpacity() * 100));
+    }, [=](int opa){
+        settings.setValue("videoplayer/opacity", opa);
+        setWindowOpacity(opa / 100.0);
+    }, 10);
 
     menu->split()->addAction(QIcon(":/icons/capture"), "截图模式", [=]{
         settings.setValue("videoplayer/useVideoWidget", !useVideoWidget);
