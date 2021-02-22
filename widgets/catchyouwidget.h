@@ -50,6 +50,8 @@ private slots:
 
     void on_tableWidget_customContextMenuRequested(const QPoint &);
 
+    void on_cdSpin_valueChanged(int arg1);
+
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);
     void detectUserLiveStatus(qint64 taskTs, int index);
