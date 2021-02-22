@@ -197,8 +197,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
 
     // 判断机器人
-    judgeRobot = settings.value("danmaku/judgeRobot", false).toBool();
-    ui->judgeRobotCheck->setChecked(judgeRobot);
+    judgeRobot = settings.value("danmaku/judgeRobot", 0).toInt();
+    ui->judgeRobotCheck->setCheckState((Qt::CheckState)judgeRobot);
+    ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
 
     // 本地昵称
     QStringList namePares = settings.value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
@@ -2646,10 +2647,14 @@ void MainWindow::getFansAndUpdate()
                     sendAttentionThankIfNotRobot(danmaku);
                 }
                 else
+                {
                     judgeRobotAndMark(danmaku);
+                }
             }
             else
+            {
                 judgeRobotAndMark(danmaku);
+            }
 
             fansList.insert(0, fan);
         }
@@ -5987,21 +5992,18 @@ void MainWindow::handleMessage(QJsonObject json)
             }
 
             qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-            if (!justStart && ui->autoSendWelcomeCheck->isChecked())
+            if (!justStart && ui->autoSendWelcomeCheck->isChecked()) // 发送欢迎
             {
-                /*int cd = ui->sendWelcomeCDSpin->value() * 1000 * 10; // 10倍冷却时间
-                if (!strongNotifyUsers.contains(uid) && userComeTimes.contains(uid) && userComeTimes.value(uid) + cd > currentTime)
-                {
-                    qDebug() << "屏蔽连续进入：" << username << uid;
-                    return ; // 避免同一个人连续欢迎多次（好像B站自动不发送？）
-                }*/
                 userComeTimes[uid] = currentTime;
                 sendWelcomeIfNotRobot(danmaku);
             }
-            else
+            else // 不发送欢迎，只是查看
             {
                 userComeTimes[uid] = currentTime; // 直接更新了
-                judgeRobotAndMark(danmaku);
+                if (judgeRobot == 2)
+                {
+                    judgeRobotAndMark(danmaku);
+                }
             }
 
             triggerCmdEvent(cmd, danmaku);
@@ -6016,7 +6018,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendAttentionThankIfNotRobot(danmaku);
             }
             else
+            {
                 judgeRobotAndMark(danmaku);
+            }
 
             triggerCmdEvent("ATTENTION", danmaku); // !这个是单独修改的
         }
@@ -6383,6 +6387,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送，在结束后的不到一秒左右
     {
+        qDebug() << json;
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "VOICE_JOIN_ROOM_COUNT_INFO") // 等待连麦队列数量变化
@@ -6518,7 +6523,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
 void MainWindow::sendWelcomeIfNotRobot(LiveDanmaku danmaku)
 {
-    if (!judgeRobot)
+    if (judgeRobot != 2)
     {
         sendWelcome(danmaku);
         return ;
@@ -9559,7 +9564,15 @@ void MainWindow::on_actionMany_Robots_triggered()
 
 void MainWindow::on_judgeRobotCheck_clicked()
 {
-    judgeRobot = ui->judgeRobotCheck->isChecked();
+    judgeRobot = (judgeRobot + 1) % 3;
+    if (judgeRobot == 0)
+        ui->judgeRobotCheck->setCheckState(Qt::Unchecked);
+    else if (judgeRobot == 1)
+        ui->judgeRobotCheck->setCheckState(Qt::PartiallyChecked);
+    else if (judgeRobot == 2)
+        ui->judgeRobotCheck->setCheckState(Qt::Checked);
+    ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
+
     settings.setValue("danmaku/judgeRobot", judgeRobot);
 }
 

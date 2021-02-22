@@ -798,7 +798,7 @@ private:
     LiveVideoPlayer* videoPlayer = nullptr;
 
     // 机器人
-    bool judgeRobot = false;
+    int judgeRobot = 0;
     QSettings robotRecord;
     QList<QWebSocket*> robots_sockets;
 
