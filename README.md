@@ -269,7 +269,6 @@
 ```
 
 <div id='programing'/>
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -463,7 +462,6 @@ tips：
 受于B站后台的限制，多条弹幕将调整为每隔1.5秒发送一次，数量无上限。
 
 <div id='cd_channel'/>
-
 ### 冷却通道
 
 >  `v2.9.0`版本新增
@@ -714,7 +712,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%total_coin%总积分(=金瓜子/100) |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
 | USER_TOAST_MSG                | 上船附带的通知                                               |
@@ -776,10 +774,10 @@ tips：
 添加事件：`PK_BEST_UNAME`，动作：
 
 ```
-[%level%=2, %total_coin% >= 10]感谢本场最佳助攻：%uname%
+[%level%=2, %gift_coin% >= 100]感谢本场最佳助攻：%uname%
 ```
 
-仅当赢了，并且本次累计送礼有超过10积分（1000金瓜子）才感谢
+仅当赢了，并且本次累计送礼有超过100积分（10000金瓜子）才感谢
 
 
 
