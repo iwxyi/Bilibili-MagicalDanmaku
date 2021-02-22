@@ -62,13 +62,23 @@ void CatchYouWidget::on_userButton_clicked()
     if (!ok)
         return ;
     settings.setValue("paosao/userId", id);
+
     catchUser(id);
 }
 
 void CatchYouWidget::on_refreshButton_clicked()
 {
     if (!userId.isEmpty())
-        catchUser(userId);
+    {
+        if (users.size()) // 已经找过了，刷新一遍
+        {
+            detectUserLiveStatus(currentTaskTs = QDateTime::currentMSecsSinceEpoch(), 0);
+        }
+        else
+        {
+            catchUser(userId);
+        }
+    }
 }
 
 void CatchYouWidget::getUserFollows(qint64 taskTs, QString userId, int page)
@@ -115,6 +125,13 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
         return ;
 
     UserInfo user = users.at(index);
+    if (user.liveStatus < 0) // 没有直播间或没有开播
+    {
+        // 直接下一个
+        ui->progressBar->setValue(index);
+        detectUserLiveStatus(taskTs, index + 1);
+        return ;
+    }
 
     QString url = "http://api.live.bilibili.com/room/v1/Room/getRoomInfoOld?mid=" + user.userId;
     get(url, [=](QJsonObject json) {
@@ -137,6 +154,12 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
 
             // 先检测弹幕
             detectRoomDanmaku(taskTs, user.userId, roomId);
+        }
+        else
+        {
+            UserInfo u = user;
+            u.liveStatus = -1;
+            users[index] = u;
         }
 
         // 检测下一个

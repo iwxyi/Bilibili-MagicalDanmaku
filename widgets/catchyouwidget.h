@@ -37,7 +37,7 @@ public:
     {
         QString userId;
         QString userName;
-        int liveStatus = 0;
+        int liveStatus = 0; // -1未播，0未知，1直播
 
         UserInfo(QString id, QString name) : userId(id), userName(name)
         {}
