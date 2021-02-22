@@ -28,7 +28,7 @@ CatchYouWidget::CatchYouWidget(QSettings &settings, QWidget *parent) :
     ui->setupUi(this);
     userId = settings.value("paosao/userId").toString();
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    ui->cdSpin->setValue(settings.value("catch/cd", 0).toInt());
+    ui->cdSpin->setValue(settings.value("catch/cd", 150).toInt());
 }
 
 CatchYouWidget::~CatchYouWidget()
