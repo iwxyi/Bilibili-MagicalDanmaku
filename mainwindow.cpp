@@ -3653,9 +3653,16 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    // xxx的xxx
-    QRegularExpression deRe("^(.+)[的の]([\u4e00-\u9fa5]{2,})$");
+    // 去掉首尾数字
+    QRegularExpression snumRe("^\\d+(\\D+)\\d*$");
     QRegularExpressionMatch match;
+    if (simp.indexOf(snumRe, 0, &match) > -1)
+    {
+        simp = match.capturedTexts().at(1);
+    }
+
+    // xxx的xxx
+    QRegularExpression deRe("^(.+)[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
         QRegularExpression blank("(名字|^确)");
@@ -3674,7 +3681,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             simp = tmp;
         }
     }
-    ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4dff]+)([\u4e00-\u9fa5]{2,})");
+    ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4dff]+)([\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*3)
     {
         QString tmp = match.capturedTexts().at(2);
