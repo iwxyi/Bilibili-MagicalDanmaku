@@ -489,6 +489,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkMaxGoldButton->hide();
         ui->pkMelonValButton->hide();
         ui->pkJudgeEarlyButton->hide();
+        ui->pkBlankButton->hide();
         ui->pkAutoMelonCheck->setChecked(false);
     }
 
@@ -5850,8 +5851,8 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
         qDebug() << ">>>>>>舰长进入：" << copy_writing;
-        QStringList results = QRegularExpression("欢迎(?:舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
-        if (results.size() < 2)
+        QStringList results = QRegularExpression("欢迎(舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
+        if (results.size() < 3)
         {
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
@@ -5861,9 +5862,17 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             return ;
         }
-        QString uname = results.at(1); // 这个昵称会被系统自动省略（太长后面会是两个点）
+        QString gd = results.at(1);
+        QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
+        int guardLevel = 0;
+        if (gd == "总督")
+            guardLevel = 1;
+        else if (gd == "提督")
+            guardLevel = 2;
+        else if (gd == "舰长")
+            guardLevel = 3;
 
-        LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
+        LiveDanmaku danmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         if (cmAudience.contains(uid)) // 去了对面串门
         {
             if (cmAudience.value(uid) == 1) // 去对面串门回来
