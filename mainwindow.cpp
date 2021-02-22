@@ -5018,6 +5018,46 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                         }
                     }*/
                 }
+                else if (cmd == "PK_BATTLE_SETTLE_NEW")
+                {
+                    /*{
+                        "cmd": "PK_BATTLE_SETTLE_NEW",
+                        "pk_id": 200933662,
+                        "pk_status": 601,
+                        "timestamp": 1613959764,
+                        "data": {
+                            "pk_id": 200933662,
+                            "pk_status": 601,
+                            "settle_status": 1,
+                            "punish_end_time": 1613959944,
+                            "timestamp": 1613959764,
+                            "battle_type": 6,
+                            "init_info": {
+                                "room_id": 7259049,
+                                "result_type": -1,
+                                "votes": 0,
+                                "assist_info": []
+                            },
+                            "match_info": {
+                                "room_id": 21839758,
+                                "result_type": 2,
+                                "votes": 3,
+                                "assist_info": [
+                                    {
+                                        "rank": 1,
+                                        "uid": 412357310,
+                                        "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
+                                        "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
+                                    }
+                                ]
+                            },
+                            "dm_conf": {
+                                "font_color": "#FFE10B",
+                                "bg_color": "#72C5E2"
+                            }
+                        }
+                    }*/
+                }
                 else
                 {
                     qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
@@ -8591,18 +8631,30 @@ void MainWindow::pkEnd(QJsonObject json)
         danmakuWindow->setToolTip("");
         danmakuWindow->setPkStatus(0);
     }
-    bool ping = winnerType1 == winnerType2;
-    bool result = (winnerType1 > 0 && snum(thisRoomId) == roomId)
-            || (winnerType1 < 0 && snum(thisRoomId) != roomId);
-    if (snum(thisRoomId) == roomId)
+    QString bestName = "";
+    int winnerType = 0;
+    if (snum(thisRoomId) == roomId) // init是自己
     {
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winnerType = winnerType1;
     }
-    else
+    else // match是自己
     {
         matchVotes = data.value("init_info").toObject().value("votes").toInt();
         myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winnerType = winnerType2;
+    }
+
+    bool ping = winnerType1 == winnerType2;
+    bool result = winnerType1 > 0;
+
+    if (myVotes > 0)
+    {
+        LiveDanmaku danmaku(bestName, ping ? 0 : result, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 
     localNotify(QString("大乱斗结果：%1，积分：%2 vs %3")

@@ -20,6 +20,7 @@ enum MessageType
     MSG_ATTENTION,
     MSG_BLOCK,
     MSG_MSG,
+    MSG_PK_BEST
 };
 
 class LiveDanmaku
@@ -104,6 +105,10 @@ public:
     {
 
     }
+
+    LiveDanmaku(QString uname, int win, int votes)
+        : msgType(MSG_PK_BEST), nickname(uname), level(win), total_coin(votes)
+    {}
 
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
@@ -224,6 +229,12 @@ public:
         {
             object.insert("text", text);
         }
+        else if (msgType == MSG_PK_BEST)
+        {
+            object.insert("level", level);
+            object.insert("total_coin", total_coin);
+        }
+
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
         object.insert("msgType", (int)msgType);
         if (!anchor_roomid.isEmpty())

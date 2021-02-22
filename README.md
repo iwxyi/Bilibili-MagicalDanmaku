@@ -677,55 +677,56 @@ tips：
 
 未加粗事件则只是接收数据，未进行解析。
 
-| 事件命令                      | 说明                               |
-| ----------------------------- | ---------------------------------- |
-| **LIVE**                      | 开播【欢迎语】                     |
-| **PREPARING**                 | 下播【结束语】                     |
-| ROOM_CHANGE                   | 房间信息改变                       |
-| ROOM_RANK                     | 排名改变                           |
-| **DANMU_MSG**                 | 接收到弹幕【自动回复】             |
-| **SEND_GIFT**                 | 有人送礼【答谢送礼】               |
-| WELCOME_GUARD                 | 舰长进入（不会触发）               |
-| **ENTRY_EFFECT**              | 舰长、热门榜、老爷进入【欢迎舰长】 |
-| WELCOME                       | 老爷进入                           |
-| **INTERACT_WORD**             | 用户进入【欢迎】                   |
-| **ATTENTION**                 | 用户关注【答谢关注】               |
-| **SHARE**                     | 用户分享直播间                     |
-| ROOM_REAL_TIME_MESSAGE_UPDATE | 粉丝数量改变                       |
-| SUPER_CHAT_MESSAGE            | 醒目留言                           |
-| SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                   |
-| SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言                       |
-| SPECIAL_GIFT                  | 节奏风暴                           |
-| **ROOM_BLOCK_MSG**            | 用户被禁言                         |
-| PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始             |
-| PK_BATTLE_SETTLE              |                                    |
-| PK_BATTLE_START               | 大乱斗开始                         |
-| PK_BATTLE_PROCESS             | 大乱斗双方送礼                     |
-| PK_BATTLE_END                 | 大乱斗结束                         |
-| PK_BATTLE_SETTLE_USER         |                                    |
-| PK_BATTLE_SETTLE_V2           |                                    |
-| PK_LOTTERY_START              | 大乱斗胜利后的抽奖                 |
-| **GUARD_BUY**                 | 有人上船                           |
-| FIRST_GUARD                   | 用户初次上船                       |
-| USER_TOAST_MSG                | 上船附带的通知                     |
-| HOT_RANK_CHANGED              | 热门榜排名改变                     |
-| HOT_RANK_SETTLEMENT           | 荣登热门榜topX                     |
-| ONLINE_RANK_V2                | 礼物榜（高能榜）刷新               |
-| ONLINE_RANK_TOP3              | 高能榜TOP3改变                     |
-| ONLINE_RANK_COUNT             | 高能榜改变                         |
-| NOTICE_MSG                    | 上船等带的通知                     |
-| COMBO_SEND                    | 礼物连击                           |
-| SPECIAL_GIFT                  | 定制的专属礼物                     |
-| ANCHOR_LOT_CHECKSTATUS        | 天选时刻前的审核                   |
-| ANCHOR_LOT_START              | 开启天选                           |
-| ANCHOR_LOT_END                | 天选结束                           |
-| ANCHOR_LOT_AWARD              | 天选结果推送                       |
-| VOICE_JOIN_ROOM_COUNT_INFO    | 申请连麦队列变化                   |
-| VOICE_JOIN_LIST               | 连麦申请、取消连麦申请             |
-| VOICE_JOIN_STATUS             | 开始连麦、结束连麦                 |
-| WARNING                       | 被警告，`%text%`可获取内容         |
-| room_admin_entrance           | 设置房管                           |
-| ROOM_ADMINS                   | 房管数量改变                       |
+| 事件命令                      | 说明                                                         |
+| ----------------------------- | ------------------------------------------------------------ |
+| **LIVE**                      | 开播【欢迎语】                                               |
+| **PREPARING**                 | 下播【结束语】                                               |
+| ROOM_CHANGE                   | 房间信息改变                                                 |
+| ROOM_RANK                     | 排名改变                                                     |
+| **DANMU_MSG**                 | 接收到弹幕【自动回复】                                       |
+| **SEND_GIFT**                 | 有人送礼【答谢送礼】                                         |
+| WELCOME_GUARD                 | 舰长进入（不会触发）                                         |
+| **ENTRY_EFFECT**              | 舰长、热门榜、老爷进入【欢迎舰长】                           |
+| WELCOME                       | 老爷进入                                                     |
+| **INTERACT_WORD**             | 用户进入【欢迎】                                             |
+| **ATTENTION**                 | 用户关注【答谢关注】                                         |
+| **SHARE**                     | 用户分享直播间                                               |
+| ROOM_REAL_TIME_MESSAGE_UPDATE | 粉丝数量改变                                                 |
+| SUPER_CHAT_MESSAGE            | 醒目留言                                                     |
+| SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                                             |
+| SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言                                                 |
+| SPECIAL_GIFT                  | 节奏风暴                                                     |
+| **ROOM_BLOCK_MSG**            | 用户被禁言，%uname%昵称                                      |
+| PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始                                       |
+| PK_BATTLE_SETTLE              |                                                              |
+| PK_BATTLE_START               | 大乱斗开始                                                   |
+| PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
+| PK_BATTLE_END                 | 大乱斗结束                                                   |
+| PK_BATTLE_SETTLE_USER         |                                                              |
+| PK_BATTLE_SETTLE_V2           |                                                              |
+| PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%total_coin%总投票 |
+| **GUARD_BUY**                 | 有人上船                                                     |
+| FIRST_GUARD                   | 用户初次上船                                                 |
+| USER_TOAST_MSG                | 上船附带的通知                                               |
+| HOT_RANK_CHANGED              | 热门榜排名改变                                               |
+| HOT_RANK_SETTLEMENT           | 荣登热门榜topX                                               |
+| ONLINE_RANK_V2                | 礼物榜（高能榜）刷新                                         |
+| ONLINE_RANK_TOP3              | 高能榜TOP3改变                                               |
+| ONLINE_RANK_COUNT             | 高能榜改变                                                   |
+| NOTICE_MSG                    | 上船等带的通知                                               |
+| COMBO_SEND                    | 礼物连击                                                     |
+| SPECIAL_GIFT                  | 定制的专属礼物                                               |
+| ANCHOR_LOT_CHECKSTATUS        | 天选时刻前的审核                                             |
+| ANCHOR_LOT_START              | 开启天选                                                     |
+| ANCHOR_LOT_END                | 天选结束                                                     |
+| ANCHOR_LOT_AWARD              | 天选结果推送                                                 |
+| VOICE_JOIN_ROOM_COUNT_INFO    | 申请连麦队列变化                                             |
+| VOICE_JOIN_LIST               | 连麦申请、取消连麦申请                                       |
+| VOICE_JOIN_STATUS             | 开始连麦、结束连麦                                           |
+| WARNING                       | 被警告，`%text%`可获取内容                                   |
+| room_admin_entrance           | 设置房管                                                     |
+| ROOM_ADMINS                   | 房管数量改变                                                 |
 
 > 考虑到发送弹幕的限制，如果同一个事件添加多个响应的动作，那么会按队列顺序执行，而不会同时一口气执行完。
 >
