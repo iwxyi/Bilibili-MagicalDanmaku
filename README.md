@@ -507,6 +507,7 @@ tips：
 | runCommandLine(cmd)               | 运行命令行                                         |
 | setValue(key, val)                | 保存值到配置文件，通过%{key}%获取，重启后仍在      |
 | openFile(path)                    | 打开文件                                           |
+| playSound(path)                   | 播放音频文件                                       |
 | improveSongOrder(username, order) | 点歌提前播放，order为提升的索引值                  |
 | cutOrderSong(username)            | 切歌，仅限正在播放该用户自己点的歌时               |
 | curOrderSong()                    | 立即切歌，无论是谁点的                             |
@@ -706,7 +707,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%total_coin%总投票 |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%total_coin%总积分(=金瓜子/100) |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
 | USER_TOAST_MSG                | 上船附带的通知                                               |
@@ -760,6 +761,30 @@ tips：
 ```
 >timerShot(270000, 离大乱斗结束还有30秒)
 ```
+
+
+
+##### 示例：大乱斗最佳助攻
+
+添加事件：`PK_BEST_UNAME`，动作：
+
+```
+[%level%=2, %total_coin% >= 10]感谢本场最佳助攻：%uname%
+```
+
+仅当赢了，并且本次累计送礼有超过10积分（1000金瓜子）才感谢
+
+
+
+##### 示例：上船声音提示
+
+添加事件：`GUARD_BUY`，动作：
+
+```
+>playSound(%app_path%/audios/guard.mp3)
+```
+
+有人上船则自动播放`安装目录/audios/guard.mp3`，本程序不自带，需要自己找音频文件放上去。也可以是安装目录之外的绝对路径。
 
 
 

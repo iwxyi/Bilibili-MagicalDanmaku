@@ -4592,6 +4592,26 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 播放声音
+    if (msg.contains("playSound"))
+    {
+        re = RE("playSound\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString path = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            QMediaPlayer* player = new QMediaPlayer(this);
+            player->setMedia(QUrl::fromLocalFile(path));
+            connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
+                if (state == QMediaPlayer::StoppedState)
+                    player->deleteLater();
+            });
+            player->play();
+            return true;
+        }
+    }
+
     // 保存到配置
     if (msg.contains("setValue"))
     {
@@ -8663,6 +8683,7 @@ void MainWindow::pkEnd(QJsonObject json)
     if (myVotes > 0)
     {
         LiveDanmaku danmaku(bestName, ping ? 0 : result, myVotes);
+        qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~pkBestUname" << bestName;
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 

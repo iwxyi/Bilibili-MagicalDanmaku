@@ -63,6 +63,7 @@
         <file alias="new_version">resources/icons/new_version.png</file>
         <file alias="update">resources/icons/update.png</file>
         <file alias="catch">resources/icons/catch.png</file>
+        <file alias="opacity">resources/icons/opacity.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
