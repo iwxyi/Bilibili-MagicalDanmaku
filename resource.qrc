@@ -60,6 +60,9 @@
         <file alias="refresh2">resources/icons/refresh2.png</file>
         <file alias="mute2">resources/icons/mute2.png</file>
         <file alias="volume2">resources/icons/volume2.png</file>
+        <file alias="new_version">resources/icons/new_version.png</file>
+        <file alias="update">resources/icons/update.png</file>
+        <file alias="catch">resources/icons/catch.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

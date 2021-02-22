@@ -196,6 +196,39 @@ void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
     }
 }
 
+void MainWindow::syncMagicalRooms()
+{
+    get("http://iwxyi.com/blmagicaldanmaku/enable_room.php?room_id="
+        + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
+        + "&title=" + roomTitle.toUtf8().toPercentEncoding(), [=](QJsonObject json){
+        // 检测数组
+        QJsonArray roomArray = json.value("rooms").toArray();
+        magicalRooms.clear();
+        foreach (QJsonValue val, roomArray)
+        {
+            magicalRooms.append(val.toString());
+        }
+
+        // 检测新版
+        QString lastestVersion = json.value("lastest_version").toString();
+        QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
+        if (appVersion.startsWith("v") || appVersion.startsWith("V"))
+            appVersion.replace(0, 1, "");
+        if (lastestVersion.startsWith("v") || lastestVersion.startsWith("V"))
+            lastestVersion.replace(0, 1, "");
+
+        if (lastestVersion > appVersion)
+        {
+            this->appNewVersion = lastestVersion;
+            this->appDownloadUrl = json.value("download_url").toString();
+            ui->actionUpdate_New_Version->setText("有新版本：" + appNewVersion);
+            ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));
+            statusLabel->setText("有新版本：" + appNewVersion);
+            qDebug() << "有新版本" << appNewVersion << appDownloadUrl;
+        }
+    });
+}
+
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
     QString urlPath = req->path(); // 示例：/user/abc

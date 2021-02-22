@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>10</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -483,7 +483,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -494,7 +494,7 @@ QTabBar::tab:selected
 注意自己的余额！！！（0.1元/吃瓜）</string>
             </property>
             <property name="text">
-             <string>大乱斗自动吃瓜偷塔</string>
+             <string>大乱斗自动偷塔</string>
             </property>
            </widget>
           </item>
@@ -537,6 +537,20 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>提前</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pkBlankButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>黑名单</string>
             </property>
            </widget>
           </item>
@@ -2853,7 +2867,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>501</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -2892,6 +2906,7 @@ margin: 6px;</string>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionGitHub"/>
+    <addaction name="actionUpdate_New_Version"/>
    </widget>
    <addaction name="menu_3"/>
    <addaction name="menu_2"/>
@@ -3085,8 +3100,21 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionCatch_You_Online">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/catch</normaloff>:/icons/catch</iconset>
+   </property>
    <property name="text">
     <string>跑骚抓人</string>
+   </property>
+  </action>
+  <action name="actionUpdate_New_Version">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/update</normaloff>:/icons/update</iconset>
+   </property>
+   <property name="text">
+    <string>检测新版本</string>
    </property>
   </action>
  </widget>

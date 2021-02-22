@@ -331,6 +331,7 @@ MainWindow::MainWindow(QWidget *parent)
     toutaCount = settings.value("pk/toutaCount", 0).toInt();
     chiguaCount = settings.value("pk/chiguaCount", 0).toInt();
     goldTransPk = settings.value("pk/goldTransPk", goldTransPk).toInt();
+    toutaBlankList = settings.value("pk/blankList").toString().split(";");
 
     // 自定义变量
     restoreCustomVariant(settings.value("danmaku/customVariant", "").toString());
@@ -3380,6 +3381,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 游戏用户
     if (msg.contains("%in_game_users%"))
         msg.replace("%in_game_users%", gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
+
+    // 程序路径
+    if (msg.contains("%app_path%"))
+        msg.replace("%app_path%", QApplication::applicationDirPath());
 
     // 读取配置文件
     QRegularExpression re("%\\{(\\S+)\\}%");
@@ -8571,7 +8576,8 @@ void MainWindow::pkProcess(QJsonObject json)
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
-                && oppositeTouta < 6) // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用）
+                && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用）
+                && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
         {
             // 调用送礼
             int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
@@ -9426,6 +9432,77 @@ void MainWindow::post(QString url, QByteArray ba, NetReplyFunc func)
     manager->post(*request, ba);
 }
 
+QString MainWindow::GetFileVertion(QString fullName)
+{
+    DWORD dwLen = 0;
+    char* lpData=NULL;
+    LPCWSTR  str_path;
+    str_path=fullName.toStdWString().c_str();
+    BOOL bSuccess = FALSE;
+    QString fileInfomation;
+    DWORD vHandle=0;
+    //获得文件基础信息
+    //--------------------------------------------------------
+    dwLen = GetFileVersionInfoSize( str_path, &vHandle);
+    if (0 == dwLen)
+    {
+        qDebug()<<"获取版本字节信息失败!";
+        return"";
+    }
+
+    lpData =(char*)malloc(dwLen+1);
+    if (NULL == lpData)
+    {
+        qDebug()<<"分配内存失败";
+        return "";
+    }
+    bSuccess = GetFileVersionInfo( fullName.toStdWString().c_str(),0, dwLen+1, lpData);
+    if (!bSuccess)
+    {
+        qDebug()<<"获取文件版本信息错误!";
+
+        return"";
+    }
+    LPVOID lpBuffer = NULL;
+    UINT uLen = 0;
+
+    //获得语言和代码页(language and code page),规定，套用即可
+    //---------------------------------------------------
+    bSuccess = VerQueryValue( lpData,
+                              (TEXT("\\VarFileInfo\\Translation")),
+                              &lpBuffer,
+                              &uLen);
+    QString strTranslation,str1,str2;
+    unsigned short int *p =(unsigned short int *)lpBuffer;
+    str1.setNum(*p,16);
+    str1="000"+ str1;
+    strTranslation+= str1.mid(str1.size()-4,4);
+    str2.setNum(*(++p),16);
+    str2="000"+ str2;
+    strTranslation+= str2.mid(str2.size()-4,4);
+
+    QString str_value;
+    QString code;
+    //以上步骤需按序进行，以下步骤可根据需要增删或者调整
+
+    //获得产品版本信息：ProductVersion
+    code ="\\StringFileInfo\\"+ strTranslation +"\\ProductVersion";
+    bSuccess = VerQueryValue(lpData,
+                             (code.toStdWString().c_str()),
+                             &lpBuffer,
+                             &uLen);
+    if (!bSuccess)
+    {
+        qDebug()<<"获取产品版本信息错误!";
+
+    }
+    else
+    {
+        str_value=QString::fromUtf16((const unsigned short int *)lpBuffer)+"\n";
+    }
+    return str_value;
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -9660,7 +9737,8 @@ void MainWindow::slotPkEnding()
     pkVoting = 0;
     // 几个吃瓜就能解决的……
     if (ui->pkAutoMelonCheck->isChecked()
-            && myVotes <= matchVotes && myVotes + pkMaxGold/goldTransPk > matchVotes)
+            && myVotes <= matchVotes && myVotes + pkMaxGold/goldTransPk > matchVotes
+            && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
     {
         // 调用送礼
         int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
@@ -9710,6 +9788,14 @@ void MainWindow::slotStartWork()
     {
         sendExpireGift();
     }
+
+    // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
+    QString useRoom = roomId;
+    QTimer::singleShot(20000, [=]{
+        if (roomId.isEmpty() || useRoom != roomId) // 使用一段时间后才算真正用上
+            return ;
+        syncMagicalRooms();
+    });
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -10152,4 +10238,27 @@ void MainWindow::on_actionCatch_You_Online_triggered()
     cyw->show();
     // cyw->catchUser(upUid);
     cyw->setDefaultUser(upUid);
+}
+
+void MainWindow::on_pkBlankButton_clicked()
+{
+    bool ok = false;
+    QString text = QInputDialog::getText(this, "自动偷塔黑名单", "设置不启用自动偷塔的房间号列表\n使用神奇弹幕的房间务必加上\n多个房间用任意非数字符号分隔",
+                                         QLineEdit::Normal, toutaBlankList.join(";"), &ok);
+    if (!ok)
+        return ;
+    toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
+    settings.setValue("pk/blankList", toutaBlankList.join(";"));
+}
+
+void MainWindow::on_actionUpdate_New_Version_triggered()
+{
+    if (!appDownloadUrl.isEmpty())
+    {
+        QDesktopServices::openUrl(QUrl(appDownloadUrl));
+    }
+    else
+    {
+        syncMagicalRooms();
+    }
 }

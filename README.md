@@ -369,6 +369,7 @@
 | time_day_year    | 当前一年中第几天         |                                               |
 | timestamp        | 当前10位时间戳           | 可用于比较进入时间、多久没来等                |
 | timestamp13      | 当前13位时间戳           |                                               |
+| app_path         | 程序运行路径             |                                               |
 | living           | 当前是否已开播           | 是：1，否：0                                  |
 | room_id          | 直播间ID                 |                                               |
 | room_name        | 直播间标题               |                                               |

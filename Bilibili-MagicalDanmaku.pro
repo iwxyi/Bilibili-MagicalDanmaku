@@ -166,7 +166,7 @@ contains(ANDROID_TARGET_ARCH,) {
 }
 
 
-unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver
+unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver -lversion
 
 INCLUDEPATH += $$PWD/libs \
     qhttpserver/
