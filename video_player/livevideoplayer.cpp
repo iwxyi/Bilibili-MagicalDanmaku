@@ -119,7 +119,7 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 {
     if (this->roomId != roomId)
         return ;
-    QTimer::singleShot(500, [=]{
+    QTimer::singleShot(useVideoWidget ? 500 : 500, [=]{
         refreshPlayUrl();
     });
 }

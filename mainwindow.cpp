@@ -2031,7 +2031,7 @@ void MainWindow::initWS()
     });
 
     xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(60000);
+    xliveHeartBeatTimer->setInterval(55000);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         sendXliveHeartBeatX();
     });
@@ -2116,7 +2116,7 @@ void MainWindow::sendXliveHeartBeatE()
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
 
         xliveHeartBeatTimer->start();
-        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000);
+        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 5000);
     });
 }
 
@@ -8699,7 +8699,7 @@ void MainWindow::pkEnd(QJsonObject json)
     }
 
     bool ping = winnerType1 == winnerType2;
-    bool result = winnerType1 > 0;
+    bool result = winnerType > 0;
 
     if (myVotes > 0)
     {

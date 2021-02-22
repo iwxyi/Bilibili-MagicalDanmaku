@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QJsonObject>
+#include <QDebug>
 
 enum MessageType
 {
@@ -109,7 +110,8 @@ public:
 
     LiveDanmaku(QString uname, int win, int votes)
         : msgType(MSG_PK_BEST), nickname(uname), level(win), total_coin(votes)
-    {}
+    {
+    }
 
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
