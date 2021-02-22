@@ -346,6 +346,18 @@ void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const fun
     manager->get(*request);
 }
 
+void CatchYouWidget::closeEvent(QCloseEvent *event)
+{
+    settings.setValue("catch/geometry", this->saveGeometry());
+    QWidget::closeEvent(event);
+}
+
+void CatchYouWidget::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    restoreGeometry(settings.value("catch/geometry").toByteArray());
+}
+
 void CatchYouWidget::on_tableWidget_customContextMenuRequested(const QPoint &)
 {
     int row = ui->tableWidget->currentRow();

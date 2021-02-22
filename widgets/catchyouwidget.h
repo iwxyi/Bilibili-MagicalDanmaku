@@ -65,6 +65,10 @@ private:
 
     void get(QString url, const std::function<void(QJsonObject)> func);
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+
 private:
     Ui::CatchYouWidget *ui;
     QSettings& settings;
