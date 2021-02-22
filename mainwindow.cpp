@@ -8831,7 +8831,23 @@ void MainWindow::connectPkRoom()
     // ========== 开始连接 ==========
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
     url += "?id="+pkRoomId+"&type=0";
-    get(url, [=](QJsonObject json){
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QByteArray dataBa = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "获取弹幕信息出错：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("pk返回结果不为0：") << json.value("message").toString();
@@ -8853,6 +8869,7 @@ void MainWindow::connectPkRoom()
         pkSocket->setSslConfiguration(config);
         pkSocket->open(host);
     });
+    manager->get(*request);
 }
 
 void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
