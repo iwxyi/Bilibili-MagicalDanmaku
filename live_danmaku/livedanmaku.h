@@ -20,6 +20,7 @@ enum MessageType
     MSG_ATTENTION,
     MSG_BLOCK,
     MSG_MSG,
+    MSG_SHARE,
     MSG_PK_BEST
 };
 
@@ -345,6 +346,11 @@ public:
         this->msgType = MSG_ATTENTION;
         prev_timestamp = attentionTime;
         attention = true;
+    }
+
+    void transToShare()
+    {
+        this->msgType = MSG_SHARE;
     }
 
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")

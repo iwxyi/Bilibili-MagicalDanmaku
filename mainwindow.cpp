@@ -5920,7 +5920,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
-        qDebug() << s8("观众进入：") << username << msgType;
+        qDebug() << s8("观众交互：") << username << msgType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -5999,7 +5999,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else if (msgType == 3) // 分享直播间
         {
-            qDebug() << json;
+            danmaku.transToShare();
             localNotify(username + "分享了直播间", uid);
 
             triggerCmdEvent("SHARE", danmaku);
@@ -9791,7 +9791,11 @@ void MainWindow::slotStartWork()
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString useRoom = roomId;
+#ifdef QT_NO_DEBUG
+    QTimer::singleShot(300000, [=]{
+#else
     QTimer::singleShot(20000, [=]{
+#endif
         if (roomId.isEmpty() || useRoom != roomId) // 使用一段时间后才算真正用上
             return ;
         syncMagicalRooms();
