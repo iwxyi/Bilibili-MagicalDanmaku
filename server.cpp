@@ -198,9 +198,13 @@ void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
 
 void MainWindow::syncMagicalRooms()
 {
+    QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
+    if (appVersion.startsWith("v") || appVersion.startsWith("V"))
+        appVersion.replace(0, 1, "");
+
     get("http://iwxyi.com/blmagicaldanmaku/enable_room.php?room_id="
         + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
-        + "&title=" + roomTitle.toUtf8().toPercentEncoding(), [=](QJsonObject json){
+        + "&title=" + roomTitle.toUtf8().toPercentEncoding() + "&version=" + appVersion, [=](QJsonObject json){
         // 检测数组
         QJsonArray roomArray = json.value("rooms").toArray();
         magicalRooms.clear();
@@ -211,9 +215,6 @@ void MainWindow::syncMagicalRooms()
 
         // 检测新版
         QString lastestVersion = json.value("lastest_version").toString();
-        QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
-        if (appVersion.startsWith("v") || appVersion.startsWith("V"))
-            appVersion.replace(0, 1, "");
         if (lastestVersion.startsWith("v") || lastestVersion.startsWith("V"))
             lastestVersion.replace(0, 1, "");
 
@@ -223,9 +224,25 @@ void MainWindow::syncMagicalRooms()
             this->appDownloadUrl = json.value("download_url").toString();
             ui->actionUpdate_New_Version->setText("有新版本：" + appNewVersion);
             ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));
+            ui->actionUpdate_New_Version->setEnabled(true);
             statusLabel->setText("有新版本：" + appNewVersion);
             qDebug() << "有新版本" << appNewVersion << appDownloadUrl;
         }
+
+        QString msg = json.value("message").toString();
+        if (!msg.isEmpty())
+        {
+            QMessageBox::information(this, "神奇弹幕", "msg");
+        }
+
+        if(json.value("auto_open").toBool())
+        {
+            QMessageBox::information(this, "版本更新", "您的版本已过旧，可能存在潜在问题，请尽快更新");
+            QDesktopServices::openUrl(appDownloadUrl);
+        }
+
+        if (json.value("force_update").toBool())
+            QApplication::quit();
     });
 }
 

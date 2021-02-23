@@ -3139,6 +3139,9 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionUpdate_New_Version">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="resource.qrc">
      <normaloff>:/icons/update</normaloff>:/icons/update</iconset>
