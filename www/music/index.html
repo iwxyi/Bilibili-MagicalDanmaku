@@ -10,15 +10,10 @@
             等待点歌
         </li>
     </ol>
-    <script type="text/javascript">
-    </script>
 
     <script type="text/javascript">
         $(document).ready(function() {
-            var ws = new WebSocket("ws://localhost:7002");
-            ws.onopen = function() {
-                console.log("connected");
-            };
+            var ws = new WebSocket("ws://localhost:5520"); // 注意端口，会被修改
             ws.onmessage = function(e) {
                 // console.log(e.data);
                 var json = JSON.parse(e.data);
@@ -26,7 +21,7 @@
                 var olText = '';
                 switch (cmd) {
                     case 'SONG_LIST':
-                        var songs = json['data']; // 歌曲数组
+                        var songs = json['data'];
                         for (var i = 0; i < songs.length; i++) {
                             var song = songs[i];
                             olText += '<li>' + song['name'] + "</li>";
@@ -34,9 +29,6 @@
                         break;
                 }
                 $("#songs").html(olText);
-            };
-            ws.onclose = function() {
-
             };
         });
     </script>
