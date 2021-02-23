@@ -830,6 +830,7 @@ private:
     QHash<QString, QString> contentTypeMap;
     QWebSocketServer* danmakuSocketServer = nullptr;
     QList<QWebSocket*> danmakuSockets;
+    QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
 
     QWebSocketServer* musicSocketServer = nullptr;
     QList<QWebSocket*> musicSockets;

@@ -42,9 +42,28 @@ void MainWindow::openServer(int port)
             });
             connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
                 qDebug() << "danmaku text message received:" << message;
+                QJsonParseError error;
+                QJsonDocument document = QJsonDocument::fromJson(message.toUtf8(), &error);
+                if (error.error != QJsonParseError::NoError)
+                {
+                    qDebug() << error.errorString() << message;
+                    return ;
+                }
+                QJsonObject json = document.object();
+                QString cmd = json.value("cmd").toString();
+                if (cmd == "cmds")
+                {
+                    QStringList sl;
+                    QJsonArray arr = json.value("data").toArray();
+                    foreach (QJsonValue val, arr)
+                        sl << val.toString();
+                    danmakuCmdsMaps[clientSocket] = sl;
+                }
             });
             connect(clientSocket, &QWebSocket::disconnected, this, [=]{
                 danmakuSockets.removeOne(clientSocket);
+                if (danmakuCmdsMaps.contains(clientSocket))
+                    danmakuCmdsMaps.remove(clientSocket);
                 clientSocket->deleteLater();
     //            qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
             });
@@ -127,6 +146,8 @@ void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
 
     foreach (QWebSocket* socket, danmakuSockets)
     {
+        if (danmakuCmdsMaps.contains(socket) && !danmakuCmdsMaps[socket].contains(cmd))
+            continue;
        socket->sendTextMessage(ba);
     }
 }
