@@ -125,7 +125,7 @@ void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
     json.insert("cmd", cmd);
     QByteArray ba = QJsonDocument(json).toJson();
 
-    foreach (QWebSocket* socket, musicSockets)
+    foreach (QWebSocket* socket, danmakuSockets)
     {
        socket->sendTextMessage(ba);
     }
@@ -336,7 +336,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
             qWarning() << "文件：" << filePath << "不存在";
             return errorStr("路径：" + urlPath + " 无法访问！", QHttpResponse::STATUS_NOT_FOUND);
         }
-        else if (isFileType("png|jpg|jpeg|bmp|gif")) // 图片文件
+        else if (isFileType("png|jpg|jpeg|bmp")) // 图片文件
         {
             QByteArray imageType = "png";
             if (suffix == "gif")
@@ -352,7 +352,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
         else // 不需要处理或者未知类型的文件
         {
             // html、txt、JS、CSS等，直接读取文件
-            file.open(QIODevice::ReadOnly | QIODevice::Text);
+            file.open(QIODevice::ReadOnly);
             doc = file.readAll();
             file.close();
         }
