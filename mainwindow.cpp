@@ -2236,7 +2236,6 @@ void MainWindow::getRoomInfo(bool reconnect)
         QJsonObject roomInfo = dataObj.value("room_info").toObject();
         QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
 
-
         // 获取房间信息
         roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
         ui->roomIdEdit->setText(roomId);
@@ -2251,10 +2250,10 @@ void MainWindow::getRoomInfo(bool reconnect)
                  << "  uid=" << upUid;
 
         roomTitle = roomInfo.value("title").toString();
+        upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         setWindowTitle(roomTitle + " - " + QApplication::applicationName());
         tray->setToolTip(roomTitle + " - " + QApplication::applicationName());
-        ui->roomNameLabel->setText(roomTitle);
-        upName = anchorInfo.value("base_info").toObject().value("uname").toString();
+        ui->roomNameLabel->setText(roomTitle + " - " + upName);
         if (liveStatus != 1)
             ui->popularityLabel->setText("未开播");
         else
@@ -2487,9 +2486,9 @@ void MainWindow::getUpFace(QString uid)
     });
 }
 
-void MainWindow::getUpPortrait(QString face)
+void MainWindow::getUpPortrait(QString faceUrl)
 {
-    get(face, [=](QNetworkReply* reply){
+    get(faceUrl, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
 
         QPixmap pixmap;
@@ -2507,9 +2506,24 @@ void MainWindow::getUpPortrait(QString face)
         painter.drawPixmap(0, 0, side, side, pixmap);
 
         // 设置到程序
-        setWindowIcon(upFace);
-        tray->setIcon(upFace);
+        QPixmap face = liveStatus ? getLivingPixmap(upFace) : upFace;
+        setWindowIcon(face);
+        tray->setIcon(face);
     });
+}
+
+/**
+ * 给直播中的头像添加绿点
+ */
+QPixmap MainWindow::getLivingPixmap(QPixmap pixmap) const
+{
+    QPainter painter(&pixmap);
+    int wid = qMin(pixmap.width(), pixmap.height()) / 3;
+    QRect rect(pixmap.width() - wid, pixmap.height() - wid, wid, wid);
+    QPainterPath path;
+    path.addEllipse(rect);
+    painter.fillPath(path, Qt::green);
+    return pixmap;
 }
 
 /**
@@ -4952,7 +4966,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 //                    if (delta_fans) // 如果有变动，实时更新
 //                        getFansAndUpdate();
                     fansLabel->setText("粉丝:" + snum(fans));
-                    fansLabel->setToolTip("粉丝数量：" + snum(fans) + "，粉丝团：" + snum(fans_club));
+                    fansLabel->setToolTip("粉丝数量：" + snum(fans) + "，粉丝团：" + snum(fans_club) + (currentGuards.size() ? "，船员数：" + snum(currentGuards.size()) : ""));
                 }
                 else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
                 {}
@@ -5199,9 +5213,7 @@ void MainWindow::handleMessage(QJsonObject json)
             qDebug() << "忽视PK导致的开播情况";
             return ;
         }
-//        QString roomId = json.value("roomid").toString();
-//        if (roomId.isEmpty())
-//            roomId = QString::number(static_cast<qint64>(json.value("roomid").toDouble()));
+        QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->startLiveWordsEdit->text();
@@ -9139,6 +9151,10 @@ void MainWindow::releaseLiveData()
     ui->actionShow_PK_Video->setEnabled(false);
 
     finishLiveRecord();
+
+    QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
+    setWindowIcon(face);
+    tray->setIcon(face);
 }
 
 QRect MainWindow::getScreenRect()
@@ -9857,6 +9873,11 @@ void MainWindow::slotStartWork()
     {
         sendExpireGift();
     }
+
+    // 设置直播状态
+    QPixmap face = getLivingPixmap(upFace);
+    setWindowIcon(face);
+    tray->setIcon(face);
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString useRoom = roomId;

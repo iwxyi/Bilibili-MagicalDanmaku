@@ -135,7 +135,7 @@ public:
             danmaku.medal_up = medal[1].toString();
             danmaku.medal_name = medal[2].toString();
         }
-        danmaku.giftId = object.value("giftId").toInt();
+        danmaku.giftId = object.value("gift_id").toInt();
         danmaku.giftName = object.value("gift_name").toString();
         danmaku.number = object.value("number").toInt();
         danmaku.coin_type = object.value("coin_type").toString();
@@ -188,7 +188,7 @@ public:
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
         {
-            object.insert("giftId", giftId);
+            object.insert("gift_id", giftId);
             object.insert("gift_name", giftName);
             object.insert("number", number);
             object.insert("coin_type", coin_type);

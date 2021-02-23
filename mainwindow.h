@@ -533,7 +533,8 @@ private:
     void getRoomCover(QString url);
     QPixmap getRoundedPixmap(QPixmap pixmap) const;
     void getUpFace(QString uid);
-    void getUpPortrait(QString face);
+    void getUpPortrait(QString faceUrl);
+    QPixmap getLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
     void getPkInfoById(QString roomId, QString pkId);
