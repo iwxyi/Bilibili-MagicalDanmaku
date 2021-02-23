@@ -13,7 +13,7 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            var ws = new WebSocket("ws://localhost:5520"); // 注意端口，会被修改
+            var ws = new WebSocket("ws://localhost:5522"); // 注意端口，会被修改
             ws.onmessage = function(e) {
                 // console.log(e.data);
                 var json = JSON.parse(e.data);

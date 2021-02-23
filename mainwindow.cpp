@@ -2031,7 +2031,7 @@ void MainWindow::initWS()
     });
 
     xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(55000);
+    xliveHeartBeatTimer->setInterval(59000);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         sendXliveHeartBeatX();
     });
@@ -2116,7 +2116,7 @@ void MainWindow::sendXliveHeartBeatE()
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
 
         xliveHeartBeatTimer->start();
-        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 5000);
+        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 1000);
     });
 }
 
