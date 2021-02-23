@@ -85,6 +85,7 @@ signals:
     void signalCancelEternalBlockUser(qint64 uid);
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg);
+    void signalShowPkVideo();
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -98,6 +99,7 @@ public slots:
 
     void showMenu();
     void showEditMenu();
+    void showPkMenu();
 
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
@@ -111,14 +113,16 @@ public slots:
 
     void showFastBlock(qint64 uid, QString msg);
 
-    void setPkStatus(int status);
+    void setPkStatus(int status, qint64 roomId, qint64 uid, QString pkUname);
     void showStatusText();
     void setStatusText(QString text);
     void setStatusTooltip(QString tooltip);
     void hideStatusText();
 
-    void showFollowCountInAction(qint64 uid, QAction* action);
-    void showViewCountInAction(qint64 uid, QAction* action);
+    void showFollowCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr);
+    void showViewCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr);
+    void showGuardInAction(qint64 roomId, qint64 uid, QAction* action);
+    void showPkLevelInAction(qint64 roomId, QAction* actionUser, QAction* actionRank);
 
     void releaseLiveData();
 
@@ -179,6 +183,9 @@ private:
 
     int pkStatus = 0;
     QLabel* statusLabel = nullptr;
+    qint64 pkRoomId = 0;
+    qint64 pkUid = 0;
+    QString pkUname;
 
     QPixmap originPixmap;
     QPixmap bgPixmap;

@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
       robotRecord(QApplication::applicationDirPath()+"/robots.ini", QSettings::Format::IniFormat)
 {
     ui->setupUi(this);
+    QApplication::setQuitOnLastWindowClosed(false);
     connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
         ui->tabWidget->setPalette(pa);
     });
@@ -2266,7 +2267,7 @@ void MainWindow::getRoomInfo(bool reconnect)
             if (pkId.toLongLong() > 0 && reconnect)
             {
                 pking = true;
-                pkVideo = pkStatus == 2;
+                pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
                 getPkInfoById(roomId, pkId);
                 qDebug() << "正在大乱斗：" << pkId << pkStatus;
             }
@@ -2517,6 +2518,8 @@ void MainWindow::getUpPortrait(QString faceUrl)
  */
 QPixmap MainWindow::getLivingPixmap(QPixmap pixmap) const
 {
+    if (pixmap.isNull())
+        return pixmap;
     QPainter painter(&pixmap);
     int wid = qMin(pixmap.width(), pixmap.height()) / 3;
     QRect rect(pixmap.width() - wid, pixmap.height() - wid, wid, wid);
@@ -2743,19 +2746,20 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         // 获取用户信息
         // pk_pre_time  pk_start_time  pk_frozen_time  pk_end_time
         QJsonObject pkData = json.value("data").toObject();
+        qint64 pkStartTime = static_cast<qint64>(pkData.value("pk_start_time").toDouble());
         pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
 
         QJsonObject initInfo = pkData.value("init_info").toObject();
         QJsonObject matchInfo = pkData.value("match_info").toObject();
-        if (matchInfo.value("room_id").toString() != roomId)
+        if (snum(qint64(matchInfo.value("room_id").toDouble())) == roomId)
         {
             QJsonObject temp = initInfo;
             initInfo = matchInfo;
             matchInfo = temp;
         }
 
-        pkRoomId = matchInfo.value("room_id").toString();
-        pkUid = matchInfo.value("uid").toString();
+        pkRoomId = snum(qint64(matchInfo.value("room_id").toDouble()));
+        pkUid = snum(qint64(matchInfo.value("uid").toDouble()));
         pkUname = matchInfo.value("uname").toString();
         myVotes = initInfo.value("votes").toInt();
         matchVotes = matchInfo.value("votes").toInt();
@@ -2765,25 +2769,29 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         {
             danmakuWindow->showStatusText();
             danmakuWindow->setToolTip(pkUname);
-            danmakuWindow->setPkStatus(1);
+            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
         }
         ui->actionShow_PK_Video->setEnabled(true);
 
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-        qint64 deltaEnd = pkEndTime - currentTime;
-        QTimer::singleShot(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)), [=]{
-            if (!pking || roomId != this->roomId) // 比如换房间了
-            {
-                qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
-                         << QDateTime::currentSecsSinceEpoch() << pkEndTime;
-                return ;
-            }
-            slotPkEnding();
-        });
-        QTimer::singleShot(deltaEnd, [=]{
-            pkEnding = false;
-            pkVoting = 0;
-        });
+        // 已经开始大乱斗
+        if (currentTime > pkStartTime) // !如果是刚好开始，可能不能运行下面的，也可能不会触发"PK_START"，不管了
+        {
+            qint64 deltaEnd = pkEndTime - currentTime;
+            QTimer::singleShot(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)), [=]{
+                if (!pking || roomId != this->roomId) // 比如换房间了
+                {
+                    qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
+                             << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+                    return ;
+                }
+                slotPkEnding();
+            });
+            QTimer::singleShot(deltaEnd, [=]{
+                pkEnding = false;
+                pkVoting = 0;
+            });
+        }
     });
 }
 
@@ -8065,6 +8073,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
         connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalAIReplyed(QString)), this, SLOT(slotAIReplyed(QString)));
+        connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
         connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
             danmakuWindow->deleteLater();
             danmakuWindow = nullptr;
@@ -8339,15 +8348,6 @@ void MainWindow::on_actionGet_Play_Url_triggered()
 
 void MainWindow::on_actionShow_Live_Video_triggered()
 {
-    /*if (videoPlayer == nullptr)
-    {
-        videoPlayer = new LiveVideoPlayer(settings, nullptr);
-        connect(this, &MainWindow::signalRoomChanged, this, [=](QString roomId){
-            videoPlayer->setRoomId(roomId);
-        });
-    }
-    videoPlayer->show();
-    videoPlayer->setRoomId(roomId);*/
     if (roomId.isEmpty())
         return ;
 
@@ -8531,7 +8531,7 @@ void MainWindow::pkStart(QJsonObject json)
     {
         danmakuWindow->showStatusText();
         danmakuWindow->setToolTip(pkUname);
-        danmakuWindow->setPkStatus(1);
+        danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
     qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
@@ -8691,7 +8691,7 @@ void MainWindow::pkEnd(QJsonObject json)
     {
         danmakuWindow->hideStatusText();
         danmakuWindow->setToolTip("");
-        danmakuWindow->setPkStatus(0);
+        danmakuWindow->setPkStatus(0, 0, 0, "");
     }
     QString bestName = "";
     int winnerType = 0;
@@ -9110,6 +9110,8 @@ void MainWindow::releaseLiveData()
     pkEnding = false;
     pkVoting = 0;
     pkVideo = false;
+    pkTimer->stop();
+    pkEndTime = 0;
     myAudience.clear();
     oppositeAudience.clear();
     fansList.clear();
