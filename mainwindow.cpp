@@ -3088,10 +3088,10 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     // 判断超过长度的
     if (removeLongerRandomDanmaku)
     {
-        for (int i = 0; i < result.size(); i++)
+        for (int i = 0; i < result.size() && result.size() > 1; i++)
         {
             QString s = result.at(i);
-            s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "");
+            s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").trimmed();
             if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest)
             {
                 result.removeAt(i--);

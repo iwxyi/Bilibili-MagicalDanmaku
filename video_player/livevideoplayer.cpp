@@ -112,7 +112,7 @@ void LiveVideoPlayer::setRoomId(QString roomId)
     this->roomId = roomId;
     refreshPlayUrl();
 
-    captureDir = QDir(QApplication::applicationDirPath() + "/capture/" + roomId);
+    captureDir = QDir(QApplication::applicationDirPath() + "/captures/" + roomId);
 }
 
 void LiveVideoPlayer::slotLiveStart(QString roomId)
