@@ -3088,7 +3088,8 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     {
         for (int i = 0; i < result.size(); i++)
         {
-            if (result.at(i).length() > danmuLongest)
+            QString s = result.at(i);
+            if (!s.contains(">") && !s.contains("\\n") && result.at(i).length() > danmuLongest)
                 result.removeAt(i--);
         }
     }
