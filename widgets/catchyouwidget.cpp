@@ -69,6 +69,9 @@ void CatchYouWidget::on_userButton_clicked()
 
 void CatchYouWidget::on_refreshButton_clicked()
 {
+    inRooms.clear();
+    ui->tableWidget->setRowCount(0);
+
     if (!userId.isEmpty())
     {
         if (users.size()) // 已经找过了，刷新一遍
