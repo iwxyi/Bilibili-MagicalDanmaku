@@ -22,7 +22,7 @@ QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
 QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
-QSet<qint64> CommonValues::currentGuards;           // 当前船员
+QHash<qint64, QString> CommonValues::currentGuards;  // 当前船员
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -5891,6 +5891,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         QString gd = results.at(1);
         QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
+        if (currentGuards.contains(uid))
+            uname = currentGuards[uid];
         int guardLevel = 0;
         if (gd == "总督")
             guardLevel = 1;
@@ -6107,7 +6109,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku);
         }
-        currentGuards.insert(uid);
+        currentGuards[uid] = username;
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
@@ -7565,7 +7567,7 @@ void MainWindow::updateExistGuards(int page)
     auto judgeGuard = [=](QJsonObject user){
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
-        currentGuards.insert(uid);
+        currentGuards[uid] = username;
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {

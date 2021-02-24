@@ -31,7 +31,7 @@ protected:
     static QList<qint64> notReplyUsers;   // 不自动回复的用户
     static QHash<int, QString> giftNames; // 礼物名字
     static QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
-    static QSet<qint64> currentGuards; // 当前船员ID
+    static QHash<qint64, QString> currentGuards; // 当前船员ID-Name
 
     // 登陆信息
     static QString browserCookie;
