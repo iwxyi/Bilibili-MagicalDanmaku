@@ -713,6 +713,8 @@ tips：
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
 | **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
+| **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
+| **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
 | USER_TOAST_MSG                | 上船附带的通知                                               |

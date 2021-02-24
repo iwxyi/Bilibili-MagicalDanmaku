@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 移除间隔
     removeTimer = new QTimer(this);
-    removeTimer->setInterval(1000);
+    removeTimer->setInterval(200);
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
@@ -5982,6 +5982,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString spreadDesc = data.value("spread_desc").toString();
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
+        QString roomId = snum(qint64(data.value("room_id").toDouble()));
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
@@ -5998,6 +5999,12 @@ void MainWindow::handleMessage(QJsonObject json)
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
         danmaku.setOpposite(opposite);
+
+        if (roomId != this->roomId) // 关注对面主播，也会引发关注事件
+        {
+            qDebug() << "不是本房间，已忽略：" << roomId << "!=" << this->roomId;
+            return ;
+        }
 
         if (msgType == 1) // 进入直播间
         {
@@ -9059,6 +9066,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         if (!pkChuanmenEnable) // 可能是中途关了
             return ;
         QJsonObject data = json.value("data").toObject();
+        int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
@@ -9068,19 +9076,23 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QString spreadDesc = data.value("spread_desc").toString();
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
+        QString roomId = snum(qint64(data.value("room_id").toDouble()));
         bool toView = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
+        bool attentionToMyRoom = false;
         if (!toView) // 不是自己方过去串门的
-            return ;
+        {
+            if (roomId == this->roomId && msgType == 2) // 在对面关注当前主播
+                attentionToMyRoom = true;
+            else
+                return ;
+        }
         if (!cmAudience.contains(uid))
             cmAudience.insert(uid, 1);
-        localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
 
-        /*qDebug() << s8("pk观众进入：") << username;
-        if (isSpread)
-            qDebug() << s8("    pk来源：") << spreadDesc;
+        qDebug() << s8("pk观众互动：") << username << spreadDesc;
         QString localName = getLocalNickname(uid);
         LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
                             unameColor, spreadDesc, spreadInfo);
@@ -9091,7 +9103,30 @@ void MainWindow::handlePkMessage(QJsonObject json)
                          "");
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);*/
+
+        if (attentionToMyRoom)
+        {
+            danmaku.transToAttention(timestamp);
+            localNotify("对面的 " + username + " 关注了本直播间", uid);
+            triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku);
+        }
+        else if (msgType == 1)
+        {
+            localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
+            triggerCmdEvent("CALL_ON_OPPOSITE", danmaku);
+        }
+        else if (msgType == 2)
+        {
+            danmaku.transToAttention(timestamp);
+            localNotify(username + " 关注了对面直播间", uid);
+        }
+        else if (msgType == 3)
+        {
+            danmaku.transToShare();
+            localNotify(username + " 分享了对面直播间", uid);
+        }
+
+        // appendNewLiveDanmaku(danmaku);
     }
 }
 
