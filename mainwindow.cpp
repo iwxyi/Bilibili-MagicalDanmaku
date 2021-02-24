@@ -3704,10 +3704,18 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
+    // 默认名字
+    QRegularExpression defRe("(\\d+)_[Bb]ili");
+    QRegularExpressionMatch match;
+    if (simp.indexOf(defRe, 0, &match) > -1)
+    {
+        simp = match.capturedTexts().at(1);
+    }
+
     // 去掉首尾数字
     QRegularExpression snumRe("^\\d+(\\D+)\\d*$");
-    QRegularExpressionMatch match;
-    if (simp.indexOf(snumRe, 0, &match) > -1)
+    if (simp.indexOf(snumRe, 0, &match) > -1
+            && match.captured(1).indexOf(QRegExp("^[的是]")) == -1)
     {
         simp = match.capturedTexts().at(1);
     }
@@ -3716,18 +3724,19 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QRegularExpression deRe("^(.+)[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
-        QRegularExpression blank("(名字|^确)");
-        if (match.capturedTexts().at(2).indexOf(blank) == -1) // 不包含黑名单
+        QRegularExpression blankL("(我$)"), blankR("(名字|^确|最)");
+        if (match.captured(1).indexOf(blankL) == -1
+                && match.captured(2).indexOf(blankR) == -1) // 不包含黑名单
             simp = match.capturedTexts().at(2);
     }
 
     // 一大串 中文enen
-    // 日语正则 [\u0800-\u4e00] ，实测“一”也会算在里面……？
+    // 注：日语正则 [\u0800-\u4e00] ，实测“一”也会算在里面……？
     QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4dff]+)$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*3 >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
-        if (!QString("的之の是叫有为奶在去着最").contains(tmp.right(1)))
+        if (!QString("的之の是叫有为奶在去着最很").contains(tmp.right(1)))
         {
             simp = tmp;
         }
@@ -3756,7 +3765,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王)$");
+    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
