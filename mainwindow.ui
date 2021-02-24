@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2930,7 +2930,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>501</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -3048,7 +3048,10 @@ margin: 6px;</string>
      <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
    </property>
    <property name="text">
-    <string>关于</string>
+    <string>关于&amp;&amp;交流反馈</string>
+   </property>
+   <property name="toolTip">
+    <string>关于和交流反馈</string>
    </property>
   </action>
   <action name="actionGitHub">

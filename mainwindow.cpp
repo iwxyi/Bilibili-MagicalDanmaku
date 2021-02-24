@@ -8346,7 +8346,8 @@ void MainWindow::on_diangeReplyCheck_clicked()
 void MainWindow::on_actionAbout_triggered()
 {
     QString text;
-    text += "由小乂独立开发。\n此程序仅供个人学习、研究之用，禁止用于商业用途。\n请在下载后24小时内删除！\n";
+    text += "本程序由心乂独立开发，参考多个开源项目实现。\n仅供个人学习、研究之用，禁止用于商业用途。\n\n";
+    text += "QQ群：1038738410\n欢迎大家一起来交流反馈&功能研发&闲聊&搞事情&拯救地球\n\n";
     text += "email : wxy@iwxyi.com\ngithub: https://github.com/iwxyi";
     QMessageBox::information(this, "关于", text);
 }
