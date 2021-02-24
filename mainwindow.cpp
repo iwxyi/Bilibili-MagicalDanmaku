@@ -3045,11 +3045,13 @@ QString MainWindow::processTimeVariants(QString msg) const
 QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
 {
     plainText = processDanmakuVariants(plainText, user);
+
     // 替换时间变量
     if (removeLongerRandomDanmaku)
     {
         plainText = processTimeVariants(plainText);
     }
+
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
     // 替换变量，寻找条件
@@ -3063,7 +3065,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     }
 
     // 查看是否优先级
-    auto hasPriority = [=](QStringList sl){
+    auto hasPriority = [=](const QStringList& sl){
         for (int i = 0; i < sl.size(); i++)
             if (sl.at(i).startsWith("*"))
                 return true;
@@ -3089,8 +3091,11 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         for (int i = 0; i < result.size(); i++)
         {
             QString s = result.at(i);
-            if (!s.contains(">") && !s.contains("\\n") && result.at(i).length() > danmuLongest)
+            s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "");
+            if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest)
+            {
                 result.removeAt(i--);
+            }
         }
     }
 
@@ -10433,7 +10438,7 @@ void MainWindow::on_actionCatch_You_Online_triggered()
 void MainWindow::on_pkBlankButton_clicked()
 {
     bool ok = false;
-    QString text = QInputDialog::getText(this, "自动偷塔黑名单", "设置不启用自动偷塔的房间号列表\n使用神奇弹幕的房间务必加上\n多个房间用任意非数字符号分隔",
+    QString text = QInputDialog::getText(this, "自动偷塔黑名单", "设置不启用自动偷塔的房间号列表\n多个房间用任意非数字符号分隔",
                                          QLineEdit::Normal, toutaBlankList.join(";"), &ok);
     if (!ok)
         return ;
