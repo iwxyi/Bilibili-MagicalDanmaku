@@ -265,6 +265,14 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         switchOnTop();
     })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
+    FacileMenu* opacityMenu = menu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
+    opacityMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
+        item->check(val == int((this->windowOpacity() + 0.005) * 10) * 10);
+    }, [=](int opa){
+        settings.setValue("videoplayer/opacity", opa);
+        setWindowOpacity(opa / 100.0);
+    }, 10);
+
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume2"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
         item->check(val == (player->volume()+5) / 10 * 10);
@@ -279,14 +287,6 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         else
             player->setVolume(settings.value("videoplayer/volume", 50).toInt());
     })->check(!player->volume());
-
-    FacileMenu* opacityMenu = menu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
-    opacityMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
-        item->check(val == int((this->windowOpacity() + 0.005) * 10) * 10);
-    }, [=](int opa){
-        settings.setValue("videoplayer/opacity", opa);
-        setWindowOpacity(opa / 100.0);
-    }, 10);
 
     menu->split()->addAction(QIcon(":/icons/capture"), "截图模式", [=]{
         settings.setValue("videoplayer/useVideoWidget", !useVideoWidget);

@@ -900,7 +900,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 
     if (localDebug)
     {
-        localNotify("发送弹幕 -> " + msg);
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
         return ;
     }
 
@@ -941,7 +941,7 @@ void MainWindow::sendAutoMsg(QString msgs)
 {
     if (msgs.trimmed().isEmpty())
         return ;
-    msgs = processTimeVariants(msgs);
+//    msgs = processTimeVariants(msgs);
 //    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(sl);
@@ -1009,6 +1009,9 @@ void MainWindow::slotSendAutoMsg()
     }
 }
 
+/**
+ * 发送前确保没有需要调整的变量了
+ */
 void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual)
 {
     if (!manual && !shallAutoMsg()) // 不在直播中
@@ -2268,10 +2271,11 @@ void MainWindow::getRoomInfo(bool reconnect)
             QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
             if (pkId.toLongLong() > 0 && reconnect)
             {
+                // 这个 pk_status 不是 battle_type
                 pking = true;
-                pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
+                // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
                 getPkInfoById(roomId, pkId);
-                qDebug() << "正在大乱斗：" << pkId << pkStatus;
+                qDebug() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
             }
         }
 
@@ -2765,6 +2769,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         pkUname = matchInfo.value("uname").toString();
         myVotes = initInfo.value("votes").toInt();
         matchVotes = matchInfo.value("votes").toInt();
+        pkVideo = pkData.value("battle_type").toInt() == 2;
 
         pkTimer->start();
         if (danmakuWindow)
@@ -2779,6 +2784,12 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
         // 已经开始大乱斗
         if (currentTime > pkStartTime) // !如果是刚好开始，可能不能运行下面的，也可能不会触发"PK_START"，不管了
         {
+            if (pkChuanmenEnable)
+            {
+                connectPkRoom();
+            }
+
+            // 监听尾声
             qint64 deltaEnd = pkEndTime - currentTime;
             QTimer::singleShot(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)), [=]{
                 if (!pking || roomId != this->roomId) // 比如换房间了
@@ -2917,9 +2928,9 @@ void MainWindow::analyzeMsgAndCd(QString& msg, int &cd, int &channel) const
 QString MainWindow::processTimeVariants(QString msg) const
 {
     // 早上/下午/晚上 - 好呀
+    int hour = QTime::currentTime().hour();
     if (msg.contains("%hour%"))
     {
-        int hour = QTime::currentTime().hour();
         QString rst;
         if (hour <= 3)
             rst = "晚上";
@@ -2941,7 +2952,6 @@ QString MainWindow::processTimeVariants(QString msg) const
     // 早上好、早、晚上好-
     if (msg.contains("%greet%"))
     {
-        int hour = QTime::currentTime().hour();
         QStringList rsts;
         rsts << "您好" << "你好";
         if (hour <= 3)
@@ -2963,12 +2973,12 @@ QString MainWindow::processTimeVariants(QString msg) const
     // 全部打招呼
     if (msg.contains("%all_greet%"))
     {
-        int hour = QTime::currentTime().hour();
         QStringList sl{"啊", "呀"};
         int r = qrand() % sl.size();
         QString tone = sl.at(r);
         QStringList rsts;
-        rsts << "您好"+tone << "你好"+tone;
+        rsts << "您好"+tone
+             << "你好"+tone;
         if (hour <= 3)
             rsts << "晚上好"+tone;
         else if (hour <= 5)
@@ -2991,9 +3001,9 @@ QString MainWindow::processTimeVariants(QString msg) const
 
         if ((hour >= 23 && hour <= 24)
                 || (hour >= 0 && hour <= 3))
-            rsts << "还没睡"+tone << "怎么还没睡~";
+            rsts << "还没睡"+tone << "怎么还没睡";
         else if (hour >= 3 && hour <= 5)
-            rsts << "通宵了吗？";
+            rsts << "通宵了吗";
 
         r = qrand() % rsts.size();
         msg = msg.replace("%all_greet%", rsts.at(r));
@@ -3035,6 +3045,11 @@ QString MainWindow::processTimeVariants(QString msg) const
 QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
 {
     plainText = processDanmakuVariants(plainText, user);
+    // 替换时间变量
+    if (removeLongerRandomDanmaku)
+    {
+        plainText = processTimeVariants(plainText);
+    }
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
     // 替换变量，寻找条件
@@ -3067,6 +3082,17 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         }
     }
 //    qDebug() << "condition result:" << result;
+
+    // 判断超过长度的
+    if (removeLongerRandomDanmaku)
+    {
+        for (int i = 0; i < result.size(); i++)
+        {
+            if (result.at(i).length() > danmuLongest)
+                result.removeAt(i--);
+        }
+    }
+
     return result;
 }
 
@@ -3175,7 +3201,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%gift_num%", snum(danmaku.getNumber()));
 
     if (msg.contains("%gift_multi_num%"))
-        msg.replace("%gift_multi_num%", danmaku.getNumber() > 0 ? snum(danmaku.getNumber()) + "个" : "");
+        msg.replace("%gift_multi_num%", danmaku.getNumber() > 1 ? snum(danmaku.getNumber()) + "个" : "");
 
     // 总共赠送金瓜子
     if (msg.contains("%total_gold%"))
@@ -3192,6 +3218,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%guard_count%"))
         msg.replace("%guard_count%", snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
 
+    // 0续费，1第一次上船，2重新上船
     if (msg.contains("%guard_first%"))
         msg.replace("%guard_first%", snum(danmaku.getFirst()));
 
@@ -6822,7 +6849,7 @@ void MainWindow::initTTS()
 void MainWindow::speekVariantText(QString text)
 {
     // 处理带变量的内容
-    text = processTimeVariants(text);
+//    text = processTimeVariants(text);
 
     // 开始播放
     speakText(text);
@@ -8528,7 +8555,10 @@ void MainWindow::pkStart(QJsonObject json)
     else
         pkVideo = false;
     if (pkVideo)
+    {
         pkToLive = currentTime;
+        qDebug() << "开始视频大乱斗";
+    }
 
     // 结束后
     QTimer::singleShot(deltaEnd, [=]{
@@ -9092,7 +9122,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         bool toView = pking &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
-                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == roomId));
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == this->roomId));
         bool attentionToMyRoom = false;
         if (!toView) // 不是自己方过去串门的
         {
@@ -9104,7 +9134,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         if (!cmAudience.contains(uid))
             cmAudience.insert(uid, 1);
 
-        qDebug() << s8("pk观众互动：") << username << spreadDesc;
+        // qDebug() << s8("pk观众互动：") << username << spreadDesc;
         QString localName = getLocalNickname(uid);
         LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
                             unameColor, spreadDesc, spreadInfo);
@@ -10306,7 +10336,9 @@ void MainWindow::on_serverPortSpin_editingFinished()
     if (server)
     {
         closeServer();
-        openServer();
+        QTimer::singleShot(1000, [=]{
+            openServer();
+        });
     }
 }
 

@@ -700,6 +700,7 @@ private:
     qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
     int danmuLongest = 20;
+    bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
 
     // 发送弹幕队列
     QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
