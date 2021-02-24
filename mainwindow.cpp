@@ -614,6 +614,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->serverCheck->setChecked(enableServer);
     int port = settings.value("server/port", 5520).toInt();
     ui->serverPortSpin->setValue(port);
+    serverDomain = settings.value("server/domain", "localhost").toString();
+    ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
         openServer();
@@ -8263,7 +8265,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             {
                 saveOrderSongs(songs);
             }
-            if (musicSocketServer)
+            if (sendSongListToSockets)
             {
                 sendMusicList(songs);
             }
@@ -8284,9 +8286,6 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                 settings.setValue("danmaku/playerWindow", false);
             });
         });
-
-        if (ui->serverCheck->isChecked() && !musicSocketServer)
-            initMusicServer();
     }
 
     bool hidding = musicWindow->isHidden();
@@ -10425,4 +10424,12 @@ void MainWindow::on_startOnRebootCheck_clicked()
     else
         reg->remove(appName);
     reg->deleteLater();
+}
+
+void MainWindow::on_domainEdit_editingFinished()
+{
+    serverDomain = ui->domainEdit->text().trimmed();
+    if (serverDomain.isEmpty())
+        serverDomain = "localhost";
+    settings.setValue("server/domain", serverDomain);
 }

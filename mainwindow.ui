@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>10</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2196,10 +2196,10 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="serverCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;【正在开发中】&lt;/p&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;点歌姬位置：网址/music&lt;/p&gt;&lt;p&gt;弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;【正在开发中】&lt;/p&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;点歌列表位置：网址/music&lt;/p&gt;&lt;p&gt;送礼动画位置：网址/gift&lt;/p&gt;&lt;p&gt;[开发中]弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>跨播服务</string>
+             <string>网络服务</string>
             </property>
            </widget>
           </item>
@@ -2209,7 +2209,7 @@ margin: 6px;</string>
              <enum>Qt::NoContextMenu</enum>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;跨播端口&lt;/p&gt;&lt;p&gt;本端口及后面最多10个端口将被本程序使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;浏览器访问端口&lt;/p&gt;&lt;p&gt;本端口及+1端口将被本程序使用&lt;/p&gt;&lt;p&gt;www下所有网页代码中“__PORT__”标记将会替换为该端口&lt;/p&gt;&lt;p&gt;WebSocket用的“__WS_PORT__”标记将会替换为+1端口&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QAbstractSpinBox
@@ -2263,6 +2263,39 @@ margin: 6px;</string>
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_48">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>公网IP</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="domainEdit">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;默认为localhost&lt;/p&gt;&lt;p&gt;www下网页代码中所有“__DOMAIN__”将会替换为该域名&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string>外网可访问的IP/域名，可空</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QWidget" name="widget_3" native="true">
           <property name="minimumSize">
            <size>
@@ -2299,6 +2332,13 @@ margin: 6px;</string>
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_29">

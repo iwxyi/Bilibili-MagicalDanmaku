@@ -498,6 +498,8 @@ private slots:
 
     void on_startOnRebootCheck_clicked();
 
+    void on_domainEdit_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -632,12 +634,12 @@ private:
     void post(QString url, QByteArray ba, NetJsonFunc func);
     void post(QString url, QByteArray ba, NetReplyFunc func);
 
-    void openServer(int port = 0);
     void initServerData();
+    void openServer(int port = 0);
+    void openSocketServer();
     void closeServer();
     void sendSocketCmd(QString cmd, LiveDanmaku danmaku);
-
-    void initMusicServer();
+    void processServerVariant(QByteArray& doc);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
 
     void syncMagicalRooms();
@@ -826,15 +828,14 @@ private:
 
     // 服务端
     QHttpServer *server = nullptr;
+    QString serverDomain;
     qint16 serverPort = 0;
     QDir wwwDir;
     QHash<QString, QString> contentTypeMap;
     QWebSocketServer* danmakuSocketServer = nullptr;
     QList<QWebSocket*> danmakuSockets;
     QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
-
-    QWebSocketServer* musicSocketServer = nullptr;
-    QList<QWebSocket*> musicSockets;
+    bool sendSongListToSockets = false;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

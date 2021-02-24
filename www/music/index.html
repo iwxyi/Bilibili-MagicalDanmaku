@@ -13,9 +13,12 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            var ws = new WebSocket("ws://localhost:5522"); // 注意端口，会被修改
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd":"cmds", "data":["SONG_LIST"]}');
+            };
             ws.onmessage = function(e) {
-                // console.log(e.data);
+                console.log(e.data);
                 var json = JSON.parse(e.data);
                 var cmd = json['cmd'];
                 var olText = '';
