@@ -226,10 +226,10 @@ void MainWindow::syncMagicalRooms()
             qDebug() << "有新版本" << appNewVersion << appDownloadUrl;
         }
 
-        QString msg = json.value("message").toString();
+        QString msg = json.value("msg").toString();
         if (!msg.isEmpty())
         {
-            QMessageBox::information(this, "神奇弹幕", "msg");
+            QMessageBox::information(this, "神奇弹幕", msg);
         }
 
         if(json.value("auto_open").toBool())

@@ -9978,7 +9978,7 @@ void MainWindow::slotStartWork()
 #else
     QTimer::singleShot(20000, [=]{
 #endif
-        if (roomId.isEmpty() || useRoom != roomId) // 使用一段时间后才算真正用上
+        if (roomId.isEmpty() || useRoom != roomId || !liveStatus) // 使用一段时间后才算真正用上
             return ;
         syncMagicalRooms();
     });
