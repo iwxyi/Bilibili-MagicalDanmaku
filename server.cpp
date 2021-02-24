@@ -26,7 +26,7 @@ void MainWindow::openServer(int port)
 
     // 弹幕socket
     danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
-    if (danmakuSocketServer->listen(QHostAddress::LocalHost, quint16(serverPort + DANMAKU_SERVER_PORT)))
+    if (danmakuSocketServer->listen(QHostAddress::Any, quint16(serverPort + DANMAKU_SERVER_PORT)))
     {
         qDebug() << "开启弹幕服务" << serverPort + DANMAKU_SERVER_PORT;
         connect(danmakuSocketServer, &QWebSocketServer::newConnection, this, [=]{
@@ -112,6 +112,8 @@ void MainWindow::closeServer()
     // server->close(); // 这个不是关闭端口的……
     server->deleteLater();
     server = nullptr;
+
+    danmakuSocketServer->close();
     danmakuSocketServer->deleteLater();
     danmakuSocketServer = nullptr;
     foreach (QWebSocket* socket, danmakuSockets) {

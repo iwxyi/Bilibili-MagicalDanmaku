@@ -6011,7 +6011,7 @@ void MainWindow::handleMessage(QJsonObject json)
                          "");
         danmaku.setOpposite(opposite);
 
-        if (roomId != this->roomId) // 关注对面主播，也会引发关注事件
+        if (roomId != "0" && roomId != this->roomId) // 关注对面主播，也会引发关注事件
         {
             qDebug() << "不是本房间，已忽略：" << roomId << "!=" << this->roomId;
             return ;
@@ -7959,6 +7959,8 @@ void MainWindow::on_timerConnectServerCheck_clicked()
     bool enable = ui->timerConnectServerCheck->isChecked();
     settings.setValue("live/timerConnectServer", enable);
     if (!liveStatus && enable)
+        startConnectRoom();
+    else if (!enable && (!socket || socket->state() == QAbstractSocket::UnconnectedState))
         startConnectRoom();
 }
 
