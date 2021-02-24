@@ -4526,6 +4526,17 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             localNotify(msg);
             return true;
         }
+
+        re = RE("localNotify\\s*\\((\\d+)\\s*,\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString uid = caps.at(1);
+            QString msg = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            localNotify(msg, uid.toLongLong());
+            return true;
+        }
     }
 
     // 朗读文本
@@ -9118,12 +9129,14 @@ void MainWindow::handlePkMessage(QJsonObject json)
         else if (msgType == 2)
         {
             danmaku.transToAttention(timestamp);
-            localNotify(username + " 关注了对面直播间", uid);
+            localNotify(username + " 关注了对面直播间", uid); // XXX
+            triggerCmdEvent("ATTENTION_OPPOSITE", danmaku);
         }
         else if (msgType == 3)
         {
             danmaku.transToShare();
-            localNotify(username + " 分享了对面直播间", uid);
+            localNotify(username + " 分享了对面直播间", uid); // XXX
+            triggerCmdEvent("SHARE_OPPOSITE", danmaku);
         }
 
         // appendNewLiveDanmaku(danmaku);

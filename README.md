@@ -505,6 +505,7 @@ tips：
 | sendRoomMsg(roomId, msg)          | 向指定直播间发送弹幕                               |
 | timerShot(msecond, msg)           | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
 | locaNotify(msg)                   | 发送本地消息通知（非弹幕，只有自己看得到）         |
+| localNotify(uid, msg)             | 同上，带用户ID                                     |
 | speakText(msg)                    | 朗读文本                                           |
 | openUrl(url)                      | 浏览器打开网址                                     |
 | connectNet(url)                   | 后台连接网址（GET）                                |
@@ -714,6 +715,8 @@ tips：
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
 | **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
 | **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
+| **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
+| **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
