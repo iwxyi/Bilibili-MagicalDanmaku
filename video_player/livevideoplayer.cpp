@@ -212,10 +212,12 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             return ;
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
         // QSize minSize = aw->minimumSize();
+        QSize maxSize = aw->maximumSize();
         aw->setFixedSize(hint);
         this->layout()->activate();
         this->adjustSize();
         aw->setMinimumSize(QSize(1, 1));
+        aw->setMaximumSize(maxSize);
     };
 
     auto setScale = [=]{
