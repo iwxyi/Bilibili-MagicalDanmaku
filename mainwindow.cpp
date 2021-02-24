@@ -2252,8 +2252,8 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-        setWindowTitle(roomTitle + " - " + QApplication::applicationName());
-        tray->setToolTip(roomTitle + " - " + QApplication::applicationName());
+        setWindowTitle(roomTitle + " - " + upName);
+        tray->setToolTip(roomTitle + " - " + upName);
         ui->roomNameLabel->setText(roomTitle + " - " + upName);
         if (liveStatus != 1)
             ui->popularityLabel->setText("未开播");

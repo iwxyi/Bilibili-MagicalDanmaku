@@ -28,7 +28,7 @@ VS_VERSION_INFO VERSIONINFO
                 VALUE "LegalCopyright", "Copyright (C)2018-2020"
                 VALUE "OriginalFilename", "Bilibili-MagicalDanmaku.exe"
                 VALUE "ProductName", "ÉñÆæµ¯Ä»"
-                VALUE "ProductVersion", "3.5.1"
+                VALUE "ProductVersion", "3.5.2"
             END
         END
         BLOCK "VarFileInfo"
