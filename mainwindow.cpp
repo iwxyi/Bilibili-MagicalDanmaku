@@ -3399,6 +3399,9 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%pk_max_gold%"))
         msg.replace("%pk_max_gold%", snum(pkMaxGold));
 
+    if (msg.contains("%pk_id%"))
+        msg.replace("%pk_id%", snum(pkId));
+
     // 房间属性
     if (msg.contains("%living%"))
         msg.replace("%living%", snum(liveStatus ? 1 : 0));
@@ -3444,6 +3447,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%app_path%"))
         msg.replace("%app_path%", QApplication::applicationDirPath());
 
+    // cookie
+    if (msg.contains("%csrf%"))
+        msg.replace("%csrf%", csrf_token);
+
     // 读取配置文件
     QRegularExpression re("%\\{(\\S+)\\}%");
     QRegularExpressionMatch match;
@@ -3478,7 +3485,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
  */
 QString MainWindow::processMsgHeaderConditions(QString msg) const
 {
-    QRegularExpression re("^\\s*\\[(.+?)\\]\\s*");
+    QRegularExpression re("^\\s*\\[(.*?)\\]\\s*");
     QRegularExpressionMatch match;
     if (msg.indexOf(re, 0, &match) == -1) // 没有检测到表达式
         return msg;

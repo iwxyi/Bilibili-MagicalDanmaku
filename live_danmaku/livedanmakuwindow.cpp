@@ -160,8 +160,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     readReplyKey();
 
     headDir = QApplication::applicationDirPath() + "/headers/";
-    QDir dir;
-    dir.mkpath(headDir);
+    QDir().mkpath(headDir);
 
     statusLabel = new QLabel(this);
     statusLabel->hide();
@@ -2212,6 +2211,7 @@ void LiveDanmakuWindow::showPkLevelInAction(qint64 roomId, QAction *actionUser, 
 void LiveDanmakuWindow::releaseLiveData()
 {
     QDir(headDir).removeRecursively();
+    QDir().mkpath(headDir);
 
     hideStatusText();
     setIds(0, 0);

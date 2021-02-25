@@ -759,6 +759,7 @@ private:
 
     // 大乱斗
     bool pking = false;
+    qint64 pkId = 0;
     qint64 pkToLive = 0; // PK导致的下播（视频必定触发）
     int myVotes = 0;
     int matchVotes = 0;

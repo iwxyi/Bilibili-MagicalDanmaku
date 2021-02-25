@@ -287,7 +287,6 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 <div id='programing'/>
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -329,6 +328,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | ai_name          | 用户智能昵称             | 优先专属昵称，其次简写昵称，无简写则用原昵称  |
 | local_name       | 用户专属昵称             | 实时弹幕中右键-设置专属昵称                   |
 | simple_name      | 用户简写昵称             | 去除前缀后缀各种字符                          |
+| csrf             | 用户的csrf token         |                                               |
 | level            | 用户等级                 | 进入直播间没有level                           |
 | text             | 当前弹幕消息             | 几乎用不到                                    |
 | come_count       | 用户进来次数             |                                               |
@@ -356,6 +356,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | new_attention    | 是否是新关注             | 最近50个关注内                                |
 | guard_count      | 上船次数，可判断是否初次 | 舰长+1、提督+10、总督+100（只统计程序运行时） |
 | pking            | 当前是否在大乱斗         | 是：1，否：0                                  |
+| pk_id            | 大乱斗的编号             |                                               |
 | pk_room_id       | pk对面房间号             | 未在PK中则为空，下同                          |
 | pk_uid           | pk对面主播ID             |                                               |
 | pk_uname         | pk对面主播昵称           |                                               |
@@ -839,6 +840,28 @@ tips：
 
 ```
 >timerShot(270000, 离大乱斗结束还有30秒)
+```
+
+
+
+##### 示例：大乱斗蹭积分卡
+
+添加事件：`PK_BATTLE_PRE`，动作：
+
+```
+>setValue(pk_ceng, 0)
+```
+
+添加事件：`SEND_GIFT`，动作：
+
+```
+[%pking%, %{pk_ceng}%=0, %gift_gold% >= 100000, %gift_num%=1]>setValue(pk_ceng, 1)\n>sendGift(20004, 1)
+```
+
+添加事件：`PK_BATTLE_END`，动作：
+
+```
+[%{pk_ceng}%=1]>setValue(pk_ceng, 1)\n>postData(https://api.live.bilibili.com/xlive/lottery-interface/v2/pk/join, id=%pk_id%&roomid=%room_id%&type=pk&csrf_token=%csrf%&csrf=%csrf%&visit_id=)
 ```
 
 
