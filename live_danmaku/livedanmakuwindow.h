@@ -127,6 +127,8 @@ public slots:
 
     void releaseLiveData();
 
+    void readReplyKey();
+
 private:
     bool isItemExist(QListWidgetItem *item);
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
@@ -160,6 +162,9 @@ private:
     QString myPrevSendMsg; // 上次发送的内容，没有发送成功的话自动填充
     qint64 roomId = 0;
     qint64 upUid = 0; // 当前主播的UID，用来显示主播标志
+
+    QString replyAPPID;
+    QString replyAPPKEY;
 
     QColor nameColor;
     QColor msgColor;

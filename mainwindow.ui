@@ -409,7 +409,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="1,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -432,6 +432,40 @@ QTabBar::tab:selected
              <string>回复弹幕</string>
             </property>
             <property name="tristate">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="AIReplyIdButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>ID</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="APReplyKeyButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>Key</string>
+            </property>
+            <property name="flat">
              <bool>true</bool>
             </property>
            </widget>

@@ -10549,3 +10549,27 @@ void MainWindow::on_domainEdit_editingFinished()
         serverDomain = "localhost";
     settings.setValue("server/domain", serverDomain);
 }
+
+void MainWindow::on_AIReplyIdButton_clicked()
+{
+    QString replyAppId = settings.value("reply/APPID", "").toString();
+    bool ok = false;
+    QString text = QInputDialog::getText(this, "AI回复的APPID", "可在 https://ai.qq.com/console 申请", QLineEdit::Normal, replyAppId, &ok);
+    if (!ok)
+        return ;
+    settings.setValue("reply/APPID", text);
+    if (danmakuWindow)
+        danmakuWindow->readReplyKey();
+}
+
+void MainWindow::on_APReplyKeyButton_clicked()
+{
+    QString replyAppKey = settings.value("reply/APPKEY", "").toString();
+    bool ok = false;
+    QString text = QInputDialog::getText(this, "AI回复的APPKEY", "可在 https://ai.qq.com/console 申请", QLineEdit::Normal, replyAppKey, &ok);
+    if (!ok)
+        return ;
+    settings.setValue("reply/APPKEY", text);
+    if (danmakuWindow)
+        danmakuWindow->readReplyKey();
+}

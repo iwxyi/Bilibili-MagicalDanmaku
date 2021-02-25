@@ -500,6 +500,10 @@ private slots:
 
     void on_domainEdit_editingFinished();
 
+    void on_AIReplyIdButton_clicked();
+
+    void on_APReplyKeyButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

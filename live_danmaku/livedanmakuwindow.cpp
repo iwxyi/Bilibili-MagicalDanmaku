@@ -157,6 +157,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     simpleMode = settings.value("livedanmakuwindow/simpleMode", false).toBool();
     chatMode = settings.value("livedanmakuwindow/chatMode", false).toBool();
 
+    readReplyKey();
+
     statusLabel = new QLabel(this);
     statusLabel->hide();
     QPalette pa;
@@ -1811,8 +1813,8 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 
     // 参数信息
     QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
-    QString nonce_str = "fa577ce340859f9fe";
-    QStringList params{"app_id", "2159207490",
+    QString nonce_str = replyAPPKEY;
+    QStringList params{"app_id", replyAPPID,
                        "nonce_str", nonce_str,
                 "question", msg,
                 "session", QString::number(danmaku.getUid()),
@@ -2207,6 +2209,19 @@ void LiveDanmakuWindow::releaseLiveData()
     headPortraits.clear();
     hideStatusText();
     setIds(0, 0);
+}
+
+void LiveDanmakuWindow::readReplyKey()
+{
+    settings.sync();
+    replyAPPID = settings.value("reply/APPID", "").toString();
+    replyAPPKEY = settings.value("reply/APPKEY", "").toString();
+
+    if (replyAPPID.isEmpty())
+    {
+        replyAPPID = "2159207490";
+        replyAPPKEY = "sTuC8iS3R9yLNbL9";
+    }
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
