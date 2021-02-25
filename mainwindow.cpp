@@ -288,7 +288,7 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *videoAction = new QAction(QIcon(":/icons/live"), "视频流", this);
     connect(videoAction, SIGNAL(triggered()), this, SLOT(on_actionShow_Live_Video_triggered()));
     QAction *quitAction = new QAction(QIcon(":/icons/cry"), "退出", this);
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(quitAction, SIGNAL(triggered()), this, SLOT(prepareQuit()));
 
     trayMenu = new QMenu(this);
     trayMenu->addAction(windowAction);
@@ -442,21 +442,6 @@ MainWindow::MainWindow(QWidget *parent)
     // WS连接
     initWS();
     startConnectRoom();
-
-//    for (int i = 0; i < 3; i++)
-    /*{
-        QFile file("receive.txt");
-        file.open(QIODevice::ReadWrite);
-        auto ba = file.readAll();
-        ba = ba.right(ba.size()-16);
-
-        unsigned long si;
-        BYTE* target = new BYTE[ba.size()*5+100]{};
-        uncompress(target, &si, (unsigned char*)ba.data(), ba.size());
-        QByteArray unc = QByteArray::fromRawData((char*)target, si);
-        qDebug() << "解压后的：" << unc;
-        qDebug() << "直接解压：" << zlibUncompress(ba);
-    }*/
 
     // 10秒内不进行自动化操作
     QTimer::singleShot(3000, [=]{
@@ -10572,4 +10557,10 @@ void MainWindow::on_APReplyKeyButton_clicked()
     settings.setValue("reply/APPKEY", text);
     if (danmakuWindow)
         danmakuWindow->readReplyKey();
+}
+
+void MainWindow::prepareQuit()
+{
+    releaseLiveData();
+    qApp->quit();
 }

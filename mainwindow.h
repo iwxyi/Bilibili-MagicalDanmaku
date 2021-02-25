@@ -504,6 +504,8 @@ private slots:
 
     void on_APReplyKeyButton_clicked();
 
+    void prepareQuit();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

@@ -136,6 +136,7 @@ private:
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(qint64 uid, QListWidgetItem *item);
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
+    QString headPath(qint64 uid) const;
     void showUserMsgHistory(qint64 uid, QString title);
     QString getPinyin(QString text);
     QVariant getCookies();
@@ -177,8 +178,9 @@ private:
     bool simpleMode = false; // 简约模式：不显示头像
     bool chatMode = false; // 聊天模式：只显示弹幕，并且不使用彩色
     bool newbieTip = true;
-    QHash<qint64, QPixmap> headPortraits;
     QList<QString> ignoreDanmakuColors;
+
+    QString headDir; // 头像保存的路径/ (带/)
 
     int fontHeight;
     int lineSpacing;

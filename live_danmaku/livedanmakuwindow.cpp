@@ -159,6 +159,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
 
     readReplyKey();
 
+    headDir = QApplication::applicationDirPath() + "/headers/";
+    QDir dir;
+    dir.mkpath(headDir);
+
     statusLabel = new QLabel(this);
     statusLabel->hide();
     QPalette pa;
@@ -378,9 +382,10 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
     if (danmaku.getMsgType() == MSG_DANMAKU && !simpleMode) // 只显示弹幕的数据
     {
-        bool hasPortrait = headPortraits.contains(danmaku.getUid());
+        QString path = headPath(danmaku.getUid());
+        bool hasPortrait = QFileInfo(path).exists();
         if (hasPortrait)
-            portrait->setPixmap(headPortraits.value(danmaku.getUid()));
+            portrait->setPixmap(QPixmap(path));
         else
             getUserInfo(danmaku.getUid(), item);
     }
@@ -2206,7 +2211,8 @@ void LiveDanmakuWindow::showPkLevelInAction(qint64 roomId, QAction *actionUser, 
 
 void LiveDanmakuWindow::releaseLiveData()
 {
-    headPortraits.clear();
+    QDir(headDir).removeRecursively();
+
     hideStatusText();
     setIds(0, 0);
 }
@@ -2325,27 +2331,37 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 
 void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)
 {
-    QNetworkAccessManager manager;
-    QEventLoop loop;
-    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-    //请求结束并下载完成后，退出子事件循环
-    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //开启子事件循环
-    loop.exec();
-    QByteArray jpegData = reply1->readAll();
-    QPixmap pixmap;
-    pixmap.loadFromData(jpegData);
-    if (pixmap.isNull())
+    QString path = headPath(uid);
+    if (!QFileInfo(path).exists())
     {
-        qDebug() << "获取用户头像为空：" << uid;
-        return ;
+        QNetworkAccessManager manager;
+        QEventLoop loop;
+        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+        //请求结束并下载完成后，退出子事件循环
+        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        //开启子事件循环
+        loop.exec();
+        QByteArray jpegData = reply1->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        if (pixmap.isNull())
+        {
+            qDebug() << "获取用户头像为空：" << uid;
+            return ;
+        }
+        if (!pixmap.save(path))
+            qWarning() << "保存头像失败：" << uid << url;
     }
-    headPortraits[uid] = pixmap;
 
     if (!isItemExist(item))
         return ;
     PortraitLabel* label = getItemWidgetPortrait(item);
-    label->setPixmap(pixmap);
+    label->setPixmap(QPixmap(path));
+}
+
+QString LiveDanmakuWindow::headPath(qint64 uid) const
+{
+    return headDir + snum(uid) + ".jpg";
 }
 
 void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
