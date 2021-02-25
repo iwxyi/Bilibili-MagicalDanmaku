@@ -4931,6 +4931,7 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     QFile file(dir.absoluteFilePath("songs.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
     stream << sl.join("\n");
     file.flush();
     file.close();
