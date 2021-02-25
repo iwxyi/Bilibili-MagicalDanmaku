@@ -731,7 +731,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
 
     // 主播判断
-    if (upUid && danmaku.getUid() == upUid)
+    if (upUid && (danmaku.getUid() == upUid || (pkStatus && danmaku.getUid() == pkUid)))
         text = "<font color='#F08080'>[主播]</font> " + text;
 
     if (danmaku.isRobot())
