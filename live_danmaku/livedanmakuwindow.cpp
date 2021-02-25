@@ -1849,6 +1849,11 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         }
 
         QString answer = json.value("data").toObject().value("answer").toString();
+
+        // 过滤文字
+        if (answer.contains("未搜到"))
+            return ;
+
         emit signalAIReplyed(answer);
 
         if (!isItemExist(item))

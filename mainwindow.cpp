@@ -1868,8 +1868,9 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         return ;
     QRegularExpression re(diangeFormatString);
     QRegularExpressionMatch match;
-    if (danmaku.getText().indexOf(re, 0, &match) == -1)
+    if (danmaku.getText().indexOf(re, 0, &match) == -1) // 不是点歌文本
         return ;
+
     if (match.capturedTexts().size() < 2)
     {
         statusLabel->setText("无法获取点歌内容，请检测点歌格式");
@@ -10346,7 +10347,7 @@ void MainWindow::slotAIReplyed(QString reply)
                 && reply.length() > ui->danmuLongestSpin->value())
             return ;
 
-        // 自动 断句
+        // 自动断句
         QStringList sl;
         int len = reply.length();
         const int maxOne = danmuLongest;
