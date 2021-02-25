@@ -491,41 +491,44 @@ tips：
 
 有一些自定义的函数，如下：
 
-| 函数                              | 说明                                               |
-| --------------------------------- | -------------------------------------------------- |
-| abort()                           | 终止本流程后面弹幕                                 |
-| block(uid, hour)                  | 禁言用户，`uid` 可使用参数 `%uid%` 获得            |
-| block(uid)                        | 同上，默认使用自动禁言的时间                       |
-| unblock(uid)                      | 解除禁言                                           |
-| delay(msecond)                    | 延迟执行后面所有待执行的操作，单位毫秒             |
-| addGameUser(uid)                  | 添加用户至游戏队列，使用`[%in_game_users%]`判断    |
-| removeGameUser(uid)               | 从游戏队列中移除用户                               |
-| sendGift(giftId, num)             | 赠送礼物，只支持 id 的方式                         |
-| execRemoteCommand(cmd)            | 执行远程控制（见下面）                             |
-| execRemoteCommand(cmd, 0)         | 执行远程控制，不发送回馈通知                       |
-| sendPrivateMsg(uid, msg)          | 向指定用户发送私信                                 |
-| sendRoomMsg(roomId, msg)          | 向指定直播间发送弹幕                               |
-| timerShot(msecond, msg)           | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数） |
-| locaNotify(msg)                   | 发送本地消息通知（非弹幕，只有自己看得到）         |
-| localNotify(uid, msg)             | 同上，带用户ID                                     |
-| speakText(msg)                    | 朗读文本                                           |
-| openUrl(url)                      | 浏览器打开网址                                     |
-| connectNet(url)                   | 后台连接网址（GET）                                |
-| postData(url, data)               | 同上（POST）                                       |
-| runCommandLine(cmd)               | 运行命令行                                         |
-| setValue(key, val)                | 保存值到配置文件，通过%{key}%获取，重启后仍在      |
-| openFile(path)                    | 打开文件                                           |
-| playSound(path)                   | 播放音频文件                                       |
-| improveSongOrder(username, order) | 点歌提前播放，order为提升的索引值                  |
-| cutOrderSong(username)            | 切歌，仅限正在播放该用户自己点的歌时               |
-| curOrderSong()                    | 立即切歌，无论是谁点的                             |
-| messageBox(text)                  | 弹窗提示                                           |
+| 函数                              | 说明                                                 |
+| --------------------------------- | ---------------------------------------------------- |
+| abort()                           | 终止本流程后面弹幕                                   |
+| block(uid, hour)                  | 禁言用户，`uid` 可使用参数 `%uid%` 获得              |
+| block(uid)                        | 同上，默认使用自动禁言的时间                         |
+| unblock(uid)                      | 解除禁言                                             |
+| delay(msecond)                    | 延迟执行后面所有待执行的操作，单位毫秒               |
+| addGameUser(uid)                  | 添加用户至游戏队列，使用`[%in_game_users%]`判断      |
+| removeGameUser(uid)               | 从游戏队列中移除用户                                 |
+| sendGift(giftId, num)             | 赠送礼物，只支持 id 的方式                           |
+| execRemoteCommand(cmd)            | 执行远程控制（见下面）                               |
+| execRemoteCommand(cmd, 0)         | 执行远程控制，不发送回馈通知                         |
+| sendPrivateMsg(uid, msg)          | 向指定用户发送私信                                   |
+| sendRoomMsg(roomId, msg)          | 向指定直播间发送弹幕                                 |
+| timerShot(msecond, msg)           | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数）   |
+| locaNotify(msg)                   | 发送本地消息通知（非弹幕，只有自己看得到）           |
+| localNotify(uid, msg)             | 同上，带用户ID                                       |
+| speakText(msg)                    | 朗读文本                                             |
+| openUrl(url)                      | 浏览器打开网址                                       |
+| connectNet(url)                   | 后台连接网址（GET）                                  |
+| postData(url, data)               | 同上（POST）                                         |
+| runCommandLine(cmd)               | 运行命令行                                           |
+| setValue(key, val)                | 保存值到配置文件，通过%{key}%获取，重启后仍在        |
+| openFile(path)                    | 打开文件                                             |
+| playSound(path)                   | 播放音频文件                                         |
+| improveSongOrder(username, order) | 点歌提前播放，order为提升的索引值                    |
+| cutOrderSong(username)            | 切歌，仅限正在播放该用户自己点的歌时                 |
+| curOrderSong()                    | 立即切歌，无论是谁点的                               |
+| messageBox(text)                  | 弹窗提示                                             |
+| runEventAction(index)             | 运行其他事件动作，index为对应序号，从1开始（会变动） |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。
 
-> 注意：不支持一条弹幕同时操作多个命令，若有需要，可用用 `\n` 隔开
+> 注意：若要同时操作多个函数，可用 `\n` 隔开（相当于多条弹幕）
 >
+
+
 
 ##### 示例：自动打卡
 
@@ -538,6 +541,8 @@ tips：
 ```
 
 注意：需要**关闭“仅直播时发送”**
+
+
 
 ##### 示例：禁言小游戏
 
@@ -579,17 +584,23 @@ tips：
 2. 解除禁言
 3. 从游戏用户中移除，后续小心心不再触发该游戏，而是普通的答谢
 
+
+
 ##### 示例：上船自动私信
 
 **答谢 — 感谢送礼**中添加：
 
 ```
-[%guard_buy%,!%guard_count%]感谢%ai_name%开通%gift_name%！\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)
+[%guard_buy%,%guard_first%=1]感谢%ai_name%开通%gift_name%！\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)
 ```
 
-`%guard_buy%` 判断是否是购买舰长的通知；`%guard_count%` 获取上船次数，为上过船为0，`!`为取反，于是可用 `!%guard_count%` 来增加第一次上船的条件。
+`%guard_buy%` 判断是否是购买舰长的通知；`%guard_first%` 判断是否第一次上船，第一次=1，续船=0，掉船后重新上传=2。
 
-> `%guard_count%` 只计算本程序时运行时购买舰长的用户，因此建议使用一个月后再开启该功能
+也可用 `%guard_count%` 来读取上船的次数作为条件，`%guard_count%=0`表示第一次上船。
+
+> `%guard_count%` 只计算本程序时运行时购买舰长的用户，每次舰长+1，提督+10，总督+100。
+
+
 
 ##### 示例：送礼优先点歌
 
@@ -605,6 +616,8 @@ tips：
 [%gift_name%=喵娘]>improveSongOrder(%username%,%[%gift_gold%/1000]%)
 ```
 
+
+
 ##### 示例：弹幕切歌
 
 房管可以切所有歌，普通观众只能切自己点的歌
@@ -617,6 +630,8 @@ tips：
 [%admin%]*>cutOrderSong()
 >cutOrderSong(%username%)
 ```
+
+
 
 ### 远程控制
 
@@ -711,6 +726,7 @@ tips：
 | PK_BATTLE_SETTLE              |                                                              |
 | PK_BATTLE_START               | 大乱斗开始                                                   |
 | PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
+| PK_FINAL                      | 大乱斗尾声，最后几秒                                         |
 | PK_BATTLE_END                 | 大乱斗结束                                                   |
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
@@ -785,6 +801,24 @@ tips：
 ```
 
 仅当赢了，并且本次累计送礼有超过100积分（10000金瓜子）才感谢
+
+
+
+##### 示例：大乱斗尊严票
+
+对面超过100积分（1万金瓜子）而自己还是0积分的时候，送一个吃瓜保尊严 ╮(╯﹏╰）╭。
+
+添加大乱斗即将结束事件：`PK_FINAL`
+
+此事件的时间为大乱斗结束前几秒，具体值由偷塔提前量决定。
+
+添加动作：
+
+```
+[%pk_my_votes%=0, %pk_match_votes%>100]>sendGift(20004, 1)
+```
+
+`20004` 为吃瓜的礼物ID，1为数量
 
 
 

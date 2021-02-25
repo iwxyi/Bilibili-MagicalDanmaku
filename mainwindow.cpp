@@ -4800,6 +4800,28 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 执行其他事件任务
+    if (msg.contains("runEventAction"))
+    {
+        re = RE("runEventAction\\s*\\(\\s*(\\d+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            int index = caps.at(1).toInt() - 1;
+            qDebug() << "执行命令：" << caps;
+            if (index < 0 || index >= ui->eventListWidget->count())
+            {
+                qWarning() << "索引超出边界";
+                return true;
+            }
+            auto item = ui->eventListWidget->item(index);
+            auto widget = ui->eventListWidget->itemWidget(item);
+            auto eventWidget = static_cast<EventWidget*>(widget);
+            eventWidget->triggerAction();
+            return true;
+        }
+    }
+
 
     return false;
 }
@@ -9950,6 +9972,8 @@ void MainWindow::slotPkEnding()
 
         localNotify(text);
     }
+
+    triggerCmdEvent("PK_ENDING", LiveDanmaku());
 }
 
 /**

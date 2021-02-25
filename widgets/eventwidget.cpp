@@ -56,6 +56,11 @@ void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
     emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
 }
 
+void EventWidget::triggerAction()
+{
+    emit signalEventMsgs(actionEdit->toPlainText(), LiveDanmaku(), false);
+}
+
 void EventWidget::autoResizeEdit()
 {
     actionEdit->document()->setPageSize(QSize(this->width(), actionEdit->document()->size().height()));
