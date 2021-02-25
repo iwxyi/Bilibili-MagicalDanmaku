@@ -538,6 +538,7 @@ tips：
 | curOrderSong()                    | 立即切歌，无论是谁点的                               |
 | messageBox(text)                  | 弹窗提示                                             |
 | runEventAction(index)             | 运行其他事件动作，index为对应序号，从1开始（会变动） |
+| sendLongText(text)                | 发送长文本，自动分割成多条                           |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。

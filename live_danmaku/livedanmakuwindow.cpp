@@ -1854,7 +1854,7 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         if (answer.contains("未搜到"))
             return ;
 
-        emit signalAIReplyed(answer);
+        emit signalAIReplyed(answer, uid);
 
         if (!isItemExist(item))
             return ;

@@ -1179,6 +1179,10 @@ void MainWindow::on_testDanmakuButton_clicked()
 
         triggerCmdEvent("LIVE", LiveDanmaku());
     }
+    else if (text == "模拟对面主播串门")
+    {
+
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -4810,6 +4814,20 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 发送长文本
+    if (msg.contains("sendLongText"))
+    {
+        re = RE("sendLongText\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            sendLongText(text);
+            return true;
+        }
+    }
+
     // 执行其他事件任务
     if (msg.contains("runEventAction"))
     {
@@ -4821,7 +4839,8 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             qDebug() << "执行命令：" << caps;
             if (index < 0 || index >= ui->eventListWidget->count())
             {
-                qWarning() << "索引超出边界";
+                qWarning() << "索引超出边界：" << snum(index);
+                localNotify("索引超出边界：" + snum(index));
                 return true;
             }
             auto item = ui->eventListWidget->item(index);
@@ -4875,6 +4894,19 @@ void MainWindow::simulateKeys(QString seq)
 
     for (int i = 0; i < keySeq.size(); i++)
         keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+}
+
+void MainWindow::sendLongText(QString text)
+{
+    QStringList sl;
+    int len = text.length();
+    const int maxOne = danmuLongest;
+    int count = (len + maxOne - 1) / maxOne;
+    for (int i = 0; i < count; i++)
+    {
+        sl << text.mid(i * maxOne, maxOne);
+    }
+    sendAutoMsg(sl.join("\\n"));
 }
 
 void MainWindow::restoreCustomVariant(QString text)
@@ -8171,7 +8203,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
         connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
-        connect(danmakuWindow, SIGNAL(signalAIReplyed(QString)), this, SLOT(slotAIReplyed(QString)));
+        connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
         connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
         connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
             danmakuWindow->deleteLater();
@@ -8416,15 +8448,7 @@ void MainWindow::on_actionSend_Long_Text_triggered()
     if (!ok || text.isEmpty())
         return ;
 
-    QStringList sl;
-    int len = text.length();
-    const int maxOne = danmuLongest;
-    int count = (len + maxOne - 1) / maxOne;
-    for (int i = 0; i < count; i++)
-    {
-        sl << text.mid(i * maxOne, maxOne);
-    }
-    sendAutoMsg(sl.join("\\n"));
+    sendLongText(text);
 }
 
 void MainWindow::on_actionShow_Lucky_Draw_triggered()
@@ -8875,7 +8899,7 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << "getRoomCurrentAudiences.ERROR:" << error.errorString();
             qCritical() << result;
             return ;
         }
@@ -8900,6 +8924,7 @@ void MainWindow::connectPkRoom()
     // 根据弹幕消息
     myAudience.clear();
     oppositeAudience.clear();
+
     getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
@@ -10338,10 +10363,14 @@ void MainWindow::on_AIReplyMsgCheck_clicked()
         ui->AIReplyMsgCheck->setText("回复弹幕(仅单条)");
 }
 
-void MainWindow::slotAIReplyed(QString reply)
+void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 {
     if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
     {
+        // 机器人自己的不回复（不然自己和自己打起来了）
+        if (snum(uid) == cookieUid)
+            return ;
+
         // AI回复长度上限，以及过滤
         if (ui->AIReplyMsgCheck->checkState() == Qt::PartiallyChecked
                 && reply.length() > ui->danmuLongestSpin->value())

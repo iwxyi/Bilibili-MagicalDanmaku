@@ -460,7 +460,7 @@ private slots:
 
     void on_AIReplyMsgCheck_clicked();
 
-    void slotAIReplyed(QString reply);
+    void slotAIReplyed(QString reply, qint64 uid);
 
     void on_danmuLongestSpin_editingFinished();
 
@@ -600,6 +600,7 @@ private:
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, CmdResponse& res, int& resVal);
     void simulateKeys(QString seq);
+    void sendLongText(QString text);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();

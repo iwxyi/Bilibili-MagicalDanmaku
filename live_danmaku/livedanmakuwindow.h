@@ -84,7 +84,7 @@ signals:
     void signalEternalBlockUser(qint64 uid, QString uname);
     void signalCancelEternalBlockUser(qint64 uid);
     void signalChangeWindowMode();
-    void signalAIReplyed(QString msg);
+    void signalAIReplyed(QString msg, qint64 uid);
     void signalShowPkVideo();
 
 public slots:
