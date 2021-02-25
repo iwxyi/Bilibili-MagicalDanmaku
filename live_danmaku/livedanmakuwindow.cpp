@@ -884,6 +884,16 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
     }
 }
 
+void LiveDanmakuWindow::removeAll()
+{
+    while (listWidget->count())
+    {
+        auto item = listWidget->item(0);
+        listWidget->removeItemWidget(item);
+        listWidget->takeItem(listWidget->row(item));
+    }
+}
+
 void LiveDanmakuWindow::showMenu()
 {
     auto item = listWidget->currentItem();

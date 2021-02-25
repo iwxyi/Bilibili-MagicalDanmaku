@@ -96,6 +96,7 @@ public slots:
     void resetItemsText();
     void resetItemsFont();
     void mergeGift(LiveDanmaku danmaku);
+    void removeAll();
 
     void showMenu();
     void showEditMenu();

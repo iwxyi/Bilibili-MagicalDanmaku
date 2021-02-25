@@ -585,11 +585,12 @@ MainWindow::MainWindow(QWidget *parent)
         }
 
         // 版权声明
-        if (liveStatus && !settings.value("danmaku/copyright", false).toBool())
+        if (liveStatus && !settings.value("danmaku/copyright", false).toBool()
+                && qrand() % 3 == 0)
         {
             if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
             {
-                sendMsg("答谢姬【神奇弹幕】为您服务~");
+                sendMsg("答谢姬【"+QApplication::applicationName()+"】为您服务~");
             }
         }
     });
@@ -605,7 +606,7 @@ MainWindow::MainWindow(QWidget *parent)
     {
         if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
         {
-            localNotify("答谢姬【神奇弹幕】为您服务~");
+            localNotify("【"+QApplication::applicationName()+"】为您服务~");
         }
     }
 
@@ -975,10 +976,11 @@ void MainWindow::slotSendAutoMsg()
 
     CmdResponse res = NullRes;
     int resVal = 0;
-    if (!execFunc(msg, res, resVal)) // 先判断能否执行命令
+    if (!execFunc(msg, res, resVal)) // 先判断能否执行命令，如果是发送弹幕
     {
+        msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
-        sendMsg(msgToShort(msg));
+        sendMsg(msg);
     }
     else // 是执行命令，发送下一条弹幕就不需要延迟了
     {
@@ -8191,6 +8193,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setWindowTitle(this->windowTitle());
 
         QTimer::singleShot(0, [=]{
+            danmakuWindow->removeAll();
             for (int i = 0; i < roomDanmakus.size(); i++)
                 danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
         });
@@ -8988,7 +8991,7 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
-    SOCKET_DEB << "pk操作码=" << operation << "  正文=" << (body.left(35)) << "...";
+    SOCKET_INF << "pk操作码=" << operation << "  正文=" << (body.left(35)) << "...";
 
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
@@ -9121,13 +9124,13 @@ void MainWindow::handlePkMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        if (noReplyMsgs.contains(msg))
+        /*if (noReplyMsgs.contains(msg) && snum(uid) == cookieUid)
         {
             danmaku.setNoReply();
-            noReplyMsgs.clear();
+            noReplyMsgs.removeOne(msg);
         }
         else
-            minuteDanmuPopular++;
+            minuteDanmuPopular++;*/
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
