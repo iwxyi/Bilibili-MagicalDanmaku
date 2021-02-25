@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>501</width>
-    <height>389</height>
+    <width>498</width>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -2929,8 +2929,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>501</width>
-     <height>21</height>
+     <width>498</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

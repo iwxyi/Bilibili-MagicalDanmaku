@@ -4329,12 +4329,19 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     {
         ui->AIReplyMsgCheck->setCheckState(Qt::CheckState::Checked);
         on_AIReplyMsgCheck_clicked();
+        if (response)
+            sendNotifyMsg(">已开启弹幕AI回复");
     }
     else if (msg == "关闭弹幕回复")
     {
         ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
+        if (response)
+            sendNotifyMsg(">已开启弹幕AI回复");
     }
+    else
+        return ;
+    qDebug() << "执行远程命令：" << msg;
 }
 
 bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
@@ -10398,6 +10405,9 @@ void MainWindow::on_acquireHeartCheck_clicked()
 
     if (ui->acquireHeartCheck->isChecked())
         sendXliveHeartBeatE();
+    else
+        if (xliveHeartBeatTimer)
+            xliveHeartBeatTimer->stop();
 }
 
 void MainWindow::on_sendExpireGiftCheck_clicked()
