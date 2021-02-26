@@ -4339,7 +4339,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
         if (response)
-            sendNotifyMsg(">已开启弹幕AI回复");
+            sendNotifyMsg(">已关闭弹幕AI回复");
     }
     else
         return ;
