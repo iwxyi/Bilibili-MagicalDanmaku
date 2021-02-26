@@ -31,6 +31,12 @@ ReplyWidget::ReplyWidget(QWidget *parent) : QWidget(parent)
     replyEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     replyEdit->setStyleSheet("QPlainTextEdit{background: transparent;}");
 
+    keyEdit->setToolTip("正则表达式简单语法\n"
+                        "包含关键词：关键词\n"
+                        "包含多个关键词：关键词1|关键词2|关键词3\n"
+                        "完全为句子：^句子$\n"
+                        "完全为多个句子：^(句子1|句子2)$");
+
     auto sendMsgs = [=](bool manual){
         emit signalReplyMsgs(replyEdit->toPlainText(), LiveDanmaku(), manual);
     };

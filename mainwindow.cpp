@@ -8208,19 +8208,24 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             qDebug() << "发送PK对面消息：" << pkRoomId << msg;
             sendRoomMsg(pkRoomId, msg);
         });
-        danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
-        danmakuWindow->hide();
         danmakuWindow->setWindowIcon(this->windowIcon());
         danmakuWindow->setWindowTitle(this->windowTitle());
+        danmakuWindow->hide();
 
         QTimer::singleShot(0, [=]{
             danmakuWindow->removeAll();
             for (int i = 0; i < roomDanmakus.size(); i++)
                 danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
+            danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+            danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+
+            if (pking)
+            {
+                danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
+            }
         });
     }
 
@@ -8280,7 +8285,7 @@ void MainWindow::on_actionSet_Cookie_triggered()
 void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Data", "设置用户登录的data", QLineEdit::Normal, browserData, &ok);
+    QString s = QInputDialog::getText(this, "设置Data", "设置弹幕的data\n自动从cookie中提取，可不用设置", QLineEdit::Normal, browserData, &ok);
     if (!ok)
         return ;
 

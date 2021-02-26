@@ -234,7 +234,7 @@ void MainWindow::syncMagicalRooms()
 
         if(json.value("auto_open").toBool())
         {
-            QMessageBox::information(this, "版本更新", "您的版本已过旧，可能存在潜在问题，请尽快更新");
+            QMessageBox::information(this, "版本更新", "您的版本已过旧，可能存在潜在问题，请尽快更新\n" + appVersion + " => " + appNewVersion);
             QDesktopServices::openUrl(appDownloadUrl);
         }
 
