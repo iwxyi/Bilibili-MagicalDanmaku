@@ -159,6 +159,32 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     else if (gifCompress == 3)
         ui->actionGIF_Compress_x8->setChecked(true);
 
+    // 图像转换选项
+    QActionGroup* convertGroup1 = new QActionGroup(this);
+    convertGroup1->addAction(ui->actionAutoColor);
+    convertGroup1->addAction(ui->actionColorOnly);
+    convertGroup1->addAction(ui->actionMonoOnly);
+
+    QActionGroup* convertGroup2 = new QActionGroup(this);
+    convertGroup2->addAction(ui->actionDiffuseDither);
+    convertGroup2->addAction(ui->actionOrderedDither);
+    convertGroup2->addAction(ui->actionThresholdDither);
+
+    QActionGroup* convertGroup3 = new QActionGroup(this);
+    convertGroup3->addAction(ui->actionThresholdAlphaDither);
+    convertGroup3->addAction(ui->actionOrderedAlphaDither);
+    convertGroup3->addAction(ui->actionDiffuseAlphaDither);
+
+    QActionGroup* convertGroup4 = new QActionGroup(this);
+    convertGroup4->addAction(ui->actionPreferDither);
+    convertGroup4->addAction(ui->actionAvoidDither);
+    convertGroup4->addAction(ui->actionAutoDither);
+    convertGroup4->addAction(ui->actionNoOpaqueDetection);
+    convertGroup4->addAction(ui->actionNoFormatConversion);
+
+    imageConversion = (Qt::ImageConversionFlags)settings.value("gif/imageConversion", 0).toInt();
+    fromImageConversionFlag();
+
     connect(this, &PictureBrowser::signalGeneralGIFProgress, this, [=](int index){
         progressBar->setValue(index);
     });
@@ -1424,6 +1450,80 @@ int PictureBrowser::getRecordInterval()
     return interval;
 }
 
+void PictureBrowser::saveImageConversionFlag()
+{
+    imageConversion = Qt::AutoColor;
+
+    if (ui->actionAutoColor->isChecked())
+        imageConversion |= Qt::AutoColor;
+    else if (ui->actionColorOnly->isChecked())
+        imageConversion |= Qt::ColorOnly;
+    else if (ui->actionMonoOnly->isChecked())
+        imageConversion |= Qt::MonoOnly;
+
+    if (ui->actionDiffuseDither->isChecked())
+        imageConversion |= Qt::DiffuseDither;
+    else if (ui->actionOrderedDither->isChecked())
+        imageConversion |= Qt::OrderedDither;
+    else if (ui->actionThresholdDither->isChecked())
+        imageConversion |= Qt::ThresholdDither;
+
+    if (ui->actionThresholdAlphaDither->isChecked())
+        imageConversion |= Qt::ThresholdAlphaDither;
+    else if (ui->actionOrderedAlphaDither->isChecked())
+        imageConversion |= Qt::OrderedAlphaDither;
+    else if (ui->actionDiffuseAlphaDither->isChecked())
+        imageConversion |= Qt::ThresholdAlphaDither;
+
+    if (ui->actionPreferDither->isChecked())
+        imageConversion |= Qt::PreferDither;
+    else if (ui->actionAvoidDither->isChecked())
+        imageConversion |= Qt::AvoidDither;
+    else if (ui->actionAutoDither->isChecked())
+        imageConversion |= Qt::AutoDither;
+    else if (ui->actionNoOpaqueDetection->isChecked())
+        imageConversion |= Qt::NoOpaqueDetection;
+    else if (ui->actionNoFormatConversion->isChecked())
+        imageConversion |= Qt::NoFormatConversion;
+
+    settings.setValue("gif/imageConversion", (int)imageConversion);
+}
+
+void PictureBrowser::fromImageConversionFlag()
+{
+    if (imageConversion & Qt::ColorOnly)
+        ui->actionColorOnly->setChecked(true);
+    else if (imageConversion & Qt::MonoOnly)
+        ui->actionMonoOnly->setChecked(true);
+    else
+        ui->actionAutoColor->setChecked(true);
+
+    if (imageConversion & Qt::OrderedDither)
+        ui->actionOrderedDither->setChecked(true);
+    else if (imageConversion & Qt::ThresholdDither)
+        ui->actionThresholdDither->setChecked(true);
+    else
+        ui->actionDiffuseDither->setChecked(true);
+
+    if (imageConversion & Qt::OrderedAlphaDither)
+        ui->actionOrderedAlphaDither->setChecked(true);
+    else if (imageConversion & Qt::ThresholdAlphaDither)
+        ui->actionDiffuseAlphaDither->setChecked(true);
+    else
+        ui->actionThresholdAlphaDither->setChecked(true);
+
+    if (imageConversion & Qt::PreferDither)
+        ui->actionPreferDither->setChecked(true);
+    else if (imageConversion & Qt::AvoidDither)
+        ui->actionAvoidDither->setChecked(true);
+    else if (imageConversion & Qt::NoOpaqueDetection)
+        ui->actionNoOpaqueDetection->setChecked(true);
+    else if (imageConversion & Qt::NoFormatConversion)
+        ui->actionNoFormatConversion->setChecked(true);
+    else
+        ui->actionAutoDither->setChecked(true);
+}
+
 void PictureBrowser::on_actionUndo_Delete_Command_triggered()
 {
     if (deleteUndoCommands.size() == 0)
@@ -1571,7 +1671,7 @@ void PictureBrowser::on_actionGeneral_GIF_triggered()
             {
                 if (prop > 1)
                     pixmap = pixmap.scaled(static_cast<int>(wt), static_cast<int>(ht));
-                m_Gif.GifWriteFrame(m_GifWriter, pixmap.toImage().convertToFormat(QImage::Format_RGBA8888).bits(), wt, ht, iv, 8, gifDither);
+                m_Gif.GifWriteFrame(m_GifWriter, pixmap.toImage().convertToFormat(QImage::Format_RGBA8888, imageConversion).bits(), wt, ht, iv, 8, gifDither);
             }
             emit signalGeneralGIFProgress(i+1);
         }
@@ -1939,4 +2039,74 @@ void PictureBrowser::on_actionCreate_Folder_triggered()
 
     QDir(currentDirPath).mkpath(name);
     enterDirectory(currentDirPath);
+}
+
+void PictureBrowser::on_actionAutoColor_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionColorOnly_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionMonoOnly_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionDiffuseDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionOrderedDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionThresholdDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionThresholdAlphaDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionOrderedAlphaDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionDiffuseAlphaDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionPreferDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionAvoidDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionAutoDither_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionNoOpaqueDetection_triggered()
+{
+    saveImageConversionFlag();
+}
+
+void PictureBrowser::on_actionNoFormatConversion_triggered()
+{
+    saveImageConversionFlag();
 }

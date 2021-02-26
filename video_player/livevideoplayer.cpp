@@ -232,11 +232,11 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         int addin = !ui->playButton->isHidden() ? ui->playButton->height() : 0;
         if (p >= prob) // 更宽，调节宽度
         {
-            this->resize(h * prob +addin, h);
+            this->resize(h * prob, h + addin);
         }
         else // 更高，调节高度
         {
-            this->resize(w, w / prob);
+            this->resize(w, w / prob + addin);
         }
     };
 

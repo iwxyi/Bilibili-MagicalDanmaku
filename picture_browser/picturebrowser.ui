@@ -114,6 +114,28 @@
      <property name="title">
       <string>参数设置</string>
      </property>
+     <widget class="QMenu" name="menu_7">
+      <property name="title">
+       <string>图像转换选项</string>
+      </property>
+      <addaction name="actionAutoColor"/>
+      <addaction name="actionColorOnly"/>
+      <addaction name="actionMonoOnly"/>
+      <addaction name="separator"/>
+      <addaction name="actionDiffuseDither"/>
+      <addaction name="actionOrderedDither"/>
+      <addaction name="actionThresholdDither"/>
+      <addaction name="separator"/>
+      <addaction name="actionThresholdAlphaDither"/>
+      <addaction name="actionOrderedAlphaDither"/>
+      <addaction name="actionDiffuseAlphaDither"/>
+      <addaction name="separator"/>
+      <addaction name="actionPreferDither"/>
+      <addaction name="actionAvoidDither"/>
+      <addaction name="actionAutoDither"/>
+      <addaction name="actionNoOpaqueDetection"/>
+      <addaction name="actionNoFormatConversion"/>
+     </widget>
      <addaction name="actionCreate_To_Origin_Folder"/>
      <addaction name="actionCreate_To_One_Folder"/>
      <addaction name="separator"/>
@@ -127,6 +149,7 @@
      <addaction name="separator"/>
      <addaction name="actionDither_Enabled"/>
      <addaction name="actionDither_Disabled"/>
+     <addaction name="menu_7"/>
     </widget>
     <addaction name="menuIcon_Size"/>
     <addaction name="menuSort_Type"/>
@@ -778,6 +801,127 @@
   <action name="actionCreate_Folder">
    <property name="text">
     <string>新建文件夹</string>
+   </property>
+  </action>
+  <action name="actionAutoColor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AutoColor</string>
+   </property>
+  </action>
+  <action name="actionColorOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ColorOnly</string>
+   </property>
+  </action>
+  <action name="actionMonoOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>MonoOnly</string>
+   </property>
+  </action>
+  <action name="actionDiffuseDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DiffuseDither</string>
+   </property>
+  </action>
+  <action name="actionOrderedDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>OrderedDither</string>
+   </property>
+  </action>
+  <action name="actionThresholdDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ThresholdDither</string>
+   </property>
+  </action>
+  <action name="actionThresholdAlphaDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ThresholdAlphaDither</string>
+   </property>
+  </action>
+  <action name="actionOrderedAlphaDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>OrderedAlphaDither</string>
+   </property>
+  </action>
+  <action name="actionDiffuseAlphaDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DiffuseAlphaDither</string>
+   </property>
+  </action>
+  <action name="actionPreferDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>PreferDither</string>
+   </property>
+  </action>
+  <action name="actionAvoidDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AvoidDither</string>
+   </property>
+  </action>
+  <action name="actionAutoDither">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AutoDither</string>
+   </property>
+  </action>
+  <action name="actionNoOpaqueDetection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NoOpaqueDetection</string>
+   </property>
+  </action>
+  <action name="actionNoFormatConversion">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NoFormatConversion</string>
    </property>
   </action>
  </widget>

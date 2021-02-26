@@ -10554,7 +10554,7 @@ void MainWindow::on_AIReplyIdButton_clicked()
 {
     QString replyAppId = settings.value("reply/APPID", "").toString();
     bool ok = false;
-    QString text = QInputDialog::getText(this, "AI回复的APPID", "可在 https://ai.qq.com/console 申请", QLineEdit::Normal, replyAppId, &ok);
+    QString text = QInputDialog::getText(this, "AI回复的APPID", "可在 https://ai.qq.com/console 申请\n自定义机器人画像，包括名字、性格等", QLineEdit::Normal, replyAppId, &ok);
     if (!ok)
         return ;
     settings.setValue("reply/APPID", text);
@@ -10566,7 +10566,7 @@ void MainWindow::on_APReplyKeyButton_clicked()
 {
     QString replyAppKey = settings.value("reply/APPKEY", "").toString();
     bool ok = false;
-    QString text = QInputDialog::getText(this, "AI回复的APPKEY", "可在 https://ai.qq.com/console 申请", QLineEdit::Normal, replyAppKey, &ok);
+    QString text = QInputDialog::getText(this, "AI回复的APPKEY", "可在 https://ai.qq.com/console 申请\n自定义机器人画像，包括名字、性格等", QLineEdit::Normal, replyAppKey, &ok);
     if (!ok)
         return ;
     settings.setValue("reply/APPKEY", text);
