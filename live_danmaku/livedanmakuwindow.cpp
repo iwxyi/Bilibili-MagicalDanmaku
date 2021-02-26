@@ -2350,7 +2350,11 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
             return ;
         }
         if (!pixmap.save(path))
+        {
             qWarning() << "保存头像失败：" << uid << url;
+            QDir().mkpath(headDir);
+            pixmap.save(path);
+        }
     }
 
     if (!isItemExist(item))

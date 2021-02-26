@@ -41,6 +41,9 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
+    // 限制
+    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
+
     // 路径
     wwwDir = QDir(QApplication::applicationDirPath() + "/www");
 
