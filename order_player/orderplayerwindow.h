@@ -246,6 +246,9 @@ private:
     void clearDownloadFiles();
     void clearHoaryFiles();
 
+    void playNextRandomSong();
+    void generalRandomSongList();
+
     void adjustExpandPlayingButton();
     void connectDesktopLyricSignals();
     void setCurrentCover(const QPixmap& pixmap);
@@ -353,6 +356,8 @@ private:
     QString qqmusicCookies;
     QVariant qqmusicCookiesVariant;
     bool unblockQQMusic = false;
+
+    QList<Song> randomSongList;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

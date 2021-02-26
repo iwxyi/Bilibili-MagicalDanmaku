@@ -653,6 +653,7 @@ void OrderPlayerWindow::addNormal(SongList songs)
         normalSongs.insert(0, songs.at(i));
         showTabAnimation(center, "+1");
     }
+    randomSongList.clear();
     saveSongList("music/normal", normalSongs);
     setSongModelToView(normalSongs, ui->normalSongsListView);
 }
@@ -665,6 +666,7 @@ void OrderPlayerWindow::removeNormal(SongList songs)
         if (normalSongs.removeOne(song))
             showTabAnimation(center, "-1");
     }
+    randomSongList.clear();
     saveSongList("music/normal", normalSongs);
     setSongModelToView(normalSongs, ui->normalSongsListView);
 }
@@ -1161,12 +1163,8 @@ void OrderPlayerWindow::playNext()
 {
     if (!orderSongs.size()) // 播放列表全部结束
     {
-        // 查看固定列表
-        if (!normalSongs.size()) // 固定列表没有歌曲
-            return ;
-
-        int r = qrand() % normalSongs.size();
-        startPlaySong(normalSongs.at(r));
+        // 播放固定列表
+        playNextRandomSong();
         return ;
     }
 
@@ -1903,6 +1901,73 @@ void OrderPlayerWindow::clearHoaryFiles()
         {
             QFile f;
             f.remove(info.absoluteFilePath());
+        }
+    }
+}
+
+void OrderPlayerWindow::playNextRandomSong()
+{
+    if (!normalSongs.size()) // 固定列表没有歌曲
+        return ;
+
+    // int r = qrand() % normalSongs.size();
+    // startPlaySong(normalSongs.at(r));
+
+    if (!randomSongList.size())
+        generalRandomSongList();
+
+    startPlaySong(randomSongList.takeFirst());
+}
+
+/**
+ * 洗牌算法：https://blog.csdn.net/zhuhengv/article/details/50496576
+ */
+void OrderPlayerWindow::generalRandomSongList()
+{
+    // 流派不好搞，直接按名字来吧
+    QHash<QString, QList<Song>> shuffles;
+    for (int i = 0; i < normalSongs.size(); i++)
+    {
+        Song song = normalSongs.at(i);
+        QString name = song.artistNames;
+        if (shuffles.contains(name))
+            shuffles[name].append(song);
+        else
+            shuffles.insert(name, QList<Song>{song});
+    }
+
+    // 取最大数量
+    int maxLen = 0;
+    foreach (const QList<Song>& songs, shuffles)
+    {
+        maxLen = qMax(maxLen, songs.size());
+    }
+
+    // 随机打散
+    for (auto it = shuffles.begin(); it != shuffles.end(); it++)
+    {
+        SongList& songs = it.value();
+        unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count ();
+        std::shuffle(songs.begin(), songs.end(), std::default_random_engine (seed));
+
+        // 插入空的Song，使每一层尽量分布均匀
+        int delta = maxLen - songs.size();
+        while (delta--)
+        {
+            songs.insert(qrand() % (songs.size() + 1), Song());
+        }
+    }
+
+    // 随机取样
+    randomSongList.clear();
+    for (int i = 0; i < maxLen; i++)
+    {
+        for (auto it = shuffles.begin(); it != shuffles.end(); it++)
+        {
+            const Song& song = it.value().at(i);
+            if (!song.isValid())
+                continue;
+            randomSongList.append(song);
         }
     }
 }
