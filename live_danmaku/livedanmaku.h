@@ -416,6 +416,11 @@ public:
         this->timeline = time;
     }
 
+    void setTime(QDateTime time)
+    {
+        this->timeline = time;
+    }
+
     void setRobot(bool r)
     {
         this->robot = r;
@@ -424,6 +429,11 @@ public:
     void setPrevTimestamp(qint64 timestamp)
     {
         this->prev_timestamp = timestamp;
+    }
+
+    void setFirst(int first)
+    {
+        this->first = first;
     }
 
     bool equal(const LiveDanmaku& another) const

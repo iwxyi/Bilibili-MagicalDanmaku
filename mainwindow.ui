@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>498</width>
-    <height>393</height>
+    <width>501</width>
+    <height>441</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1016,17 +1016,59 @@ QTabBar::tab:selected
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <layout class="QHBoxLayout" name="horizontalLayout_47">
+          <property name="topMargin">
+           <number>0</number>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
+          <item>
+           <widget class="QCheckBox" name="giftComboSendCheck">
+            <property name="text">
+             <string>礼物连击(测试)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="giftComboDelaySpin">
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string>秒</string>
+            </property>
+            <property name="prefix">
+             <string>延迟</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>60</number>
+            </property>
+            <property name="value">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_26">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -2963,8 +3005,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>498</width>
-     <height>23</height>
+     <width>501</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

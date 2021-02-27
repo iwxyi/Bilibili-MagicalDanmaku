@@ -861,7 +861,7 @@ void LiveDanmakuWindow::resetItemsFont()
     }
 }
 
-void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
+void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku, int delayTime)
 {
     qint64 uid = danmaku.getUid();
     QString gift = danmaku.getGiftName();
@@ -874,7 +874,7 @@ void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0)
             continue;
-        if (t + 6 < time)
+        if (t + delayTime < time)
             return ;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid

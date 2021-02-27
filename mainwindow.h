@@ -207,10 +207,9 @@ private slots:
     void slotSendAutoMsg(bool timeout);
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
-
     void sendAttentionMsg(QString msg);
-
     void sendNotifyMsg(QString msg);
+    void slotComboSend();
 
     void slotSocketError(QAbstractSocket::SocketError error);
 
@@ -506,6 +505,10 @@ private slots:
 
     void prepareQuit();
 
+    void on_giftComboSendCheck_clicked();
+
+    void on_giftComboDelaySpin_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -709,6 +712,10 @@ private:
     QStringList noReplyMsgs;
     int danmuLongest = 20;
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
+
+    // 礼物连击
+    QHash<QString, LiveDanmaku> giftCombos;
+    QTimer* comboTimer = nullptr;
 
     // 发送弹幕队列
     QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！

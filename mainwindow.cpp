@@ -257,6 +257,13 @@ MainWindow::MainWindow(QWidget *parent)
         notReplyUsers.append(s.toLongLong());
     }
 
+    // 礼物连击
+    ui->giftComboSendCheck->setChecked(settings.value("danmaku/giftComboSend", false).toBool());
+    ui->giftComboDelaySpin->setValue(settings.value("danmaku/giftComboDelay",  5).toInt());
+    comboTimer = new QTimer(this);
+    comboTimer->setInterval(500);
+    connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
+
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(settings.value("danmaku/sendAutoOnlyLive", true).toBool());
     ui->autoDoSignCheck->setChecked(settings.value("danmaku/autoDoSign", false).toBool());
@@ -1056,6 +1063,50 @@ void MainWindow::sendNotifyMsg(QString msg)
 {
     sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
               true, false);
+}
+
+/**
+ * 连击定时器到达
+ */
+void MainWindow::slotComboSend()
+{
+    if (!giftCombos.size())
+    {
+        comboTimer->stop();
+        return ;
+    }
+
+    qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+    int delta = ui->giftComboDelaySpin->value();
+    QStringList eraseds;
+    for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
+    {
+        const LiveDanmaku& danmaku = it.value();
+        if (danmaku.getTimeline().toSecsSinceEpoch() + delta < timestamp) // 到达统计时间了
+        {
+            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            if (words.size())
+            {
+                int r = qrand() % words.size();
+                QString msg = words.at(r);
+                if (strongNotifyUsers.contains(danmaku.getUid()))
+                {
+                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                }
+                else
+                    sendGiftMsg(msg);
+            }
+//            it = giftCombos.erase(it); // 不知道为啥这样子会崩溃诶
+            eraseds.append(it.key());
+        }
+    }
+
+    if (eraseds.size())
+    {
+        foreach (QString s, eraseds)
+            giftCombos.remove(s);
+    }
 }
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
@@ -5592,149 +5643,149 @@ void MainWindow::handleMessage(QJsonObject json)
         /*{
             "cmd": "SEND_GIFT",
             "data": {
-                "action": "投喂",
-                "batch_combo_id": "batch:gift:combo_id:441692891:389088:30607:1613123366.4287",
-                "batch_combo_send": null,
+                "draw": 0,
+                "gold": 0,
+                "silver": 0,
+                "num": 1,
+                "total_coin": 0,
+                "effect": 0,
+                "broadcast_id": 0,
+                "crit_prob": 0,
+                "guard_level": 0,
+                "rcost": 200773,
+                "uid": 20285041,
+                "timestamp": 1614439816,
+                "giftId": 30607,
+                "giftType": 5,
+                "super": 0,
+                "super_gift_num": 1,
+                "super_batch_gift_num": 1,
+                "remain": 19,
+                "price": 0,
                 "beatId": "",
                 "biz_source": "Live",
-                "broadcast_id": 0,
+                "action": "投喂",
                 "coin_type": "silver",
-                "combo_resources_id": 1,
+                "uname": "懒一夕智能科技",
+                "face": "http://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg",
+                "batch_combo_id": "batch:gift:combo_id:20285041:2070473390:30607:1614439816.1655",      // 多个以及最后的 COMBO_SEND 是一样的
+                "rnd": "34158224",
+                "giftName": "小心心",
                 "combo_send": null,
+                "batch_combo_send": null,
+                "tag_image": "",
+                "top_list": null,
+                "send_master": null,
+                "is_first": true,                   // 不是第一个就是false
+                "demarcation": 1,
                 "combo_stay_time": 3,
                 "combo_total_coin": 1,
-                "crit_prob": 0,
-                "demarcation": 1,
-                "draw": 0,
-                "effect": 0,
+                "tid": "1614439816120100003",
                 "effect_block": 1,
-                "face": "http://i1.hdslb.com/bfs/face/a7396336b09261e70470c4e1de0278adf644771b.jpg",
-                "giftId": 30607,
-                "giftName": "小心心",
-                "giftType": 5,
-                "gold": 0,
-                "guard_level": 0,
-                "is_first": false,
                 "is_special_batch": 0,
+                "combo_resources_id": 1,
                 "magnification": 1,
-                "medal_info": {
-                    "anchor_roomid": 0,
-                    "anchor_uname": "",
-                    "guard_level": 0,
-                    "icon_id": 0,
-                    "is_lighted": 1,
-                    "medal_color": 12478086,
-                    "medal_color_border": 12478086,
-                    "medal_color_end": 12478086,
-                    "medal_color_start": 12478086,
-                    "medal_level": 13,
-                    "medal_name": "KKZ",
-                    "special": "",
-                    "target_id": 389088
-                },
                 "name_color": "",
-                "num": 1,
-                "price": 0,
-                "rcost": 330342818,
-                "remain": 1,
-                "rnd": "E962967F-9877-4C04-991A-8C6F0445321D",
-                "send_master": null,
-                "silver": 0,
-                "super": 0,
-                "super_batch_gift_num": 3,
-                "super_gift_num": 3,
-                "svga_block": 0,
-                "tag_image": "",
-                "tid": "1613123367130100001",
-                "timestamp": 1613123367,
-                "top_list": null,
-                "total_coin": 0,
-                "uid": 441692891,
-                "uname": "凯碧黛有岱"
+                "medal_info": {
+                    "target_id": 0,
+                    "special": "",
+                    "icon_id": 0,
+                    "anchor_uname": "",
+                    "anchor_roomid": 0,
+                    "medal_level": 0,
+                    "medal_name": "",
+                    "medal_color": 0,
+                    "medal_color_start": 0,
+                    "medal_color_end": 0,
+                    "medal_color_border": 0,
+                    "is_lighted": 0,
+                    "guard_level": 0
+                },
+                "svga_block": 0
             }
         }*/
         /*{
             "cmd": "SEND_GIFT",
             "data": {
-                "action": "投喂",
-                "batch_combo_id": "batch:gift:combo_id:355198782:389088:30822:1613123369.8959",
-                "batch_combo_send": {
-                    "action": "投喂",
-                    "batch_combo_id": "batch:gift:combo_id:355198782:389088:30822:1613123369.8959",
-                    "batch_combo_num": 1,
-                    "gift_id": 30822,
-                    "gift_name": "牛气爆竹",
-                    "gift_num": 1,
-                    "send_master": null,
-                    "uid": 355198782,
-                    "uname": "玲之兰音"
-                },
+                "draw": 0,
+                "gold": 0,
+                "silver": 0,
+                "num": 1,
+                "total_coin": 1000,
+                "effect": 0,                // 太便宜的礼物没有
+                "broadcast_id": 0,
+                "crit_prob": 0,
+                "guard_level": 0,
+                "rcost": 200795,
+                "uid": 20285041,
+                "timestamp": 1614440753,
+                "giftId": 30823,
+                "giftType": 0,
+                "super": 0,
+                "super_gift_num": 1,
+                "super_batch_gift_num": 1,
+                "remain": 0,
+                "price": 1000,
                 "beatId": "",
                 "biz_source": "Live",
-                "broadcast_id": 0,
+                "action": "投喂",
                 "coin_type": "gold",
-                "combo_resources_id": 1,
+                "uname": "懒一夕智能科技",
+                "face": "http://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg",
+                "batch_combo_id": "batch:gift:combo_id:20285041:2070473390:30823:1614440753.1786",
+                "rnd": "245758485",
+                "giftName": "小巧花灯",
                 "combo_send": {
-                    "action": "投喂",
-                    "combo_id": "gift:combo_id:355198782:389088:30822:1613123369.8952",
-                    "combo_num": 1,
-                    "gift_id": 30822,
-                    "gift_name": "牛气爆竹",
+                    "uid": 20285041,
                     "gift_num": 1,
-                    "send_master": null,
-                    "uid": 355198782,
-                    "uname": "玲之兰音"
+                    "combo_num": 1,
+                    "gift_id": 30823,
+                    "combo_id": "gift:combo_id:20285041:2070473390:30823:1614440753.1781",
+                    "gift_name": "小巧花灯",
+                    "action": "投喂",
+                    "uname": "懒一夕智能科技",
+                    "send_master": null
                 },
-                "combo_stay_time": 3,
-                "combo_total_coin": 100,
-                "crit_prob": 0,
-                "demarcation": 1,
-                "draw": 0,
-                "effect": 3,
-                "effect_block": 0,
-                "face": "http://i0.hdslb.com/bfs/face/b7095f5df522c2769fa329934bcd9a8ec9cb13c8.jpg",
-                "giftId": 30822,
-                "giftName": "牛气爆竹",
-                "giftType": 1,
-                "gold": 0,
-                "guard_level": 0,
+                "batch_combo_send": {
+                    "uid": 20285041,
+                    "gift_num": 1,
+                    "batch_combo_num": 1,
+                    "gift_id": 30823,
+                    "batch_combo_id": "batch:gift:combo_id:20285041:2070473390:30823:1614440753.1786",
+                    "gift_name": "小巧花灯",
+                    "action": "投喂",
+                    "uname": "懒一夕智能科技",
+                    "send_master": null
+                },
+                "tag_image": "",
+                "top_list": null,
+                "send_master": null,
                 "is_first": true,
+                "demarcation": 2,
+                "combo_stay_time": 3,
+                "combo_total_coin": 1000,
+                "tid": "1614440753121100001",
+                "effect_block": 0,
                 "is_special_batch": 0,
+                "combo_resources_id": 1,
                 "magnification": 1,
+                "name_color": "",
                 "medal_info": {
-                    "anchor_roomid": 0,
-                    "anchor_uname": "",
-                    "guard_level": 0,
+                    "target_id": 0,
+                    "special": "",
                     "icon_id": 0,
-                    "is_lighted": 0,
-                    "medal_color": 0,
-                    "medal_color_border": 0,
-                    "medal_color_end": 0,
-                    "medal_color_start": 0,
+                    "anchor_uname": "",
+                    "anchor_roomid": 0,
                     "medal_level": 0,
                     "medal_name": "",
-                    "special": "",
-                    "target_id": 0
+                    "medal_color": 0,
+                    "medal_color_start": 0,
+                    "medal_color_end": 0,
+                    "medal_color_border": 0,
+                    "is_lighted": 0,
+                    "guard_level": 0
                 },
-                "name_color": "",
-                "num": 1,
-                "price": 100,
-                "rcost": 330342921,
-                "remain": 0,
-                "rnd": "291422544",
-                "send_master": null,
-                "silver": 0,
-                "super": 0,
-                "super_batch_gift_num": 1,
-                "super_gift_num": 1,
-                "svga_block": 0,
-                "tag_image": "",
-                "tid": "1613123369121200002",
-                "timestamp": 1613123369,
-                "top_list": null,
-                "total_coin": 100,
-                "uid": 355198782,
-                "uname": "玲之兰音"
+                "svga_block": 0
             }
         }*/
         QJsonObject data = json.value("data").toObject();
@@ -5744,7 +5795,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         int num = data.value("num").toInt();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
+        timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
@@ -5778,25 +5830,49 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
+        danmaku.setFirst(merged ? 0 : 1);
         if (!merged)
         {
             appendNewLiveDanmaku(danmaku);
         }
 
-        if (!justStart && ui->autoSendGiftCheck->isChecked() && !merged)
+        if (!justStart && ui->autoSendGiftCheck->isChecked()) // 是否需要礼物答谢
         {
-            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (words.size())
+            QJsonValue batchComboIdVal = data.value("batch_combo_id");
+            QString batchComboId = batchComboIdVal.toString();
+            if (!ui->giftComboSendCheck->isChecked() || batchComboIdVal.isNull()) // 立刻发送
             {
-                int r = qrand() % words.size();
-                QString msg = words.at(r);
-                if (strongNotifyUsers.contains(uid))
+                // 如果合并了，那么可能已经感谢了，就不用管了
+                if (!merged)
                 {
-                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                    QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+                    if (words.size())
+                    {
+                        int r = qrand() % words.size();
+                        QString msg = words.at(r);
+                        if (strongNotifyUsers.contains(uid))
+                        {
+                            sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                        }
+                        else
+                            sendGiftMsg(msg);
+                    }
                 }
-                else
-                    sendGiftMsg(msg);
+            }
+            else // 延迟发送
+            {
+                if (giftCombos.contains(batchComboId)) // 已经连击了，合并
+                {
+                    giftCombos[batchComboId].addGift(num, totalCoin, QDateTime::currentDateTime());
+                }
+                else // 创建新的连击
+                {
+                    danmaku.setTime(QDateTime::currentDateTime());
+                    giftCombos.insert(batchComboId, danmaku);
+                    if (!comboTimer->isActive())
+                        comboTimer->start();
+                }
             }
         }
 
@@ -5835,6 +5911,85 @@ void MainWindow::handleMessage(QJsonObject json)
         markNotRobot(uid);
 
         triggerCmdEvent(cmd, danmaku);
+    }
+    else if (cmd == "COMBO_SEND") // 连击礼物
+    {
+        /*{
+            "cmd": "COMBO_SEND",
+            "data": {
+                "action": "投喂",
+                "batch_combo_id": "batch:gift:combo_id:8833188:354580019:30607:1610168283.0188",
+                "batch_combo_num": 9,
+                "combo_id": "gift:combo_id:8833188:354580019:30607:1610168283.0182",
+                "combo_num": 9,
+                "combo_total_coin": 0,
+                "gift_id": 30607,
+                "gift_name": "小心心",
+                "gift_num": 0,
+                "is_show": 1,
+                "medal_info": {
+                    "anchor_roomid": 0,
+                    "anchor_uname": "",
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 1,
+                    "medal_color": 1725515,
+                    "medal_color_border": 1725515,
+                    "medal_color_end": 5414290,
+                    "medal_color_start": 1725515,
+                    "medal_level": 23,
+                    "medal_name": "好听",
+                    "special": "",
+                    "target_id": 354580019
+                },
+                "name_color": "",
+                "r_uname": "薄薄的温酱",
+                "ruid": 354580019,
+                "send_master": null,
+                "total_num": 9,
+                "uid": 8833188,
+                "uname": "南酱的可露儿"
+            }
+        }*/
+        /*{
+            "cmd": "COMBO_SEND",
+            "data": {
+                "uid": 20285041,
+                "ruid": 2070473390,
+                "uname": "懒一夕智能科技",
+                "r_uname": "喵大王_cat",
+                "combo_num": 4,
+                "gift_id": 30607,
+                "gift_num": 0,
+                "batch_combo_num": 4,
+                "gift_name": "小心心",
+                "action": "投喂",
+                "combo_id": "gift:combo_id:20285041:2070473390:30607:1614439816.1648",
+                "batch_combo_id": "batch:gift:combo_id:20285041:2070473390:30607:1614439816.1655",
+                "is_show": 1,
+                "send_master": null,
+                "name_color": "",
+                "total_num": 4,
+                "medal_info": {
+                    "target_id": 0,
+                    "special": "",
+                    "icon_id": 0,
+                    "anchor_uname": "",
+                    "anchor_roomid": 0,
+                    "medal_level": 0,
+                    "medal_name": "",
+                    "medal_color": 0,
+                    "medal_color_start": 0,
+                    "medal_color_end": 0,
+                    "medal_color_border": 0,
+                    "is_lighted": 0,
+                    "guard_level": 0
+                },
+                "combo_total_coin": 0
+            }
+        }*/
+
+        triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
@@ -6439,48 +6594,6 @@ void MainWindow::handleMessage(QJsonObject json)
                 "color": "#EF903AFF",
                 "head_icon": "https://i0.hdslb.com/bfs/live/31566d8cd5d468c30de8c148c5d06b3b345d8333.png",
                 "highlight": "#D54900FF"
-            }
-        }*/
-
-        triggerCmdEvent(cmd, LiveDanmaku());
-    }
-    else if (cmd == "COMBO_SEND") // 连击礼物
-    {
-        /*{
-            "cmd": "COMBO_SEND",
-            "data": {
-                "action": "投喂",
-                "batch_combo_id": "batch:gift:combo_id:8833188:354580019:30607:1610168283.0188",
-                "batch_combo_num": 9,
-                "combo_id": "gift:combo_id:8833188:354580019:30607:1610168283.0182",
-                "combo_num": 9,
-                "combo_total_coin": 0,
-                "gift_id": 30607,
-                "gift_name": "小心心",
-                "gift_num": 0,
-                "is_show": 1,
-                "medal_info": {
-                    "anchor_roomid": 0,
-                    "anchor_uname": "",
-                    "guard_level": 0,
-                    "icon_id": 0,
-                    "is_lighted": 1,
-                    "medal_color": 1725515,
-                    "medal_color_border": 1725515,
-                    "medal_color_end": 5414290,
-                    "medal_color_start": 1725515,
-                    "medal_level": 23,
-                    "medal_name": "好听",
-                    "special": "",
-                    "target_id": 354580019
-                },
-                "name_color": "",
-                "r_uname": "薄薄的温酱",
-                "ruid": 354580019,
-                "send_master": null,
-                "total_num": 9,
-                "uid": 8833188,
-                "uname": "南酱的可露儿"
             }
         }*/
 
@@ -7144,6 +7257,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
     int giftId = danmaku.getGiftId();
     qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
     LiveDanmaku* merged = nullptr;
+    int delayTime = ui->giftComboDelaySpin->value(); // + 1; // 多出的1秒当做网络延迟了
 
     // 遍历房间弹幕
     for (int i = roomDanmakus.size()-1; i >= 0; i--)
@@ -7152,7 +7266,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         qint64 t = dm.getTimeline().toSecsSinceEpoch();
         if (t == 0) // 有些是没带时间的
             continue;
-        if (t + 6 < time) // x秒以内
+        if (t + delayTime < time) // x秒以内
             return false;
         if (dm.getMsgType() != MSG_GIFT
                 || dm.getUid() != uid
@@ -7172,7 +7286,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
 
     // 合并实时弹幕
     if (danmakuWindow)
-        danmakuWindow->mergeGift(danmaku);
+        danmakuWindow->mergeGift(danmaku, delayTime);
 
     return true;
 }
@@ -10630,4 +10744,14 @@ void MainWindow::prepareQuit()
 {
     releaseLiveData();
     qApp->quit();
+}
+
+void MainWindow::on_giftComboSendCheck_clicked()
+{
+    settings.setValue("danmaku/giftComboSend", ui->giftComboSendCheck->isChecked());
+}
+
+void MainWindow::on_giftComboDelaySpin_editingFinished()
+{
+    settings.setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
 }
