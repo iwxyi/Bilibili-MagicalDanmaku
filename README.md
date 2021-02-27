@@ -839,7 +839,7 @@ tips：
 
 ##### 示例：QQ群推送开播消息
 
-以酷推为例：https://cp.xuthus.cc，按其说明配置
+以酷推为例：[https://cp.xuthus.cc](https://cp.xuthus.cc)，按其说明配置
 
 添加事件：`LIVE`，动作：
 

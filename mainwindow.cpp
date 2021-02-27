@@ -5334,6 +5334,13 @@ void MainWindow::handleMessage(QJsonObject json)
         if (liveStatus || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qDebug() << "忽视PK导致的开播情况";
+            // 大乱斗时突然断联后恢复
+            if (!liveStatus)
+            {
+                if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
+                    connectServerTimer->stop();
+                slotStartWork();
+            }
             return ;
         }
         QString roomId = json.value("roomid").toString();
