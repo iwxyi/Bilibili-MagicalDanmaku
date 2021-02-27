@@ -174,11 +174,13 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
 {
     restoreGeometry(settings.value("livedanmakuwindow/geometry").toByteArray());
+    enableAnimation = true;
 }
 
 void LiveDanmakuWindow::hideEvent(QHideEvent *event)
 {
     settings.setValue("livedanmakuwindow/geometry", this->saveGeometry());
+    enableAnimation = false;
 }
 
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -487,7 +489,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             auto widget = listWidget->itemWidget(item);
             item->setData(DANMAKU_STRING_ROLE, ""); // 清空，免得重复删除到头一个上面
 
-            if (DANMAKU_ANIMATION_ENABLED)
+            if (enableAnimation)
             {
                 if (!widget)
                 {
@@ -764,7 +766,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     item->setSizeHint(widget->sizeHint());
 
     // 动画
-    if (DANMAKU_ANIMATION_ENABLED)
+    if (enableAnimation)
     {
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
         ani->setStartValue(QSize(widget->width(), oldHeight));
@@ -1241,6 +1243,7 @@ void LiveDanmakuWindow::showMenu()
         {
             careUsers.append(danmaku.getUid());
             highlightItemText(item);
+            emit signalMarkUser(danmaku.getUid());
         }
 
         // 保存特别关心
@@ -1262,6 +1265,7 @@ void LiveDanmakuWindow::showMenu()
         {
             strongNotifyUsers.append(danmaku.getUid());
             highlightItemText(item);
+            emit signalMarkUser(danmaku.getUid());
         }
 
         // 保存特别关心
@@ -1303,6 +1307,7 @@ void LiveDanmakuWindow::showMenu()
         else
         {
             localNicknames[uid] = name;
+            emit signalMarkUser(danmaku.getUid());
         }
 
         // 保存本地昵称
@@ -2282,7 +2287,7 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
     setItemWidgetText(item);
 
-    if (false && DANMAKU_ANIMATION_ENABLED)
+    if (false && enableAnimation)
     {
         QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
         ani->setStartValue(QSize(label->width(), ht));

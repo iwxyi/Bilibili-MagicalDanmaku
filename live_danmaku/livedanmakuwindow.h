@@ -45,8 +45,6 @@
 #include "commonvalues.h"
 #include "eternalblockdialog.h"
 
-#define DANMAKU_ANIMATION_ENABLED true
-
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
 #define DANMAKU_TRANS_ROLE Qt::UserRole+3
@@ -79,6 +77,7 @@ protected:
 signals:
     void signalSendMsg(QString msg);
     void signalSendMsgToPk(QString msg);
+    void signalMarkUser(qint64 uid);
     void signalAddBlockUser(qint64 uid, int hour);
     void signalDelBlockUser(qint64 uid);
     void signalEternalBlockUser(qint64 uid, QString uname);
@@ -152,6 +151,7 @@ private:
 
 private:
     QSettings& settings;
+
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
 #ifndef Q_OS_ANDROID
@@ -167,6 +167,7 @@ private:
     QString replyAPPID;
     QString replyAPPKEY;
 
+    bool enableAnimation = true;
     QColor nameColor;
     QColor msgColor;
     QColor bgColor;

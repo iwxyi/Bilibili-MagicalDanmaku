@@ -8372,6 +8372,10 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             qDebug() << "发送PK对面消息：" << pkRoomId << msg;
             sendRoomMsg(pkRoomId, msg);
         });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
+            if (judgeRobot)
+                markNotRobot(uid);
+        });
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
