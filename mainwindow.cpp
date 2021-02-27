@@ -1379,7 +1379,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if (!manual && !shallAutoMsg()) // 没有开播，不进行自动回复
+        if ((!manual && !shallAutoMsg()) || danmaku.isPkLink()) // 没有开播，不进行自动回复
             return ;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
