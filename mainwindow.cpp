@@ -5475,7 +5475,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
+        if (snum(uid) == upUid || snum(uid) == cookieUid || manager) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
