@@ -246,7 +246,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 ![1606054818666](pictures/cookie.png)
 
-使用Cookie也是为了保证账号安全，当程序借给别人时，自己可以远程退出Bilibili账号，之后则需要重新cookie和data。
+使用Cookie也是为了保证账号安全，当程序借给别人时，自己可以远程退出Bilibili账号，所有登录失效。之后则需要重新设置cookie。
 
 > 如果输入房间号后一直显示“获取房间信息...”，需先安装VC_redist：https://aka.ms/vs/15/release/vc_redist.x64.exe
 
@@ -306,7 +306,6 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 <div id='programing'/>
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -440,6 +439,14 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | punc      | 标点           | “~”或“！”                                         |
 | tone/punc | 语气词或标点   | 上面两项，适用于和%greet%结合                     |
 
+### 常量
+
+| 常量 | 描述                                 |
+| ---- | ------------------------------------ |
+| %n%  | 替换为换行符`\n`，用于`postData()`等 |
+
+
+
 ### 四则运算
 
 数字与数字、字符串与字符串之间可进行比较。其中运算符支持 `加+`、`减-`、`乘*`、`除/`(向下取整)、`取模%`、`包含~`，比较支持 `大于>`、`小于<`、`等于=`、`不等于!=`、`大于等于>=`、`小于等于<=`。
@@ -502,7 +509,6 @@ tips：
 受于B站后台的限制，多条弹幕将调整为每隔1.5秒发送一次，数量无上限。
 
 <div id='cd_channel'/>
-
 ### 冷却通道
 
 >  `v2.9.0`版本新增
@@ -551,6 +557,8 @@ tips：
 | openUrl(url)                      | 浏览器打开网址                                       |
 | connectNet(url)                   | 后台连接网址（GET）                                  |
 | postData(url, data)               | 同上（POST）                                         |
+| sendToSockets(cmd, data)          | 发送给所有WebSocket                                  |
+| sendToLastSocket(cmd, data)       | 发送给最后连上的WebSocket                            |
 | runCommandLine(cmd)               | 运行命令行                                           |
 | setValue(key, val)                | 保存值到配置文件，通过%{key}%获取，重启后仍在        |
 | openFile(path)                    | 打开文件                                             |
@@ -721,7 +729,7 @@ tips：
 
 逐一说明：
 
-- \`>execRemoteCommand`：运行仅机器人和主播才能用的远程指令，参数2的`0`表示不自动回复（因为有自定义的另一个回复，覆盖掉默认的）
+- `>execRemoteCommand`：运行仅机器人和主播才能用的远程指令，参数2的`0`表示不自动回复（因为有自定义的另一个回复，覆盖掉默认的）
 - `\n`：多个指令或多条弹幕，用 `\n` 标记隔开
 - `setValue(reply, 1)`：设置变量`reply`的值为1，用来判断是否需要关闭
 - `[%guard%, %{reply}%]`：舰长且`reply`=1，若是则执行后面的，否则不做操作
@@ -962,6 +970,92 @@ tips：
 其中`%upname%`可以使用菜单中的“自定义变量”来统一设置，也可以固定写死。
 
 
+
+### 服务端事件
+
+| 事件命令       | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| NEW_WEBSOCKET  | 新连接进入                                                   |
+| WEBSOCKET_CMDS | socket设置对应类型，%text%获取，英文逗号分隔，例如：“SONG_LIST,DANMAKU” |
+
+##### 示例：远程计数
+
+例如送指定礼物做10个蹲起，这时候需要显示蹲起的数量
+
+添加新连接事件：`NEW_WEBSOCKET`，动作：
+
+```
+[%text%=SQUAT]>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":%{squat}%})
+```
+
+添加`初始化蹲起数量`的动作（事件可空，手动发送）：
+
+```
+>setValue(squat, 0)\n>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":0})
+```
+
+添加`蹲起数量+1`的动作（事情可空，手动发送）：
+
+```
+>setValue(squat, %[%{squat}%+1]%)\n>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":%[%{squat}%+1]%})
+```
+
+创建`www/squat.html`文件，写入：
+
+```html
+<head>
+    <title>神奇弹幕蹲起</title>
+    <script src="js/jquery-2.1.0.js"></script>
+
+    <style type="text/css">
+        .card {
+            background-color: #fff;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            /* width: 40%; */
+            border-radius: 5px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card" style="display:inline-block">
+        <h1 id='count'>蹲起个数：0</h1>
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function () {
+                ws.send('{"cmd":"cmds", "data":["SQUAT"]}');
+            };
+            ws.onmessage = function (e) {
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'SQUAT':
+                        console.log(json);
+                        var count = parseInt(json['data']);
+                        $("#count").html('蹲起个数：' + count);
+                        break;
+                }
+            };
+        });
+    </script>
+</body>
+```
+
+访问`localhost:5520/squat.html`（端口域名按照设定的来），显示`蹲起数量：0`。
+
+每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
+
+[]()
 
 ## 附：弹幕CMD列表
 

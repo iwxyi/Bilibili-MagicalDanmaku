@@ -69,6 +69,8 @@ void MainWindow::openSocketServer()
                         sendSongListToSockets = true;
                         sendMusicList(musicWindow->getOrderSongs(), clientSocket);
                     }
+
+                    triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
                 }
             });
             connect(clientSocket, &QWebSocket::disconnected, this, [=]{
@@ -96,6 +98,8 @@ void MainWindow::openSocketServer()
                 clientSocket->deleteLater();
                 qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
             });
+
+            triggerCmdEvent("NEW_WEBSOCKET", LiveDanmaku());
         });
     }
     else
@@ -162,6 +166,25 @@ void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
         if (danmakuCmdsMaps.contains(socket) && !danmakuCmdsMaps[socket].contains(cmd))
             continue;
        socket->sendTextMessage(ba);
+    }
+}
+
+void MainWindow::sendToSockets(QString cmd, QByteArray data, QWebSocket *socket)
+{
+    if (!socket && !danmakuSockets.size())
+        return ;
+
+    if (socket)
+    {
+        socket->sendTextMessage(data);
+    }
+    else
+    {
+        foreach (QWebSocket* socket, danmakuSockets)
+        {
+            if (!danmakuCmdsMaps.contains(socket) || danmakuCmdsMaps[socket].contains(cmd))
+                socket->sendTextMessage(data);
+        }
     }
 }
 

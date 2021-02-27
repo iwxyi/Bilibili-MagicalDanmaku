@@ -1935,10 +1935,6 @@ void MainWindow::initWS()
         // 定时发送心跳包
         heartTimer->start();
         danmuPopularTimer->start();
-
-        // 发送获取小心心的心跳包
-        if (ui->acquireHeartCheck->isChecked() && liveStatus)
-            sendXliveHeartBeatE();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -3109,6 +3105,11 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     {
         msg.replace(it.key(), it.value());
     }
+
+    // 固定标记
+    if (msg.contains("%n%"))
+        msg.replace("%n%", "\n");
+        msg.replace("%n%", "\n");
 
     // 用户昵称
     if (msg.contains("%uname%"))
@@ -4648,6 +4649,37 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 qDebug() << QString(reply->readAll());
             });
+            return true;
+        }
+    }
+
+    // 发送socket
+    if (msg.contains("sendToSockets"))
+    {
+        re = RE("sendToSockets\\s*\\(\\s*(\\S+),\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            QString data = caps.at(2);
+
+            qDebug() << "执行命令：" << caps;
+            sendToSockets(cmd, data.toUtf8());
+            return true;
+        }
+    }
+    if (msg.contains("sendToLastSocket"))
+    {
+        re = RE("sendToLastSocket\\s*\\(\\s*(\\S+),\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            QString data = caps.at(2);
+
+            qDebug() << "执行命令：" << caps;
+            if (danmakuSockets.size())
+                sendToSockets(cmd, data.toUtf8(), danmakuSockets.last());
             return true;
         }
     }

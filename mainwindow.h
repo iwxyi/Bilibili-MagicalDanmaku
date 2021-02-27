@@ -647,6 +647,7 @@ private:
     void closeServer();
     void sendSocketCmd(QString cmd, LiveDanmaku danmaku);
     void processServerVariant(QByteArray& doc);
+    void sendToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
 
     void syncMagicalRooms();
