@@ -47,31 +47,7 @@ void MainWindow::openSocketServer()
             });
             connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
                 qDebug() << "danmaku text message received:" << message;
-                QJsonParseError error;
-                QJsonDocument document = QJsonDocument::fromJson(message.toUtf8(), &error);
-                if (error.error != QJsonParseError::NoError)
-                {
-                    qDebug() << error.errorString() << message;
-                    return ;
-                }
-                QJsonObject json = document.object();
-                QString cmd = json.value("cmd").toString();
-                if (cmd == "cmds")
-                {
-                    QStringList sl;
-                    QJsonArray arr = json.value("data").toArray();
-                    foreach (QJsonValue val, arr)
-                        sl << val.toString();
-                    danmakuCmdsMaps[clientSocket] = sl;
-
-                    if (sl.contains("SONG_LIST") && musicWindow)
-                    {
-                        sendSongListToSockets = true;
-                        sendMusicList(musicWindow->getOrderSongs(), clientSocket);
-                    }
-
-                    triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
-                }
+                processSocketTextMsg(clientSocket, message);
             });
             connect(clientSocket, &QWebSocket::disconnected, this, [=]{
                 danmakuSockets.removeOne(clientSocket);
@@ -105,6 +81,68 @@ void MainWindow::openSocketServer()
     else
     {
         qWarning() << "弹幕服务开启失败，端口：" << quint16(serverPort + DANMAKU_SERVER_PORT);
+    }
+}
+
+void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &message)
+{
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(message.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError)
+    {
+        qDebug() << error.errorString() << message;
+        return ;
+    }
+    QJsonObject json = document.object();
+    QString cmd = json.value("cmd").toString().toUpper();
+    if (cmd == "CMDS") // 筛选cmd
+    {
+        QStringList sl;
+        QJsonArray arr = json.value("data").toArray();
+        foreach (QJsonValue val, arr)
+            sl << val.toString();
+        danmakuCmdsMaps[clientSocket] = sl;
+
+        if (sl.contains("SONG_LIST") && musicWindow)
+        {
+            sendSongListToSockets = true;
+            sendMusicList(musicWindow->getOrderSongs(), clientSocket);
+        }
+
+        triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
+    }
+    else if (cmd == "FORWARD") // 转发
+    {
+        QJsonObject data = json.value("data").toObject();
+        QString cmd2 = data.value("cmd").toString();
+        sendToSockets(cmd2, QJsonDocument(data).toJson());
+    }
+    else if (cmd == "SET_VALUE")
+    {
+        QJsonObject data = json.value("data").toObject();
+        QString key = data.value("key").toString();
+        QJsonValue val = data.value("value");
+        if (val.isString())
+            settings.setValue(key, val.toString());
+        else if (val.isBool())
+            settings.setValue(key, val.toBool());
+        else if (val.isDouble())
+            settings.setValue(key, val.toDouble());
+        else
+            settings.setValue(key, val.toVariant());
+    }
+    else if (cmd == "SEND_MSG")
+    {
+        QString text = json.value("data").toString();
+        qDebug() << "发送远程弹幕或命令：" << text;
+        sendAutoMsg(text);
+    }
+    else if (cmd == "SEND_VARIANT_MSG")
+    {
+        QString text = json.value("data").toString();
+        text = processDanmakuVariants(text, LiveDanmaku());
+        qDebug() << "发送远程弹幕或命令：" << text;
+        sendAutoMsg(text);
     }
 }
 
@@ -180,6 +218,7 @@ void MainWindow::sendToSockets(QString cmd, QByteArray data, QWebSocket *socket)
     }
     else
     {
+        SOCKET_DEB << "发送至每个socket" << cmd << data;
         foreach (QWebSocket* socket, danmakuSockets)
         {
             if (!danmakuCmdsMaps.contains(socket) || danmakuCmdsMaps[socket].contains(cmd))

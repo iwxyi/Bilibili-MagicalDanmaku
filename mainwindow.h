@@ -624,6 +624,7 @@ private:
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
     bool shallAutoMsg() const;
+    bool shallAutoMsg(const QString& sl) const;
 
     void releaseLiveData();
     QRect getScreenRect();
@@ -647,6 +648,7 @@ private:
     void initServerData();
     void openServer(int port = 0);
     void openSocketServer();
+    void processSocketTextMsg(QWebSocket* clientSocket, const QString& message);
     void closeServer();
     void sendSocketCmd(QString cmd, LiveDanmaku danmaku);
     void processServerVariant(QByteArray& doc);

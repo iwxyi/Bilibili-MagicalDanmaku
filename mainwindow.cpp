@@ -1229,6 +1229,25 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
 
     }
+    else if (text == "测试花灯")
+    {
+        QString username = "测试用户";
+        QString giftName = "炫彩花灯";
+        int r = qrand() % 5;
+        if (r == 1)
+            giftName = "漫天花灯";
+        else if (r == 2)
+            giftName = "暴富花灯";
+        int giftId = 123;
+        int num = qrand() % 3 + 1;
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString coinType = qrand()%2 ? "gold" : "silver";
+        int totalCoin = qrand() % 20 * 100;
+        uid = 123456;
+        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        appendNewLiveDanmaku(danmaku);
+        triggerCmdEvent("SEND_GIFT", danmaku);
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -1348,7 +1367,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
-        if (!manual && !shallAutoMsg()) // 没有开播，不进行定时任务
+        if (!manual && !shallAutoMsg(sl)) // 没有开播，不进行定时任务
             return ;
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
         if (msgs.size())
@@ -1437,7 +1456,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if ((!manual && !shallAutoMsg()) || danmaku.isPkLink()) // 没有开播，不进行自动回复
+        if ((!manual && !shallAutoMsg(sl)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
             return ;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
@@ -1528,7 +1547,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if (!manual && !shallAutoMsg()) // 没有开播，不进行自动回复
+        if (!manual && !shallAutoMsg(sl)) // 没有开播，不进行自动回复
         {
             qDebug() << "未开播，不做操作";
             return ;
@@ -9417,6 +9436,13 @@ void MainWindow::handlePkMessage(QJsonObject json)
 bool MainWindow::shallAutoMsg() const
 {
     return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveStatus /*&& popularVal > 1*/);
+}
+
+bool MainWindow::shallAutoMsg(const QString &sl) const
+{
+    if (sl.contains("%living%"))
+        return true;
+    return shallAutoMsg();
 }
 
 void MainWindow::releaseLiveData()
