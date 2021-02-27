@@ -1937,7 +1937,7 @@ void MainWindow::initWS()
         danmuPopularTimer->start();
 
         // 发送获取小心心的心跳包
-        if (ui->acquireHeartCheck->isChecked())
+        if (ui->acquireHeartCheck->isChecked() && liveStatus)
             sendXliveHeartBeatE();
     });
 
@@ -2032,9 +2032,10 @@ void MainWindow::initWS()
     });
 
     xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(59000);
+    xliveHeartBeatTimer->setInterval(59500);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
-        sendXliveHeartBeatX();
+        if (liveStatus)
+            sendXliveHeartBeatX();
     });
 }
 
@@ -2069,7 +2070,7 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::sendXliveHeartBeatE()
 {
-    if (roomId.isEmpty() || cookieUid.isEmpty())
+    if (roomId.isEmpty() || cookieUid.isEmpty() || !liveStatus)
         return ;
     xliveHeartBeatIndex = 0;
 
@@ -5475,7 +5476,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (snum(uid) == upUid || snum(uid) == cookieUid || manager) // 是自己或UP主的，不屏蔽
+        if (snum(uid) == upUid || snum(uid) == cookieUid ) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
@@ -10041,6 +10042,10 @@ void MainWindow::slotStartWork()
         sendExpireGift();
     }
 
+    // 挂小心心
+    if (ui->acquireHeartCheck->isChecked() && liveStatus)
+        sendXliveHeartBeatE();
+
     // 设置直播状态
     QPixmap face = getLivingPixmap(upFace);
     setWindowIcon(face);
@@ -10445,7 +10450,8 @@ void MainWindow::on_acquireHeartCheck_clicked()
     settings.setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
 
     if (ui->acquireHeartCheck->isChecked())
-        sendXliveHeartBeatE();
+        if (liveStatus)
+            sendXliveHeartBeatE();
     else
         if (xliveHeartBeatTimer)
             xliveHeartBeatTimer->stop();
