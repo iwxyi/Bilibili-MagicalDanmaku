@@ -88,7 +88,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
     autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
-    connect(autoMsgTimer, SIGNAL(timeout()), this, SLOT(slotSendAutoMsg()));
+    connect(autoMsgTimer, &QTimer::timeout, this, [=]{
+        slotSendAutoMsg(true);
+    });
 
     // 点歌自动复制
     diangeAutoCopy = settings.value("danmaku/diangeAutoCopy", true).toBool();
@@ -934,9 +936,9 @@ void MainWindow::sendAutoMsg(QString msgs)
 //    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(sl);
-    if (!autoMsgTimer->isActive())
+    if (!autoMsgTimer->isActive() || !inDanmakuCd)
     {
-        slotSendAutoMsg(); // 先运行一次
+        slotSendAutoMsg(false); // 先运行一次
         autoMsgTimer->start();
     }
 }
@@ -945,14 +947,18 @@ void MainWindow::sendAutoMsg(QString msgs)
  * 执行发送队列中的发送弹幕，或者函数操作
  * // @return 是否是执行函数。为空或发送弹幕为false
  */
-void MainWindow::slotSendAutoMsg()
+void MainWindow::slotSendAutoMsg(bool timeout)
 {
+    if (timeout) // 全部发完之后 timer 一定还开着的，最后一次 timeout 清除弹幕发送冷却
+        inDanmakuCd = false;
+
     if (autoMsgQueues.isEmpty())
     {
         autoMsgTimer->stop();
         return ;
     }
-    if (autoMsgTimer->interval() != AUTO_MSG_CD)
+
+    if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前函数修改过延时
         autoMsgTimer->setInterval(AUTO_MSG_CD);
 
     QStringList& sl = autoMsgQueues[0];
@@ -969,6 +975,7 @@ void MainWindow::slotSendAutoMsg()
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
         sendMsg(msg);
+        inDanmakuCd = true;
     }
     else // 是执行命令，发送下一条弹幕就不需要延迟了
     {
@@ -994,7 +1001,7 @@ void MainWindow::slotSendAutoMsg()
         QRegularExpression re("^\\s*>");
         if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
         {
-            slotSendAutoMsg();
+            slotSendAutoMsg(false); // 递归
         }
     }
 }

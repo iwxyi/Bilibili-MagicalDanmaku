@@ -204,7 +204,7 @@ private slots:
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
-    void slotSendAutoMsg();
+    void slotSendAutoMsg(bool timeout);
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
 
@@ -713,6 +713,7 @@ private:
     // 发送弹幕队列
     QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
     QTimer* autoMsgTimer;
+    bool inDanmakuCd = false;
 
     // 点歌
     bool diangeAutoCopy = false;
