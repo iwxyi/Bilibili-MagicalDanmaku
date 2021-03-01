@@ -1021,11 +1021,15 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
         qDebug() << "未开播，不做操作";
+        if (ui->localDebugCheck->isChecked())
+            localNotify("[未开播，不做操作]");
         return ;
     }
     if (msg.trimmed().isEmpty())
     {
-        qDebug() << "空字符串，已跳过";
+        qDebug() << "空弹幕，已跳过";
+        if (ui->localDebugCheck->isChecked())
+            localNotify("[空弹幕，已跳过]");
         return ;
     }
 
@@ -1096,6 +1100,10 @@ void MainWindow::slotComboSend()
                 }
                 else
                     sendGiftMsg(msg);
+            }
+            else if (ui->localDebugCheck->isChecked())
+            {
+                localNotify("[没有可发送的连击答谢弹幕]");
             }
 //            it = giftCombos.erase(it); // 不知道为啥这样子会崩溃诶
             eraseds.append(it.key());
@@ -1205,6 +1213,10 @@ void MainWindow::on_testDanmakuButton_clicked()
                 QString msg = words.at(r);
                 sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+            }
+            else if (ui->localDebugCheck->isChecked())
+            {
+                localNotify("[没有可发送的上船弹幕]");
             }
         }
     }
@@ -3900,7 +3912,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
 QString MainWindow::msgToShort(QString msg) const
 {
-    if (msg.startsWith(">") || msg.length() <= ui->danmuLongestSpin->value())
+    if (msg.startsWith(">") || msg.length() <= danmuLongest)
         return msg;
     if (msg.contains(" "))
     {
@@ -5635,6 +5647,10 @@ void MainWindow::handleMessage(QJsonObject json)
                                     sendNotifyMsg(s);
                                 }
                             }
+                            else if (ui->localDebugCheck->isChecked())
+                            {
+                                localNotify("[没有可发送的禁言通知弹幕]");
+                            }
                         }
                     }
                 }
@@ -5877,6 +5893,14 @@ void MainWindow::handleMessage(QJsonObject json)
                         else
                             sendGiftMsg(msg);
                     }
+                    else if (ui->localDebugCheck->isChecked())
+                    {
+                        localNotify("[没有可发送的礼物答谢弹幕]");
+                    }
+                }
+                else if (ui->localDebugCheck->isChecked())
+                {
+                    localNotify("[礼物被合并，不答谢]");
                 }
             }
             else // 延迟发送
@@ -6464,6 +6488,10 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
+            else if (ui->localDebugCheck->isChecked())
+            {
+                localNotify("[没有可发送的上船弹幕]");
+            }
         }
 
         int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
@@ -7021,7 +7049,11 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
 //    if (strongNotifyUsers.contains(danmaku.getUid()))
 //        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
     if (!words.size())
+    {
+        if (ui->localDebugCheck->isChecked())
+            localNotify("[没有可用的欢迎弹幕]");
         return ;
+    }
     int r = qrand() % words.size();
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
@@ -7041,7 +7073,11 @@ void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
 {
     QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
     if (!words.size())
+    {
+        if (ui->localDebugCheck->isChecked())
+            localNotify("[没有可用的感谢关注弹幕]");
         return ;
+    }
     int r = qrand() % words.size();
     QString msg = words.at(r);
     sendAttentionMsg(msg);
@@ -10568,7 +10604,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 
         // AI回复长度上限，以及过滤
         if (ui->AIReplyMsgCheck->checkState() == Qt::PartiallyChecked
-                && reply.length() > ui->danmuLongestSpin->value())
+                && reply.length() > danmuLongest)
             return ;
 
         // 自动断句
