@@ -265,6 +265,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 - 一周至一个月没来：`[%come_time%>%timestamp%-3600*24*30, %come_time%<%timestamp%-3600*24*7, 0]*%ai_name%，太久没来了哦~`
 - **大乱斗对面**来人：`[%pk_opposite%]***欢迎%ai_name%串门哦~`
 
+
+
 ### 送礼答谢
 
 - 普通的答谢：`谢谢 %ai_name% 的%gift_name%~`
@@ -274,6 +276,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 - **超过80元**的礼物：`[%gift_gold%>=80000]*哇噢！感谢 %ai_name% 的%gift_name%！\n老板大气！！！！！！`
   `\n`表示换行，将分作两条弹幕发送（可以配合`<h1>`放大字体，仅部分弹幕插件有效）
 - **跳过机器人送的吃瓜**：`[%uid%=%my_uid%,%origin_gift_name%=吃瓜]**`
+
+
 
 ### 定时任务
 
@@ -306,7 +310,19 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 
+##### 示例：房管远程弹幕禁言
+
+默认仅主播与机器人账号支持弹幕禁言，此方法可提升至房管（或其他特定条件用户）：
+
+添加回复：`^((禁言|解禁|解除禁言|取消禁言) .+|撤销禁言)$`，添加动作：
+
+```
+[%admin%]>execRemoteCommand(%text%)
+```
+
 <div id='programing'/>
+
+
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -322,6 +338,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 看下去，有更多例子。
 
+
+
 ### 计算变量
 
 | 变量    | 描述               | 注意事项                               |
@@ -329,11 +347,15 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | %{key}% | 获取配置文件中的值 | key为setValue(key)中的键值，未设置为空 |
 | %[exp]% | 简单的数值计算     | 暂时只支持加减乘除，不支持括号、小数   |
 
+
+
 ##### 示例：礼物价值
 
 ```
 谢谢%ai_name%赠送了价值%[%gift_gold%/1000]%元的%gift_name%！
 ```
+
+
 
 ### 数据变量
 
@@ -428,6 +450,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | not_reply        | 不自动回复               | 不回复：1，回复：0                            |
 | blocked          | 被禁言中                 | 禁言：1，未禁言0                              |
 
+
+
 #### 特殊用法
 
 ##### 打破“仅直播时发送”
@@ -460,6 +484,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | punc      | 标点           | “~”或“！”                                         |
 | tone/punc | 语气词或标点   | 上面两项，适用于和%greet%结合                     |
 
+
+
 ### 常量
 
 | 常量 | 描述                                 |
@@ -482,6 +508,8 @@ tips：
 
 另外，仅支持在开头的`[]`判断中进行四则运算，**在弹幕内容中计算需要使用`%[公式]%`**！
 
+
+
 ### 逻辑运算
 
 与编程语言相似的算法，每一行使用 `[]` 开头，则方括号中的内容会识别为`条件表达式`，使用 `,` 或 `&&` 来执行“与”逻辑，使用 `;` 或 `||` 来执行“或”逻辑；“或”的优先级更高。`[]` 中使用 `%val%` 作为变量值，例如 `[%level%>10]弹幕内容`，则只有当用户等级超过10级时才会被发送`弹幕内容`。
@@ -496,6 +524,8 @@ tips：
 - 付费两万（2千万金瓜子）的老板：`[%total_gold% >= 20000000]`
 - 一小时内重新进入直播间：`[%come_time% > %timestamp%-3600]`
 - 几周没来：`[%come_time%>%timestamp%-3600*24*30 &&  %come_time%<%timestamp%-3600*24*7]`
+
+
 
 ### 优先级覆盖
 
@@ -521,6 +551,8 @@ tips：
 - 当本次礼物金瓜子总价介于5万到15万时，发送第三项；
 - 当本次礼物金瓜子总价超过15万时，发送第四项。
 
+
+
 ### 多条弹幕
 
 使用 `\n` 来分割过长弹幕，则会分多条弹幕发送，每次延时1.5s。通过此方式支持**执行多条命令**。
@@ -530,6 +562,8 @@ tips：
 受于B站后台的限制，多条弹幕将调整为每隔1.5秒发送一次，数量无上限。
 
 <div id='cd_channel'/>
+
+
 ### 冷却通道
 
 >  `v2.9.0`版本新增
@@ -551,6 +585,7 @@ tips：
 内置100个冷却通道，其中0~9已被系统使用，用户自定义建议为10~99，应该够用了。
 
 >  注意：B站连续发送弹幕的冷却时间为1秒，与本程序的弹幕冷却系统无关。
+
 
 
 ### 函数操作
@@ -767,6 +802,8 @@ tips：
 
 大部分CMD等同于B站后台CMD，也有一些是自创的。可用事件CMD如下：
 
+
+
 #### 主程序事件
 
 | 事件命令         | 说明     |
@@ -787,7 +824,9 @@ tips：
 >已禁言：%uname%
 ```
 
-**添加本事件，将会屏蔽系统自带的禁言回复**
+**注意：添加本事件，将会屏蔽系统自带的禁言回复**
+
+
 
 #### 点歌姬事件
 
@@ -813,6 +852,8 @@ tips：
 ```
 
 加了**冷却通道**，最多十分钟提醒一次。
+
+
 
 #### 弹幕姬事件
 
@@ -867,6 +908,8 @@ tips：
 > 并且有冷却（默认2秒左右），可以在开头加上冷却通道例如`(cd78:0)`消除冷却
 >
 > 另外，需注意`PREPARE`，若开启了“仅直播时回复”，那么大部分动作（包括弹幕、函数等）将不会执行，可在下播结束语中操作
+
+
 
 #### 大乱斗事件
 
@@ -1022,6 +1065,8 @@ tips：
 | NEW_WEBSOCKET  | 新连接进入                                                   |
 | WEBSOCKET_CMDS | socket设置对应类型，%text%获取，英文逗号分隔，例如：“SONG_LIST,DANMAKU” |
 
+
+
 ##### 示例：远程计数
 
 例如送指定礼物做10个蹲起，这时候需要显示蹲起的数量。
@@ -1099,76 +1144,12 @@ tips：
 
 每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
 
-[]()
-
-## 附：弹幕CMD列表
-
-根据字节流中的`protocol`，等于 `2` 时body部分需要用`zlib.uncompress`解压，常见CMD如下：
-
-```C++
-"ROOM_ADMINS" //房管列表
-"room_admin_entrance"
-"ONLINE_RANK_TOP3"
-"ONLINE_RANK_COUNT"
-"ONLINE_RANK_V2"
-"TRADING_SCORE" //每日任务
-"MATCH_ROOM_CONF" //赛事房间配置
-"HOT_ROOM_NOTIFY" //热点房间
-"MATCH_TEAM_GIFT_RANK" //赛事人气比拼
-"ACTIVITY_MATCH_GIFT" //赛事礼物
-"PK_BATTLE_PRE" //人气pk
-"PK_BATTLE_START" //人气pk
-"PK_BATTLE_PROCESS" //人气pk
-"PK_BATTLE_END" //人气pk
-"PK_BATTLE_RANK_CHANGE" //人气pk
-"PK_BATTLE_SETTLE_USER" //人气pk
-"PK_BATTLE_SETTLE_V2" //人气pk
-"PK_BATTLE_SETTLE" //人气pk
-"SYS_MSG" //系统消息
-"ROOM_SKIN_MSG"
-"GUARD_ACHIEVEMENT_ROOM"
-"ANCHOR_LOT_START" //天选之人开始
-"ANCHOR_LOT_CHECKSTATUS"
-"ANCHOR_LOT_END" //天选之人结束
-"ANCHOR_LOT_AWARD" //天选之人获奖
-"COMBO_SEND"
-"INTERACT_WORD"
-"ACTIVITY_BANNER_UPDATE_V2"
-"NOTICE_MSG"
-"ROOM_BANNER"
-"ONLINERANK"
-"WELCOME"
-"HOUR_RANK_AWARDS"
-"ROOM_RANK"
-"ROOM_SHIELD"
-"USER_TOAST_MSG" //大航海购买信息
-"WIN_ACTIVITY" //活动
-"SPECIAL_GIFT" //节奏风暴
-"GUARD_BUY" / //大航海购买
-"WELCOME_GUARD" //大航海进入
-"DANMU_MSG" //弹幕
-"ROOM_CHANGE" //房间信息分区改变
-"ROOM_SILENT_OFF" //禁言结束
-"ROOM_SILENT_ON" //禁言开始
-"SEND_GIFT" //礼物
-"ROOM_BLOCK_MSG" //封禁
-"PREPARING" //下播
-"LIVE" //开播
-"SUPER_CHAT_ENTRANCE" //SC入口
-"SUPER_CHAT_MESSAGE_DELETE" //SC删除
-"SUPER_CHAT_MESSAGE" //SC
-"SUPER_CHAT_MESSAGE_JPN" //SC
-"PANEL" //排行榜
-"ENTRY_EFFECT" / //进入特效
-"ROOM_REAL_TIME_MESSAGE_UPDATE" / //粉丝数
-```
 
 
+## 参考资料
 
-> 参考资料：
->
 > - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
-> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
+>- 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
 > - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
 > - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
