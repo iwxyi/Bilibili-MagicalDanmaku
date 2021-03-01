@@ -22,9 +22,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     }
     if (settings.value("livedanmakuwindow/onTop", true).toBool())
-    {
         this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
-    }
+    if (settings.value("livedanmakuwindow/transMouse", false).toBool())
+        this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
@@ -967,6 +967,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionChatMode  = new QAction("聊天模式", this);
     QAction* actionWindow = new QAction("窗口模式", this);
     QAction* actionOnTop = new QAction("置顶显示", this);
+    QAction* actionTransMouse = new QAction("鼠标穿透", this);
 
     QAction* actionDelete = new QAction(QIcon(":/danmaku/delete"), "删除", this);
     QAction* actionHide = new QAction(QIcon(":/danmaku/hide"), "隐藏", this);
@@ -990,6 +991,8 @@ void LiveDanmakuWindow::showMenu()
     actionWindow->setChecked(settings.value("livedanmakuwindow/jiWindow", false).toBool());
     actionOnTop->setCheckable(true);
     actionOnTop->setChecked(settings.value("livedanmakuwindow/onTop", true).toBool());
+    actionTransMouse->setCheckable(true);
+    actionTransMouse->setChecked(settings.value("livedanmakuwindow/transMouse", false).toBool());
     actionPictureSelect->setCheckable(true);
     actionPictureSelect->setChecked(!pictureFilePath.isEmpty());
     actionPictureFolder->setCheckable(true);
@@ -1170,6 +1173,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionChatMode);
     settingMenu->addAction(actionWindow);
     settingMenu->addAction(actionOnTop);
+    settingMenu->addAction(actionTransMouse);
 
     menu->addAction(actionDelete);
     menu->addAction(actionHide);
@@ -1504,6 +1508,12 @@ void LiveDanmakuWindow::showMenu()
         qDebug() << "置顶显示：" << onTop;
         this->show();
     });
+    connect(actionTransMouse, &QAction::triggered, this, [=]{
+        bool trans = !settings.value("livedanmakuwindow/transMouse", false).toBool();
+        setAttribute(Qt::WA_TransparentForMouseEvents, trans);
+        settings.setValue("livedanmakuwindow/transMouse", trans);
+        qDebug() << "鼠标穿透：" << trans;
+    });
     connect(actionSimpleMode, &QAction::triggered, this, [=]{
         settings.setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
     });
@@ -1655,6 +1665,7 @@ void LiveDanmakuWindow::showMenu()
     actionChatMode->deleteLater();
     actionWindow->deleteLater();
     actionOnTop->deleteLater();
+    actionTransMouse->deleteLater();
     actionPictureSelect->deleteLater();
     actionPictureFolder->deleteLater();
     actionPictureAlpha->deleteLater();
