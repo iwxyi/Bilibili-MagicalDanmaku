@@ -1052,7 +1052,7 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
 {
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
-        qDebug() << "未开播，不做操作";
+        qDebug() << "未开播，不做操作(cd)" << msg;
         if (ui->localDebugCheck->isChecked())
             localNotify("[未开播，不做操作]");
         return ;
@@ -1411,8 +1411,11 @@ void MainWindow::addTimerTask(bool enable, int second, QString text)
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
-        if (!manual && !shallAutoMsg(sl)) // 没有开播，不进行定时任务
+        if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行定时任务
+        {
+            qDebug() << "未开播，不做回复(timer)" << sl;
             return ;
+        }
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
         if (msgs.size())
         {
@@ -1500,8 +1503,12 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if ((!manual && !shallAutoMsg(sl)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
+        if ((!manual && !shallAutoMsg(sl, manual)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
+        {
+            if (!danmaku.isPkLink())
+                qDebug() << "未开播，不做回复(reply)" << sl;
             return ;
+        }
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
         {
@@ -1591,11 +1598,13 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
-        if (!manual && !shallAutoMsg(sl)) // 没有开播，不进行自动回复
+        if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
-            qDebug() << "未开播，不做操作";
+            qDebug() << "未开播，不做操作(event)" << sl;
             return ;
         }
+        if (!liveStatus && !manual)
+            manual = true;
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
         {
@@ -9510,6 +9519,16 @@ bool MainWindow::shallAutoMsg(const QString &sl) const
 {
     if (sl.contains("%living%"))
         return true;
+    return shallAutoMsg();
+}
+
+bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
+{
+    if (sl.contains("%living%"))
+    {
+        manual = true;
+        return true;
+    }
     return shallAutoMsg();
 }
 

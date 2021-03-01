@@ -627,6 +627,7 @@ private:
     void handlePkMessage(QJsonObject json);
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
+    bool shallAutoMsg(const QString& sl, bool& manual);
 
     void releaseLiveData();
     QRect getScreenRect();
