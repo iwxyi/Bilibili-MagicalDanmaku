@@ -4339,7 +4339,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             sendNotifyMsg(">已关闭录播");
     }
-    else if (msg == "撤销禁言")
+    else if (ui->enableBlockCheck->isChecked() && msg == "撤销禁言")
     {
         if (!blockedQueue.size())
         {
@@ -4357,7 +4357,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             sendNotifyMsg(">已解除禁言：" + danmaku.getNickname());
     }
-    else if (msg.startsWith("禁言 "))
+    else if (ui->enableBlockCheck->isChecked() && msg.startsWith("禁言 "))
     {
         QRegularExpression re("^禁言\\s*(\\S+)\\s*(\\d+)?$");
         QRegularExpressionMatch match;
@@ -4377,13 +4377,31 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
+                // 是这个人了，判断是不是房管
+                if (snum(danmaku.getUid()) == upUid)
+                {
+                    sendNotifyMsg(">已禁言主播（狗头保命）");
+                    return ;
+                }
+                else if (snum(danmaku.getUid()) == cookieUid)
+                {
+                    sendNotifyMsg(">哦");
+                    return ;
+                }
+                else if (danmaku.isAdmin())
+                {
+                    sendNotifyMsg(">无法禁言房管：" + nick);
+                    return ;
+                }
+
                 addBlockUser(danmaku.getUid(), hour);
                 sendNotifyMsg(">已禁言：" + nick);
                 return ;
             }
         }
     }
-    else if (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 "))
+    else if (ui->enableBlockCheck->isChecked() &&
+             (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 ")))
     {
         QRegularExpression re("^(?:解禁|解除禁言|取消禁言)\\s*(.+)\\s*$");
         QRegularExpressionMatch match;
@@ -4437,7 +4455,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             }
         }
     }
-    else if (msg.startsWith("永久禁言 "))
+    else if (ui->enableBlockCheck->isChecked() && msg.startsWith("永久禁言 "))
     {
         QRegularExpression re("^永久禁言\\s*(\\S+)\\s*$");
         QRegularExpressionMatch match;
