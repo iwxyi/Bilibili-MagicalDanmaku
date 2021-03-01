@@ -511,6 +511,8 @@ private slots:
 
     void on_retryFailedDanmuCheck_clicked();
 
+    void on_debugPrintCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -744,6 +746,7 @@ private:
     QString cookieUid; // 自己的UID
     QString cookieUname; // 自己的昵称
     bool localDebug = false; // 本地调试模式
+    bool debugPrint = false; // 调试输出模式
 
     QString shortId; // 房间短号（有些没有，也没什么用）
     QString upUid; // 主播的UID

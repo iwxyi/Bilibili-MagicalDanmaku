@@ -180,10 +180,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 保存弹幕
     bool saveDanmuToFile = settings.value("danmaku/saveDanmakuToFile", false).toBool();
     if (saveDanmuToFile)
-    {
         ui->saveDanmakuToFileCheck->setChecked(true);
-        startSaveDanmakuToFile();
-    }
 
     // 每日数据
     bool calcDaliy = settings.value("live/calculateDaliyData", true).toBool();
@@ -599,6 +596,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 本地调试模式
     localDebug = settings.value("danmaku/localDebug", false).toBool();
     ui->localDebugCheck->setChecked(localDebug);
+    debugPrint = settings.value("danmaku/debugPrint", false).toBool();
+    ui->debugPrintCheck->setChecked(debugPrint);
 
     triggerCmdEvent("START_UP", LiveDanmaku());
 
@@ -934,10 +933,13 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             if (!ui->retryFailedDanmuCheck->isChecked())
                 return ;
 
+            QString room = this->roomId;
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
                 QTimer::singleShot(5000, [=]{ // 太快的话会repeat
+                    if (room != this->roomId) // 换房间了
+                        return ;
                     sendAutoMsg(msg);
                 });
             }
@@ -945,6 +947,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             {
                 localNotify("[3s后重试]");
                 QTimer::singleShot(3200, [=]{
+                    if (room != this->roomId) // 换房间了
+                        return ;
                     sendAutoMsg(msg);
                 });
             }
@@ -952,6 +956,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             {
                 localNotify("[自动分割长度]");
                 QTimer::singleShot(1000, [=]{
+                    if (room != this->roomId) // 换房间了
+                        return ;
                     sendLongText(msg);
                 });
             }
@@ -1053,14 +1059,14 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
         qDebug() << "未开播，不做操作(cd)" << msg;
-        if (ui->localDebugCheck->isChecked())
+        if (debugPrint)
             localNotify("[未开播，不做操作]");
         return ;
     }
     if (msg.trimmed().isEmpty())
     {
         qDebug() << "空弹幕，已跳过";
-        if (ui->localDebugCheck->isChecked())
+        if (debugPrint)
             localNotify("[空弹幕，已跳过]");
         return ;
     }
@@ -1133,7 +1139,7 @@ void MainWindow::slotComboSend()
                 else
                     sendGiftMsg(msg);
             }
-            else if (ui->localDebugCheck->isChecked())
+            else if (debugPrint)
             {
                 localNotify("[没有可发送的连击答谢弹幕]");
             }
@@ -1246,7 +1252,7 @@ void MainWindow::on_testDanmakuButton_clicked()
                 sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
-            else if (ui->localDebugCheck->isChecked())
+            else if (debugPrint)
             {
                 localNotify("[没有可发送的上船弹幕]");
             }
@@ -2196,10 +2202,6 @@ void MainWindow::startConnectRoom()
     if (ui->calculateDailyDataCheck->isChecked())
         startCalculateDailyData();
 
-    // 保存房间弹幕
-    if (ui->saveDanmakuToFileCheck)
-        startSaveDanmakuToFile();
-
     // 开始获取房间信息
     getRoomInfo(true);
     if (ui->enableBlockCheck->isChecked())
@@ -2944,6 +2946,10 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
 
 void MainWindow::startMsgLoop()
 {
+    // 保存房间弹幕
+    if (ui->saveDanmakuToFileCheck)
+        startSaveDanmakuToFile();
+
     int hostRetry = 0; // 循环测试连接（意思一下，暂时未使用，否则应当设置为成员变量）
     HostInfo hostServer = hostList.at(hostRetry);
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
@@ -5719,7 +5725,7 @@ void MainWindow::handleMessage(QJsonObject json)
                                     sendNotifyMsg(s);
                                 }
                             }
-                            else if (ui->localDebugCheck->isChecked())
+                            else if (debugPrint)
                             {
                                 localNotify("[没有可发送的禁言通知弹幕]");
                             }
@@ -5965,12 +5971,12 @@ void MainWindow::handleMessage(QJsonObject json)
                         else
                             sendGiftMsg(msg);
                     }
-                    else if (ui->localDebugCheck->isChecked())
+                    else if (debugPrint)
                     {
                         localNotify("[没有可发送的礼物答谢弹幕]");
                     }
                 }
-                else if (ui->localDebugCheck->isChecked())
+                else if (debugPrint)
                 {
                     localNotify("[礼物被合并，不答谢]");
                 }
@@ -6561,7 +6567,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
-            else if (ui->localDebugCheck->isChecked())
+            else if (debugPrint)
             {
                 localNotify("[没有可发送的上船弹幕]");
             }
@@ -7123,7 +7129,7 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
 //        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
     if (!words.size())
     {
-        if (ui->localDebugCheck->isChecked())
+        if (debugPrint)
             localNotify("[没有可用的欢迎弹幕]");
         return ;
     }
@@ -7147,7 +7153,7 @@ void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
     QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
     if (!words.size())
     {
-        if (ui->localDebugCheck->isChecked())
+        if (debugPrint)
             localNotify("[没有可用的感谢关注弹幕]");
         return ;
     }
@@ -7781,8 +7787,8 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 
     if (localDebug)
     {
-//        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
-//        return ;
+        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
     }
 
     // 设置数据（JSON的ByteArray）
@@ -9598,8 +9604,10 @@ void MainWindow::releaseLiveData()
 
     xliveHeartBeatTimer->stop();
 
+    autoMsgQueues.clear();
     for (int i = 0; i < CHANNEL_COUNT; i++)
         msgCds[i] = 0;
+    roomDanmakus.clear();
 
     if (danmakuWindow)
     {
@@ -9619,6 +9627,7 @@ void MainWindow::releaseLiveData()
     ui->actionShow_PK_Video->setEnabled(false);
 
     finishLiveRecord();
+    finishSaveDanmuToFile();
 
     QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
     setWindowIcon(face);
@@ -10908,4 +10917,9 @@ void MainWindow::on_giftComboDelaySpin_editingFinished()
 void MainWindow::on_retryFailedDanmuCheck_clicked()
 {
     settings.setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
+}
+
+void MainWindow::on_debugPrintCheck_clicked()
+{
+    settings.setValue("danmaku/debugPrint", debugPrint = ui->debugPrintCheck->isChecked());
 }
