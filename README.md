@@ -769,9 +769,25 @@ tips：
 
 #### 主程序事件
 
-| 事件命令 | 说明     |
-| -------- | -------- |
-| START_UP | 程序启动 |
+| 事件命令         | 说明     |
+| ---------------- | -------- |
+| START_UP         | 程序启动 |
+| **REMOTE_BLOCK** | 远程禁言 |
+
+##### 示例：远程禁言回复
+
+`禁言 xxx`通过倒找弹幕发送人昵称的方法，通过弹幕禁言用户。其中所有属性同`DANMU_MSG`，例如`%uid%`、`%uname%`等。如果禁言对象是房管，那么将会禁言失败。
+
+添加事件`REMOTE_BLOCK`，添加动作：
+
+```
+[%uid%=%my_uid%]**>因为太帅无法被禁言
+[%uid%=%up_uid%]**>已禁言主播（狗头保命）
+[%admin%]*>无法禁言房管
+>已禁言：%uname%
+```
+
+**添加本事件，将会屏蔽系统自带的禁言回复**
 
 #### 点歌姬事件
 
@@ -824,20 +840,6 @@ tips：
 | SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言                                                 |
 | SPECIAL_GIFT                  | 节奏风暴                                                     |
 | **ROOM_BLOCK_MSG**            | 用户被禁言，%uname%昵称                                      |
-| PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始                                       |
-| PK_BATTLE_SETTLE              |                                                              |
-| PK_BATTLE_START               | 大乱斗开始                                                   |
-| PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
-| PK_FINAL                      | 大乱斗尾声，最后几秒                                         |
-| PK_BATTLE_END                 | 大乱斗结束                                                   |
-| PK_BATTLE_SETTLE_USER         |                                                              |
-| PK_BATTLE_SETTLE_V2           |                                                              |
-| PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
-| **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
-| **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
-| **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
-| **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
 | USER_TOAST_MSG                | 上船附带的通知                                               |
@@ -860,11 +862,32 @@ tips：
 | room_admin_entrance           | 设置房管                                                     |
 | ROOM_ADMINS                   | 房管数量改变                                                 |
 
-> 考虑到发送弹幕的限制，如果同一个事件添加多个响应的动作，那么会按队列顺序执行，而不会同时一口气执行完。
+> 考虑到发送弹幕的限制，如果同一个事件添加多条弹幕，那么会按队列顺序发送，而不会一口气发完。
 >
 > 并且有冷却（默认2秒左右），可以在开头加上冷却通道例如`(cd78:0)`消除冷却
 >
-> 另外，需注意`PREPARE`，若开启了“仅直播时回复”，那么任意动作（包括弹幕、函数等）将不会执行，可在下播结束语中操作
+> 另外，需注意`PREPARE`，若开启了“仅直播时回复”，那么大部分动作（包括弹幕、函数等）将不会执行，可在下播结束语中操作
+
+#### 大乱斗事件
+
+| 事件命令 | 说明 |
+| ---- | ---- |
+| PK_BATTLE_PRE                 | 大乱斗准备，10秒后开始                                       |
+| PK_BATTLE_SETTLE              |                                                              |
+| PK_BATTLE_START               | 大乱斗开始                                                   |
+| PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
+| PK_FINAL                      | 大乱斗尾声，最后几秒                                         |
+| PK_BATTLE_END                 | 大乱斗结束                                                   |
+| PK_BATTLE_SETTLE_USER         |                                                              |
+| PK_BATTLE_SETTLE_V2           |                                                              |
+| PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
+| **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
+| **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
+| **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
+| **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
+
+
 
 ##### 示例：QQ群推送开播消息
 
@@ -992,7 +1015,7 @@ tips：
 
 
 
-### 服务端事件
+#### 服务端事件
 
 | 事件命令       | 说明                                                         |
 | -------------- | ------------------------------------------------------------ |

@@ -1657,6 +1657,18 @@ void MainWindow::restoreEventList()
     }
 }
 
+bool MainWindow::hasEvent(QString cmd) const
+{
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+        auto tw = static_cast<EventWidget*>(widget);
+        if (tw->eventEdit->text() == cmd && tw->check->isChecked())
+            return true;
+    }
+    return false;
+}
+
 QVariant MainWindow::getCookies()
 {
     QList<QNetworkCookie> cookies;
@@ -4380,22 +4392,23 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 // 是这个人了，判断是不是房管
                 if (snum(danmaku.getUid()) == upUid)
                 {
-                    sendNotifyMsg(">已禁言主播（狗头保命）");
-                    return ;
+                    localNotify("无法禁言主播");
                 }
                 else if (snum(danmaku.getUid()) == cookieUid)
                 {
-                    sendNotifyMsg(">哦");
-                    return ;
+                    localNotify("无法禁言自己");
                 }
                 else if (danmaku.isAdmin())
                 {
-                    sendNotifyMsg(">无法禁言房管：" + nick);
-                    return ;
+                    localNotify("无法禁言房管");
                 }
-
-                addBlockUser(danmaku.getUid(), hour);
-                sendNotifyMsg(">已禁言：" + nick);
+                else
+                {
+                    addBlockUser(danmaku.getUid(), hour);
+                    if (!hasEvent("REMOTE_BLOCK"))
+                        sendNotifyMsg(">已禁言：" + nick);
+                }
+                triggerCmdEvent("REMOTE_BLOCK", danmaku);
                 return ;
             }
         }
@@ -5581,7 +5594,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QMessageBox::information(this, "弹幕数据 user", QString(QJsonDocument(user).toJson()));
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
-        int manager = user[2].toInt(); // 是否为房管（主播也属于房管）
+        int manager = user[2].toInt(); // 是否为房管（实测现在主播不属于房管了）
         int vip = user[3].toInt(); // 是否为老爷
         int svip = user[4].toInt(); // 是否为年费老爷
         int uidentity = user[5].toInt(); // 是否为非正式会员或正式会员（5000非，10000正）
@@ -6224,14 +6237,15 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "SPECIAL_GIFT") // 节奏风暴（特殊礼物？）
     {
         qDebug() << "特殊礼物：" << json;
+
         /*{
             "cmd": "SPECIAL_GIFT",
             "data": {
                 "39": {
                     "action": "start",
-                    "content": "你们城里人真会玩",
+                    "content": "糟了，是心动的感觉！",
                     "hadJoin": 0,
-                    "id": "3066862253926",
+                    "id": "3072200788973",
                     "num": 1,
                     "storm_gif": "http://static.hdslb.com/live-static/live-room/images/gift-section/mobilegift/2/jiezou.gif?2017011901",
                     "time": 90
@@ -9935,7 +9949,7 @@ void MainWindow::post(QString url, QByteArray ba, NetJsonFunc func)
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url;
+            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url << reply;
             return ;
         }
         QJsonObject json = document.object();

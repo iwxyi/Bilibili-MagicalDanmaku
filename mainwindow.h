@@ -531,6 +531,7 @@ private:
     void addEventAction(bool enable, QString cmd, QString action);
     void saveEventList();
     void restoreEventList();
+    bool hasEvent(QString cmd) const;
 
     QVariant getCookies();
     void getUserInfo();
