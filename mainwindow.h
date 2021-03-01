@@ -509,6 +509,8 @@ private slots:
 
     void on_giftComboDelaySpin_editingFinished();
 
+    void on_retryFailedDanmuCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

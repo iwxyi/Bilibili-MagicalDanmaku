@@ -85,6 +85,9 @@ MainWindow::MainWindow(QWidget *parent)
     danmuLongest = settings.value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
 
+    // 失败重试
+    ui->retryFailedDanmuCheck->setChecked(settings.value("danmaku/retryFailedDanmu", true).toBool());
+
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
     autoMsgTimer->setInterval(1500); // 1.5秒发一次弹幕
@@ -927,6 +930,35 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             statusLabel->setText(errorMsg);
             qCritical() << s8("warning: 发送失败：") << errorMsg << msg;
             localNotify(errorMsg + " -> " + msg);
+
+            if (!ui->retryFailedDanmuCheck->isChecked())
+                return ;
+
+            if (errorMsg.contains("msg in 1s"))
+            {
+                localNotify("[5s后重试]");
+                QTimer::singleShot(5000, [=]{ // 太快的话会repeat
+                    sendAutoMsg(msg);
+                });
+            }
+            else if (errorMsg.contains("msg repeat"))
+            {
+                localNotify("[3s后重试]");
+                QTimer::singleShot(3200, [=]{
+                    sendAutoMsg(msg);
+                });
+            }
+            else if (errorMsg.contains("超出限制长度"))
+            {
+                localNotify("[自动分割长度]");
+                QTimer::singleShot(1000, [=]{
+                    sendLongText(msg);
+                });
+            }
+            else if (errorMsg == "f") // 敏感词
+            {
+
+            }
         }
     });
 }
@@ -10820,4 +10852,9 @@ void MainWindow::on_giftComboSendCheck_clicked()
 void MainWindow::on_giftComboDelaySpin_editingFinished()
 {
     settings.setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
+}
+
+void MainWindow::on_retryFailedDanmuCheck_clicked()
+{
+    settings.setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
 }

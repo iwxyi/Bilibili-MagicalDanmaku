@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -337,6 +337,13 @@ QTabBar::tab:selected
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="retryFailedDanmuCheck">
+            <property name="text">
+             <string>发送失败重试</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -3006,7 +3013,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>501</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
