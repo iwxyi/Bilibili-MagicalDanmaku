@@ -109,7 +109,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->outerMusicKeyEdit->setText(settings.value("danmaku/outerMusicPauseKey").toString());
     ui->orderSongsToFileCheck->setChecked(settings.value("danmaku/orderSongsToFile", false).toBool());
     ui->orderSongsToFileFormatEdit->setText(settings.value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
-    ui->orderSongsToFileMaxSpin->setValue(settings.value("danmaku/orderSongsToFileMax", 99).toInt());
+    ui->orderSongsToFileMaxSpin->setValue(settings.value("danmaku/orderSongsToFileMax", 9).toInt());
+    ui->songLyricsToFileCheck->setChecked(settings.value("danmaku/songLyricsToFile", false).toBool());
+    ui->songLyricsToFileMaxSpin->setValue(settings.value("danmaku/songLyricsToFileMax", 2).toInt());
 
     // 自动翻译
     bool trans = settings.value("danmaku/autoTrans", true).toBool();
@@ -5161,6 +5163,24 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     file.close();
 }
 
+void MainWindow::saveSongLyrics()
+{
+    QStringList lyrics = musicWindow->getSongLyrics(ui->songLyricsToFileMaxSpin->value());
+
+    // 获取路径
+    QDir dir(wwwDir.absoluteFilePath("music"));
+    dir.mkpath(dir.absolutePath());
+
+    // 保存到文件
+    QFile file(dir.absoluteFilePath("lyrics.txt"));
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+    stream.setCodec("UTF-8");
+    stream << lyrics.join("\n");
+    file.flush();
+    file.close();
+}
+
 void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 {
     int operation = ((uchar)message[8] << 24)
@@ -8671,6 +8691,16 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                 sendMusicList(songs);
             }
         });
+        connect(musicWindow, &OrderPlayerWindow::signalLyricChanged, this, [=](){
+            if (ui->songLyricsToFileCheck->isChecked())
+            {
+                saveSongLyrics();
+            }
+            if (sendLyricListToSockets)
+            {
+                sendLyricList();
+            }
+        });
         auto simulateMusicKey = [=]{
 #if defined (Q_OS_WIN)
             simulateKeys(ui->outerMusicKeyEdit->text());
@@ -10908,4 +10938,32 @@ void MainWindow::on_giftComboDelaySpin_editingFinished()
 void MainWindow::on_retryFailedDanmuCheck_clicked()
 {
     settings.setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
+}
+
+void MainWindow::on_songLyricsToFileCheck_clicked()
+{
+    settings.setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
+
+    if (musicWindow && ui->songLyricsToFileCheck->isChecked())
+    {
+        saveSongLyrics();
+    }
+    if (musicWindow && sendLyricListToSockets)
+    {
+        sendLyricList();
+    }
+}
+
+void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
+{
+    settings.setValue("danmaku/songLyricsToFileMax", ui->songLyricsToFileMaxSpin->value());
+
+    if (musicWindow && ui->songLyricsToFileCheck->isChecked())
+    {
+        saveSongLyrics();
+    }
+    if (musicWindow && sendLyricListToSockets)
+    {
+        sendLyricList();
+    }
 }

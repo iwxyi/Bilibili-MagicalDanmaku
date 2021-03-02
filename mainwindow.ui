@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>501</width>
-    <height>441</height>
+    <height>435</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1178,7 +1178,7 @@ QTabBar::tab:selected
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>读取接口</string>
+             <string>列表读取接口</string>
             </property>
            </widget>
           </item>
@@ -1231,6 +1231,73 @@ QTabBar::tab:selected
              <number>99</number>
             </property>
            </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_49">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="songLyricsToFileCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>歌词读取接口</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="songLyricsToFileMaxSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;当前歌词及其后面的行数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string>行</string>
+            </property>
+            <property name="prefix">
+             <string>最多</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_27">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>

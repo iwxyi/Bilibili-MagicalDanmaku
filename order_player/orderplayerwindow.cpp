@@ -13,6 +13,8 @@ OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     starting = true;
     ui->setupUi(this);
 
+    connect(ui->lyricWidget, SIGNAL(signalRowChanged()), this, SIGNAL(signalLyricChanged()));
+
     QHeaderView* header = ui->searchResultTable->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::ResizeToContents);
     header->setMinimumSectionSize(QFontMetrics(this->font()).horizontalAdvance("哈哈哈哈哈哈"));
@@ -333,6 +335,11 @@ OrderPlayerWindow::~OrderPlayerWindow()
 const SongList &OrderPlayerWindow::getOrderSongs() const
 {
     return orderSongs;
+}
+
+const QStringList OrderPlayerWindow::getSongLyrics(int rowCount) const
+{
+    return ui->lyricWidget->getLyrics(rowCount);
 }
 
 bool OrderPlayerWindow::hasSongInOrder(QString by)
@@ -1286,6 +1293,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     {
         downloadSongCover(song);
     }
+
     // 设置歌词
     if (QFileInfo(lyricPath(song)).exists())
     {
@@ -1736,6 +1744,7 @@ void OrderPlayerWindow::setCurrentLyric(QString lyric)
 {
     desktopLyric->setLyric(lyric);
     ui->lyricWidget->setLyric(lyric);
+    emit signalLyricChanged();
 }
 
 void OrderPlayerWindow::openPlayList(QString shareUrl)

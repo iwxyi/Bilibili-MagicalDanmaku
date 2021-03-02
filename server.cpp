@@ -53,10 +53,11 @@ void MainWindow::openSocketServer()
                 danmakuSockets.removeOne(clientSocket);
                 if (danmakuCmdsMaps.contains(clientSocket))
                 {
-                    if (sendSongListToSockets && danmakuCmdsMaps[clientSocket].contains("SONG_LIST"))
-                    {
-                        danmakuCmdsMaps.remove(clientSocket);
+                    QStringList cmds = danmakuCmdsMaps[clientSocket];
+                    danmakuCmdsMaps.remove(clientSocket);
 
+                    if (sendSongListToSockets && cmds.contains("SONG_LIST"))
+                    {
                         // 判断是否还需要点歌列表的
                         bool find = false;
                         foreach (QStringList sl, danmakuCmdsMaps) {
@@ -68,8 +69,19 @@ void MainWindow::openSocketServer()
                         }
                         sendSongListToSockets = find;
                     }
-                    else
-                        danmakuCmdsMaps.remove(clientSocket);
+                    if (sendSongListToSockets && cmds.contains("LYRIC_LIST"))
+                    {
+                        // 判断是否还需要点歌列表的
+                        bool find = false;
+                        foreach (QStringList sl, danmakuCmdsMaps) {
+                            if (sl.contains("LYRIC_LIST"))
+                            {
+                                find = true;
+                                break;
+                            }
+                        }
+                        sendSongListToSockets = find;
+                    }
                 }
                 clientSocket->deleteLater();
                 qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
@@ -103,10 +115,15 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             sl << val.toString();
         danmakuCmdsMaps[clientSocket] = sl;
 
-        if (sl.contains("SONG_LIST") && musicWindow)
+        if (sl.contains("SONG_LIST"))
         {
             sendSongListToSockets = true;
             sendMusicList(musicWindow->getOrderSongs(), clientSocket);
+        }
+        if (sl.contains("LYRIC_LIST"))
+        {
+            sendLyricListToSockets = true;
+            sendLyricList(clientSocket);
         }
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
@@ -201,7 +218,7 @@ void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
 
     foreach (QWebSocket* socket, danmakuSockets)
     {
-        if (danmakuCmdsMaps.contains(socket) && !danmakuCmdsMaps[socket].contains(cmd))
+        if (!danmakuCmdsMaps.contains(socket) || !danmakuCmdsMaps[socket].contains(cmd))
             continue;
        socket->sendTextMessage(ba);
     }
@@ -229,7 +246,7 @@ void MainWindow::sendToSockets(QString cmd, QByteArray data, QWebSocket *socket)
 
 void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
 {
-    if (!sendSongListToSockets || (!socket && !danmakuSockets.size())) // 不需要发送，空着的
+    if (!sendSongListToSockets || (!socket && !danmakuSockets.size()) || !musicWindow) // 不需要发送，空着的
         return ;
 
     QJsonObject json;
@@ -249,6 +266,32 @@ void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
         foreach (QWebSocket* socket, danmakuSockets)
         {
             if (!danmakuCmdsMaps.contains(socket) || danmakuCmdsMaps[socket].contains("SONG_LIST"))
+                socket->sendTextMessage(ba);
+        }
+    }
+}
+
+void MainWindow::sendLyricList(QWebSocket *socket)
+{
+    if (!sendLyricListToSockets || (!socket && !danmakuSockets.size()) || !musicWindow)
+        return ;
+
+    QJsonObject json;
+    QJsonArray array;
+    QStringList lyrics = musicWindow->getSongLyrics(ui->songLyricsToFileMaxSpin->value());
+    json.insert("data", lyrics.join("\n"));
+    json.insert("cmd", "LYRIC_LIST");
+    QByteArray ba = QJsonDocument(json).toJson();
+
+    if (socket)
+    {
+        socket->sendTextMessage(ba);
+    }
+    else
+    {
+        foreach (QWebSocket* socket, danmakuSockets)
+        {
+            if (!danmakuCmdsMaps.contains(socket) || danmakuCmdsMaps[socket].contains("LYRIC_LIST"))
                 socket->sendTextMessage(ba);
         }
     }

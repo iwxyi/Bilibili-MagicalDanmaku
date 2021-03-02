@@ -511,6 +511,10 @@ private slots:
 
     void on_retryFailedDanmuCheck_clicked();
 
+    void on_songLyricsToFileCheck_clicked();
+
+    void on_songLyricsToFileMaxSpin_editingFinished();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -617,6 +621,7 @@ private:
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
     void saveOrderSongs(const SongList& songs);
+    void saveSongLyrics();
 
     void pkPre(QJsonObject json);
     void pkStart(QJsonObject json);
@@ -658,6 +663,7 @@ private:
     void processServerVariant(QByteArray& doc);
     void sendToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
+    void sendLyricList(QWebSocket* socket = nullptr);
 
     void syncMagicalRooms();
 
@@ -860,6 +866,7 @@ private:
     QList<QWebSocket*> danmakuSockets;
     QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
     bool sendSongListToSockets = false;
+    bool sendLyricListToSockets = false;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;
