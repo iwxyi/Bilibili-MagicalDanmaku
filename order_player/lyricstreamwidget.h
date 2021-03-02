@@ -134,7 +134,17 @@ public:
         switchRowTimestamp = QDateTime::currentMSecsSinceEpoch();
         updateTimer->start();
         update();
+        emit signalRowChanged();
         return true;
+    }
+
+    QStringList getLyrics(int rowCount) const
+    {
+        QStringList sl;
+        int end = qMin(currentRow + rowCount, lyricStream.size());
+        for (int i = currentRow; i < end; i++)
+            sl.append(lyricStream.at(i).text);
+        return sl;
     }
 
     int getCurrentTop() const
@@ -278,6 +288,7 @@ protected:
 signals:
     void signalSwitchCoverBlur();
     void signalAdjustLyricTime(QString);
+    void signalRowChanged();
 
 private slots:
     void showMenu()

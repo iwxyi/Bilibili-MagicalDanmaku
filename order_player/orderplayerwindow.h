@@ -137,6 +137,7 @@ public:
     };
 
     const SongList& getOrderSongs() const;
+    const QStringList getSongLyrics(int rowCount) const;
     bool hasSongInOrder(QString by);
 
 public slots:
@@ -294,6 +295,7 @@ signals:
     void signalOrderSongSucceed(Song song, qint64 msecond, int waiting);
     void signalOrderSongPlayed(Song song);
     void signalOrderSongModified(const SongList& songs);
+    void signalLyricChanged();
     void signalOrderSongNoCopyright(Song song);
     void signalOrderSongImproved(Song song, int previous, int current);
     void signalOrderSongCutted(Song song);

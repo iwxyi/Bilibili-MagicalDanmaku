@@ -208,7 +208,7 @@ private slots:
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
     void sendAttentionMsg(QString msg);
-    void sendNotifyMsg(QString msg);
+    void sendNotifyMsg(QString msg, bool manual = false);
     void slotComboSend();
 
     void slotSocketError(QAbstractSocket::SocketError error);
@@ -513,6 +513,20 @@ private slots:
 
     void on_debugPrintCheck_clicked();
 
+    void on_songLyricsToFileCheck_clicked();
+
+    void on_songLyricsToFileMaxSpin_editingFinished();
+
+    void on_allowWebControlCheck_clicked();
+
+    void on_saveEveryGuardCheck_clicked();
+
+    void on_saveMonthGuardCheck_clicked();
+
+    void on_saveEveryGiftCheck_clicked();
+
+    void on_exportDailyButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -619,6 +633,7 @@ private:
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
     void saveOrderSongs(const SongList& songs);
+    void saveSongLyrics();
 
     void pkPre(QJsonObject json);
     void pkStart(QJsonObject json);
@@ -631,6 +646,11 @@ private:
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
+
+    void saveMonthGuard();
+    void saveEveryGuard(LiveDanmaku danmaku);
+    void saveEveryGift(LiveDanmaku danmaku);
+    void appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku);
 
     void releaseLiveData();
     QRect getScreenRect();
@@ -660,6 +680,7 @@ private:
     void processServerVariant(QByteArray& doc);
     void sendToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
+    void sendLyricList(QWebSocket* socket = nullptr);
 
     void syncMagicalRooms();
 
@@ -720,6 +741,7 @@ private:
     QStringList noReplyMsgs;
     int danmuLongest = 20;
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
+    LiveDanmaku lastDanmaku; // 最近一个弹幕
 
     // 礼物连击
     QHash<QString, LiveDanmaku> giftCombos;
@@ -759,6 +781,7 @@ private:
 
     // 每日数据
     QSettings* dailySettings = nullptr;
+    QTimer* dayTimer = nullptr;
     int dailyCome = 0; // 进来数量人次
     int dailyPeopleNum = 0; // 本次进来的人数（不是全程的话，不准确）
     int dailyDanmaku = 0; // 弹幕数量
@@ -768,6 +791,9 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+
+    // 船员
+    QList<LiveDanmaku> guardInfos;
 
     // 录播
     qint64 startRecordTime = 0;
@@ -863,6 +889,7 @@ private:
     QList<QWebSocket*> danmakuSockets;
     QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
     bool sendSongListToSockets = false;
+    bool sendLyricListToSockets = false;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

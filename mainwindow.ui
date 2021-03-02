@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>501</width>
-    <height>441</height>
+    <width>546</width>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -359,40 +359,6 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>保存弹幕到文件</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="calculateDailyDataCheck">
-            <property name="toolTip">
-             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-            </property>
-            <property name="text">
-             <string>每日数据统计</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>今日</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -1188,7 +1154,7 @@ QTabBar::tab:selected
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>读取接口</string>
+             <string>列表读取接口</string>
             </property>
            </widget>
           </item>
@@ -1241,6 +1207,73 @@ QTabBar::tab:selected
              <number>99</number>
             </property>
            </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_49">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="songLyricsToFileCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>歌词读取接口</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="songLyricsToFileMaxSpin">
+            <property name="contextMenuPolicy">
+             <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;当前歌词及其后面的行数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string>行</string>
+            </property>
+            <property name="prefix">
+             <string>最多</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_27">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -2289,7 +2322,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="serverCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;挂在服务器上远程访问需要使用公网IP或域名，而非localhost&lt;/p&gt;&lt;p&gt;点歌列表位置：网址/music&lt;/p&gt;&lt;p&gt;送礼动画位置：网址/gift&lt;/p&gt;&lt;p&gt;[开发中]弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;挂在服务器上远程访问需要使用公网IP或域名，而非localhost&lt;/p&gt;&lt;p&gt;点歌列表位置：网址/music&lt;/p&gt;&lt;p&gt;歌词列表位置：网址/music/lyrics.html&lt;/p&gt;&lt;p&gt;送礼动画位置：网址/gift&lt;/p&gt;&lt;p&gt;[开发中]弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>网络服务</string>
@@ -2383,6 +2416,23 @@ margin: 6px;</string>
             </property>
             <property name="placeholderText">
              <string>外网可访问的IP/域名，可空</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_50">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="allowWebControlCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息来控制神奇弹幕&lt;/p&gt;&lt;p&gt;请仅在必要且确认安全的情况下启用&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、修改设置、禁言用户、发送私信、调用B站API等&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>允许反向控制</string>
             </property>
            </widget>
           </item>
@@ -3013,6 +3063,124 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_13">
+       <attribute name="title">
+        <string>其他</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="calculateDailyDataCheck">
+            <property name="toolTip">
+             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+            </property>
+            <property name="text">
+             <string>每日数据统计</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>今日</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="exportDailyButton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>导出</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_51">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="saveEveryGuardCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录每次上船</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="saveMonthGuardCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录每月船员</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_52">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="saveEveryGiftCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录礼物历史</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>215</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -3022,8 +3190,8 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>501</width>
-     <height>21</height>
+     <width>546</width>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
