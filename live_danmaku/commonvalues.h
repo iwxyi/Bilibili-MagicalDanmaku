@@ -22,6 +22,7 @@ protected:
     static QHash<qint64, qint64> userComeTimes;   // 用户进来的时间（客户端时间戳为准）
     static QHash<qint64, qint64> userBlockIds;    // 本次用户屏蔽的ID
     static QSettings* danmakuCounts; // 保存弹幕次数的settings
+    static QSettings* userMarks; // 保存每位用户的设置
     static QList<LiveDanmaku> allDanmakus;
     static QList<qint64> careUsers; // 特别关心
     static QList<qint64> strongNotifyUsers; // 强提醒

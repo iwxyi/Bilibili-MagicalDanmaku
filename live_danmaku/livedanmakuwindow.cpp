@@ -922,6 +922,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionAddCare = new QAction(QIcon(":/icons/heart"), "添加特别关心", this);
     QAction* actionStrongNotify = new QAction(QIcon(":/danmaku/notify"), "添加强提醒", this);
     QAction* actionSetName = new QAction(QIcon(":/danmaku/nick"), "设置专属昵称", this);
+    QAction* actionUserMark = new QAction(QIcon(""), "设置用户备注", this);
     QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/"), "设置礼物别名", this);
 
     QAction* actionAddBlockTemp = new QAction(QIcon(":/danmaku/block2"), "禁言1小时", this);
@@ -1048,6 +1049,8 @@ void LiveDanmakuWindow::showMenu()
             actionStrongNotify->setText("移除强提醒");
         if (localNicknames.contains(uid))
             actionSetName->setText("专属昵称：" + localNicknames.value(uid));
+        if (userMarks->contains("base/" + snum(uid)))
+            actionSetName->setText("备注：" + userMarks->value("base/" + snum(uid)).toString());
         actionNotWelcome->setChecked(notWelcomeUsers.contains(uid));
         actionNotReply->setChecked(notReplyUsers.contains(uid));
 
@@ -1077,6 +1080,7 @@ void LiveDanmakuWindow::showMenu()
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
+        actionUserMark->setEnabled(false);
         actionNotWelcome->setEnabled(false);
         actionNotReply->setEnabled(false);
         actionFollow->setEnabled(false);
@@ -1089,6 +1093,7 @@ void LiveDanmakuWindow::showMenu()
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
+        actionUserMark->setEnabled(false);
         actionCopy->setEnabled(false);
         actionSearch->setEnabled(false);
         actionTranslate->setEnabled(false);
@@ -1127,6 +1132,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionAddCare);
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
+    menu->addAction(actionUserMark);
     menu->addAction(actionNotWelcome);
     menu->addAction(actionNotReply);
     if (danmaku.is(MSG_GIFT))
@@ -1323,6 +1329,30 @@ void LiveDanmakuWindow::showMenu()
             it++;
         }
         settings.setValue("danmaku/localNicknames", ress.join(";"));
+    });
+    connect(actionUserMark, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+
+        // 设置昵称
+        bool ok = false;
+        QString mark;
+        if (userMarks->contains("base/" + snum(uid)))
+            mark = userMarks->value("base/" + snum(uid), "").toString();
+        QString tip = "设置【" + danmaku.getNickname() + "】的备注\n可通过%umark%放入至弹幕中";
+        mark = QInputDialog::getText(this, "专属昵称", tip, QLineEdit::Normal, mark, &ok);
+        if (!ok)
+            return ;
+        if (mark.isEmpty())
+        {
+            if (userMarks->contains("base/" + snum(uid)))
+                userMarks->remove("base/" + snum(uid));
+        }
+        else
+        {
+            userMarks->setValue("base/" + snum(uid), mark);
+            emit signalMarkUser(danmaku.getUid());
+        }
     });
     connect(actionNotWelcome, &QAction::triggered, this, [=]{
         if (notWelcomeUsers.contains(uid))
@@ -1652,6 +1682,7 @@ void LiveDanmakuWindow::showMenu()
     actionValue->deleteLater();
     actionAddCare->deleteLater();
     actionSetName->deleteLater();
+    actionUserMark->deleteLater();
     actionRepeat->deleteLater();
     actionCopy->deleteLater();
     actionSearch->deleteLater();

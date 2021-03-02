@@ -13,6 +13,7 @@ QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
 QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
 QSettings* CommonValues::danmakuCounts = nullptr;    // 每个用户的统计
+QSettings* CommonValues::userMarks = nullptr;        // 每个用户的备注
 QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
 QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
@@ -276,6 +277,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 弹幕次数
     danmakuCounts = new QSettings(QApplication::applicationDirPath()+"/danmu_count.ini", QSettings::Format::IniFormat);
 
+    // 用户备注
+    userMarks = new QSettings(QApplication::applicationDirPath()+"/user_mark.ini", QSettings::Format::IniFormat);
+
     // 状态栏
     statusLabel = new QLabel(this);
     fansLabel = new QLabel(this);
@@ -364,6 +368,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 事件动作
     restoreEventList();
+
+    // 保存舰长
+    ui->saveEveryGuardCheck->setChecked(settings.value("danmaku/saveEveryGuard", false).toBool());
+    ui->saveMonthGuardCheck->setChecked(settings.value("danmaku/saveMonthGuard", false).toBool());
 
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
@@ -844,6 +852,7 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 {
     roomDanmakus.append(danmaku);
+    lastDanmaku = danmaku;
     allDanmakus.append(danmaku);
     newLiveDanmakuAdded(danmaku);
 }
@@ -1220,7 +1229,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text == "测试舰长进入")
     {
         QString uname = "测试舰长";
-        LiveDanmaku danmaku(1, uname, uid, QDateTime::currentDateTime());
+        LiveDanmaku danmaku(qrand() % 3 + 1, uname, uid, QDateTime::currentDateTime());
         appendNewLiveDanmaku(danmaku);
 
         if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
@@ -1238,6 +1247,8 @@ void MainWindow::on_testDanmakuButton_clicked()
         int price = 198000;
         LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price, 2);
         appendNewLiveDanmaku(danmaku);
+        if (ui->saveEveryGuardCheck->isChecked())
+            saveEveryGuard(danmaku);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
@@ -3601,6 +3612,10 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%csrf%"))
         msg.replace("%csrf%", csrf_token);
 
+    // 用户备注
+    if (msg.contains("%umark%"))
+        msg.replace("%umark%", userMarks->value("base/" + snum(danmaku.getUid()), "").toString());
+
     // 读取配置文件
     QRegularExpression re("%\\{(\\S+)\\}%");
     QRegularExpressionMatch match;
@@ -4884,6 +4899,39 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString  cmd = QString("xdg-open ")+ path; //在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
             system(cmd.toStdString().c_str());
 #endif
+            return true;
+        }
+    }
+
+    // 写入文件行
+    if (msg.contains("appendFileLine"))
+    {
+        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString dirName = caps.at(1);
+            QString fileName = caps.at(2);
+            QString format = caps.at(3);
+            appendFileLine(dirName, fileName, format, lastDanmaku);
+            return true;
+        }
+    }
+
+    // 删除文件
+    if (msg.contains("removeFile"))
+    {
+        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString fileName = caps.at(1);
+            if (!fileName.startsWith("/"))
+                fileName = "/" + fileName;
+            QFile file(QApplication::applicationDirPath() + fileName);
+            file.remove();
             return true;
         }
     }
@@ -6566,6 +6614,9 @@ void MainWindow::handleMessage(QJsonObject json)
                             guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
 
+        if (ui->saveEveryGuardCheck->isChecked())
+            saveEveryGuard(danmaku);
+
         if (!guardCount)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku);
@@ -7988,6 +8039,7 @@ void MainWindow::updateExistGuards(int page)
     {
         page = 1;
         currentGuards.clear();
+        guardInfos.clear();
 
         // 参数是0的话，自动判断是否需要
         if (browserCookie.isEmpty())
@@ -7999,11 +8051,13 @@ void MainWindow::updateExistGuards(int page)
     auto judgeGuard = [=](QJsonObject user){
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
+        int guardLevel = user.value("guard_level").toInt();
         currentGuards[uid] = username;
+        guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
+
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {
-            int guardLevel = user.value("guard_level").toInt();
             int count = 1;
             if (guardLevel == 3)
                 count = 1;
@@ -8043,6 +8097,11 @@ void MainWindow::updateExistGuards(int page)
         int num = info.value("num").toInt();
         if (page * pageSize + 3 < num)
             updateExistGuards(page + 1);
+        else // 全部结束了
+        {
+            if (ui->saveMonthGuardCheck->isChecked())
+                saveMonthGuard();
+        }
     });
 }
 
@@ -9595,6 +9654,61 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
     return shallAutoMsg();
 }
 
+void MainWindow::saveMonthGuard()
+{
+    QDir dir(QApplication::applicationDirPath() + "/guard_month");
+    dir.mkpath(dir.absolutePath());
+    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(roomId + ".csv"));
+
+    QFile file(filePath);
+    file.open(QIODevice::WriteOnly | QIODevice::Append);
+    QTextStream stream(&file);
+}
+
+void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
+{
+    QDir dir(QApplication::applicationDirPath() + "/guard_histories");
+    dir.mkpath(dir.absolutePath());
+    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(roomId + ".csv"));
+
+    QFile file(filePath);
+    bool exists = file.exists();
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+        qDebug() << "打开上船记录文件失败：" << filePath;
+    QTextStream stream(&file);
+
+    if (!exists)
+        stream << QString("日期,时间,昵称,礼物,数量,UID,备注\n").toUtf8();
+
+    stream << danmaku.getTimeline().toString("yyyy-MM-dd") << ","
+           << danmaku.getTimeline().toString("hh:mm") << ","
+           << danmaku.getNickname() << ","
+           << danmaku.getGiftName() << ","
+           << danmaku.getNumber() << ","
+           << danmaku.getUid() << ","
+           << userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
+
+    file.close();
+}
+
+void MainWindow::appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku)
+{
+    if (!dirName.startsWith("/"))
+        dirName = "/" + dirName;
+    QDir dir(QApplication::applicationDirPath() + dirName);
+    dir.mkpath(dir.absolutePath());
+    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+        qDebug() << "打开文件失败：" << filePath;
+    QTextStream stream(&file);
+
+    stream << processDanmakuVariants(format, danmaku) << "\n";
+
+    file.close();
+}
+
 void MainWindow::releaseLiveData()
 {
     ui->roomRankLabel->setText("");
@@ -9613,6 +9727,7 @@ void MainWindow::releaseLiveData()
     oppositeAudience.clear();
     fansList.clear();
     currentGuards.clear();
+    guardInfos.clear();
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
@@ -10972,4 +11087,14 @@ void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
 void MainWindow::on_allowWebControlCheck_clicked()
 {
     settings.setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
+}
+
+void MainWindow::on_saveEveryGuardCheck_clicked()
+{
+    settings.setValue("danmaku/saveEveryGuard", ui->saveEveryGuardCheck->isChecked());
+}
+
+void MainWindow::on_saveMonthGuardCheck_clicked()
+{
+    settings.setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>501</width>
-    <height>435</height>
+    <width>546</width>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>10</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -359,40 +359,6 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>保存弹幕到文件</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="calculateDailyDataCheck">
-            <property name="toolTip">
-             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-            </property>
-            <property name="text">
-             <string>每日数据统计</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>今日</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -3087,6 +3053,87 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_13">
+       <attribute name="title">
+        <string>其他</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="calculateDailyDataCheck">
+            <property name="toolTip">
+             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+            </property>
+            <property name="text">
+             <string>每日数据统计</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>今日</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_51">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="saveEveryGuardCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，包括：&lt;/p&gt;&lt;p&gt;时间、UID、舰长/提督/总督、数量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录每次上船</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="saveMonthGuardCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员，包括时间、[舰长/提督/总督]昵称_ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录每月船员</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>239</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -3096,7 +3143,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>501</width>
+     <width>546</width>
      <height>23</height>
     </rect>
    </property>

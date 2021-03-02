@@ -517,6 +517,10 @@ private slots:
 
     void on_allowWebControlCheck_clicked();
 
+    void on_saveEveryGuardCheck_clicked();
+
+    void on_saveMonthGuardCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -637,6 +641,10 @@ private:
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
 
+    void saveMonthGuard();
+    void saveEveryGuard(LiveDanmaku danmaku);
+    void appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku);
+
     void releaseLiveData();
     QRect getScreenRect();
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
@@ -726,6 +734,7 @@ private:
     QStringList noReplyMsgs;
     int danmuLongest = 20;
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
+    LiveDanmaku lastDanmaku; // 最近一个弹幕
 
     // 礼物连击
     QHash<QString, LiveDanmaku> giftCombos;
@@ -773,6 +782,9 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+
+    // 船员
+    QList<LiveDanmaku> guardInfos;
 
     // 录播
     qint64 startRecordTime = 0;
