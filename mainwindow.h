@@ -521,6 +521,10 @@ private slots:
 
     void on_saveMonthGuardCheck_clicked();
 
+    void on_saveEveryGiftCheck_clicked();
+
+    void on_exportDailyButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -643,6 +647,7 @@ private:
 
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);
+    void saveEveryGift(LiveDanmaku danmaku);
     void appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku);
 
     void releaseLiveData();

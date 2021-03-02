@@ -372,6 +372,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 保存舰长
     ui->saveEveryGuardCheck->setChecked(settings.value("danmaku/saveEveryGuard", false).toBool());
     ui->saveMonthGuardCheck->setChecked(settings.value("danmaku/saveMonthGuard", false).toBool());
+    ui->saveEveryGiftCheck->setChecked(settings.value("danmaku/saveEveryGift", false).toBool());
 
     // 自动发送
     ui->autoSendWelcomeCheck->setChecked(settings.value("danmaku/sendWelcome", false).toBool());
@@ -1198,6 +1199,8 @@ void MainWindow::on_testDanmakuButton_clicked()
         int totalCoin = qrand() % 20 * 100;
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         appendNewLiveDanmaku(danmaku);
+        if (ui->saveEveryGiftCheck->isChecked())
+            saveEveryGift(danmaku);
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         qDebug() << "条件替换结果：" << words;
@@ -4060,6 +4063,8 @@ void MainWindow::startCalculateDailyData()
     dailyGiftSilver = dailySettings->value("gift_silver", 0).toInt();
     dailyGiftGold = dailySettings->value("gift_gold", 0).toInt();
     dailyGuard = dailySettings->value("guard", 0).toInt();
+    if (currentGuards.size())
+        dailySettings->setValue("guard_count", currentGuards.size());
 }
 
 void MainWindow::saveCalculateDailyData()
@@ -6011,6 +6016,8 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             appendNewLiveDanmaku(danmaku);
         }
+        if (ui->saveEveryGiftCheck->isChecked())
+            saveEveryGift(danmaku);
 
         if (!justStart && ui->autoSendGiftCheck->isChecked()) // 是否需要礼物答谢
         {
@@ -6622,6 +6629,7 @@ void MainWindow::handleMessage(QJsonObject json)
             triggerCmdEvent("FIRST_GUARD", danmaku);
         }
         currentGuards[uid] = username;
+        guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
@@ -8101,6 +8109,9 @@ void MainWindow::updateExistGuards(int page)
         {
             if (ui->saveMonthGuardCheck->isChecked())
                 saveMonthGuard();
+
+            if (dailySettings)
+                dailySettings->setValue("guard_count", currentGuards.size());
         }
     });
 }
@@ -8483,7 +8494,7 @@ void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_doveCheck_clicked()
 {
-
+    // 这里不做操作，重启失效
 }
 
 void MainWindow::on_notOnlyNewbieCheck_clicked()
@@ -9708,6 +9719,34 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
            << danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
            << danmaku.getUid() << ","
            << userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
+
+    file.close();
+}
+
+void MainWindow::saveEveryGift(LiveDanmaku danmaku)
+{
+    QDir dir(QApplication::applicationDirPath() + "/gift_histories");
+    dir.mkpath(dir.absolutePath());
+    QDate date = QDate::currentDate();
+    QString fileName = QString("%1_%2-%3.csv").arg(roomId).arg(date.year()).arg(date.month());
+    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
+
+    QFile file(filePath);
+    bool exists = file.exists();
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
+        qDebug() << "打开礼物记录文件失败：" << filePath;
+    QTextStream stream(&file);
+
+    if (!exists)
+        stream << QString("日期,时间,昵称,礼物,数量,金瓜子,UID\n").toUtf8();
+
+    stream << danmaku.getTimeline().toString("yyyy-MM-dd") << ","
+           << danmaku.getTimeline().toString("hh:mm") << ","
+           << danmaku.getNickname() << ","
+           << danmaku.getGiftName() << ","
+           << danmaku.getNumber() << ","
+           << (danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0) << ","
+           << danmaku.getUid() << "\n";
 
     file.close();
 }
@@ -11118,4 +11157,50 @@ void MainWindow::on_saveEveryGuardCheck_clicked()
 void MainWindow::on_saveMonthGuardCheck_clicked()
 {
     settings.setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
+}
+
+void MainWindow::on_saveEveryGiftCheck_clicked()
+{
+    settings.setValue("danmaku/saveEveryGift", ui->saveEveryGiftCheck->isChecked());
+}
+
+void MainWindow::on_exportDailyButton_clicked()
+{
+    if (roomId.isEmpty())
+        return ;
+
+    QString oldPath = settings.value("danmaku/exportPath", "").toString();
+    QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv *.txt)");
+    if (path.isEmpty())
+        return ;
+    settings.setValue("danmaku/exportPath", path);
+    QFile file(path);
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+
+    // 拼接数据
+    QString dirPath = QApplication::applicationDirPath() + "/live_daily";
+    QDir dir(dirPath);
+    auto files = dir.entryList(QStringList{roomId + "_*.ini"}, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    stream << QString("日期,进入人次,进入人数,弹幕数量,新人弹幕,新增关注,关注总数,总金瓜子,总银瓜子,上船人数,船员总数\n").toUtf8();
+    for (int i = 0; i < files.size(); i++)
+    {
+        QStringList sl;
+        QSettings st(dirPath + "/" + files.at(i), QSettings::Format::IniFormat);
+        QString day = files.at(i);
+        day.replace(roomId + "_", "").replace(".ini", "");
+        stream << day << ","
+               << st.value("come", 0).toInt() << ","
+               << st.value("people_num", 0).toInt() << ","
+               << st.value("danmaku", 0).toInt() << ","
+               << st.value("newbie_msg", 0).toInt() << ","
+               << st.value("new_fans", 0).toInt() << ","
+               << st.value("total_fans", 0).toInt() << ","
+               << st.value("gift_gold", 0).toInt() << ","
+               << st.value("gift_silver", 0).toInt() << ","
+               << st.value("guard", 0).toInt() << ","
+               << st.value("guard_count", 0).toInt() << "\n";
+    }
+
+    file.close();
 }

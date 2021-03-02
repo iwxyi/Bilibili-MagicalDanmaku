@@ -592,41 +592,41 @@ tips：
 
 有一些自定义的函数，如下：
 
-| 函数                                      | 说明                                                 |
-| ----------------------------------------- | ---------------------------------------------------- |
-| abort()                                   | 终止本流程后面弹幕                                   |
-| block(uid, hour)                          | 禁言用户，`uid` 可使用参数 `%uid%` 获得              |
-| block(uid)                                | 同上，默认使用自动禁言的时间                         |
-| unblock(uid)                              | 解除禁言                                             |
-| delay(msecond)                            | 延迟执行后面所有待执行的操作，单位毫秒               |
-| addGameUser(uid)                          | 添加用户至游戏队列，使用`[%in_game_users%]`判断      |
-| removeGameUser(uid)                       | 从游戏队列中移除用户                                 |
-| sendGift(giftId, num)                     | 赠送礼物，只支持 id 的方式                           |
-| execRemoteCommand(cmd)                    | 执行远程控制（见下面）                               |
-| execRemoteCommand(cmd, 0)                 | 执行远程控制，不发送回馈通知                         |
-| sendPrivateMsg(uid, msg)                  | 向指定用户发送私信                                   |
-| sendRoomMsg(roomId, msg)                  | 向指定直播间发送弹幕                                 |
-| timerShot(msecond, msg)                   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数）   |
-| locaNotify(msg)                           | 发送本地消息通知（非弹幕，只有自己看得到）           |
-| localNotify(uid, msg)                     | 同上，带用户ID                                       |
-| speakText(msg)                            | 朗读文本                                             |
-| openUrl(url)                              | 浏览器打开网址                                       |
-| connectNet(url)                           | 后台连接网址（GET）                                  |
-| postData(url, data)                       | 同上（POST）                                         |
-| sendToSockets(cmd, data)                  | 发送给所有WebSocket                                  |
-| sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                            |
-| runCommandLine(cmd)                       | 运行命令行                                           |
-| setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在        |
-| openFile(path)                            | 打开文件                                             |
-| playSound(path)                           | 播放音频文件                                         |
-| improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                    |
-| cutOrderSong(username)                    | 切歌，仅限正在播放该用户自己点的歌时                 |
-| curOrderSong()                            | 立即切歌，无论是谁点的                               |
-| messageBox(text)                          | 弹窗提示                                             |
-| runEventAction(index)                     | 运行其他事件动作，index为对应序号，从1开始（会变动） |
-| sendLongText(text)                        | 发送长文本，自动分割成多条                           |
-| appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dir/file”下，支持变量    |
-| removeFile(fileName)                      | 删除文件“程序目录/file”                              |
+| 函数                                      | 说明                                                         |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| abort()                                   | 终止本流程后面弹幕                                           |
+| block(uid, hour)                          | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
+| block(uid)                                | 同上，默认使用自动禁言的时间                                 |
+| unblock(uid)                              | 解除禁言                                                     |
+| delay(msecond)                            | 延迟执行后面所有待执行的操作，单位毫秒                       |
+| addGameUser(uid)                          | 添加用户至游戏队列，使用`[%in_game_users%]`判断              |
+| removeGameUser(uid)                       | 从游戏队列中移除用户                                         |
+| sendGift(giftId, num)                     | 赠送礼物，只支持 id 的方式                                   |
+| execRemoteCommand(cmd)                    | 执行远程控制（见下面）                                       |
+| execRemoteCommand(cmd, 0)                 | 执行远程控制，不发送回馈通知                                 |
+| sendPrivateMsg(uid, msg)                  | 向指定用户发送私信                                           |
+| sendRoomMsg(roomId, msg)                  | 向指定直播间发送弹幕                                         |
+| timerShot(msecond, msg)                   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数）           |
+| locaNotify(msg)                           | 发送本地消息通知（非弹幕，只有自己看得到）                   |
+| localNotify(uid, msg)                     | 同上，带用户ID                                               |
+| speakText(msg)                            | 朗读文本                                                     |
+| openUrl(url)                              | 浏览器打开网址                                               |
+| connectNet(url)                           | 后台连接网址（GET）                                          |
+| postData(url, data)                       | 同上（POST）                                                 |
+| sendToSockets(cmd, data)                  | 发送给所有WebSocket                                          |
+| sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                                    |
+| runCommandLine(cmd)                       | 运行命令行                                                   |
+| setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在                |
+| openFile(path)                            | 打开文件                                                     |
+| playSound(path)                           | 播放音频文件                                                 |
+| improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
+| cutOrderSong(username)                    | 切歌，仅限正在播放该用户自己点的歌时                         |
+| curOrderSong()                            | 立即切歌，无论是谁点的                                       |
+| messageBox(text)                          | 弹窗提示                                                     |
+| runEventAction(index)                     | 运行其他事件动作，index为对应序号，从1开始（会变动）         |
+| sendLongText(text)                        | 发送长文本，自动分割成多条                                   |
+| appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dir/file”下，支持变量。可用于保存送礼记录、上船记录等 |
+| removeFile(fileName)                      | 删除文件“程序目录/file”                                      |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。

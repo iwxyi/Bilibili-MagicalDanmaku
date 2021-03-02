@@ -3059,7 +3059,7 @@ margin: 6px;</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_14">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -3090,6 +3090,26 @@ margin: 6px;</string>
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="exportDailyButton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton
+{
+	background: transparent;
+	border: none;
+}</string>
+            </property>
+            <property name="text">
+             <string>导出</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -3100,7 +3120,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="saveEveryGuardCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，包括：&lt;/p&gt;&lt;p&gt;时间、UID、舰长/提督/总督、数量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>记录每次上船</string>
@@ -3110,10 +3130,27 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="saveMonthGuardCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>记录每月船员</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_52">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="saveEveryGiftCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录礼物历史</string>
             </property>
            </widget>
           </item>
@@ -3127,7 +3164,7 @@ margin: 6px;</string>
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>239</height>
+            <height>215</height>
            </size>
           </property>
          </spacer>
