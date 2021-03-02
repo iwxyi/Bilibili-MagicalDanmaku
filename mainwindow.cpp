@@ -1095,10 +1095,10 @@ void MainWindow::sendAttentionMsg(QString msg)
               ui->sendAttentionTextCheck->isChecked(), ui->sendAttentionVoiceCheck->isChecked());
 }
 
-void MainWindow::sendNotifyMsg(QString msg)
+void MainWindow::sendNotifyMsg(QString msg, bool manual)
 {
     sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
-              true, false);
+              true, false, manual);
 }
 
 /**
@@ -4406,7 +4406,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 {
                     addBlockUser(danmaku.getUid(), hour);
                     if (!hasEvent("REMOTE_BLOCK"))
-                        sendNotifyMsg(">已禁言：" + nick);
+                        sendNotifyMsg(">已禁言：" + nick, true);
                 }
                 triggerCmdEvent("REMOTE_BLOCK", danmaku);
                 return ;
@@ -4439,7 +4439,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 }
 
                 delBlockUser(danmaku.getUid());
-                sendNotifyMsg(">已解禁：" + nick);
+                sendNotifyMsg(">已解禁：" + nick, true);
                 blockedQueue.removeAt(i);
                 return ;
             }
@@ -4462,7 +4462,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 }
 
                 delBlockUser(danmaku.getUid());
-                sendNotifyMsg(">已解禁：" + nick);
+                sendNotifyMsg(">已解禁：" + nick, true);
                 blockedQueue.removeAt(i);
                 return ;
             }
@@ -4485,7 +4485,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             if (nick.contains(nickname))
             {
                 eternalBlockUser(danmaku.getUid(), danmaku.getNickname());
-                sendNotifyMsg(">已永久禁言：" + nick);
+                sendNotifyMsg(">已永久禁言：" + nick, true);
                 return ;
             }
         }

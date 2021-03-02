@@ -208,7 +208,7 @@ private slots:
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
     void sendAttentionMsg(QString msg);
-    void sendNotifyMsg(QString msg);
+    void sendNotifyMsg(QString msg, bool manual = false);
     void slotComboSend();
 
     void slotSocketError(QAbstractSocket::SocketError error);
