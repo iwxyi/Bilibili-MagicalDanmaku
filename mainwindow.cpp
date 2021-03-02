@@ -9658,11 +9658,31 @@ void MainWindow::saveMonthGuard()
 {
     QDir dir(QApplication::applicationDirPath() + "/guard_month");
     dir.mkpath(dir.absolutePath());
-    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(roomId + ".csv"));
+    QDate date = QDate::currentDate();
+    QString fileName = QString("%1_%2-%3.csv").arg(roomId).arg(date.year()).arg(date.month());
+    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
 
     QFile file(filePath);
-    file.open(QIODevice::WriteOnly | QIODevice::Append);
+    file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+
+    stream << QString("UID,昵称,级别,备注\n").toUtf8();
+    auto getGuardName = [=](int level) {
+        if (level == 1)
+            return QString("总督").toUtf8();
+        else if (level == 2)
+            return QString("提督").toUtf8();
+        return QString("舰长").toUtf8();
+    };
+    for (int i = 0; i < guardInfos.size(); i++)
+    {
+        LiveDanmaku danmaku = guardInfos.at(i);
+        stream << danmaku.getUid() << ","
+               << danmaku.getNickname() << ","
+               << getGuardName(danmaku.getGuard()) << "\n";
+    }
+
+    file.close();
 }
 
 void MainWindow::saveEveryGuard(LiveDanmaku danmaku)

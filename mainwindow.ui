@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>12</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -3110,7 +3110,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="saveMonthGuardCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员，包括时间、[舰长/提督/总督]昵称_ID&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>记录每月船员</string>
