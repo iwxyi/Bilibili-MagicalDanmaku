@@ -618,6 +618,7 @@ MainWindow::MainWindow(QWidget *parent)
     int port = settings.value("server/port", 5520).toInt();
     ui->serverPortSpin->setValue(port);
     serverDomain = settings.value("server/domain", "localhost").toString();
+    ui->allowWebControlCheck->setChecked(settings.value("server/allowWebControl", false).toBool());
     ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
@@ -10966,4 +10967,9 @@ void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
     {
         sendLyricList();
     }
+}
+
+void MainWindow::on_allowWebControlCheck_clicked()
+{
+    settings.setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
 }

@@ -128,13 +128,17 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
     }
-    else if (cmd == "FORWARD") // 转发
+    else if (!ui->allowWebControlCheck->isChecked())
+    {
+        return ;
+    }
+    else if (cmd == "FORWARD") // 转发给其他socket
     {
         QJsonObject data = json.value("data").toObject();
         QString cmd2 = data.value("cmd").toString();
         sendToSockets(cmd2, QJsonDocument(data).toJson());
     }
-    else if (cmd == "SET_VALUE")
+    else if (cmd == "SET_VALUE") // 修改本地配置
     {
         QJsonObject data = json.value("data").toObject();
         QString key = data.value("key").toString();
@@ -148,13 +152,13 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         else
             settings.setValue(key, val.toVariant());
     }
-    else if (cmd == "SEND_MSG")
+    else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {
         QString text = json.value("data").toString();
-        qDebug() << "发送远程弹幕或命令：" << text;
+        qDebug() << "发送远程弹幕：" << text;
         sendAutoMsg(text);
     }
-    else if (cmd == "SEND_VARIANT_MSG")
+    else if (cmd == "SEND_VARIANT_MSG") // 发送带有变量的弹幕
     {
         QString text = json.value("data").toString();
         text = processDanmakuVariants(text, LiveDanmaku());

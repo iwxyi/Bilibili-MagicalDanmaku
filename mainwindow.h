@@ -515,6 +515,8 @@ private slots:
 
     void on_songLyricsToFileMaxSpin_editingFinished();
 
+    void on_allowWebControlCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

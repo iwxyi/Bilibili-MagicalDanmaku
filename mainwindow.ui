@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>10</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2440,6 +2440,23 @@ margin: 6px;</string>
             </property>
             <property name="placeholderText">
              <string>外网可访问的IP/域名，可空</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_50">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="allowWebControlCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息来控制神奇弹幕&lt;/p&gt;&lt;p&gt;请仅在必要且确认安全的情况下启用&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、修改设置、禁言用户、发送私信、调用B站API等&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>允许反向控制</string>
             </property>
            </widget>
           </item>
