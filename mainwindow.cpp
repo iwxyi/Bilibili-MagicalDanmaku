@@ -9698,13 +9698,14 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
     QTextStream stream(&file);
 
     if (!exists)
-        stream << QString("日期,时间,昵称,礼物,数量,UID,备注\n").toUtf8();
+        stream << QString("日期,时间,昵称,礼物,数量,累计,UID,备注\n").toUtf8();
 
     stream << danmaku.getTimeline().toString("yyyy-MM-dd") << ","
            << danmaku.getTimeline().toString("hh:mm") << ","
            << danmaku.getNickname() << ","
            << danmaku.getGiftName() << ","
            << danmaku.getNumber() << ","
+           << danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
            << danmaku.getUid() << ","
            << userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
 

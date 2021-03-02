@@ -922,8 +922,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionAddCare = new QAction(QIcon(":/icons/heart"), "添加特别关心", this);
     QAction* actionStrongNotify = new QAction(QIcon(":/danmaku/notify"), "添加强提醒", this);
     QAction* actionSetName = new QAction(QIcon(":/danmaku/nick"), "设置专属昵称", this);
-    QAction* actionUserMark = new QAction(QIcon(""), "设置用户备注", this);
-    QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/"), "设置礼物别名", this);
+    QAction* actionUserMark = new QAction(QIcon(":/danmaku/mark"), "设置用户备注", this);
+    QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/gift"), "设置礼物别名", this);
 
     QAction* actionAddBlockTemp = new QAction(QIcon(":/danmaku/block2"), "禁言1小时", this);
     QAction* actionAddBlock = new QAction(QIcon(":/danmaku/block2"), "禁言720小时", this);
@@ -1024,6 +1024,10 @@ void LiveDanmakuWindow::showMenu()
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
+            actionMedal->setText("船员数量：" + snum(currentGuards.size()));
+        }
+        else if (danmaku.is(MSG_WELCOME_GUARD))
+        {
             actionMedal->setText("船员数量：" + snum(currentGuards.size()));
         }
 
