@@ -2346,7 +2346,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="serverCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;挂在服务器上远程访问需要使用公网IP或域名，而非localhost&lt;/p&gt;&lt;p&gt;点歌列表位置：网址/music&lt;/p&gt;&lt;p&gt;送礼动画位置：网址/gift&lt;/p&gt;&lt;p&gt;[开发中]弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持作为素材添加到直播页面&lt;/p&gt;&lt;p&gt;直播姬中添加浏览器，网址为：localhost:端口&lt;/p&gt;&lt;p&gt;挂在服务器上远程访问需要使用公网IP或域名，而非localhost&lt;/p&gt;&lt;p&gt;点歌列表位置：网址/music&lt;/p&gt;&lt;p&gt;歌词列表位置：网址/music/lyrics.html&lt;/p&gt;&lt;p&gt;送礼动画位置：网址/gift&lt;/p&gt;&lt;p&gt;[开发中]弹幕姬位置：网址/danmaku&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>网络服务</string>

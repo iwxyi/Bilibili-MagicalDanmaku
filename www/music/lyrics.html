@@ -1,0 +1,44 @@
+<head>
+    <title>神奇弹幕点歌姬</title>
+    <script src="../js/jquery-2.1.0.js"></script>
+
+    <style type="text/css">
+        ul {
+            list-style-type: none;
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="lyrics">
+        <li>
+            歌词列表
+        </li>
+    </ul>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__"); // 注意端口，会被修改
+            ws.onopen = function() {
+                ws.send('{"cmd":"cmds", "data":["LYRIC_LIST"]}');
+            };
+            ws.onmessage = function(e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'LYRIC_LIST':
+                        var data = json['data'];
+                        var list = data.split('\n');
+                        var ulText = '';
+                        for (var i = 0; i < list.length; i++) {
+                            var lyric = list[i];
+                            ulText += '<li>' + lyric + "</li>";
+                        }
+                        $("#lyrics").html(ulText);
+                        break;
+                }
+            };
+        });
+    </script>
+</body>
