@@ -778,6 +778,7 @@ private:
 
     // 每日数据
     QSettings* dailySettings = nullptr;
+    QTimer* dayTimer = nullptr;
     int dailyCome = 0; // 进来数量人次
     int dailyPeopleNum = 0; // 本次进来的人数（不是全程的话，不准确）
     int dailyDanmaku = 0; // 弹幕数量

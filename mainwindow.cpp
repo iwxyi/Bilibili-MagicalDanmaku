@@ -578,6 +578,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 开机自启
     if (settings.value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
+
     // 每小时的事件
     hourTimer = new QTimer(this);
     hourTimer->setInterval(3600000);
@@ -606,6 +607,23 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     hourTimer->start();
+
+    // 每天的事件
+    dayTimer = new QTimer(this);
+    QTime zeroTime = QTime::currentTime();
+    zeroTime.setHMS(0, 0, 0);
+    QDate tomorrowDate = QDate::currentDate();
+    tomorrowDate = tomorrowDate.addDays(1);
+    QDateTime tomorrow(tomorrowDate, zeroTime);
+    qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
+    dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
+    qDebug() << "定时：" << zeroSecond - QDateTime::currentMSecsSinceEpoch();
+    connect(dayTimer, &QTimer::timeout, this, [=]{
+        dayTimer->setInterval(24*2600*1000);
+        if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
+            startCalculateDailyData();
+    });
+    dayTimer->start();
 
     // 本地调试模式
     localDebug = settings.value("danmaku/localDebug", false).toBool();
@@ -4071,15 +4089,16 @@ void MainWindow::saveCalculateDailyData()
 {
     if (dailySettings)
     {
-        // dailySettings->setValue("come", dailyCome);
+        dailySettings->setValue("come", dailyCome);
         dailySettings->setValue("people_num", userComeTimes.size());
-        // dailySettings->setValue("danmaku", dailyDanmaku);
-        // dailySettings->setValue("newbie_msg", dailyNewbieMsg);
-        // dailySettings->setValue("new_fans", dailyNewFans);
+        dailySettings->setValue("danmaku", dailyDanmaku);
+        dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+        dailySettings->setValue("new_fans", dailyNewFans);
         dailySettings->setValue("total_fans", currentFans);
-        // dailySettings->setValue("gift_silver", dailyGiftSilver);
-        // dailySettings->setValue("gift_gold", dailyGiftGold);
-        // dailySettings->setValue("guard", dailyGuard);
+        dailySettings->setValue("gift_silver", dailyGiftSilver);
+        dailySettings->setValue("gift_gold", dailyGiftGold);
+        dailySettings->setValue("guard", dailyGuard);
+        dailySettings->setValue("guard_count", currentGuards.size());
     }
 }
 
