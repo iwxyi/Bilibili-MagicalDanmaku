@@ -9861,7 +9861,7 @@ void MainWindow::releaseLiveData(bool prepare)
     {
         danmakuWindow->hideStatusText();
         danmakuWindow->setIds(0, 0);
-        danmakuWindow->releaseLiveData();
+        danmakuWindow->releaseLiveData(prepare);
     }
 
     if (pkSocket)

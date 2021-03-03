@@ -19,7 +19,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setMinimumSize(32, 32);
 
     // 设置模式
-    useVideoWidget = settings.value("videoplayer/useVideoWidget", true).toBool();
+    useVideoWidget = settings.value("videoplayer/useVideoWidget", false).toBool();
 
     player = new QMediaPlayer(this);
     if (useVideoWidget)
@@ -120,13 +120,6 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     if (!enablePrevCapture)
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/captures");
-
-    // 裁剪
-    clipCapture = settings.value("videoplayer/clipCapture", false).toBool();
-    clipLeft = settings.value("videoplayer/clipLeft", 0).toInt();
-    clipTop = settings.value("videoplayer/clipTop", 0).toInt();
-    clipRight = settings.value("videoplayer/clipRight", 0).toInt();
-    clipBottom = settings.value("videoplayer/clipBottom", 0).toInt();
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -137,6 +130,14 @@ LiveVideoPlayer::~LiveVideoPlayer()
 void LiveVideoPlayer::setRoomId(QString roomId)
 {
     this->roomId = roomId;
+
+    // 裁剪
+    clipCapture = settings.value("videoplayer/clipCapture", false).toBool();
+    clipLeft = settings.value("videoplayer/clipLeft_" + roomId, 0).toInt();
+    clipTop = settings.value("videoplayer/clipTop_" + roomId, 0).toInt();
+    clipRight = settings.value("videoplayer/clipRight_" + roomId, 0).toInt();
+    clipBottom = settings.value("videoplayer/clipBottom_" + roomId, 0).toInt();
+
     refreshPlayUrl();
 
     captureDir = QDir(QApplication::applicationDirPath() + "/captures/" + roomId);
@@ -342,7 +343,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipLeft = val;
-        settings.setValue("videoplayer/clipLeft", clipLeft);
+        settings.setValue("videoplayer/clipLeft_" + roomId, clipLeft);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪顶边", [=]{
         bool ok = false;
@@ -350,7 +351,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipTop = val;
-        settings.setValue("videoplayer/clipTop", clipTop);
+        settings.setValue("videoplayer/clipTop_" + roomId, clipTop);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪右边", [=]{
         bool ok = false;
@@ -358,7 +359,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipRight = val;
-        settings.setValue("videoplayer/clipRight", clipRight);
+        settings.setValue("videoplayer/clipRight_" + roomId, clipRight);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪底边", [=]{
         bool ok = false;
@@ -366,10 +367,10 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipBottom = val;
-        settings.setValue("videoplayer/clipBottom", clipBottom);
+        settings.setValue("videoplayer/clipBottom_" + roomId, clipBottom);
     })->hide(useVideoWidget);
 
-    menu->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
+    menu->split()->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
         QSize sz = this->size();
         int deltaHeight = ui->playButton->height();

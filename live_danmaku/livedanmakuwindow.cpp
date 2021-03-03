@@ -2259,13 +2259,25 @@ void LiveDanmakuWindow::showPkLevelInAction(qint64 roomId, QAction *actionUser, 
     manager->get(*request);
 }
 
-void LiveDanmakuWindow::releaseLiveData()
+void LiveDanmakuWindow::releaseLiveData(bool prepare)
 {
     QDir(headDir).removeRecursively();
     QDir().mkpath(headDir);
 
     hideStatusText();
     setIds(0, 0);
+
+    if (!prepare)
+    {
+        // 清空所有的弹幕
+        while (listWidget->count())
+        {
+            auto item = listWidget->item(0);
+            listWidget->removeItemWidget(item);
+            listWidget->itemWidget(item)->deleteLater();
+            delete item;
+        }
+    }
 }
 
 void LiveDanmakuWindow::readReplyKey()

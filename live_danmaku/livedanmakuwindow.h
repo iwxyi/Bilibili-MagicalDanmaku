@@ -124,7 +124,7 @@ public slots:
     void showGuardInAction(qint64 roomId, qint64 uid, QAction* action);
     void showPkLevelInAction(qint64 roomId, QAction* actionUser, QAction* actionRank);
 
-    void releaseLiveData();
+    void releaseLiveData(bool prepare = false);
 
     void readReplyKey();
 
