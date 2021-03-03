@@ -21,10 +21,18 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
         this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     }
-    if (settings.value("livedanmakuwindow/onTop", true).toBool())
+    bool onTop = settings.value("livedanmakuwindow/onTop", true).toBool();
+    if (onTop)
         this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     if (settings.value("livedanmakuwindow/transMouse", false).toBool())
+    {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        QTimer::singleShot(100, [=]{
+            emit signalTransMouse(true);
+        });
+    }
 
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
@@ -1527,13 +1535,7 @@ void LiveDanmakuWindow::showMenu()
             this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
             this->setAttribute(Qt::WA_TranslucentBackground, true);
         }
-#ifndef Q_OS_ANDROID
-        editShortcut->setShortcut(QKeySequence(""));
-        editShortcut->setDisabled(true);
-        delete editShortcut;
-        editShortcut = nullptr;
-#endif
-        emit signalChangeWindowMode();
+        restart();
     });
     connect(actionOnTop, &QAction::triggered, this, [=]{
         bool onTop = !settings.value("livedanmakuwindow/onTop", true).toBool();
@@ -1546,7 +1548,13 @@ void LiveDanmakuWindow::showMenu()
         bool trans = !settings.value("livedanmakuwindow/transMouse", false).toBool();
         setAttribute(Qt::WA_TransparentForMouseEvents, trans);
         settings.setValue("livedanmakuwindow/transMouse", trans);
-        qDebug() << "鼠标穿透：" << trans;
+        emit signalTransMouse(trans);
+
+        // 需要切换一遍置顶才生效
+        bool onTop = settings.value("livedanmakuwindow/onTop", true).toBool();
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+        this->show();
     });
     connect(actionSimpleMode, &QAction::triggered, this, [=]{
         settings.setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
@@ -2291,6 +2299,31 @@ void LiveDanmakuWindow::readReplyKey()
         replyAPPID = "2159207490";
         replyAPPKEY = "sTuC8iS3R9yLNbL9";
     }
+}
+
+void LiveDanmakuWindow::closeTransMouse()
+{
+    const bool trans = false;
+    setAttribute(Qt::WA_TransparentForMouseEvents, trans);
+    settings.setValue("livedanmakuwindow/transMouse", trans);
+    emit signalTransMouse(trans);
+
+    restart();
+    /* bool onTop = settings.value("livedanmakuwindow/onTop", true).toBool();
+    this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
+    this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
+    this->show(); */
+}
+
+void LiveDanmakuWindow::restart()
+{
+#ifndef Q_OS_ANDROID
+        editShortcut->setShortcut(QKeySequence(""));
+        editShortcut->setDisabled(true);
+        delete editShortcut;
+        editShortcut = nullptr;
+#endif
+        emit signalChangeWindowMode();
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)

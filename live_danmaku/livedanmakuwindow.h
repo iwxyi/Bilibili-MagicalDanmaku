@@ -85,6 +85,7 @@ signals:
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg, qint64 uid);
     void signalShowPkVideo();
+    void signalTransMouse(bool enabled);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);
@@ -127,6 +128,8 @@ public slots:
     void releaseLiveData(bool prepare = false);
 
     void readReplyKey();
+    void closeTransMouse();
+    void restart();
 
 private:
     bool isItemExist(QListWidgetItem *item);

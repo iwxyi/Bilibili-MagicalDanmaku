@@ -527,6 +527,8 @@ private slots:
 
     void on_exportDailyButton_clicked();
 
+    void on_closeTransMouseButton_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

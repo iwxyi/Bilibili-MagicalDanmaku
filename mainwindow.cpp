@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->tabWidget->setPalette(pa);
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
+    ui->closeTransMouseButton->hide();
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -1114,7 +1115,7 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     if (timestamp - msgCds[channel] < cd)
     {
         if (debugPrint)
-            localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + "<" + snum(cd) + "ms]");
+            localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + "," + snum(cd) + "ms]");
         return ;
     }
     msgCds[channel] = timestamp;
@@ -3889,7 +3890,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
     QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
-    QStringList ends{"er", "啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
+    QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)
@@ -8642,6 +8643,12 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             if (judgeRobot)
                 markNotRobot(uid);
         });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalTransMouse, this, [=](bool enabled){
+            if (enabled)
+                ui->closeTransMouseButton->show();
+            else
+                ui->closeTransMouseButton->hide();
+        });
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
@@ -11271,4 +11278,10 @@ void MainWindow::on_exportDailyButton_clicked()
     }
 
     file.close();
+}
+
+void MainWindow::on_closeTransMouseButton_clicked()
+{
+    if (danmakuWindow)
+        danmakuWindow->closeTransMouse();
 }
