@@ -608,7 +608,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 每天的事件
     dayTimer = new QTimer(this);
     QTime zeroTime = QTime::currentTime();
-    zeroTime.setHMS(0, 0, 0);
+    zeroTime.setHMS(0, 0, 1); // 应当完全0点整的，避免误差
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
@@ -616,7 +616,7 @@ MainWindow::MainWindow(QWidget *parent)
     dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
     qDebug() << "定时：" << zeroSecond - QDateTime::currentMSecsSinceEpoch();
     connect(dayTimer, &QTimer::timeout, this, [=]{
-        dayTimer->setInterval(24*2600*1000);
+        dayTimer->setInterval(24*3600*1000);
         if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
             startCalculateDailyData();
     });
@@ -4115,7 +4115,8 @@ void MainWindow::saveCalculateDailyData()
         dailySettings->setValue("gift_silver", dailyGiftSilver);
         dailySettings->setValue("gift_gold", dailyGiftGold);
         dailySettings->setValue("guard", dailyGuard);
-        dailySettings->setValue("guard_count", currentGuards.size());
+        if (currentGuards.size())
+            dailySettings->setValue("guard_count", currentGuards.size());
     }
 }
 
@@ -5680,7 +5681,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 connectServerTimer->start();
         }
 
-        releaseLiveData();
+        releaseLiveData(true);
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ROOM_CHANGE")
@@ -8755,7 +8756,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qDebug() << "点歌成功" << song.simpleString() << latency;
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
-            danmaku.setPrevTimestamp(latency);
+            danmaku.setPrevTimestamp(latency / 1000); // 毫秒转秒
             danmaku.setFirst(waiting);
             triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
             if (hasEvent("ORDER_SONG_SUCCEED"))
@@ -9811,25 +9812,35 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
     file.close();
 }
 
-void MainWindow::releaseLiveData()
+void MainWindow::releaseLiveData(bool prepare)
 {
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
 
-    pking = false;
-    pkUid = "";
-    pkUname = "";
-    pkRoomId = "";
-    pkEnding = false;
-    pkVoting = 0;
-    pkVideo = false;
-    pkTimer->stop();
-    pkEndTime = 0;
-    myAudience.clear();
-    oppositeAudience.clear();
-    fansList.clear();
-    currentGuards.clear();
-    guardInfos.clear();
+    if (!prepare)
+    {
+        pking = false;
+        pkUid = "";
+        pkUname = "";
+        pkRoomId = "";
+        pkEnding = false;
+        pkVoting = 0;
+        pkVideo = false;
+        pkTimer->stop();
+        pkEndTime = 0;
+        myAudience.clear();
+        oppositeAudience.clear();
+        fansList.clear();
+        currentGuards.clear();
+        guardInfos.clear();
+        currentFans = 0;
+        currentFansClub = 0;
+
+        autoMsgQueues.clear();
+        for (int i = 0; i < CHANNEL_COUNT; i++)
+            msgCds[i] = 0;
+        roomDanmakus.clear();
+    }
 
     danmuPopularQueue.clear();
     minuteDanmuPopular = 0;
@@ -9845,11 +9856,6 @@ void MainWindow::releaseLiveData()
     popularVal = 0;
 
     xliveHeartBeatTimer->stop();
-
-    autoMsgQueues.clear();
-    for (int i = 0; i < CHANNEL_COUNT; i++)
-        msgCds[i] = 0;
-    roomDanmakus.clear();
 
     if (danmakuWindow)
     {

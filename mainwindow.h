@@ -652,7 +652,7 @@ private:
     void saveEveryGift(LiveDanmaku danmaku);
     void appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku);
 
-    void releaseLiveData();
+    void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 

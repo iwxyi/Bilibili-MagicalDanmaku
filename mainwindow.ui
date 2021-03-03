@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>12</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
