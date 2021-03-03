@@ -2274,7 +2274,7 @@ void LiveDanmakuWindow::releaseLiveData(bool prepare)
         {
             auto item = listWidget->item(0);
             listWidget->removeItemWidget(item);
-            listWidget->itemWidget(item)->deleteLater();
+//            listWidget->itemWidget(item)->deleteLater();
             delete item;
         }
     }
