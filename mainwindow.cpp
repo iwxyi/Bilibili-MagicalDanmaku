@@ -883,6 +883,8 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
     // 保存到文件
     if (danmuLogStream)
     {
+        if (danmaku.is(MSG_DEF) && danmaku.getText().startsWith("["))
+            return ;
         (*danmuLogStream) << danmaku.toString() << "\n";
         (*danmuLogStream).flush(); // 立刻刷新到文件里
     }

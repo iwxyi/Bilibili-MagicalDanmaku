@@ -785,7 +785,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QCheckBox" name="debugPrintCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示具体为什么不发送弹幕，&lt;/p&gt;&lt;p&gt;以及弹幕发送失败的原因。&lt;/p&gt;&lt;p&gt;适用于逐步调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>调试模式</string>
