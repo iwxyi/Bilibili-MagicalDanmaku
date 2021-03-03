@@ -614,7 +614,6 @@ MainWindow::MainWindow(QWidget *parent)
     QDateTime tomorrow(tomorrowDate, zeroTime);
     qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
     dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
-    qDebug() << "定时：" << zeroSecond - QDateTime::currentMSecsSinceEpoch();
     connect(dayTimer, &QTimer::timeout, this, [=]{
         dayTimer->setInterval(24*3600*1000);
         if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
@@ -3439,7 +3438,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 房管
     if (msg.contains("%admin%"))
-        msg.replace("%admin%", danmaku.isAdmin() ? "1" : "0");
+        msg.replace("%admin%", danmaku.isAdmin() ? "1" : (!upUid.isEmpty() && snum(danmaku.getUid())==upUid ? "1" : "0"));
 
     // 舰长
     if (msg.contains("%guard%"))
