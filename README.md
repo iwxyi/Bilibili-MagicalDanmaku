@@ -834,16 +834,18 @@ tips：
 
 `%uname%`用户，`%text%`歌名
 
-| 事件命令                    | 说明                              |
-| --------------------------- | --------------------------------- |
-| ORDER_SONG_SUCCEED          | 点歌成功                          |
-| ORDER_SONG_PLAY             | 开始播放                          |
-| ORDER_SONG_FREQUENCY        | 点歌过于频繁                      |
-| ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                      |
-| ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）        |
-| ORDER_SONG_COPY             | 点歌已复制歌名                    |
-| ORDER_SONG_IMPROVED         | 提前播放                          |
-| ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong` |
+| 事件命令                    | 说明                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| ORDER_SONG_SUCCEED          | 点歌成功，%text%获取歌名，%prev_time%获取几秒钟后播放，%first%获取第几首播放 |
+| ORDER_SONG_PLAY             | 开始播放                                                     |
+| ORDER_SONG_FREQUENCY        | 点歌过于频繁                                                 |
+| ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                                                 |
+| ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）                                   |
+| ORDER_SONG_COPY             | 点歌已复制歌名                                               |
+| ORDER_SONG_IMPROVED         | 提前播放                                                     |
+| ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong`                            |
+
+**开启`ORDER_SONG_SUCCEED`事件后自带的点歌成功回复将会被覆盖**
 
 ##### 示例：点歌提示未带勋章
 

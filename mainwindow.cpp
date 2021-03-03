@@ -8754,6 +8754,12 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         musicWindow = new OrderPlayerWindow(nullptr);
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qDebug() << "点歌成功" << song.simpleString() << latency;
+            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+            danmaku.setPrevTimestamp(latency);
+            danmaku.setFirst(waiting);
+            triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
+            if (hasEvent("ORDER_SONG_SUCCEED"))
+                return ;
             if (latency < 180000) // 小于3分钟
             {
                 QString tip = "成功点歌：【" + song.simpleString() + "】";
@@ -8775,7 +8781,6 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                 if (ui->diangeReplyCheck->isChecked())
                     sendNotifyMsg("成功点歌，" + snum(minute) + "分钟后播放");
             }
-            triggerCmdEvent("ORDER_SONG_SUCCEED", LiveDanmaku(song.id, song.addBy, song.name));
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             localNotify("开始播放：" + song.simpleString());
