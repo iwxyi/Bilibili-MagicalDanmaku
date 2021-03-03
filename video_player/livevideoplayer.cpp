@@ -39,8 +39,28 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
             QImage recvImage(cloneFrame.bits(), videoSize.width(), videoSize.height(), QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
             cloneFrame.unmap();
             QPixmap pixmap = QPixmap::fromImage(recvImage);
+
+            // 包含裁剪预先截图
+            if (clipCapture && (clipLeft || clipTop || clipRight || clipBottom))
+            {
+                pixmap = pixmap.copy(pixmap.width() * clipLeft / 100,
+                                     pixmap.height() * clipTop / 100,
+                                     pixmap.width() * (100 - clipLeft - clipRight) / 100,
+                                     pixmap.height() * (100 - clipTop - clipBottom) / 100);
+            }
+
+            // 预先截图
             if (captureRunning)
                 slotSaveFrameCapture(pixmap);
+
+            // 预先截图不裁剪
+            if (!clipCapture && (clipLeft || clipTop || clipRight || clipBottom))
+            {
+                pixmap = pixmap.copy(pixmap.width() * clipLeft / 100,
+                                     pixmap.height() * clipTop / 100,
+                                     pixmap.width() * (100 - clipLeft - clipRight) / 100,
+                                     pixmap.height() * (100 - clipTop - clipBottom) / 100);
+            }
             ui->label->setPixmap(pixmap.scaled(ui->label->size(), Qt::KeepAspectRatio, transformation));
             ui->label->setMinimumSize(QSize(1, 1));
         });
@@ -100,6 +120,13 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     if (!enablePrevCapture)
         showCaptureButtons(false);
     captureDir = QDir(QApplication::applicationDirPath() + "/captures");
+
+    // 裁剪
+    clipCapture = settings.value("videoplayer/clipCapture", false).toBool();
+    clipLeft = settings.value("videoplayer/clipLeft", 0).toInt();
+    clipTop = settings.value("videoplayer/clipTop", 0).toInt();
+    clipRight = settings.value("videoplayer/clipRight", 0).toInt();
+    clipBottom = settings.value("videoplayer/clipBottom", 0).toInt();
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -211,7 +238,9 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (hint.height() < 10 || hint.width() < 10)
             return ;
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
-        // QSize minSize = aw->minimumSize();
+        if (!useVideoWidget)
+            hint = QSize(hint.width() * (100 - clipLeft - clipRight) / 100,
+                         hint.height() * (100 - clipTop - clipBottom) / 100);
         QSize maxSize = aw->maximumSize();
         aw->setFixedSize(hint);
         this->layout()->activate();
@@ -226,6 +255,9 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             return ;
         // 根据宽高自动修改窗口大小
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
+        if (!useVideoWidget)
+            hint = QSize(hint.width() * (100 - clipLeft - clipRight) / 100,
+                         hint.height() * (100 - clipTop - clipBottom) / 100);
         int w = aw->width(), h = aw->height();
         double prob = double(hint.width()) / hint.height(); // 宽高比
         double p = double(w) / h;
@@ -298,6 +330,44 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         transformation = transformation ? Qt::FastTransformation : Qt::SmoothTransformation;
         settings.setValue("videoplayer/transformation", transformation);
     })->check(!transformation)->hide(useVideoWidget);
+
+    FacileMenu* clipMenu = menu->addMenu(QIcon(":/icons/clip"), "裁剪尺寸");
+    clipMenu->addAction(QIcon(":/icons/clip2"), "裁剪截图", [=]{
+        clipCapture = !clipCapture;
+        settings.setValue("videoplayer/clipCapture", clipCapture);
+    })->check(clipCapture)->hide(useVideoWidget);
+    clipMenu->addAction(QIcon(":/icons/clip"), "裁剪左边", [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "裁剪", "裁剪左上角的百分比，0~50", clipLeft, 0, 50, 10, &ok);
+        if (!ok)
+            return ;
+        clipLeft = val;
+        settings.setValue("videoplayer/clipLeft", clipLeft);
+    })->hide(useVideoWidget);
+    clipMenu->addAction(QIcon(":/icons/clip"), "裁剪顶边", [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "裁剪", "裁剪左上角的百分比，0~50", clipTop, 0, 50, 10, &ok);
+        if (!ok)
+            return ;
+        clipTop = val;
+        settings.setValue("videoplayer/clipTop", clipTop);
+    })->hide(useVideoWidget);
+    clipMenu->addAction(QIcon(":/icons/clip"), "裁剪右边", [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "裁剪", "裁剪左上角的百分比，0~50", clipRight, 0, 50, 10, &ok);
+        if (!ok)
+            return ;
+        clipRight = val;
+        settings.setValue("videoplayer/clipRight", clipRight);
+    })->hide(useVideoWidget);
+    clipMenu->addAction(QIcon(":/icons/clip"), "裁剪底边", [=]{
+        bool ok = false;
+        int val = QInputDialog::getInt(this, "裁剪", "裁剪左上角的百分比，0~50", clipBottom, 0, 50, 10, &ok);
+        if (!ok)
+            return ;
+        clipBottom = val;
+        settings.setValue("videoplayer/clipBottom", clipBottom);
+    })->hide(useVideoWidget);
 
     menu->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
