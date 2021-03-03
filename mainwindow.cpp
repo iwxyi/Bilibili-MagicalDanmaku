@@ -5138,6 +5138,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
 
 void MainWindow::simulateKeys(QString seq)
 {
+    if (seq.isEmpty())
+        return ;
+
     // 模拟点击右键
     // mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
     // mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
@@ -6637,6 +6640,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         triggerCmdEvent(cmd, danmaku);
     }
+    else if (handlePK(json))
+    {
+    }
     else if (handlePK2(json)) // 太多了，换到单独一个方法里面
     {
     }
@@ -7543,6 +7549,10 @@ bool MainWindow::handlePK(QJsonObject json)
     if (cmd == "PK_BATTLE_START") // 开始大乱斗
     {
         pkStart(json);
+    }
+    else if (cmd == "PK_BATTLE_START_NEW")
+    {
+
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
@@ -8815,6 +8825,8 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             }
         });
         auto simulateMusicKey = [=]{
+            if (!ui->autoPauseOuterMusicCheck->isChecked())
+                return ;
 #if defined (Q_OS_WIN)
             simulateKeys(ui->outerMusicKeyEdit->text());
 #endif
@@ -8964,6 +8976,7 @@ void MainWindow::on_pkMsgSyncCheck_clicked()
 
 void MainWindow::pkPre(QJsonObject json)
 {
+    qDebug() << json;
     /*{
         "cmd": "PK_BATTLE_PRE",
         "pk_status": 101,
