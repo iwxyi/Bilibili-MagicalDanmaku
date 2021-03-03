@@ -361,94 +361,94 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 同上，都需要带上百分号，例如`%var%`，表格中皆省略。
 
-| 变量             | 描述                     | 注意事项                                      |
-| ---------------- | ------------------------ | --------------------------------------------- |
-| uid              | 用户ID                   | 是一串数字，确定唯一用户                      |
-| uname            | 用户名                   | 需要用户值，例如定时消息，则只是空字符串      |
-| username         | 用户名                   | 和上面一模一样                                |
-| nickname         | 用户名                   | 同上                                          |
-| ai_name          | 用户智能昵称             | 优先专属昵称，其次简写昵称，无简写则用原昵称  |
-| local_name       | 用户专属昵称             | 实时弹幕中右键-设置专属昵称                   |
-| simple_name      | 用户简写昵称             | 去除前缀后缀各种字符                          |
-| csrf             | 用户的csrf token         |                                               |
-| level            | 用户等级                 | 进入直播间没有level                           |
-| text             | 当前弹幕消息             | 几乎用不到                                    |
-| come_count       | 用户进来次数             |                                               |
-| come_time        | 用户上次进来时间         | 第一次进来是0                                 |
-| gift_gold        | 当前礼物金瓜子           | 非送礼答谢则没有                              |
-| gift_silver      | 当前礼物银瓜子           |                                               |
-| gift_coin        | 当前礼物价值(不分金银)   |                                               |
-| coin_gold        | 是否是金瓜子礼物         | 金瓜子是1，银瓜子是0                          |
-| gift_name        | 当前礼物名字             | 如果设置了别名，则使用别名                    |
-| origin_gift_name | 原始礼物名字(非别名)     |                                               |
-| gift_num         | 当前礼物数量             |                                               |
-| gift_multi_num   | 带单位的礼物数量         | 如果为1个，则忽略，为空文本                   |
-| guard_buy        | 是否为购买舰长的通知     | 没有瓜子，gift_name为舰长/提督/总督           |
-| guard_frist      | 是否初次购买舰长         | 初次1，重新上船2，其余0                       |
-| total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量            |
-| total_silver     | 用户总共银瓜子           | 同上                                          |
-| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字  |
-| medal_name       | 粉丝牌名称               | 同上                                          |
-| medal_level      | 粉丝牌等级               | 同上                                          |
-| medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                |
-| nickname_len     | 昵称长度                 |                                               |
-| giftname_len     | 礼物名字长度             |                                               |
-| name_sum_len     | 昵称长度+礼物名字长度    |                                               |
-| ainame_sum_len   | 短昵称长度+礼物名字长度  |                                               |
-| new_attention    | 是否是新关注             | 最近50个关注内                                |
-| guard_count      | 上船次数，可判断是否初次 | 舰长+1、提督+10、总督+100（只统计程序运行时） |
-| pking            | 当前是否在大乱斗         | 是：1，否：0                                  |
-| pk_id            | 大乱斗的编号             |                                               |
-| pk_room_id       | pk对面房间号             | 未在PK中则为空，下同                          |
-| pk_uid           | pk对面主播ID             |                                               |
-| pk_uname         | pk对面主播昵称           |                                               |
-| pk_opposite      | pk对面进来               | 需开启串门提示                                |
-| pk_view_return   | pk去对面串门并回来       | 需开启串门提示                                |
-| pk_count         | pk次数                   | 未在PK中为0，下同                             |
-| pk_touta_prob    | 对面偷塔概率百分比       | 数值部分，例如概率为50%，则为50。初次PK为0    |
-| pk_my_votes      | 本次pk己方积分           |                                               |
-| pk_match_votes   | 本次pk对方积分           |                                               |
-| pk_ending        | 是否大乱斗快结束了       | 根据设置中的大乱斗【提前】值判断              |
-| pk_trans_gold    | pk的1分等于多少金瓜子    | 按照设置来                                    |
-| pk_max_gold      | pk最大偷塔金瓜子         |                                               |
-| today_come       | 今日进来人次             | 每个人可能重复进入                            |
-| today_newbie_msg | 今日新人人数             |                                               |
-| today_danmaku    | 今日弹幕总数             |                                               |
-| today_fans       | 今日新增粉丝数           |                                               |
-| fans_count       | 当前总粉丝数             |                                               |
-| today_gold       | 今日收到金瓜子总数       |                                               |
-| today_silver     | 今日收到银瓜子总数       |                                               |
-| today_guard      | 今日上船人次             | 续多个月算多次                                |
-| admin            | 是否是房管               | 只有弹幕、进入才有                            |
-| guard            | 舰长                     | 只有弹幕消息有；普通0，舰长3，提督2，总督1    |
-| admin_or_guard   | 是否是房管或舰长         | 只有弹幕消息有，0或1                          |
-| vip              | 是否是姥爷               | 同上                                          |
-| svip             | 是否是年费姥爷           | 同上                                          |
-| uidentity        | 是否是正式会员           | 同上                                          |
-| iphone           | 是否手机号认证           | 同上                                          |
-| time_hour        | 当前小时                 |                                               |
-| time_minute      | 当前分钟                 |                                               |
-| time_second      | 当前秒                   |                                               |
-| time_day         | 当前日期                 |                                               |
-| time_month       | 当前月份                 |                                               |
-| time_year        | 当前年份                 |                                               |
-| time_day_week    | 当前星期                 | 1~7                                           |
-| time_day_year    | 当前一年中第几天         |                                               |
-| timestamp        | 当前10位时间戳           | 可用于比较进入时间、多久没来等                |
-| timestamp13      | 当前13位时间戳           |                                               |
-| app_path         | 程序运行路径             |                                               |
-| living           | 当前是否已开播           | 是：1，否：0                                  |
-| room_id          | 直播间ID                 |                                               |
-| room_name        | 直播间标题               |                                               |
-| up_uid           | 主播UID                  |                                               |
-| up_name          | 主播名字                 |                                               |
-| my_uid           | 机器人UID                |                                               |
-| my_uname         | 机器人名字               |                                               |
-| care             | 特别关系                 | 是：1，否：0                                  |
-| strong_notify    | 强提醒                   | 是：1，否：0                                  |
-| not_welcome      | 不自动欢迎               | 不欢迎：1，欢迎：0                            |
-| not_reply        | 不自动回复               | 不回复：1，回复：0                            |
-| blocked          | 被禁言中                 | 禁言：1，未禁言0                              |
+| 变量             | 描述                     | 注意事项                                                     |
+| ---------------- | ------------------------ | ------------------------------------------------------------ |
+| uid              | 用户ID                   | 是一串数字，确定唯一用户                                     |
+| uname            | 用户名                   | 需要用户值，例如定时消息，则只是空字符串                     |
+| username         | 用户名                   | 和上面一模一样                                               |
+| nickname         | 用户名                   | 同上                                                         |
+| ai_name          | 用户智能昵称             | 优先专属昵称，其次简写昵称，无简写则用原昵称                 |
+| local_name       | 用户专属昵称             | 实时弹幕中右键-设置专属昵称                                  |
+| simple_name      | 用户简写昵称             | 去除前缀后缀各种字符                                         |
+| csrf             | 用户的csrf token         |                                                              |
+| level            | 用户等级                 | 进入直播间没有level                                          |
+| text             | 当前弹幕消息             | 几乎用不到                                                   |
+| come_count       | 用户进来次数             |                                                              |
+| come_time        | 用户上次进来时间         | 第一次进来是0                                                |
+| gift_gold        | 当前礼物金瓜子           | 非送礼答谢则没有                                             |
+| gift_silver      | 当前礼物银瓜子           |                                                              |
+| gift_coin        | 当前礼物价值(不分金银)   |                                                              |
+| coin_gold        | 是否是金瓜子礼物         | 金瓜子是1，银瓜子是0                                         |
+| gift_name        | 当前礼物名字             | 如果设置了别名，则使用别名                                   |
+| origin_gift_name | 原始礼物名字(非别名)     |                                                              |
+| gift_num         | 当前礼物数量             |                                                              |
+| gift_multi_num   | 带单位的礼物数量         | 如果为1个，则忽略，为空文本                                  |
+| guard_buy        | 是否为购买舰长的通知     | 没有瓜子，gift_name：舰长/提督/总督；guard：3舰长/2提督/1总督 |
+| guard_frist      | 是否初次购买舰长         | 初次1，重新上船2，其余0                                      |
+| total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量                           |
+| total_silver     | 用户总共银瓜子           | 同上                                                         |
+| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字                 |
+| medal_name       | 粉丝牌名称               | 同上                                                         |
+| medal_level      | 粉丝牌等级               | 同上                                                         |
+| medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                               |
+| nickname_len     | 昵称长度                 |                                                              |
+| giftname_len     | 礼物名字长度             |                                                              |
+| name_sum_len     | 昵称长度+礼物名字长度    |                                                              |
+| ainame_sum_len   | 短昵称长度+礼物名字长度  |                                                              |
+| new_attention    | 是否是新关注             | 最近50个关注内                                               |
+| guard_count      | 上船次数，可判断是否初次 | 舰长+1、提督+10、总督+100（只统计程序运行时）                |
+| pking            | 当前是否在大乱斗         | 是：1，否：0                                                 |
+| pk_id            | 大乱斗的编号             |                                                              |
+| pk_room_id       | pk对面房间号             | 未在PK中则为空，下同                                         |
+| pk_uid           | pk对面主播ID             |                                                              |
+| pk_uname         | pk对面主播昵称           |                                                              |
+| pk_opposite      | pk对面进来               | 需开启串门提示                                               |
+| pk_view_return   | pk去对面串门并回来       | 需开启串门提示                                               |
+| pk_count         | pk次数                   | 未在PK中为0，下同                                            |
+| pk_touta_prob    | 对面偷塔概率百分比       | 数值部分，例如概率为50%，则为50。初次PK为0                   |
+| pk_my_votes      | 本次pk己方积分           |                                                              |
+| pk_match_votes   | 本次pk对方积分           |                                                              |
+| pk_ending        | 是否大乱斗快结束了       | 根据设置中的大乱斗【提前】值判断                             |
+| pk_trans_gold    | pk的1分等于多少金瓜子    | 按照设置来                                                   |
+| pk_max_gold      | pk最大偷塔金瓜子         |                                                              |
+| today_come       | 今日进来人次             | 每个人可能重复进入                                           |
+| today_newbie_msg | 今日新人人数             |                                                              |
+| today_danmaku    | 今日弹幕总数             |                                                              |
+| today_fans       | 今日新增粉丝数           |                                                              |
+| fans_count       | 当前总粉丝数             |                                                              |
+| today_gold       | 今日收到金瓜子总数       |                                                              |
+| today_silver     | 今日收到银瓜子总数       |                                                              |
+| today_guard      | 今日上船人次             | 续多个月算多次                                               |
+| admin            | 是否是房管               | 只有弹幕、进入才有                                           |
+| guard            | 舰长                     | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
+| admin_or_guard   | 是否是房管或舰长         | 只有弹幕消息有，0或1                                         |
+| vip              | 是否是姥爷               | 同上                                                         |
+| svip             | 是否是年费姥爷           | 同上                                                         |
+| uidentity        | 是否是正式会员           | 同上                                                         |
+| iphone           | 是否手机号认证           | 同上                                                         |
+| time_hour        | 当前小时                 |                                                              |
+| time_minute      | 当前分钟                 |                                                              |
+| time_second      | 当前秒                   |                                                              |
+| time_day         | 当前日期                 |                                                              |
+| time_month       | 当前月份                 |                                                              |
+| time_year        | 当前年份                 |                                                              |
+| time_day_week    | 当前星期                 | 1~7                                                          |
+| time_day_year    | 当前一年中第几天         |                                                              |
+| timestamp        | 当前10位时间戳           | 可用于比较进入时间、多久没来等                               |
+| timestamp13      | 当前13位时间戳           |                                                              |
+| app_path         | 程序运行路径             |                                                              |
+| living           | 当前是否已开播           | 是：1，否：0                                                 |
+| room_id          | 直播间ID                 |                                                              |
+| room_name        | 直播间标题               |                                                              |
+| up_uid           | 主播UID                  |                                                              |
+| up_name          | 主播名字                 |                                                              |
+| my_uid           | 机器人UID                |                                                              |
+| my_uname         | 机器人名字               |                                                              |
+| care             | 特别关系                 | 是：1，否：0                                                 |
+| strong_notify    | 强提醒                   | 是：1，否：0                                                 |
+| not_welcome      | 不自动欢迎               | 不欢迎：1，欢迎：0                                           |
+| not_reply        | 不自动回复               | 不回复：1，回复：0                                           |
+| blocked          | 被禁言中                 | 禁言：1，未禁言0                                             |
 
 
 

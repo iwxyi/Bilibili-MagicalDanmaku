@@ -1007,7 +1007,11 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 void MainWindow::sendAutoMsg(QString msgs)
 {
     if (msgs.trimmed().isEmpty())
+    {
+        if (debugPrint)
+            localNotify("[空弹幕，已忽略]");
         return ;
+    }
 //    msgs = processTimeVariants(msgs);
 //    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
@@ -1108,12 +1112,16 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     if (timestamp - msgCds[channel] < cd)
     {
+        if (debugPrint)
+            localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + "<" + snum(cd) + "ms]");
         return ;
     }
     msgCds[channel] = timestamp;
 
     if (enableText)
     {
+//        if (debugPrint)
+//            localNotify("[发送弹幕：" + msg + "]");
         sendAutoMsg(msg);
     }
     if (enableVoice)
@@ -1164,6 +1172,7 @@ void MainWindow::slotComboSend()
                 QString msg = words.at(r);
                 if (strongNotifyUsers.contains(danmaku.getUid()))
                 {
+                    localNotify("[强提醒]");
                     sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                               ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                 }
@@ -6060,6 +6069,7 @@ void MainWindow::handleMessage(QJsonObject json)
                         QString msg = words.at(r);
                         if (strongNotifyUsers.contains(uid))
                         {
+                            localNotify("[强提醒]");
                             sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                                       ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                         }
@@ -6642,7 +6652,7 @@ void MainWindow::handleMessage(QJsonObject json)
         // start_time和end_time都是当前时间？
         int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         qDebug() << username << s8("购买") << giftName << num << guardCount;
-        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price,
+        LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
 
@@ -7224,8 +7234,6 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
             && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
-//    if (strongNotifyUsers.contains(danmaku.getUid()))
-//        showLocalNotify("TEST强提醒sendWelcome：" + words.join(";"));
     if (!words.size())
     {
         if (debugPrint)
@@ -7233,10 +7241,12 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
         return ;
     }
     int r = qrand() % words.size();
+    if (debugPrint && !(words.size() == 1 && words.first().trimmed().isEmpty()))
+        localNotify("[rand " + snum(r) + " in " + snum(words.size()) + "]");
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
-//        showLocalNotify("TEST强提醒sendWelcome2：" + msg);
+        localNotify("[强提醒]");
         sendCdMsg(msg, 2000, NOTIFY_CD_CN,
                   ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
