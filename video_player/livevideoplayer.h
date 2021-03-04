@@ -93,6 +93,7 @@ private:
     QSize videoSize;
     bool clipCapture = false;
     int clipLeft = 0, clipTop = 0, clipRight = 0, clipBottom = 0;
+    QImage::Format pixelFormat;
 
     qint64 captureMaxLong = 60000;
     QDir captureDir;

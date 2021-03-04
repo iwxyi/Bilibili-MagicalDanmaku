@@ -926,7 +926,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:2赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:1赢,0~~平,-1~~输；%gift_coin%总积分(=金瓜子/100) |
 | **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
@@ -989,7 +989,7 @@ tips：
 添加事件：`PK_BEST_UNAME`，动作：
 
 ```
-[%level%=2, %gift_coin% >= 100]感谢本场最佳助攻：%uname%
+[%level%>0, %gift_coin% >= 100]感谢本场最佳助攻：%uname%
 ```
 
 仅当赢了，并且本次累计送礼有超过100积分（10000金瓜子）才感谢

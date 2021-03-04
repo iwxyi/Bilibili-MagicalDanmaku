@@ -1321,9 +1321,18 @@ void MainWindow::on_testDanmakuButton_clicked()
 
         triggerCmdEvent("LIVE", LiveDanmaku());
     }
-    else if (text == "模拟对面主播串门")
+    else if (text == "测试对面主播进入")
     {
-
+        QJsonObject json;
+        json.insert("cmd", "INTERACT_WORD");
+        QJsonObject data;
+        data.insert("msg_type", 1);
+        data.insert("timestamp", QDateTime::currentSecsSinceEpoch());
+        data.insert("uid", pkUid.toLongLong());
+        data.insert("uname", "测试用户");
+        json.insert("data", data);
+        handleMessage(json);
+        qDebug() << pkUid << oppositeAudience;
     }
     else if (text == "测试花灯")
     {
@@ -8983,7 +8992,6 @@ void MainWindow::on_pkMsgSyncCheck_clicked()
 
 void MainWindow::pkPre(QJsonObject json)
 {
-    qDebug() << json;
     /*{
         "cmd": "PK_BATTLE_PRE",
         "pk_status": 101,
@@ -9043,9 +9051,16 @@ void MainWindow::pkPre(QJsonObject json)
                 text += "[" + QString::number(pkCount) + "]";
             danmakuWindow->setStatusText(text);
             qDebug() << "主播：" << uname << pkUid << pkRoomId;
+            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
         }
     }
     pkToLive = QDateTime::currentSecsSinceEpoch();
+
+    if (pkChuanmenEnable /*&& battle_type == 2*/)
+    {
+        connectPkRoom();
+    }
+    ui->actionShow_PK_Video->setEnabled(true);
 }
 
 void MainWindow::pkStart(QJsonObject json)
@@ -9129,12 +9144,6 @@ void MainWindow::pkStart(QJsonObject json)
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
     localNotify(text, pkUid.toLongLong());
-
-    if (pkChuanmenEnable /*&& battle_type == 2*/)
-    {
-        connectPkRoom();
-    }
-    ui->actionShow_PK_Video->setEnabled(true);
 }
 
 void MainWindow::pkProcess(QJsonObject json)
@@ -9304,9 +9313,9 @@ void MainWindow::pkEnd(QJsonObject json)
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
                                      .arg(matchVotes));
+    qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
     myVotes = 0;
     matchVotes = 0;
-    qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败"));
     QTimer::singleShot(60000, [=]{
         if (pking) // 下一把PK，已经清空了
             return ;

@@ -703,6 +703,8 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             text += " ";
             if (danmaku.getSpreadInfo().isEmpty())
                 text += danmaku.getSpreadDesc();
+            else if (simpleMode)
+                text += " " + danmaku.getSpreadDesc();
             else
                 text += "<font color='"+danmaku.getSpreadInfo()+"'>"+danmaku.getSpreadDesc()+"</font>";
         }

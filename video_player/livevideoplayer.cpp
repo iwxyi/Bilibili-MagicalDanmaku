@@ -21,6 +21,13 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     // 设置模式
     useVideoWidget = settings.value("videoplayer/useVideoWidget", false).toBool();
 
+    /*QTimer* timer = new QTimer(this);
+    timer->setInterval(5000);
+    connect(timer, &QTimer::timeout, this, [=]{
+        pixelFormat = QImage::Format((pixelFormat + 1) % 28);
+    });
+    timer->start();*/
+
     player = new QMediaPlayer(this);
     if (useVideoWidget)
     {
@@ -36,7 +43,8 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
             QVideoFrame cloneFrame(frame);
             cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
             videoSize = cloneFrame.size();
-            QImage recvImage(cloneFrame.bits(), videoSize.width(), videoSize.height(), QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
+            auto format = QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat());
+            QImage recvImage(cloneFrame.bits(), videoSize.width(), videoSize.height(), format);
             cloneFrame.unmap();
             QPixmap pixmap = QPixmap::fromImage(recvImage);
 
