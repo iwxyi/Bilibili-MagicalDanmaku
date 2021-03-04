@@ -108,8 +108,8 @@ public:
 
     }
 
-    LiveDanmaku(QString uname, int win, int votes)
-        : msgType(MSG_PK_BEST), nickname(uname), level(win), total_coin(votes)
+    LiveDanmaku(QString uname, qint64 uid, int win, int votes)
+        : msgType(MSG_PK_BEST), nickname(uname), uid(uid), level(win), total_coin(votes)
     {
     }
 

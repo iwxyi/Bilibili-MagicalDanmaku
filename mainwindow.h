@@ -816,6 +816,7 @@ private:
     QTimer* pkTimer = nullptr;
     int pkJudgeEarly = 2000;
     bool pkVideo = false;
+    QList<LiveDanmaku> pkGifts;
 
     // 大乱斗偷塔
     int goldTransPk = 100; // 金瓜子转乱斗值的比例，除以10还是100

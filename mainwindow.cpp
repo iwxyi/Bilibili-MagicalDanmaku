@@ -3332,12 +3332,12 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     // 本地昵称+简化
     if (msg.contains("%ai_name%"))
     {
-        QString local = getLocalNickname(danmaku.getUid());
-        if (local.isEmpty())
-            local = nicknameSimplify(danmaku.getNickname());
-        if (local.isEmpty())
-            local = danmaku.getNickname();
-        msg.replace("%ai_name%", local);
+        QString name = getLocalNickname(danmaku.getUid());
+        if (name.isEmpty())
+            name = nicknameSimplify(danmaku.getNickname());
+        if (name.isEmpty())
+            name = danmaku.getNickname();
+        msg.replace("%ai_name%", name);
     }
 
     // 专属昵称
@@ -6141,6 +6141,11 @@ void MainWindow::handleMessage(QJsonObject json)
             dailyGiftGold += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
+
+            // 正在PK，保存弹幕历史
+            // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
+            // 方便起见，直接全部保存下来了
+            pkGifts.append(danmaku);
 
             // 正在偷塔阶段
             if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
@@ -9066,6 +9071,7 @@ void MainWindow::pkPre(QJsonObject json)
         connectPkRoom();
     }
     ui->actionShow_PK_Video->setEnabled(true);
+    pkGifts.clear();
 }
 
 void MainWindow::pkStart(QJsonObject json)
@@ -9312,7 +9318,14 @@ void MainWindow::pkEnd(QJsonObject json)
 
     if (myVotes > 0)
     {
-        LiveDanmaku danmaku(bestName, ping ? 0 : result, myVotes);
+        qint64 uid = 0;
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                uid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, uid, ping ? 0 : result, myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 
@@ -9370,7 +9383,7 @@ int MainWindow::getPkMaxGold(int votes)
     double prop = pow(money, 1.0/3);
     prop = qMax(1.0, prop);
     prop = qMin(prop, 10.0);
-    if (debugPrint)
+    if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
         localNotify("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
     return int(pkMaxGold * prop);
@@ -9889,6 +9902,7 @@ void MainWindow::releaseLiveData(bool prepare)
         for (int i = 0; i < CHANNEL_COUNT; i++)
             msgCds[i] = 0;
         roomDanmakus.clear();
+        pkGifts.clear();
     }
 
     danmuPopularQueue.clear();
