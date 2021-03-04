@@ -529,6 +529,8 @@ private slots:
 
     void on_closeTransMouseButton_clicked();
 
+    void on_pkAutoMaxGoldCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>546</width>
-    <height>393</height>
+    <height>411</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>12</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -490,7 +490,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0,0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_28" stretch="1,0,0,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -530,6 +530,16 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>上限</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="pkAutoMaxGoldCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;根据己方礼物数值，自动调整偷塔的上限，最高为设定的10倍&lt;/p&gt;&lt;p&gt;积分超过10000时（1000元），为10倍。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>自动调整</string>
             </property>
            </widget>
           </item>

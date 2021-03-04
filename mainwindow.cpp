@@ -42,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
     ui->closeTransMouseButton->hide();
+    ui->pkMelonValButton->hide();
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -353,6 +354,7 @@ MainWindow::MainWindow(QWidget *parent)
     chiguaCount = settings.value("pk/chiguaCount", 0).toInt();
     goldTransPk = settings.value("pk/goldTransPk", goldTransPk).toInt();
     toutaBlankList = settings.value("pk/blankList").toString().split(";");
+    ui->pkAutoMaxGoldCheck->setChecked(settings.value("pk/autoMaxGold", true).toBool());
 
     // 自定义变量
     restoreCustomVariant(settings.value("danmaku/customVariant", "").toString());
@@ -500,6 +502,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->pkMelonValButton->hide();
         ui->pkJudgeEarlyButton->hide();
         ui->pkBlankButton->hide();
+        ui->pkAutoMaxGoldCheck->hide();
         ui->pkAutoMelonCheck->setChecked(false);
     }
 
@@ -9189,6 +9192,8 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        int maxGold = pkMaxGold * qMax(1, int(pow(myVotes / goldTransPk, 1.0/3)));
+
         // 显示偷塔情况
         if (prevMyVotes < myVotes)
         {
@@ -9209,8 +9214,8 @@ void MainWindow::pkProcess(QJsonObject json)
             {
                 int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
                 int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
-                QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, pkMaxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
-                            .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(pkMaxGold).arg(goldTransPk).arg(oppositeTouta)
+                QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
+                            .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(maxGold).arg(goldTransPk).arg(oppositeTouta)
                             .arg(num);
                 qDebug() << s;
                 if (danmuLogStream)
@@ -9223,7 +9228,7 @@ void MainWindow::pkProcess(QJsonObject json)
 
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
-                && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + pkMaxGold/goldTransPk > matchVotes
+                && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
                 && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用）
                 && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
         {
@@ -10575,9 +10580,11 @@ void MainWindow::slotPkEnding()
 
     pkEnding = true;
     pkVoting = 0;
+    int maxGold = pkMaxGold * qMax(1, int(pow(myVotes / goldTransPk, 1.0/3)));
+
     // 几个吃瓜就能解决的……
     if (ui->pkAutoMelonCheck->isChecked()
-            && myVotes <= matchVotes && myVotes + pkMaxGold/goldTransPk > matchVotes
+            && myVotes <= matchVotes && myVotes + maxGold/goldTransPk > matchVotes
             && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
     {
         // 调用送礼
@@ -11295,4 +11302,9 @@ void MainWindow::on_closeTransMouseButton_clicked()
 {
     if (danmakuWindow)
         danmakuWindow->closeTransMouse();
+}
+
+void MainWindow::on_pkAutoMaxGoldCheck_clicked()
+{
+    settings.setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
 }
