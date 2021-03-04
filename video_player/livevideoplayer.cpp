@@ -307,7 +307,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
     FacileMenu* opacityMenu = menu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
-    opacityMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
+    opacityMenu->addNumberedActions("%1", 10, 110, [=](FacileMenuItem* item, int val){
         item->check(val == int((this->windowOpacity() + 0.005) * 10) * 10);
     }, [=](int opa){
         settings.setValue("videoplayer/opacity", opa);
@@ -341,6 +341,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     })->check(!transformation)->hide(useVideoWidget);
 
     FacileMenu* clipMenu = menu->addMenu(QIcon(":/icons/clip"), "裁剪尺寸");
+    menu->lastAction()->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip2"), "裁剪截图", [=]{
         clipCapture = !clipCapture;
         settings.setValue("videoplayer/clipCapture", clipCapture);

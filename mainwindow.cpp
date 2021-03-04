@@ -4109,6 +4109,8 @@ void MainWindow::startCalculateDailyData()
     dailyGuard = dailySettings->value("guard", 0).toInt();
     if (currentGuards.size())
         dailySettings->setValue("guard_count", currentGuards.size());
+    else
+        updateExistGuards(0);
 }
 
 void MainWindow::saveCalculateDailyData()
