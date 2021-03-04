@@ -643,6 +643,7 @@ private:
     void pkStart(QJsonObject json);
     void pkProcess(QJsonObject json);
     void pkEnd(QJsonObject json);
+    int getPkMaxGold(int votes);
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
     void connectPkRoom();
     void uncompressPkBytes(const QByteArray &body);

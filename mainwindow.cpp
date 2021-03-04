@@ -3985,7 +3985,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱)$");
+    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -9192,7 +9192,7 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
-        int maxGold = pkMaxGold * qMax(1, int(pow(myVotes / goldTransPk, 1.0/3)));
+        int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
 
         // 显示偷塔情况
         if (prevMyVotes < myVotes)
@@ -9360,6 +9360,20 @@ void MainWindow::pkEnd(QJsonObject json)
         }
         pkSocket = nullptr;
     }
+}
+
+int MainWindow::getPkMaxGold(int votes)
+{
+    if (!ui->pkAutoMaxGoldCheck->isChecked())
+        return pkMaxGold;
+    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold * 10 / 1000);
+    double prop = pow(money, 1.0/3);
+    prop = qMax(1.0, prop);
+    prop = qMin(prop, 10.0);
+    if (debugPrint)
+        localNotify("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
+                    +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
+    return int(pkMaxGold * prop);
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -10580,7 +10594,7 @@ void MainWindow::slotPkEnding()
 
     pkEnding = true;
     pkVoting = 0;
-    int maxGold = pkMaxGold * qMax(1, int(pow(myVotes / goldTransPk, 1.0/3)));
+    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
 
     // 几个吃瓜就能解决的……
     if (ui->pkAutoMelonCheck->isChecked()

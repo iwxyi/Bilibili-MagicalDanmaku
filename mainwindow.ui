@@ -536,7 +536,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QCheckBox" name="pkAutoMaxGoldCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;根据己方礼物数值，自动调整偷塔的上限，最高为设定的10倍&lt;/p&gt;&lt;p&gt;积分超过10000时（1000元），为10倍。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;根据双方礼物数值，自动调整偷塔的上限，最高为设定的10倍&lt;/p&gt;&lt;p&gt;积分超过10000时（1000元），为10倍。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>自动调整</string>
