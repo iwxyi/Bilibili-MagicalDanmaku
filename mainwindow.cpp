@@ -3896,12 +3896,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         return "";
     }*/
 
-    // 特殊字符
-    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
-
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
+    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁"};
     QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
     starts += special;
     ends += special;
@@ -3929,6 +3926,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QRegularExpressionMatch match;
     if (simp.indexOf(defRe, 0, &match) > -1)
     {
+        qDebug() << "11111";
         simp = match.capturedTexts().at(1);
     }
 
@@ -3939,9 +3937,16 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     {
         simp = match.capturedTexts().at(1);
     }
+    snumRe = QRegularExpression("^(\\D+)\\d+$");
+    if (simp.indexOf(snumRe, 0, &match) > -1
+            && match.captured(1) != "bili_"
+            && match.captured(1).indexOf(QRegExp("^[的是]")) == -1)
+    {
+        simp = match.capturedTexts().at(1);
+    }
 
     // xxx的xxx
-    QRegularExpression deRe("^(.+)[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
+    QRegularExpression deRe("^(.{2,})[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
         QRegularExpression blankL("(我$)"), blankR("(名字|^确|最)");
@@ -3961,6 +3966,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             simp = tmp;
         }
     }
+    // enen中文
     ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4dff]+)([\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*3)
     {
@@ -3973,7 +3979,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
-                         "^(.{2})(不是|有点|才是|敲|很).+$"};
+                         "^(.{2})(不是|有点|才是|敲|很).+$", "^(.{2,})想要(.+)$",
+                        "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));
@@ -3983,6 +3990,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             break;
         }
     }
+
+    // 特殊字符
+    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
 
     // xxx哥哥
     QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
@@ -4011,7 +4021,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // Name1Name2
-    QRegularExpression sunameRe = QRegularExpression("^([A-Z][a-z0-9]+)[-_A-Z0-9]([\\w_\\-])+$");
+    QRegularExpression sunameRe = QRegularExpression("^[A-Z]*?([A-Z][a-z0-9]+)[-_A-Z0-9]([\\w_\\-])*$");
     if (simp.indexOf(sunameRe, 0, &match) > -1)
     {
         QString ch = match.capturedTexts().at(1);
