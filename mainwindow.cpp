@@ -653,6 +653,42 @@ MainWindow::MainWindow(QWidget *parent)
     {
         openServer();
     }
+
+    /* QTimer::singleShot(3000, [=]{
+        appendNewLiveDanmaku(LiveDanmaku("神奇弹幕", "神奇弹幕",
+                             5988102, 12,
+                             QDateTime::currentDateTime(), "", ""));
+
+        appendNewLiveDanmaku(LiveDanmaku("懒一夕智能科技", "准备偷塔",
+                             20285041, 12,
+                             QDateTime::currentDateTime(), "#02b5da", ""));
+
+        localNotify("[偷塔] 0:1，赠送2个吃瓜");
+        localNotify("[己方偷塔] + 2");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 2:11，赠送10个吃瓜");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[反偷塔] 12:21，赠送10个吃瓜");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 22:31，赠送10个吃瓜");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 32:41，赠送10个吃瓜");
+        localNotify("[己方偷塔] + 10");
+        localNotify("大乱斗 胜利：42 vs 41");
+
+        QString username = "懒一夕智能科技";
+        QString giftName = "吃瓜";
+        int giftId = 123;
+        int num = 42;
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString coinType = "gold";
+        int totalCoin = 4200;
+        LiveDanmaku danmaku(username, giftId, giftName, num, 1, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        appendNewLiveDanmaku(danmaku);
+    }); */
 }
 
 MainWindow::~MainWindow()
@@ -1177,7 +1213,8 @@ void MainWindow::slotComboSend()
                 QString msg = words.at(r);
                 if (strongNotifyUsers.contains(danmaku.getUid()))
                 {
-                    localNotify("[强提醒]");
+                    if (debugPrint)
+                        localNotify("[强提醒]");
                     sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                               ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                 }
@@ -6102,7 +6139,8 @@ void MainWindow::handleMessage(QJsonObject json)
                         QString msg = words.at(r);
                         if (strongNotifyUsers.contains(uid))
                         {
-                            localNotify("[强提醒]");
+                            if (debugPrint)
+                                localNotify("[强提醒]");
                             sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                                       ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                         }
@@ -7282,7 +7320,8 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
-        localNotify("[强提醒]");
+        if (debugPrint)
+            localNotify("[强提醒]");
         sendCdMsg(msg, 2000, NOTIFY_CD_CN,
                   ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
@@ -9329,7 +9368,7 @@ void MainWindow::pkEnd(QJsonObject json)
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 
-    localNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
+    localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
                                      .arg(matchVotes));
@@ -10618,7 +10657,7 @@ void MainWindow::slotPkEnding()
         int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
         int num = static_cast<int>((matchVotes-myVotes+melon)/melon);
         sendGift(20004, num);
-        localNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
+        localNotify("[偷塔] " + snum(myVotes) + ":" + snum(matchVotes) + "，赠送 " + snum(num) + " 个吃瓜");
         pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
         qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
         toutaCount++;
