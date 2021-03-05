@@ -354,15 +354,14 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 ```css
 background: white;
-border-radius: 10px;
 padding:5px;
+border-radius: 10px;
 ```
 
 ##### 气泡图片
 
 ```css
-border-radius: 10px;
-padding:5px;
+padding:10px;
 border-image: url(:/bubbles/bubble1)
 ```
 
@@ -391,14 +390,13 @@ border-image: url(C:/Path/To/Image.png)
 
 ```css
 #danmaku {
-    border-radius: 10px;
-    padding:5px;
-    border-image: url(:/bubbles/bubble1)
+    border-image: url(:/bubbles/bubble1);
+    padding: 10px;
 }
 #gift, #guard-buy {
-	padding:5px;
-    background:white;
-    border-radius:10px; 
+    background: #FFDAB9;
+	padding: 5px;
+    border-radius: 10px; 
 }
 ```
 
@@ -1208,7 +1206,100 @@ tips：
 
 ## 开发接口
 
-### 网页
+### WebSocket通讯
+
+支持JavaScript的WebSocket通讯，示例如下：
+
+```js
+var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+ws.onopen = function() {
+    ws.send('{"cmd":"cmds", "data":["SONG_LIST"]}');
+};
+```
+
+其中，`__DOMAIN__::__WS_PORT__`会自动替换为用户设置的`域名:端口`，若未设置，则为`localhost:5520`。
+
+通过WebSocket，在网页中可接收几乎所有的弹幕消息，显示各种动画特效。
+
+
+
+### 接收弹幕消息
+
+在`onopen`方法中，必须向服务端发送格式为`{"cmd": "cmds","data":[需要接收的cmd列表]}`的JSON数据，其中`cmd列表`为接收服务端的哪些类型，等可用**事件** 中的命令。
+
+另外，有专门的其他CMD，如下：
+
+- SONG_LIST：点歌列表
+- LYRIC_LIST：歌词
+
+以点歌姬的点歌列表为例，接收到`SONG_LIST`并显示在DOM节点中：
+
+```html
+<ol id="songs" class="live numbers"> </ol> <!-- 被修改的ul -->
+```
+
+```js
+ws.onmessage = function(e) {
+    console.log(e.data); // 打印接收的json格式，类型太多，就不一一说明了
+    var json = JSON.parse(e.data);
+    var cmd = json['cmd'];
+    switch (cmd) {
+        case 'SONG_LIST':
+            var songs = json['data']; // 歌曲对象组成的数组
+		    var olHtml = '';
+            for (var i = 0; i < songs.length; i++) {
+                var song = songs[i]; // 歌曲对象，可获取歌名、歌手、用户等
+                olHtml += '<li>' + song['name'] + "</li>";
+            }
+		    $("#songs").html(olHtml);
+            break;
+    }
+};
+```
+
+
+
+### 反向控制主程序
+
+在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送socket数据，反向控制主程序。需要在设置中开启`跨播-允许反向控制`方有效（默认关闭）。
+
+JSON格式：
+
+```json
+{
+    "cmd": cmd类型,
+    "data": 数据
+}
+```
+
+服务端可接收 `cmd类型` 如下（不分大小写）：
+
+- cmds：指定ws需要接收的类型，不在其中的不会发送，可提高性能
+
+- forward：将`data`中的数据发送给其他socket，`data`中要同样再包含一层cmd和data。整体JSON示例如下：
+
+  ```json
+  {
+      "cmd": "forward",
+      "data": {
+          "cmd": "[命令]",
+          "data": "[数据]"
+      }
+  }
+  ```
+
+- set_value：修改主程序的配置，不是用 `%{key}%` 读取的需要重启生效。`data`部分如下：
+
+  ```json
+  "data": {
+      "key": "[key]",
+      "value": "[value]" // 可以是字符串，也可以是数值
+  }
+  ```
+
+- send_msg：使主程序发送弹幕，`data`为弹幕字符串，允许使用`\\n`来分隔
+
+- send_variant_msg：使主程序发送带变量的弹幕命令，例如 `%{key}%`，需要用户信息的例如 `%uid%` 均不可使用。
 
 
 
