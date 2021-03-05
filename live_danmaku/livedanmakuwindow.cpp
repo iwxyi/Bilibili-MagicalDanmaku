@@ -1034,7 +1034,8 @@ void LiveDanmakuWindow::showMenu()
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
-            actionMedal->setText("船员数量：" + snum(currentGuards.size()));
+            if (danmaku.is(MSG_GUARD_BUY))
+                actionMedal->setText("船员数量：" + snum(currentGuards.size()));
         }
         else if (danmaku.is(MSG_WELCOME_GUARD))
         {

@@ -5406,7 +5406,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
                     dailyNewFans += delta_fans;
                     if (dailySettings)
+                    {
                         dailySettings->setValue("new_fans", dailyNewFans);
+                        dailySettings->setValue("total_fans", currentFans);
+                    }
 
 //                    if (delta_fans) // 如果有变动，实时更新
 //                        getFansAndUpdate();
