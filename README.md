@@ -210,9 +210,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 ![喷子禁言](pictures/screenshot9.png)
 
-![实时弹幕](pictures/danmaku1.png)
-
-![自动偷塔、反偷塔](pictures/danmaku2.png)
+![实时弹幕](pictures/danmaku.png)
 
 ![音乐](pictures/music1.png)
 
