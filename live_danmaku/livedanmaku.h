@@ -31,13 +31,13 @@ public:
     LiveDanmaku() : msgType(MSG_DEF)
     {}
 
-    LiveDanmaku(qint64 uid) : msgType(MSG_DEF), uid(uid)
+    LiveDanmaku(qint64 uid) : msgType(MSG_MSG), uid(uid)
     {}
 
-    LiveDanmaku(qint64 uid, QString text) : msgType(MSG_DEF), uid(uid), text(text)
+    LiveDanmaku(qint64 uid, QString text) : msgType(MSG_MSG), uid(uid), text(text)
     {}
 
-    LiveDanmaku(qint64 uid, QString nickname, QString text) : msgType(MSG_DEF), uid(uid), nickname(nickname), text(text)
+    LiveDanmaku(qint64 uid, QString nickname, QString text) : msgType(MSG_MSG), uid(uid), nickname(nickname), text(text)
     {}
 
     LiveDanmaku(QString nickname, QString text, qint64 uid, int level, QDateTime time, QString unameColor, QString textColor)

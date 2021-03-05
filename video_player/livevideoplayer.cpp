@@ -378,6 +378,13 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         clipBottom = val;
         settings.setValue("videoplayer/clipBottom_" + roomId, clipBottom);
     })->hide(useVideoWidget);
+    clipMenu->split()->addAction(QIcon(":/icons/clip"), "取消裁剪", [=]{
+        clipLeft = clipTop = clipRight = clipBottom = false;
+        settings.setValue("videoplayer/clipLeft_" + roomId, clipLeft);
+        settings.setValue("videoplayer/clipTop_" + roomId, clipTop);
+        settings.setValue("videoplayer/clipRight_" + roomId, clipRight);
+        settings.setValue("videoplayer/clipBottom_" + roomId, clipBottom);
+    });
 
     menu->split()->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
         enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();

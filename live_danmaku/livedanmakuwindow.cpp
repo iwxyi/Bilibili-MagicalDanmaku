@@ -668,10 +668,22 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GIFT)
     {
-        text = QString("<font color='gray'>[送礼]</font> %1 赠送 %2×%3")
+        text = QString("<center>%1 赠送 %2")
                 .arg(nameText)
-                .arg(danmaku.getGiftName())
-                .arg(danmaku.getNumber());
+                .arg("<font color='" + QVariant(this->nameColor).toString() + "'>" + danmaku.getGiftName() + "</font>");
+        if (danmaku.getNumber() > 1)
+            text += "×" + snum(danmaku.getNumber());
+        text += "</center>";
+        if (danmaku.isGoldCoin() && danmaku.getTotalCoin() >= 1000)
+        {
+            int coin = danmaku.getTotalCoin();
+            text += " <hr><center><span style='font-weight: bold;'>￥ ";
+            if (coin % 1000 == 0)
+                text += snum(coin / 1000);
+            else
+                text += QString::number(coin / 1000.0, 'f', 1);
+            text += " 元</span></center>";
+        }
     }
     else if (msgType == MSG_GUARD_BUY)
     {
