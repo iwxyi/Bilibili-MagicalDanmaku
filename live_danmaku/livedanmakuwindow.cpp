@@ -941,7 +941,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionEternalBlock = new QAction(QIcon(":/danmaku/block"), "永久禁言", this);
     QAction* actionCancelEternalBlock = new QAction(QIcon(":/danmaku/block"), "取消永久禁言", this);
     QAction* actionNotWelcome = new QAction(QIcon(":/danmaku/welcome"), "不自动欢迎", this);
-    QAction* actionNotReply = new QAction(QIcon(":/danmaku/reply"), "不自动回复", this);
+    QAction* actionNotReply = new QAction(QIcon(":/danmaku/reply"), "不AI回复", this);
 
     QMenu* operMenu = new QMenu("文字", this);
     operMenu->setIcon(QIcon(":/danmaku/word"));

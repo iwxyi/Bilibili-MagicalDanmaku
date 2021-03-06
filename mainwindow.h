@@ -43,8 +43,8 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define SOCKET_DEB if (0) qDebug() // 输出调试信息
-#define SOCKET_INF if (0) qDebug() // 输出数据包信息
+#define SOCKET_DEB if (1) qDebug() // 输出调试信息
+#define SOCKET_INF if (1) qDebug() // 输出数据包信息
 #define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
@@ -711,6 +711,7 @@ private:
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
 
+    qint64 liveTimestamp = 0;
     QTimer* xliveHeartBeatTimer = nullptr;
     int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
     qint64 xliveHeartBeatEts = 0;        // 上次心跳时间戳

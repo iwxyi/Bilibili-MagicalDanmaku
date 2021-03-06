@@ -5669,7 +5669,8 @@ void MainWindow::handleMessage(QJsonObject json)
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->startLiveWordsEdit->text();
-            if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
+            if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
+                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
                 sendAutoMsg(text);
             ui->popularityLabel->setText("已开播");
             liveStatus = true;
@@ -5689,7 +5690,8 @@ void MainWindow::handleMessage(QJsonObject json)
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->endLiveWordsEdit->text();
-            if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty())
+            if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
+                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text);
             ui->popularityLabel->setText("已下播");
             liveStatus = false;
@@ -9918,6 +9920,7 @@ void MainWindow::releaseLiveData(bool prepare)
     fansLabel->setText("");
     popularVal = 0;
 
+    liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
 
     if (danmakuWindow)
@@ -10652,6 +10655,9 @@ void MainWindow::slotPkEnding()
  */
 void MainWindow::slotStartWork()
 {
+    // 初始化开播数据
+    liveTimestamp = QDateTime::currentMSecsSinceEpoch();
+
     // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
     {
