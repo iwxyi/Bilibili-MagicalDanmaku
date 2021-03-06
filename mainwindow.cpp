@@ -547,6 +547,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+        if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
+            return ;
         if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
             speakText(danmaku.getText());
     });
