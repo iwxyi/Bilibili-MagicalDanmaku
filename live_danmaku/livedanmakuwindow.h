@@ -61,6 +61,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     Q_PROPERTY(int bgAlpha READ getBgAlpha WRITE setBgAlpha)
     Q_PROPERTY(int prevAlpha READ getPrevAlpha WRITE setPrevAlpha)
     friend class MainWindow;
+    Q_ENUM(MessageType)
 public:
     LiveDanmakuWindow(QSettings &st, QWidget *parent = nullptr);
 
@@ -95,6 +96,7 @@ public slots:
     void resetItemsTextColor();
     void resetItemsText();
     void resetItemsFont();
+    void resetItemsStyleSheet();
     void mergeGift(LiveDanmaku danmaku, int delayTime);
     void removeAll();
 
@@ -211,6 +213,8 @@ private:
     QPixmap prevPixmap;
     int bgAlpha = 0;
     int prevAlpha = 0;
+
+    QString labelStyleSheet;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

@@ -106,4 +106,7 @@
         <file alias="content_type">resources/documents/content_type.txt</file>
         <file alias="pinyin">resources/documents/pinyin.txt</file>
     </qresource>
+    <qresource prefix="/bubbles">
+        <file alias="bubble1">resources/bubbles/bubble1.png</file>
+    </qresource>
 </RCC>

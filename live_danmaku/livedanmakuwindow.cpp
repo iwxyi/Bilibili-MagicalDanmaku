@@ -1,4 +1,5 @@
 #include <QFileDialog>
+#include <QMetaEnum>
 #include "livedanmakuwindow.h"
 #include "facilemenu.h"
 
@@ -134,6 +135,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     QString fontString = settings.value("livedanmakuwindow/font").toString();
     if (!fontString.isEmpty())
         danmakuFont.fromString(fontString);
+    labelStyleSheet = settings.value("livedanmakuwindow/labelStyleSheet").toString();
 
     // 背景图片
     pictureFilePath = settings.value("livedanmakuwindow/pictureFilePath", "").toString();
@@ -373,6 +375,41 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     QHBoxLayout* layout = new QHBoxLayout(widget);
     layout->addWidget(portrait);
     layout->addWidget(label);
+
+    static auto msgTypeString = [=](MessageType type) -> QString {
+        switch (type) {
+        case MSG_DEF:
+            return "default";
+        case MSG_DANMAKU:
+            return "danmaku";
+        case MSG_GIFT:
+            return "gift";
+        case MSG_WELCOME:
+            return "welcome";
+        case MSG_DIANGE:
+            return "order-song";
+        case MSG_GUARD_BUY:
+            return "guard-buy";
+        case MSG_WELCOME_GUARD:
+            return "welcome-guard";
+        case MSG_FANS:
+            return "fans";
+        case MSG_ATTENTION:
+            return "attention";
+        case MSG_BLOCK:
+            return "block";
+        case MSG_MSG:
+            return "msg";
+        case MSG_SHARE:
+            return "share";
+        case MSG_PK_BEST:
+            return "pk-best";
+        }
+    };
+
+    label->setObjectName(msgTypeString(danmaku.getMsgType()));
+    if (!labelStyleSheet.isEmpty())
+        label->setStyleSheet(labelStyleSheet);
     layout->setMargin(2);
     layout->setAlignment(Qt::AlignLeft);
     widget->setLayout(layout);
@@ -631,10 +668,22 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_GIFT)
     {
-        text = QString("<font color='gray'>[送礼]</font> %1 赠送 %2×%3")
+        text = QString("<center>%1 赠送 %2")
                 .arg(nameText)
-                .arg(danmaku.getGiftName())
-                .arg(danmaku.getNumber());
+                .arg("<font color='" + QVariant(this->nameColor).toString() + "'>" + danmaku.getGiftName() + "</font>");
+        if (danmaku.getNumber() > 1)
+            text += "×" + snum(danmaku.getNumber());
+        text += "</center>";
+        if (danmaku.isGoldCoin() && danmaku.getTotalCoin() >= 1000)
+        {
+            int coin = danmaku.getTotalCoin();
+            text += " <hr><center><span style='font-weight: bold;'>￥ ";
+            if (coin % 1000 == 0)
+                text += snum(coin / 1000);
+            else
+                text += QString::number(coin / 1000.0, 'f', 1);
+            text += " 元</span></center>";
+        }
     }
     else if (msgType == MSG_GUARD_BUY)
     {
@@ -873,6 +922,26 @@ void LiveDanmakuWindow::resetItemsFont()
     }
 }
 
+void LiveDanmakuWindow::resetItemsStyleSheet()
+{
+    for (int i = 0; i < listWidget->count(); i++)
+    {
+        auto item = listWidget->item(i);
+        auto widget = listWidget->itemWidget(item);
+        if (!widget)
+            continue;
+        QHBoxLayout* layout = static_cast<QHBoxLayout*>(widget->layout());
+        auto layoutItem = layout->itemAt(DANMAKU_WIDGET_LABEL);
+        auto label = layoutItem->widget();
+        if (!label)
+            continue;
+        label->setStyleSheet(labelStyleSheet);
+        label->adjustSize();
+        widget->adjustSize();
+        item->setSizeHint(widget->size());
+    }
+}
+
 void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku, int delayTime)
 {
     qint64 uid = danmaku.getUid();
@@ -960,6 +1029,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionBgColor = new QAction("背景颜色", this);
     QAction* actionHlColor = new QAction("高亮颜色", this);
     QAction* actionFont = new QAction("弹幕字体", this);
+    QAction* actionLabelStyleSheet = new QAction("标签样式", this);
 
     QMenu* pictureMenu = new QMenu("背景图片", settingMenu);
     QAction* actionPictureSelect = new QAction("选择图片", this);
@@ -1034,7 +1104,8 @@ void LiveDanmakuWindow::showMenu()
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
-            actionMedal->setText("船员数量：" + snum(currentGuards.size()));
+            if (danmaku.is(MSG_GUARD_BUY))
+                actionMedal->setText("船员数量：" + snum(currentGuards.size()));
         }
         else if (danmaku.is(MSG_WELCOME_GUARD))
         {
@@ -1180,6 +1251,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionBgColor);
     settingMenu->addAction(actionHlColor);
     settingMenu->addAction(actionFont);
+    settingMenu->addAction(actionLabelStyleSheet);
     settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
@@ -1253,6 +1325,15 @@ void LiveDanmakuWindow::showMenu()
         this->setFont(font);
         settings.setValue("livedanmakuwindow/font", danmakuFont.toString());
         resetItemsFont();
+    });
+    connect(actionLabelStyleSheet, &QAction::triggered, this, [=]{
+        bool ok;
+        QString ss = QInputDialog::getText(this, "标签样式", "请输入标签样式，支持CSS，将影响所有弹幕\n可通过CSS选择器来筛选特定样式", QLineEdit::Normal, labelStyleSheet, &ok);
+        if (!ok)
+            return ;
+        labelStyleSheet = ss;
+        settings.setValue("livedanmakuwindow/labelStyleSheet", labelStyleSheet);
+        resetItemsStyleSheet();
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

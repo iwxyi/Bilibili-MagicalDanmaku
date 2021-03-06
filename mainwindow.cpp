@@ -655,6 +655,42 @@ MainWindow::MainWindow(QWidget *parent)
     {
         openServer();
     }
+
+    /* QTimer::singleShot(3000, [=]{
+        appendNewLiveDanmaku(LiveDanmaku("神奇弹幕", "神奇弹幕",
+                             5988102, 12,
+                             QDateTime::currentDateTime(), "", ""));
+
+        appendNewLiveDanmaku(LiveDanmaku("懒一夕智能科技", "准备偷塔",
+                             20285041, 12,
+                             QDateTime::currentDateTime(), "#02b5da", ""));
+
+        localNotify("[偷塔] 0:1，赠送2个吃瓜");
+        localNotify("[己方偷塔] + 2");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 2:11，赠送10个吃瓜");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[反偷塔] 12:21，赠送10个吃瓜");
+        localNotify("[己方偷塔] + 10");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 22:31，赠送10个吃瓜");
+        localNotify("[对方偷塔] + 10");
+        localNotify("[反偷塔] 32:41，赠送10个吃瓜");
+        localNotify("[己方偷塔] + 10");
+        localNotify("大乱斗 胜利：42 vs 41");
+
+        QString username = "懒一夕智能科技";
+        QString giftName = "吃瓜";
+        int giftId = 123;
+        int num = 42;
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        QString coinType = "gold";
+        int totalCoin = 4200;
+        LiveDanmaku danmaku(username, giftId, giftName, num, 1, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        appendNewLiveDanmaku(danmaku);
+    }); */
 }
 
 MainWindow::~MainWindow()
@@ -1179,7 +1215,8 @@ void MainWindow::slotComboSend()
                 QString msg = words.at(r);
                 if (strongNotifyUsers.contains(danmaku.getUid()))
                 {
-                    localNotify("[强提醒]");
+                    if (debugPrint)
+                        localNotify("[强提醒]");
                     sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                               ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                 }
@@ -3898,12 +3935,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         return "";
     }*/
 
-    // 特殊字符
-    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
-
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做"};
+    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁"};
     QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
     starts += special;
     ends += special;
@@ -3931,6 +3965,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QRegularExpressionMatch match;
     if (simp.indexOf(defRe, 0, &match) > -1)
     {
+        qDebug() << "11111";
         simp = match.capturedTexts().at(1);
     }
 
@@ -3941,9 +3976,16 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     {
         simp = match.capturedTexts().at(1);
     }
+    snumRe = QRegularExpression("^(\\D+)\\d+$");
+    if (simp.indexOf(snumRe, 0, &match) > -1
+            && match.captured(1) != "bili_"
+            && match.captured(1).indexOf(QRegExp("^[的是]")) == -1)
+    {
+        simp = match.capturedTexts().at(1);
+    }
 
     // xxx的xxx
-    QRegularExpression deRe("^(.+)[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
+    QRegularExpression deRe("^(.{2,})[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
     {
         QRegularExpression blankL("(我$)"), blankR("(名字|^确|最)");
@@ -3963,6 +4005,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
             simp = tmp;
         }
     }
+    // enen中文
     ceRe = QRegularExpression("^([-\\w\\d_\u0800-\u4dff]+)([\u4e00-\u9fa5]{2,})$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*3)
     {
@@ -3975,7 +4018,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
-                         "^(.{2})(不是|有点|才是|敲|很).+$"};
+                         "^(.{2})(不是|有点|才是|敲|很).+$", "^(.{2,})想要(.+)$",
+                        "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));
@@ -3986,8 +4030,11 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
+    // 特殊字符
+    simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
+
     // xxx哥哥
-    QRegularExpression gegeRe("^(.+?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
+    QRegularExpression gegeRe("^(.{2,}?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
@@ -4013,7 +4060,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }
 
     // Name1Name2
-    QRegularExpression sunameRe = QRegularExpression("^([A-Z][a-z0-9]+)[-_A-Z0-9]([\\w_\\-])+$");
+    QRegularExpression sunameRe = QRegularExpression("^[A-Z]*?([A-Z][a-z0-9]+)[-_A-Z0-9]([\\w_\\-])*$");
     if (simp.indexOf(sunameRe, 0, &match) > -1)
     {
         QString ch = match.capturedTexts().at(1);
@@ -5408,7 +5455,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
                     dailyNewFans += delta_fans;
                     if (dailySettings)
+                    {
                         dailySettings->setValue("new_fans", dailyNewFans);
+                        dailySettings->setValue("total_fans", currentFans);
+                    }
 
 //                    if (delta_fans) // 如果有变动，实时更新
 //                        getFansAndUpdate();
@@ -6093,7 +6143,8 @@ void MainWindow::handleMessage(QJsonObject json)
                         QString msg = words.at(r);
                         if (strongNotifyUsers.contains(uid))
                         {
-                            localNotify("[强提醒]");
+                            if (debugPrint)
+                                localNotify("[强提醒]");
                             sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
                                       ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
                         }
@@ -7278,7 +7329,8 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     QString msg = words.at(r);
     if (strongNotifyUsers.contains(danmaku.getUid()))
     {
-        localNotify("[强提醒]");
+        if (debugPrint)
+            localNotify("[强提醒]");
         sendCdMsg(msg, 2000, NOTIFY_CD_CN,
                   ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
     }
@@ -9333,7 +9385,7 @@ void MainWindow::pkEnd(QJsonObject json)
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
 
-    localNotify(QString("大乱斗结果：%1，积分：%2 vs %3")
+    localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
                                      .arg(matchVotes));
@@ -10624,7 +10676,7 @@ void MainWindow::slotPkEnding()
         int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
         int num = static_cast<int>((matchVotes-myVotes+melon)/melon);
         sendGift(20004, num);
-        localNotify("[偷塔] " + snum(matchVotes-myVotes+1) + "，赠送 " + snum(num) + " 个吃瓜");
+        localNotify("[偷塔] " + snum(myVotes) + ":" + snum(matchVotes) + "，赠送 " + snum(num) + " 个吃瓜");
         pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
         qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
         toutaCount++;
