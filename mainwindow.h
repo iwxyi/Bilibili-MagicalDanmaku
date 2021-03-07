@@ -531,6 +531,8 @@ private slots:
 
     void on_pkAutoMaxGoldCheck_clicked();
 
+    void on_saveRecvCmdsCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -773,8 +775,9 @@ private:
     // 连接信息
     QString cookieUid; // 自己的UID
     QString cookieUname; // 自己的昵称
-    bool localDebug = false; // 本地调试模式
-    bool debugPrint = false; // 调试输出模式
+    bool localDebug = false;   // 本地调试模式
+    bool debugPrint = false;   // 调试输出模式
+    bool saveRecvCmds = false; // 保存收到的CMD
 
     QString shortId; // 房间短号（有些没有，也没什么用）
     QString upUid; // 主播的UID

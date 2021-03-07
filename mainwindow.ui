@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>12</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -777,46 +777,6 @@ QTabBar::tab:selected
            <string>欢迎语，多行随机发送一行</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_41">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="text">
-             <string>仅直播时回复</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="localDebugCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>本地模式</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="debugPrintCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示具体为什么不发送弹幕，&lt;/p&gt;&lt;p&gt;以及弹幕发送失败的原因。&lt;/p&gt;&lt;p&gt;适用于逐步调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>调试模式</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </item>
        </layout>
       </widget>
@@ -1674,12 +1634,15 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="startupAnimationCheck">
+           <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
             </property>
             <property name="text">
-             <string>程序启动动画</string>
+             <string>仅直播时回复</string>
             </property>
            </widget>
           </item>
@@ -3152,6 +3115,16 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
+           <widget class="QCheckBox" name="saveEveryGiftCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>记录礼物历史</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="saveEveryGuardCheck">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3179,12 +3152,49 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="saveEveryGiftCheck">
+           <widget class="QCheckBox" name="startupAnimationCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>记录礼物历史</string>
+             <string>程序启动动画</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_41">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="localDebugCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>本地模式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="debugPrintCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示具体为什么不发送弹幕，&lt;/p&gt;&lt;p&gt;以及弹幕发送失败的原因。&lt;/p&gt;&lt;p&gt;适用于逐步调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>调试模式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="saveRecvCmdsCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存服务器收到的cmd&lt;/p&gt;&lt;p&gt;用于开发者调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>保存CMD</string>
             </property>
            </widget>
           </item>

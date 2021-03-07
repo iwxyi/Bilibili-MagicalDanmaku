@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->tabWidget->setPalette(pa);
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
+    ui->saveRecvCmdsCheck->hide();
     ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
 
@@ -456,7 +457,7 @@ MainWindow::MainWindow(QWidget *parent)
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
-        connectServerTimer->setInterval(180000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        connectServerTimer->setInterval(90000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
         if (liveStatus && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
         {
             connectServerTimer->stop();
@@ -632,6 +633,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->localDebugCheck->setChecked(localDebug);
     debugPrint = settings.value("danmaku/debugPrint", false).toBool();
     ui->debugPrintCheck->setChecked(debugPrint);
+    saveRecvCmds = settings.value("danmaku/saveRecvCmds", false).toBool();
+    ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
 
     triggerCmdEvent("START_UP", LiveDanmaku());
 
@@ -11395,4 +11398,10 @@ void MainWindow::on_closeTransMouseButton_clicked()
 void MainWindow::on_pkAutoMaxGoldCheck_clicked()
 {
     settings.setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
+}
+
+void MainWindow::on_saveRecvCmdsCheck_clicked()
+{
+    saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
+    settings.setValue("danmaku/saveRecvCmds", saveRecvCmds);
 }

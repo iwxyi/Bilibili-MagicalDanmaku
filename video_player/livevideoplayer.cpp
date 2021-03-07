@@ -247,15 +247,19 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (hint.height() < 10 || hint.width() < 10)
             return ;
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
+        int addin = !ui->playButton->isHidden() ? ui->playButton->height() : 0;
         if (!useVideoWidget)
             hint = QSize(hint.width() * (100 - clipLeft - clipRight) / 100,
                          hint.height() * (100 - clipTop - clipBottom) / 100);
         QSize maxSize = aw->maximumSize();
         aw->setFixedSize(hint);
-        this->layout()->activate();
-        this->adjustSize();
         aw->setMinimumSize(QSize(1, 1));
         aw->setMaximumSize(maxSize);
+
+        hint.setHeight(hint.height() + addin);
+        this->resize(hint);
+        this->layout()->activate();
+        this->adjustSize();
     };
 
     auto setScale = [=]{
