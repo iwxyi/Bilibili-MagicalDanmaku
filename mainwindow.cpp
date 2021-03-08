@@ -10003,6 +10003,36 @@ void MainWindow::releaseLiveData(bool prepare)
     QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
     setWindowIcon(face);
     tray->setIcon(face);
+
+    // 清理一周没来的用户
+    danmakuCounts->beginGroup("comeTime");
+    QStringList removedKeys;
+    auto keys = danmakuCounts->allKeys();
+    qint64 week = QDateTime::currentSecsSinceEpoch() - 7 * 24 * 3600;
+    foreach (auto key, keys)
+    {
+        qint64 value = danmakuCounts->value(key).toLongLong();
+        if (value < week)
+        {
+            removedKeys.append(key);
+        }
+    }
+    danmakuCounts->endGroup();
+
+    danmakuCounts->beginGroup("comeTime");
+    foreach (auto key, removedKeys)
+    {
+        danmakuCounts->remove(key);
+    }
+    danmakuCounts->endGroup();
+
+    danmakuCounts->beginGroup("come");
+    foreach (auto key, removedKeys)
+    {
+        danmakuCounts->remove(key);
+    }
+    danmakuCounts->endGroup();
+    danmakuCounts->sync();
 }
 
 QRect MainWindow::getScreenRect()
