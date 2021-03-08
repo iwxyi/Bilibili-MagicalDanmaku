@@ -3719,7 +3719,7 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace("%umark%", userMarks->value("base/" + snum(danmaku.getUid()), "").toString());
 
     // 自动回复传入的变量
-    QRegularExpression re = QRegularExpression("%$(\\d+)%");
+    QRegularExpression re = QRegularExpression("%\\$(\\d+)%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -5267,16 +5267,16 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 忽略自动欢迎
     if (msg.contains("ignoreWelcome"))
     {
-        re = RE("ignoreWelcome\\s*\\(\\s*(\\d+)\\s*)");
+        re = RE("ignoreWelcome\\s*\\(\\s*(\\d+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qint64 uid = caps.at(1).toLongLong();
             qDebug() << "执行命令：" << caps;
 
-            if (notWelcomeUsers.contains(uid))
+            if (!notWelcomeUsers.contains(uid))
             {
-                notWelcomeUsers.removeOne(uid);
+                notWelcomeUsers.append(uid);
                 QStringList ress;
                 foreach (qint64 uid, notWelcomeUsers)
                     ress << QString::number(uid);
@@ -6941,7 +6941,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
-    else if (cmd == "ONLINE_RANK_TOP3") // 高能榜
+    else if (cmd == "ONLINE_RANK_TOP3") // 高能榜前3变化（不知道会不会跟着 ONLINE_RANK_V2）
     {
         /*{
             "cmd": "ONLINE_RANK_TOP3",
@@ -6955,11 +6955,9 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        updateOnlineGoldRank();
-
         triggerCmdEvent(cmd, LiveDanmaku());
     }
-    else if (cmd == "ONLINE_RANK_COUNT")
+    else if (cmd == "ONLINE_RANK_COUNT") // 高能榜数量变化（但必定会跟着 ONLINE_RANK_V2）
     {
         /*{
             "cmd": "ONLINE_RANK_COUNT",
