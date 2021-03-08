@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->saveRecvCmdsCheck->hide();
     ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
+    ui->AIReplyIdButton->hide();
+    ui->AIReplyKeyButton->hide();
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -606,7 +608,9 @@ MainWindow::MainWindow(QWidget *parent)
         {
             if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
             {
-                sendMsg("答谢姬【"+QApplication::applicationName()+"】为您服务~");
+                sendMsg(QString(QByteArray::fromBase64("562U6LCi5aes44CQ"))
+                        +QApplication::applicationName()
+                        +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
             }
         }
     });
@@ -642,7 +646,9 @@ MainWindow::MainWindow(QWidget *parent)
     {
         if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
         {
-            localNotify("【"+QApplication::applicationName()+"】为您服务~");
+            localNotify(QString(QByteArray::fromBase64("44CQ"))
+                        +QApplication::applicationName()
+                        +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
         }
     }
 
@@ -5195,6 +5201,23 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             auto widget = ui->eventListWidget->itemWidget(item);
             auto eventWidget = static_cast<EventWidget*>(widget);
             eventWidget->triggerAction();
+            return true;
+        }
+    }
+
+    // 强制AI回复
+    if (msg.contains("aiReply"))
+    {
+        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 id = caps.at(1).toLongLong();
+            QString text = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            AIReply(id, text, [=](QString s){
+                sendLongText(s);
+            });
             return true;
         }
     }
@@ -10266,6 +10289,61 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     });
 }
 
+void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func)
+{
+    if (text.isEmpty())
+        return ;
+
+    // 参数信息
+    QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
+    QString nonce_str = "replyAPPKEY";
+    QStringList params{"app_id", "2159207490",
+                       "nonce_str", nonce_str,
+                "question", text,
+                "session", snum(id),
+                "time_stamp", QString::number(QDateTime::currentSecsSinceEpoch()),
+                      };
+
+    // 接口鉴权
+    QString pinjie;
+    for (int i = 0; i < params.size()-1; i+=2)
+        if (!params.at(i+1).isEmpty())
+            pinjie += params.at(i) + "=" + QUrl::toPercentEncoding(params.at(i+1)) + "&";
+    QString appkey = "sTuC8iS3R9yLNbL9";
+    pinjie += "app_key="+appkey;
+
+    QString sign = QString(QCryptographicHash::hash(pinjie.toLocal8Bit(), QCryptographicHash::Md5).toHex().data()).toUpper();
+    params << "sign" << sign;
+//    qDebug() << pinjie << sign;
+
+    // 获取信息
+    connect(new NetUtil(url, params), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "AI回复：" << error.errorString();
+            return ;
+        }
+
+        QJsonObject json = document.object();
+        if (json.value("ret").toInt() != 0)
+        {
+            qDebug() << "AI回复：" << json.value("msg").toString();
+            return ;
+        }
+
+        QString answer = json.value("data").toObject().value("answer").toString();
+
+        // 过滤文字
+        if (answer.contains("未搜到")
+                || answer.isEmpty())
+            return ;
+
+        func(answer);
+    });
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -11292,7 +11370,7 @@ void MainWindow::on_AIReplyIdButton_clicked()
         danmakuWindow->readReplyKey();
 }
 
-void MainWindow::on_APReplyKeyButton_clicked()
+void MainWindow::on_AIReplyKeyButton_clicked()
 {
     QString replyAppKey = settings.value("reply/APPKEY", "").toString();
     bool ok = false;

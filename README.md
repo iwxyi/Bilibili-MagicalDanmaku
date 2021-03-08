@@ -709,6 +709,7 @@ tips：
 | sendLongText(text)                        | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dir/file”下，支持变量。可用于保存送礼记录、上船记录等 |
 | removeFile(fileName)                      | 删除文件“程序目录/file”                                      |
+| aiReply(sessionId, text)                  | 调用AI回复某文字（随机）                                     |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行本地函数，而不发送弹幕（若不是上述函数，将改为弹幕发送）。
