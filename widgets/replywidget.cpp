@@ -67,11 +67,13 @@ void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
         return ;
     }
 
-    if (danmaku.getText().indexOf(keyRe) == -1)
+    QRegularExpressionMatch match;
+    if (danmaku.getText().indexOf(keyRe, 0, &match) == -1)
         return ;
 
     // 开始发送
     qDebug() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
+    danmaku.setArgs(match.capturedTexts());
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
 }
 

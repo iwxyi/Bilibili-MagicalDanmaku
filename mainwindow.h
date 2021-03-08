@@ -803,6 +803,7 @@ private:
     int dailyGuard = 0; // 上船/续船人次
 
     // 船员
+    bool updateGuarding = false;
     QList<LiveDanmaku> guardInfos;
 
     // 录播

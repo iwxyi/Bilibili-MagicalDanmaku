@@ -436,6 +436,11 @@ public:
         this->first = first;
     }
 
+    void setArgs(QStringList args)
+    {
+        this->args = args;
+    }
+
     bool equal(const LiveDanmaku& another) const
     {
         return this->uid == another.uid
@@ -653,6 +658,13 @@ public:
         return first;
     }
 
+    QString getArgs(int i) const
+    {
+        if (i < 0 || i >= args.size())
+            return "";
+        return args.at(i);
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -709,6 +721,8 @@ private:
     bool robot = false;
     qint64 prev_timestamp = 0;
     int first = 0; // 初次：1；新的：2
+
+    QStringList args;
 };
 
 #endif // LIVEDANMAKU_H

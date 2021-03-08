@@ -1431,6 +1431,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
             socket->abort();
     }
     roomId = ui->roomIdEdit->text();
+    upUid = "";
     settings.setValue("danmaku/roomId", roomId);
 
     releaseLiveData();
@@ -3354,6 +3355,8 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
  */
 QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) const
 {
+    QRegularExpressionMatch match;
+
     // 自定义变量
     for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
     {
@@ -3716,7 +3719,6 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
 
     // 读取配置文件
     QRegularExpression re("%\\{(\\S+)\\}%");
-    QRegularExpressionMatch match;
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -3735,6 +3737,16 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         QString text = match.captured(1);
         text = snum(calcIntExpression(text));
         msg.replace(_var, text); // 默认使用变量类型吧
+    }
+
+    // 自动回复传入的变量
+    re = QRegularExpression("%$(\\d+)%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        int i = match.captured(1).toInt();
+        QString text = danmaku.getArgs(i);
+        msg.replace(_var, text);
     }
 
     return msg;
@@ -5218,6 +5230,61 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             AIReply(id, text, [=](QString s){
                 sendLongText(s);
             });
+            return true;
+        }
+    }
+
+    // 忽略自动欢迎
+    if (msg.contains("ignoreWelcome"))
+    {
+        re = RE("ignoreWelcome\\s*\\(\\s*(\\d+)\\s*)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            qDebug() << "执行命令：" << caps;
+
+            if (notWelcomeUsers.contains(uid))
+            {
+                notWelcomeUsers.removeOne(uid);
+                QStringList ress;
+                foreach (qint64 uid, notWelcomeUsers)
+                    ress << QString::number(uid);
+                settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
+            }
+
+            return true;
+        }
+    }
+
+    // 设置专属昵称
+    if (msg.contains("setNickname"))
+    {
+        re = RE("setNickname\\s*\\(\\s*(\\d+)\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            QString name = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            if (name.isEmpty()) // 移除
+            {
+                if (localNicknames.contains(uid))
+                    localNicknames.remove(uid);
+            }
+            else // 添加
+            {
+                localNicknames[uid] = name;
+
+                QStringList ress;
+                auto it = localNicknames.begin();
+                while (it != localNicknames.end())
+                {
+                    ress << QString("%1=>%2").arg(it.key()).arg(it.value());
+                    it++;
+                }
+                settings.setValue("danmaku/localNicknames", ress.join(";"));
+            }
             return true;
         }
     }
@@ -8194,9 +8261,13 @@ void MainWindow::updateExistGuards(int page)
 {
     if (page == 0) // 表示是入口
     {
+        if (updateGuarding)
+            return ;
+
         page = 1;
         currentGuards.clear();
         guardInfos.clear();
+        updateGuarding = true;
 
         // 参数是0的话，自动判断是否需要
         if (browserCookie.isEmpty())
@@ -8229,9 +8300,16 @@ void MainWindow::updateExistGuards(int page)
         }
     };
 
+    QString _upUid = upUid;
     QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
             +roomId+"&page="+snum(page)+"&ruid="+upUid+"&page_size="+snum(pageSize);
     get(url, [=](QJsonObject json){
+        if (_upUid != upUid)
+        {
+            updateGuarding = false;
+            return ;
+        }
+
         QJsonObject data = json.value("data").toObject();
 
         if (page == 1)
@@ -8261,6 +8339,7 @@ void MainWindow::updateExistGuards(int page)
 
             if (dailySettings)
                 dailySettings->setValue("guard_count", currentGuards.size());
+            updateGuarding = false;
         }
     });
 }
