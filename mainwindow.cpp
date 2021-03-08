@@ -6645,7 +6645,6 @@ void MainWindow::handleMessage(QJsonObject json)
                 {
                     danmaku = onlineGoldRank.at(i); // 就是这个用户了
                     danmaku.setTime(QDateTime::currentDateTime());
-                    appendNewLiveDanmaku(danmaku);
                     break;
                 }
             }
