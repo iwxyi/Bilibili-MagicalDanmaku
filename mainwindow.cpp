@@ -2825,6 +2825,7 @@ void MainWindow::getDanmuInfo()
         startMsgLoop();
 
         updateExistGuards(0);
+        updateOnlineGoldRank();
     });
     manager->get(*request);
     ui->connectStateLabel->setText("获取弹幕信息...");
@@ -3717,8 +3718,18 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
     if (msg.contains("%umark%"))
         msg.replace("%umark%", userMarks->value("base/" + snum(danmaku.getUid()), "").toString());
 
+    // 自动回复传入的变量
+    QRegularExpression re = QRegularExpression("%$(\\d+)%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        int i = match.captured(1).toInt();
+        QString text = danmaku.getArgs(i);
+        msg.replace(_var, text);
+    }
+
     // 读取配置文件
-    QRegularExpression re("%\\{(\\S+)\\}%");
+    re = QRegularExpression("%\\{(\\S+)\\}%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -3739,15 +3750,34 @@ QString MainWindow::processDanmakuVariants(QString msg, LiveDanmaku danmaku) con
         msg.replace(_var, text); // 默认使用变量类型吧
     }
 
-    // 自动回复传入的变量
-    re = QRegularExpression("%$(\\d+)%");
+    // 根据昵称替换为uid：倒找最近的弹幕、送礼
+    re = QRegularExpression("%\\((.+?)\\)%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
-        int i = match.captured(1).toInt();
-        QString text = danmaku.getArgs(i);
-        msg.replace(_var, text);
+        QString text = match.captured(1);
+        bool find = false;
+        for (int i = roomDanmakus.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = roomDanmakus.at(i);
+            if (!danmaku.is(MSG_DANMAKU))
+                continue;
+
+            QString nick = danmaku.getNickname();
+            if (nick.contains(text))
+            {
+                // 就是这个人
+                msg.replace(_var, snum(danmaku.getUid()));
+                find = true;
+                break;
+            }
+        }
+        if (!find)
+        {
+            msg.replace(_var, "0");
+        }
     }
+
 
     return msg;
 }
@@ -6594,46 +6624,58 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
-        qDebug() << ">>>>>>舰长进入：" << copy_writing;
-        QStringList results = QRegularExpression("欢迎(舰长|提督|总督).+<%(.+)%>").match(copy_writing).capturedTexts();
-        if (results.size() < 3)
+
+        QStringList results = QRegularExpression("欢迎(舰长|提督|总督)?.+?<%(.+)%>").match(copy_writing).capturedTexts();
+        LiveDanmaku danmaku;
+        if (results.at(1).isEmpty()) // 不是船员
         {
+            qDebug() << ">>>>>>高能榜进入：" << copy_writing;
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
                 qWarning() << "识别舰长进入失败：" << copy_writing;
                 qWarning() << data;
+                return ;
             }
-            return ;
-        }
-        QString gd = results.at(1);
-        QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
-        if (currentGuards.contains(uid))
-            uname = currentGuards[uid];
-        int guardLevel = 0;
-        if (gd == "总督")
-            guardLevel = 1;
-        else if (gd == "提督")
-            guardLevel = 2;
-        else if (gd == "舰长")
-            guardLevel = 3;
 
-        LiveDanmaku danmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
-        if (cmAudience.contains(uid)) // 去了对面串门
-        {
-            if (cmAudience.value(uid) == 1) // 去对面串门回来
+            // 高能榜上的用户
+            for (int i = 0; i < onlineGoldRank.size(); i++)
             {
-                cmAudience[uid] = 0;
-                danmaku.setViewReturn(true);
-                localNotify(uname + " 去对面串门回来");
+                if (onlineGoldRank.at(i).getUid() == uid)
+                {
+                    danmaku = onlineGoldRank.at(i); // 就是这个用户了
+                    danmaku.setTime(QDateTime::currentDateTime());
+                    appendNewLiveDanmaku(danmaku);
+                    break;
+                }
+            }
+            if (danmaku.getUid() == 0)
+            {
+                qWarning() << "未在已有高能榜上找到，立即更新高能榜";
+                updateOnlineGoldRank();
+                return ;
             }
         }
-        appendNewLiveDanmaku(danmaku);
-
-        if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
+        else // 舰长进入
         {
-            sendWelcome(danmaku);
+            qDebug() << ">>>>>>舰长进入：" << copy_writing;
+
+            QString gd = results.at(1);
+            QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
+            if (currentGuards.contains(uid))
+                uname = currentGuards[uid];
+            int guardLevel = 0;
+            if (gd == "总督")
+                guardLevel = 1;
+            else if (gd == "提督")
+                guardLevel = 2;
+            else if (gd == "舰长")
+                guardLevel = 3;
+
+            danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         }
+
+        userComeEvent(danmaku);
 
         triggerCmdEvent(cmd, danmaku);
     }
@@ -6700,10 +6742,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         QString roomId = snum(qint64(data.value("room_id").toDouble()));
-        bool opposite = pking &&
-                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
-                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
+
         qDebug() << s8("观众交互：") << username << msgType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
@@ -6715,6 +6754,11 @@ void MainWindow::handleMessage(QJsonObject json)
                          fansMedal.value("medal_level").toInt(),
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
+
+        bool opposite = pking &&
+                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         danmaku.setOpposite(opposite);
 
         if (roomId != "0" && roomId != this->roomId) // 关注对面主播，也会引发关注事件
@@ -6725,48 +6769,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (msgType == 1) // 进入直播间
         {
-            // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
-            // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-            int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
-            danmaku.setNumber(userCome);
-            danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
-            appendNewLiveDanmaku(danmaku);
-
-            userCome++;
-            danmakuCounts->setValue("come/"+snum(uid), userCome);
-            danmakuCounts->setValue("comeTime/"+snum(uid), timestamp);
-
-            dailyCome++;
-            if (dailySettings)
-                dailySettings->setValue("come", dailyCome);
-            if (opposite)
-            {
-                // myAudience.insert(uid); // 加到自己这边来，免得下次误杀（即只提醒一次）
-            }
-            else if (cmAudience.contains(uid))
-            {
-                if (cmAudience.value(uid) == 1)
-                {
-                    cmAudience[uid] = 0;
-                    danmaku.setViewReturn(true);
-                    localNotify(username + " 去对面串门回来");
-                }
-            }
-
-            qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-            if (!justStart && ui->autoSendWelcomeCheck->isChecked()) // 发送欢迎
-            {
-                userComeTimes[uid] = currentTime;
-                sendWelcomeIfNotRobot(danmaku);
-            }
-            else // 不发送欢迎，只是查看
-            {
-                userComeTimes[uid] = currentTime; // 直接更新了
-                if (judgeRobot == 2)
-                {
-                    judgeRobotAndMark(danmaku);
-                }
-            }
+            userComeEvent(danmaku);
 
             triggerCmdEvent(cmd, danmaku);
         }
@@ -6934,6 +6937,8 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
+        updateOnlineGoldRank();
+
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "ONLINE_RANK_TOP3") // 高能榜
@@ -6949,6 +6954,8 @@ void MainWindow::handleMessage(QJsonObject json)
                 ]
             }
         }*/
+
+        updateOnlineGoldRank();
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
@@ -7974,6 +7981,57 @@ bool MainWindow::handlePK2(QJsonObject json)
     return true;
 }
 
+void MainWindow::userComeEvent(LiveDanmaku &danmaku)
+{
+    qint64 uid = danmaku.getUid();
+
+    // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
+    // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
+    int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
+    danmaku.setNumber(userCome);
+    danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+
+    appendNewLiveDanmaku(danmaku);
+
+    userCome++;
+    danmakuCounts->setValue("come/"+snum(uid), userCome);
+    danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+
+    dailyCome++;
+    if (dailySettings)
+        dailySettings->setValue("come", dailyCome);
+    if (danmaku.isOpposite())
+    {
+        // 加到自己这边来，免得下次误杀（即只提醒一次）
+        // 不过不能这么做，否则不会显示“对面”两个字了
+        // myAudience.insert(uid);
+    }
+    else if (cmAudience.contains(uid))
+    {
+        if (cmAudience.value(uid) == 1)
+        {
+            cmAudience[uid] = 0;
+            danmaku.setViewReturn(true);
+            localNotify(danmaku.getNickname() + " 去对面串门回来");
+        }
+    }
+
+    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+    if (!justStart && ui->autoSendWelcomeCheck->isChecked()) // 发送欢迎
+    {
+        userComeTimes[uid] = currentTime;
+        sendWelcomeIfNotRobot(danmaku);
+    }
+    else // 不发送欢迎，只是查看
+    {
+        userComeTimes[uid] = currentTime; // 直接更新了
+        if (judgeRobot == 2)
+        {
+            judgeRobotAndMark(danmaku);
+        }
+    }
+}
+
 void MainWindow::refreshBlockList()
 {
     if (browserData.isEmpty())
@@ -8341,6 +8399,113 @@ void MainWindow::updateExistGuards(int page)
                 dailySettings->setValue("guard_count", currentGuards.size());
             updateGuarding = false;
         }
+    });
+}
+
+/**
+ * 获取高能榜上的用户（仅取第一页就行了）
+ */
+void MainWindow::updateOnlineGoldRank()
+{
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "onlineNum": 12,
+            "OnlineRankItem": [
+                {
+                    "userRank": 1,
+                    "uid": 8160635,
+                    "name": "嘻嘻家の第二帅",
+                    "face": "http://i2.hdslb.com/bfs/face/494fcc986807a944b79a027559d964c8b6b3addb.jpg",
+                    "score": 3300,
+                    "medalInfo": null,
+                    "guard_level": 2
+                },
+                {
+                    "userRank": 2,
+                    "uid": 1274248,
+                    "name": "贪睡的熊猫",
+                    "face": "http://i1.hdslb.com/bfs/face/6241c9080e98a8988a3acc2df146236bad897be3.gif",
+                    "score": 1782,
+                    "medalInfo": {
+                        "guardLevel": 3,
+                        "medalColorStart": 1725515,
+                        "medalColorEnd": 5414290,
+                        "medalColorBorder": 6809855,
+                        "medalName": "戒不掉",
+                        "level": 21,
+                        "targetId": 300702024,
+                        "isLight": 1
+                    },
+                    "guard_level": 3
+                },
+                ...剩下10个...
+            ],
+            "ownInfo": {
+                "uid": 20285041,
+                "name": "懒一夕智能科技",
+                "face": "http://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg",
+                "rank": -1,
+                "needScore": 1,
+                "score": 0,
+                "guard_level": 0
+            }
+        }
+    }*/
+    QString _upUid = upUid;
+    QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?roomId="
+            +roomId+"&page="+snum(1)+"&ruid="+upUid+"&pageSize="+snum(50);
+    onlineGoldRank.clear();
+
+    get(url, [=](QJsonObject json){
+        if (_upUid != upUid)
+            return ;
+
+        QStringList names;
+        QJsonObject data = json.value("data").toObject();
+        QJsonArray array = data.value("OnlineRankItem").toArray();
+        foreach (auto val, array)
+        {
+            QJsonObject item = val.toObject();
+            qint64 uid = qint64(item.value("uid").toDouble());
+            QString name = item.value("name").toString();
+            int guard_level = item.value("guard_level").toInt(); // 没戴牌子也会算进去
+            int score = item.value("score").toInt(); // 金瓜子数量
+            int rank = item.value("userRank").toInt(); // 1,2,3...
+
+            names.append(name);
+            LiveDanmaku danmaku(name, uid, QDateTime(), false,
+                                "", "", "");
+            danmaku.setFirst(rank);
+            danmaku.setTotalCoin(score);
+
+            if (guard_level)
+                danmaku.setGuardLevel(guard_level);
+
+            if (!item.value("medalInfo").isNull())
+            {
+                QJsonObject medalInfo = item.value("medalInfo").toObject();
+
+                if (medalInfo.contains("guardLevel"))
+                    danmaku.setGuardLevel(medalInfo.value("guardLevel").toInt());
+
+                qint64 medalColor = qint64(medalInfo.value("medalColorStart").toDouble());
+                QString cs = QString::number(medalColor, 16);
+                while (cs.size() < 6)
+                    cs = "0" + cs;
+
+                danmaku.setMedal(snum(qint64(medalInfo.value("targetId").toDouble())),
+                                 medalInfo.value("medalName").toString(),
+                                 medalInfo.value("level").toInt(),
+                                 "",
+                                 "");
+            }
+
+            onlineGoldRank.append(danmaku);
+        }
+        qDebug() << "高能榜：" << names;
     });
 }
 

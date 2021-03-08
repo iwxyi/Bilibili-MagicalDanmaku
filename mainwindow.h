@@ -582,6 +582,7 @@ private:
     bool mergeGiftCombo(LiveDanmaku danmaku);
     bool handlePK(QJsonObject json);
     bool handlePK2(QJsonObject json);
+    void userComeEvent(LiveDanmaku& danmaku);
     void refreshBlockList();
     bool isInFans(qint64 upUid);
     void sendGift(int giftId, int giftNum);
@@ -591,6 +592,7 @@ private:
     void sendExpireGift();
     void getBagList(qint64 sendExpire = 0);
     void updateExistGuards(int page);
+    void updateOnlineGoldRank();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -805,6 +807,9 @@ private:
     // 船员
     bool updateGuarding = false;
     QList<LiveDanmaku> guardInfos;
+
+    // 高能榜
+    QList<LiveDanmaku> onlineGoldRank;
 
     // 录播
     qint64 startRecordTime = 0;

@@ -364,6 +364,11 @@ public:
         this->medal_up = up;
     }
 
+    void setGuardLevel(int level)
+    {
+        this->guard = level;
+    }
+
     void setUserInfo(int admin, int vip, int svip, int uidentity, int iphone, int guard)
     {
         this->admin = admin;
@@ -414,6 +419,11 @@ public:
         this->number += count;
         this->total_coin += total;
         this->timeline = time;
+    }
+
+    void setTotalCoin(int coin)
+    {
+        this->total_coin = coin;
     }
 
     void setTime(QDateTime time)
