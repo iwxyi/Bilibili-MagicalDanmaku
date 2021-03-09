@@ -3822,10 +3822,11 @@ bool MainWindow::processVariantConditions(QString exprs) const
         foreach (QString exp, andExps)
         {
 //            qDebug() << "表达式and内：" << exp;
+            exp = exp.trimmed();
             if (exp.indexOf(compRe, 0, &match) == -1) // 非比较
             {
                 exp = exp.trimmed();
-                bool notTrue = exp.startsWith("!");
+                bool notTrue = exp.startsWith("!"); // 与否取反
                 if (notTrue) // 取反……
                 {
                     exp = exp.right(exp.length() - 1);
@@ -3835,6 +3836,11 @@ bool MainWindow::processVariantConditions(QString exprs) const
                     if (!notTrue)
                     {
                         isTrue = false;
+                        break;
+                    }
+                    else // 取反
+                    {
+                        isTrue = true;
                         break;
                     }
                 }
