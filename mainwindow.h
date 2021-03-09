@@ -598,7 +598,8 @@ private:
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
-    QString processDanmakuVariants(QString msg, LiveDanmaku danmaku) const;
+    QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku) const;
+    void replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
