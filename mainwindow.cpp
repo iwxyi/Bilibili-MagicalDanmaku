@@ -4244,7 +4244,7 @@ void MainWindow::saveCalculateDailyData()
     if (dailySettings)
     {
         dailySettings->setValue("come", dailyCome);
-        dailySettings->setValue("people_num", userComeTimes.size());
+        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), userComeTimes.size()));
         dailySettings->setValue("danmaku", dailyDanmaku);
         dailySettings->setValue("newbie_msg", dailyNewbieMsg);
         dailySettings->setValue("new_fans", dailyNewFans);
