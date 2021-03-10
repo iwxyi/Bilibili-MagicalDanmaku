@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2505,10 +2505,23 @@ margin: 6px;</string>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="1,0,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_31" stretch="0,1,0,0,0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
+          <item>
+           <spacer name="horizontalSpacer_28">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <widget class="QSpinBox" name="screenDanmakuSpeedSpin">
             <property name="contextMenuPolicy">
@@ -2560,6 +2573,19 @@ margin: 6px;</string>
            </spacer>
           </item>
           <item>
+           <spacer name="horizontalSpacer_29">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QPushButton" name="screenDanmakuFontButton">
             <property name="text">
              <string>字体</string>
@@ -2578,6 +2604,19 @@ margin: 6px;</string>
              <bool>true</bool>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_30">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -3242,6 +3281,7 @@ margin: 6px;</string>
     <addaction name="actionShow_PK_Video"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
+    <addaction name="actionJoin_Battle"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -3481,6 +3521,11 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>检测新版本</string>
+   </property>
+  </action>
+  <action name="actionJoin_Battle">
+   <property name="text">
+    <string>开启大乱斗</string>
    </property>
   </action>
  </widget>

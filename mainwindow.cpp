@@ -6975,7 +6975,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 "rank_type": "gold-rank"
             }
         }*/
+        qDebug() << json;
 
+        // 因为高能榜上的只有名字和ID，没有粉丝牌，所以还是需要手动刷新一下
         updateOnlineGoldRank();
 
         triggerCmdEvent(cmd, LiveDanmaku());
@@ -11798,4 +11800,25 @@ void MainWindow::on_saveRecvCmdsCheck_clicked()
 void MainWindow::on_allowRemoteControlCheck_clicked()
 {
     settings.setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
+}
+
+void MainWindow::on_actionJoin_Battle_triggered()
+{
+    if (!liveStatus || cookieUid != upUid)
+    {
+        qCritical() << "未开播或不是直播间主播";
+        statusLabel->setText("未开播或不是直播间主播");
+        return ;
+    }
+
+    QStringList params{
+        "room_id", roomId,
+                "platform", "pc",
+                "battle_type", "1",
+                "csrf_token", csrf_token,
+                "csrf", csrf_token
+    };
+    post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
+        qDebug() << json;
+    });
 }

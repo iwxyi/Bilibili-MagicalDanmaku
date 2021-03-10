@@ -535,6 +535,8 @@ private slots:
 
     void on_allowRemoteControlCheck_clicked();
 
+    void on_actionJoin_Battle_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
