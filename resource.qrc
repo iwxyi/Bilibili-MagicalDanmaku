@@ -66,6 +66,7 @@
         <file alias="opacity">resources/icons/opacity.png</file>
         <file alias="clip">resources/icons/clip.png</file>
         <file alias="clip2">resources/icons/clip2.png</file>
+        <file alias="pk">resources/icons/pk.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

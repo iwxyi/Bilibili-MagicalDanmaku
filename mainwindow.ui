@@ -3524,6 +3524,13 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionJoin_Battle">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/pk</normaloff>:/icons/pk</iconset>
+   </property>
    <property name="text">
     <string>开启大乱斗</string>
    </property>

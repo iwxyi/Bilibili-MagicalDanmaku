@@ -2495,10 +2495,6 @@ void MainWindow::getRoomInfo(bool reconnect)
         int pkStatus = roomInfo.value("pk_status").toInt();
         if (danmakuWindow)
             danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
-        qDebug() << "房间信息: roomid=" << roomId
-                 << "  shortid=" << shortId
-                 << "  uid=" << upUid;
-
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         setWindowTitle(roomTitle + " - " + upName);
@@ -2508,6 +2504,11 @@ void MainWindow::getRoomInfo(bool reconnect)
             ui->popularityLabel->setText("未开播");
         else
             ui->popularityLabel->setText("已开播");
+
+        qDebug() << "房间信息: roomid=" << roomId
+                 << "  shortid=" << shortId
+                 << "  upName=" << upName
+                 << "  uid=" << upUid;
 
         if (pkStatus)
         {
@@ -2521,6 +2522,13 @@ void MainWindow::getRoomInfo(bool reconnect)
                 getPkInfoById(roomId, pkId);
                 qDebug() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
             }
+        }
+        else
+        {
+            QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
+                if (cookieUid == upUid)
+                    ui->actionJoin_Battle->setEnabled(true);
+            });
         }
 
         areaId = snum(roomInfo.value("area_id").toInt());
@@ -5359,6 +5367,19 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 开启大乱斗
+    if (msg.contains("joinBattle"))
+    {
+        re = RE("joinBattle\\s*\\(\\s*([12])\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            int type = caps.at(1).toInt();
+            qDebug() << "执行命令：" << caps;
+            joinBattle(type);
+            return true;
+        }
+    }
 
     return false;
 }
@@ -9436,6 +9457,7 @@ void MainWindow::pkPre(QJsonObject json)
         connectPkRoom();
     }
     ui->actionShow_PK_Video->setEnabled(true);
+    ui->actionJoin_Battle->setEnabled(false);
     pkGifts.clear();
 }
 
@@ -9726,6 +9748,9 @@ void MainWindow::pkEnd(QJsonObject json)
     oppositeAudience.clear();
     pkVideo = false;
     ui->actionShow_PK_Video->setEnabled(false);
+
+    if (cookieUid == upUid)
+        ui->actionJoin_Battle->setEnabled(true);
 
     if (pkSocket)
     {
@@ -10302,6 +10327,7 @@ void MainWindow::releaseLiveData(bool prepare)
 
     ui->actionShow_Live_Video->setEnabled(false);
     ui->actionShow_PK_Video->setEnabled(false);
+    ui->actionJoin_Battle->setEnabled(false);
 
     finishLiveRecord();
     finishSaveDanmuToFile();
@@ -10624,6 +10650,30 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func)
             return ;
 
         func(answer);
+    });
+}
+
+void MainWindow::joinBattle(int type)
+{
+    if (!liveStatus || cookieUid != upUid)
+    {
+        qCritical() << "未开播或不是主播本人";
+        statusLabel->setText("未开播或不是主播本人");
+        return ;
+    }
+
+    QStringList params{
+        "room_id", roomId,
+        "platform", "pc",
+        "battle_type", snum(type),
+        "csrf_token", csrf_token,
+        "csrf", csrf_token
+    };
+    post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+            qWarning() << json.value("message").toString();
+        else
+            qDebug() << json;
     });
 }
 
@@ -11804,21 +11854,5 @@ void MainWindow::on_allowRemoteControlCheck_clicked()
 
 void MainWindow::on_actionJoin_Battle_triggered()
 {
-    if (!liveStatus || cookieUid != upUid)
-    {
-        qCritical() << "未开播或不是直播间主播";
-        statusLabel->setText("未开播或不是直播间主播");
-        return ;
-    }
-
-    QStringList params{
-        "room_id", roomId,
-                "platform", "pc",
-                "battle_type", "1",
-                "csrf_token", csrf_token,
-                "csrf", csrf_token
-    };
-    post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
-        qDebug() << json;
-    });
+    joinBattle(1);
 }

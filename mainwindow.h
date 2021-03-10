@@ -676,6 +676,7 @@ private:
     void joinLOT(qint64 id, bool follow = true);
     void sendPrivateMsg(qint64 uid, QString msg);
     void AIReply(qint64 id, QString text, NetStringFunc func);
+    void joinBattle(int type);
 
     void startSplash();
 
