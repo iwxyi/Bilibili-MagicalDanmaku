@@ -174,9 +174,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
 
     statusLabel = new QLabel(this);
     statusLabel->hide();
-    QPalette pa;
-    pa.setColor(QPalette::Text, msgColor);
-    statusLabel->setPalette(pa);
+    statusLabel->setStyleSheet("color:" + QVariant(msgColor).toString() + ";");
     statusLabel->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(statusLabel, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showPkMenu()));
 }
@@ -1291,9 +1289,7 @@ void LiveDanmakuWindow::showMenu()
         }
         if (statusLabel)
         {
-            QPalette pa;
-            pa.setColor(QPalette::Text, c);
-            statusLabel->setPalette(pa);
+            statusLabel->setStyleSheet("color:" + QVariant(msgColor).toString() + ";");
         }
     });
     connect(actionBgColor, &QAction::triggered, this, [=]{

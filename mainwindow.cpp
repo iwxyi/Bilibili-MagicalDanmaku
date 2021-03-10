@@ -6996,10 +6996,33 @@ void MainWindow::handleMessage(QJsonObject json)
                 "rank_type": "gold-rank"
             }
         }*/
-        qDebug() << json;
+        QJsonArray array = json.value("data").toObject().value("list").toArray();
+        // 因为高能榜上的只有名字和ID，没有粉丝牌，有需要的话还是需要手动刷新一下
+        if (array.size() != onlineGoldRank.size())
+        {
+            updateOnlineGoldRank();
+        }
+        else
+        {
+            // 如果仅仅是排名和金瓜子，那么就挨个修改吧
+            foreach (auto val, array)
+            {
+                auto user = val.toObject();
+                qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
+                int score = user.value("score").toInt();
+                int rank = user.value("rank").toInt();
 
-        // 因为高能榜上的只有名字和ID，没有粉丝牌，所以还是需要手动刷新一下
-        updateOnlineGoldRank();
+                for (int i = 0; i < onlineGoldRank.size(); i++)
+                {
+                    if (onlineGoldRank.at(i).getUid() == uid)
+                    {
+                        onlineGoldRank[i].setFirst(rank);
+                        onlineGoldRank[i].setTotalCoin(score);
+                        break;
+                    }
+                }
+            }
+        }
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
@@ -7027,6 +7050,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 "count": 9
             }
         }*/
+
+        // 数量变化了，那还是得刷新一下
+        updateOnlineGoldRank();
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
@@ -10671,9 +10697,10 @@ void MainWindow::joinBattle(int type)
     };
     post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
-            qWarning() << json.value("message").toString();
-        else
-            qDebug() << json;
+            statusLabel->setText(json.value("message").toString());
+        else if (danmakuWindow)
+            danmakuWindow->setStatusText("正在匹配...");
+        qDebug() << json;
     });
 }
 
