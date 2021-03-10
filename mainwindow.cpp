@@ -10357,6 +10357,7 @@ void MainWindow::releaseLiveData(bool prepare)
 
     finishLiveRecord();
     finishSaveDanmuToFile();
+    saveCalculateDailyData();
 
     QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
     setWindowIcon(face);
