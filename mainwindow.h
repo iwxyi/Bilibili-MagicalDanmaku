@@ -533,6 +533,8 @@ private slots:
 
     void on_saveRecvCmdsCheck_clicked();
 
+    void on_allowRemoteControlCheck_clicked();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);

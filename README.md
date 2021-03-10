@@ -1346,7 +1346,7 @@ ws.onmessage = function(e) {
 
 ### 反向控制主程序
 
-在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送socket数据，反向控制主程序。需要在设置中开启`跨播-允许反向控制`方有效（默认关闭）。
+在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送socket数据，反向控制主程序。需要在设置中开启`远程-允许网页控制`方有效（默认关闭）。
 
 JSON格式：
 
@@ -1399,6 +1399,6 @@ JSON格式：
 > - 点歌姬网易云源：https://github.com/Binaryify/NeteaseCloudMusicApi
 > - 点歌姬QQ音乐源：https://github.com/rain120/qq-music-api
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
-> - 跨播功能：https://github.com/nikhilm/qhttpserver
+> - 服务端模块：https://github.com/nikhilm/qhttpserver
 
 

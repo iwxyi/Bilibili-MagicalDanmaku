@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>546</width>
-    <height>411</height>
+    <width>451</width>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1303,6 +1303,7 @@ QTabBar::tab:selected
            <string notr="true">QListWidget
 {
 	background: transparent;
+	border: none;
 }</string>
           </property>
          </widget>
@@ -1942,363 +1943,165 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_11">
+      <widget class="QWidget" name="tab_13">
        <attribute name="title">
-        <string>语音</string>
+        <string>统计</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_12">
+       <layout class="QVBoxLayout" name="verticalLayout_14">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_38">
+         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="0,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+           <widget class="QCheckBox" name="calculateDailyDataCheck">
+            <property name="toolTip">
+             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+            </property>
             <property name="text">
-             <string>朗读弹幕</string>
+             <string>每日数据统计</string>
             </property>
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_21">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>0</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="voicePreviewButton">
+           <widget class="QPushButton" name="pushButton">
             <property name="styleSheet">
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>预听</string>
+             <string>今日</string>
+            </property>
+            <property name="autoDefault">
+             <bool>true</bool>
+            </property>
+            <property name="default">
+             <bool>false</bool>
             </property>
             <property name="flat">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_35">
-          <item>
-           <widget class="QRadioButton" name="voiceLocalRadio">
-            <property name="text">
-             <string>本地</string>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="voiceXfyRadio">
-            <property name="text">
-             <string>讯飞</string>
+           <widget class="QPushButton" name="exportDailyButton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="voiceCustomRadio">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string>自定义</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_36">
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>发音人</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="voiceNameEdit">
-            <property name="styleSheet">
-             <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="voiceNameSelectButton">
             <property name="styleSheet">
              <string notr="true"/>
             </property>
             <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="resource.qrc">
-              <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
+             <string>导出</string>
             </property>
             <property name="flat">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="0,4,1,0,4">
-          <item>
-           <widget class="QLabel" name="voicePitchLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本地语音可能有点问题&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>音调</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="voicePitchSlider">
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="maximum">
-             <number>100</number>
-            </property>
-            <property name="singleStep">
-             <number>1</number>
-            </property>
-            <property name="value">
-             <number>50</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_19">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>5</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="voiceSpeedLabel">
-            <property name="text">
-             <string>音速</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSlider" name="voiceSpeedSlider">
-            <property name="maximum">
-             <number>100</number>
-            </property>
-            <property name="singleStep">
-             <number>1</number>
-            </property>
-            <property name="value">
-             <number>50</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="0,4,6">
+         <layout class="QHBoxLayout" name="horizontalLayout_51">
           <property name="topMargin">
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="voiceVolumeLabel">
+           <widget class="QCheckBox" name="saveEveryGiftCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不支持讯飞语音&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>音量</string>
+             <string>记录礼物历史</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QSlider" name="voiceVolumeSlider">
+           <widget class="QCheckBox" name="saveEveryGuardCheck">
             <property name="toolTip">
-             <string/>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
-            <property name="maximum">
-             <number>100</number>
-            </property>
-            <property name="singleStep">
-             <number>1</number>
-            </property>
-            <property name="value">
-             <number>50</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+            <property name="text">
+             <string>记录每次上船</string>
             </property>
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_22">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
+           <widget class="QCheckBox" name="saveMonthGuardCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
+            <property name="text">
+             <string>记录每月船员</string>
             </property>
-           </spacer>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <widget class="QStackedWidget" name="voiceStack">
-          <property name="currentIndex">
-           <number>1</number>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
-          <widget class="QWidget" name="voiceLocalPage"/>
-          <widget class="QWidget" name="voiceXfyPage">
-           <layout class="QGridLayout" name="gridLayout_2">
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>API Key</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>APP ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLineEdit" name="xfyAppIdEdit">
-              <property name="styleSheet">
-               <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLineEdit" name="xfyApiKeyEdit">
-              <property name="styleSheet">
-               <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>API Secret</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLineEdit" name="xfyApiSecretEdit">
-              <property name="styleSheet">
-               <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <spacer name="verticalSpacer_7">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.xfyun.cn/services/tts&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;点此申请讯飞语音合成秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="voiceCustomPage">
-           <layout class="QGridLayout" name="gridLayout">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>API链接</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLineEdit" name="voiceCustomUrlEdit">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;只支持直接生成并下载音频文件的API&lt;/p&gt;&lt;p&gt;例如：http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&amp;amp;voice=EkhoMandarin&amp;amp;speedDelta=0&amp;amp;pitchDelta=0&amp;amp;volumeDelta=0&amp;amp;text=%1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-              </property>
-              <property name="placeholderText">
-               <string>音频接口，文本用“%1”替换</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <spacer name="verticalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
-         </widget>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>215</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_41">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="startupAnimationCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>启动动画</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="localDebugCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>本地模式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="debugPrintCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示具体为什么不发送弹幕，&lt;/p&gt;&lt;p&gt;以及弹幕发送失败的原因。&lt;/p&gt;&lt;p&gt;适用于逐步调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>调试模式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="saveRecvCmdsCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存服务器收到的cmd&lt;/p&gt;&lt;p&gt;用于开发者调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>保存CMD</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tab_7">
        <attribute name="title">
-        <string>跨播</string>
+        <string>远程</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_8">
         <item>
@@ -2414,12 +2217,22 @@ margin: 6px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QCheckBox" name="allowWebControlCheck">
+           <widget class="QCheckBox" name="allowRemoteControlCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息来控制神奇弹幕&lt;/p&gt;&lt;p&gt;请仅在必要且确认安全的情况下启用&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、修改设置、禁言用户、发送私信、调用B站API等&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;仅机器人账号与主播有效&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>允许反向控制</string>
+             <string>允许弹幕控制</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="allowWebControlCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许来自网页的消息反向控制神奇弹幕&lt;/p&gt;&lt;p&gt;请仅在必要且确认安全的情况下启用&lt;/p&gt;&lt;p&gt;包括但不限于：发送弹幕、修改设置、禁言用户、发送私信、调用B站API等所有函数命令&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>允许网页控制</string>
             </property>
            </widget>
           </item>
@@ -2816,6 +2629,360 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_11">
+       <attribute name="title">
+        <string>语音</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_38">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+            <property name="text">
+             <string>朗读弹幕</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_21">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="voicePreviewButton">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string>预听</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_35">
+          <item>
+           <widget class="QRadioButton" name="voiceLocalRadio">
+            <property name="text">
+             <string>本地</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="voiceXfyRadio">
+            <property name="text">
+             <string>讯飞</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="voiceCustomRadio">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>自定义</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_36">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>发音人</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="voiceNameEdit">
+            <property name="styleSheet">
+             <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="voiceNameSelectButton">
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resource.qrc">
+              <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_37" stretch="0,4,1,0,4">
+          <item>
+           <widget class="QLabel" name="voicePitchLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本地语音可能有点问题&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>音调</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="voicePitchSlider">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>50</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_19">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>5</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="voiceSpeedLabel">
+            <property name="text">
+             <string>音速</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="voiceSpeedSlider">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>50</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="0,4,6">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="voiceVolumeLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不支持讯飞语音&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>音量</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="voiceVolumeSlider">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>50</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_22">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="voiceStack">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="voiceLocalPage"/>
+          <widget class="QWidget" name="voiceXfyPage">
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>APP ID</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="xfyAppIdEdit">
+              <property name="styleSheet">
+               <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="xfyApiKeyEdit">
+              <property name="styleSheet">
+               <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>API Secret</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="xfyApiSecretEdit">
+              <property name="styleSheet">
+               <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <spacer name="verticalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.xfyun.cn/services/tts&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;点此申请讯飞语音合成秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="voiceCustomPage">
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>API链接</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="voiceCustomUrlEdit">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;只支持直接生成并下载音频文件的API&lt;/p&gt;&lt;p&gt;例如：http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&amp;amp;voice=EkhoMandarin&amp;amp;speedDelta=0&amp;amp;pitchDelta=0&amp;amp;volumeDelta=0&amp;amp;text=%1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+              </property>
+              <property name="placeholderText">
+               <string>音频接口，文本用“%1”替换</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tab_6">
        <attribute name="title">
         <string>禁言</string>
@@ -3050,171 +3217,6 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_13">
-       <attribute name="title">
-        <string>其他</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_14">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="1,0,0">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="calculateDailyDataCheck">
-            <property name="toolTip">
-             <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-            </property>
-            <property name="text">
-             <string>每日数据统计</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>今日</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="exportDailyButton">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
-            </property>
-            <property name="text">
-             <string>导出</string>
-            </property>
-            <property name="flat">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_51">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="saveEveryGiftCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>记录礼物历史</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="saveEveryGuardCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>记录每次上船</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="saveMonthGuardCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>记录每月船员</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_52">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="startupAnimationCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>程序启动动画</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_41">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="localDebugCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;另外包括送礼、禁言、解禁等，都只在本地发送通知（开启实时弹幕能看到），不真正操作&lt;/p&gt;&lt;p&gt;适用于调试时使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>本地模式</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="debugPrintCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示具体为什么不发送弹幕，&lt;/p&gt;&lt;p&gt;以及弹幕发送失败的原因。&lt;/p&gt;&lt;p&gt;适用于逐步调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>调试模式</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="saveRecvCmdsCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存服务器收到的cmd&lt;/p&gt;&lt;p&gt;用于开发者调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>保存CMD</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>215</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -3224,7 +3226,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>546</width>
+     <width>451</width>
      <height>23</height>
     </rect>
    </property>

@@ -659,6 +659,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->serverPortSpin->setValue(port);
     serverDomain = settings.value("server/domain", "localhost").toString();
     ui->allowWebControlCheck->setChecked(settings.value("server/allowWebControl", false).toBool());
+    ui->allowRemoteControlCheck->setChecked(remoteControl = settings.value("danmaku/remoteControl", true).toBool());
     ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
@@ -5291,6 +5292,31 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             if (!notWelcomeUsers.contains(uid))
             {
                 notWelcomeUsers.append(uid);
+
+                QStringList ress;
+                foreach (qint64 uid, notWelcomeUsers)
+                    ress << QString::number(uid);
+                settings.setValue("danmaku/notWelcomeUsers", ress.join(";"));
+            }
+
+            return true;
+        }
+    }
+
+    // 启用欢迎
+    if (msg.contains("enableWelcome"))
+    {
+        re = RE("enableWelcome\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qint64 uid = caps.at(1).toLongLong();
+            qDebug() << "执行命令：" << caps;
+
+            if (notWelcomeUsers.contains(uid))
+            {
+                notWelcomeUsers.removeOne(uid);
+
                 QStringList ress;
                 foreach (qint64 uid, notWelcomeUsers)
                     ress << QString::number(uid);
@@ -11767,4 +11793,9 @@ void MainWindow::on_saveRecvCmdsCheck_clicked()
 {
     saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
     settings.setValue("danmaku/saveRecvCmds", saveRecvCmds);
+}
+
+void MainWindow::on_allowRemoteControlCheck_clicked()
+{
+    settings.setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
 }
