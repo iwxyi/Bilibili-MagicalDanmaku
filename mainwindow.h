@@ -602,7 +602,7 @@ private:
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
-    QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku) const;
+    QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     void replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;

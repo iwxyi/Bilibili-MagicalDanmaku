@@ -3367,7 +3367,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
  * 处理用户信息中蕴含的表达式
  * 用户信息、弹幕、礼物等等
  */
-QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danmaku) const
+QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danmaku)
 {
     QRegularExpressionMatch match;
 
@@ -3396,28 +3396,6 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, text);
     }
 
-    // 读取配置文件的变量
-    re = QRegularExpression("%\\{(\\S+)\\}%");
-    while (msg.indexOf(re, 0, &match) > -1)
-    {
-        QString _var = match.captured(0);
-        QString key = match.captured(1);
-        if (!key.contains("/"))
-            key = "heaps/" + key;
-        QVariant var = settings.value(key);
-        msg.replace(_var, var.toString()); // 默认使用变量类型吧
-    }
-
-    // 进行数学计算的变量
-    re = QRegularExpression("%\\[(.+?)\\]%");
-    while (msg.indexOf(re, 0, &match) > -1)
-    {
-        QString _var = match.captured(0);
-        QString text = match.captured(1);
-        text = snum(calcIntExpression(text));
-        msg.replace(_var, text); // 默认使用变量类型吧
-    }
-
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
     re = QRegularExpression("%\\((.+?)\\)%");
     while (msg.indexOf(re, 0, &match) > -1)
@@ -3443,7 +3421,30 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         if (!find)
         {
             msg.replace(_var, "0");
+            localNotify("[未找到用户：" + text + "]");
         }
+    }
+
+    // 进行数学计算的变量
+    re = QRegularExpression("%\\[(.+?)\\]%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        QString text = match.captured(1);
+        text = snum(calcIntExpression(text));
+        msg.replace(_var, text); // 默认使用变量类型吧
+    }
+
+    // 读取配置文件的变量
+    re = QRegularExpression("%\\{(\\S+)\\}%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        QString key = match.captured(1);
+        if (!key.contains("/"))
+            key = "heaps/" + key;
+        QVariant var = settings.value(key);
+        msg.replace(_var, var.toString()); // 默认使用变量类型吧
     }
 
     return msg;
@@ -3592,6 +3593,20 @@ void MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // 舰长
     if (key == "%guard%")
         msg.replace("%guard%", snum(danmaku.getGuard()));
+
+    // 舰长名称
+    if (key == "%guard_name%")
+    {
+        int guard = danmaku.getGuard();
+        QString name = "用户";
+        if (guard == 1)
+            name = "总督";
+        else if (guard == 2)
+            name = "提督";
+        else if (guard == 3)
+            name = "舰长";
+        msg.replace("%guard_name%", name);
+    }
 
     // 房管或舰长
     if (key == "%admin_or_guard%")
