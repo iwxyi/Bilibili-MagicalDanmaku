@@ -459,7 +459,7 @@ MainWindow::MainWindow(QWidget *parent)
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
-        connectServerTimer->setInterval(90000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        connectServerTimer->setInterval(900000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
         if (liveStatus && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
         {
             connectServerTimer->stop();
@@ -2500,8 +2500,12 @@ void MainWindow::getRoomInfo(bool reconnect)
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         ui->roomNameLabel->setText(roomTitle + " - " + upName);
-        if (liveStatus != 1)
+        if (!liveStatus)
+        {
             ui->popularityLabel->setText("未开播");
+            if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
+                connectServerTimer->start();
+        }
         else
             ui->popularityLabel->setText("已开播");
 
