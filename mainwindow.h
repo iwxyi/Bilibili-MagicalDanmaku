@@ -601,7 +601,7 @@ private:
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
-    QStringList getEditConditionStringList(QString plainText, LiveDanmaku user) const;
+    QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     void replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
     QString processMsgHeaderConditions(QString msg) const;

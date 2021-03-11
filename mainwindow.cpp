@@ -3303,7 +3303,7 @@ QString MainWindow::processTimeVariants(QString msg) const
     return msg;
 }
 
-QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user) const
+QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user)
 {
     plainText = processDanmakuVariants(plainText, user);
 
