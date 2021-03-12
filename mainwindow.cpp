@@ -1154,7 +1154,6 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     }
     if (msg.trimmed().isEmpty())
     {
-        qDebug() << "空弹幕，已跳过";
         if (debugPrint)
             localNotify("[空弹幕，已跳过]");
         return ;
@@ -1722,6 +1721,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
         }
         if (!liveStatus && !manual)
             manual = true;
+
         QStringList msgs = getEditConditionStringList(sl, danmaku);
         if (msgs.size())
         {
@@ -3309,12 +3309,14 @@ QString MainWindow::processTimeVariants(QString msg) const
 QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user)
 {
     plainText = processDanmakuVariants(plainText, user);
+    CALC_DEB << "处理变量之后：" << plainText;
 
     // 替换时间变量
     if (removeLongerRandomDanmaku)
     {
         plainText = processTimeVariants(plainText);
     }
+    CALC_DEB << "处理时间之后：" << plainText;
 
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
@@ -3323,7 +3325,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     {
         QString line = lines.at(i);
         line = processMsgHeaderConditions(line);
-//        qDebug() << "取条件后：" << line << "    原始：" << lines.at(i);
+        CALC_DEB << "取条件后：" << line << "    原始：" << lines.at(i);
         if (!line.isEmpty())
             result.append(line.trimmed());
     }
@@ -3361,7 +3363,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
                 result[i] = result.at(i).right(result.at(i).length()-1);
         }
     }
-//    qDebug() << "condition result:" << result;
+    CALC_DEB << "condition result:" << result;
 
     return result;
 }
@@ -3428,16 +3430,6 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
     }
 
-    // 进行数学计算的变量
-    re = QRegularExpression("%\\[(.+?)\\]%");
-    while (msg.indexOf(re, 0, &match) > -1)
-    {
-        QString _var = match.captured(0);
-        QString text = match.captured(1);
-        text = snum(calcIntExpression(text));
-        msg.replace(_var, text); // 默认使用变量类型吧
-    }
-
     // 读取配置文件的变量
     re = QRegularExpression("%\\{(\\S+)\\}%");
     while (msg.indexOf(re, 0, &match) > -1)
@@ -3448,6 +3440,16 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
             key = "heaps/" + key;
         QVariant var = settings.value(key);
         msg.replace(_var, var.toString()); // 默认使用变量类型吧
+    }
+
+    // 进行数学计算的变量
+    re = QRegularExpression("%\\[(.+?)\\]%");
+    while (msg.indexOf(re, 0, &match) > -1)
+    {
+        QString _var = match.captured(0);
+        QString text = match.captured(1);
+        text = snum(calcIntExpression(text));
+        msg.replace(_var, text); // 默认使用变量类型吧
     }
 
     return msg;
@@ -3851,10 +3853,10 @@ bool MainWindow::processVariantConditions(QString exprs) const
     {
         isTrue = true;
         QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
-//        qDebug() << "表达式or内：" << andExps;
+        CALC_DEB << "表达式or内：" << andExps;
         foreach (QString exp, andExps)
         {
-//            qDebug() << "表达式and内：" << exp;
+            CALC_DEB << "表达式and内：" << exp;
             exp = exp.trimmed();
             if (exp.indexOf(compRe, 0, &match) == -1) // 非比较
             {
@@ -3885,8 +3887,6 @@ bool MainWindow::processVariantConditions(QString exprs) const
                         break;
                     }
                 }
-                // qDebug() << "无法解析表达式：" << exp;
-                // qDebug() << "    原始语句：" << msg;
                 continue;
             }
 
@@ -3895,12 +3895,12 @@ bool MainWindow::processVariantConditions(QString exprs) const
             QString s1 = caps.at(1);
             QString op = caps.at(2);
             QString s2 = caps.at(3);
-//            qDebug() << "比较：" << s1 << op << s2;
+            CALC_DEB << "比较：" << s1 << op << s2;
             if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
             {
                 qint64 i1 = calcIntExpression(s1);
                 qint64 i2 = calcIntExpression(s2);
-//                qDebug() << "比较整数" << i1 << op << i2;
+                CALC_DEB << "比较整数" << i1 << op << i2;
                 if (!isConditionTrue<qint64>(i1, i2, op))
                 {
                     isTrue = false;
@@ -3919,7 +3919,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
                 };
                 s1 = removeQuote(s1);
                 s2 = removeQuote(s2);
-//                qDebug() << "比较字符串" << s1 << op << s2;
+                CALC_DEB << "比较字符串" << s1 << op << s2;
                 if (op == "~")
                 {
                     if (!s1.contains(QRegularExpression(s2)))
@@ -3953,20 +3953,23 @@ qint64 MainWindow::calcIntExpression(QString exp) const
 {
     exp = exp.replace(QRegularExpression("\\s*"), ""); // 去掉所有空白
     QRegularExpression opRe("[\\+\\-\\*/%]");
+
     // 获取所有整型数值
     QStringList valss = exp.split(opRe); // 如果是-开头，那么会当做 0-x
     if (valss.size() == 0)
         return 0;
     QList<qint64> vals;
     foreach (QString val, valss)
+    {
         vals << val.toLongLong();
+    }
+
     // 获取所有运算符
     QStringList ops;
     QRegularExpressionMatchIterator i = opRe.globalMatch(exp);
     while (i.hasNext())
     {
-        QRegularExpressionMatch match = i.next();
-        ops << match.captured(0);
+        ops << i.next().captured(0);
     }
     if (valss.size() != ops.size() + 1)
     {
@@ -3975,22 +3978,31 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     }
 
     // 入栈：* / %
-    for (int i = 0; i < ops.size(); i++)
+    for (int i = 0; i < ops.size()-1; i++)
     {
         // op[i] 操作 vals[i] x vals[i+1]
         if (ops[i] == "*")
+        {
             vals[i] *= vals[i+1];
+        }
         else if (ops[i] == "/")
         {
             if (vals[i+1] == 0)
             {
-                qWarning() << "警告：被除数是0 ：" << exp;
+                qWarning() << "!!!被除数是0 ：" << exp;
                 vals[i+1] = 1;
             }
             vals[i] /= vals[i+1];
         }
         else if (ops[i] == "%")
+        {
+            if (vals[i+1] == 0)
+            {
+                qWarning() << "!!!被模数是0 ：" << exp;
+                vals[i+1] = 1;
+            }
             vals[i] %= vals[i+1];
+        }
         else
             continue;
         vals.removeAt(i+1);
@@ -4055,7 +4067,6 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QRegularExpressionMatch match;
     if (simp.indexOf(defRe, 0, &match) > -1)
     {
-        qDebug() << "11111";
         simp = match.capturedTexts().at(1);
     }
 
@@ -6874,7 +6885,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else
         {
-            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
+            qDebug() << "新的进入msgType" << msgType << json;
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
