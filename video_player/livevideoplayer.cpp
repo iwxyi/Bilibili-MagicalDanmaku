@@ -444,10 +444,10 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!pictureBrowser)
         {
             pictureBrowser = new PictureBrowser(settings, nullptr);
-            pictureBrowser->readDirectory(captureDir.absolutePath());
         }
 
         pictureBrowser->show();
+        pictureBrowser->readDirectory(captureDir.absolutePath());
     })->hide(useVideoWidget);
 
     menu->exec();

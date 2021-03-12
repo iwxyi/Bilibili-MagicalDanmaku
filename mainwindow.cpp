@@ -11656,9 +11656,9 @@ void MainWindow::on_actionPicture_Browser_triggered()
     if (!pictureBrowser)
     {
         pictureBrowser = new PictureBrowser(settings, nullptr);
-        pictureBrowser->readDirectory(QApplication::applicationDirPath() + "/captures");
     }
     pictureBrowser->show();
+    pictureBrowser->readDirectory(QApplication::applicationDirPath() + "/captures");
 }
 
 void MainWindow::on_orderSongsToFileCheck_clicked()
