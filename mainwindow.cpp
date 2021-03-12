@@ -3858,9 +3858,9 @@ bool MainWindow::processVariantConditions(QString exprs) const
         {
             CALC_DEB << "表达式and内：" << exp;
             exp = exp.trimmed();
-            if (exp.indexOf(compRe, 0, &match) == -1) // 非比较
+            if (exp.indexOf(compRe, 0, &match) == -1         // 非比较
+                    || (match.captured(1).isEmpty() && match.captured(2) == "!"))    // 取反类型
             {
-                exp = exp.trimmed();
                 bool notTrue = exp.startsWith("!"); // 与否取反
                 if (notTrue) // 取反……
                 {
