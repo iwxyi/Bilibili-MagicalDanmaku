@@ -55,6 +55,7 @@ SOURCES += \
     picture_browser/picturebrowser.cpp \
     picture_browser/resizablepicture.cpp \
     server.cpp \
+    utils/netinterface.cpp \
     utils/xfytts.cpp \
     video_player/videosurface.cpp \
     widgets/catchyouwidget.cpp \
@@ -63,6 +64,7 @@ SOURCES += \
     widgets/eventwidget.cpp \
     widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
+    widgets/qrcodelogindialog.cpp \
     widgets/replywidget.cpp \
     widgets/roomstatusdialog.cpp \
     widgets/taskwidget.cpp \
@@ -114,6 +116,8 @@ HEADERS += \
     widgets/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
+    widgets/netinterface.h \
+    widgets/qrcodelogindialog.h \
     widgets/replywidget.h \
     widgets/roomstatusdialog.h \
     widgets/taskwidget.h \
@@ -136,6 +140,7 @@ FORMS += \
     video_player/livevideoplayer.ui \
     widgets/catchyouwidget.ui \
     widgets/eternalblockdialog.ui \
+    widgets/qrcodelogindialog.ui \
     widgets/roomstatusdialog.ui \
     widgets/videolyricscreator.ui
 

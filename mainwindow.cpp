@@ -8,6 +8,7 @@
 #include "eventwidget.h"
 #include "RoundedAnimationLabel.h"
 #include "catchyouwidget.h"
+#include "qrcodelogindialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -32,6 +33,7 @@ QVariant CommonValues::userCookies;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow),
+      NetInterface(this),
       settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat),
       robotRecord(QApplication::applicationDirPath()+"/robots.ini", QSettings::Format::IniFormat)
 {
@@ -1406,6 +1408,11 @@ void MainWindow::on_testDanmakuButton_clicked()
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         appendNewLiveDanmaku(danmaku);
         triggerCmdEvent("SEND_GIFT", danmaku);
+    }
+    else if (text == "测试高能榜")
+    {
+        QByteArray ba = "{ \"cmd\": \"ENTRY_EFFECT\", \"data\": { \"basemap_url\": \"https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png\", \"business\": 3, \"copy_color\": \"#000000\", \"copy_writing\": \"欢迎 <%___君陌%> 进入直播间\", \"copy_writing_v2\": \"欢迎 <^icon^> <%___君陌%> 进入直播间\", \"effective_time\": 2, \"face\": \"https://i1.hdslb.com/bfs/face/8fb8336e1ae50001ca76b80c30b01d23b07203c9.jpg\", \"highlight_color\": \"#FFF100\", \"icon_list\": [ 2 ], \"id\": 136, \"max_delay_time\": 7, \"mock_effect\": 0, \"priority\": 1, \"privilege_type\": 0, \"show_avatar\": 1, \"target_id\": 5988102, \"uid\": 453364, \"web_basemap_url\": \"https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png\", \"web_close_time\": 900, \"web_effect_close\": 0, \"web_effective_time\": 2 } }";
+        handleMessage(QJsonDocument::fromJson(ba).object());
     }
     else
     {
@@ -6678,8 +6685,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         triggerCmdEvent(cmd, danmaku);
     }
-    else  if (cmd == "ENTRY_EFFECT") // 舰长进入、高能榜（不知道到榜几）的同时会出现
+    else  if (cmd == "ENTRY_EFFECT") // 舰长进入、高能榜（不知道到榜几）、姥爷的同时会出现
     {
+        // 欢迎舰长
         /*{
             "cmd": "ENTRY_EFFECT",
             "data": {
@@ -6709,6 +6717,37 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
+        // 欢迎姥爷
+        /*{
+            "cmd": "ENTRY_EFFECT",
+            "data": {
+                "basemap_url": "https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png",
+                "business": 3,
+                "copy_color": "#000000",
+                "copy_writing": "欢迎 <%___君陌%> 进入直播间",
+                "copy_writing_v2": "欢迎 <^icon^> <%___君陌%> 进入直播间",
+                "effective_time": 2,
+                "face": "https://i1.hdslb.com/bfs/face/8fb8336e1ae50001ca76b80c30b01d23b07203c9.jpg",
+                "highlight_color": "#FFF100",
+                "icon_list": [
+                    2
+                ],
+                "id": 136,
+                "max_delay_time": 7,
+                "mock_effect": 0,
+                "priority": 1,
+                "privilege_type": 0,
+                "show_avatar": 1,
+                "target_id": 5988102,
+                "uid": 453364,
+                "web_basemap_url": "https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png",
+                "web_close_time": 900,
+                "web_effect_close": 0,
+                "web_effective_time": 2
+            }
+        }*/
+        qDebug() << json;
+
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
@@ -6733,6 +6772,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 {
                     danmaku = onlineGoldRank.at(i); // 就是这个用户了
                     danmaku.setTime(QDateTime::currentDateTime());
+                    qDebug() << "                guard:" << danmaku.getGuard();
                     break;
                 }
             }
@@ -6742,6 +6782,9 @@ void MainWindow::handleMessage(QJsonObject json)
                 updateOnlineGoldRank();
                 return ;
             }
+
+            // 高能榜的，不能有guard，不然会误判为牌子
+            // danmaku.setGuardLevel(0);
         }
         else // 舰长进入
         {
@@ -6760,6 +6803,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 guardLevel = 3;
 
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
+            qDebug() << "~~~~~~~~~~~~~~~~保存舰长：" << uname << gd << guardLevel;
         }
 
         userComeEvent(danmaku);
@@ -8588,7 +8632,7 @@ void MainWindow::updateOnlineGoldRank()
             int score = item.value("score").toInt(); // 金瓜子数量
             int rank = item.value("userRank").toInt(); // 1,2,3...
 
-            names.append(name);
+            names.append(name + " " + snum(guard_level));
             LiveDanmaku danmaku(name, uid, QDateTime(), false,
                                 "", "", "");
             danmaku.setFirst(rank);
@@ -10764,93 +10808,10 @@ void MainWindow::startSplash()
 #endif
 }
 
-void MainWindow::get(QString url, NetStringFunc func)
+void MainWindow::setCookie(const QString &url, QNetworkRequest *request)
 {
-    get(url, [=](QNetworkReply* reply){
-        func(reply->readAll());
-    });
-}
-
-void MainWindow::get(QString url, NetJsonFunc func)
-{
-    get(url, [=](QNetworkReply* reply){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << error.errorString() << url;
-            return ;
-        }
-        func(document.object());
-    });
-}
-
-void MainWindow::get(QString url, NetReplyFunc func)
-{
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
     if (url.contains("bilibili.com") && !browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, userCookies);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        func(reply);
-
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-    });
-    manager->get(*request);
-}
-
-void MainWindow::post(QString url, QStringList params, NetJsonFunc func)
-{
-    QString data;
-    for (int i = 0; i < params.size(); i++)
-    {
-        if (i & 1) // 用户数据
-            data += QUrl::toPercentEncoding(params.at(i));
-        else // 固定变量
-            data += (i==0?"":"&") + params.at(i) + "=";
-    }
-    QByteArray ba(data.toLatin1());
-    post(url, ba, func);
-}
-
-void MainWindow::post(QString url, QByteArray ba, NetJsonFunc func)
-{
-    post(url, ba, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "解析返回文本JSON错误：" << error.errorString() << url << reply;
-            return ;
-        }
-        QJsonObject json = document.object();
-        func(json);
-    });
-}
-
-void MainWindow::post(QString url, QByteArray ba, NetReplyFunc func)
-{
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    if (url.contains("bilibili.com") && !browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-
-    // 连接槽
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        func(reply);
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-    });
-
-    manager->post(*request, ba);
 }
 
 QString MainWindow::GetFileVertion(QString fullName)
@@ -11910,4 +11871,10 @@ void MainWindow::on_allowRemoteControlCheck_clicked()
 void MainWindow::on_actionJoin_Battle_triggered()
 {
     joinBattle(1);
+}
+
+void MainWindow::on_actionQRCode_Login_triggered()
+{
+    QRCodeLoginDialog* dialog = new QRCodeLoginDialog(this);
+    dialog->exec();
 }

@@ -4,8 +4,6 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QSettings>
-#include <QJsonDocument>
-#include <QJsonParseError>
 #include <QDebug>
 #include <QApplication>
 #include <QClipboard>
@@ -38,6 +36,7 @@
 #include "xfytts.h"
 #include "eternalblockdialog.h"
 #include "picturebrowser.h"
+#include "netinterface.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -70,7 +69,7 @@ QT_END_NAMESPACE
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
-class MainWindow : public QMainWindow, public CommonValues
+class MainWindow : public QMainWindow, public CommonValues, public NetInterface
 {
     Q_OBJECT
     Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
@@ -538,6 +537,8 @@ private slots:
 
     void on_actionJoin_Battle_triggered();
 
+    void on_actionQRCode_Login_triggered();
+
 private:
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
@@ -681,12 +682,7 @@ private:
 
     void startSplash();
 
-    void get(QString url, NetStringFunc func);
-    void get(QString url, NetJsonFunc func);
-    void get(QString url, NetReplyFunc func);
-    void post(QString url, QStringList params, NetJsonFunc func);
-    void post(QString url, QByteArray ba, NetJsonFunc func);
-    void post(QString url, QByteArray ba, NetReplyFunc func);
+    virtual void setCookie(const QString &url, QNetworkRequest *request) override;
 
     void initServerData();
     void openServer(int port = 0);

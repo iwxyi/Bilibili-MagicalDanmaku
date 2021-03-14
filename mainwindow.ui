@@ -3266,7 +3266,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>451</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -3287,6 +3287,7 @@ margin: 6px;</string>
     <property name="title">
      <string>账号</string>
     </property>
+    <addaction name="actionQRCode_Login"/>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
     <addaction name="actionCookie_Help"/>
@@ -3533,6 +3534,11 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>开启大乱斗</string>
+   </property>
+  </action>
+  <action name="actionQRCode_Login">
+   <property name="text">
+    <string>二维码登录</string>
    </property>
   </action>
  </widget>

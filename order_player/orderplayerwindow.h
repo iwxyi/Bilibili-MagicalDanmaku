@@ -7,7 +7,6 @@
 #include <QDebug>
 #include <QApplication>
 #include <QClipboard>
-#include <QNetworkCookie>
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QTextCodec>
@@ -16,8 +15,6 @@
 #include <QtWebSockets/QWebSocket>
 #include <QAuthenticator>
 #include <QtConcurrent/QtConcurrent>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QStyledItemDelegate>
 #include <QListView>
 #include <QStringListModel>
@@ -29,6 +26,7 @@
 #include "numberanimation.h"
 #include "imageutil.h"
 #include "logindialog.h"
+#include "netinterface.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class OrderPlayerWindow; }
@@ -45,10 +43,6 @@ QT_END_NAMESPACE
 #define LISTTAB_HISTORY 3
 
 #define MUSIC_DEB if (0) qDebug()
-
-typedef std::function<void(QString)> const NetStringFunc;
-typedef std::function<void(QJsonObject)> const NetJsonFunc;
-typedef std::function<void(QNetworkReply*)> const NetReplyFunc;
 
 enum MusicQuality
 {
