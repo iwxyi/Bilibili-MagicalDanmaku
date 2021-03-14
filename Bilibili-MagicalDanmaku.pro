@@ -55,7 +55,6 @@ SOURCES += \
     picture_browser/picturebrowser.cpp \
     picture_browser/resizablepicture.cpp \
     server.cpp \
-    utils/netinterface.cpp \
     utils/xfytts.cpp \
     video_player/videosurface.cpp \
     widgets/catchyouwidget.cpp \
@@ -107,6 +106,7 @@ HEADERS += \
     qhttpserver/qhttpserver.h \
     qhttpserver/qhttpserverapi.h \
     qhttpserver/qhttpserverfwd.h \
+    utils/myjson.h \
     utils/xfytts.h \
     video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
