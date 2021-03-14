@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
     MainWindow w;
     if (w.getSettings().value("runtime/debugToFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);
+#if defined(ENABLE_TRAY)
     if (w.getSettings().value("mainwindow/autoShow", true).toBool())
+#endif
         w.show();
     return a.exec();
 }

@@ -93,7 +93,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 
-#ifndef Q_OS_ANDROID
+#if defined(ENABLE_SHORTCUT)
     editShortcut = new QxtGlobalShortcut(this);
     QString def_key = settings.value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
     editShortcut->setShortcut(QKeySequence(def_key));
@@ -107,9 +107,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
         }
         else // 激活并聚焦
         {
-#ifdef Q_OS_WIN32
             prevWindow = GetForegroundWindow();
-#endif
 
             this->activateWindow();
             if (lineEdit->isHidden())
@@ -1253,7 +1251,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
-#ifndef Q_OS_ANDROID
+#if defined(ENABLE_SHORTCUT)
     settingMenu->addAction(actionDialogSend);
     settingMenu->addAction(actionShortCut);
 #endif
@@ -1579,7 +1577,7 @@ void LiveDanmakuWindow::showMenu()
             lineEdit->hide();
         settings.setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
     });
-#ifndef Q_OS_ANDROID
+#if defined(ENABLE_SHORTCUT)
     connect(actionDialogSend, &QAction::triggered, this, [=]{
         bool enable = !settings.value("livedanmakuwindow/sendEditShortcut", false).toBool();
         settings.setValue("livedanmakuwindow/sendEditShortcut", enable);
@@ -2396,7 +2394,7 @@ void LiveDanmakuWindow::closeTransMouse()
 
 void LiveDanmakuWindow::restart()
 {
-#ifndef Q_OS_ANDROID
+#if defined(ENABLE_SHORTCUT)
         editShortcut->setShortcut(QKeySequence(""));
         editShortcut->setDisabled(true);
         delete editShortcut;
