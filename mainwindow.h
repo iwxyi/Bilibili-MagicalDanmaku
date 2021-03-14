@@ -146,7 +146,7 @@ public:
         VoiceCustom
     };
 
-    const QSettings &getSettings() const;
+    const QSettings *getSettings() const;
 
 protected:
     void showEvent(QShowEvent* event) override;
@@ -540,6 +540,8 @@ private slots:
     void on_actionQRCode_Login_triggered();
 
 private:
+    void initPath();
+    void readConfig();
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
@@ -702,7 +704,8 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    QSettings settings;
+    QSettings* settings;
+    QString dataPath;
     QString appNewVersion;
     QString appDownloadUrl;
 
@@ -876,7 +879,7 @@ private:
 
     // 机器人
     int judgeRobot = 0;
-    QSettings robotRecord;
+    QSettings* robotRecord;
     QList<QWebSocket*> robots_sockets;
 
     // 托盘

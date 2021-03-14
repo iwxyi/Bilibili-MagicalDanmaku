@@ -122,6 +122,7 @@ class OrderPlayerWindow : public QMainWindow
     Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
 public:
     OrderPlayerWindow(QWidget *parent = nullptr);
+    OrderPlayerWindow(QString dataPath, QWidget* parent = nullptr);
     ~OrderPlayerWindow() override;
 
     enum PlayCircleMode

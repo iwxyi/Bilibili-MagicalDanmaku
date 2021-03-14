@@ -18,7 +18,7 @@ class LuckyDrawWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit LuckyDrawWindow(QWidget *parent = nullptr);
+    explicit LuckyDrawWindow(QSettings *st, QWidget *parent = nullptr);
     ~LuckyDrawWindow();
 
     enum LotteryType

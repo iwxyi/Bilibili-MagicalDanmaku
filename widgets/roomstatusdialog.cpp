@@ -13,21 +13,21 @@
 #include "ui_roomstatusdialog.h"
 #include "livevideoplayer.h"
 
-RoomStatusDialog::RoomStatusDialog(QSettings &settings, QWidget *parent) :
+RoomStatusDialog::RoomStatusDialog(QSettings *settings, QString dataPath, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RoomStatusDialog),
-    settings(settings)
+    settings(settings), dataPath(dataPath)
 {
     ui->setupUi(this);
     setModal(false);
     setAttribute(Qt::WA_DeleteOnClose, true);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
-    int count = settings.value("rooms/count", 0).toInt();
+    int count = settings->value("rooms/count", 0).toInt();
     ui->roomsTable->setRowCount(count);
     for (int i = 0; i < count; i++)
     {
-        QString id = settings.value("rooms/r" + QString::number(i)).toString();
+        QString id = settings->value("rooms/r" + QString::number(i)).toString();
         roomStatus.append(RoomStatus(id));
         ui->roomsTable->setItem(i, 0, new QTableWidgetItem(id));
     }
@@ -54,8 +54,8 @@ void RoomStatusDialog::on_addRoomButton_clicked()
     ui->roomsTable->setItem(roomStatus.size()-1, 0, new QTableWidgetItem(id));
     refreshRoomStatus(id);
 
-    settings.setValue("rooms/count", roomStatus.size());
-    settings.setValue("rooms/r" + QString::number(roomStatus.size()-1), id);
+    settings->setValue("rooms/count", roomStatus.size());
+    settings->setValue("rooms/r" + QString::number(roomStatus.size()-1), id);
 }
 
 void RoomStatusDialog::on_refreshStatusButton_clicked()
@@ -120,9 +120,9 @@ void RoomStatusDialog::on_roomsTable_customContextMenuRequested(const QPoint &)
         roomStatus.removeAt(row);
         ui->roomsTable->removeRow(row);
 
-        settings.setValue("rooms/count", roomStatus.size());
+        settings->setValue("rooms/count", roomStatus.size());
         for (int i = row; i < roomStatus.size(); i++)
-            settings.setValue("rooms/r" + QString::number(roomStatus.size()-1), roomStatus.at(i).roomId);
+            settings->setValue("rooms/r" + QString::number(roomStatus.size()-1), roomStatus.at(i).roomId);
     });
 
     menu->exec(QCursor::pos());
@@ -216,7 +216,7 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
 
 void RoomStatusDialog::openRoomVideo(QString roomId)
 {
-    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, dataPath, nullptr);
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->show();
@@ -274,12 +274,12 @@ void RoomStatusDialog::showEvent(QShowEvent *e)
 {
     QDialog::showEvent(e);
 
-    restoreGeometry(settings.value("rooms/geometry").toByteArray());
+    restoreGeometry(settings->value("rooms/geometry").toByteArray());
 }
 
 void RoomStatusDialog::closeEvent(QCloseEvent *e)
 {
-    settings.setValue("rooms/geometry", this->saveGeometry());
+    settings->setValue("rooms/geometry", this->saveGeometry());
 
     QDialog::closeEvent(e);
 }

@@ -34,7 +34,7 @@ class RoomStatusDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit RoomStatusDialog(QSettings& settings, QWidget *parent = nullptr);
+    explicit RoomStatusDialog(QSettings* settings, QString dataPath, QWidget *parent = nullptr);
     ~RoomStatusDialog() override;
 
 private slots:
@@ -59,7 +59,8 @@ protected:
 private:
     Ui::RoomStatusDialog *ui;
 
-    QSettings& settings;
+    QSettings* settings;
+    QString dataPath;
     QList<RoomStatus> roomStatus;
 };
 

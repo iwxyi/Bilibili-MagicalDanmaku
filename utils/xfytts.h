@@ -15,7 +15,7 @@ class XfyTTS : public QObject
 {
     Q_OBJECT
 public:
-    XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject* parent = nullptr);
+    XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecret, QObject* parent = nullptr);
 
     void speakText(QString text);
     void speakNext();

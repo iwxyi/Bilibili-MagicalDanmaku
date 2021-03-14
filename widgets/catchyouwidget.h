@@ -16,8 +16,8 @@ class CatchYouWidget : public QWidget, public CommonValues
 {
     Q_OBJECT
 public:
-    explicit CatchYouWidget(QSettings& settings, QWidget *parent = nullptr);
-    ~CatchYouWidget();
+    explicit CatchYouWidget(QSettings* settings, QString dataPath, QWidget *parent = nullptr);
+    ~CatchYouWidget() override;
 
     void catchUser(QString userId);
     void setDefaultUser(QString userId);
@@ -71,7 +71,8 @@ protected:
 
 private:
     Ui::CatchYouWidget *ui;
-    QSettings& settings;
+    QSettings* settings;
+    QString dataPath;
 
     QString userId;
     QList<UserInfo> users;

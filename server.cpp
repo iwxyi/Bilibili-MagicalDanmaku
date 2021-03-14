@@ -144,13 +144,13 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         QString key = data.value("key").toString();
         QJsonValue val = data.value("value");
         if (val.isString())
-            settings.setValue(key, val.toString());
+            settings->setValue(key, val.toString());
         else if (val.isBool())
-            settings.setValue(key, val.toBool());
+            settings->setValue(key, val.toBool());
         else if (val.isDouble())
-            settings.setValue(key, val.toDouble());
+            settings->setValue(key, val.toDouble());
         else
-            settings.setValue(key, val.toVariant());
+            settings->setValue(key, val.toVariant());
     }
     else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {

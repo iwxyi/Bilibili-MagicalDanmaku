@@ -15,10 +15,9 @@
 #include "videolyricscreator.h"
 #include "ui_videolyricscreator.h"
 
-VideoLyricsCreator::VideoLyricsCreator(QWidget *parent) :
+VideoLyricsCreator::VideoLyricsCreator(QSettings* st, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::VideoLyricsCreator),
-    settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat)
+    ui(new Ui::VideoLyricsCreator), settings(st)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose, true);

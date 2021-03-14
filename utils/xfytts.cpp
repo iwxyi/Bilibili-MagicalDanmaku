@@ -5,11 +5,11 @@
 #include <QJsonParseError>
 #include "xfytts.h"
 
-XfyTTS::XfyTTS(QString APPID, QString APIKey, QString APISecret, QObject *parent)
+XfyTTS::XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecret, QObject *parent)
     : QObject(parent), APPID(APPID), APIKey(APIKey), APISecret(APISecret)
 {
     AUTH_DEB << APIKey << APISecret;
-    savedDir = QApplication::applicationDirPath() + "/audios/";
+    savedDir = dataPath + "audios/";
     QDir dir(savedDir);
     dir.mkpath(savedDir);
 

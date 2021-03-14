@@ -31,7 +31,7 @@ class LiveVideoPlayer : public QDialog
 {
     Q_OBJECT
 public:
-    explicit LiveVideoPlayer(QSettings& settings, QWidget *parent = nullptr);
+    explicit LiveVideoPlayer(QSettings* settings, QString dataPath, QWidget *parent = nullptr);
     ~LiveVideoPlayer() override;
 
 public slots:
@@ -84,7 +84,8 @@ private:
 
 private:
     Ui::LiveVideoPlayer *ui;
-    QSettings& settings;
+    QSettings* settings;
+    QString dataPath;
     QString roomId;
 
     QMediaPlayer* player;

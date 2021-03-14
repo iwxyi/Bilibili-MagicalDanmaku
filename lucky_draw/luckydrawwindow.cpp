@@ -1,10 +1,10 @@
 #include "luckydrawwindow.h"
 #include "ui_luckydrawwindow.h"
 
-LuckyDrawWindow::LuckyDrawWindow(QWidget *parent) :
+LuckyDrawWindow::LuckyDrawWindow(QSettings* st, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::LuckyDrawWindow),
-    settings(QApplication::applicationDirPath()+"/settings.ini", QSettings::Format::IniFormat),
+    settings(st),
     countdownTimer(new QTimer(this))
 {
     ui->setupUi(this);

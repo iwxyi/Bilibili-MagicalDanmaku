@@ -45,7 +45,7 @@ class PictureBrowser : public QMainWindow
     Q_OBJECT
 
 public:
-    PictureBrowser(QSettings &settings, QWidget *parent = nullptr);
+    PictureBrowser(QSettings *settings, QWidget *parent = nullptr);
     ~PictureBrowser() override;
 
     struct ListProgress
@@ -264,7 +264,7 @@ private:
     QLabel* sizeLabel;
     QProgressBar* progressBar;
 
-    QSettings& settings;
+    QSettings* settings;
     QString rootDirPath;
     QString tempDirPath;
     QDir recycleDir;

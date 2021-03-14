@@ -1,7 +1,7 @@
 #include "picturebrowser.h"
 #include "ui_picturebrowser.h"
 
-PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
+PictureBrowser::PictureBrowser(QSettings *settings, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::PictureBrowser),
     settings(settings)
@@ -14,9 +14,9 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     iconSizeGroup->addAction(ui->actionIcon_Large);
     iconSizeGroup->addAction(ui->actionIcon_Middle);
     iconSizeGroup->addAction(ui->actionIcon_Small);
-    if (settings.contains("picturebrowser/iconSize"))
+    if (settings->contains("picturebrowser/iconSize"))
     {
-        int size = settings.value("picturebrowser/iconSize").toInt();
+        int size = settings->value("picturebrowser/iconSize").toInt();
         ui->listWidget->setIconSize(QSize(size, size));
 
         if (size == 64)
@@ -56,7 +56,7 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
 
     // 播放动图
     slideTimer = new QTimer(this);
-    int interval = settings.value("picturebrowser/slideInterval", 100).toInt();
+    int interval = settings->value("picturebrowser/slideInterval", 100).toInt();
     slideTimer->setInterval(interval);
     connect(slideTimer, &QTimer::timeout, this, [&]{
         int row = ui->listWidget->currentRow();
@@ -83,7 +83,7 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
                 targetRow = row + 1; // 播放下一帧
             }
             else if (count > 1 && row == count-1
-                     && settings.value("picturebrowser/slideReturnFirst", false).toBool())
+                     && settings->value("picturebrowser/slideReturnFirst", false).toBool())
             {
                 if (ui->listWidget->item(0)->data(FilePathRole).toString() == BACK_PREV_DIRECTORY)
                     // 子目录第一项是返回上一级
@@ -123,7 +123,7 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     QActionGroup* createFolderGroup = new QActionGroup(this);
     createFolderGroup->addAction(ui->actionCreate_To_Origin_Folder);
     createFolderGroup->addAction(ui->actionCreate_To_One_Folder);
-    bool toOne = settings.value("gif/createToOne", false).toBool();
+    bool toOne = settings->value("gif/createToOne", false).toBool();
     if (toOne)
         ui->actionCreate_To_One_Folder->setChecked(true);
     else
@@ -133,13 +133,13 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     QActionGroup* gifRecordGroup = new QActionGroup(this);
     gifRecordGroup->addAction(ui->actionGIF_Use_Record_Interval);
     gifRecordGroup->addAction(ui->actionGIF_Use_Display_Interval);
-    bool gifUseRecordInterval = settings.value("gif/recordInterval", true).toBool();
+    bool gifUseRecordInterval = settings->value("gif/recordInterval", true).toBool();
     ui->actionGIF_Use_Record_Interval->setChecked(gifUseRecordInterval);
     ui->actionGIF_Use_Display_Interval->setChecked(!gifUseRecordInterval);
     QActionGroup* gifDitherGroup = new QActionGroup(this);
     gifDitherGroup->addAction(ui->actionDither_Enabled);
     gifDitherGroup->addAction(ui->actionDither_Disabled);
-    if (settings.value("gif/dither", true).toBool())
+    if (settings->value("gif/dither", true).toBool())
         ui->actionDither_Enabled->setChecked(true);
     else
         ui->actionDither_Disabled->setChecked(true);
@@ -149,7 +149,7 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     gifCompressGroup->addAction(ui->actionGIF_Compress_x2);
     gifCompressGroup->addAction(ui->actionGIF_Compress_x4);
     gifCompressGroup->addAction(ui->actionGIF_Compress_x8);
-    int gifCompress = settings.value("gif/compress", 0).toInt();
+    int gifCompress = settings->value("gif/compress", 0).toInt();
     if (gifCompress == 0)
         ui->actionGIF_Compress_None->setChecked(true);
     else if (gifCompress == 1)
@@ -182,7 +182,7 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     convertGroup4->addAction(ui->actionNoOpaqueDetection);
     convertGroup4->addAction(ui->actionNoFormatConversion);
 
-    imageConversion = (Qt::ImageConversionFlags)settings.value("gif/imageConversion", 0).toInt();
+    imageConversion = (Qt::ImageConversionFlags)settings->value("gif/imageConversion", 0).toInt();
     fromImageConversionFlag();
 
     connect(this, &PictureBrowser::signalGeneralGIFProgress, this, [=](int index){
@@ -234,12 +234,12 @@ PictureBrowser::PictureBrowser(QSettings &settings, QWidget *parent) :
     });
 
     // 预览设置
-    bool resizeAutoInit = settings.value("picturebrowser/resizeAutoInit", true).toBool();
+    bool resizeAutoInit = settings->value("picturebrowser/resizeAutoInit", true).toBool();
     ui->actionResize_Auto_Init->setChecked(resizeAutoInit);
     ui->previewPicture->setResizeAutoInit(resizeAutoInit);
 
     // 快速分类
-    fastSort = settings.value("picturebrowser/fastSort", true).toBool();
+    fastSort = settings->value("picturebrowser/fastSort", true).toBool();
 
     // 状态栏
     selectLabel = new QLabel;
@@ -439,10 +439,10 @@ void PictureBrowser::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
 
-    restoreGeometry(settings.value("picturebrowser/geometry").toByteArray());
-    restoreState(settings.value("picturebrowser/state").toByteArray());
-    ui->splitter->restoreGeometry(settings.value("picturebrowser/splitterGeometry").toByteArray());
-    ui->splitter->restoreState(settings.value("picturebrowser/splitterState").toByteArray());
+    restoreGeometry(settings->value("picturebrowser/geometry").toByteArray());
+    restoreState(settings->value("picturebrowser/state").toByteArray());
+    ui->splitter->restoreGeometry(settings->value("picturebrowser/splitterGeometry").toByteArray());
+    ui->splitter->restoreState(settings->value("picturebrowser/splitterState").toByteArray());
 
     // 初始化缩放
     static bool inited = false;
@@ -452,17 +452,17 @@ void PictureBrowser::showEvent(QShowEvent *event)
         ui->previewPicture->resetScale();
     }
 
-    int is = settings.value("picturebrowser/iconSize", 64).toInt();
+    int is = settings->value("picturebrowser/iconSize", 64).toInt();
     ui->listWidget->setIconSize(QSize(1, 1));
     ui->listWidget->setIconSize(QSize(is, is));
 }
 
 void PictureBrowser::closeEvent(QCloseEvent *event)
 {
-    settings.setValue("picturebrowser/geometry", this->saveGeometry());
-    settings.setValue("picturebrowser/state", this->saveState());
-    settings.setValue("picturebrowser/splitterGeometry", ui->splitter->saveGeometry());
-    settings.setValue("picturebrowser/splitterState", ui->splitter->saveState());
+    settings->setValue("picturebrowser/geometry", this->saveGeometry());
+    settings->setValue("picturebrowser/state", this->saveState());
+    settings->setValue("picturebrowser/splitterGeometry", ui->splitter->saveGeometry());
+    settings->setValue("picturebrowser/splitterState", ui->splitter->saveState());
 
     slideTimer->stop();
 }
@@ -501,9 +501,9 @@ void PictureBrowser::keyPressEvent(QKeyEvent *event)
 
 void PictureBrowser::readSortFlags()
 {
-    sortFlags = static_cast<QDir::SortFlags>(settings.value("picturebrowser/sortType", QDir::Time).toInt());
+    sortFlags = static_cast<QDir::SortFlags>(settings->value("picturebrowser/sortType", QDir::Time).toInt());
 
-    if (settings.value("picturebrowser/sortReversed", false).toBool())
+    if (settings->value("picturebrowser/sortReversed", false).toBool())
         sortFlags |= QDir::Reversed;
 }
 
@@ -515,7 +515,7 @@ void PictureBrowser::showCurrentItemPreview()
 void PictureBrowser::setListWidgetIconSize(int x)
 {
     ui->listWidget->setIconSize(QSize(x, x));
-    settings.setValue("picturebrowser/iconSize", x);
+    settings->setValue("picturebrowser/iconSize", x);
     on_actionRefresh_triggered();
 }
 
@@ -568,7 +568,7 @@ void PictureBrowser::restoreCurrentViewPos()
 
 void PictureBrowser::setSlideInterval(int ms)
 {
-    settings.setValue("picturebrowser/slideInterval", ms);
+    settings->setValue("picturebrowser/slideInterval", ms);
     slideTimer->setInterval(ms);
 }
 
@@ -1100,28 +1100,28 @@ void PictureBrowser::on_listWidget_itemSelectionChanged()
 
 void PictureBrowser::on_actionSort_By_Time_triggered()
 {
-    settings.setValue("picturebrowser/sortType", QDir::Time);
+    settings->setValue("picturebrowser/sortType", QDir::Time);
     readSortFlags();
     on_actionRefresh_triggered();
 }
 
 void PictureBrowser::on_actionSort_By_Name_triggered()
 {
-    settings.setValue("picturebrowser/sortType", QDir::Name);
+    settings->setValue("picturebrowser/sortType", QDir::Name);
     readSortFlags();
     on_actionRefresh_triggered();
 }
 
 void PictureBrowser::on_actionSort_AESC_triggered()
 {
-    settings.setValue("picturebrowser/sortReversed", false);
+    settings->setValue("picturebrowser/sortReversed", false);
     readSortFlags();
     on_actionRefresh_triggered();
 }
 
 void PictureBrowser::on_actionSort_DESC_triggered()
 {
-    settings.setValue("picturebrowser/sortReversed", true);
+    settings->setValue("picturebrowser/sortReversed", true);
     readSortFlags();
     on_actionRefresh_triggered();
 }
@@ -1197,8 +1197,8 @@ void PictureBrowser::on_actionSlide_3000ms_triggered()
 
 void PictureBrowser::on_actionSlide_Return_First_triggered()
 {
-    bool first = !settings.value("picturebrowser/slideReturnFirst", false).toBool();
-    settings.setValue("picturebrowser/slideReturnFirst", first);
+    bool first = !settings->value("picturebrowser/slideReturnFirst", false).toBool();
+    settings->setValue("picturebrowser/slideReturnFirst", first);
 
     ui->actionSlide_Return_First->setChecked(first);
 }
@@ -1430,7 +1430,7 @@ bool PictureBrowser::copyDirectoryFiles(const QString &fromDir, const QString &t
  */
 int PictureBrowser::getRecordInterval()
 {
-    bool gifUseRecordInterval = settings.value("gif/recordInterval", true).toBool();
+    bool gifUseRecordInterval = settings->value("gif/recordInterval", true).toBool();
     int interval = 0;
     if (gifUseRecordInterval)
     {
@@ -1487,7 +1487,7 @@ void PictureBrowser::saveImageConversionFlag()
     else if (ui->actionNoFormatConversion->isChecked())
         imageConversion |= Qt::NoFormatConversion;
 
-    settings.setValue("gif/imageConversion", (int)imageConversion);
+    settings->setValue("gif/imageConversion", (int)imageConversion);
 }
 
 void PictureBrowser::fromImageConversionFlag()
@@ -1643,7 +1643,7 @@ void PictureBrowser::on_actionGeneral_GIF_triggered()
             .absoluteFilePath(fileName);
 
     // 压缩程度
-    int compress = settings.value("gif/compress", 0).toInt();
+    int compress = settings->value("gif/compress", 0).toInt();
     int prop = 1;
     for (int i = 0; i < compress; i++)
         prop *= 2;
@@ -1687,37 +1687,37 @@ void PictureBrowser::on_actionGeneral_GIF_triggered()
 
 void PictureBrowser::on_actionGIF_Use_Record_Interval_triggered()
 {
-    settings.setValue("gif/recordInterval", true);
+    settings->setValue("gif/recordInterval", true);
     ui->actionGIF_Use_Record_Interval->setChecked(true);
 }
 
 void PictureBrowser::on_actionGIF_Use_Display_Interval_triggered()
 {
-    settings.setValue("gif/recordInterval", false);
+    settings->setValue("gif/recordInterval", false);
     ui->actionGIF_Use_Display_Interval->setChecked(true);
 }
 
 void PictureBrowser::on_actionGIF_Compress_None_triggered()
 {
-    settings.setValue("gif/compress", 0);
+    settings->setValue("gif/compress", 0);
     ui->actionGIF_Compress_None->setChecked(true);
 }
 
 void PictureBrowser::on_actionGIF_Compress_x2_triggered()
 {
-    settings.setValue("gif/compress", 1);
+    settings->setValue("gif/compress", 1);
     ui->actionGIF_Compress_x2->setChecked(true);
 }
 
 void PictureBrowser::on_actionGIF_Compress_x4_triggered()
 {
-    settings.setValue("gif/compress", 2);
+    settings->setValue("gif/compress", 2);
     ui->actionGIF_Compress_x4->setChecked(true);
 }
 
 void PictureBrowser::on_actionGIF_Compress_x8_triggered()
 {
-    settings.setValue("gif/compress", 3);
+    settings->setValue("gif/compress", 3);
     ui->actionGIF_Compress_x8->setChecked(true);
 }
 
@@ -1849,12 +1849,12 @@ void PictureBrowser::on_actionGIF_ASCII_Art_triggered()
 
 void PictureBrowser::on_actionDither_Enabled_triggered()
 {
-    settings.setValue("gif/dither", true);
+    settings->setValue("gif/dither", true);
 }
 
 void PictureBrowser::on_actionDither_Disabled_triggered()
 {
-    settings.setValue("gif/dither", false);
+    settings->setValue("gif/dither", false);
 }
 
 void PictureBrowser::on_actionGeneral_AVI_triggered()
@@ -1892,7 +1892,7 @@ void PictureBrowser::on_actionGeneral_AVI_triggered()
             .absoluteFilePath(fileName);
 
     // 压缩程度
-    int compress = settings.value("gif/compress", 0).toInt();
+    int compress = settings->value("gif/compress", 0).toInt();
     int prop = 1;
     for (int i = 0; i < compress; i++)
         prop *= 2;
@@ -1936,18 +1936,18 @@ void PictureBrowser::on_actionGeneral_AVI_triggered()
 
 void PictureBrowser::on_actionCreate_To_Origin_Folder_triggered()
 {
-    settings.setValue("gif/createToOne", false);
+    settings->setValue("gif/createToOne", false);
 }
 
 void PictureBrowser::on_actionCreate_To_One_Folder_triggered()
 {
-    settings.setValue("gif/createToOne", true);
+    settings->setValue("gif/createToOne", true);
 }
 
 void PictureBrowser::on_actionResize_Auto_Init_triggered()
 {
     bool init = ui->actionResize_Auto_Init->isChecked();
-    settings.setValue("picturebrowser/resizeAutoInit", init);
+    settings->setValue("picturebrowser/resizeAutoInit", init);
     ui->previewPicture->setResizeAutoInit(init);
 }
 
@@ -2028,7 +2028,7 @@ void PictureBrowser::on_actionClip_Selected_triggered()
 void PictureBrowser::on_actionSort_Enabled_triggered()
 {
     fastSort = !fastSort;
-    settings.setValue("picturebrowser/fastSort", fastSort);
+    settings->setValue("picturebrowser/fastSort", fastSort);
 }
 
 void PictureBrowser::on_actionCreate_Folder_triggered()

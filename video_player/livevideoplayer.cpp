@@ -8,10 +8,10 @@
 #include "facilemenu.h"
 #include "picturebrowser.h"
 
-LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
+LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LiveVideoPlayer),
-    settings(settings)
+    settings(settings), dataPath(dataPath)
 {
     ui->setupUi(this);
     setModal(false);
@@ -19,7 +19,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     setMinimumSize(32, 32);
 
     // 设置模式
-    useVideoWidget = settings.value("videoplayer/useVideoWidget", false).toBool();
+    useVideoWidget = settings->value("videoplayer/useVideoWidget", false).toBool();
 
     /*QTimer* timer = new QTimer(this);
     timer->setInterval(5000);
@@ -105,29 +105,29 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings &settings, QWidget *parent) :
     ui->saveCapture60sButton->setFixedSize(uw, uw);
 
     // 设置音量
-    player->setVolume(settings.value("videoplayer/volume", 50).toInt());
-    setWindowOpacity(settings.value("videoplayer/opacity", 100).toInt() / 100.0);
+    player->setVolume(settings->value("videoplayer/volume", 50).toInt());
+    setWindowOpacity(settings->value("videoplayer/opacity", 100).toInt() / 100.0);
 
     // 设置置顶
-    if (settings.value("videoplayer/top", false).toBool())
+    if (settings->value("videoplayer/top", false).toBool())
         switchOnTop();
 
     // 设置全屏
-    if (settings.value("videoplayer/fullScreen", false).toBool())
+    if (settings->value("videoplayer/fullScreen", false).toBool())
         switchFullScreen();
 
     // 设置预先截图
     captureTimer = new QTimer(this);
     captureTimer->setInterval(100);
     connect(captureTimer, SIGNAL(timeout()), this, SLOT(slotSaveCurrentCapture()));
-    captureInterval = settings.value("videoplayer/captureInterval", 100).toInt();
-    enablePrevCapture = settings.value("videoplayer/capture", false).toBool();
-    transformation = (Qt::TransformationMode)settings.value("videoplayer/transformation", 0).toInt();
+    captureInterval = settings->value("videoplayer/captureInterval", 100).toInt();
+    enablePrevCapture = settings->value("videoplayer/capture", false).toBool();
+    transformation = (Qt::TransformationMode)settings->value("videoplayer/transformation", 0).toInt();
     if (useVideoWidget)
         enablePrevCapture = false;
     if (!enablePrevCapture)
         showCaptureButtons(false);
-    captureDir = QDir(QApplication::applicationDirPath() + "/captures");
+    captureDir = QDir(dataPath + "captures");
 }
 
 LiveVideoPlayer::~LiveVideoPlayer()
@@ -140,15 +140,15 @@ void LiveVideoPlayer::setRoomId(QString roomId)
     this->roomId = roomId;
 
     // 裁剪
-    clipCapture = settings.value("videoplayer/clipCapture", false).toBool();
-    clipLeft = settings.value("videoplayer/clipLeft_" + roomId, 0).toInt();
-    clipTop = settings.value("videoplayer/clipTop_" + roomId, 0).toInt();
-    clipRight = settings.value("videoplayer/clipRight_" + roomId, 0).toInt();
-    clipBottom = settings.value("videoplayer/clipBottom_" + roomId, 0).toInt();
+    clipCapture = settings->value("videoplayer/clipCapture", false).toBool();
+    clipLeft = settings->value("videoplayer/clipLeft_" + roomId, 0).toInt();
+    clipTop = settings->value("videoplayer/clipTop_" + roomId, 0).toInt();
+    clipRight = settings->value("videoplayer/clipRight_" + roomId, 0).toInt();
+    clipBottom = settings->value("videoplayer/clipBottom_" + roomId, 0).toInt();
 
     refreshPlayUrl();
 
-    captureDir = QDir(QApplication::applicationDirPath() + "/captures/" + roomId);
+    captureDir = QDir(dataPath + "captures/" + roomId);
 }
 
 void LiveVideoPlayer::slotLiveStart(QString roomId)
@@ -214,7 +214,7 @@ void LiveVideoPlayer::refreshPlayUrl()
 void LiveVideoPlayer::showEvent(QShowEvent *e)
 {
     QDialog::showEvent(e);
-    restoreGeometry(settings.value("videoplayer/geometry").toByteArray());
+    restoreGeometry(settings->value("videoplayer/geometry").toByteArray());
 
     if (!player->media().isNull())
     {
@@ -224,7 +224,7 @@ void LiveVideoPlayer::showEvent(QShowEvent *e)
 
 void LiveVideoPlayer::hideEvent(QHideEvent *e)
 {
-    settings.setValue("videoplayer/geometry", this->saveGeometry());
+    settings->setValue("videoplayer/geometry", this->saveGeometry());
 
     if (player->state() == QMediaPlayer::PlayingState)
     {
@@ -314,7 +314,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     opacityMenu->addNumberedActions("%1", 10, 110, [=](FacileMenuItem* item, int val){
         item->check(val == int((this->windowOpacity() + 0.005) * 10) * 10);
     }, [=](int opa){
-        settings.setValue("videoplayer/opacity", opa);
+        settings->setValue("videoplayer/opacity", opa);
         setWindowOpacity(opa / 100.0);
     }, 10);
 
@@ -322,7 +322,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
         item->check(val == (player->volume()+5) / 10 * 10);
     }, [=](int vol){
-        settings.setValue("videoplayer/volume", vol);
+        settings->setValue("videoplayer/volume", vol);
         player->setVolume(vol);
     }, 10);
 
@@ -330,25 +330,25 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (player->volume())
             player->setVolume(0);
         else
-            player->setVolume(settings.value("videoplayer/volume", 50).toInt());
+            player->setVolume(settings->value("videoplayer/volume", 50).toInt());
     })->check(!player->volume());
 
     menu->split()->addAction(QIcon(":/icons/capture"), "截图模式", [=]{
-        settings.setValue("videoplayer/useVideoWidget", !useVideoWidget);
+        settings->setValue("videoplayer/useVideoWidget", !useVideoWidget);
         this->close();
         emit signalRestart();
     })->check(!useVideoWidget);
 
     menu->addAction(QIcon(":/icons/linear"), "线性缩放", [=]{
         transformation = transformation ? Qt::FastTransformation : Qt::SmoothTransformation;
-        settings.setValue("videoplayer/transformation", transformation);
+        settings->setValue("videoplayer/transformation", transformation);
     })->check(!transformation)->hide(useVideoWidget);
 
     FacileMenu* clipMenu = menu->addMenu(QIcon(":/icons/clip"), "裁剪尺寸");
     menu->lastAction()->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip2"), "裁剪截图", [=]{
         clipCapture = !clipCapture;
-        settings.setValue("videoplayer/clipCapture", clipCapture);
+        settings->setValue("videoplayer/clipCapture", clipCapture);
     })->check(clipCapture)->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪左边", [=]{
         bool ok = false;
@@ -356,7 +356,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipLeft = val;
-        settings.setValue("videoplayer/clipLeft_" + roomId, clipLeft);
+        settings->setValue("videoplayer/clipLeft_" + roomId, clipLeft);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪顶边", [=]{
         bool ok = false;
@@ -364,7 +364,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipTop = val;
-        settings.setValue("videoplayer/clipTop_" + roomId, clipTop);
+        settings->setValue("videoplayer/clipTop_" + roomId, clipTop);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪右边", [=]{
         bool ok = false;
@@ -372,7 +372,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipRight = val;
-        settings.setValue("videoplayer/clipRight_" + roomId, clipRight);
+        settings->setValue("videoplayer/clipRight_" + roomId, clipRight);
     })->hide(useVideoWidget);
     clipMenu->addAction(QIcon(":/icons/clip"), "裁剪底边", [=]{
         bool ok = false;
@@ -380,18 +380,18 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         if (!ok)
             return ;
         clipBottom = val;
-        settings.setValue("videoplayer/clipBottom_" + roomId, clipBottom);
+        settings->setValue("videoplayer/clipBottom_" + roomId, clipBottom);
     })->hide(useVideoWidget);
     clipMenu->split()->addAction(QIcon(":/icons/clip"), "取消裁剪", [=]{
         clipLeft = clipTop = clipRight = clipBottom = false;
-        settings.setValue("videoplayer/clipLeft_" + roomId, clipLeft);
-        settings.setValue("videoplayer/clipTop_" + roomId, clipTop);
-        settings.setValue("videoplayer/clipRight_" + roomId, clipRight);
-        settings.setValue("videoplayer/clipBottom_" + roomId, clipBottom);
+        settings->setValue("videoplayer/clipLeft_" + roomId, clipLeft);
+        settings->setValue("videoplayer/clipTop_" + roomId, clipTop);
+        settings->setValue("videoplayer/clipRight_" + roomId, clipRight);
+        settings->setValue("videoplayer/clipBottom_" + roomId, clipBottom);
     });
 
     menu->split()->addAction(QIcon(":/icons/previous"), "预先截图", [=]{
-        enablePrevCapture = !settings.value("videoplayer/capture", false).toBool();
+        enablePrevCapture = !settings->value("videoplayer/capture", false).toBool();
         QSize sz = this->size();
         int deltaHeight = ui->playButton->height();
         if (enablePrevCapture)
@@ -404,7 +404,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
             stopCapture(true);
         }
         showCaptureButtons(enablePrevCapture);
-        settings.setValue("videoplayer/capture", enablePrevCapture);
+        settings->setValue("videoplayer/capture", enablePrevCapture);
         sz.setHeight(sz.height() + (enablePrevCapture ? deltaHeight : -deltaHeight));
         if (!this->isMaximized() && !this->isFullScreen())
             this->resize(sz);
@@ -437,7 +437,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
                 input = 0.0001;
             captureInterval = int(1000.0 / input);
         }
-        settings.setValue("videoplayer/captureInterval", captureInterval);
+        settings->setValue("videoplayer/captureInterval", captureInterval);
     });
 
     menu->addAction(QIcon(":/icons/capture_manager"), "截图管理", [=]{
@@ -503,15 +503,15 @@ void LiveVideoPlayer::switchFullScreen()
         if (fullScreen && (windowFlags() & Qt::WindowStaysOnTopHint))
         {
             switchOnTop();
-            settings.setValue("videoplayer/top", true);
+            settings->setValue("videoplayer/top", true);
         }
-        else if (!fullScreen && settings.value("videoplayer/top", false).toBool()
+        else if (!fullScreen && settings->value("videoplayer/top", false).toBool()
                   && !(windowFlags() & Qt::WindowStaysOnTopHint))
         {
             switchOnTop();
         }
         ui->videoWidget->setFullScreen(fullScreen);
-        settings.setValue("videoplayer/fullScreen", fullScreen);
+        settings->setValue("videoplayer/fullScreen", fullScreen);
 
     }
     else
@@ -522,7 +522,7 @@ void LiveVideoPlayer::switchFullScreen()
             if (windowFlags() & Qt::WindowStaysOnTopHint)
             {
                 switchOnTop();
-                settings.setValue("videoplayer/top", true);
+                settings->setValue("videoplayer/top", true);
             }
 
             this->layout()->removeWidget(ui->label);
@@ -531,7 +531,7 @@ void LiveVideoPlayer::switchFullScreen()
         }
         else
         {
-            if (settings.value("videoplayer/top", false).toBool() && !(windowFlags() & Qt::WindowStaysOnTopHint))
+            if (settings->value("videoplayer/top", false).toBool() && !(windowFlags() & Qt::WindowStaysOnTopHint))
             {
                 switchOnTop();
             }
@@ -539,7 +539,7 @@ void LiveVideoPlayer::switchFullScreen()
             ui->label->setWindowFlag(Qt::Window, false);
             static_cast<QVBoxLayout*>(this->layout())->insertWidget(1, ui->label, 1);
         }
-        settings.setValue("videoplayer/fullScreen", fullScreen);
+        settings->setValue("videoplayer/fullScreen", fullScreen);
     }
 }
 
@@ -552,7 +552,7 @@ void LiveVideoPlayer::switchOnTop()
     else
         setWindowFlag(Qt::WindowStaysOnTopHint, true);
     show();
-    settings.setValue("videoplayer/top", toTop);
+    settings->setValue("videoplayer/top", toTop);
 }
 
 /**

@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("神奇弹幕");
 
     MainWindow w;
-    if (w.getSettings().value("runtime/debugToFile", false).toBool())
+    if (w.getSettings()->value("runtime/debugToFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);
-    if (w.getSettings().value("mainwindow/autoShow", true).toBool())
+    if (w.getSettings()->value("mainwindow/autoShow", true).toBool())
         w.show();
     return a.exec();
 }

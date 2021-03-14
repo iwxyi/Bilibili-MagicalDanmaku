@@ -20,15 +20,15 @@
 #include "ui_catchyouwidget.h"
 #include "livevideoplayer.h"
 
-CatchYouWidget::CatchYouWidget(QSettings &settings, QWidget *parent) :
+CatchYouWidget::CatchYouWidget(QSettings *settings, QString dataPath, QWidget *parent) :
     QWidget(parent),
-    settings(settings),
+    settings(settings), dataPath(dataPath),
     ui(new Ui::CatchYouWidget)
 {
     ui->setupUi(this);
-    userId = settings.value("paosao/userId").toString();
+    userId = settings->value("paosao/userId").toString();
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    ui->cdSpin->setValue(settings.value("catch/cd", 150).toInt());
+    ui->cdSpin->setValue(settings->value("catch/cd", 150).toInt());
 }
 
 CatchYouWidget::~CatchYouWidget()
@@ -62,7 +62,7 @@ void CatchYouWidget::on_userButton_clicked()
     QString id = QInputDialog::getText(this, "输入用户Id", "请输入要抓的用户Id", QLineEdit::Normal, userId, &ok);
     if (!ok)
         return ;
-    settings.setValue("paosao/userId", id);
+    settings->setValue("paosao/userId", id);
 
     catchUser(id);
 }
@@ -318,7 +318,7 @@ void CatchYouWidget::addToTable(CatchYouWidget::RoomInfo room)
 
 void CatchYouWidget::openRoomVideo(QString roomId)
 {
-    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, dataPath, nullptr);
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(roomId);
     player->show();
@@ -351,14 +351,14 @@ void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const fun
 
 void CatchYouWidget::closeEvent(QCloseEvent *event)
 {
-    settings.setValue("catch/geometry", this->saveGeometry());
+    settings->setValue("catch/geometry", this->saveGeometry());
     QWidget::closeEvent(event);
 }
 
 void CatchYouWidget::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
-    restoreGeometry(settings.value("catch/geometry").toByteArray());
+    restoreGeometry(settings->value("catch/geometry").toByteArray());
 }
 
 void CatchYouWidget::on_tableWidget_customContextMenuRequested(const QPoint &)
@@ -400,5 +400,5 @@ void CatchYouWidget::on_tableWidget_customContextMenuRequested(const QPoint &)
 
 void CatchYouWidget::on_cdSpin_valueChanged(int arg1)
 {
-    settings.setValue("catch/cd", arg1);
+    settings->setValue("catch/cd", arg1);
 }

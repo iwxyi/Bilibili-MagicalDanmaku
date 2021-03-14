@@ -2,16 +2,22 @@
 #include "ui_orderplayerwindow.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
+    : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
+{
+}
+
+OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::OrderPlayerWindow),
-      settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat),
-      musicsFileDir(QApplication::applicationDirPath()+"/musics"),
+      settings(dataPath + "musics.ini", QSettings::Format::IniFormat),
+      musicsFileDir(dataPath+"musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(settings, nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this))
 {
     starting = true;
     ui->setupUi(this);
+    ui->lyricWidget->setSettings(&settings);
 
     connect(ui->lyricWidget, SIGNAL(signalRowChanged()), this, SIGNAL(signalLyricChanged()));
 

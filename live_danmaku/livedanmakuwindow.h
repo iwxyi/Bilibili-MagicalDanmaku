@@ -63,7 +63,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     friend class MainWindow;
     Q_ENUM(MessageType)
 public:
-    LiveDanmakuWindow(QSettings &st, QWidget *parent = nullptr);
+    LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *parent = nullptr);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -155,7 +155,8 @@ private:
     int getPrevAlpha() const;
 
 private:
-    QSettings& settings;
+    QSettings* settings;
+    QString dataPath;
 
     QListWidget* listWidget;
     TransparentEdit* lineEdit;

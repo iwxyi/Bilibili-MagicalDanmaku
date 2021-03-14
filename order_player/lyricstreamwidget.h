@@ -10,17 +10,22 @@ class LyricStreamWidget : public QWidget
     Q_OBJECT
 public:
     LyricStreamWidget(QWidget* parent = nullptr)
-        : QWidget(parent), settings(QApplication::applicationDirPath()+"/musics.ini", QSettings::Format::IniFormat),
+        : QWidget(parent),
           updateTimer(new QTimer(this))
     {
         setContextMenuPolicy(Qt::CustomContextMenu);
         connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu()));
-        playingColor = qvariant_cast<QColor>(settings.value("lyric/playingColor", playingColor));
-        waitingColor = qvariant_cast<QColor>(settings.value("lyric/waitingColor", waitingColor));
-        pointSize = settings.value("lyric/pointSize", pointSize).toInt();
 
         connect(updateTimer, SIGNAL(timeout()), this, SLOT(update()));
         updateTimer->setInterval(16);
+    }
+
+    void setSettings(QSettings* st)
+    {
+        this->settings = st;
+        playingColor = qvariant_cast<QColor>(settings->value("lyric/playingColor", playingColor));
+        waitingColor = qvariant_cast<QColor>(settings->value("lyric/waitingColor", waitingColor));
+        pointSize = settings->value("lyric/pointSize", pointSize).toInt();
     }
 
     void updateFixedHeight()
@@ -300,7 +305,7 @@ private slots:
                 return ;
             if (c != playingColor)
             {
-                settings.setValue("lyric/playingColor", playingColor = c);
+                settings->setValue("lyric/playingColor", playingColor = c);
                 update();
             }
         })->fgColor(playingColor);
@@ -310,7 +315,7 @@ private slots:
                 return ;
             if (c != waitingColor)
             {
-                settings.setValue("lyric/waitingColor", waitingColor = c);
+                settings->setValue("lyric/waitingColor", waitingColor = c);
                 update();
             }
         })->fgColor(waitingColor);
@@ -320,7 +325,7 @@ private slots:
             sl << QString::number(i);
         fontMenu->addOptions(sl, pointSize-8, [=](int index){
             pointSize = index + 8;
-            settings.setValue("lyric/pointSize", pointSize);
+            settings->setValue("lyric/pointSize", pointSize);
             updateFixedHeight();
             update();
         });
@@ -341,7 +346,7 @@ private slots:
     }
 
 private:
-    QSettings settings;
+    QSettings* settings;
     LyricStream lyricStream;
     int currentRow = -1;
     qint64 switchRowTimestamp = 0;

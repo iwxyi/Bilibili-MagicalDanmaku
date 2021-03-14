@@ -13,7 +13,7 @@ class VideoLyricsCreator : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit VideoLyricsCreator(QWidget *parent = nullptr);
+    explicit VideoLyricsCreator(QSettings *st, QWidget *parent = nullptr);
     ~VideoLyricsCreator();
 
 private slots:
