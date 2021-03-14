@@ -2,8 +2,10 @@
 #define DESKTOPLYRICWIDGET_H
 
 #include <QWidget>
+#ifdef Q_OS_WIN
 #include <windows.h>
 #include <windowsx.h>
+#endif
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>

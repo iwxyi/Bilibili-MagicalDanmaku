@@ -16,7 +16,8 @@ INCLUDEPATH += $$PWD/core \
 HEADERS  += $$PWD/core/qxtglobal.h \
     $$PWD/gui/qxtglobalshortcut_p.h \
     $$PWD/gui/qxtglobalshortcut.h \
-    $$PWD/gui/qxtwindowsystem.h
+    $$PWD/gui/qxtwindowsystem.h \
+    $$PWD/gui/qxtwindowsystem_mac.h
 
     SOURCES  +=	$$PWD/core/qxtglobal.cpp \
         $$PWD/gui/qxtwindowsystem.cpp \

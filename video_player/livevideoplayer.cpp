@@ -246,9 +246,10 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         QSize hint = useVideoWidget ? ui->videoWidget->sizeHint() : videoSize;
         if (hint.height() < 10 || hint.width() < 10)
             return ;
+
         QWidget* aw = useVideoWidget ? (QWidget*)(ui->videoWidget) : (QWidget*)(ui->label);
         int addin = !ui->playButton->isHidden() ? ui->playButton->height() : 0;
-        if (!useVideoWidget)
+        if (!useVideoWidget) // 截图模式，可能会裁剪
             hint = QSize(hint.width() * (100 - clipLeft - clipRight) / 100,
                          hint.height() * (100 - clipTop - clipBottom) / 100);
         QSize maxSize = aw->maximumSize();
@@ -259,7 +260,9 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         hint.setHeight(hint.height() + addin);
         this->resize(hint);
         this->layout()->activate();
+#if defined(Q_OS_WIN)
         this->adjustSize();
+#endif
     };
 
     auto setScale = [=]{

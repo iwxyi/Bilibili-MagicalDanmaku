@@ -19,9 +19,11 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QtTextToSpeech/QTextToSpeech>
+#if defined(ENABLE_HTTP_SERVER)
 #include <qhttpserver.h>
 #include <qhttprequest.h>
 #include <qhttpresponse.h>
+#endif
 #include <QWebSocketServer>
 #include "netutil.h"
 #include "livedanmaku.h"
@@ -45,7 +47,6 @@ QT_END_NAMESPACE
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出数据包信息
-#define SOCKET_MODE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
@@ -464,11 +465,11 @@ private slots:
     void on_danmuLongestSpin_editingFinished();
 
     void on_startupAnimationCheck_clicked();
-
+#if defined (ENABLE_HTTP_SERVER)
     void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
     void serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp);
-
+#endif
     void on_serverCheck_clicked();
 
     void on_serverPortSpin_editingFinished();
@@ -904,7 +905,9 @@ private:
     QList<qint64> gameUsers[CHANNEL_COUNT];
 
     // 服务端
+#ifndef Q_OS_MAC
     QHttpServer *server = nullptr;
+#endif
     QString serverDomain;
     qint16 serverPort = 0;
     QDir wwwDir;

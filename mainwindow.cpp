@@ -66,16 +66,6 @@ MainWindow::MainWindow(QWidget *parent)
     if (!roomId.isEmpty())
         ui->roomIdEdit->setText(roomId);
 
-    // 刷新间隔
-#ifndef SOCKET_MODE
-    danmakuTimer = new QTimer(this);
-    int interval = settings->value("danmaku/interval", 500).toInt();
-    ui->refreshDanmakuIntervalSpin->setValue(interval);
-    danmakuTimer->setInterval(interval);
-    connect(danmakuTimer, SIGNAL(timeout()), this, SLOT(pullLiveDanmaku()));
-    ui->refreshDanmakuCheck->setChecked(true);
-#endif
-
     // 移除间隔
     removeTimer = new QTimer(this);
     removeTimer->setInterval(200);
@@ -726,7 +716,6 @@ void MainWindow::initPath()
     dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
     QDir().mkPath(dataPath);
 #endif
-qDebug() << dataPath;
 }
 
 void MainWindow::readConfig()
@@ -785,6 +774,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings->setValue("mainwindow/geometry", this->saveGeometry());
 
+#if defined(ENABLE_TRAY)
     event->ignore();
     this->hide();
 
@@ -793,6 +783,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
             return ;
         settings->setValue("mainwindow/autoShow", false);
     });
+#else
+    QMainWindow::closeEvent(event);
+#endif
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -923,27 +916,6 @@ void MainWindow::removeTimeoutDanmaku()
 
 void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 {
-#ifndef SOCKET_MODE
-    // 去掉已经存在的弹幕
-    while (danmakus.size() && danmakus.first().getTimeline().toMSecsSinceEpoch() <= prevLastDanmakuTimestamp)
-        danmakus.removeFirst();
-    if (!danmakus.size())
-        return ;
-    prevLastDanmakuTimestamp = danmakus.last().getTimeline().toMSecsSinceEpoch();
-
-    // 不是第一次加载
-    if (!firstPullDanmaku || danmakus.size() == 1) // 用作测试就不需要该条件；1条很可能是测试弹幕
-    {
-        // 发送信号给其他插件
-        for (int i = 0; i < danmakus.size(); i++)
-        {
-            newLiveDanmakuAdded(danmakus.at(i));
-        }
-    }
-    else
-        firstPullDanmaku = false;
-#endif
-
     // 添加到队列
     roomDanmakus.append(danmakus);
     allDanmakus.append(danmakus);
@@ -1477,15 +1449,10 @@ void MainWindow::on_roomIdEdit_editingFinished()
     emit signalRoomChanged(roomId);
 
     // 开启新的
-#ifndef SOCKET_MODE
-    firstPullDanmaku = true;
-    prevLastDanmakuTimestamp = 0;
-#else
     if (socket)
     {
         startConnectRoom();
     }
-#endif
 }
 
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
@@ -5485,7 +5452,7 @@ void MainWindow::simulateKeys(QString seq)
     // keybd_event('P', (BYTE)0, 0, 0);
     // keybd_event('P', (BYTE)0, KEYEVENTF_KEYUP, 0);
     // keybd_event(VK_CONTROL, (BYTE)0, KEYEVENTF_KEYUP, 0);
-
+#if defined(Q_OS_WIN)
     // 字符串转KEY
     QList<int>keySeq;
     QStringList keyStrs = seq.toLower().split("+", QString::SkipEmptyParts);
@@ -5515,6 +5482,7 @@ void MainWindow::simulateKeys(QString seq)
 
     for (int i = 0; i < keySeq.size(); i++)
         keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+#endif
 }
 
 void MainWindow::sendLongText(QString text)
@@ -10851,6 +10819,7 @@ void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 
 QString MainWindow::GetFileVertion(QString fullName)
 {
+#if defined(Q_OS_WIN)
     DWORD dwLen = 0;
     char* lpData=NULL;
     LPCWSTR  str_path;
@@ -10918,6 +10887,9 @@ QString MainWindow::GetFileVertion(QString fullName)
         str_value=QString::fromUtf16((const unsigned short int *)lpBuffer)+"\n";
     }
     return str_value;
+#else
+    return "";
+#endif
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
@@ -11605,6 +11577,7 @@ void MainWindow::on_serverCheck_clicked()
 void MainWindow::on_serverPortSpin_editingFinished()
 {
     settings->setValue("server/port", ui->serverPortSpin->value());
+#if defined(ENABLE_HTTP_SERVER)
     if (server)
     {
         closeServer();
@@ -11612,6 +11585,7 @@ void MainWindow::on_serverPortSpin_editingFinished()
             openServer();
         });
     }
+#endif
 }
 
 void MainWindow::on_autoPauseOuterMusicCheck_clicked()

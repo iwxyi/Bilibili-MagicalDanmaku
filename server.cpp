@@ -8,7 +8,7 @@ void MainWindow::openServer(int port)
     if (port < 1 || port > 65535)
         port = 5520;
     serverPort = qint16(port);
-
+#if defined(ENABLE_HTTP_SERVER)
     server = new QHttpServer;
     connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
             this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
@@ -25,6 +25,7 @@ void MainWindow::openServer(int port)
     }
 
     openSocketServer();
+#endif
 }
 
 void MainWindow::openSocketServer()
@@ -195,10 +196,12 @@ void MainWindow::initServerData()
 
 void MainWindow::closeServer()
 {
+#if defined(ENABLE_HTTP_SERVER)
     qDebug() << "关闭服务端";
     // server->close(); // 这个不是关闭端口的……
     server->deleteLater();
     server = nullptr;
+#endif
 
     danmakuSocketServer->close();
     danmakuSocketServer->deleteLater();
@@ -352,6 +355,7 @@ void MainWindow::syncMagicalRooms()
     });
 }
 
+#if defined(ENABLE_HTTP_SERVER)
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
     QString urlPath = req->path(); // 示例：/user/abc
@@ -470,6 +474,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     resp->write(doc);
     resp->end();
 }
+#endif
 
 void MainWindow::processServerVariant(QByteArray &doc)
 {

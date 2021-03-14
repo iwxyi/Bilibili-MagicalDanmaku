@@ -17,10 +17,17 @@ RC_FILE += resource.rc
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-contains(DEFINES,ANDROID){
-    message("shortcuts not support")
-}else{
+win32{
+DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
+}
+unix:!macx{
+    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
+}
+
+contains(DEFINES, ENABLE_SHORTCUT) {
     include($$PWD/qxtglobalshortcut5/qxt.pri)
+}else{
+    message("shortcuts not support")
 }
 
 INCLUDEPATH += \
@@ -109,12 +116,6 @@ HEADERS += \
     picture_browser/ASCII_Art.h \
     picture_browser/picturebrowser.h \
     picture_browser/resizablepicture.h \
-    qhttpserver/qhttpconnection.h \
-    qhttpserver/qhttprequest.h \
-    qhttpserver/qhttpresponse.h \
-    qhttpserver/qhttpserver.h \
-    qhttpserver/qhttpserverapi.h \
-    qhttpserver/qhttpserverfwd.h \
     qrencode/bitstream.h \
     qrencode/config.h \
     qrencode/mask.h \
@@ -164,6 +165,16 @@ FORMS += \
     widgets/roomstatusdialog.ui \
     widgets/videolyricscreator.ui
 
+contains(DEFINES, ENABLE_HTTP_SERVER) {
+HEADERS += \
+    qhttpserver/qhttpconnection.h \
+    qhttpserver/qhttprequest.h \
+    qhttpserver/qhttpresponse.h \
+    qhttpserver/qhttpserver.h \
+    qhttpserver/qhttpserverapi.h \
+    qhttpserver/qhttpserverfwd.h
+}
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
@@ -195,7 +206,8 @@ contains(ANDROID_TARGET_ARCH,) {
 }
 
 
-unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver -lversion
+unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver
+win32: LIBS += -lversion
 
 INCLUDEPATH += $$PWD/libs \
     qhttpserver/
