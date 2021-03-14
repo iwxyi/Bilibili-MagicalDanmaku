@@ -17,11 +17,11 @@ RC_FILE += resource.rc
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-contains(DEFINES,WIN32){
-    DEFINES += ENABLE_SHORT ENABLE_HTTP_SERVER ENABLE_TRAY
+win32{
+DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
 }
-contains(DEFINES,LINUX){
-    DEFINES += ENABLE_SHORT ENABLE_HTTP_SERVER ENABLE_TRAY
+unix:!macx{
+    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
 }
 
 contains(DEFINES, ENABLE_SHORTCUT) {

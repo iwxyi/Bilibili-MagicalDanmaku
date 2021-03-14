@@ -718,7 +718,7 @@ void PictureBrowser::on_listWidget_itemActivated(QListWidgetItem *item)
         PBDEB << "打开图片失败：" << path;
     }
 #else
-    QString  cmd = QString("xdg-open ")+ path;　　　　　　　　//在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
+    QString  cmd = QString("xdg-open ")+ path; //在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
     system(cmd.toStdString().c_str());
 #endif
     }

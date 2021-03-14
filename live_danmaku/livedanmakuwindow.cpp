@@ -92,7 +92,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
     connect(lineEdit, &QLineEdit::customContextMenuRequested, this, &LiveDanmakuWindow::showEditMenu);
     if (!settings.value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
+#ifdef Q_OS_LINUX
 
+#endif
 #if defined(ENABLE_SHORTCUT)
     editShortcut = new QxtGlobalShortcut(this);
     QString def_key = settings.value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
@@ -107,7 +109,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings& st, QWidget *parent)
         }
         else // 激活并聚焦
         {
+#if defined(Q_OS_WIN32)
             prevWindow = GetForegroundWindow();
+#endif
 
             this->activateWindow();
             if (lineEdit->isHidden())

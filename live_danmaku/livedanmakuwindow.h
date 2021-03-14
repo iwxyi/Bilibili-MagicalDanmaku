@@ -38,7 +38,7 @@
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
-#ifdef Q_OS_WIN32
+#if defined(ENABLE_SHORTCUT)
 #include "qxtglobalshortcut.h"
 #endif
 #include "portraitlabel.h"
@@ -159,7 +159,7 @@ private:
 
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
-#ifdef Q_OS_WIN32
+#if defined(ENABLE_SHORTCUT)
     QxtGlobalShortcut* editShortcut;
 #endif
 #ifdef Q_OS_WIN32

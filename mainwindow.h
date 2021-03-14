@@ -19,7 +19,7 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QtTextToSpeech/QTextToSpeech>
-#ifndef Q_OS_MAC
+#if defined(ENABLE_HTTP_SERVER)
 #include <qhttpserver.h>
 #include <qhttprequest.h>
 #include <qhttpresponse.h>
@@ -465,7 +465,7 @@ private slots:
     void on_danmuLongestSpin_editingFinished();
 
     void on_startupAnimationCheck_clicked();
-#ifndef Q_OS_MAC
+#if defined (ENABLE_HTTP_SERVER)
     void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
     void serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp);
