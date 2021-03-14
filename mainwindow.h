@@ -561,6 +561,7 @@ private:
     void restoreEventList();
     bool hasEvent(QString cmd) const;
 
+    void autoSetCookie(QString s);
     QVariant getCookies();
     void getUserInfo();
     void getRoomUserInfo();
@@ -682,7 +683,7 @@ private:
 
     void startSplash();
 
-    virtual void setCookie(const QString &url, QNetworkRequest *request) override;
+    virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
 
     void initServerData();
     void openServer(int port = 0);

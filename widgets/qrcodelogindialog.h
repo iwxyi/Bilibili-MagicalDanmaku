@@ -14,19 +14,23 @@ class QRCodeLoginDialog : public QDialog, public NetInterface
 
 public:
     explicit QRCodeLoginDialog(QWidget *parent = nullptr);
-    ~QRCodeLoginDialog();
+    ~QRCodeLoginDialog() override;
 
-protected:
-    void showEvent(QShowEvent *event) override;
+private slots:
+    void getLoginUrl();
+    void getLoginInfo();
 
 private:
-    void getLoginUrl();
     void error(QString msg, QString title = "");
+
+signals:
+    void logined(QString cookie);
 
 private:
     Ui::QRCodeLoginDialog *ui;
 
     QString oauthKey;
+    QTimer* queryTimer;
 };
 
 #endif // QRCODELOGINDIALOG_H

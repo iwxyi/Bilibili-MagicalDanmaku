@@ -48,7 +48,7 @@ public:
     {
         QNetworkAccessManager* manager = new QNetworkAccessManager;
         QNetworkRequest* request = new QNetworkRequest(url);
-        setCookie(url, request);
+        setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
@@ -62,6 +62,20 @@ public:
     }
 
     void post(QString url, QStringList params, NetJsonFunc func)
+    {
+        QString data;
+        for (int i = 0; i < params.size(); i++)
+        {
+            if (i & 1) // 用户数据
+                data += QUrl::toPercentEncoding(params.at(i));
+            else // 固定变量
+                data += (i==0?"":"&") + params.at(i) + "=";
+        }
+        QByteArray ba(data.toLatin1());
+        post(url, ba, func);
+    }
+
+    void post(QString url, QStringList params, NetReplyFunc func)
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -95,7 +109,7 @@ public:
     {
         QNetworkAccessManager* manager = new QNetworkAccessManager;
         QNetworkRequest* request = new QNetworkRequest(url);
-        setCookie(url, request);
+        setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
 
@@ -110,7 +124,7 @@ public:
         manager->post(*request, ba);
     }
 
-    virtual void setCookie(const QString& url, QNetworkRequest* request)
+    virtual void setUrlCookie(const QString& url, QNetworkRequest* request)
     {
         Q_UNUSED(url)
         Q_UNUSED(request)

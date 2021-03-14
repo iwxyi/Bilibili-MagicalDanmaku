@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -3537,6 +3537,10 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionQRCode_Login">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/qrcode</normaloff>:/icons/qrcode</iconset>
+   </property>
    <property name="text">
     <string>二维码登录</string>
    </property>

@@ -180,8 +180,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings.value("danmaku/browserCookie", "").toString();
     browserData = settings.value("danmaku/browserData", "").toString();
-    int posl = browserData.indexOf("csrf_token=") + 11;
-    int posr = browserData.indexOf("&", posl);
+    int posl = browserCookie.indexOf("bili_jct=") + 11;
+    int posr = browserCookie.indexOf(";", posl);
     if (posr == -1) posr = browserData.length();
     csrf_token = browserData.mid(posl, posr - posl);
     userCookies = getCookies();
@@ -1793,6 +1793,32 @@ bool MainWindow::hasEvent(QString cmd) const
     return false;
 }
 
+void MainWindow::autoSetCookie(QString s)
+{
+    settings.setValue("danmaku/browserCookie", browserCookie = s);
+    if (browserCookie.isEmpty())
+        return ;
+
+    getUserInfo();
+
+    // 自动设置弹幕格式
+    int posl = browserCookie.indexOf("bili_jct=") + 9;
+    if (posl == -1)
+        return ;
+    int posr = browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = browserCookie.length();
+    csrf_token = browserCookie.mid(posl, posr - posl);
+    qDebug() << "检测到csrf_token:" << csrf_token;
+
+    if (browserData.isEmpty())
+        browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
+    browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
+    browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
+    userCookies = getCookies();
+    settings.setValue("danmaku/browserData", browserData);
+    qDebug() << "设置弹幕格式：" << browserData;
+}
+
 QVariant MainWindow::getCookies()
 {
     QList<QNetworkCookie> cookies;
@@ -1825,7 +1851,8 @@ void MainWindow::getUserInfo()
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            statusLabel->setText(json.value("message").toString());
+            qCritical() << s8("账号登录返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -9201,28 +9228,7 @@ void MainWindow::on_actionSet_Cookie_triggered()
     if (s.toLower().startsWith("cookie:"))
         s = s.replace(0, 7, "").trimmed();
 
-    settings.setValue("danmaku/browserCookie", browserCookie = s);
-    if (browserCookie.isEmpty())
-        return ;
-
-    getUserInfo();
-
-    // 自动设置弹幕格式
-    int posl = browserCookie.indexOf("bili_jct=") + 9;
-    if (posl == -1)
-        return ;
-    int posr = browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = browserCookie.length();
-    csrf_token = browserCookie.mid(posl, posr - posl);
-    qDebug() << "检测到csrf_token:" << csrf_token;
-
-    if (browserData.isEmpty())
-        browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
-    browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
-    browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
-    userCookies = getCookies();
-    settings.setValue("danmaku/browserData", browserData);
-    qDebug() << "设置弹幕格式：" << browserData;
+    autoSetCookie(s);
 }
 
 void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
@@ -10808,7 +10814,7 @@ void MainWindow::startSplash()
 #endif
 }
 
-void MainWindow::setCookie(const QString &url, QNetworkRequest *request)
+void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, userCookies);
@@ -11876,5 +11882,8 @@ void MainWindow::on_actionJoin_Battle_triggered()
 void MainWindow::on_actionQRCode_Login_triggered()
 {
     QRCodeLoginDialog* dialog = new QRCodeLoginDialog(this);
+    connect(dialog, &QRCodeLoginDialog::logined, this, [=](QString s){
+        autoSetCookie(s);
+    });
     dialog->exec();
 }

@@ -7,17 +7,30 @@
     <x>0</x>
     <y>0</y>
     <width>343</width>
-    <height>289</height>
+    <height>324</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
    <item>
     <widget class="QLabel" name="qrcodeLabel">
      <property name="text">
       <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="styleSheet">
+      <string notr="true">font-size: 24px;</string>
+     </property>
+     <property name="text">
+      <string>等待二维码</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
