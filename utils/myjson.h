@@ -6,14 +6,14 @@
 #include <QJsonArray>
 #include "functional"
 
-#define jsona(x, y) auto y = x.a(#y)
-#define jsonb(x, y) auto y = x.b(#y)
-#define jsond(x, y) auto y = x.d(#y)
-#define jsoni(x, y) auto y = x.i(#y)
-#define jsonl(x, y) auto y = x.l(#y)
-#define jsono(x, y) auto y = x.o(#y)
-#define jsons(x, y) auto y = x.s(#y)
-#define jsonv(x, y) auto y = v.s(#y)
+#define jsona(x, y) y = x.a(#y)
+#define jsonb(x, y) y = x.b(#y)
+#define jsond(x, y) y = x.d(#y)
+#define jsoni(x, y) y = x.i(#y)
+#define jsonl(x, y) y = x.l(#y)
+#define jsono(x, y) y = x.o(#y)
+#define jsons(x, y) y = x.s(#y)
+#define jsonv(x, y) y = x.v(#y)
 
 class MyJson : public QJsonObject
 {
@@ -60,11 +60,6 @@ public:
     QString s(QString key) const
     {
         return QJsonObject::value(key).toString();
-    }
-
-    QString v(QString key) const
-    {
-        return QJsonObject::value(key).toVariant();
     }
 
     QByteArray toBa() const
