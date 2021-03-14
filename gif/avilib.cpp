@@ -31,6 +31,8 @@
 #define ftruncate _chsize
 #define strncasecmp _strnicmp
 typedef int asize_t;
+#else
+typedef int asize_t;
 #endif
 
 #ifdef __CYGWIN__

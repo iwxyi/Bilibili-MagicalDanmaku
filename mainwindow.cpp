@@ -5457,7 +5457,7 @@ void MainWindow::simulateKeys(QString seq)
     // keybd_event('P', (BYTE)0, 0, 0);
     // keybd_event('P', (BYTE)0, KEYEVENTF_KEYUP, 0);
     // keybd_event(VK_CONTROL, (BYTE)0, KEYEVENTF_KEYUP, 0);
-
+#if defined(Q_OS_WIN)
     // 字符串转KEY
     QList<int>keySeq;
     QStringList keyStrs = seq.toLower().split("+", QString::SkipEmptyParts);
@@ -5487,6 +5487,7 @@ void MainWindow::simulateKeys(QString seq)
 
     for (int i = 0; i < keySeq.size(); i++)
         keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+#endif
 }
 
 void MainWindow::sendLongText(QString text)
@@ -10822,6 +10823,7 @@ void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 
 QString MainWindow::GetFileVertion(QString fullName)
 {
+#if defined(Q_OS_WIN)
     DWORD dwLen = 0;
     char* lpData=NULL;
     LPCWSTR  str_path;
@@ -10889,6 +10891,9 @@ QString MainWindow::GetFileVertion(QString fullName)
         str_value=QString::fromUtf16((const unsigned short int *)lpBuffer)+"\n";
     }
     return str_value;
+#else
+    return "";
+#endif
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
