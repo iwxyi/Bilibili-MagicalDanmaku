@@ -25,6 +25,8 @@ private:
 
 private:
     Ui::QRCodeLoginDialog *ui;
+
+    QString oauthKey;
 };
 
 #endif // QRCODELOGINDIALOG_H

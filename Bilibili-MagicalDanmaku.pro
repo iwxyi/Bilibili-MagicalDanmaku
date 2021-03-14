@@ -8,7 +8,7 @@ CONFIG += c++11
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT
+DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
 
 RC_FILE += resource.rc
 
@@ -54,6 +54,15 @@ SOURCES += \
     order_player/orderplayerwindow.cpp \
     picture_browser/picturebrowser.cpp \
     picture_browser/resizablepicture.cpp \
+    qrencode/bitstream.c \
+    qrencode/mask.c \
+    qrencode/mmask.c \
+    qrencode/mqrspec.c \
+    qrencode/qrencode.c \
+    qrencode/qrinput.c \
+    qrencode/qrspec.c \
+    qrencode/rsecc.c \
+    qrencode/split.c \
     server.cpp \
     utils/xfytts.cpp \
     video_player/videosurface.cpp \
@@ -106,6 +115,17 @@ HEADERS += \
     qhttpserver/qhttpserver.h \
     qhttpserver/qhttpserverapi.h \
     qhttpserver/qhttpserverfwd.h \
+    qrencode/bitstream.h \
+    qrencode/config.h \
+    qrencode/mask.h \
+    qrencode/mmask.h \
+    qrencode/mqrspec.h \
+    qrencode/qrencode.h \
+    qrencode/qrencode_inner.h \
+    qrencode/qrinput.h \
+    qrencode/qrspec.h \
+    qrencode/rsecc.h \
+    qrencode/split.h \
     utils/myjson.h \
     utils/xfytts.h \
     video_player/videosurface.h \
