@@ -97,7 +97,7 @@ void QRCodeLoginDialog::getLoginInfo()
                     sl << s;
             }
 
-            QTimer::singleShot(5000, [=]{ // 立刻登录的话不行
+            QTimer::singleShot(1000, [=]{
                 emit logined(sl.join(";"));
                 this->close();
             });

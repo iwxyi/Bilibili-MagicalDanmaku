@@ -1794,6 +1794,7 @@ void MainWindow::autoSetCookie(QString s)
     if (browserCookie.isEmpty())
         return ;
 
+    userCookies = getCookies();
     getUserInfo();
 
     // 自动设置弹幕格式
@@ -1809,7 +1810,6 @@ void MainWindow::autoSetCookie(QString s)
         browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
     browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
     browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
-    userCookies = getCookies();
     settings->setValue("danmaku/browserData", browserData);
     qDebug() << "设置弹幕格式：" << browserData;
 }
@@ -1857,6 +1857,7 @@ void MainWindow::getUserInfo()
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameLabel->setText(cookieUname);
+        statusLabel->setText(cookieUid);
     });
 }
 
