@@ -338,6 +338,11 @@ OrderPlayerWindow::~OrderPlayerWindow()
     desktopLyric->deleteLater();
 }
 
+const Song &OrderPlayerWindow::getPlayingSong() const
+{
+    return playingSong;
+}
+
 const SongList &OrderPlayerWindow::getOrderSongs() const
 {
     return orderSongs;

@@ -3436,7 +3436,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
-    re = QRegularExpression("%\\(([^(%\\()]+?)\\)%");
+    re = QRegularExpression("%\\(([^(%)]+?)\\)%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -3464,26 +3464,34 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
     }
 
-    // 读取配置文件的变量
-    re = QRegularExpression("%\\{([^(%\\{)]+?)\\}%");
-    while (msg.indexOf(re, 0, &match) > -1)
+    bool find = true;
+    while (find)
     {
-        QString _var = match.captured(0);
-        QString key = match.captured(1);
-        if (!key.contains("/"))
-            key = "heaps/" + key;
-        QVariant var = settings->value(key);
-        msg.replace(_var, var.toString()); // 默认使用变量类型吧
-    }
+        find = false;
 
-    // 进行数学计算的变量
-    re = QRegularExpression("%\\[([^(%\\[)]+?)\\]%");
-    while (msg.indexOf(re, 0, &match) > -1)
-    {
-        QString _var = match.captured(0);
-        QString text = match.captured(1);
-        text = snum(calcIntExpression(text));
-        msg.replace(_var, text); // 默认使用变量类型吧
+        // 读取配置文件的变量
+        re = QRegularExpression("%\\{([^(%(\\{|\\[))]*?)\\}%");
+        while (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString _var = match.captured(0);
+            QString key = match.captured(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            QVariant var = settings->value(key);
+            msg.replace(_var, var.toString()); // 默认使用变量类型吧
+            find = true;
+        }
+
+        // 进行数学计算的变量
+        re = QRegularExpression("%\\[([^(%(\\{|\\[))]*?)\\]%");
+        while (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString _var = match.captured(0);
+            QString text = match.captured(1);
+            text = snum(calcIntExpression(text));
+            msg.replace(_var, text); // 默认使用变量类型吧
+            find = true;
+        }
     }
 
     return msg;
@@ -3849,6 +3857,31 @@ void MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // 用户备注
     else if (key == "%umark%")
         msg.replace(key, userMarks->value("base/" + snum(danmaku.getUid()), "").toString());
+
+    // 正则播放的音乐
+    else if (key == "%playing_song%")
+    {
+        QString name = "";
+        if (musicWindow)
+        {
+            Song song = musicWindow->getPlayingSong();
+            if (song.isValid())
+                name = song.name;
+        }
+        msg.replace(key, name);
+    }
+    // 点歌的用户
+    else if (key == "%song_order_uname%")
+    {
+        QString name = "";
+        if (musicWindow)
+        {
+            Song song = musicWindow->getPlayingSong();
+            if (song.isValid())
+                name = song.addBy;
+        }
+        msg.replace(key, name);
+    }
 }
 
 /**

@@ -518,6 +518,8 @@ border-image: url(C:/Path/To/Image.png)
 | %[exp]%  | 简单的数值计算      | 暂时只支持加减乘除，不支持括号、小数   |
 | %(name)% | 将用户昵称转换为uid | 需要弹幕姬上显示才有效，允许部分昵称   |
 
+`%{key}%` 如果是一个未设置的值，那么将会是空字符串，如果要转化为数字`0`，可以使用`%[%{key}%+0]%`的方式。
+
 
 
 ##### 示例：礼物价值
@@ -621,6 +623,8 @@ border-image: url(C:/Path/To/Image.png)
 | not_welcome      | 不自动欢迎               | 不欢迎：1，欢迎：0                                           |
 | not_reply        | 不自动回复               | 不回复：1，回复：0                                           |
 | blocked          | 被禁言中                 | 禁言：1，未禁言0                                             |
+| playing_song     | 当前播放的歌曲           | 点歌姬没有播放歌曲则为空                                     |
+| song_order_uname | 当前歌曲点歌者           | 同上                                                         |
 
 
 

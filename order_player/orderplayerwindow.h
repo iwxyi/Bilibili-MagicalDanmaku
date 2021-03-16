@@ -131,6 +131,7 @@ public:
         SingleCircle
     };
 
+    const Song& getPlayingSong() const;
     const SongList& getOrderSongs() const;
     const QStringList getSongLyrics(int rowCount) const;
     bool hasSongInOrder(QString by);
