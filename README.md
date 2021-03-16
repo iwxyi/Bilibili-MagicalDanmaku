@@ -777,7 +777,7 @@ tips：
 | sendPrivateMsg(uid, msg)                  | 向指定用户发送私信                                           |
 | sendRoomMsg(roomId, msg)                  | 向指定直播间发送弹幕                                         |
 | timerShot(msecond, msg)                   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一函数）           |
-| locaNotify(msg)                           | 发送本地消息通知（非弹幕，只有自己看得到）                   |
+| localNotify(msg)                          | 发送本地消息通知（非弹幕，只有自己看得到）                   |
 | localNotify(uid, msg)                     | 同上，带用户ID                                               |
 | speakText(msg)                            | 朗读文本                                                     |
 | openUrl(url)                              | 浏览器打开网址                                               |
