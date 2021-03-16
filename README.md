@@ -787,6 +787,7 @@ tips：
 | sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                       | 运行命令行                                                   |
 | setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在                |
+| removeValue(exp)                          | 移除配置文件中的多个值，exp为正则表达式                      |
 | openFile(path)                            | 打开文件                                                     |
 | playSound(path)                           | 播放音频文件                                                 |
 | improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
@@ -979,6 +980,25 @@ tips：
 ```
 
 **注意：添加本事件，将会屏蔽系统自带的禁言回复**
+
+
+
+##### 示例：打卡计数
+
+发送“签到”或“打卡”进行打卡，并回复第几个以及累计几天；每人每天只能打一次卡。
+
+添加自动回复：`^(签到|打卡)$`，动作：
+
+```
+[%{daka_today_%uid%}%]*>您已打过卡
+>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\n>setValue(daka, %[%{daka}%+1]%)\n>setValue(daka_today_%uid%, 1)\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)
+```
+
+添加事件：`NEW_DAY`，动作：
+
+```
+>removeValue(daka_today_\d+)\n>setValue(daka, 0)
+```
 
 
 

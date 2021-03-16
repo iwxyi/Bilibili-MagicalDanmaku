@@ -5218,6 +5218,31 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 删除配置
+    if (msg.contains("removeValue"))
+    {
+        re = RE("removeValue\\s*\\(\\s*(\\S+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+
+            settings->beginGroup("heaps");
+            auto keys = settings->allKeys();
+            QRegularExpression re(key);
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re) > -1)
+                {
+                    settings->remove(keys.takeAt(i--));
+                }
+            }
+            settings->endGroup();
+            return true;
+        }
+    }
+
     // 提升点歌
     if (msg.contains("improveSongOrder"))
     {
