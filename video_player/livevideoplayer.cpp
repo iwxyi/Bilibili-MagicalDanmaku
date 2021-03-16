@@ -106,7 +106,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
 
     // 设置音量
     player->setVolume(settings->value("videoplayer/volume", 50).toInt());
-    setWindowOpacity(settings->value("videoplayer/opacity", 100).toInt() / 100.0);
+    setWindowOpacity(qMax(settings->value("videoplayer/opacity", 100).toInt() / 100.0, 0.1));
 
     // 设置置顶
     if (settings->value("videoplayer/top", false).toBool())

@@ -606,6 +606,7 @@ MainWindow::MainWindow(QWidget *parent)
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
             }
         }
+        triggerCmdEvent("NEW_HOUR", LiveDanmaku());
     });
     hourTimer->start();
 
@@ -623,6 +624,7 @@ MainWindow::MainWindow(QWidget *parent)
         if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
             startCalculateDailyData();
         userComeTimes.clear();
+        triggerCmdEvent("NEW_DAY", LiveDanmaku());
     });
     dayTimer->start();
 
@@ -633,8 +635,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->debugPrintCheck->setChecked(debugPrint);
     saveRecvCmds = settings->value("danmaku/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
-
-    triggerCmdEvent("START_UP", LiveDanmaku());
 
     if (!settings->value("danmaku/copyright", false).toBool())
     {
@@ -659,6 +659,8 @@ MainWindow::MainWindow(QWidget *parent)
     {
         openServer();
     }
+
+    triggerCmdEvent("START_UP", LiveDanmaku());
 
     /* QTimer::singleShot(3000, [=]{
         appendNewLiveDanmaku(LiveDanmaku("神奇弹幕", "神奇弹幕",
@@ -747,6 +749,8 @@ MainWindow::~MainWindow()
         playerWindow->close();
         playerWindow->deleteLater();
     }*/
+
+    triggerCmdEvent("SHUT_DOWN", LiveDanmaku());
 
     delete ui;
 }
@@ -1857,7 +1861,7 @@ void MainWindow::getUserInfo()
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameLabel->setText(cookieUname);
-        statusLabel->setText(cookieUid);
+        statusLabel->setText(cookieUname);
     });
 }
 
