@@ -4782,19 +4782,24 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             }
         }
     }
-    else if (msg == "开启弹幕回复")
+    else if (msg == "开启AI回复")
     {
         ui->AIReplyMsgCheck->setCheckState(Qt::CheckState::Checked);
+        ui->AIReplyCheck->setChecked(true);
         on_AIReplyMsgCheck_clicked();
+        if (!danmakuWindow)
+            on_actionShow_Live_Danmaku_triggered();
         if (response)
-            sendNotifyMsg(">已开启弹幕AI回复");
+            sendNotifyMsg(">已开启AI弹幕回复");
     }
-    else if (msg == "关闭弹幕回复")
+    else if (msg == "关闭AI回复")
     {
         ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
+        if (settings->value("danmaku/aiReply", false).toBool())
+            ui->AIReplyCheck->setChecked(false);
         if (response)
-            sendNotifyMsg(">已关闭弹幕AI回复");
+            sendNotifyMsg(">已关闭AI回复");
     }
     else
         return ;
