@@ -7840,6 +7840,8 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
         return ;
     if (!ui->enableScreenMsgCheck->isChecked() && danmaku.getMsgType() != MSG_DANMAKU) // 不显示所有msg
         return ;
+    if (danmaku.isPkLink()) // 对面同步过来的弹幕
+        return ;
 
     // 显示动画
     QLabel* label = new QLabel(nullptr);
