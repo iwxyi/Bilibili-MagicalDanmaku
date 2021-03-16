@@ -3413,7 +3413,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 弹幕变量、环境变量（固定文字）
-    QRegularExpression re("%[\\w_]+%");
+    QRegularExpression re("%[\\w_]+?%");
     int matchPos = 0;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
     {
@@ -3461,7 +3461,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 读取配置文件的变量
-    re = QRegularExpression("%\\{(\\S+)\\}%");
+    re = QRegularExpression("%\\{(\\S+?)\\}%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
