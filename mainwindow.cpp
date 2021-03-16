@@ -3436,7 +3436,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
-    re = QRegularExpression("%\\((.+?)\\)%");
+    re = QRegularExpression("%\\(([^(%\\()]+?)\\)%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -3465,7 +3465,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 读取配置文件的变量
-    re = QRegularExpression("%\\{(\\S+?)\\}%");
+    re = QRegularExpression("%\\{([^(%\\{)]+?)\\}%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
@@ -3477,7 +3477,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 进行数学计算的变量
-    re = QRegularExpression("%\\[(.+?)\\]%");
+    re = QRegularExpression("%\\[([^(%\\[)]+?)\\]%");
     while (msg.indexOf(re, 0, &match) > -1)
     {
         QString _var = match.captured(0);
