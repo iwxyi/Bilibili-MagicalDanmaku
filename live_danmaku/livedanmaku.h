@@ -161,7 +161,7 @@ public:
         danmaku.robot = object.value("robot").toBool();
         danmaku.uidentity = object.value("uidentity").toInt();
         danmaku.iphone = object.value("iphone").toInt();
-        danmaku.guard = object.value("guard").toInt();
+        danmaku.guard = object.value("guard_level").toInt();
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         danmaku.first = object.value("first").toInt();
         return danmaku;
@@ -183,7 +183,7 @@ public:
             object.insert("level", level);
             object.insert("uidentity", uidentity);
             object.insert("iphone", iphone);
-            object.insert("guard", guard);
+            object.insert("guard_level", guard);
             object.insert("no_reply", no_reply);
         }
         else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
@@ -196,7 +196,7 @@ public:
 
             if (msgType == MSG_GUARD_BUY)
             {
-                object.insert("guard", guard);
+                object.insert("guard_level", guard);
                 object.insert("first", first);
             }
         }
@@ -211,7 +211,7 @@ public:
         else if (msgType == MSG_WELCOME_GUARD)
         {
             object.insert("admin", admin);
-            object.insert("guard", guard);
+            object.insert("guard_level", guard);
         }
         else if (msgType == MSG_DIANGE)
         {
@@ -348,6 +348,11 @@ public:
         this->msgType = MSG_ATTENTION;
         prev_timestamp = attentionTime;
         attention = true;
+    }
+
+    void transToDanmu()
+    {
+        this->msgType = MSG_DANMAKU;
     }
 
     void transToShare()

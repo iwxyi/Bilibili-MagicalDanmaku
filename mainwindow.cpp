@@ -876,10 +876,15 @@ void MainWindow::pullLiveDanmaku()
         }
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-        QList<LiveDanmaku> lds;
+        QDateTime time = QDateTime::currentDateTime();
         for (int i = 0; i < danmakus.size(); i++)
-            lds.append(LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject()));
-        appendNewLiveDanmakus(lds);
+        {
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            danmaku.transToDanmu();
+            danmaku.setTime(time);
+            danmaku.setNoReply();
+            appendNewLiveDanmaku(danmaku);
+        }
     });
 }
 
@@ -9260,14 +9265,21 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 
         QTimer::singleShot(0, [=]{
             danmakuWindow->removeAll();
-            for (int i = 0; i < roomDanmakus.size(); i++)
-                danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
-            danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-            danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-
-            if (pking)
+            if (roomDanmakus.size())
             {
-                danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
+                for (int i = 0; i < roomDanmakus.size(); i++)
+                    danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
+                danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+                danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+
+                if (pking)
+                {
+                    danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
+                }
+            }
+            else // 没有之前的弹幕，从API重新pull下来
+            {
+                pullLiveDanmaku();
             }
         });
     }
