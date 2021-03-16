@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>10</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2219,10 +2219,20 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="allowRemoteControlCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;仅机器人账号与主播有效&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;默认仅机器人账号与主播有效，可开启右边的“房管控制”&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>允许弹幕控制</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="allowAdminControlCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许房管通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>允许房管控制</string>
             </property>
            </widget>
           </item>
@@ -3266,7 +3276,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>451</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

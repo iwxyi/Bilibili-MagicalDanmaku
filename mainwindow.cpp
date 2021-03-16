@@ -654,6 +654,7 @@ MainWindow::MainWindow(QWidget *parent)
     serverDomain = settings->value("server/domain", "localhost").toString();
     ui->allowWebControlCheck->setChecked(settings->value("server/allowWebControl", false).toBool());
     ui->allowRemoteControlCheck->setChecked(remoteControl = settings->value("danmaku/remoteControl", true).toBool());
+    ui->allowAdminControlCheck->setChecked(settings->value("danmaku/adminControl", false).toBool());
     ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
@@ -6080,7 +6081,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QMessageBox::information(this, "弹幕数据 user", QString(QJsonDocument(user).toJson()));
         qint64 uid = static_cast<qint64>(user[0].toDouble());
         QString username = user[1].toString();
-        int manager = user[2].toInt(); // 是否为房管（实测现在主播不属于房管了）
+        int admin = user[2].toInt(); // 是否为房管（实测现在主播不属于房管了）
         int vip = user[3].toInt(); // 是否为老爷
         int svip = user[4].toInt(); // 是否为年费老爷
         int uidentity = user[5].toInt(); // 是否为非正式会员或正式会员（5000非，10000正）
@@ -6115,7 +6116,7 @@ void MainWindow::handleMessage(QJsonObject json)
             cs = "0" + cs;
         LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
                                                  unameColor, "#"+cs);
-        danmaku.setUserInfo(manager, vip, svip, uidentity, iphone, uguard);
+        danmaku.setUserInfo(admin, vip, svip, uidentity, iphone, uguard);
         if (medal.size() >= 4)
         {
             medal_level = medal[0].toInt();
@@ -6155,9 +6156,14 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (snum(uid) == upUid || snum(uid) == cookieUid ) // 是自己或UP主的，不屏蔽
+        if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
+            processRemoteCmd(msg);
+        }
+        else if (admin && ui->allowAdminControlCheck->isChecked())
+        {
+            // 开放给房管的特权
             processRemoteCmd(msg);
         }
         else if (ui->blockNotOnlyNewbieCheck->isChecked() || (level == 0 && medal_level <= 1 && danmuCount <= 3) || danmuCount <= 1)
@@ -11952,4 +11958,9 @@ void MainWindow::on_actionQRCode_Login_triggered()
         autoSetCookie(s);
     });
     dialog->exec();
+}
+
+void MainWindow::on_allowAdminControlCheck_clicked()
+{
+    settings->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
 }

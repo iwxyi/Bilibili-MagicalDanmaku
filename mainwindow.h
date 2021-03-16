@@ -540,6 +540,8 @@ private slots:
 
     void on_actionQRCode_Login_triggered();
 
+    void on_allowAdminControlCheck_clicked();
+
 private:
     void initPath();
     void readConfig();
