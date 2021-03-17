@@ -1,7 +1,7 @@
 #include "conditioneditor.h"
 #include "replywidget.h"
 
-ReplyWidget::ReplyWidget(QWidget *parent) : QWidget(parent)
+ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
 {
     check = new QCheckBox("启用", this);
     btn = new QPushButton("发送", this);
@@ -55,6 +55,23 @@ ReplyWidget::ReplyWidget(QWidget *parent) : QWidget(parent)
     });
 }
 
+void ReplyWidget::fromJson(MyJson json)
+{
+    check->setChecked(json.b("enabled"));
+    keyEdit->setText(json.s("key"));
+    replyEdit->setPlainText(json.s("reply"));
+}
+
+MyJson ReplyWidget::toJson() const
+{
+    MyJson json;
+    json.insert("key", CODE_AUTO_REPLY_KEY);
+    json.insert("enabled", check->isEnabled());
+    json.insert("key", keyEdit->text());
+    json.insert("reply", replyEdit->toPlainText());
+    return json;
+}
+
 void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
 {
     if (!check->isChecked() || !danmaku.is(MSG_DANMAKU) || danmaku.isNoReply())
@@ -90,8 +107,3 @@ void ReplyWidget::autoResizeEdit()
     emit signalResized();
 }
 
-void ReplyWidget::showEvent(QShowEvent *event)
-{
-    QWidget::showEvent(event);
-//    autoResizeEdit();
-}

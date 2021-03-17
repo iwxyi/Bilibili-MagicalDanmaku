@@ -32,6 +32,7 @@ contains(DEFINES, ENABLE_SHORTCUT) {
 
 INCLUDEPATH += \
     utils/ \
+    list_items/ \
     live_danmaku/ \
     interactive_buttons/ \
     facile_menu/ \
@@ -51,6 +52,7 @@ SOURCES += \
     gif/avilib.cpp \
     gif/gif.cpp \
     interactive_buttons/interactivebuttonbase.cpp \
+    list_items/listiteminterface.cpp \
     live_danmaku/livedanmakuwindow.cpp \
     lucky_draw/luckydrawwindow.cpp \
     main.cpp \
@@ -76,13 +78,13 @@ SOURCES += \
     widgets/catchyouwidget.cpp \
     widgets/conditioneditor.cpp \
     widgets/eternalblockdialog.cpp \
-    widgets/eventwidget.cpp \
+    list_items/eventwidget.cpp \
     widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
     widgets/qrcodelogindialog.cpp \
-    widgets/replywidget.cpp \
+    list_items/replywidget.cpp \
     widgets/roomstatusdialog.cpp \
-    widgets/taskwidget.cpp \
+    list_items/taskwidget.cpp \
     utils/fileutil.cpp \
     utils/stringutil.cpp \
     utils/textinputdialog.cpp \
@@ -97,6 +99,7 @@ HEADERS += \
     gif/avilib.h \
     gif/gif.h \
     interactive_buttons/interactivebuttonbase.h \
+    list_items/listiteminterface.h \
     live_danmaku/commonvalues.h \
     live_danmaku/freecopyedit.h \
     live_danmaku/livedanmakuwindow.h \
@@ -134,14 +137,14 @@ HEADERS += \
     widgets/catchyouwidget.h \
     widgets/conditioneditor.h \
     widgets/eternalblockdialog.h \
-    widgets/eventwidget.h \
+    list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/netinterface.h \
     widgets/qrcodelogindialog.h \
-    widgets/replywidget.h \
+    list_items/replywidget.h \
     widgets/roomstatusdialog.h \
-    widgets/taskwidget.h \
+    list_items/taskwidget.h \
     utils/dlog.h \
     utils/fileutil.h \
     utils/netutil.h \

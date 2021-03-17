@@ -1,7 +1,7 @@
 #include "conditioneditor.h"
 #include "taskwidget.h"
 
-TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
+TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
 {
     timer = new QTimer(this);
     check = new QCheckBox("启用", this);
@@ -64,8 +64,9 @@ void TaskWidget::fromJson(MyJson json)
 {
     check->setChecked(json.b("enabled"));
     spin->setValue(json.i("interval"));
-    timer->setInterval(spin->value() * 1000);
     edit->setPlainText(json.s("text"));
+
+    timer->setInterval(spin->value() * 1000);
 }
 
 MyJson TaskWidget::toJson() const
@@ -95,10 +96,4 @@ void TaskWidget::autoResizeEdit()
     this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     edit->setFixedHeight(he);
     emit signalResized();
-}
-
-void TaskWidget::showEvent(QShowEvent *event)
-{
-    QWidget::showEvent(event);
-//    autoResizeEdit();
 }

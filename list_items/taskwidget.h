@@ -12,32 +12,27 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTextDocument>
-#include <QApplication>
 #include <QDebug>
-#include "myjson.h"
+#include "listiteminterface.h"
 
 #define CODE_TIMER_TASK_KEY (QApplication::applicationName() + ":TimerTask")
 
-class TaskWidget : public QWidget
+class TaskWidget : public ListItemInterface
 {
     Q_OBJECT
 public:
     TaskWidget(QWidget *parent = nullptr);
 
-    void fromJson(MyJson json);
-    MyJson toJson() const;
+    virtual void fromJson(MyJson json) override;
+    virtual MyJson toJson() const override;
 
 signals:
     void signalSendMsgs(QString msgs, bool manual);
     void spinChanged(int val);
-    void signalResized();
 
 public slots:
     void slotSpinChanged(int val);
-    void autoResizeEdit();
-
-protected:
-    void showEvent(QShowEvent *event) override;
+    void autoResizeEdit() override;
 
 public:
     QTimer* timer;

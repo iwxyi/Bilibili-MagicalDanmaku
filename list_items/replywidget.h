@@ -13,24 +13,25 @@
 #include <QTextDocument>
 #include <QDebug>
 #include "livedanmaku.h"
+#include "listiteminterface.h"
 
-class ReplyWidget : public QWidget
+#define CODE_AUTO_REPLY_KEY (QApplication::applicationName() + ":AutoReply")
+
+class ReplyWidget : public ListItemInterface
 {
     Q_OBJECT
 public:
     ReplyWidget(QWidget *parent = nullptr);
 
+    virtual void fromJson(MyJson json) override;
+    virtual MyJson toJson() const override;
+
 signals:
     void signalReplyMsgs(QString msgs, LiveDanmaku danmaku, bool manual);
-    void spinChanged(int val);
-    void signalResized();
 
 public slots:
     void slotNewDanmaku(LiveDanmaku danmaku);
-    void autoResizeEdit();
-
-protected:
-    void showEvent(QShowEvent *event) override;
+    void autoResizeEdit() override;
 
 public:
     QCheckBox* check;

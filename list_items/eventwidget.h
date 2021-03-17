@@ -13,25 +13,26 @@
 #include <QTextDocument>
 #include <QDebug>
 #include "livedanmaku.h"
+#include "listiteminterface.h"
 
-class EventWidget : public QWidget
+#define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
+
+class EventWidget : public ListItemInterface
 {
     Q_OBJECT
 public:
     EventWidget(QWidget *parent = nullptr);
 
+    virtual void fromJson(MyJson json) override;
+    virtual MyJson toJson() const override;
+
 signals:
     void signalEventMsgs(QString msgs, LiveDanmaku danmaku, bool manual);
-    void spinChanged(int val);
-    void signalResized();
 
 public slots:
     void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
     void triggerAction();
-    void autoResizeEdit();
-
-protected:
-    void showEvent(QShowEvent *event) override;
+    void autoResizeEdit() override;
 
 public:
     QCheckBox* check;

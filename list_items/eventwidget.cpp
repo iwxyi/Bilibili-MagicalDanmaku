@@ -1,7 +1,7 @@
 #include "eventwidget.h"
 #include "conditioneditor.h"
 
-EventWidget::EventWidget(QWidget *parent) : QWidget(parent)
+EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 {
     check = new QCheckBox("启用", this);
     btn = new QPushButton("发送", this);
@@ -48,6 +48,25 @@ EventWidget::EventWidget(QWidget *parent) : QWidget(parent)
     });
 }
 
+void EventWidget::fromJson(MyJson json)
+{
+    check->setChecked(json.b("enabled"));
+    eventEdit->setText(json.s("event"));
+    actionEdit->setPlainText(json.s("action"));
+
+    cmdKey = eventEdit->text();
+}
+
+MyJson EventWidget::toJson() const
+{
+    MyJson json;
+    json.insert("key", CODE_EVENT_ACTION_KEY);
+    json.insert("enabled", check->isEnabled());
+    json.insert("event", eventEdit->text());
+    json.insert("action", actionEdit->toPlainText());
+    return json;
+}
+
 void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     if (!check->isChecked() || cmdKey != cmd)
@@ -72,9 +91,4 @@ void EventWidget::autoResizeEdit()
     this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     actionEdit->setFixedHeight(he);
     emit signalResized();
-}
-
-void EventWidget::showEvent(QShowEvent *event)
-{
-    QWidget::showEvent(event);
 }
