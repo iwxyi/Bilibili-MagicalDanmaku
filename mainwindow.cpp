@@ -1563,7 +1563,7 @@ void MainWindow::addTimerTask(bool enable, int second, QString text, int index)
         settings->setValue("task/r"+QString::number(row)+"Interval", val);
     });
 
-    connect(tw->edit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(tw->edit, &ConditionEditor::textChanged, this, [=]{
         item->setSizeHint(tw->sizeHint());
 
         QString content = tw->edit->toPlainText();
@@ -1653,7 +1653,7 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
         settings->setValue("reply/r"+QString::number(row)+"Key", content);
     });
 
-    connect(rw->replyEdit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(rw->replyEdit, &ConditionEditor::textChanged, this, [=]{
         item->setSizeHint(rw->sizeHint());
 
         QString content = rw->replyEdit->toPlainText();
@@ -1748,7 +1748,7 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
         settings->setValue("event/r"+QString::number(row)+"Cmd", content);
     });
 
-    connect(rw->actionEdit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(rw->actionEdit, &ConditionEditor::textChanged, this, [=]{
         item->setSizeHint(rw->sizeHint());
 
         QString content = rw->actionEdit->toPlainText();
@@ -2086,11 +2086,7 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         }
     }
 
-    auto menu = new FacileMenu(this);
-    menu->addAction("插入", [=]{
-        addTimerTask(false, 1800, "", row);
-    })->disable(!item);
-    menu->addAction("上移", [=]{
+    auto moveToRow = [=](int newRow){
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         MyJson json = tw->toJson();
@@ -2102,35 +2098,24 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         newTw->fromJson(json);
 
         QListWidgetItem* newItem = new QListWidgetItem;
-        listWidget->insertItem(row-1, newItem);
+        listWidget->insertItem(newRow, newItem);
         listWidget->setItemWidget(newItem, newTw);
         newTw->autoResizeEdit();
-        newTw->adjustSize();
         newItem->setSizeHint(newTw->sizeHint());
 
         (this->*saveFunc)();
-        listWidget->setCurrentRow(row - 1);
+        listWidget->setCurrentRow(newRow);
+    };
+
+    auto menu = new FacileMenu(this);
+    menu->addAction("插入", [=]{
+        addTimerTask(false, 1800, "", row);
+    })->disable(!item);
+    menu->addAction("上移", [=]{
+        moveToRow(row - 1);
     })->disable(!item || row <= 0);
     menu->addAction("下移", [=]{
-        auto widget = listWidget->itemWidget(item);
-        auto tw = static_cast<ListItemInterface*>(widget);
-
-        auto newTw = new T(listWidget);
-        newTw->fromJson(tw->toJson());
-
-        listWidget->takeItem(row);
-        delete item;
-        tw->deleteLater();
-
-        QListWidgetItem* newItem = new QListWidgetItem;
-        listWidget->insertItem(row+1, newItem);
-        listWidget->setItemWidget(newItem, newTw);
-        newTw->autoResizeEdit();
-        newTw->adjustSize();
-        newItem->setSizeHint(newTw->sizeHint());
-
-        (this->*saveFunc)();
-        listWidget->setCurrentRow(row + 1);
+        moveToRow(row + 1);
     })->disable(!item || row >= listWidget->count()-1);
     menu->split()->addAction("复制", [=]{
         auto widget = listWidget->itemWidget(item);
