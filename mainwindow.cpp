@@ -172,10 +172,10 @@ MainWindow::MainWindow(QWidget *parent)
     // 发送弹幕
     browserCookie = settings->value("danmaku/browserCookie", "").toString();
     browserData = settings->value("danmaku/browserData", "").toString();
-    int posl = browserCookie.indexOf("bili_jct=") + 11;
+    int posl = browserCookie.indexOf("bili_jct=") + 9;
     int posr = browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = browserData.length();
-    csrf_token = browserData.mid(posl, posr - posl);
+    if (posr == -1) posr = browserCookie.length();
+    csrf_token = browserCookie.mid(posl, posr - posl);
     userCookies = getCookies();
     getUserInfo();
 
@@ -3449,7 +3449,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     QRegularExpression re;
 
     // 去掉注释
-    re = QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)");
+    re = QRegularExpression("(?<!:)//.*?(?=\\n|$|\\\\n)");
     msg.replace(re, "");
 
     // 软换行符
@@ -5173,7 +5173,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("postData"))
     {
-        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -9016,13 +9016,8 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
 void MainWindow::delRoomBlockUser(qint64 id)
 {
     QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
-
-    int posl = browserData.indexOf("csrf_token=") + 11;
-    int posr = browserData.indexOf("&", posl);
-    if (posr == -1) posr = browserData.length();
-    QString csrf = browserData.mid(posl, posr - posl);
     QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(roomId).arg(csrf).arg(csrf);
+                    .arg(id).arg(roomId).arg(csrf_token).arg(csrf_token);
 
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -9400,7 +9395,7 @@ void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
         return ;
 
     settings->setValue("danmaku/browserData", browserData = s);
-    int posl = browserData.indexOf("csrf_token=") + 11;
+    int posl = browserData.indexOf("csrf_token=") + 9;
     int posr = browserData.indexOf("&", posl);
     if (posr == -1) posr = browserData.length();
     csrf_token = browserData.mid(posl, posr - posl);

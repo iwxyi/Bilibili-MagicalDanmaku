@@ -38,7 +38,7 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // 冷却通道 (cd5:10)
         QSSRule{QRegularExpression("\\(cd\\d{1,2}:\\d+\\)"), getTCF(QColor(0, 128, 0))},
         // 注释
-        QSSRule{QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
+        QSSRule{QRegularExpression("(?<!:)//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
         // 软换行符
         QSSRule{QRegularExpression("\\s*\\\\\\s*\\n\\s*"), getTCF(QColor(119, 136, 153))},
     };
