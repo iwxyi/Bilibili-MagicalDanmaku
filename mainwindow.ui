@@ -3289,9 +3289,10 @@ margin: 6px;</string>
     <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
     <addaction name="actionShow_PK_Video"/>
+    <addaction name="actionJoin_Battle"/>
+    <addaction name="separator"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
-    <addaction name="actionJoin_Battle"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">

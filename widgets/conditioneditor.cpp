@@ -40,7 +40,7 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // 注释
         QSSRule{QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
         // 软换行符
-        QSSRule{QRegularExpression("\\s*\\\\\\s*"), getTCF(QColor(119, 136, 153))},
+        QSSRule{QRegularExpression("\\s*\\\\\\s*\\n\\s*"), getTCF(QColor(119, 136, 153))},
     };
 
     foreach (auto rule, qss_rules)

@@ -19,7 +19,7 @@ QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹
 QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
-QHash<QString, QString> CommonValues::customVariant; // 自定义变量
+QList<QPair<QString, QString>> CommonValues::customVariant; // 自定义变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
 QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
@@ -3441,23 +3441,8 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     msg.replace(re, "");
 
     // 软换行符
-    re = QRegularExpression("\\s*\\\\\\s*");
+    re = QRegularExpression("\\s*\\\\\\s*\\n\\s*");
     msg.replace(re, "");
-
-    // 自定义变量
-    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
-    {
-        msg.replace(it.key(), it.value());
-    }
-
-    // 弹幕变量、环境变量（固定文字）
-    re = QRegularExpression("%[\\w_]+?%");
-    int matchPos = 0;
-    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
-    {
-        replaceDanmakuVariants(msg, danmaku, match.captured(0));
-        matchPos = matchPos + 1;
-    }
 
     // 自动回复传入的变量
     re = QRegularExpression("%\\$(\\d+)%");
@@ -3503,6 +3488,22 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     {
         find = false;
 
+        // 自定义变量
+        for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+        {
+            msg.replace(it->first, it->second);
+        }
+
+        // 弹幕变量、环境变量（固定文字）
+        re = QRegularExpression("%[\\w_]+?%");
+        int matchPos = 0;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            if (replaceDanmakuVariants(msg, danmaku, match.captured(0)))
+                find = true;
+            matchPos = matchPos + 1;
+        }
+
         // 读取配置文件的变量
         re = QRegularExpression("%\\{([^(%(\\{|\\[))]*?)\\}%");
         while (msg.indexOf(re, 0, &match) > -1)
@@ -3531,7 +3532,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     return msg;
 }
 
-void MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku, const QString &key) const
+bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku, const QString &key) const
 {
     // 固定标记
     if (key == "%n%")
@@ -3916,6 +3917,9 @@ void MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         }
         msg.replace(key, name);
     }
+    else
+        return false;
+    return true;
 }
 
 /**
@@ -5617,7 +5621,7 @@ void MainWindow::restoreCustomVariant(QString text)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            customVariant.insert(key, val);
+            customVariant.append(QPair<QString, QString>(key, val));
         }
         else
             qCritical() << "自定义变量读取失败：" << s;
@@ -5629,7 +5633,7 @@ QString MainWindow::saveCustomVariant()
     QStringList sl;
     for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
     {
-        sl << it.key() + " = " + it.value();
+        sl << it->first + " = " + it->second;
     }
     return sl.join("\n");
 }

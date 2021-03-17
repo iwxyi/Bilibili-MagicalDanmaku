@@ -27,7 +27,7 @@ protected:
     static QList<qint64> careUsers; // 特别关心
     static QList<qint64> strongNotifyUsers; // 强提醒
     static QHash<QString, QString> pinyinMap; // 拼音
-    static QHash<QString, QString> customVariant; // 自定义变量
+    static QList<QPair<QString, QString>> customVariant; // 自定义变量
     static QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
     static QList<qint64> notReplyUsers;   // 不自动回复的用户
     static QHash<int, QString> giftNames; // 礼物名字

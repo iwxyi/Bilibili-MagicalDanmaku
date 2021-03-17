@@ -612,7 +612,7 @@ private:
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
-    void replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
+    bool replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
