@@ -1034,29 +1034,32 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
-                QTimer::singleShot(5000, [=]{ // 太快的话会repeat
+                sendAutoMsgInFirst(msg, 5000);
+                /* QTimer::singleShot(5000, [=]{ // 太快的话会repeat
                     if (room != this->roomId) // 换房间了
                         return ;
                     sendAutoMsg(msg);
-                });
+                }); */
             }
             else if (errorMsg.contains("msg repeat"))
             {
                 localNotify("[3s后重试]");
-                QTimer::singleShot(3200, [=]{
+                sendAutoMsgInFirst(msg, 3200);
+                /* QTimer::singleShot(3200, [=]{
                     if (room != this->roomId) // 换房间了
                         return ;
                     sendAutoMsg(msg);
-                });
+                }); */
             }
             else if (errorMsg.contains("超出限制长度"))
             {
                 localNotify("[自动分割长度]");
-                QTimer::singleShot(1000, [=]{
+                sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), 1000);
+                /* QTimer::singleShot(1000, [=]{
                     if (room != this->roomId) // 换房间了
                         return ;
                     sendLongText(msg);
-                });
+                }); */
             }
             else if (errorMsg == "f") // 敏感词
             {
@@ -1087,6 +1090,22 @@ void MainWindow::sendAutoMsg(QString msgs)
         slotSendAutoMsg(false); // 先运行一次
         autoMsgTimer->start();
     }
+}
+
+void MainWindow::sendAutoMsgInFirst(QString msgs, int interval)
+{
+    if (msgs.trimmed().isEmpty())
+    {
+        if (debugPrint)
+            localNotify("[空弹幕，已忽略]");
+        return ;
+    }
+    QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
+    autoMsgQueues.insert(0, sl);
+    if (interval > 0)
+        autoMsgTimer->setInterval(interval);
+    if (!autoMsgTimer->isActive())
+        autoMsgTimer->start();
 }
 
 /**
@@ -5559,7 +5578,7 @@ void MainWindow::simulateKeys(QString seq)
 #endif
 }
 
-void MainWindow::sendLongText(QString text)
+QStringList MainWindow::splitLongDanmu(QString text) const
 {
     QStringList sl;
     int len = text.length();
@@ -5569,7 +5588,12 @@ void MainWindow::sendLongText(QString text)
     {
         sl << text.mid(i * maxOne, maxOne);
     }
-    sendAutoMsg(sl.join("\\n"));
+    return sl;
+}
+
+void MainWindow::sendLongText(QString text)
+{
+    sendAutoMsg(splitLongDanmu(text).join("\\n"));
 }
 
 void MainWindow::restoreCustomVariant(QString text)

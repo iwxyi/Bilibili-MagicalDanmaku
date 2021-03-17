@@ -205,6 +205,7 @@ private slots:
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
     void sendAutoMsg(QString msgs);
+    void sendAutoMsgInFirst(QString msgs, int interval = 0);
     void slotSendAutoMsg(bool timeout);
     void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
     void sendGiftMsg(QString msg);
@@ -649,6 +650,7 @@ private:
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, CmdResponse& res, int& resVal);
     void simulateKeys(QString seq);
+    QStringList splitLongDanmu(QString text) const;
     void sendLongText(QString text);
 
     void restoreCustomVariant(QString text);
