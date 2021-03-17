@@ -73,6 +73,7 @@
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
         <file alias="qq">resources/musics/QQ-music.png</file>
+        <file alias="migu">resources/musics/migu-music.png</file>
     </qresource>
     <qresource prefix="/snow">
         <file alias="neve_music">resources/snow/neve_music.png</file>

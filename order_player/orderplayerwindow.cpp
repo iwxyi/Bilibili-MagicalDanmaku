@@ -450,6 +450,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
     case QQMusic:
         url = QQMUSIC_SERVER + "/getSearchByKey?key=" + key.toUtf8().toPercentEncoding() + "&limit=80";
         break;
+    case MiguMusic:
+        url = MIGU_SERVER + "/search?keyword=" + key.toUtf8().toPercentEncoding() + "&pageSize=100";
+        break;
     }
     fetch(url, [=](QJsonObject json){
         bool insertOnce = this->insertOrderOnce;
@@ -464,11 +467,12 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << ("返回结果不为200：") << json.value("message").toString();
+                qDebug() << "网易云返回结果不为200：" << json.value("message").toString();
                 return ;
             }
             break;
         case QQMusic:
+        {
             QJsonValue val = json.value("response");
             if (!val.isObject()) // 不是正常搜索结果对象
             {
@@ -478,7 +482,15 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             response = val.toObject();
             if (response.value("code").toInt() != 0)
             {
-                qDebug() << ("返回结果不为0：") << json.value("message").toString();
+                qDebug() << "QQ音乐返回结果不为0：" << json.value("message").toString();
+                return ;
+            }
+            break;
+        }
+        case MiguMusic:
+            if (json.value("result").toInt() != 100)
+            {
+                qDebug() << "咪咕搜索返回结果不为0：" << json.value("result").toInt();
                 return ;
             }
             break;
@@ -494,6 +506,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case QQMusic:
             songs = response.value("data").toObject().value("song").toObject().value("list").toArray();
             break;
+        case MiguMusic:
+            songs = json.value("data").toObject().value("list").toArray();
+            break;
         }
         searchResultSongs.clear();
         switch (source) {
@@ -506,6 +521,10 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case QQMusic:
             foreach (QJsonValue val, songs)
                 searchResultSongs << Song::fromQQMusicJson(val.toObject());
+            break;
+        case MiguMusic:
+            foreach (QJsonValue val, songs)
+                searchResultSongs << Song::fromMiguMusicJson(val.toObject());
             break;
         }
 
@@ -748,6 +767,8 @@ QString OrderPlayerWindow::songPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("netease_" + snum(song.id) + ".mp3");
     case QQMusic:
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".mp3");
+    case MiguMusic:
+        return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".mp3");
     }
     return "";
 }
@@ -761,6 +782,8 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("netease_" + snum(song.id) + ".lrc");
     case QQMusic:
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".lrc");
+    case MiguMusic:
+        return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".lrc");
     }
     return "";
 }
@@ -774,6 +797,8 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("netease_" + snum(song.id) + ".jpg");
     case QQMusic:
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".jpg");
+    case MiguMusic:
+        return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".jpg");
     }
     return "";
 }
@@ -788,6 +813,8 @@ bool OrderPlayerWindow::isSongDownloaded(Song song)
 
 QString OrderPlayerWindow::msecondToString(qint64 msecond)
 {
+    if (!msecond)
+        return "";
     return QString("%1:%2").arg(msecond/1000 / 60, 2, 10, QLatin1Char('0'))
             .arg(msecond/1000 % 60, 2, 10, QLatin1Char('0'));
 }
@@ -1393,6 +1420,9 @@ void OrderPlayerWindow::downloadSong(Song song)
         else
             url = url = QQMUSIC_SERVER + "/getMusicPlay?songmid=" + song.mid;
         break;
+    case MiguMusic:
+        downloadSongMp3(song, song.url);
+        return ;
     }
 
     MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
@@ -1446,36 +1476,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             MUSIC_DEB << "    信息：" << br << size << type << fileUrl;
             if (size == 0)
             {
-                if (!song.addBy.isEmpty())
-                {
-                    emit signalOrderSongNoCopyright(song);
-                }
-                qDebug() << "无法下载，可能没有版权" << song.simpleString();
-                if (playAfterDownloaded == song)
-                {
-                    if (orderSongs.contains(song))
-                    {
-                        orderSongs.removeOne(song);
-                        saveSongList("music/order", orderSongs);
-                        setSongModelToView(orderSongs, ui->orderSongsListView);
-                    }
-                    if (autoSwitchSource && song.source == musicSource
-                            /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
-                    {
-                        slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
-                        qDebug() << "无法播放：" << song.name << "，开始换源";
-                        insertOrderOnce = true;
-                        searchMusicBySource(song.name, musicSource == NeteaseCloudMusic
-                                            ? QQMusic : NeteaseCloudMusic, song.addBy);
-                    }
-                    else
-                    {
-                        playNext();
-                    }
-                }
-
-                downloadingSong = Song();
-                downloadNext();
+                downloadSongFailed(song);
                 return ;
             }
             break;
@@ -1530,68 +1531,91 @@ void OrderPlayerWindow::downloadSong(Song song)
 
             if (fileUrl.isEmpty())
             {
-                qDebug() << "无法下载，歌曲不存在或没有版权" << song.simpleString();
-                if (playAfterDownloaded == song)
-                {
-                    if (orderSongs.contains(song))
-                    {
-                        orderSongs.removeOne(song);
-                    }
-                    playNext();
-                }
-
-                downloadingSong = Song();
-                downloadNext();
-                return ;
+                downloadSongFailed(song);
             }
 
             break;
         }
+        case MiguMusic:
+            return ;
         }
         MUSIC_DEB << "歌曲下载直链：" << fileUrl;
 
-        // 开始下载歌曲本身
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(fileUrl)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray mp3Ba = reply1->readAll();
-        if (mp3Ba.isEmpty())
-        {
-            qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString();
-            downloadingSong = Song();
-            downloadNext();
-            return ;
-        }
-
-        // 解析MP3标签
-        /*try {
-            readMp3Data(mp3Ba);
-        } catch(...) {
-            qDebug() << "读取音乐标签出错";
-        }*/
-
-        // 保存到文件
-        QFile file(songPath(song));
-        file.open(QIODevice::WriteOnly);
-        file.write(mp3Ba);
-        file.flush();
-        file.close();
-
-        emit signalSongDownloadFinished(song);
-
-        if (playAfterDownloaded == song)
-            playLocalSong(song);
-
-        downloadingSong = Song();
-        downloadNext();
+        downloadSongMp3(song, fileUrl);
     }, song.source);
 
     downloadSongLyric(song);
     downloadSongCover(song);
+}
+
+void OrderPlayerWindow::downloadSongFailed(Song song)
+{
+    if (!song.addBy.isEmpty())
+    {
+        emit signalOrderSongNoCopyright(song);
+    }
+    qDebug() << "无法下载，可能没有版权" << song.simpleString();
+    if (playAfterDownloaded == song)
+    {
+        if (orderSongs.contains(song))
+        {
+            orderSongs.removeOne(song);
+            saveSongList("music/order", orderSongs);
+            setSongModelToView(orderSongs, ui->orderSongsListView);
+        }
+
+        if (autoSwitchSource && song.source == musicSource
+                /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
+        {
+            slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
+            qDebug() << "无法播放：" << song.name << "，开始换源";
+            insertOrderOnce = true;
+            searchMusicBySource(song.name, musicSource == MiguMusic
+                                ? NeteaseCloudMusic: MiguMusic, song.addBy);
+        }
+        else
+        {
+            playNext();
+        }
+    }
+
+    downloadingSong = Song();
+    downloadNext();
+}
+
+void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
+{
+    // 开始下载歌曲本身
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+    //请求结束并下载完成后，退出子事件循环
+    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //开启子事件循环
+    loop.exec();
+    QByteArray mp3Ba = reply1->readAll();
+    if (mp3Ba.isEmpty())
+    {
+        qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString();
+        downloadingSong = Song();
+        downloadNext();
+        return ;
+    }
+
+    // 保存到文件
+    QFile file(songPath(song));
+    file.open(QIODevice::WriteOnly);
+    file.write(mp3Ba);
+    file.flush();
+    file.close();
+
+    emit signalSongDownloadFinished(song);
+
+    if (playAfterDownloaded == song)
+        playLocalSong(song);
+
+    downloadingSong = Song();
+    downloadNext();
 }
 
 void OrderPlayerWindow::downloadSongLyric(Song song)
@@ -1611,6 +1635,8 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     case QQMusic:
         url = QQMUSIC_SERVER + "/getLyric?songmid=" + song.mid;
         break;
+    case MiguMusic:
+        url = MIGU_SERVER + "/song?cid=" + song.mid;
     }
 
     fetch(url, [=](QJsonObject json){
@@ -1621,13 +1647,21 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << ("返回结果不为200：") << json.value("message").toString();
+                qDebug() << "网易云歌词返回结果不为200：" << json.value("message").toString();
                 return ;
             }
             lrc = json.value("lrc").toObject().value("lyric").toString();
             break;
         case QQMusic:
             lrc = json.value("response").toObject().value("lyric").toString();
+            break;
+        case MiguMusic:
+            if (json.value("result").toInt() != 100)
+            {
+                qDebug() << "咪咕歌词返回结果不为100：" << json.value("result").toInt();
+                return ;
+            }
+            lrc = json.value("data").toObject().value("lyric").toString();
             break;
         }
         if (!lrc.isEmpty())
@@ -1670,6 +1704,10 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     case QQMusic:
         url = QQMUSIC_SERVER + "/getImageUrl?id=" + song.album.mid;
         break;
+    case MiguMusic:
+        MUSIC_DEB << "咪咕音乐封面地址：" << song.album.picUrl;
+        downloadSongCoverJpg(song, song.album.picUrl);
+        return ;
     }
 
     MUSIC_DEB << "封面信息url:" << url;
@@ -1704,48 +1742,58 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             }
             url = json.value("response").toObject().value("data").toObject().value("imageUrl").toString();
             break;
+        case MiguMusic:
+            return ;
         }
 
         MUSIC_DEB << "封面地址：" << url;
 
-        // 开始下载封面数据
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray baData1 = reply1->readAll();
-        QPixmap pixmap;
-        pixmap.loadFromData(baData1);
-        if (!pixmap.isNull())
+        downloadSongCoverJpg(song, url);
+    }, song.source);
+}
+
+void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
+{
+    // 开始下载封面数据
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
+    //请求结束并下载完成后，退出子事件循环
+    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    //开启子事件循环
+    loop.exec();
+    QByteArray baData1 = reply1->readAll();
+    QPixmap pixmap;
+    pixmap.loadFromData(baData1);
+    if (!pixmap.isNull())
+    {
+        QFile file(coverPath(song));
+        file.open(QIODevice::WriteOnly);
+        file.write(baData1);
+        file.flush();
+        file.close();
+
+        MUSIC_DEB << "封面下载完成:" << pixmap.size() << "   "
+                  << (playAfterDownloaded == song) << (playingSong == song)
+                  << (coveringSong == song);
+        emit signalCoverDownloadFinished(song);
+
+        // 正是当前要播放的歌曲
+        if (playAfterDownloaded == song || playingSong == song)
         {
-            QFile file(coverPath(song));
-            file.open(QIODevice::WriteOnly);
-            file.write(baData1);
-            file.flush();
-            file.close();
-
-            emit signalCoverDownloadFinished(song);
-
-            // 正是当前要播放的歌曲
-            if (playAfterDownloaded == song || playingSong == song)
+            if (coveringSong != song)
             {
-                if (coveringSong != song)
-                {
-                    pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
-                    ui->playingCoverLabel->setPixmap(pixmap);
-                    coveringSong = song;
-                    setCurrentCover(pixmap);
-                }
+                pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
+                ui->playingCoverLabel->setPixmap(pixmap);
+                coveringSong = song;
+                setCurrentCover(pixmap);
             }
         }
-        else
-        {
-            qDebug() << "warning: 下载的封面是空的" << song.simpleString();
-        }
-    }, song.source);
+    }
+    else
+    {
+        qDebug() << "warning: 下载的封面是空的" << song.simpleString() << url;
+    }
 }
 
 /**
@@ -1896,6 +1944,10 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
             break;
         }
+        case MiguMusic:
+        {
+            // TODO: 歌单接口
+        }
         }
     }, source);
 
@@ -1967,7 +2019,7 @@ void OrderPlayerWindow::generalRandomSongList()
     for (auto it = shuffles.begin(); it != shuffles.end(); it++)
     {
         SongList& songs = it.value();
-        unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count ();
+        unsigned seed = unsigned(std::chrono::system_clock::now ().time_since_epoch ().count());
         std::shuffle(songs.begin(), songs.end(), std::default_random_engine (seed));
 
         // 插入空的Song，使每一层尽量分布均匀
@@ -2258,6 +2310,10 @@ void OrderPlayerWindow::setMusicIconBySource()
         ui->musicSourceButton->setIcon(QIcon(":/musics/qq"));
         ui->musicSourceButton->setToolTip("当前播放源：QQ音乐\n点击切换");
         break;
+    case MiguMusic:
+        ui->musicSourceButton->setIcon(QIcon(":/musics/migu"));
+        ui->musicSourceButton->setToolTip("当前播放源：咪咕音乐\n点击切换");
+        break;
     }
 }
 
@@ -2275,7 +2331,7 @@ void OrderPlayerWindow::fetch(QString url, NetJsonFunc func, MusicSource cookie)
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << error.errorString() << url;
             return ;
         }
         func(document.object());
@@ -2299,7 +2355,9 @@ void OrderPlayerWindow::fetch(QString url, NetReplyFunc func, MusicSource cookie
         break;
     case QQMusic:
         if (!qqmusicCookies.isEmpty() && url.startsWith(QQMUSIC_SERVER))
-                request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+            request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+        break;
+    case MiguMusic:
         break;
     }
 
@@ -2330,7 +2388,9 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
         break;
     case QQMusic:
         if (!qqmusicCookies.isEmpty() && url.startsWith(QQMUSIC_SERVER))
-                request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+            request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+        break;
+    case MiguMusic:
         break;
     }
 
@@ -2350,7 +2410,7 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << error.errorString() << url;
             return ;
         }
         func(document.object());
@@ -3088,7 +3148,8 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
 void OrderPlayerWindow::on_musicSourceButton_clicked()
 {
-    musicSource = MusicSource((int(musicSource) + 1) % 2);
+    const int musicCount = 3;
+    musicSource = MusicSource((int(musicSource) + 1) % musicCount);
     settings.setValue("music/source", musicSource);
 
     setMusicIconBySource();

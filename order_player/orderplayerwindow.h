@@ -42,7 +42,7 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define MUSIC_DEB if (0) qDebug()
+#define MUSIC_DEB if (1) qDebug()
 
 enum MusicQuality
 {
@@ -236,8 +236,11 @@ private:
     void addDownloadSong(Song song);
     void downloadNext();
     void downloadSong(Song song);
+    void downloadSongFailed(Song song);
+    void downloadSongMp3(Song song, QString url);
     void downloadSongLyric(Song song);
     void downloadSongCover(Song song);
+    void downloadSongCoverJpg(Song song, QString url);
     void setCurrentLyric(QString lyric);
     void openPlayList(QString shareUrl);
     void clearDownloadFiles();

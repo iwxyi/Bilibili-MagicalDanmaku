@@ -3578,7 +3578,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         msg.replace(key, "\n");
 
     // 用户昵称
-    else if (key == "%uname%" || key == "username%" || key =="%nickname%")
+    else if (key == "%uname%" || key == "%username%" || key =="%nickname%")
         msg.replace(key, danmaku.getNickname());
 
     // 用户昵称

@@ -19,7 +19,8 @@ enum MusicSource
 {
     UnknowMusic = -1,
     NeteaseCloudMusic = 0,
-    QQMusic = 1
+    QQMusic = 1,
+    MiguMusic = 2
 };
 
 struct Artist
@@ -47,7 +48,14 @@ struct Artist
         artist.id = JVAL_LONG(id);
         artist.mid = JVAL_STR(mid);
         artist.name = JVAL_STR(name);
-//        artist.faceUrl = JVAL_STR(img1v1Url);
+        return artist;
+    }
+
+    static Artist fromMiguMusicJson(QJsonObject json)
+    {
+        Artist artist;
+        artist.id = JVAL_LONG(id);
+        artist.name = JVAL_STR(name);
         return artist;
     }
 
@@ -69,6 +77,7 @@ struct Album
     QString name;
     int size = 0;
     int mark = 0;
+    QString picUrl;
 
     static Album fromJson(QJsonObject json)
     {
@@ -88,8 +97,16 @@ struct Album
         album.id = JVAL_LONG(id);
         album.mid = JVAL_STR(mid);
         album.name = JVAL_STR(name);
-//        album.size = JVAL_INT(size);
-//        album.mark = JVAL_INT(mark);
+        return album;
+    }
+
+    static Album fromMiguMusicJson(QJsonObject json)
+    {
+        Album album;
+        album.id = JVAL_LONG(id);
+        album.mid = JVAL_STR(mid);
+        album.name = JVAL_STR(name);
+        album.picUrl = JVAL_STR(picUrl);
         return album;
     }
 
@@ -101,6 +118,7 @@ struct Album
         json.insert("name", name);
         json.insert("size", size);
         json.insert("mark", mark);
+        json.insert("picUrl", picUrl);
         return json;
     }
 };
@@ -116,6 +134,7 @@ struct Song
     char m_padding1[4];
     Album album;
     QString artistNames;
+    QString url;
     char m_padding2[4];
     qint64 addTime;
     QString addBy;
@@ -127,6 +146,7 @@ struct Song
         song.id = JVAL_LONG(id);
         song.mid = JVAL_STR(mid);
         song.name = JVAL_STR(name);
+
         QJsonArray array = json.value("artists").toArray();
         QStringList artistNameList;
         foreach (QJsonValue val, array)
@@ -136,9 +156,11 @@ struct Song
             artistNameList.append(artist.name);
         }
         song.artistNames = artistNameList.join("/");
+
         song.album = Album::fromJson(json.value("album").toObject());
         song.duration = JVAL_INT(duration); // 毫秒
         song.mark = JVAL_INT(mark);
+
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
         if (json.contains("addBy"))
@@ -155,6 +177,7 @@ struct Song
         if (json.contains("mid"))
             song.mid = JVAL_STR(mid);
         song.name = JVAL_STR(name);
+
         QJsonArray array = json.value("singer").toArray();
         QStringList artistNameList;
         foreach (QJsonValue val, array)
@@ -164,14 +187,45 @@ struct Song
             artistNameList.append(artist.name);
         }
         song.artistNames = artistNameList.join("/");
+
         song.album = Album::fromQQMusicJson(json.value("album").toObject());
         song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
         song.mark = JVAL_INT(mark);
+
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
         if (json.contains("addBy"))
             song.addBy = JVAL_STR(addBy);
         song.source = QQMusic;
+        return song;
+    }
+
+    static Song fromMiguMusicJson(QJsonObject json)
+    {
+        Song song;
+        song.id = JVAL_STR(id).toLongLong();
+        if (json.contains("cid"))
+            song.mid = JVAL_STR(cid);
+        song.name = JVAL_STR(name);
+        song.url = JVAL_STR(url);
+
+        QJsonArray array = json.value("artists").toArray();
+        QStringList artistNameList;
+        foreach (QJsonValue val, array)
+        {
+            Artist artist = Artist::fromMiguMusicJson(val.toObject());
+            song.artists.append(artist);
+            artistNameList.append(artist.name);
+        }
+        song.artistNames = artistNameList.join("/");
+
+        song.album = Album::fromMiguMusicJson(json.value("album").toObject());
+
+        if (json.contains("addTime"))
+            song.addTime = JVAL_LONG(addTime);
+        if (json.contains("addBy"))
+            song.addBy = JVAL_STR(addBy);
+        song.source = MiguMusic;
         return song;
     }
 
@@ -202,6 +256,7 @@ struct Song
         json.insert("id", id);
         json.insert("mid", mid);
         json.insert("name", name);
+        json.insert("url", url);
         json.insert("duration", duration);
         json.insert("mark", mark);
         QJsonArray array;
