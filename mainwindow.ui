@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -3288,11 +3288,12 @@ margin: 6px;</string>
     <addaction name="actionShow_Order_Player_Window"/>
     <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
+    <addaction name="actionSend_Long_Text"/>
     <addaction name="actionShow_PK_Video"/>
     <addaction name="actionJoin_Battle"/>
     <addaction name="separator"/>
-    <addaction name="actionSend_Long_Text"/>
     <addaction name="actionCustom_Variant"/>
+    <addaction name="actionPaste_Code"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -3554,6 +3555,15 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>二维码登录</string>
+   </property>
+  </action>
+  <action name="actionPaste_Code">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/code</normaloff>:/icons/code</iconset>
+   </property>
+   <property name="text">
+    <string>粘贴代码片段</string>
    </property>
   </action>
  </widget>

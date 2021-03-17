@@ -60,6 +60,24 @@ TaskWidget::TaskWidget(QWidget *parent) : QWidget(parent)
     });
 }
 
+void TaskWidget::fromJson(MyJson json)
+{
+    check->setChecked(json.b("enabled"));
+    spin->setValue(json.i("interval"));
+    timer->setInterval(spin->value() * 1000);
+    edit->setPlainText(json.s("text"));
+}
+
+MyJson TaskWidget::toJson() const
+{
+    MyJson json;
+    json.insert("key", CODE_TIMER_TASK_KEY);
+    json.insert("enabled", check->isEnabled());
+    json.insert("interval", spin->value());
+    json.insert("text", edit->toPlainText());
+    return json;
+}
+
 void TaskWidget::slotSpinChanged(int val)
 {
     timer->setInterval(val * 1000);

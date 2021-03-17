@@ -1,6 +1,7 @@
 #include <zlib.h>
 #include <QListView>
 #include <QMovie>
+#include <QClipboard>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -877,9 +878,12 @@ void MainWindow::pullLiveDanmaku()
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
         QDateTime time = QDateTime::currentDateTime();
+        qint64 removeTime = time.toMSecsSinceEpoch() - removeDanmakuInterval;
         for (int i = 0; i < danmakus.size(); i++)
         {
             LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
+                continue;
             danmaku.transToDanmu();
             danmaku.setTime(time);
             danmaku.setNoReply();
@@ -1527,15 +1531,25 @@ void MainWindow::on_SendMsgEdit_returnPressed()
     ui->SendMsgEdit->clear();
 }
 
-void MainWindow::addTimerTask(bool enable, int second, QString text)
+void MainWindow::addTimerTask(bool enable, int second, QString text, int index)
 {
     TaskWidget* tw = new TaskWidget(this);
-    QListWidgetItem* item = new QListWidgetItem(ui->taskListWidget);
+    QListWidgetItem* item;
 
-    ui->taskListWidget->addItem(item);
-    ui->taskListWidget->setItemWidget(item, tw);
-    ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
-    ui->taskListWidget->scrollToBottom();
+    if (index == -1)
+    {
+        item = new QListWidgetItem(ui->taskListWidget);
+        ui->taskListWidget->addItem(item);
+        ui->taskListWidget->setItemWidget(item, tw);
+        ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
+        ui->taskListWidget->scrollToBottom();
+    }
+    else
+    {
+        item = new QListWidgetItem();
+        ui->taskListWidget->insertItem(index, item);
+        ui->taskListWidget->setItemWidget(item, tw);
+    }
 
     // 连接信号
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
@@ -2055,18 +2069,78 @@ void MainWindow::getRoomUserInfo()
 void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
 {
     QListWidgetItem* item = ui->taskListWidget->currentItem();
+    int row = ui->taskListWidget->currentRow();
 
-    QMenu* menu = new QMenu(this);
-    QAction* actionDelete = new QAction("删除", this);
-
-    if (!item)
+    QString clipText = QApplication::clipboard()->text();
+    bool canPaste = false;
+    MyJson clipJson;
+    if (!clipText.isEmpty())
     {
-        actionDelete->setEnabled(false);
+        bool ok;
+        clipJson = MyJson::from(clipText.toUtf8(), &ok);
+        if (ok)
+        {
+            JS(clipJson, key);
+            canPaste = (key == CODE_TIMER_TASK_KEY);
+        }
     }
 
-    menu->addAction(actionDelete);
+    auto menu = new FacileMenu(this);
+    menu->addAction("插入", [=]{
+        addTimerTask(false, 1800, "", row);
+    })->disable(!item);
+    menu->addAction("上移", [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
 
-    connect(actionDelete, &QAction::triggered, this, [=]{
+        auto newTw = new TaskWidget(ui->taskListWidget);
+        newTw->fromJson(tw->toJson());
+
+        ui->taskListWidget->takeItem(row);
+        delete item;
+        tw->deleteLater();
+
+        QListWidgetItem* newItem = new QListWidgetItem;
+        ui->taskListWidget->insertItem(row-1, newItem);
+        ui->taskListWidget->setItemWidget(newItem, newTw);
+        newTw->autoResizeEdit();
+        newTw->adjustSize();
+        newItem->setSizeHint(newTw->sizeHint());
+
+        saveTaskList();
+    })->disable(!item || row <= 0);
+    menu->addAction("下移", [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+
+        auto newTw = new TaskWidget(ui->taskListWidget);
+        newTw->fromJson(tw->toJson());
+
+        ui->taskListWidget->takeItem(row);
+        delete item;
+        tw->deleteLater();
+
+        QListWidgetItem* newItem = new QListWidgetItem;
+        ui->taskListWidget->insertItem(row+1, newItem);
+        ui->taskListWidget->setItemWidget(newItem, newTw);
+        newTw->autoResizeEdit();
+        newTw->adjustSize();
+        newItem->setSizeHint(newTw->sizeHint());
+
+        saveTaskList();
+    })->disable(!item || row >= ui->taskListWidget->count()-1);
+    menu->split()->addAction("复制", [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+        QApplication::clipboard()->setText(tw->toJson().toBa());
+    })->disable(!item);
+    menu->addAction("粘贴", [=]{
+        auto widget = ui->taskListWidget->itemWidget(item);
+        auto tw = static_cast<TaskWidget*>(widget);
+        tw->fromJson(clipJson);
+        saveTaskList();
+    })->disable(!canPaste);
+    menu->split()->addAction("删除", [=]{
         auto widget = ui->taskListWidget->itemWidget(item);
         auto tw = static_cast<TaskWidget*>(widget);
 
@@ -2076,11 +2150,8 @@ void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
         saveTaskList();
 
         tw->deleteLater();
-    });
-
-    menu->exec(QCursor::pos());
-
-    actionDelete->deleteLater();
+    })->disable(!item);
+    menu->exec();
 }
 
 void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)

@@ -67,6 +67,9 @@ QT_END_NAMESPACE
 #define DANMAKU_SERVER_PORT 1
 #define MUSIC_SERVER_PORT 2
 
+#define CODE_AUTO_REPLY_KEY (QApplication::applicationName() + ":AutoReply")
+#define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
+
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
@@ -554,7 +557,7 @@ private:
     void localNotify(QString text);
     void localNotify(QString text, qint64 uid);
 
-    void addTimerTask(bool enable, int second, QString text);
+    void addTimerTask(bool enable, int second, QString text, int index = -1);
     void saveTaskList();
     void restoreTaskList();
 

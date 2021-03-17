@@ -7,17 +7,29 @@
 #include "functional"
 
 #define jsona(x, y) y = x.a(#y)
+#define JA(x, y) QJsonArray y = x.a(#y)
 #define jsonb(x, y) y = x.b(#y)
+#define JB(x, y) bool y = x.b(#y)
 #define jsond(x, y) y = x.d(#y)
+#define JF(x, y) double y = x.d(#y)
 #define jsoni(x, y) y = x.i(#y)
+#define JI(x, y) int y = x.i(#y)
 #define jsonl(x, y) y = x.l(#y)
+#define JL(x, y) long long y = x.l(#y)
 #define jsono(x, y) y = x.o(#y)
+#define JO(x, y) MyJson y = x.o(#y)
 #define jsons(x, y) y = x.s(#y)
+#define JS(x, y) QString y = x.s(#y)
 #define jsonv(x, y) y = x.v(#y)
+#define JV(x, y) QVariant y = x.v(#y)
 
 class MyJson : public QJsonObject
 {
 public:
+    MyJson()
+    {
+    }
+
     MyJson(QJsonObject json) : QJsonObject(json)
     {
     }
@@ -25,6 +37,24 @@ public:
     MyJson(QByteArray ba) : QJsonObject(QJsonDocument::fromJson(ba).object())
     {
 
+    }
+
+    static MyJson from(QByteArray ba, bool* ok = nullptr)
+    {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(ba, &error);
+        if (error.error == QJsonParseError::NoError)
+        {
+            if (*ok)
+                *ok = true;
+            return doc.object();
+        }
+        else
+        {
+            if (*ok)
+                *ok = false;
+            return MyJson();
+        }
     }
 
     QJsonArray a(QString key) const

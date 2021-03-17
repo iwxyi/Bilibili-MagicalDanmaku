@@ -12,13 +12,20 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTextDocument>
+#include <QApplication>
 #include <QDebug>
+#include "myjson.h"
+
+#define CODE_TIMER_TASK_KEY (QApplication::applicationName() + ":TimerTask")
 
 class TaskWidget : public QWidget
 {
     Q_OBJECT
 public:
     TaskWidget(QWidget *parent = nullptr);
+
+    void fromJson(MyJson json);
+    MyJson toJson() const;
 
 signals:
     void signalSendMsgs(QString msgs, bool manual);
