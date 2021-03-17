@@ -2066,10 +2066,11 @@ void MainWindow::getRoomUserInfo()
     });
 }
 
-void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
+template<class T>
+void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc saveFunc)
 {
-    QListWidgetItem* item = ui->taskListWidget->currentItem();
-    int row = ui->taskListWidget->currentRow();
+    QListWidgetItem* item = listWidget->currentItem();
+    int row = listWidget->currentRow();
 
     QString clipText = QApplication::clipboard()->text();
     bool canPaste = false;
@@ -2080,8 +2081,8 @@ void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
         clipJson = MyJson::from(clipText.toUtf8(), &ok);
         if (ok)
         {
-            JS(clipJson, key);
-            canPaste = (key == CODE_TIMER_TASK_KEY);
+            JS(clipJson, anchor_key);
+            canPaste = (anchor_key == listKey);
         }
     }
 
@@ -2090,130 +2091,85 @@ void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
         addTimerTask(false, 1800, "", row);
     })->disable(!item);
     menu->addAction("上移", [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<TaskWidget*>(widget);
-
-        auto newTw = new TaskWidget(ui->taskListWidget);
-        newTw->fromJson(tw->toJson());
-
-        ui->taskListWidget->takeItem(row);
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
+        MyJson json = tw->toJson();
+        listWidget->takeItem(row);
         delete item;
         tw->deleteLater();
 
+        auto newTw = new T(listWidget);
+        newTw->fromJson(json);
+
         QListWidgetItem* newItem = new QListWidgetItem;
-        ui->taskListWidget->insertItem(row-1, newItem);
-        ui->taskListWidget->setItemWidget(newItem, newTw);
+        listWidget->insertItem(row-1, newItem);
+        listWidget->setItemWidget(newItem, newTw);
         newTw->autoResizeEdit();
         newTw->adjustSize();
         newItem->setSizeHint(newTw->sizeHint());
 
-        saveTaskList();
+        (this->*saveFunc)();
+        listWidget->setCurrentRow(row - 1);
     })->disable(!item || row <= 0);
     menu->addAction("下移", [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<TaskWidget*>(widget);
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
 
-        auto newTw = new TaskWidget(ui->taskListWidget);
+        auto newTw = new T(listWidget);
         newTw->fromJson(tw->toJson());
 
-        ui->taskListWidget->takeItem(row);
+        listWidget->takeItem(row);
         delete item;
         tw->deleteLater();
 
         QListWidgetItem* newItem = new QListWidgetItem;
-        ui->taskListWidget->insertItem(row+1, newItem);
-        ui->taskListWidget->setItemWidget(newItem, newTw);
+        listWidget->insertItem(row+1, newItem);
+        listWidget->setItemWidget(newItem, newTw);
         newTw->autoResizeEdit();
         newTw->adjustSize();
         newItem->setSizeHint(newTw->sizeHint());
 
-        saveTaskList();
-    })->disable(!item || row >= ui->taskListWidget->count()-1);
+        (this->*saveFunc)();
+        listWidget->setCurrentRow(row + 1);
+    })->disable(!item || row >= listWidget->count()-1);
     menu->split()->addAction("复制", [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<TaskWidget*>(widget);
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
         QApplication::clipboard()->setText(tw->toJson().toBa());
     })->disable(!item);
     menu->addAction("粘贴", [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<TaskWidget*>(widget);
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
         tw->fromJson(clipJson);
-        saveTaskList();
+
+        (this->*saveFunc)();
     })->disable(!canPaste);
     menu->split()->addAction("删除", [=]{
-        auto widget = ui->taskListWidget->itemWidget(item);
-        auto tw = static_cast<TaskWidget*>(widget);
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
 
-        ui->taskListWidget->removeItemWidget(item);
-        ui->taskListWidget->takeItem(ui->taskListWidget->currentRow());
+        listWidget->removeItemWidget(item);
+        listWidget->takeItem(listWidget->currentRow());
 
-        saveTaskList();
-
+        (this->*saveFunc)();
         tw->deleteLater();
     })->disable(!item);
     menu->exec();
 }
 
-void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
+void MainWindow::on_taskListWidget_customContextMenuRequested(const QPoint &)
 {
-    QListWidgetItem* item = ui->replyListWidget->currentItem();
-
-    QMenu* menu = new QMenu(this);
-    QAction* actionDelete = new QAction("删除", this);
-
-    if (!item)
-    {
-        actionDelete->setEnabled(false);
-    }
-
-    menu->addAction(actionDelete);
-
-    connect(actionDelete, &QAction::triggered, this, [=]{
-        auto widget = ui->replyListWidget->itemWidget(item);
-        auto rw = static_cast<ReplyWidget*>(widget);
-
-        ui->replyListWidget->removeItemWidget(item);
-        ui->replyListWidget->takeItem(ui->replyListWidget->currentRow());
-
-        saveReplyList();
-
-        rw->deleteLater();
-    });
-
-    menu->exec(QCursor::pos());
-
-    actionDelete->deleteLater();
+    showListMenu<TaskWidget>(ui->taskListWidget, CODE_TIMER_TASK_KEY, &MainWindow::saveTaskList);
 }
 
-void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &pos)
+void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
 {
-    QListWidgetItem* item = ui->eventListWidget->currentItem();
+    showListMenu<ReplyWidget>(ui->replyListWidget, CODE_AUTO_REPLY_KEY, &MainWindow::saveReplyList);
+}
 
-    QMenu* menu = new QMenu(this);
-    QAction* actionDelete = new QAction("删除", this);
-
-    if (!item)
-    {
-        actionDelete->setEnabled(false);
-    }
-
-    menu->addAction(actionDelete);
-
-    connect(actionDelete, &QAction::triggered, this, [=]{
-        auto widget = ui->eventListWidget->itemWidget(item);
-        auto rw = static_cast<EventWidget*>(widget);
-
-        ui->eventListWidget->removeItemWidget(item);
-        ui->eventListWidget->takeItem(ui->eventListWidget->currentRow());
-
-        saveEventList();
-
-        rw->deleteLater();
-    });
-
-    menu->exec(QCursor::pos());
-
-    actionDelete->deleteLater();
+void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &)
+{
+    showListMenu<EventWidget>(ui->eventListWidget, CODE_EVENT_ACTION_KEY, &MainWindow::saveEventList);
 }
 
 void MainWindow::on_addTaskButton_clicked()
@@ -12118,3 +12074,6 @@ void MainWindow::on_allowAdminControlCheck_clicked()
 {
     settings->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
 }
+
+
+

@@ -67,8 +67,9 @@ QT_END_NAMESPACE
 #define DANMAKU_SERVER_PORT 1
 #define MUSIC_SERVER_PORT 2
 
-#define CODE_AUTO_REPLY_KEY (QApplication::applicationName() + ":AutoReply")
-#define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
+class MainWindow;
+
+typedef void(MainWindow::*VoidFunc)();
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -195,7 +196,7 @@ private slots:
 
     void on_replyListWidget_customContextMenuRequested(const QPoint &);
 
-    void on_eventListWidget_customContextMenuRequested(const QPoint &pos);
+    void on_eventListWidget_customContextMenuRequested(const QPoint &);
 
     void on_addTaskButton_clicked();
 
@@ -569,6 +570,9 @@ private:
     void saveEventList();
     void restoreEventList();
     bool hasEvent(QString cmd) const;
+
+    template<class T>
+    void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
 
     void autoSetCookie(QString s);
     QVariant getCookies();

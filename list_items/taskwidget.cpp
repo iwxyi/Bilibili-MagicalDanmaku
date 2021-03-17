@@ -72,8 +72,8 @@ void TaskWidget::fromJson(MyJson json)
 MyJson TaskWidget::toJson() const
 {
     MyJson json;
-    json.insert("key", CODE_TIMER_TASK_KEY);
-    json.insert("enabled", check->isEnabled());
+    json.insert("anchor_key", CODE_TIMER_TASK_KEY);
+    json.insert("enabled", check->isChecked());
     json.insert("interval", spin->value());
     json.insert("text", edit->toPlainText());
     return json;

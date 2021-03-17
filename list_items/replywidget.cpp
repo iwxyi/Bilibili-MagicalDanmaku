@@ -65,8 +65,8 @@ void ReplyWidget::fromJson(MyJson json)
 MyJson ReplyWidget::toJson() const
 {
     MyJson json;
-    json.insert("key", CODE_AUTO_REPLY_KEY);
-    json.insert("enabled", check->isEnabled());
+    json.insert("anchor_key", CODE_AUTO_REPLY_KEY);
+    json.insert("enabled", check->isChecked());
     json.insert("key", keyEdit->text());
     json.insert("reply", replyEdit->toPlainText());
     return json;

@@ -60,8 +60,8 @@ void EventWidget::fromJson(MyJson json)
 MyJson EventWidget::toJson() const
 {
     MyJson json;
-    json.insert("key", CODE_EVENT_ACTION_KEY);
-    json.insert("enabled", check->isEnabled());
+    json.insert("anchor_key", CODE_EVENT_ACTION_KEY);
+    json.insert("enabled", check->isChecked());
     json.insert("event", eventEdit->text());
     json.insert("action", actionEdit->toPlainText());
     return json;
