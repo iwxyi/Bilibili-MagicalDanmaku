@@ -1412,8 +1412,13 @@ void OrderPlayerWindow::downloadSong(Song song)
             url = QQMUSIC_SERVER + "/song/url?id=" + song.mid;
         break;
     case MiguMusic:
-        downloadSongMp3(song, song.url);
-        return ;
+        if (!song.url.isEmpty())
+        {
+            downloadSongMp3(song, song.url);
+            return ;
+        }
+        url = MIGU_SERVER + "/song?cid=" + song.mid;
+        break;
     }
 
     MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
@@ -1522,12 +1527,24 @@ void OrderPlayerWindow::downloadSong(Song song)
             if (fileUrl.isEmpty())
             {
                 downloadSongFailed(song);
+                return ;
             }
 
             break;
         }
         case MiguMusic:
-            return ;
+            if (json.value("result").toInt() != 100)
+            {
+                qDebug() << "QQ歌曲链接返回结果不为100：" << json;
+                return ;
+            }
+            fileUrl = json.value("data").toObject().value("url").toString();
+            if (fileUrl.isEmpty())
+            {
+                downloadSongFailed(song);
+                return ;
+            }
+            break;
         }
         MUSIC_DEB << "歌曲下载直链：" << fileUrl;
 
@@ -1586,7 +1603,7 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
     QByteArray mp3Ba = reply1->readAll();
     if (mp3Ba.isEmpty())
     {
-        qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString();
+        qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid;
         downloadingSong = Song();
         downloadNext();
         return ;
@@ -1628,6 +1645,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     case MiguMusic:
         url = MIGU_SERVER + "/song?cid=" + song.mid;
     }
+    MUSIC_DEB << "歌词信息链接：" << url;
 
     fetch(url, [=](QJsonObject json){
         QString lrc;
@@ -1652,6 +1670,14 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
                 return ;
             }
             lrc = json.value("data").toObject().value("lyric").toString();
+
+            // 如果没有自带封面，则在歌词这里同步下载
+            if (song.album.picUrl.isEmpty())
+            {
+                QString picUrl = json.value("data").toObject().value("picUrl").toString();
+                MUSIC_DEB << "咪咕同步下载封面" << picUrl;
+                downloadSongCoverJpg(song, picUrl);
+            }
             break;
         }
         if (!lrc.isEmpty())
@@ -1695,8 +1721,13 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         downloadSongCoverJpg(song, url);
         return ;
     case MiguMusic:
-        MUSIC_DEB << "咪咕音乐封面地址：" << song.album.picUrl;
-        downloadSongCoverJpg(song, song.album.picUrl);
+        if (!song.album.picUrl.isEmpty())
+        {
+            MUSIC_DEB << "咪咕音乐封面地址：" << song.album.picUrl;
+            downloadSongCoverJpg(song, song.album.picUrl);
+            return ;
+        }
+        // url = MIGU_SERVER + "/song?cid=" + song.mid; // 在下载歌词的时候同步下载封面
         return ;
     }
 
@@ -1837,12 +1868,12 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         QRegularExpressionMatch match;
         if (shareUrl.indexOf(re, 0, &match) == -1)
         {
-            qWarning() << "无法解析歌单链接：" << shareUrl;
-            QMessageBox::warning(this, "打开歌单", "无法解析的歌单地址");
+            qWarning() << "无法解析的网易云音乐歌单链接：" << shareUrl;
+            QMessageBox::warning(this, "打开歌单", "无法解析的网易云音乐歌单地址");
             return ;
         }
         id = match.captured(1);
-        playlistUrl = QQMUSIC_SERVER + "/getSongListDetail?disstid=" + id;
+        playlistUrl = QQMUSIC_SERVER + "/songlist?id=" + id;
     }
     else if (shareUrl.contains("y.qq.com/n/yqq/playlist/")) // QQ音乐短网址第二次重定向（网页打开的）
     {
@@ -1852,25 +1883,41 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         if (shareUrl.indexOf(QRegularExpression("playlist/(\\d+)"), 0, &match) > -1)
         {
             id = match.captured(1);
-            playlistUrl = QQMUSIC_SERVER + "/getSongListDetail?disstid=" + id;
+            playlistUrl = QQMUSIC_SERVER + "/songlist?id=" + id;
         }
         else
         {
-            qWarning() << "无法解析歌单链接：" << shareUrl;
-            QMessageBox::warning(this, "打开歌单", "无法解析的歌单地址");
+            qWarning() << "无法解析的QQ音乐歌单链接：" << shareUrl;
+            QMessageBox::warning(this, "打开歌单", "无法解析的QQ音乐歌单地址");
+            return ;
+        }
+    }
+    else if (shareUrl.contains("music.migu.cn"))
+    {
+        // https://music.migu.cn/v3/music/playlist/172881646?origin=1001001
+        source = MiguMusic;
+        QRegularExpressionMatch match;
+        if (shareUrl.indexOf(QRegularExpression("playlist/(\\d+)"), 0, &match) > -1)
+        {
+            id = match.captured(1);
+            playlistUrl = MIGU_SERVER + "/playlist?id=" + id;
+        }
+        else
+        {
+            qWarning() << "无法解析的咪咕音乐歌单链接：" << shareUrl;
+            QMessageBox::warning(this, "打开歌单", "无法解析的咪咕音乐歌单地址");
             return ;
         }
     }
     else
     {
-        qWarning() << "无法解析歌单链接：" << shareUrl;
+        qWarning() << "无法解析的歌单链接：" << shareUrl;
         QMessageBox::warning(this, "打开歌单", "无法解析的歌单地址");
         return ;
     }
 
     MUSIC_DEB << "歌单接口：" << playlistUrl;
     fetch(playlistUrl, [=](QJsonObject json){
-        QJsonObject response;
         SongList songs;
         switch (source) {
         case UnknowMusic:
@@ -1912,13 +1959,12 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         }
         case QQMusic:
         {
-            response = json.value("response").toObject();
-            if (response.value("code").toInt() != 0)
+            if (json.value("result").toInt() != 100)
             {
-                qDebug() << ("返回结果不为0：") << json.value("message").toString();
+                qDebug() << "返回结果不为100：" << json;
                 return ;
             }
-            QJsonArray array = response.value("cdlist").toArray().first().toObject().value("songlist").toArray();
+            QJsonArray array = json.value("data").toObject().value("songlist").toArray();
             searchResultSongs.clear();
             foreach (QJsonValue val, array)
             {
@@ -1930,7 +1976,20 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         }
         case MiguMusic:
         {
-            // TODO: 歌单接口
+            if (json.value("result").toInt() != 100)
+            {
+                qDebug() << "返回结果不为100：" << json;
+                return ;
+            }
+            QJsonArray array = json.value("data").toObject().value("list").toArray();
+            searchResultSongs.clear();
+            foreach (QJsonValue val, array)
+            {
+                searchResultSongs << Song::fromMiguMusicJson(val.toObject());
+            }
+            setSearchResultTable(searchResultSongs);
+            ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+            break;
         }
         }
     }, source);
