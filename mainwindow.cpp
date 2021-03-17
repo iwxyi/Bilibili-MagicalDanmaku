@@ -3440,6 +3440,10 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     re = QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)");
     msg.replace(re, "");
 
+    // 软换行符
+    re = QRegularExpression("\\s*\\\\\\s*");
+    msg.replace(re, "");
+
     // 自定义变量
     for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
     {

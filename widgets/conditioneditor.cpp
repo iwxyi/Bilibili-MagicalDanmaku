@@ -39,6 +39,8 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         QSSRule{QRegularExpression("\\(cd\\d{1,2}:\\d+\\)"), getTCF(QColor(0, 128, 0))},
         // 注释
         QSSRule{QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
+        // 软换行符
+        QSSRule{QRegularExpression("\\s*\\\\\\s*"), getTCF(QColor(119, 136, 153))},
     };
 
     foreach (auto rule, qss_rules)
