@@ -448,7 +448,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         url = NETEASE_SERVER + "/search?keywords=" + key.toUtf8().toPercentEncoding() + "&limit=80";
         break;
     case QQMusic:
-        url = QQMUSIC_SERVER + "/getSearchByKey?key=" + key.toUtf8().toPercentEncoding() + "&limit=80";
+        url = QQMUSIC_SERVER + "/search?key=" + key.toUtf8().toPercentEncoding() + "&limit=80";
         break;
     case MiguMusic:
         url = MIGU_SERVER + "/search?keyword=" + key.toUtf8().toPercentEncoding() + "&pageSize=100";
@@ -473,16 +473,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             break;
         case QQMusic:
         {
-            QJsonValue val = json.value("response");
-            if (!val.isObject()) // 不是正常搜索结果对象
+            if (json.value("result").toInt() != 100)
             {
-                qDebug() << val;
-                return ;
-            }
-            response = val.toObject();
-            if (response.value("code").toInt() != 0)
-            {
-                qDebug() << "QQ音乐返回结果不为0：" << json.value("message").toString();
+                qDebug() << "QQ搜索返回结果不为0：" << json.value("result").toInt();
                 return ;
             }
             break;
@@ -504,8 +497,6 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             songs = json.value("result").toObject().value("songs").toArray();
             break;
         case QQMusic:
-            songs = response.value("data").toObject().value("song").toObject().value("list").toArray();
-            break;
         case MiguMusic:
             songs = json.value("data").toObject().value("list").toArray();
             break;
@@ -1418,7 +1409,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         if (unblockQQMusic)
             url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
         else
-            url = url = QQMUSIC_SERVER + "/getMusicPlay?songmid=" + song.mid;
+            url = QQMUSIC_SERVER + "/song/url?id=" + song.mid;
         break;
     case MiguMusic:
         downloadSongMp3(song, song.url);
@@ -1455,7 +1446,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         {
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << ("歌曲信息返回结果不为200：") << json.value("message").toString();
+                qDebug() << "网易云歌曲链接返回结果不为200：" << json.value("message").toString();
                 return ;
             }
 
@@ -1519,14 +1510,13 @@ void OrderPlayerWindow::downloadSong(Song song)
             }
             else // QQMUSIC
             {
-                QJsonObject playUrl = json.value("data").toObject().value("playUrl").toObject();
-                fileUrl = playUrl.value(song.mid).toObject().value("url").toString();
-                if (fileUrl.isEmpty())
+                if (json.value("result").toInt() != 100)
                 {
-                    QString error = playUrl.value(song.mid).toObject().value("error").toString();
-                    if (!error.isEmpty())
-                        qDebug() << "无法播放音乐：" << song.simpleString() << error;
+                    qDebug() << "QQ歌曲链接返回结果不为100：" << json;
+                    return ;
                 }
+
+                fileUrl = json.value("data").toString();
             }
 
             if (fileUrl.isEmpty())
@@ -1633,7 +1623,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         url = NETEASE_SERVER + "/lyric?id=" + snum(song.id);
         break;
     case QQMusic:
-        url = QQMUSIC_SERVER + "/getLyric?songmid=" + song.mid;
+        url = QQMUSIC_SERVER + "/lyric?songmid=" + song.mid;
         break;
     case MiguMusic:
         url = MIGU_SERVER + "/song?cid=" + song.mid;
@@ -1653,7 +1643,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             lrc = json.value("lrc").toObject().value("lyric").toString();
             break;
         case QQMusic:
-            lrc = json.value("response").toObject().value("lyric").toString();
+            lrc = json.value("data").toObject().value("lyric").toString();
             break;
         case MiguMusic:
             if (json.value("result").toInt() != 100)
@@ -1692,7 +1682,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
 {
     if (QFileInfo(coverPath(song)).exists())
         return ;
-//    downloadingSong = song; // 忘了为什么要加这句了？
 
     QString url;
     switch (song.source) {
@@ -1702,8 +1691,9 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         url = NETEASE_SERVER + "/song/detail?ids=" + snum(song.id);
         break;
     case QQMusic:
-        url = QQMUSIC_SERVER + "/getImageUrl?id=" + song.album.mid;
-        break;
+        url = "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + song.album.mid + ".jpg";
+        downloadSongCoverJpg(song, url);
+        return ;
     case MiguMusic:
         MUSIC_DEB << "咪咕音乐封面地址：" << song.album.picUrl;
         downloadSongCoverJpg(song, song.album.picUrl);
@@ -1735,13 +1725,7 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             break;
         }
         case QQMusic:
-            if (json.value("code").toInt() != 0)
-            {
-                qDebug() << ("封面返回结果不为0：") << json.value("message").toString();
-                return ;
-            }
-            url = json.value("response").toObject().value("data").toObject().value("imageUrl").toString();
-            break;
+            return ;
         case MiguMusic:
             return ;
         }

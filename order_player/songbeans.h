@@ -94,9 +94,9 @@ struct Album
     static Album fromQQMusicJson(QJsonObject json)
     {
         Album album;
-        album.id = JVAL_LONG(id);
-        album.mid = JVAL_STR(mid);
-        album.name = JVAL_STR(name);
+        album.id = JVAL_LONG(albumid);
+        album.mid = JVAL_STR(albummid);
+        album.name = JVAL_STR(albumname);
         return album;
     }
 
@@ -173,10 +173,10 @@ struct Song
     static Song fromQQMusicJson(QJsonObject json)
     {
         Song song;
-        song.id = JVAL_LONG(id);
-        if (json.contains("mid"))
-            song.mid = JVAL_STR(mid);
-        song.name = JVAL_STR(name);
+        song.id = JVAL_LONG(songid);
+        if (json.contains("songmid"))
+            song.mid = JVAL_STR(songmid);
+        song.name = JVAL_STR(songname);
 
         QJsonArray array = json.value("singer").toArray();
         QStringList artistNameList;
@@ -188,9 +188,8 @@ struct Song
         }
         song.artistNames = artistNameList.join("/");
 
-        song.album = Album::fromQQMusicJson(json.value("album").toObject());
+        song.album = Album::fromQQMusicJson(json);
         song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
-        song.mark = JVAL_INT(mark);
 
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);

@@ -11,7 +11,7 @@ class LoginDialog;
 }
 
 #define NETEASE_SERVER QString("http://iwxyi.com:3000")
-#define QQMUSIC_SERVER QString("http://iwxyi.com:3200")
+#define QQMUSIC_SERVER QString("http://iwxyi.com:3300")
 #define MIGU_SERVER QString("http://iwxyi.com:3400")
 
 class LoginDialog : public QDialog
