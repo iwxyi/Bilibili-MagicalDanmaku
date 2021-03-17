@@ -1103,7 +1103,7 @@ void LiveDanmakuWindow::showMenu()
         }
         else if (danmaku.getMsgType() == MSG_GIFT || danmaku.getMsgType() == MSG_GUARD_BUY)
         {
-            actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toInt()/1000) + "元");
+            actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toLongLong()/1000) + "元");
             if (danmaku.is(MSG_GUARD_BUY))
                 actionMedal->setText("船员数量：" + snum(currentGuards.size()));
         }
@@ -2550,16 +2550,16 @@ void LiveDanmakuWindow::showUserMsgHistory(qint64 uid, QString title)
     if (!uid)
         return ;
     QStringList sums;
-    int c = danmakuCounts->value("danmaku/"+snum(uid)).toInt();
+    qint64 c = danmakuCounts->value("danmaku/"+snum(uid)).toInt();
     if(c)
         sums << snum(c)+" 条弹幕";
     c = danmakuCounts->value("come/"+snum(uid)).toInt();
     if (c)
         sums << "进来 " + snum(c)+" 次";
-    c = danmakuCounts->value("gold/"+snum(uid)).toInt();
+    c = danmakuCounts->value("gold/"+snum(uid)).toLongLong();
     if (c)
         sums << "赠送 " + snum(c)+" 金瓜子";
-    c = danmakuCounts->value("silver/"+snum(uid)).toInt();
+    c = danmakuCounts->value("silver/"+snum(uid)).toLongLong();
     if (c)
         sums << snum(c)+" 银瓜子";
 

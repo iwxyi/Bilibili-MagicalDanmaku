@@ -3629,11 +3629,11 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
-        msg.replace(key, snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toInt()));
+        msg.replace(key, snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong()));
 
     // 总共赠送银瓜子
     else if (key == "%total_silver%")
-        msg.replace(key, snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toInt()));
+        msg.replace(key, snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong()));
 
     // 购买舰长
     else if (key == "%guard_buy%")
@@ -6536,7 +6536,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (coinType == "silver")
         {
-            int userSilver = danmakuCounts->value("silver/" + snum(uid)).toInt();
+            qint64 userSilver = danmakuCounts->value("silver/" + snum(uid)).toLongLong();
             userSilver += totalCoin;
             danmakuCounts->setValue("silver/"+snum(uid), userSilver);
 
@@ -6546,7 +6546,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (coinType == "gold")
         {
-            int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+            qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
             userGold += totalCoin;
             danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
@@ -7131,7 +7131,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }
 
-        int userGold = danmakuCounts->value("gold/" + snum(uid)).toInt();
+        qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
         userGold += price;
         danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
