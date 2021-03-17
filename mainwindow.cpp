@@ -2186,7 +2186,7 @@ void MainWindow::on_addEventButton_clicked()
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
 {
-    if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
+    if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink() || danmaku.isNoReply())
         return ;
     QRegularExpression re(diangeFormatString);
     QRegularExpressionMatch match;

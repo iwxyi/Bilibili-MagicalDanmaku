@@ -1191,6 +1191,7 @@ void OrderPlayerWindow::startPlaySong(Song song)
     else
     {
         playAfterDownloaded = song;
+        toDownloadSongs.removeOne(song);
         downloadSong(song);
     }
 }
@@ -1384,7 +1385,6 @@ void OrderPlayerWindow::downloadNext()
     Song song = toDownloadSongs.takeFirst();
     if (!song.isValid())
         return downloadNext();
-
     downloadSong(song);
 }
 
@@ -1469,7 +1469,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             int size = JVAL_INT(size);
             QString type = JVAL_STR(type); // mp3
             QString encodeType = JVAL_STR(encodeType); // mp3
-            MUSIC_DEB << "    信息：" << br << size << type << fileUrl;
+            MUSIC_DEB << "    网易云信息：" << br << size << type << fileUrl;
             if (size == 0)
             {
                 downloadSongFailed(song);
@@ -1575,10 +1575,24 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
                 /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
         {
             slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
-            qDebug() << "无法播放：" << song.name << "，开始换源";
             insertOrderOnce = true;
-            searchMusicBySource(song.name, musicSource == MiguMusic
-                                ? NeteaseCloudMusic: MiguMusic, song.addBy);
+            MusicSource res = UnknowMusic;
+            switch (musicSource) {
+            case UnknowMusic:
+                res = QQMusic;
+                break;
+            case NeteaseCloudMusic:
+                res = QQMusic;
+                break;
+            case QQMusic:
+                res = MiguMusic;
+                break;
+            case MiguMusic:
+                res = QQMusic;
+                break;
+            }
+            qDebug() << "无法播放：" << song.name << "，开始换源：" << musicSource << res;
+            searchMusicBySource(song.name + " " + song.artistNames, res, song.addBy);
         }
         else
         {
@@ -1718,12 +1732,13 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         break;
     case QQMusic:
         url = "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + song.album.mid + ".jpg";
+        MUSIC_DEB << "QQ专辑封面信息url:" << url;
         downloadSongCoverJpg(song, url);
         return ;
     case MiguMusic:
         if (!song.album.picUrl.isEmpty())
         {
-            MUSIC_DEB << "咪咕音乐封面地址：" << song.album.picUrl;
+            MUSIC_DEB << "咪咕专辑封面地址：" << song.album.picUrl;
             downloadSongCoverJpg(song, song.album.picUrl);
             return ;
         }
