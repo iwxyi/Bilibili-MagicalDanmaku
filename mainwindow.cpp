@@ -3434,6 +3434,11 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danmaku)
 {
     QRegularExpressionMatch match;
+    QRegularExpression re;
+
+    // 去掉注释
+    re = QRegularExpression("\\s*//.*?(?=\\n|$|\\\\n)");
+    msg.replace(re, "");
 
     // 自定义变量
     for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
@@ -3442,7 +3447,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 弹幕变量、环境变量（固定文字）
-    QRegularExpression re("%[\\w_]+?%");
+    re = QRegularExpression("%[\\w_]+?%");
     int matchPos = 0;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
     {
