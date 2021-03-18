@@ -1516,13 +1516,14 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
         item = new QListWidgetItem(ui->taskListWidget);
         ui->taskListWidget->addItem(item);
         ui->taskListWidget->setItemWidget(item, tw);
-        ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
+        // ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
     }
     else
     {
         item = new QListWidgetItem();
         ui->taskListWidget->insertItem(index, item);
         ui->taskListWidget->setItemWidget(item, tw);
+        ui->taskListWidget->setCurrentRow(index);
     }
 
     // 连接信号
@@ -1613,15 +1614,25 @@ void MainWindow::restoreTaskList()
     }
 }
 
-ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply)
+ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, int index)
 {
     ReplyWidget* rw = new ReplyWidget(this);
-    QListWidgetItem* item = new QListWidgetItem(ui->replyListWidget);
+    QListWidgetItem* item;
 
-    ui->replyListWidget->addItem(item);
-    ui->replyListWidget->setItemWidget(item, rw);
-    ui->replyListWidget->setCurrentRow(ui->replyListWidget->count()-1);
-    ui->replyListWidget->scrollToBottom();
+    if (index == -1)
+    {
+        item = new QListWidgetItem(ui->replyListWidget);
+        ui->replyListWidget->addItem(item);
+        ui->replyListWidget->setItemWidget(item, rw);
+        // ui->replyListWidget->setCurrentRow(ui->replyListWidget->count()-1);
+    }
+    else
+    {
+        item = new QListWidgetItem();
+        ui->replyListWidget->insertItem(index, item);
+        ui->replyListWidget->setItemWidget(item, rw);
+        ui->replyListWidget->setCurrentRow(index);
+    }
 
     // 连接信号
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
@@ -1717,15 +1728,25 @@ void MainWindow::restoreReplyList()
     }
 }
 
-EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action)
+EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action, int index)
 {
     EventWidget* rw = new EventWidget(this);
-    QListWidgetItem* item = new QListWidgetItem(ui->eventListWidget);
+    QListWidgetItem* item;
 
-    ui->eventListWidget->addItem(item);
-    ui->eventListWidget->setItemWidget(item, rw);
-    ui->eventListWidget->setCurrentRow(ui->eventListWidget->count()-1);
-    ui->eventListWidget->scrollToBottom();
+    if (index == -1)
+    {
+        item = new QListWidgetItem(ui->eventListWidget);
+        ui->eventListWidget->addItem(item);
+        ui->eventListWidget->setItemWidget(item, rw);
+        // ui->eventListWidget->setCurrentRow(ui->eventListWidget->count()-1);
+    }
+    else
+    {
+        item = new QListWidgetItem();
+        ui->eventListWidget->insertItem(index, item);
+        ui->eventListWidget->setItemWidget(item, rw);
+        ui->eventListWidget->setCurrentRow(index);
+    }
 
     // 连接信号
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
@@ -2110,7 +2131,12 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
 
     auto menu = new FacileMenu(this);
     menu->addAction("插入", [=]{
-        addTimerTask(false, 1800, "", row);
+        if (listKey == CODE_TIMER_TASK_KEY)
+            addTimerTask(false, 1800, "", row);
+        else if (listKey == CODE_AUTO_REPLY_KEY)
+            addAutoReply(false, "", "", row);
+        else if (listKey == CODE_EVENT_ACTION_KEY)
+            addEventAction(false, "", "", row);
     })->disable(!item);
     menu->addAction("上移", [=]{
         moveToRow(row - 1);
@@ -2164,6 +2190,7 @@ void MainWindow::on_addTaskButton_clicked()
     saveTaskList();
     auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
     auto tw = static_cast<TaskWidget*>(widget);
+    ui->taskListWidget->scrollToBottom();
     tw->edit->setFocus();
 }
 
@@ -2173,6 +2200,7 @@ void MainWindow::on_addReplyButton_clicked()
     saveReplyList();
     auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(ui->replyListWidget->count()-1));
     auto rw = static_cast<ReplyWidget*>(widget);
+    ui->replyListWidget->scrollToBottom();
     rw->keyEdit->setFocus();
 }
 
@@ -2182,6 +2210,7 @@ void MainWindow::on_addEventButton_clicked()
     saveEventList();
     auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
     auto ew = static_cast<EventWidget*>(widget);
+    ui->eventListWidget->scrollToBottom();
     ew->eventEdit->setFocus();
 }
 

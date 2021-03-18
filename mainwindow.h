@@ -71,6 +71,7 @@ QT_END_NAMESPACE
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
+typedef ListItemInterface*(MainWindow::*InsertItemFunc)(MyJson);
 
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
@@ -572,12 +573,12 @@ private:
     void saveTaskList();
     void restoreTaskList();
 
-    ReplyWidget *addAutoReply(bool enable, QString key, QString reply);
+    ReplyWidget *addAutoReply(bool enable, QString key, QString reply, int index= -1);
     ReplyWidget *addAutoReply(MyJson json);
     void saveReplyList();
     void restoreReplyList();
 
-    EventWidget *addEventAction(bool enable, QString cmd, QString action);
+    EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
     EventWidget *addEventAction(MyJson json);
     void saveEventList();
     void restoreEventList();
