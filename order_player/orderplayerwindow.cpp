@@ -1606,45 +1606,38 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
 
 void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
 {
-    // 开始下载歌曲本身
-    QNetworkAccessManager manager;
-    QEventLoop loop;
-    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-    //请求结束并下载完成后，退出子事件循环
-    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //开启子事件循环
-    loop.exec();
-    QByteArray mp3Ba = reply1->readAll();
-    if (mp3Ba.isEmpty())
-    {
-        qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid;
+    fetch(url, [=](QNetworkReply* reply){
+        QByteArray mp3Ba = reply->readAll();
+        if (mp3Ba.isEmpty())
+        {
+            qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid;
+            downloadingSong = Song();
+            downloadNext();
+            return ;
+        }
+
+        // 保存到文件
+        QFile file(songPath(song));
+        file.open(QIODevice::WriteOnly);
+        file.write(mp3Ba);
+        file.flush();
+        file.close();
+
+        emit signalSongDownloadFinished(song);
+        MUSIC_DEB << "歌曲mp3下载完成：" << song.simpleString();
+
+        if (playAfterDownloaded == song)
+            playLocalSong(song);
+
         downloadingSong = Song();
         downloadNext();
-        return ;
-    }
-
-    // 保存到文件
-    QFile file(songPath(song));
-    file.open(QIODevice::WriteOnly);
-    file.write(mp3Ba);
-    file.flush();
-    file.close();
-
-    emit signalSongDownloadFinished(song);
-
-    if (playAfterDownloaded == song)
-        playLocalSong(song);
-
-    downloadingSong = Song();
-    downloadNext();
+    });
 }
 
 void OrderPlayerWindow::downloadSongLyric(Song song)
 {
     if (QFileInfo(lyricPath(song)).exists())
         return ;
-
-//    downloadingSong = song; // 忘了为什么要加这句了？
 
     QString url;
     switch (song.source) {
@@ -1784,46 +1777,40 @@ void OrderPlayerWindow::downloadSongCover(Song song)
 
 void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
 {
-    // 开始下载封面数据
-    QNetworkAccessManager manager;
-    QEventLoop loop;
-    QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-    //请求结束并下载完成后，退出子事件循环
-    connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    //开启子事件循环
-    loop.exec();
-    QByteArray baData1 = reply1->readAll();
-    QPixmap pixmap;
-    pixmap.loadFromData(baData1);
-    if (!pixmap.isNull())
-    {
-        QFile file(coverPath(song));
-        file.open(QIODevice::WriteOnly);
-        file.write(baData1);
-        file.flush();
-        file.close();
-
-        MUSIC_DEB << "封面下载完成:" << pixmap.size() << "   "
-                  << (playAfterDownloaded == song) << (playingSong == song)
-                  << (coveringSong == song);
-        emit signalCoverDownloadFinished(song);
-
-        // 正是当前要播放的歌曲
-        if (playAfterDownloaded == song || playingSong == song)
+    fetch(url, [=](QNetworkReply* reply){
+        QByteArray baData1 = reply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(baData1);
+        if (!pixmap.isNull())
         {
-            if (coveringSong != song)
+            QFile file(coverPath(song));
+            file.open(QIODevice::WriteOnly);
+            file.write(baData1);
+            file.flush();
+            file.close();
+
+            MUSIC_DEB << "封面下载完成:" << pixmap.size() << "   "
+                      << (playAfterDownloaded == song) << (playingSong == song)
+                      << (coveringSong == song);
+            emit signalCoverDownloadFinished(song);
+
+            // 正是当前要播放的歌曲
+            if (playAfterDownloaded == song || playingSong == song)
             {
-                pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
-                ui->playingCoverLabel->setPixmap(pixmap);
-                coveringSong = song;
-                setCurrentCover(pixmap);
+                if (coveringSong != song)
+                {
+                    pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
+                    ui->playingCoverLabel->setPixmap(pixmap);
+                    coveringSong = song;
+                    setCurrentCover(pixmap);
+                }
             }
         }
-    }
-    else
-    {
-        qDebug() << "warning: 下载的封面是空的" << song.simpleString() << url;
-    }
+        else
+        {
+            qDebug() << "warning: 下载的封面是空的" << song.simpleString() << url;
+        }
+    });
 }
 
 /**
