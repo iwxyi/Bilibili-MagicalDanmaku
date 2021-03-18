@@ -816,9 +816,10 @@ tips：
 | sendToSockets(cmd, data)                  | 发送给所有WebSocket                                          |
 | sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                       | 运行命令行                                                   |
-| setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在                |
+| setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”设置分组 |
+| setValues(exp, val)                       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
 | removeValue(key)                          | 移除配置文件中的单个值                                       |
-| removeValues(exp)                         | 移除配置文件中的多个值，exp为正则表达式                      |
+| removeValues(exp)                         | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
 | openFile(path)                            | 打开文件                                                     |
 | playSound(path)                           | 播放音频文件                                                 |
 | improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
@@ -988,12 +989,13 @@ tips：
 
 #### 主程序事件
 
-| 事件命令         | 说明                               |
-| ---------------- | ---------------------------------- |
-| START_UP         | 程序启动                           |
-| **REMOTE_BLOCK** | 远程禁言                           |
-| NEW_HOUR         | 按程序启动时间，每隔一小时触发一次 |
-| NEW_DAY          | 每天0点0分准时触发                 |
+| 事件命令         | 说明                                 |
+| ---------------- | ------------------------------------ |
+| START_UP         | 程序启动                             |
+| START_WORK       | 开播后启动程序，或者程序启动后再开播 |
+| **REMOTE_BLOCK** | 远程禁言                             |
+| NEW_HOUR         | 按程序启动时间，每隔一小时触发一次   |
+| NEW_DAY          | 每天0点0分准时触发                   |
 
 
 

@@ -5333,6 +5333,32 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 修改配置
+    if (msg.contains("setValues"))
+    {
+        re = RE("setValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            QString value = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+
+            settings->beginGroup("heaps");
+            auto keys = settings->allKeys();
+            QRegularExpression re(key);
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re) > -1)
+                {
+                    settings->setValue(keys.at(i), value);
+                }
+            }
+            settings->endGroup();
+            return true;
+        }
+    }
+
     // 删除配置
     if (msg.contains("removeValue"))
     {
@@ -11387,6 +11413,8 @@ void MainWindow::slotStartWork()
             return ;
         syncMagicalRooms();
     });
+
+    triggerCmdEvent("START_WORK", LiveDanmaku());
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
