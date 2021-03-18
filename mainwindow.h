@@ -564,14 +564,17 @@ private:
     void localNotify(QString text, qint64 uid);
 
     TaskWidget *addTimerTask(bool enable, int second, QString text, int index = -1);
+    TaskWidget *addTimerTask(MyJson json);
     void saveTaskList();
     void restoreTaskList();
 
     ReplyWidget *addAutoReply(bool enable, QString key, QString reply);
+    ReplyWidget *addAutoReply(MyJson json);
     void saveReplyList();
     void restoreReplyList();
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action);
+    EventWidget *addEventAction(MyJson json);
     void saveEventList();
     void restoreEventList();
     bool hasEvent(QString cmd) const;

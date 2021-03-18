@@ -9,6 +9,8 @@
 #include "RoundedAnimationLabel.h"
 #include "catchyouwidget.h"
 #include "qrcodelogindialog.h"
+#include "fileutil.h"
+#include "stringutil.h"
 #include "escape_dialog/escapedialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
@@ -53,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 路径
     initPath();
+    bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
     settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(dataPath + "www");
@@ -430,7 +433,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->startLiveSendCheck->setChecked(settings->value("live/startSend").toBool());
 
     // 启动动画
-    ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", true).toBool());
+    ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", firstOpen).toBool());
 
     // 弹幕人气
     danmuPopularTimer = new QTimer(this);
@@ -662,43 +665,59 @@ MainWindow::MainWindow(QWidget *parent)
         openServer();
     }
 
+    // 设置默认配置
+    if (firstOpen)
+    {
+        QString path = QApplication::applicationDirPath() + "/default_code.json";
+        if (!QFileInfo(path).exists())
+            path = ":/documents/default_code";
+        QString text = readTextFileIfExist(path);
+        MyJson json(text.toUtf8());
+        if (json.contains("welcome"))
+        {
+            ui->autoWelcomeWordsEdit->setPlainText(json.s("welcome"));
+        }
+        if (json.contains("gift"))
+        {
+            ui->autoThankWordsEdit->setPlainText(json.s("gift"));
+        }
+        if (json.contains("attention"))
+        {
+            ui->autoAttentionWordsEdit->setPlainText(json.s("attention"));
+        }
+        if (json.contains("timer_task"))
+        {
+            json.each("timer_task", [=](MyJson obj){
+                addTimerTask(obj);
+            });
+        }
+        if (json.contains("auto_reply"))
+        {
+            json.each("auto_reply", [=](MyJson obj){
+                addAutoReply(obj);
+            });
+        }
+        if (json.contains("event_action"))
+        {
+            json.each("event_action", [=](MyJson obj){
+                addEventAction(obj);
+            });
+        }
+        if (json.contains("block_keys"))
+        {
+            ui->autoBlockNewbieKeysEdit->setPlainText(json.s("block_keys"));
+        }
+        if (json.contains("block_notify"))
+        {
+            ui->autoBlockNewbieNotifyWordsEdit->setPlainText(json.s("block_notify"));
+        }
+        if (json.contains("block_tip"))
+        {
+            ui->promptBlockNewbieKeysEdit->setPlainText(json.s("block_tip"));
+        }
+    }
+
     triggerCmdEvent("START_UP", LiveDanmaku());
-
-    /* QTimer::singleShot(3000, [=]{
-        appendNewLiveDanmaku(LiveDanmaku("神奇弹幕", "神奇弹幕",
-                             5988102, 12,
-                             QDateTime::currentDateTime(), "", ""));
-
-        appendNewLiveDanmaku(LiveDanmaku("懒一夕智能科技", "准备偷塔",
-                             20285041, 12,
-                             QDateTime::currentDateTime(), "#02b5da", ""));
-
-        localNotify("[偷塔] 0:1，赠送2个吃瓜");
-        localNotify("[己方偷塔] + 2");
-        localNotify("[对方偷塔] + 10");
-        localNotify("[反偷塔] 2:11，赠送10个吃瓜");
-        localNotify("[对方偷塔] + 10");
-        localNotify("[己方偷塔] + 10");
-        localNotify("[己方偷塔] + 10");
-        localNotify("[反偷塔] 12:21，赠送10个吃瓜");
-        localNotify("[己方偷塔] + 10");
-        localNotify("[对方偷塔] + 10");
-        localNotify("[反偷塔] 22:31，赠送10个吃瓜");
-        localNotify("[对方偷塔] + 10");
-        localNotify("[反偷塔] 32:41，赠送10个吃瓜");
-        localNotify("[己方偷塔] + 10");
-        localNotify("大乱斗 胜利：42 vs 41");
-
-        QString username = "懒一夕智能科技";
-        QString giftName = "吃瓜";
-        int giftId = 123;
-        int num = 42;
-        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
-        QString coinType = "gold";
-        int totalCoin = 4200;
-        LiveDanmaku danmaku(username, giftId, giftName, num, 1, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        appendNewLiveDanmaku(danmaku);
-    }); */
 }
 
 void MainWindow::initPath()
@@ -709,12 +728,14 @@ void MainWindow::initPath()
     if (QFileInfo(dataPath+"green_version").exists()
             || QFileInfo(dataPath+"green_version.txt").exists())
     {
-        // 默认路径，不需要改
+        // 安装路径，不需要改
+
     }
     else // 通用文件夹
     {
         dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         // C:/Users/Administrator/AppData/Roaming/神奇弹幕    (未定义ApplicationName时为exe名)
+        SOCKET_DEB << "路径：" << dataPath;
     }
 #else
     dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
@@ -1607,6 +1628,13 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     return tw;
 }
 
+TaskWidget *MainWindow::addTimerTask(MyJson json)
+{
+    auto item = addTimerTask(false, 1800, "");
+    item->fromJson(json);
+    return item;
+}
+
 void MainWindow::saveTaskList()
 {
     settings->setValue("task/count", ui->taskListWidget->count());
@@ -1704,6 +1732,13 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply)
     return rw;
 }
 
+ReplyWidget *MainWindow::addAutoReply(MyJson json)
+{
+    auto item = addAutoReply(false, "", "");
+    item->fromJson(json);
+    return item;
+}
+
 void MainWindow::saveReplyList()
 {
     settings->setValue("reply/count", ui->replyListWidget->count());
@@ -1798,6 +1833,13 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     item->setSizeHint(rw->sizeHint());
 
     return rw;
+}
+
+EventWidget* MainWindow::addEventAction(MyJson json)
+{
+    auto item = addEventAction(false, "", "");
+    item->fromJson(json);
+    return item;
 }
 
 void MainWindow::saveEventList()
@@ -11017,7 +11059,7 @@ void MainWindow::joinBattle(int type)
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
-    if (!settings->value("mainwindow/splash", true).toBool())
+    if (!ui->startupAnimationCheck->isChecked())
         return ;
     RoundedAnimationLabel* label = new RoundedAnimationLabel(this);
     QMovie* movie = new QMovie(":/icons/star_gif");
