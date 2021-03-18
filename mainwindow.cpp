@@ -1672,8 +1672,12 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
             if (!s.trimmed().isEmpty())
             {
                 if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
-                    s = "\\n" + s; // 延迟一次发送的时间
-
+                {
+                    if (s.contains(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"))) // 带冷却通道，不能放前面
+                        autoMsgTimer->start(); // 先启动，避免立即发送
+                    else
+                        s = "\\n" + s; // 延迟一次发送的时间
+                }
                 sendCdMsg(s, 1500, REPLY_CD_CN, true, false, manual);
             }
         }
