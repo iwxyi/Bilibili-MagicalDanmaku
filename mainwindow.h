@@ -553,7 +553,7 @@ private slots:
 
     void on_actionPaste_Code_triggered();
 
-    void on_actionGeneral_Default_Code_triggered();
+    void on_actionGenerate_Default_Code_triggered();
 
     void on_actionRead_Default_Code_triggered();
 
@@ -728,7 +728,7 @@ private:
 
     QString GetFileVertion(QString fullName);
 
-    void generalDefaultCode(QString path = "");
+    void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");
 
 private:

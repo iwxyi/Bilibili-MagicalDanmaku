@@ -9560,7 +9560,9 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongPlayed, this, [=](Song song){
             localNotify("开始播放：" + song.simpleString());
-            triggerCmdEvent("ORDER_SONG_PLAY", LiveDanmaku(song.id, song.addBy, song.name));
+            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+            danmaku.setPrevTimestamp(song.addTime);
+            triggerCmdEvent("ORDER_SONG_PLAY", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongImproved, this, [=](Song song, int prev, int curr){
             localNotify("提升歌曲：" + song.name + " : " + snum(prev) + "->" + snum(curr));
@@ -11151,7 +11153,7 @@ QString MainWindow::GetFileVertion(QString fullName)
 #endif
 }
 
-void MainWindow::generalDefaultCode(QString path)
+void MainWindow::generateDefaultCode(QString path)
 {
     MyJson json;
     json.insert("welcome", ui->autoWelcomeWordsEdit->toPlainText());
@@ -12293,7 +12295,7 @@ void MainWindow::on_actionPaste_Code_triggered()
     item->fromJson(clipJson);
 }
 
-void MainWindow::on_actionGeneral_Default_Code_triggered()
+void MainWindow::on_actionGenerate_Default_Code_triggered()
 {
     QString oldPath = settings->value("danmaku/codePath", "").toString();
     QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Json (*.json *.txt)");
@@ -12301,7 +12303,7 @@ void MainWindow::on_actionGeneral_Default_Code_triggered()
         return ;
     settings->setValue("danmaku/codePath", path);
 
-    generalDefaultCode(path);
+    generateDefaultCode(path);
 }
 
 void MainWindow::on_actionRead_Default_Code_triggered()

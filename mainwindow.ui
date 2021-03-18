@@ -3294,7 +3294,7 @@ margin: 6px;</string>
     <addaction name="separator"/>
     <addaction name="actionCustom_Variant"/>
     <addaction name="actionPaste_Code"/>
-    <addaction name="actionGeneral_Default_Code"/>
+    <addaction name="actionGenerate_Default_Code"/>
     <addaction name="actionRead_Default_Code"/>
    </widget>
    <widget class="QMenu" name="menu_3">
@@ -3578,7 +3578,11 @@ margin: 6px;</string>
     <string>恰饭入口</string>
    </property>
   </action>
-  <action name="actionGeneral_Default_Code">
+  <action name="actionGenerate_Default_Code">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/generate</normaloff>:/icons/generate</iconset>
+   </property>
    <property name="text">
     <string>生成代码配置</string>
    </property>
@@ -3587,6 +3591,10 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionRead_Default_Code">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/read_config</normaloff>:/icons/read_config</iconset>
+   </property>
    <property name="text">
     <string>读取代码配置</string>
    </property>
