@@ -790,7 +790,7 @@ tips：
 
 ### 函数操作
 
-有一些自定义的函数，如下：
+有一些自定义的函数，如`>block(123456)`，如下：
 
 | 函数                                      | 说明                                                         |
 | ----------------------------------------- | ------------------------------------------------------------ |
@@ -817,7 +817,8 @@ tips：
 | sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                       | 运行命令行                                                   |
 | setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在                |
-| removeValue(exp)                          | 移除配置文件中的多个值，exp为正则表达式                      |
+| removeValue(key)                          | 移除配置文件中的单个值                                       |
+| removeValues(exp)                         | 移除配置文件中的多个值，exp为正则表达式                      |
 | openFile(path)                            | 打开文件                                                     |
 | playSound(path)                           | 播放音频文件                                                 |
 | improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
@@ -1027,7 +1028,7 @@ tips：
 添加事件：`NEW_DAY`，动作：
 
 ```
->removeValue(daka_today_\d+)\n>setValue(daka, 0)
+>removeValues(daka_today_\d+)\n>setValue(daka, 0)
 ```
 
 

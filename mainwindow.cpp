@@ -5341,6 +5341,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         {
             QStringList caps = match.capturedTexts();
             QString key = caps.at(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            qDebug() << "执行命令：" << caps;
+
+            settings->remove(key);
+            return true;
+        }
+    }
+    if (msg.contains("removeValues"))
+    {
+        re = RE("removeValues\\s*\\(\\s*(\\S+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
             qDebug() << "执行命令：" << caps;
 
             settings->beginGroup("heaps");

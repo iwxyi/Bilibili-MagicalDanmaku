@@ -1287,7 +1287,7 @@ void OrderPlayerWindow::appendNextSongs(SongList songs)
  */
 void OrderPlayerWindow::playLocalSong(Song song)
 {
-    qDebug() << "开始播放：" << song.simpleString();
+    qDebug() << "开始播放：" << song.simpleString() << song.id << song.mid;
     if (!isSongDownloaded(song))
     {
         qDebug() << "error: 未下载歌曲" << song.simpleString() << "开始下载";
