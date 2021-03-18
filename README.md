@@ -311,7 +311,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 赠送小电视飞船，发送指定弹幕：
 
 ```
-[%gift_name%=小电视飞船]哇！！！谢谢%ai_name%带我上太空~
+[%gift_name%=小电视飞船]**哇！！！谢谢%ai_name%带我上太空~
 ```
 
 
@@ -405,7 +405,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 添加自动回复表达式：`叫(\S+)\s+(.*)`，添加回复：
 
 ```
->setNickname(%(%$1%)%, %$2%)\n>修改专属昵称成功
+[%admin%]>setNickname(%(%$1%)%, %$2%)\n>修改专属昵称成功
 ```
 
 
@@ -923,11 +923,13 @@ tips：
 [%guard_buy%,%guard_first%=1]感谢%ai_name%开通%gift_name%！\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)
 ```
 
-`%guard_buy%` 判断是否是购买舰长的通知；`%guard_first%` 判断是否第一次上船，第一次=1，续船=0，掉船后重新上传=2。
+`%guard_buy%` 判断是否是购买舰长的通知；`%guard_first%` 判断是否第一次上船，第一次=1，续船=0，掉船后重新上船=2。
 
 也可用 `%guard_count%` 来读取上船的次数作为条件，`%guard_count%=0`表示第一次上船。
 
 > `%guard_count%` 只计算本程序时运行时购买舰长的用户，每次舰长+1，提督+10，总督+100。
+
+后续版本已添加 `FIRST_GUARD` 用户第一次上船事件，可直接使用。
 
 
 
@@ -1040,14 +1042,16 @@ tips：
 
 ```
 [%{daka_today_%uid%}%]*>您已打过卡
->打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\n>setValue(daka, %[%{daka}%+1]%)\n>setValue(daka_today_%uid%, 1)\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)
+[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\n>setValue(daka, %[%{daka}%+1]%)\n>setValue(daka_today_%uid%, 1)\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)
 ```
 
 添加事件：`NEW_DAY`，动作：
 
 ```
->removeValues(daka_today_\d+)\n>setValue(daka, 0)
+[%living%+1]>removeValues(daka_today_\d+)\n>setValue(daka, 0)
 ```
+
+`[%living%+1]` 是用来保证即使开启了“仅在直播时回复”也能发送回复的弹幕
 
 
 

@@ -113,6 +113,7 @@
         <file alias="pinyin">resources/documents/pinyin.txt</file>
         <file alias="wx_qr">resources/documents/wx_qr.png</file>
         <file alias="zfb_qr">resources/documents/zfb_qr.jpg</file>
+        <file alias="default_json">resources/documents/default_code.json</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">resources/bubbles/bubble1.png</file>

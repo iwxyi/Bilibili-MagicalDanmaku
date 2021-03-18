@@ -22,9 +22,11 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // [condition]
         QSSRule{QRegularExpression("^(\\[.*\\])"), getTCF(QColor(128, 34, 172))},
         // 执行函数 func(args)
-        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)"), getTCF(QColor(136, 80, 80))},
+        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)($|\\\\n)"), getTCF(QColor(136, 80, 80))},
         // 变量 %val%
         QSSRule{QRegularExpression("%\\S+?%"), getTCF(QColor(204, 85, 0))},
+        // 取值 %{}%
+        // 计算 %[]%
         // 名字类变量 %xxx_name%
         QSSRule{QRegularExpression("%\\S*?name\\S*?%"), getTCF(QColor(237, 51, 0))},
         // 数字 123
@@ -39,6 +41,8 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         QSSRule{QRegularExpression("\\(cd\\d{1,2}:\\d+\\)"), getTCF(QColor(0, 128, 0))},
         // 注释
         QSSRule{QRegularExpression("(?<!:)//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
+        // 开头注释，标记为标题
+        QSSRule{QRegularExpression("^\\s*///.*?(?=\\n|$|\\\\n)"), getTCF(QColor(43, 85, 213))},
         // 软换行符
         QSSRule{QRegularExpression("\\s*\\\\\\s*\\n\\s*"), getTCF(QColor(119, 136, 153))},
     };

@@ -668,53 +668,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 设置默认配置
     if (firstOpen)
     {
-        QString path = QApplication::applicationDirPath() + "/default_code.json";
-        if (!QFileInfo(path).exists())
-            path = ":/documents/default_code";
-        QString text = readTextFileIfExist(path);
-        MyJson json(text.toUtf8());
-        if (json.contains("welcome"))
-        {
-            ui->autoWelcomeWordsEdit->setPlainText(json.s("welcome"));
-        }
-        if (json.contains("gift"))
-        {
-            ui->autoThankWordsEdit->setPlainText(json.s("gift"));
-        }
-        if (json.contains("attention"))
-        {
-            ui->autoAttentionWordsEdit->setPlainText(json.s("attention"));
-        }
-        if (json.contains("timer_task"))
-        {
-            json.each("timer_task", [=](MyJson obj){
-                addTimerTask(obj);
-            });
-        }
-        if (json.contains("auto_reply"))
-        {
-            json.each("auto_reply", [=](MyJson obj){
-                addAutoReply(obj);
-            });
-        }
-        if (json.contains("event_action"))
-        {
-            json.each("event_action", [=](MyJson obj){
-                addEventAction(obj);
-            });
-        }
-        if (json.contains("block_keys"))
-        {
-            ui->autoBlockNewbieKeysEdit->setPlainText(json.s("block_keys"));
-        }
-        if (json.contains("block_notify"))
-        {
-            ui->autoBlockNewbieNotifyWordsEdit->setPlainText(json.s("block_notify"));
-        }
-        if (json.contains("block_tip"))
-        {
-            ui->promptBlockNewbieKeysEdit->setPlainText(json.s("block_tip"));
-        }
+        readDefaultCode();
     }
 
     triggerCmdEvent("START_UP", LiveDanmaku());
@@ -1563,7 +1517,6 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
         ui->taskListWidget->addItem(item);
         ui->taskListWidget->setItemWidget(item, tw);
         ui->taskListWidget->setCurrentRow(ui->taskListWidget->count()-1);
-        ui->taskListWidget->scrollToBottom();
     }
     else
     {
@@ -11169,6 +11122,95 @@ QString MainWindow::GetFileVertion(QString fullName)
 #endif
 }
 
+void MainWindow::generalDefaultCode(QString path)
+{
+    MyJson json;
+    json.insert("welcome", ui->autoWelcomeWordsEdit->toPlainText());
+    json.insert("gift", ui->autoThankWordsEdit->toPlainText());
+    json.insert("attention", ui->autoAttentionWordsEdit->toPlainText());
+
+    QJsonArray array;
+    for (int row = 0; row < ui->taskListWidget->count(); row++)
+        array.append(static_cast<TaskWidget*>(ui->taskListWidget->itemWidget(ui->taskListWidget->item(row)))->toJson());
+    json.insert("timer_task", array);
+
+    array = QJsonArray();
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+        array.append(static_cast<ReplyWidget*>(ui->replyListWidget->itemWidget(ui->replyListWidget->item(row)))->toJson());
+    json.insert("auto_reply", array);
+
+    array = QJsonArray();
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+        array.append(static_cast<EventWidget*>(ui->eventListWidget->itemWidget(ui->eventListWidget->item(row)))->toJson());
+    json.insert("event_action", array);
+
+    json.insert("block_keys", ui->autoBlockNewbieKeysEdit->toPlainText());
+    json.insert("block_notify", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
+    json.insert("block_tip", ui->promptBlockNewbieKeysEdit->toPlainText());
+
+    if (path.isEmpty())
+        path = QApplication::applicationDirPath() + "/default_code.json";
+    writeTextFile(path, QString::fromUtf8(json.toBa()));
+}
+
+void MainWindow::readDefaultCode(QString path)
+{
+    if (path.isEmpty())
+    {
+        path = QApplication::applicationDirPath() + "/default_code.json";
+        if (!QFileInfo(path).exists())
+            path = ":/documents/default_code";
+    }
+
+    QString text = readTextFileIfExist(path);
+    MyJson json(text.toUtf8());
+    if (json.contains("welcome"))
+    {
+        ui->autoWelcomeWordsEdit->setPlainText(json.s("welcome"));
+    }
+    if (json.contains("gift"))
+    {
+        ui->autoThankWordsEdit->setPlainText(json.s("gift"));
+    }
+    if (json.contains("attention"))
+    {
+        ui->autoAttentionWordsEdit->setPlainText(json.s("attention"));
+    }
+    if (json.contains("timer_task"))
+    {
+        json.each("timer_task", [=](MyJson obj){
+            addTimerTask(obj);
+        });
+        saveTaskList();
+    }
+    if (json.contains("auto_reply"))
+    {
+        json.each("auto_reply", [=](MyJson obj){
+            addAutoReply(obj);
+        });
+        saveReplyList();
+    }
+    if (json.contains("event_action"))
+    {
+        json.each("event_action", [=](MyJson obj){
+            addEventAction(obj);
+        });
+        saveEventList();
+    }
+    if (json.contains("block_keys"))
+    {
+        ui->autoBlockNewbieKeysEdit->setPlainText(json.s("block_keys"));
+    }
+    if (json.contains("block_notify"))
+    {
+        ui->autoBlockNewbieNotifyWordsEdit->setPlainText(json.s("block_notify"));
+    }
+    if (json.contains("block_tip"))
+    {
+        ui->promptBlockNewbieKeysEdit->setPlainText(json.s("block_tip"));
+    }
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -12220,4 +12262,26 @@ void MainWindow::on_actionPaste_Code_triggered()
         ui->eventListWidget->scrollToBottom();
     }
     item->fromJson(clipJson);
+}
+
+void MainWindow::on_actionGeneral_Default_Code_triggered()
+{
+    QString oldPath = settings->value("danmaku/codePath", "").toString();
+    QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Json (*.json *.txt)");
+    if (path.isEmpty())
+        return ;
+    settings->setValue("danmaku/codePath", path);
+
+    generalDefaultCode(path);
+}
+
+void MainWindow::on_actionRead_Default_Code_triggered()
+{
+    QString oldPath = settings->value("danmaku/codePath", "").toString();
+    QString path = QFileDialog::getOpenFileName(this, "选择读取位置", oldPath, "Json (*.json *.txt)");
+    if (path.isEmpty())
+        return ;
+    settings->setValue("danmaku/codePath", path);
+
+    readDefaultCode(path);
 }

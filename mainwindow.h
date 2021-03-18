@@ -552,6 +552,10 @@ private slots:
 
     void on_actionPaste_Code_triggered();
 
+    void on_actionGeneral_Default_Code_triggered();
+
+    void on_actionRead_Default_Code_triggered();
+
 private:
     void initPath();
     void readConfig();
@@ -722,6 +726,9 @@ private:
     void syncMagicalRooms();
 
     QString GetFileVertion(QString fullName);
+
+    void generalDefaultCode(QString path = "");
+    void readDefaultCode(QString path = "");
 
 private:
     Ui::MainWindow *ui;

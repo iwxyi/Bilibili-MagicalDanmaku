@@ -1,0 +1,128 @@
+{
+    "attention": "感谢%ai_name%的关注%punc%\n感谢%ai_name%关注%up_name%%punc%\n感谢%ai_name%的关注，啾咪~\n谢谢%ai_name%的关注，喜欢可以领牌牌哦\n谢谢%ai_name%的关注~入股不亏哦~~",
+    "auto_reply": [
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "别这么热情",
+            "reply": "/// 关闭自己的自动欢迎\n>ignoreWelcome(%uid%)\\n>已关闭您的自动欢迎"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^请?叫我\\s*(.*)$",
+            "reply": "/// 设置自己专属昵称：叫我小明\n>setNickname(%uid%, %$1%)\\n>设置您的专属昵称为：%$1%"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "叫(\\S+)\\s+(.*)",
+            "reply": "/// 房管修改别人的专属昵称：叫张三 小张\n[%admin%]>setNickname(%(%$1%)%, %$2%)\\n>修改专属昵称成功"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^(签到|打卡)$",
+            "reply": "/// 记录每位用户是第几个打卡以及累计天数\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\\n>setValue(daka, %[%{daka}%+1]%)\\n>setValue(daka_today_%uid%, 1)\\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^切歌$",
+            "reply": "/// 弹幕切歌\n[%admin%]*>cutOrderSong() // 房管可以切所有人的歌\n>cutOrderSong(%username%) // 普通用户只能切自己点的歌"
+        }
+    ],
+    "block_keys": "",
+    "block_notify": "",
+    "block_tip": "",
+    "event_action": [
+        {
+            "action": "/// 感谢用户分享直播间\n感谢%ai_name%分享%up_name%的直播间！",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "SHARE"
+        },
+        {
+            "action": "/// 大乱斗最佳助攻：胜利并且超过1000积分\n[%level%>0, %gift_coin% >= 1000]感谢本场最佳助攻：%ai_name%\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%帮%up_name%打大乱斗！\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%的最佳助攻！",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "PK_BEST_UNAME"
+        },
+        {
+            "action": "/// （点歌姬）点歌未戴粉丝牌\n(cd35:300)戴粉丝勋章才能点歌\n(cd35:300)点歌戴粉丝牌！丝牌！牌！重要的事情说三遍\n(cd35:300)点歌未戴粉丝勋章",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "ORDER_SONG_NO_MEDAL"
+        },
+        {
+            "action": "/// （点歌姬）赠送一个喵娘点歌优先播放\n[%gift_name%=喵娘]>improveSongOrder(%username%, 99)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "SEND_GIFT"
+        },
+        {
+            "action": "/// （房管）远程禁言回复\n[%uid%=%my_uid%]**>因为太帅无法被禁言\n[%uid%=%up_uid%]**>已禁言主播（狗头保命）\n[%admin%]*>无法禁言房管\n>已禁言：%uname%",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "REMOTE_BLOCK"
+        },
+        {
+            "action": "/// 每天打卡的人数清零\n[%living%+1]>removeValues(daka_today_\\d+)\\n>setValue(daka, 0)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": true,
+            "event": "NEW_DAY"
+        },
+        {
+            "action": "/// 开播QQ群通知，详见文档\n>connectNet(https://push.xuthus.cc/group/[skey]?c=[开播消息])",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "LIVE"
+        },
+        {
+            "action": "/// 第一次上船，发送私信\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "FIRST_GUARD"
+        },
+        {
+            "action": "/// 有人上船播放声音\n>playSound([音频文件路径])",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "GUARD_BUY"
+        },
+        {
+            "action": "/// （主播）循环开启大乱斗\n>timerShot(5000, >joinBattle(1))",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "PK_BATTLE_SETTLE"
+        },
+        {
+            "action": "/// （非主播）大乱斗尊严票：被碾压时送个吃瓜……\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "PK_FINAL"
+        },
+        {
+            "action": "/// 大乱斗对面主播来串门，自己也过去\n[%pking%, %uid%=%pk_uid%]>sendRoomMsg(%pk_room_id%, 我也来串门啦~)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "INTERACT_WORD"
+        }
+    ],
+    "gift": "// ---------- 小礼物不答谢 ----------\n[%gift_gold%=0, %gift_silver%<1000, %gift_num% < 6]*\n// ---------- 普通的答谢 ----------\n感谢%ai_name%赠送的%gift_name%%punc%\n十分感谢%ai_name%相赠的%gift_name%%punc%\n谢谢%ai_name%的%gift_multi_num%%gift_name% ~~~\n感谢%ai_name%的%gift_multi_num%%gift_name%，么么哒~\n感谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n多谢%ai_name%的%gift_multi_num%%gift_name%，mua~\n多谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n// ---------- 50元以上的 ----------\n[%gift_gol-d%>50000]*(cd13:0)哇噢！感谢%ai_name%的%gift_multi_num%%gift_name%！\\n老板大气！\n// ---------- 指定礼物 ----------\n[%gift_name%=小电视飞船]**哇！谢谢%ai_name%带大家上太空~\n// ---------- 上船通知 ----------\n[%guard_buy%, %guard_first%!=0]**(cd13:0)哇塞！感谢%ai_name%开通%gift_name%！\\n老板大气！！！\n[%guard_buy%, %guard_first%=0]**(cd13:0)哇塞！感谢%ai_name%续费%gift_name%！\\n老板大气！！！\n// 屏蔽自动送的吃瓜\n[%uid%=%my_uid%,%gift_name%=吃瓜]**",
+    "timer_task": [
+        {
+            "anchor_key": "神奇弹幕:TimerTask",
+            "enabled": false,
+            "interval": 1800,
+            "text": "/// 定时发送的弹幕\n喜欢%up_name%的小伙伴可以动动小手点个关注~\n喜欢%up_name%的小伙伴，点点关注不迷路~\n赠送一个B坷拉，领取主播专属勋章哦~\n你已经是成熟的观众了，该学会自己上船了~\n[%today_guard%=0]今天%up_name%等到新的舰长了吗？\\n老板们救救可怜的%up_name%吧~\n[%today_guard%>0]今天%up_name%等到新的舰长，还有老板想上船嘛~\n小礼物和弹幕都是对%up_name%的支持哦，比心心~\n有一种关心叫关注，有一种惦记叫入粉\\n还有一种陪伴叫：加入大航海~\nIOS端可关注公众号哔哩哔哩直播姬充值~\n万水千山总是情，点个关注行不行~"
+        },
+        {
+            "anchor_key": "神奇弹幕:TimerTask",
+            "enabled": false,
+            "interval": 86400,
+            "text": "/// 每天在其他直播间打卡\n[%living%+1]>sendRoomMsg([直播间房号], 打卡)"
+        }
+    ],
+    "welcome": "// 只欢迎戴勋章的用户\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// 一分钟内重复进出不算\n[%come_time%>%timestamp%-60]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~"
+}

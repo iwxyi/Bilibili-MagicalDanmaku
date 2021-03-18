@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>12</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -315,7 +315,7 @@ QTabBar::tab:selected
              <number>20</number>
             </property>
             <property name="maximum">
-             <number>40</number>
+             <number>80</number>
             </property>
             <property name="singleStep">
              <number>10</number>
@@ -3294,6 +3294,8 @@ margin: 6px;</string>
     <addaction name="separator"/>
     <addaction name="actionCustom_Variant"/>
     <addaction name="actionPaste_Code"/>
+    <addaction name="actionGeneral_Default_Code"/>
+    <addaction name="actionRead_Default_Code"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -3574,6 +3576,19 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>恰饭入口</string>
+   </property>
+  </action>
+  <action name="actionGeneral_Default_Code">
+   <property name="text">
+    <string>生成代码配置</string>
+   </property>
+   <property name="toolTip">
+    <string>生成代码配置，放在 程序目录/default_code.json 时第一次打开会自动读取</string>
+   </property>
+  </action>
+  <action name="actionRead_Default_Code">
+   <property name="text">
+    <string>读取代码配置</string>
    </property>
   </action>
  </widget>
