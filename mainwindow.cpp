@@ -10,6 +10,7 @@
 #include "RoundedAnimationLabel.h"
 #include "catchyouwidget.h"
 #include "qrcodelogindialog.h"
+#include "escape_dialog/escapedialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -9600,10 +9601,15 @@ void MainWindow::on_diangeReplyCheck_clicked()
 
 void MainWindow::on_actionAbout_triggered()
 {
+    QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
+    if (!appVersion.startsWith("v") && !appVersion.startsWith("V"))
+        appVersion.insert(0, "v");
+
     QString text;
-    text += "本程序由心乂独立开发，参考多个开源项目实现。\n仅供个人学习、研究之用，禁止用于商业用途。\n\n";
+    text += QApplication::applicationName() + " " + appVersion;
+    text += "\n\n本程序由心乂独立开发，参考多个开源项目实现。\n仅供个人学习、研究之用，禁止用于商业用途。\n\n";
     text += "QQ群：1038738410\n欢迎大家一起来交流反馈&功能研发&闲聊&搞事情&拯救地球\n\n";
-    text += "email : wxy@iwxyi.com\ngithub: https://github.com/iwxyi";
+    text += "GitHub: https://github.com/iwxyi";
     QMessageBox::information(this, "关于", text);
 }
 
@@ -12122,5 +12128,8 @@ void MainWindow::on_allowAdminControlCheck_clicked()
     settings->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
 }
 
-
-
+void MainWindow::on_actionSponsor_triggered()
+{
+    EscapeDialog* dialog = new EscapeDialog("友情赞助", "您的支持是开发者为爱发电的最大动力！", "不想付钱", "感谢支持", this);
+    dialog->exec();
+}

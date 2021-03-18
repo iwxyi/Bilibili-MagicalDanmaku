@@ -77,6 +77,8 @@ SOURCES += \
     video_player/videosurface.cpp \
     widgets/catchyouwidget.cpp \
     widgets/conditioneditor.cpp \
+    widgets/escape_dialog/escapedialog.cpp \
+    widgets/escape_dialog/hoverbutton.cpp \
     widgets/eternalblockdialog.cpp \
     list_items/eventwidget.cpp \
     widgets/fluentbutton.cpp \
@@ -136,6 +138,8 @@ HEADERS += \
     widgets/RoundedAnimationLabel.h \
     widgets/catchyouwidget.h \
     widgets/conditioneditor.h \
+    widgets/escape_dialog/escapedialog.h \
+    widgets/escape_dialog/hoverbutton.h \
     widgets/eternalblockdialog.h \
     list_items/eventwidget.h \
     widgets/fluentbutton.h \

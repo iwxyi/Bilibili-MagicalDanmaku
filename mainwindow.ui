@@ -3318,6 +3318,7 @@ margin: 6px;</string>
     <addaction name="actionCatch_You_Online"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionSponsor"/>
     <addaction name="actionGitHub"/>
     <addaction name="actionUpdate_New_Version"/>
    </widget>
@@ -3564,6 +3565,15 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>粘贴代码片段</string>
+   </property>
+  </action>
+  <action name="actionSponsor">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/icons/sponsor</normaloff>:/icons/sponsor</iconset>
+   </property>
+   <property name="text">
+    <string>捐赠</string>
    </property>
   </action>
  </widget>

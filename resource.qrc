@@ -69,6 +69,7 @@
         <file alias="pk">resources/icons/pk.png</file>
         <file alias="qrcode">resources/icons/qrcode.png</file>
         <file alias="code">resources/icons/code.png</file>
+        <file alias="sponsor">resources/icons/sponsor.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>
@@ -109,6 +110,8 @@
     <qresource prefix="/documents">
         <file alias="content_type">resources/documents/content_type.txt</file>
         <file alias="pinyin">resources/documents/pinyin.txt</file>
+        <file alias="wx_qr">resources/documents/wx_qr.png</file>
+        <file alias="zfb_qr">resources/documents/zfb_qr.jpg</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">resources/bubbles/bubble1.png</file>

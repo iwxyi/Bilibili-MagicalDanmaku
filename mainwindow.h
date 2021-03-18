@@ -547,6 +547,8 @@ private slots:
 
     void on_allowAdminControlCheck_clicked();
 
+    void on_actionSponsor_triggered();
+
 private:
     void initPath();
     void readConfig();
