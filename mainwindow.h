@@ -30,6 +30,7 @@
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
 #include "replywidget.h"
+#include "eventwidget.h"
 #include "commonvalues.h"
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
@@ -549,6 +550,8 @@ private slots:
 
     void on_actionSponsor_triggered();
 
+    void on_actionPaste_Code_triggered();
+
 private:
     void initPath();
     void readConfig();
@@ -560,15 +563,15 @@ private:
     void localNotify(QString text);
     void localNotify(QString text, qint64 uid);
 
-    void addTimerTask(bool enable, int second, QString text, int index = -1);
+    TaskWidget *addTimerTask(bool enable, int second, QString text, int index = -1);
     void saveTaskList();
     void restoreTaskList();
 
-    void addAutoReply(bool enable, QString key, QString reply);
+    ReplyWidget *addAutoReply(bool enable, QString key, QString reply);
     void saveReplyList();
     void restoreReplyList();
 
-    void addEventAction(bool enable, QString cmd, QString action);
+    EventWidget *addEventAction(bool enable, QString cmd, QString action);
     void saveEventList();
     void restoreEventList();
     bool hasEvent(QString cmd) const;

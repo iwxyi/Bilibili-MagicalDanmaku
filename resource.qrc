@@ -70,6 +70,7 @@
         <file alias="qrcode">resources/icons/qrcode.png</file>
         <file alias="code">resources/icons/code.png</file>
         <file alias="sponsor">resources/icons/sponsor.png</file>
+        <file alias="rice">resources/icons/rice.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

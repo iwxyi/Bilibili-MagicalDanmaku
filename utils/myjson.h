@@ -39,20 +39,22 @@ public:
 
     }
 
-    static MyJson from(QByteArray ba, bool* ok = nullptr)
+    static MyJson from(QByteArray ba, bool* ok = nullptr, QString* errorString = nullptr)
     {
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(ba, &error);
         if (error.error == QJsonParseError::NoError)
         {
-            if (*ok)
+            if (ok)
                 *ok = true;
             return doc.object();
         }
         else
         {
-            if (*ok)
+            if (ok)
                 *ok = false;
+            if (errorString)
+                *errorString = error.errorString();
             return MyJson();
         }
     }

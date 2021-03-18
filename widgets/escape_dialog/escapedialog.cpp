@@ -4,6 +4,7 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
     : QDialog(parent), mt(rd()),
       exchanged(false), escape_count(0), last_escape_index(0), has_overlapped(false)
 {
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     setWindowTitle(title);
 
     QVBoxLayout* main_vlayout = new QVBoxLayout;

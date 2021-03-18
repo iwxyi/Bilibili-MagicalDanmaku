@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1811,7 +1811,7 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_3">
+      <widget class="QWidget" name="tabTimer">
        <attribute name="title">
         <string>定时</string>
        </attribute>
@@ -1856,7 +1856,7 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_10">
+      <widget class="QWidget" name="tabReply">
        <attribute name="title">
         <string>回复</string>
        </attribute>
@@ -1898,7 +1898,7 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_12">
+      <widget class="QWidget" name="tabEvent">
        <attribute name="title">
         <string>事件</string>
        </attribute>
@@ -3570,10 +3570,10 @@ margin: 6px;</string>
   <action name="actionSponsor">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/icons/sponsor</normaloff>:/icons/sponsor</iconset>
+     <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
    </property>
    <property name="text">
-    <string>捐赠</string>
+    <string>恰饭入口</string>
    </property>
   </action>
  </widget>

@@ -6,7 +6,6 @@
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
 #include "roomstatusdialog.h"
-#include "eventwidget.h"
 #include "RoundedAnimationLabel.h"
 #include "catchyouwidget.h"
 #include "qrcodelogindialog.h"
@@ -1532,7 +1531,7 @@ void MainWindow::on_SendMsgEdit_returnPressed()
     ui->SendMsgEdit->clear();
 }
 
-void MainWindow::addTimerTask(bool enable, int second, QString text, int index)
+TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int index)
 {
     TaskWidget* tw = new TaskWidget(this);
     QListWidgetItem* item;
@@ -1604,6 +1603,8 @@ void MainWindow::addTimerTask(bool enable, int second, QString text, int index)
     tw->autoResizeEdit();
     tw->adjustSize();
 //    item->setSizeHint(tw->sizeHint());
+
+    return tw;
 }
 
 void MainWindow::saveTaskList()
@@ -1631,7 +1632,7 @@ void MainWindow::restoreTaskList()
     }
 }
 
-void MainWindow::addAutoReply(bool enable, QString key, QString reply)
+ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply)
 {
     ReplyWidget* rw = new ReplyWidget(this);
     QListWidgetItem* item = new QListWidgetItem(ui->replyListWidget);
@@ -1699,6 +1700,8 @@ void MainWindow::addAutoReply(bool enable, QString key, QString reply)
     rw->autoResizeEdit();
     rw->adjustSize();
     item->setSizeHint(rw->sizeHint());
+
+    return rw;
 }
 
 void MainWindow::saveReplyList()
@@ -1726,7 +1729,7 @@ void MainWindow::restoreReplyList()
     }
 }
 
-void MainWindow::addEventAction(bool enable, QString cmd, QString action)
+EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action)
 {
     EventWidget* rw = new EventWidget(this);
     QListWidgetItem* item = new QListWidgetItem(ui->eventListWidget);
@@ -1793,6 +1796,8 @@ void MainWindow::addEventAction(bool enable, QString cmd, QString action)
     rw->autoResizeEdit();
     rw->adjustSize();
     item->setSizeHint(rw->sizeHint());
+
+    return rw;
 }
 
 void MainWindow::saveEventList()
@@ -12132,4 +12137,45 @@ void MainWindow::on_actionSponsor_triggered()
 {
     EscapeDialog* dialog = new EscapeDialog("友情赞助", "您的支持是开发者为爱发电的最大动力！", "不想付钱", "感谢支持", this);
     dialog->exec();
+}
+
+void MainWindow::on_actionPaste_Code_triggered()
+{
+    QString clipText = QApplication::clipboard()->text();
+    if (clipText.isEmpty())
+    {
+        QMessageBox::information(this, "粘贴代码片段", "在定时任务、自动回复、事件动作等列表的右键菜单中复制的结果，可用于备份或发送至其余地方");
+        return ;
+    }
+    bool ok = false;
+    MyJson clipJson;
+    QString errorString;
+    clipJson = MyJson::from(clipText.toUtf8(), &ok, &errorString);
+    if (!ok)
+    {
+        QMessageBox::information(this, "粘贴代码片段", "只支持JSON格式的代码配置\n" + errorString);
+        return ;
+    }
+    JS(clipJson, anchor_key);
+
+    ListItemInterface* item = nullptr;
+    if (anchor_key == CODE_TIMER_TASK_KEY)
+    {
+        item = addTimerTask(false, 1800, "");
+        ui->tabWidget->setCurrentWidget(ui->tabTimer);
+        ui->taskListWidget->scrollToBottom();
+    }
+    else if (anchor_key == CODE_AUTO_REPLY_KEY)
+    {
+        item = addAutoReply(false, "","");
+        ui->tabWidget->setCurrentWidget(ui->tabReply);
+        ui->replyListWidget->scrollToBottom();
+    }
+    else if (anchor_key == CODE_EVENT_ACTION_KEY)
+    {
+        item = addEventAction(false, "", "");
+        ui->tabWidget->setCurrentWidget(ui->tabEvent);
+        ui->eventListWidget->scrollToBottom();
+    }
+    item->fromJson(clipJson);
 }
