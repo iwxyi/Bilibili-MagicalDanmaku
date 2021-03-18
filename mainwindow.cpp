@@ -1114,7 +1114,7 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, int interval)
 
 /**
  * 执行发送队列中的发送弹幕，或者函数操作
- * // @return 是否是执行函数。为空或发送弹幕为false
+ * // @return 是否是执行命令。为空或发送弹幕为false
  */
 void MainWindow::slotSendAutoMsg(bool timeout)
 {
@@ -1127,7 +1127,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
         return ;
     }
 
-    if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前函数修改过延时
+    if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前命令修改过延时
         autoMsgTimer->setInterval(AUTO_MSG_CD);
 
     QStringList& sl = autoMsgQueues[0];
@@ -3566,7 +3566,20 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
             msg.replace(_var, text); // 默认使用变量类型吧
             find = true;
         }
+
+        // 一些类似函数的变量
+        re = QRegularExpression("%>(\\w+)\\s*\\(([^%>]+)\\)%");
+        while (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString _var = match.captured(0);
+            QString func = match.captured(1);
+            QString args = match.captured(2);
+            if (replaceDynamicVariants(msg, _var, func, args))
+                find = true;
+        }
     }
+
+    // 一些用于替换特殊字符的东西，例如想办法避免无法显示 100% 这种
 
     return msg;
 }
@@ -3956,6 +3969,17 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         }
         msg.replace(key, name);
     }
+    else
+        return false;
+    return true;
+}
+
+bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, const QString &funcName, const QString &args) const
+{
+    QRegularExpressionMatch match;
+    // 替换时间
+    if (funcName == "time")
+        msg.replace(total, QDateTime::currentDateTime().toString(args));
     else
         return false;
     return true;
@@ -4889,7 +4913,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     if (msg.indexOf(re) == -1)
         return false;
 
-    qDebug() << "尝试执行函数：" << msg;
+    qDebug() << "尝试执行命令：" << msg;
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };

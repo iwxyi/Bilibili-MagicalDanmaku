@@ -1591,8 +1591,10 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
                 res = QQMusic;
                 break;
             }
-            qDebug() << "无法播放：" << song.name << "，开始换源：" << musicSource << res;
-            searchMusicBySource(song.name + " " + song.artistNames, res, song.addBy);
+            QString searchKey = song.name + " " + song.artistNames;
+            // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), "");
+            qDebug() << "无法播放：" << song.name << "，开始换源：" << musicSource << res << searchKey;
+            searchMusicBySource(searchKey, res, song.addBy);
         }
         else
         {

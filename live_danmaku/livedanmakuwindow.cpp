@@ -2511,31 +2511,35 @@ void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidget
     QString path = headPath(uid);
     if (!QFileInfo(path).exists())
     {
-        QNetworkAccessManager manager;
-        QEventLoop loop;
-        QNetworkReply *reply1 = manager.get(QNetworkRequest(QUrl(url)));
-        //请求结束并下载完成后，退出子事件循环
-        connect(reply1, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        //开启子事件循环
-        loop.exec();
-        QByteArray jpegData = reply1->readAll();
-        QPixmap pixmap;
-        pixmap.loadFromData(jpegData);
-        if (pixmap.isNull())
-        {
-            qDebug() << "获取用户头像为空：" << uid;
-            return ;
-        }
-        if (!pixmap.save(path))
-        {
-            qWarning() << "保存头像失败：" << uid << url;
-            QDir().mkpath(headDir);
-            pixmap.save(path);
-        }
+        QNetworkAccessManager* manager = new QNetworkAccessManager;
+        QNetworkRequest* request = new QNetworkRequest(url);
+        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+            QByteArray jpegData = reply->readAll();
+            QPixmap pixmap;
+            pixmap.loadFromData(jpegData);
+            if (pixmap.isNull())
+            {
+                qDebug() << "获取用户头像为空：" << uid;
+                return ;
+            }
+            if (!pixmap.save(path))
+            {
+                qWarning() << "保存头像失败：" << uid << url;
+                QDir().mkpath(headDir);
+                pixmap.save(path);
+            }
+
+            if (!isItemExist(item))
+                return ;
+            PortraitLabel* label = getItemWidgetPortrait(item);
+            label->setPixmap(QPixmap(path));
+        });
+        manager->get(*request);
+        return ;
     }
 
-    if (!isItemExist(item))
-        return ;
     PortraitLabel* label = getItemWidgetPortrait(item);
     label->setPixmap(QPixmap(path));
 }
