@@ -1678,7 +1678,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
                     else
                         s = "\\n" + s; // 延迟一次发送的时间
                 }
-                sendCdMsg(s, 1500, REPLY_CD_CN, true, false, manual);
+                sendCdMsg(s, 0, REPLY_CD_CN, true, false, manual);
             }
         }
     });
