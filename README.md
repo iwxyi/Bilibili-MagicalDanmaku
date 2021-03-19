@@ -862,7 +862,7 @@ tips：
 | runCommandLine(cmd)                       | 运行命令行                                                   |
 | setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
 | setValues(exp, val)                       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
-| setValuesIf(exp, [condition], val)        | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），`_VALUE_`为当前值，例如：`[_VALUE_>2]` |
+| setValuesIf(exp, [condition], newVal)     | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
 | removeValue(key)                          | 移除配置文件中的单个值                                       |
 | removeValues(exp)                         | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
 | removeValuesIf(exp, [condition])          | 按条件移除配置文件中的多个值                                 |
@@ -888,6 +888,35 @@ tips：
 >
 
 
+
+#### 批量修改配置
+
+针对 `setValuesIf(exp, [condition], newVal)` 、`removeValuesIf(exp, [condition])` 这两个较为复杂命令。
+
+`exp`为正则表达式，将会操作所有key满足该表达式的配置。
+
+**当且仅当在`[condition]`中：**
+
+- `_VALUE_`替换为当前遍历到的值(value)
+- `_$x_`替换为exp正则捕获的文字，其中`x=0`时为键(key)，`x>0`时为正则的捕获组，等同于自动回复中的 `%$x%`
+- `_{key}_` 替换为读取配置文件，等同于正常情况下的 `%{key}%`
+
+**当且仅当在`newVal` 中：**
+
+- `_[exp]_`替换为计算表达式（不支持外面再嵌套任意内容）
+
+例如：
+
+- 删除7天没来的用户记录：
+  `removeValuesIf(not_come_(\d+), [_VALUE_>7])`
+- 今日没签到的用户重置连续签到为0：
+  `setValuesIf(signin_keep_(\d+), [!_{signin_today__$1_}_], 0)`
+- 用户上船天数+1：
+  `setValuesIf(guard_days_\d+, [1], _[_VALUE_+1]_)`
+
+
+
+#### 简单命令示例
 
 ##### 示例：自动打卡
 

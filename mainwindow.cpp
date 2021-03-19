@@ -5481,14 +5481,58 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             settings->beginGroup("heaps");
             auto keys = settings->allKeys();
             QRegularExpression re(key);
+            QRegularExpressionMatch match2;
             for (int i = 0; i < keys.size(); i++)
             {
-                if (keys.at(i).indexOf(re) > -1)
+                if (keys.at(i).indexOf(re, 0, &match2) > -1)
                 {
                     QString exp = VAL_EXP;
+                    // _VALUE_ 替换为 当前key的值
                     exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    // _$1_ 替换为 match的值
+                    if (exp.contains("_$"))
+                    {
+                        auto caps = match2.capturedTexts();
+                        for (int i = 0; i < caps.size(); i++)
+                            exp.replace("_$" + snum(i) + "_", caps.at(i));
+                    }
+                    // 替换获取配置的值 _{}_
+                    if (exp.contains("_{"))
+                    {
+                        QRegularExpression re2("_\\{(.*?)\\}_");
+                        while (exp.indexOf(re2, 0, &match2) > -1)
+                        {
+                            QString _var = match2.captured(0);
+                            QString key = match2.captured(1);
+                            QVariant var = settings->value(key);
+                            exp.replace(_var, var.toString());
+                        }
+                    }
                     if (processVariantConditions(exp))
+                    {
+                        // 处理 newValue
+                        if (newValue.contains("_VALUE_"))
+                        {
+                            // _VALUE_ 替换为 当前key的值
+                            newValue.replace("_VALUE_", settings->value(keys.at(i)).toString());
+
+                            // 替换计算属性 _[]_
+                            if (newValue.contains("_["))
+                            {
+                                QRegularExpression re2("_\\[(.*?)\\]_");
+                                while (newValue.indexOf(re2, 0, &match2) > -1)
+                                {
+                                    QString _var = match2.captured(0);
+                                    QString text = match2.captured(1);
+                                    text = snum(calcIntExpression(text));
+                                    newValue.replace(_var, text); // 默认使用变量类型吧
+                                }
+                            }
+                        }
+
+                        // 真正设置
                         settings->setValue(keys.at(i), newValue);
+                    }
                 }
             }
             settings->endGroup();
@@ -5552,14 +5596,37 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             settings->beginGroup("heaps");
             auto keys = settings->allKeys();
             QRegularExpression re(key);
+            QRegularExpressionMatch match2;
             for (int i = 0; i < keys.size(); i++)
             {
-                if (keys.at(i).indexOf(re) > -1)
+                if (keys.at(i).indexOf(re, 0, &match2) > -1)
                 {
                     QString exp = VAL_EXP;
+                    // _VALUE_ 替换为 当前key的值
                     exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    // _$1_ 替换为 match的值
+                    if (exp.contains("_$"))
+                    {
+                        auto caps = match2.capturedTexts();
+                        for (int i = 0; i < caps.size(); i++)
+                            exp.replace("_$" + snum(i) + "_", caps.at(i));
+                    }
+                    // 替换获取配置的值 _{}_
+                    if (exp.contains("_{"))
+                    {
+                        QRegularExpression re2("_\\{(.*?)\\}_");
+                        while (exp.indexOf(re2, 0, &match2) > -1)
+                        {
+                            QString _var = match2.captured(0);
+                            QString key = match2.captured(1);
+                            QVariant var = settings->value(key);
+                            exp.replace(_var, var.toString());
+                        }
+                    }
                     if (processVariantConditions(exp))
+                    {
                         settings->remove(keys.takeAt(i--));
+                    }
                 }
             }
             settings->endGroup();
