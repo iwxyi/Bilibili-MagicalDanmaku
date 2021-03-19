@@ -1136,7 +1136,7 @@ tips：
 
 ##### 示例：高级打卡
 
-在以上的打卡计数中，添加了：打卡查询、连续天数、每月累计天数。
+在以上的打卡计数中，添加了：打卡查询、连续天数、每月累计天数、满足天数报告。
 
 因数量较多，建议直接复制以下代码，使用“工具-菜单”中的“**粘贴代码片段**”一键添加。
 
@@ -1146,7 +1146,7 @@ tips：
         "anchor_key": "神奇弹幕:AutoReply",
         "enabled": true,
         "key": "^(签到|打卡)$",
-        "reply": "/// 记录每位用户是第几个打卡以及累计天数\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)"
+        "reply": "/// 记录每位用户是第几个打卡以及累计天数\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
     },
     {
         "anchor_key": "神奇弹幕:AutoReply",
@@ -1155,16 +1155,22 @@ tips：
         "reply": "[%living%+1]连续%[%{daka_keep_%uid%}%]%天，本月%[%{daka_month_%uid%}%]%天，累计%[%{daka_sum_%uid%}%]%天"
     },
     {
+        "action": "/// 重置每天打卡的人数\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡",
         "anchor_key": "神奇弹幕:EventAction",
         "enabled": true,
-        "event": "NEW_DAY",
-        "action": "/// 重置每天打卡的人数\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡"
+        "event": "NEW_DAY"
     },
     {
+        "action": "/// 重置每月打卡天数\n[%living%+1]>setValues(daka_month_\\d+, 0)",
         "anchor_key": "神奇弹幕:EventAction",
         "enabled": true,
-        "event": "NEW_MONTH",
-        "action": "/// 重置每月打卡天数\n[%living%+1]>setValues(daka_month_\\d+, 0)"
+        "event": "NEW_MONTH"
+    },
+    {
+        "action": "您已打卡满21天，可找主播领小礼物~",
+        "anchor_key": "神奇弹幕:EventAction",
+        "enabled": true,
+        "event": "DAKA_MONTH_21"
     }
 ]
 ```
