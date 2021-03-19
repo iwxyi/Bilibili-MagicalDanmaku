@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -990,7 +990,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QCheckBox" name="giftComboSendCheck">
             <property name="text">
-             <string>礼物连击(测试)</string>
+             <string>礼物连击</string>
             </property>
            </widget>
           </item>
@@ -1034,6 +1034,29 @@ QTabBar::tab:selected
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="giftComboTopCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;多人同时赠送礼物，等待所有人送完，并只答谢最贵的一项&lt;/p&gt;&lt;p&gt;开盲盒时容易出不同礼物，开启此项可减少刷屏&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Top1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="giftComboMergeCheck">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;多人同时送同一项礼物，合并用户；&lt;/p&gt;&lt;p&gt;一人连续送出多个礼物，合并礼物。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>合并</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -1945,7 +1968,7 @@ margin: 6px;</string>
       </widget>
       <widget class="QWidget" name="tab_13">
        <attribute name="title">
-        <string>统计</string>
+        <string>数据</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_14">
         <item>
@@ -3276,7 +3299,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>467</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

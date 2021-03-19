@@ -265,6 +265,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 礼物连击
     ui->giftComboSendCheck->setChecked(settings->value("danmaku/giftComboSend", false).toBool());
     ui->giftComboDelaySpin->setValue(settings->value("danmaku/giftComboDelay",  5).toInt());
+    ui->giftComboTopCheck->setChecked(settings->value("danmaku/giftComboTop", false).toBool());
+    ui->giftComboMergeCheck->setChecked(settings->value("danmaku/giftComboMerge", false).toBool());
     comboTimer = new QTimer(this);
     comboTimer->setInterval(500);
     connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
@@ -1275,43 +1277,89 @@ void MainWindow::slotComboSend()
 
     qint64 timestamp = QDateTime::currentSecsSinceEpoch();
     int delta = ui->giftComboDelaySpin->value();
-    QStringList eraseds;
-    for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
-    {
-        const LiveDanmaku& danmaku = it.value();
-        if (danmaku.getTimeline().toSecsSinceEpoch() + delta < timestamp) // 到达统计时间了
+
+    auto thankGift = [=](LiveDanmaku danmaku) -> bool {
+        QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+        if (words.size())
         {
-            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-            if (words.size())
+            int r = qrand() % words.size();
+            QString msg = words.at(r);
+            if (strongNotifyUsers.contains(danmaku.getUid()))
             {
-                int r = qrand() % words.size();
-                QString msg = words.at(r);
-                if (strongNotifyUsers.contains(danmaku.getUid()))
-                {
-                    if (debugPrint)
-                        localNotify("[强提醒]");
-                    sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
-                }
-                else
-                    sendGiftMsg(msg);
+                if (debugPrint)
+                    localNotify("[强提醒]");
+                sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
             }
-            else if (debugPrint)
+            else
             {
-                localNotify("[没有可发送的连击答谢弹幕]");
+                sendGiftMsg(msg);
             }
-            // it = giftCombos.erase(it); // 为啥子这样写会崩溃诶
-            // 好吧我知道了，因为it已经是下一个了，再it++就跳过了一个，可能跳过end()
-            // 但是我，懒 得 改！[傲娇脸]
-            eraseds.append(it.key());
+            return true;
+        }
+        else if (debugPrint)
+        {
+            localNotify("[没有可发送的连击答谢弹幕]");
+            return false;
+        }
+        return false;
+    };
+
+    if (!ui->giftComboTopCheck->isChecked()) // 全部答谢，看冷却时间
+    {
+        for (auto it = giftCombos.begin(); it != giftCombos.end(); )
+        {
+            const LiveDanmaku& danmaku = it.value();
+            if (danmaku.getTimeline().toSecsSinceEpoch() + delta > timestamp) // 未到达统计时间
+            {
+                it++;
+                continue;
+            }
+
+            // 开始答谢该项
+            thankGift(danmaku);
+            it = giftCombos.erase(it);
         }
     }
-
-    if (eraseds.size())
+    else // 等待结束，只答谢最贵的一项
     {
-        foreach (QString s, eraseds)
-            giftCombos.remove(s);
+        qint64 maxGold = 0;
+        auto maxIt = giftCombos.begin();
+        for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
+        {
+            const LiveDanmaku& danmaku = it.value();
+            if (danmaku.getTimeline().toSecsSinceEpoch() + delta > timestamp) // 还有礼物未到答谢时间
+                return ;
+            if (danmaku.isGoldCoin() && danmaku.getTotalCoin() > maxGold)
+            {
+                maxGold = danmaku.getTotalCoin();
+                maxIt = it;
+            }
+        }
+        if (maxGold > 0)
+        {
+            thankGift(maxIt.value());
+            giftCombos.clear();
+            return ;
+        }
+
+        // 没有金瓜子，只有银瓜子
+        int maxSilver = 0;
+        maxIt = giftCombos.begin();
+        for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
+        {
+            const LiveDanmaku& danmaku = it.value();
+            if (danmaku.getTotalCoin() > maxGold)
+            {
+                maxSilver = danmaku.getTotalCoin();
+                maxIt = it;
+            }
+        }
+        thankGift(maxIt.value());
+        giftCombos.clear();
+        return ;
     }
+
 }
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
@@ -12597,4 +12645,14 @@ void MainWindow::on_actionRead_Default_Code_triggered()
     settings->setValue("danmaku/codePath", path);
 
     readDefaultCode(path);
+}
+
+void MainWindow::on_giftComboTopCheck_clicked()
+{
+    settings->setValue("danmaku/giftComboTop", ui->giftComboTopCheck->isChecked());
+}
+
+void MainWindow::on_giftComboMergeCheck_clicked()
+{
+    settings->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
 }

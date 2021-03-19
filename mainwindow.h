@@ -557,6 +557,10 @@ private slots:
 
     void on_actionRead_Default_Code_triggered();
 
+    void on_giftComboTopCheck_clicked();
+
+    void on_giftComboMergeCheck_clicked();
+
 private:
     void initPath();
     void readConfig();
