@@ -6015,6 +6015,20 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 模拟快捷键
+    if (msg.contains("simulateKeys"))
+    {
+        re = RE("simulateKeys\\s*\\(\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qDebug() << "执行命令：" << caps;
+            simulateKeys(text);
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -10307,7 +10321,6 @@ void MainWindow::pkProcess(QJsonObject json)
             oppositeTouta++;
             localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
 
-            // TODO: 偷塔调试
             {
                 int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
                 int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
@@ -10326,7 +10339,7 @@ void MainWindow::pkProcess(QJsonObject json)
         // 反偷塔，防止对方也在最后几秒刷礼物
         if (ui->pkAutoMelonCheck->isChecked()
                 && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
-                && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用）
+                /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
                 && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
         {
             // 调用送礼
