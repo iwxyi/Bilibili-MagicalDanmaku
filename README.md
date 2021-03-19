@@ -1115,7 +1115,10 @@ tips：
 
 ```
 [%{daka_today_%uid%}%]*>您已打过卡
-[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\n>setValue(daka, %[%{daka}%+1]%)\n>setValue(daka_today_%uid%, 1)\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)
+[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\n\
+	>setValue(daka, %[%{daka}%+1]%)\n\
+	>setValue(daka_today_%uid%, 1)\n\
+	>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)
 ```
 
 添加事件：`NEW_DAY`，动作：
@@ -1125,6 +1128,46 @@ tips：
 ```
 
 `[%living%+1]` 是用来保证即使开启了“仅在直播时回复”也能发送回复的弹幕
+
+
+
+##### 示例：高级打卡
+
+在以上的打卡计数中，添加了：打卡查询、连续天数、每月天数
+
+添加自动回复：`^(签到|打卡)$`，动作：
+
+```
+[%{daka_today_%uid%}%]*>您已打过卡
+[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\n\
+	>setValue(daka, %[%{daka}%+1]%)\n\
+	>setValue(daka_today_%uid%, 1)\n\
+	>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\n\
+	>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\n\
+	>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)
+```
+
+添加自动回复：`^(查询(打卡|签到)|(打卡|签到)查询)$`，动作：
+
+```
+[%living%+1]连续%[%{daka_keep_%uid%}%]%天，本月%[%{daka_month_%uid%}%]%天，累计%[%{daka_sum_%uid%}%]%天
+```
+
+添加事件：`NEW_DAY`，动作：
+
+```
+/// 重置每天打卡
+[%living%+1]>setValue(daka, 0)\n\ // 重置今日打卡人数
+	>removeValuesIf(^daka_keep_(\d+)$, [!_{daka_today__$1_}_])\n\ // 未连续签到断开
+	>removeValues(daka_today_\d+) // 重置每人是否打卡
+```
+
+添加事件：`NEW_MONTH`，动作：
+
+```
+/// 重置每月打卡天数
+[%living%+1]>setValues(daka_month_\d+, 0)
+```
 
 
 
