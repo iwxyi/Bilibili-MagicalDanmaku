@@ -45,6 +45,14 @@ public:
         QJsonDocument doc = QJsonDocument::fromJson(ba, &error);
         if (error.error == QJsonParseError::NoError)
         {
+            if (!doc.isObject())
+            {
+                if (ok)
+                    *ok = false;
+                if (errorString)
+                    *errorString = "Not Json Object";
+                return MyJson();
+            }
             if (ok)
                 *ok = true;
             return doc.object();

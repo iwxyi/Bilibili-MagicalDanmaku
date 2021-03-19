@@ -2152,16 +2152,26 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
     int row = listWidget->currentRow();
 
     QString clipText = QApplication::clipboard()->text();
-    bool canPaste = false;
+    bool canPaste = false, canContinueCopy = false;
     MyJson clipJson;
+    QJsonArray clipArray;
     if (!clipText.isEmpty())
     {
-        bool ok;
-        clipJson = MyJson::from(clipText.toUtf8(), &ok);
-        if (ok)
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(clipText.toUtf8(), &error);
+        if (error.error == QJsonParseError::NoError)
         {
-            JS(clipJson, anchor_key);
-            canPaste = (anchor_key == listKey);
+            if (doc.isObject())
+            {
+                JS(clipJson, anchor_key);
+                clipJson = doc.object();
+                canPaste = (anchor_key == listKey);
+            }
+            else if (doc.isArray())
+            {
+                clipArray = doc.array();
+            }
+            canContinueCopy = true;
         }
     }
 
@@ -2206,6 +2216,24 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         auto tw = static_cast<ListItemInterface*>(widget);
         QApplication::clipboard()->setText(tw->toJson().toBa());
     })->disable(!item);
+    menu->addAction("继续复制", [=]{
+        auto widget = listWidget->itemWidget(item);
+        auto tw = static_cast<ListItemInterface*>(widget);
+        MyJson twJson = tw->toJson();
+        if (!clipArray.isEmpty()) // 已经是JSON数组了，继续复制
+        {
+            QJsonArray array = clipArray;
+            array.append(twJson);
+            QApplication::clipboard()->setText(QJsonDocument(array).toJson());
+        }
+        else // 是JSON对象，需要变成数组
+        {
+            QJsonArray array;
+            array.append(clipJson);
+            array.append(twJson);
+            QApplication::clipboard()->setText(QJsonDocument(array).toJson());
+        }
+    })->disable(!item)->hide(!canContinueCopy);
     menu->addAction("粘贴", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
@@ -12443,37 +12471,51 @@ void MainWindow::on_actionPaste_Code_triggered()
         QMessageBox::information(this, "粘贴代码片段", "在定时任务、自动回复、事件动作等列表的右键菜单中复制的结果，可用于备份或发送至其余地方");
         return ;
     }
-    bool ok = false;
-    MyJson clipJson;
-    QString errorString;
-    clipJson = MyJson::from(clipText.toUtf8(), &ok, &errorString);
-    if (!ok)
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(clipText.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError)
     {
-        QMessageBox::information(this, "粘贴代码片段", "只支持JSON格式的代码配置\n" + errorString);
+        QMessageBox::information(this, "粘贴代码片段", "只支持JSON格式的代码配置\n" + error.errorString());
         return ;
     }
-    JS(clipJson, anchor_key);
 
-    ListItemInterface* item = nullptr;
-    if (anchor_key == CODE_TIMER_TASK_KEY)
+    auto pasteFromJson = [=](QJsonObject json) {
+        QString anchor_key = json.value("anchor_key").toString();
+        ListItemInterface* item = nullptr;
+        if (anchor_key == CODE_TIMER_TASK_KEY)
+        {
+            item = addTimerTask(false, 1800, "");
+            ui->tabWidget->setCurrentWidget(ui->tabTimer);
+            ui->taskListWidget->scrollToBottom();
+        }
+        else if (anchor_key == CODE_AUTO_REPLY_KEY)
+        {
+            item = addAutoReply(false, "","");
+            ui->tabWidget->setCurrentWidget(ui->tabReply);
+            ui->replyListWidget->scrollToBottom();
+        }
+        else if (anchor_key == CODE_EVENT_ACTION_KEY)
+        {
+            item = addEventAction(false, "", "");
+            ui->tabWidget->setCurrentWidget(ui->tabEvent);
+            ui->eventListWidget->scrollToBottom();
+        }
+        item->fromJson(json);
+    };
+
+    if (doc.isObject())
     {
-        item = addTimerTask(false, 1800, "");
-        ui->tabWidget->setCurrentWidget(ui->tabTimer);
-        ui->taskListWidget->scrollToBottom();
+        pasteFromJson(doc.object());
     }
-    else if (anchor_key == CODE_AUTO_REPLY_KEY)
+    else if (doc.isArray())
     {
-        item = addAutoReply(false, "","");
-        ui->tabWidget->setCurrentWidget(ui->tabReply);
-        ui->replyListWidget->scrollToBottom();
+        QJsonArray array = doc.array();
+        foreach (QJsonValue val, array)
+        {
+            pasteFromJson(val.toObject());
+        }
     }
-    else if (anchor_key == CODE_EVENT_ACTION_KEY)
-    {
-        item = addEventAction(false, "", "");
-        ui->tabWidget->setCurrentWidget(ui->tabEvent);
-        ui->eventListWidget->scrollToBottom();
-    }
-    item->fromJson(clipJson);
 }
 
 void MainWindow::on_actionGenerate_Default_Code_triggered()

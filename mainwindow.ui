@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>451</width>
+    <width>467</width>
     <height>393</height>
    </rect>
   </property>
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -3275,7 +3275,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>451</width>
+     <width>467</width>
      <height>23</height>
     </rect>
    </property>
@@ -3286,16 +3286,10 @@ margin: 6px;</string>
     <addaction name="actionShow_Live_Danmaku"/>
     <addaction name="actionShow_Live_Video"/>
     <addaction name="actionShow_Order_Player_Window"/>
-    <addaction name="actionShow_Lucky_Draw"/>
     <addaction name="separator"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionShow_PK_Video"/>
     <addaction name="actionJoin_Battle"/>
-    <addaction name="separator"/>
-    <addaction name="actionCustom_Variant"/>
-    <addaction name="actionPaste_Code"/>
-    <addaction name="actionGenerate_Default_Code"/>
-    <addaction name="actionRead_Default_Code"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -3304,7 +3298,6 @@ margin: 6px;</string>
     <addaction name="actionQRCode_Login"/>
     <addaction name="actionSet_Cookie"/>
     <addaction name="actionSet_Danmaku_Data_Format"/>
-    <addaction name="actionCookie_Help"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_Room_To_List"/>
     <addaction name="separator"/>
@@ -3318,15 +3311,33 @@ margin: 6px;</string>
     <addaction name="actionGet_Play_Url"/>
     <addaction name="actionRoom_Status"/>
     <addaction name="actionCatch_You_Online"/>
+   </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>构建</string>
+    </property>
+    <addaction name="actionCustom_Variant"/>
     <addaction name="separator"/>
+    <addaction name="actionPaste_Code"/>
+    <addaction name="actionGenerate_Default_Code"/>
+    <addaction name="actionRead_Default_Code"/>
+   </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>帮助</string>
+    </property>
     <addaction name="actionAbout"/>
     <addaction name="actionSponsor"/>
     <addaction name="actionGitHub"/>
+    <addaction name="separator"/>
+    <addaction name="actionCookie_Help"/>
     <addaction name="actionUpdate_New_Version"/>
    </widget>
    <addaction name="menu_3"/>
    <addaction name="menu_2"/>
+   <addaction name="menu"/>
    <addaction name="menu_4"/>
+   <addaction name="menu_5"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionData_Path">
@@ -3401,7 +3412,7 @@ margin: 6px;</string>
      <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
    </property>
    <property name="text">
-    <string>关于&amp;&amp;交流反馈</string>
+    <string>关于&amp;&amp;交流</string>
    </property>
    <property name="toolTip">
     <string>关于和交流反馈</string>
