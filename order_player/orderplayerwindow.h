@@ -259,6 +259,7 @@ private:
     void readMp3Data(const QByteArray& array);
 
     void setMusicIconBySource();
+    void switchSource(Song song, bool play = false);
 
     void fetch(QString url, NetStringFunc func, MusicSource cookie = UnknowMusic);
     void fetch(QString url, NetJsonFunc func, MusicSource cookie = UnknowMusic);

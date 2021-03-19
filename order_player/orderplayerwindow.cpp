@@ -171,7 +171,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         }
         else if (status == QMediaPlayer::InvalidMedia)
         {
-            qDebug() << "无效媒体：" << playingSong.simpleString();
+            qWarning() << "无效媒体：" << playingSong.simpleString();
             playNext();
         }
     });
@@ -467,7 +467,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << "网易云返回结果不为200：" << json.value("message").toString();
+                qWarning() << "网易云返回结果不为200：" << json.value("message").toString();
                 return ;
             }
             break;
@@ -475,7 +475,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         {
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "QQ搜索返回结果不为0：" << json.value("result").toInt();
+                qWarning() << "QQ搜索返回结果不为0：" << json.value("result").toInt();
                 return ;
             }
             break;
@@ -483,7 +483,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "咪咕搜索返回结果不为0：" << json.value("result").toInt();
+                qWarning() << "咪咕搜索返回结果不为0：" << json.value("result").toInt();
                 return ;
             }
             break;
@@ -1290,7 +1290,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     qDebug() << "开始播放：" << song.simpleString() << song.id << song.mid;
     if (!isSongDownloaded(song))
     {
-        qDebug() << "error: 未下载歌曲" << song.simpleString() << "开始下载";
+        qWarning() << "error: 未下载歌曲" << song.simpleString() << "开始下载";
         playAfterDownloaded = song;
         downloadSong(song);
         return ;
@@ -1310,7 +1310,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
     {
         QPixmap pixmap(coverPath(song), "1"); // 这里读取要加个参数，原因未知……
         if (pixmap.isNull())
-            qDebug() << "warning: 本地封面是空的" << song.simpleString() << coverPath(song);
+            qWarning() << "warning: 本地封面是空的" << song.simpleString() << coverPath(song);
         else if (coveringSong != song)
         {
             pixmap = pixmap.scaledToHeight(ui->playingCoverLabel->height());
@@ -1451,14 +1451,14 @@ void OrderPlayerWindow::downloadSong(Song song)
         {
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << "网易云歌曲链接返回结果不为200：" << json.value("message").toString();
+                qWarning() << "网易云歌曲链接返回结果不为200：" << json.value("message").toString();
                 return ;
             }
 
             QJsonArray array = json.value("data").toArray();
             if (!array.size())
             {
-                qDebug() << "未找到歌曲：" << song.simpleString();
+                qWarning() << "未找到歌曲：" << song.simpleString();
                 downloadingSong = Song();
                 downloadNext();
                 return ;
@@ -1517,7 +1517,8 @@ void OrderPlayerWindow::downloadSong(Song song)
             {
                 if (json.value("result").toInt() != 100)
                 {
-                    qDebug() << "QQ歌曲链接返回结果不为100：" << json;
+                    qWarning() << "QQ歌曲链接返回结果不为100：" << json;
+                    switchSource(song);
                     return ;
                 }
 
@@ -1535,7 +1536,8 @@ void OrderPlayerWindow::downloadSong(Song song)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "QQ歌曲链接返回结果不为100：" << json;
+                qWarning() << "咪咕歌曲链接返回结果不为100：" << json;
+                switchSource(song);
                 return ;
             }
             fileUrl = json.value("data").toObject().value("url").toString();
@@ -1561,7 +1563,7 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
     {
         emit signalOrderSongNoCopyright(song);
     }
-    qDebug() << "无法下载，可能没有版权" << song.simpleString();
+    qWarning() << "无法下载，可能没有版权" << song.simpleString();
     if (playAfterDownloaded == song)
     {
         if (orderSongs.contains(song))
@@ -1571,30 +1573,12 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
             setSongModelToView(orderSongs, ui->orderSongsListView);
         }
 
-        if (autoSwitchSource && song.source == musicSource
+        if (autoSwitchSource /* && song.source == musicSource */
                 /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
         {
             slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
             insertOrderOnce = true;
-            MusicSource res = UnknowMusic;
-            switch (musicSource) {
-            case UnknowMusic:
-                res = QQMusic;
-                break;
-            case NeteaseCloudMusic:
-                res = QQMusic;
-                break;
-            case QQMusic:
-                res = MiguMusic;
-                break;
-            case MiguMusic:
-                res = QQMusic;
-                break;
-            }
-            QString searchKey = song.name + " " + song.artistNames;
-            // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), "");
-            qDebug() << "无法播放：" << song.name << "，开始换源：" << musicSource << res << searchKey;
-            searchMusicBySource(searchKey, res, song.addBy);
+            switchSource(song, true);
         }
         else
         {
@@ -1664,7 +1648,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << "网易云歌词返回结果不为200：" << json.value("message").toString();
+                qWarning() << "网易云歌词返回结果不为200：" << json.value("message").toString();
                 return ;
             }
             lrc = json.value("lrc").toObject().value("lyric").toString();
@@ -1675,7 +1659,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "咪咕歌词返回结果不为100：" << json.value("result").toInt();
+                qWarning() << "咪咕歌词返回结果不为100：" << json.value("result").toInt();
                 return ;
             }
             lrc = json.value("data").toObject().value("lyric").toString();
@@ -1751,13 +1735,13 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         {
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << ("返回结果不为200：") << json.value("message").toString();
+                qWarning() << ("网易云封面返回结果不为200：") << json.value("message").toString();
                 return ;
             }
             QJsonArray array = json.value("songs").toArray();
             if (!array.size())
             {
-                qDebug() << "未找到歌曲：" << song.simpleString();
+                qWarning() << "未找到歌曲：" << song.simpleString();
                 return ;
             }
 
@@ -1810,7 +1794,7 @@ void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
         }
         else
         {
-            qDebug() << "warning: 下载的封面是空的" << song.simpleString() << url;
+            qWarning() << "warning: 下载的封面是空的" << song.simpleString() << url;
         }
     });
 }
@@ -1930,7 +1914,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         {
             if (json.value("code").toInt() != 200)
             {
-                qDebug() << ("歌单返回结果不为200：") << json.value("message").toString();
+                qWarning() << ("歌单返回结果不为200：") << json.value("message").toString();
                 return ;
             }
             // QJsonArray array = json.value("playlist").toObject().value("tracks").toArray(); // tracks是不完整的，需要使用 trackIds
@@ -1965,7 +1949,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         {
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "返回结果不为100：" << json;
+                qWarning() << "QQ歌单返回结果不为100：" << json;
                 return ;
             }
             QJsonArray array = json.value("data").toObject().value("songlist").toArray();
@@ -1982,7 +1966,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         {
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "返回结果不为100：" << json;
+                qDebug() << "咪咕歌单返回结果不为100：" << json;
                 return ;
             }
             QJsonArray array = json.value("data").toObject().value("list").toArray();
@@ -2364,6 +2348,53 @@ void OrderPlayerWindow::setMusicIconBySource()
     }
 }
 
+/**
+ * 切换音源并播放
+ * 网易云：=> QQ音乐 => 咪咕
+ * QQ音乐：=> 网易云 => 咪咕
+ * 咪咕：=> 网易云 => QQ音乐
+ */
+void OrderPlayerWindow::switchSource(Song song, bool play)
+{
+    MusicSource res = UnknowMusic;
+    switch (song.source) {
+    case UnknowMusic:
+        res = NeteaseCloudMusic;
+        break;
+    case NeteaseCloudMusic:
+        if (musicSource == QQMusic)
+            res = MiguMusic;
+        else
+            res = QQMusic;
+        break;
+    case QQMusic:
+        if (musicSource == NeteaseCloudMusic)
+            res= MiguMusic;
+        else
+            res = NeteaseCloudMusic;
+        break;
+    case MiguMusic:
+        if (musicSource == NeteaseCloudMusic)
+            res = QQMusic;
+        else
+            res = NeteaseCloudMusic;
+        break;
+    }
+
+    if(res == musicSource) // 轮了一圈，又回来了
+    {
+        qWarning() << "所有平台都不支持，已结束";
+        if (play)
+            playNext();
+        return ;
+    }
+
+    QString searchKey = song.name + " " + song.artistNames;
+    // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
+    qWarning() << "无法播放：" << song.name << "，开始换源：" << musicSource << res << searchKey;
+    searchMusicBySource(searchKey, res, song.addBy);
+}
+
 void OrderPlayerWindow::fetch(QString url, NetStringFunc func, MusicSource cookie)
 {
     fetch(url, [=](QNetworkReply* reply){
@@ -2378,7 +2409,7 @@ void OrderPlayerWindow::fetch(QString url, NetJsonFunc func, MusicSource cookie)
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString() << url;
+            qWarning() << error.errorString() << url;
             return ;
         }
         func(document.object());
@@ -2457,7 +2488,7 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString() << url;
+            qWarning() << error.errorString() << url;
             return ;
         }
         func(document.object());
