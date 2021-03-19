@@ -97,3 +97,8 @@ void TaskWidget::autoResizeEdit()
     edit->setFixedHeight(he);
     emit signalResized();
 }
+
+void TaskWidget::triggerAction(LiveDanmaku)
+{
+    emit signalSendMsgs(edit->toPlainText(), false);
+}

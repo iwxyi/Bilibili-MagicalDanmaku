@@ -872,7 +872,9 @@ tips：
 | cutOrderSong(username)                    | 切歌，仅限正在播放该用户自己点的歌时                         |
 | curOrderSong()                            | 立即切歌，无论是谁点的                                       |
 | messageBox(text)                          | 弹窗提示                                                     |
-| runEventAction(index)                     | 运行其他事件动作，index为对应序号，从1开始（会变动）         |
+| runTaskAction(index)                      | 运行定时任务，index为对应序号，从1开始（会变动）             |
+| runReplyAction(index)                     | 运行自动回复，index同上                                      |
+| runEventAction(index)                     | 运行其他事件动作，index同上                                  |
 | sendLongText(text)                        | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dir/file”下，支持变量。可用于保存送礼记录、上船记录等 |
 | removeFile(fileName)                      | 删除文件“程序目录/file”                                      |
@@ -880,6 +882,7 @@ tips：
 | ignoreWelcome(uid)                        | 不自动欢迎某用户                                             |
 | setNickname(uid, name)                    | 设置用户专属昵称                                             |
 | joinBattle(type)                          | 开启大乱斗，1普通，2视频                                     |
+| triggerEvent(event)                       | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

@@ -75,9 +75,9 @@ void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
     emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
 }
 
-void EventWidget::triggerAction()
+void EventWidget::triggerAction(LiveDanmaku danmaku)
 {
-    emit signalEventMsgs(actionEdit->toPlainText(), LiveDanmaku(), false);
+    emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
 }
 
 void EventWidget::autoResizeEdit()

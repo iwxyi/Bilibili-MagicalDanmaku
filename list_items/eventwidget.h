@@ -31,7 +31,7 @@ signals:
 
 public slots:
     void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
-    void triggerAction();
+    void triggerAction(LiveDanmaku danmaku);
     void autoResizeEdit() override;
 
 public:

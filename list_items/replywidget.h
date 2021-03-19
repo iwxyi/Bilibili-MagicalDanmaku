@@ -32,6 +32,7 @@ signals:
 public slots:
     void slotNewDanmaku(LiveDanmaku danmaku);
     void autoResizeEdit() override;
+    void triggerAction(LiveDanmaku danmaku);
 
 public:
     QCheckBox* check;

@@ -14,6 +14,7 @@
 #include <QTextDocument>
 #include <QDebug>
 #include "listiteminterface.h"
+#include "livedanmaku.h"
 
 #define CODE_TIMER_TASK_KEY (QApplication::applicationName() + ":TimerTask")
 
@@ -33,6 +34,7 @@ signals:
 public slots:
     void slotSpinChanged(int val);
     void autoResizeEdit() override;
+    void triggerAction(LiveDanmaku);
 
 public:
     QTimer* timer;

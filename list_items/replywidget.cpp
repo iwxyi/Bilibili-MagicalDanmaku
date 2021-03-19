@@ -107,3 +107,8 @@ void ReplyWidget::autoResizeEdit()
     emit signalResized();
 }
 
+void ReplyWidget::triggerAction(LiveDanmaku danmaku)
+{
+    emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
+}
+
