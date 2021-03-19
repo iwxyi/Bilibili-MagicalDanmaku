@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1168,7 +1168,7 @@ QTabBar::tab:selected
           <item>
            <widget class="QLineEdit" name="orderSongsToFileFormatEdit">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}、&lt;/p&gt;&lt;p&gt;{当前歌名}、{当前歌手}、{当前用户}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QLineEdit

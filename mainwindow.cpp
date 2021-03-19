@@ -6115,6 +6115,8 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     int count = qMin(songs.size(), ui->orderSongsToFileMaxSpin->value());
     QString format = ui->orderSongsToFileFormatEdit->text();
 
+    Song currentSong = musicWindow ? musicWindow->getPlayingSong() : Song();
+
     // 组合成长文本
     QStringList sl;
     for (int i = 0; i < count; i++)
@@ -6126,7 +6128,10 @@ void MainWindow::saveOrderSongs(const SongList &songs)
                 .replace("{歌手}", song.artistNames)
                 .replace("{用户}", song.addBy)
                 .replace("{时长}", snum(song.duration/60) + ":" + snum(song.duration%60))
-                .replace("{专辑}", song.album.name);
+                .replace("{专辑}", song.album.name)
+                .replace("{当前歌名}", currentSong.name)
+                .replace("{当前歌手}", currentSong.artistNames)
+                .replace("{当前用户}", currentSong.addBy);
         sl.append(text);
     }
 
