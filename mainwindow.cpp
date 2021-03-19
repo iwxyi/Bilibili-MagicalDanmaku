@@ -2211,8 +2211,9 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         {
             if (doc.isObject())
             {
-                JS(clipJson, anchor_key);
                 clipJson = doc.object();
+                JS(clipJson, anchor_key);
+                qDebug() << anchor_key << listKey;
                 canPaste = (anchor_key == listKey);
             }
             else if (doc.isArray())
@@ -4309,7 +4310,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     }
 
     // 入栈：* / %
-    for (int i = 0; i < ops.size()-1; i++)
+    for (int i = 0; i < ops.size(); i++)
     {
         // op[i] 操作 vals[i] x vals[i+1]
         if (ops[i] == "*")
@@ -4318,6 +4319,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
         }
         else if (ops[i] == "/")
         {
+            qDebug() << "除法" << ops << vals;
             if (vals[i+1] == 0)
             {
                 qWarning() << "!!!被除数是0 ：" << exp;
