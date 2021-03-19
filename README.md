@@ -504,7 +504,6 @@ border-image: url(C:/Path/To/Image.png)
 
 <div id='programing'/>
 
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -883,6 +882,7 @@ tips：
 | setNickname(uid, name)                    | 设置用户专属昵称                                             |
 | joinBattle(type)                          | 开启大乱斗，1普通，2视频                                     |
 | triggerEvent(event)                       | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
+| orderSong(songName, uname)                | 自动点歌，uname可以为任意字符                                |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
@@ -1388,7 +1388,7 @@ tips：
 添加事件：`PK_BATTLE_END`，动作：
 
 ```
-[%{pk_ceng}%=1]>setValue(pk_ceng, 1)\n>postData(https://api.live.bilibili.com/xlive/lottery-interface/v2/pk/join, id=%pk_id%&roomid=%room_id%&type=pk&csrf_token=%csrf%&csrf=%csrf%&visit_id=)
+[%{pk_ceng}%=0]>setValue(pk_ceng, 1)\n>postData(https://api.live.bilibili.com/xlive/lottery-interface/v2/pk/join, id=%pk_id%&roomid=%room_id%&type=pk&csrf_token=%csrf%&csrf=%csrf%&visit_id=)
 ```
 
 

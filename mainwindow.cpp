@@ -3574,6 +3574,8 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
             s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").trimmed();
             if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest)
             {
+                if (debugPrint)
+                    localNotify("[去掉过长候选：" + s + "]");
                 result.removeAt(i--);
             }
         }
@@ -5982,6 +5984,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 自定义事件
     if (msg.contains("triggerEvent"))
     {
         re = RE("triggerEvent\\s*\\(\\s*(.+)\\s*\\)");
@@ -5991,6 +5994,23 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
             triggerCmdEvent(text, lastDanmaku);
+            return true;
+        }
+    }
+
+    // 点歌
+    if (msg.contains("orderSong"))
+    {
+        re = RE("orderSong\\s*\\(\\s*(.+)\\s*,\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            QString uname = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            if (!musicWindow)
+                on_actionShow_Order_Player_Window_triggered();
+            musicWindow->slotSearchAndAutoAppend(text, uname);
             return true;
         }
     }
