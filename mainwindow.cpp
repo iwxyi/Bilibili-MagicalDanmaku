@@ -5434,17 +5434,12 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 key = "heaps/" + key;
             QString value = caps.at(2);
             qDebug() << "执行命令：" << caps;
-            /* if (value.indexOf(QRegularExpression("^\\d+$")) > -1) // 整数型
-                settings->setValue(key, value.toInt());
-            else if (value.indexOf(QRegularExpression("^\\d+\\.\\d+$")) > -1) // 小数型
-                settings->setValue(key, value.toInt());
-            else // 字符串 */
             settings->setValue(key, value);
             return true;
         }
     }
 
-    // 修改配置
+    // 批量修改配置
     if (msg.contains("setValues"))
     {
         re = RE("setValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
@@ -5470,6 +5465,37 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 按条件批量修改配置
+    if (msg.contains("setValuesIf"))
+    {
+        re = RE("setValuesIf\\s*\\(\\s*(\\S+?)\\s*,\\s*\\[(.*?)\\]\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            QString VAL_EXP = caps.at(2);
+            QString newValue = caps.at(3);
+            qDebug() << "执行命令：" << caps;
+
+            // 开始修改
+            settings->beginGroup("heaps");
+            auto keys = settings->allKeys();
+            QRegularExpression re(key);
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re) > -1)
+                {
+                    QString exp = VAL_EXP;
+                    exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    if (processVariantConditions(exp))
+                        settings->setValue(keys.at(i), newValue);
+                }
+            }
+            settings->endGroup();
+            return true;
+        }
+    }
+
     // 删除配置
     if (msg.contains("removeValue"))
     {
@@ -5486,6 +5512,8 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
     }
+
+    // 批量删除配置
     if (msg.contains("removeValues"))
     {
         re = RE("removeValues\\s*\\(\\s*(\\S+?)\\s*\\)");
@@ -5503,6 +5531,35 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 if (keys.at(i).indexOf(re) > -1)
                 {
                     settings->remove(keys.takeAt(i--));
+                }
+            }
+            settings->endGroup();
+            return true;
+        }
+    }
+
+    // 按条件批量删除配置
+    if (msg.contains("removeValuesIf"))
+    {
+        re = RE("removeValuesIf\\s*\\(\\s*(\\S+?)\\s*,\\s*\\[(.*)\\]\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            QString VAL_EXP = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+
+            settings->beginGroup("heaps");
+            auto keys = settings->allKeys();
+            QRegularExpression re(key);
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re) > -1)
+                {
+                    QString exp = VAL_EXP;
+                    exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    if (processVariantConditions(exp))
+                        settings->remove(keys.takeAt(i--));
                 }
             }
             settings->endGroup();

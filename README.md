@@ -862,8 +862,10 @@ tips：
 | runCommandLine(cmd)                       | 运行命令行                                                   |
 | setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”设置分组 |
 | setValues(exp, val)                       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
+| setValuesIf(exp, [condition], val)        | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），`_VALUE_`为当前值，例如：`[_VALUE_>2]` |
 | removeValue(key)                          | 移除配置文件中的单个值                                       |
 | removeValues(exp)                         | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
+| removeValuesIf(exp, [condition])          | 按条件移除配置文件中的多个值                                 |
 | openFile(path)                            | 打开文件                                                     |
 | playSound(path)                           | 播放音频文件                                                 |
 | improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
