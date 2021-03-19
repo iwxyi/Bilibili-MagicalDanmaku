@@ -839,6 +839,7 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+    bool todayIsEnding = false;
 
     // 船员
     bool updateGuarding = false;

@@ -611,24 +611,77 @@ MainWindow::MainWindow(QWidget *parent)
             }
         }
         triggerCmdEvent("NEW_HOUR", LiveDanmaku());
+
+        // 判断每天最后一小时
+        // 以 23:59:30为准
+        QDateTime current = QDateTime::currentDateTime();
+        QTime t = current.time();
+        if (todayIsEnding) // 已经触发最后一小时事件了
+        {}
+        else if (current.time().hour() == 23
+                || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
+        {
+            todayIsEnding = true;
+            QDateTime dt = current;
+            QTime t = dt.time();
+            t.setHMS(23, 59, 30); // 移动到最后半分钟
+            dt.setTime(t);
+            qint64 delta = dt.toMSecsSinceEpoch() - QDateTime::currentMSecsSinceEpoch();
+            if (delta < 0) // 可能已经是即将最后了
+                delta = 0;
+            QTimer::singleShot(delta, [=]{
+                triggerCmdEvent("DAY_END", LiveDanmaku());
+
+                // 判断每月最后一天
+                QDate d = current.date();
+                int days = d.daysInMonth();
+                if (d.day() == days) // 1~31 == 28~31
+                {
+                    triggerCmdEvent("MONTH_END", LiveDanmaku());
+
+                    // 判断每年最后一天
+                    days = d.daysInYear();
+                    if (d.dayOfYear() == days)
+                    {
+                        triggerCmdEvent("YEAR_END", LiveDanmaku());
+                    }
+                }
+            });
+        }
     });
     hourTimer->start();
 
     // 每天的事件
     dayTimer = new QTimer(this);
     QTime zeroTime = QTime::currentTime();
-    zeroTime.setHMS(0, 0, 1); // 应当完全0点整的，避免误差
+    zeroTime.setHMS(0, 0, 1); // 本应当完全0点整的，避免误差
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
     qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
     dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
+    // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
+        todayIsEnding = false;
         dayTimer->setInterval(24*3600*1000);
         if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
             startCalculateDailyData();
         userComeTimes.clear();
+
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
+
+        // 判断每一月初
+        if (QDateTime::currentDateTime().date().day() == 1)
+        {
+            triggerCmdEvent("NEW_MONTH", LiveDanmaku());
+
+            // 判断每一年初
+            if (QDateTime::currentDateTime().date().month() == 1)
+            {
+                triggerCmdEvent("NEW_YEAR", LiveDanmaku());
+                triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku());
+            }
+        }
     });
     dayTimer->start();
 
