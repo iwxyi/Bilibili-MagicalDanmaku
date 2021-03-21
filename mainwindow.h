@@ -725,9 +725,10 @@ private:
     void openSocketServer();
     void processSocketTextMsg(QWebSocket* clientSocket, const QString& message);
     void closeServer();
-    void sendSocketCmd(QString cmd, LiveDanmaku danmaku);
+    void sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku);
+    void sendJsonToSockets(QString cmd, QJsonObject data, QWebSocket* socket = nullptr);
     void processServerVariant(QByteArray& doc);
-    void sendToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
+    void sendTextToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
     void sendLyricList(QWebSocket* socket = nullptr);
 
@@ -951,8 +952,10 @@ private:
     QWebSocketServer* danmakuSocketServer = nullptr;
     QList<QWebSocket*> danmakuSockets;
     QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
+
     bool sendSongListToSockets = false;
     bool sendLyricListToSockets = false;
+    bool sendCurrentSongToSockets = false;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;

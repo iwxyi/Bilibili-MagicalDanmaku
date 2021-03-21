@@ -1185,13 +1185,16 @@ tips：
 | --------------------------- | ------------------------------------------------------------ |
 | ORDER_SONG_SUCCEED          | 点歌成功，%text%获取歌名，%prev_time%获取几秒钟后播放，%first%获取第几首播放 |
 | ORDER_SONG_SUCCEED_OVERRIDE | 同上，但是会**覆盖掉**自带的点歌成功回复                     |
-| ORDER_SONG_PLAY             | 开始播放，%text%歌名，%uname%点歌的用户名，%come_time%点歌时间戳(秒) |
+| ORDER_SONG_PLAY             | 点歌开始播放，%text%歌名，%uname%点歌的用户名，%come_time%点歌时间戳(秒) |
 | ORDER_SONG_FREQUENCY        | 点歌过于频繁                                                 |
 | ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                                                 |
 | ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）                                   |
 | ORDER_SONG_COPY             | 点歌已复制歌名                                               |
 | ORDER_SONG_IMPROVED         | 播放顺序提前                                                 |
 | ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong`                            |
+| CURRENT_SONG_CHANGED        | 歌曲开始播放(包括手动播放的)或结束。                         |
+
+可用歌名 `[%text%=""]` 判断歌曲是否有效， `["%uname%"=""]` 判断是在点歌姬中手动搜索添加的歌曲还是弹幕点歌的歌曲。
 
 
 

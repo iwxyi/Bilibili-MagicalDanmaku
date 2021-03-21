@@ -5397,7 +5397,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString data = caps.at(2);
 
             qDebug() << "执行命令：" << caps;
-            sendToSockets(cmd, data.toUtf8());
+            sendTextToSockets(cmd, data.toUtf8());
             return true;
         }
     }
@@ -5412,7 +5412,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
 
             qDebug() << "执行命令：" << caps;
             if (danmakuSockets.size())
-                sendToSockets(cmd, data.toUtf8(), danmakuSockets.last());
+                sendTextToSockets(cmd, data.toUtf8(), danmakuSockets.last());
             return true;
         }
     }
@@ -9936,6 +9936,14 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             danmaku.setPrevTimestamp(song.addTime);
             triggerCmdEvent("ORDER_SONG_PLAY", danmaku);
         });
+        connect(musicWindow, &OrderPlayerWindow::signalCurrentSongChanged, this, [=](Song song){
+            if (sendCurrentSongToSockets)
+                sendJsonToSockets("CURRENT_SONG", song.toJson());
+
+            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+            danmaku.setPrevTimestamp(song.addTime);
+            triggerCmdEvent("CURRENT_SONG_CHANGED", danmaku);
+        });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongImproved, this, [=](Song song, int prev, int curr){
             localNotify("提升歌曲：" + song.name + " : " + snum(prev) + "->" + snum(curr));
             triggerCmdEvent("ORDER_SONG_IMPROVED", LiveDanmaku(song.id, song.addBy, song.name));
@@ -12002,7 +12010,7 @@ void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     emit signalCmdEvent(cmd, danmaku);
 
-    sendSocketCmd(cmd, danmaku);
+    sendDanmakuToSockets(cmd, danmaku);
 }
 
 void MainWindow::on_voiceLocalRadio_toggled(bool checked)

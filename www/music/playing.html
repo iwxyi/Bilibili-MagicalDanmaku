@@ -1,0 +1,50 @@
+<head>
+    <title>神奇弹幕点歌姬</title>
+    <script src="../js/jquery-2.1.0.js"></script>
+
+    <style type="text/css">
+        #show {
+            color: #1e6fff;
+            font-weight: bold;
+            font-size: 24px;
+            text-shadow: -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                1px 1px 0 #fff,
+                0px 2px 2px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <span id="show">
+        等待点歌
+    </span>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function () {
+                ws.send('{"cmd":"cmds", "data":["CURRENT_SONG"]}');
+            };
+            ws.onmessage = function (e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                var songHtml = '';
+                switch (cmd) {
+                    case 'CURRENT_SONG':
+                        var song = json['data'];
+                        if (song['name'] == '') {
+                            songHtml = '等待点歌';
+                        }
+                        else {
+                            songHtml = '正在播放：' + song['name'];
+                        }
+                        break;
+                }
+                $("#show").html(songHtml);
+            };
+        });
+    </script>
+</body>

@@ -259,7 +259,7 @@ private:
     void readMp3Data(const QByteArray& array);
 
     void setMusicIconBySource();
-    void switchSource(Song song, bool play = false);
+    bool switchSource(Song song, bool play = false);
 
     void fetch(QString url, NetStringFunc func, MusicSource cookie = UnknowMusic);
     void fetch(QString url, NetJsonFunc func, MusicSource cookie = UnknowMusic);
@@ -293,7 +293,8 @@ signals:
 
     // 因为目标是作为插件，这些信号是给外面程序连接的
     void signalOrderSongSucceed(Song song, qint64 msecond, int waiting);
-    void signalOrderSongPlayed(Song song);
+    void signalCurrentSongChanged(Song song);
+    void signalOrderSongPlayed(Song song); // 仅点歌
     void signalOrderSongModified(const SongList& songs);
     void signalLyricChanged();
     void signalOrderSongNoCopyright(Song song);

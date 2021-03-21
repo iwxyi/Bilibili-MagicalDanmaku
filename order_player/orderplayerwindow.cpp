@@ -1363,6 +1363,8 @@ void OrderPlayerWindow::playLocalSong(Song song)
 
     // 保存当前歌曲
     settings.setValue("music/currentSong", song.toJson());
+
+    emit signalCurrentSongChanged(playingSong);
 }
 
 /**
@@ -1578,7 +1580,8 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
         {
             slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
             insertOrderOnce = true;
-            switchSource(song, true);
+            if (!switchSource(song, true))
+                playNext();
         }
         else
         {
@@ -2354,7 +2357,7 @@ void OrderPlayerWindow::setMusicIconBySource()
  * QQ音乐：=> 网易云 => 咪咕
  * 咪咕：=> 网易云 => QQ音乐
  */
-void OrderPlayerWindow::switchSource(Song song, bool play)
+bool OrderPlayerWindow::switchSource(Song song, bool play)
 {
     MusicSource res = UnknowMusic;
     switch (song.source) {
@@ -2386,13 +2389,14 @@ void OrderPlayerWindow::switchSource(Song song, bool play)
         qWarning() << "所有平台都不支持，已结束";
         if (play)
             playNext();
-        return ;
+        return false;
     }
 
     QString searchKey = song.name + " " + song.artistNames;
     // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
     qWarning() << "无法播放：" << song.name << "，开始换源：" << musicSource << res << searchKey;
     searchMusicBySource(searchKey, res, song.addBy);
+    return true;
 }
 
 void OrderPlayerWindow::fetch(QString url, NetStringFunc func, MusicSource cookie)
@@ -2656,6 +2660,7 @@ void OrderPlayerWindow::slotSongPlayEnd()
 
             setCurrentCover(QPixmap(":bg/bg"));
             emit signalOrderSongEnded();
+            emit signalCurrentSongChanged(Song());
         }
         else
         {

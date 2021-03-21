@@ -57,32 +57,20 @@ void MainWindow::openSocketServer()
                     QStringList cmds = danmakuCmdsMaps[clientSocket];
                     danmakuCmdsMaps.remove(clientSocket);
 
-                    if (sendSongListToSockets && cmds.contains("SONG_LIST"))
-                    {
-                        // 判断是否还需要点歌列表的
-                        bool find = false;
+                    auto setFalseIfNone = [=](bool& enabled, QString key) {
+                        if (!enabled || !cmds.contains(key))
+                            return ;
+
                         foreach (QStringList sl, danmakuCmdsMaps) {
-                            if (sl.contains("SONG_LIST"))
-                            {
-                                find = true;
-                                break;
-                            }
+                            if (sl.contains(key))
+                                return ;
                         }
-                        sendSongListToSockets = find;
-                    }
-                    if (sendSongListToSockets && cmds.contains("LYRIC_LIST"))
-                    {
-                        // 判断是否还需要点歌列表的
-                        bool find = false;
-                        foreach (QStringList sl, danmakuCmdsMaps) {
-                            if (sl.contains("LYRIC_LIST"))
-                            {
-                                find = true;
-                                break;
-                            }
-                        }
-                        sendSongListToSockets = find;
-                    }
+                        enabled = false;
+                    };
+
+                    setFalseIfNone(sendSongListToSockets, "SONG_LIST");
+                    setFalseIfNone(sendLyricListToSockets, "LYRIC_LIST");
+                    setFalseIfNone(sendCurrentSongToSockets, "CURRENT_SONG");
                 }
                 clientSocket->deleteLater();
                 qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
@@ -108,7 +96,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     }
     QJsonObject json = document.object();
     QString cmd = json.value("cmd").toString().toUpper();
-    if (cmd == "CMDS") // 筛选cmd
+    if (cmd == "CMDS") // 最开始的筛选cmd
     {
         QStringList sl;
         QJsonArray arr = json.value("data").toArray();
@@ -116,15 +104,23 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             sl << val.toString();
         danmakuCmdsMaps[clientSocket] = sl;
 
-        if (sl.contains("SONG_LIST"))
+        if (musicWindow)
         {
-            sendSongListToSockets = true;
-            sendMusicList(musicWindow->getOrderSongs(), clientSocket);
-        }
-        if (sl.contains("LYRIC_LIST"))
-        {
-            sendLyricListToSockets = true;
-            sendLyricList(clientSocket);
+            if (sl.contains("SONG_LIST"))
+            {
+                sendSongListToSockets = true;
+                sendMusicList(musicWindow->getOrderSongs(), clientSocket);
+            }
+            if (sl.contains("LYRIC_LIST"))
+            {
+                sendLyricListToSockets = true;
+                sendLyricList(clientSocket);
+            }
+            if (sl.contains("CURRENT_SONG"))
+            {
+                sendCurrentSongToSockets = true;
+                sendJsonToSockets("CURRENT_SONG", musicWindow->getPlayingSong().toJson(), clientSocket);
+            }
         }
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
@@ -137,7 +133,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     {
         QJsonObject data = json.value("data").toObject();
         QString cmd2 = data.value("cmd").toString();
-        sendToSockets(cmd2, QJsonDocument(data).toJson());
+        sendTextToSockets(cmd2, QJsonDocument(data).toJson());
     }
     else if (cmd == "SET_VALUE") // 修改本地配置
     {
@@ -213,14 +209,14 @@ void MainWindow::closeServer()
     danmakuSockets.clear();
 }
 
-void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
+void MainWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
 {
     if (!danmakuSocketServer || !danmakuSockets.size()) // 不需要发送，空着的
         return ;
 
     QJsonObject json;
-    json.insert("data", danmaku.toJson());
     json.insert("cmd", cmd);
+    json.insert("data", danmaku.toJson());
     QByteArray ba = QJsonDocument(json).toJson();
 
     foreach (QWebSocket* socket, danmakuSockets)
@@ -231,7 +227,19 @@ void MainWindow::sendSocketCmd(QString cmd, LiveDanmaku danmaku)
     }
 }
 
-void MainWindow::sendToSockets(QString cmd, QByteArray data, QWebSocket *socket)
+void MainWindow::sendJsonToSockets(QString cmd, QJsonObject data, QWebSocket *socket)
+{
+    if (!socket && !danmakuSockets.size()) // 不需要发送，空着的
+        return ;
+
+    QJsonObject json;
+    json.insert("cmd", cmd);
+    json.insert("data", data);
+    QByteArray ba = QJsonDocument(json).toJson();
+    sendTextToSockets(cmd, ba, socket);
+}
+
+void MainWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *socket)
 {
     if (!socket && !danmakuSockets.size())
         return ;
@@ -245,8 +253,10 @@ void MainWindow::sendToSockets(QString cmd, QByteArray data, QWebSocket *socket)
         SOCKET_DEB << "发送至每个socket" << cmd << data;
         foreach (QWebSocket* socket, danmakuSockets)
         {
-            if (!danmakuCmdsMaps.contains(socket) || danmakuCmdsMaps[socket].contains(cmd))
+            if (danmakuCmdsMaps.contains(socket) && danmakuCmdsMaps[socket].contains(cmd))
+            {
                 socket->sendTextMessage(data);
+            }
         }
     }
 }
