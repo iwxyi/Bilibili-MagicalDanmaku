@@ -456,6 +456,11 @@ public:
         this->args = args;
     }
 
+    void setMedalLevel(int level)
+    {
+        this->medal_level = level;
+    }
+
     bool equal(const LiveDanmaku& another) const
     {
         return this->uid == another.uid

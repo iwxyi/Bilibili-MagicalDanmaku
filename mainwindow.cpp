@@ -7447,7 +7447,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 guardLevel = 3;
 
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
-            qDebug() << "~~~~~~~~~~~~~~~~保存舰长：" << uname << gd << guardLevel;
+            qDebug() << "~~~~~~~~~~~~~~~~读取舰长名字：" << uname << gd << guardLevel;
         }
 
         userComeEvent(danmaku);
@@ -11421,12 +11421,73 @@ void MainWindow::joinBattle(int type)
 
 void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
 {
+    /* {
+        "code": 0,
+        "msg": "",
+        "message": "",
+        "data": {
+            "guard_type": 3,
+            "intimacy": 2672,
+            "is_receive": 1,
+            "last_wear_time": 1616941910,
+            "level": 23,
+            "lpl_status": 0,
+            "master_available": 1,
+            "master_status": 0,
+            "medal_id": 37075,
+            "medal_name": "蘑菇云",
+            "receive_channel": 30726000,
+            "receive_time": "2020-12-11 21:41:39",
+            "score": 50007172,
+            "source": 1,
+            "status": 0,
+            "target_id": 13908357,
+            "today_intimacy": 4,
+            "uid": 20285041,
+            "target_name": "娇羞的蘑菇",
+            "target_face": "https://i1.hdslb.com/bfs/face/180d0e87a0e88cb6c04ce6504c3f04003dd77392.jpg",
+            "live_stream_status": 0,
+            "icon_code": 0,
+            "icon_text": "",
+            "rank": "-",
+            "medal_color": 1725515,
+            "medal_color_start": 1725515,
+            "medal_color_end": 5414290,
+            "guard_level": 3,
+            "medal_color_border": 6809855,
+            "is_lighted": 1,
+            "today_feed": 4,
+            "day_limit": 250000,
+            "next_intimacy": 3000,
+            "can_delete": false
+        }
+    } */
+
+    if (upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0.可能是小心心，不需要判断
+        return ;
     int giftIntimacy = danmaku.getTotalCoin() / 100;
+    if (!giftIntimacy) // 0瓜子
+    {
+        if (danmaku.getGiftId() == 30607 && danmaku.getAnchorRoomid() == roomId && danmaku.getMedalLevel() < 21)
+            giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
+        else
+            return ;
+    }
     QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
-            + snum(danmaku.getUid()) + "&target_id=" + roomId;
+            + snum(danmaku.getUid()) + "&target_id=" + upUid;
     get(url, [=](MyJson json){
-        if (json.data().i("intimacy") < giftIntimacy)
-            triggerCmdEvent("MEDAL_UPGRADE", danmaku);
+        MyJson medalObject = json.data();
+        if (medalObject.isEmpty())
+            return ; // 没有勋章，更没有亲密度
+        int intimacy = medalObject.i("intimacy");
+        if (intimacy >= giftIntimacy) // 没有升级
+            return ;
+        LiveDanmaku ld = danmaku;
+        if (ld.getAnchorRoomid() != roomId) // 没有戴本房间的牌子
+        {
+            ld.setMedalLevel(medalObject.i("level"));
+        }
+        triggerCmdEvent("MEDAL_UPGRADE", ld);
     });
 }
 
