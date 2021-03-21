@@ -503,7 +503,6 @@ border-image: url(C:/Path/To/Image.png)
 ```
 
 <div id='programing'/>
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -1069,11 +1068,12 @@ tips：
 
 #### 主程序事件
 
-| 事件命令         | 说明                                 |
-| ---------------- | ------------------------------------ |
-| START_UP         | 程序启动                             |
-| START_WORK       | 开播后启动程序，或者程序启动后再开播 |
-| **REMOTE_BLOCK** | 远程禁言                             |
+| 事件命令                  | 说明                                 |
+| ------------------------- | ------------------------------------ |
+| START_UP                  | 程序启动                             |
+| START_WORK                | 开播后启动程序，或者程序启动后再开播 |
+| **REMOTE_BLOCK**          | 远程禁言，信息为最后一条弹幕         |
+| **REMOTE_BLOCK_OVERRIDE** | 同上，但是会覆盖掉自带的禁言回复     |
 
 
 
@@ -1184,6 +1184,7 @@ tips：
 | 事件命令                    | 说明                                                         |
 | --------------------------- | ------------------------------------------------------------ |
 | ORDER_SONG_SUCCEED          | 点歌成功，%text%获取歌名，%prev_time%获取几秒钟后播放，%first%获取第几首播放 |
+| ORDER_SONG_SUCCEED_OVERRIDE | 同上，但是会**覆盖掉**自带的点歌成功回复                     |
 | ORDER_SONG_PLAY             | 开始播放，%text%歌名，%uname%点歌的用户名，%come_time%点歌时间戳(秒) |
 | ORDER_SONG_FREQUENCY        | 点歌过于频繁                                                 |
 | ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                                                 |
@@ -1191,8 +1192,6 @@ tips：
 | ORDER_SONG_COPY             | 点歌已复制歌名                                               |
 | ORDER_SONG_IMPROVED         | 播放顺序提前                                                 |
 | ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong`                            |
-
-**开启`ORDER_SONG_SUCCEED`事件后自带的点歌成功回复将会被覆盖**
 
 
 

@@ -561,6 +561,8 @@ private slots:
 
     void on_giftComboMergeCheck_clicked();
 
+    void on_listenMedalUpgradeCheck_clicked();
+
 private:
     void initPath();
     void readConfig();
@@ -712,6 +714,7 @@ private:
     void sendPrivateMsg(qint64 uid, QString msg);
     void AIReply(qint64 id, QString text, NetStringFunc func);
     void joinBattle(int type);
+    void detectMedalUpgrade(LiveDanmaku danmaku);
 
     void startSplash();
 

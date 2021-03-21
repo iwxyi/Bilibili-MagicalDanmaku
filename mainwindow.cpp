@@ -275,6 +275,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sendAutoOnlyLiveCheck->setChecked(settings->value("danmaku/sendAutoOnlyLive", true).toBool());
     ui->autoDoSignCheck->setChecked(settings->value("danmaku/autoDoSign", false).toBool());
 
+    // 勋章升级
+    ui->listenMedalUpgradeCheck->setChecked(settings->value("danmaku/listenMedalUpgrade", false).toBool());
+
     // 弹幕次数
     danmakuCounts = new QSettings(dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
 
@@ -605,12 +608,12 @@ MainWindow::MainWindow(QWidget *parent)
         if (liveStatus && !settings->value("danmaku/copyright", false).toBool()
                 && qrand() % 3 == 0)
         {
-            if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
+            /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
             {
                 sendMsg(QString(QByteArray::fromBase64("562U6LCi5aes44CQ"))
                         +QApplication::applicationName()
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
-            }
+            } */
         }
         triggerCmdEvent("NEW_HOUR", LiveDanmaku());
 
@@ -3861,7 +3864,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         msg.replace(key, snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
 
     // 0续费，1第一次上船，2重新上船
-    else if (key == "%guard_first%")
+    else if (key == "%guard_first%" || key == "%first%")
         msg.replace(key, snum(danmaku.getFirst()));
 
     // 粉丝牌房间
@@ -4106,6 +4109,10 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // cookie
     else if (key == "%csrf%")
         msg.replace(key, csrf_token);
+
+    // 工作状态
+    else if (key == "%working%")
+        msg.replace(key, (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())) ? "1" : "0");
 
     // 用户备注
     else if (key == "%umark%")
@@ -4964,10 +4971,11 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                 else
                 {
                     addBlockUser(danmaku.getUid(), hour);
-                    if (!hasEvent("REMOTE_BLOCK"))
+                    if (!hasEvent("REMOTE_BLOCK_OVERRIDE"))
                         sendNotifyMsg(">已禁言：" + nick, true);
                 }
                 triggerCmdEvent("REMOTE_BLOCK", danmaku);
+                triggerCmdEvent("REMOTE_BLOCK_OVERRIDE", danmaku);
                 return ;
             }
         }
@@ -7063,6 +7071,12 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // 都送礼了，总该不是机器人了吧
         markNotRobot(uid);
+
+        // 监听勋章升级
+        if (ui->listenMedalUpgradeCheck->isChecked())
+        {
+            detectMedalUpgrade(danmaku);
+        }
 
         triggerCmdEvent(cmd, danmaku);
     }
@@ -9891,7 +9905,8 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             danmaku.setPrevTimestamp(latency / 1000); // 毫秒转秒
             danmaku.setFirst(waiting);
             triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
-            if (hasEvent("ORDER_SONG_SUCCEED"))
+            triggerCmdEvent("ORDER_SONG_SUCCEED_OVERRIDE", danmaku);
+            if (hasEvent("ORDER_SONG_SUCCEED_OVERRIDE"))
                 return ;
             if (latency < 180000) // 小于3分钟
             {
@@ -11396,6 +11411,17 @@ void MainWindow::joinBattle(int type)
     });
 }
 
+void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
+{
+    int giftIntimacy = danmaku.getTotalCoin() / 100;
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
+            + snum(danmaku.getUid()) + "&target_id=" + roomId;
+    get(url, [=](MyJson json){
+        if (json.data().i("intimacy") < giftIntimacy)
+            triggerCmdEvent("MEDAL_UPGRADE", danmaku);
+    });
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -12695,4 +12721,9 @@ void MainWindow::on_giftComboTopCheck_clicked()
 void MainWindow::on_giftComboMergeCheck_clicked()
 {
     settings->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
+}
+
+void MainWindow::on_listenMedalUpgradeCheck_clicked()
+{
+    settings->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
 }
