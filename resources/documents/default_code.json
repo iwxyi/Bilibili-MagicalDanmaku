@@ -67,12 +67,6 @@
             "event": "MEDAL_UPGRADE"
         },
         {
-            "action": "/// （房管）远程禁言回复\n[%uid%=%my_uid%]**>因为太帅无法被禁言\n[%uid%=%up_uid%]**>已禁言主播（狗头保命）\n[%admin%]*>无法禁言房管\n>已禁言：%uname%",
-            "anchor_key": "神奇弹幕:EventAction",
-            "enabled": false,
-            "event": "REMOTE_BLOCK_OVERRIDE"
-        },
-        {
             "action": "/// 每天打卡的人数清零\n[%living%+1]>removeValues(daka_today_\\d+)\\n>setValue(daka, 0)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
@@ -138,8 +132,8 @@
         {
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": true,
-            "interval": 3600,
-            "text": "[%working%]答谢姬【神奇弹幕】为您服务~"
+            "interval": 7200,
+            "text": "/// 免费软件，靠爱发电，还请帮忙宣传分享~\n[%working%]答谢姬【神奇弹幕】为您服务~"
         }
     ],
     "welcome": "// 只欢迎戴勋章的用户\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// 一分钟内重复进出不算\n[%come_time%>%timestamp%-60]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~"
