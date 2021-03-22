@@ -12,6 +12,9 @@ DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
 
 RC_FILE += resource.rc
 
+# 图片太大，会导致 cc1plus.exe:-1: error: out of memory allocating 4198399 bytes 错误
+CONFIG += resources_big
+
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
