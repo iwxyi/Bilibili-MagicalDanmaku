@@ -5132,6 +5132,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 永久禁言
+    if (msg.contains("eternalBlock"))
+    {
+        re = RE("eternalBlock\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            QString uname = caps.at(2);
+            eternalBlockUser(uid, uname);
+            return true;
+        }
+    }
+
     // 赠送礼物
     if (msg.contains("sendGift"))
     {
@@ -5469,6 +5484,22 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString fileName = caps.at(2);
             QString format = caps.at(3);
             appendFileLine(dirName, fileName, format, lastDanmaku);
+            return true;
+        }
+    }
+
+    // 写入文件行
+    if (msg.contains("writeTextFile"))
+    {
+        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString dirName = caps.at(1);
+            QString fileName = caps.at(2);
+            QString text = caps.at(3);
+            writeTextFile(dirName + "/" + fileName, text);
             return true;
         }
     }
