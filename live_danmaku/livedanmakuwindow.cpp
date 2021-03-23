@@ -426,7 +426,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    if (danmaku.getMsgType() == MSG_DANMAKU && !simpleMode) // 只显示弹幕的数据
+    if ((danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode) // 只显示弹幕的数据
     {
         QString path = headPath(danmaku.getUid());
         bool hasPortrait = QFileInfo(path).exists();
@@ -614,10 +614,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     QString text;
     MessageType msgType = danmaku.getMsgType();
-    if (msgType == MSG_DANMAKU)
+    if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT)
     {
         // 新人：0级，3次以内
-        if (newbieTip && !danmaku.isPkLink())
+        if (msgType == MSG_DANMAKU && newbieTip && !danmaku.isPkLink())
         {
             int count = danmakuCounts->value("danmaku/"+snum(danmaku.getUid())).toInt();
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
@@ -1096,7 +1096,7 @@ void LiveDanmakuWindow::showMenu()
         else if (danmaku.isVip() || danmaku.isSvip())
             actionUserInfo->setText("姥爷主页");
         // 弹幕的数据多一点，包含牌子、等级等
-        if (danmaku.getMsgType() == MSG_DANMAKU)
+        if (danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT))
         {
             actionUserInfo->setText(actionUserInfo->text() +  "：LV" + snum(danmaku.getLevel()));
             actionHistory->setText("消息记录：" + snum(danmakuCounts->value("danmaku/"+snum(uid)).toInt()) + "条");
