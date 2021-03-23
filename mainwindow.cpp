@@ -9139,11 +9139,28 @@ void MainWindow::updateExistGuards(int page)
     const int pageSize = 29;
 
     auto judgeGuard = [=](QJsonObject user){
+        /*{
+            "face": "http://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg",
+            "guard_level": 3,
+            "guard_sub_level": 0,
+            "is_alive": 1,
+            "medal_info": {
+                "medal_color_border": 6809855,
+                "medal_color_end": 5414290,
+                "medal_color_start": 1725515,
+                "medal_level": 23,
+                "medal_name": "翊中人"
+            },
+            "rank": 71,
+            "ruid": 5988102,
+            "uid": 20285041,
+            "username": "懒一夕智能科技"
+        }*/
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
-        currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
+        currentGuards[uid] = username;
 
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
@@ -9292,7 +9309,8 @@ void MainWindow::updateOnlineGoldRank()
             {
                 QJsonObject medalInfo = item.value("medalInfo").toObject();
 
-                if (medalInfo.contains("guardLevel"))
+                QString anchorId = snum(qint64(medalInfo.value("targetId").toDouble()));
+                if (medalInfo.contains("guardLevel") && anchorId == roomId)
                     danmaku.setGuardLevel(medalInfo.value("guardLevel").toInt());
 
                 qint64 medalColor = qint64(medalInfo.value("medalColorStart").toDouble());
@@ -9300,7 +9318,7 @@ void MainWindow::updateOnlineGoldRank()
                 while (cs.size() < 6)
                     cs = "0" + cs;
 
-                danmaku.setMedal(snum(qint64(medalInfo.value("targetId").toDouble())),
+                danmaku.setMedal(anchorId,
                                  medalInfo.value("medalName").toString(),
                                  medalInfo.value("level").toInt(),
                                  "",
