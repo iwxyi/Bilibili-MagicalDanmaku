@@ -7206,7 +7206,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 "end_time": 1613125905,
                 "gift": {
                     "gift_id": 12000,
-                    "gift_name": "醒目留言",
+                    "gift_name": "醒目留言", // 这个是特殊礼物？
                     "num": 1
                 },
                 "id": 1278390,
@@ -7255,6 +7255,46 @@ void MainWindow::handleMessage(QJsonObject json)
             },
             "roomid": "1010"
         }*/
+
+        MyJson data = json.value("data").toObject();
+        JL(data, uid);
+        JS(data, message);
+        JS(data, message_font_color);
+        JL(data, end_time); // 秒
+        JI(data, price); // 价格：元
+
+        JO(data, gift);
+        JI(gift, gift_id);
+        JS(gift, gift_name);
+        JI(gift, num);
+
+        JO(data, user_info);
+        JS(user_info, uname);
+        JI(user_info, user_level);
+        JS(user_info, name_color);
+        JI(user_info, is_main_vip);
+        JI(user_info, is_vip);
+        JI(user_info, is_svip);
+
+        JO(data, medal_info);
+        JL(medal_info, anchor_roomid);
+        JS(medal_info, anchor_uname);
+        JI(medal_info, guard_level);
+        JI(medal_info, medal_level);
+        JS(medal_info, medal_color);
+        JS(medal_info, medal_name);
+        JL(medal_info, target_id);
+
+        if (gift_id != 12000) // 醒目留言
+        {
+            qWarning() << "非醒目留言的特殊聊天消息：" << json;
+            return ;
+        }
+
+        LiveDanmaku danmaku(uname, message, uid, user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
+                    gift_id, gift_name, num, price);
+        danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
+        appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
@@ -7991,6 +8031,10 @@ void MainWindow::handleMessage(QJsonObject json)
             "roomid": 22532956
         }*/
 
+        QJsonObject data = json.value("data").toObject();
+        int point = data.value("red_point").toInt();
+        localNotify("连麦队列：" + snum(point));
+
         triggerCmdEvent(cmd, LiveDanmaku());
     }
     else if (cmd == "VOICE_JOIN_STATUS") // 连麦状态，连麦开始/结束
@@ -8029,6 +8073,20 @@ void MainWindow::handleMessage(QJsonObject json)
             },
             "roomid": 22532956
         }*/
+
+        QJsonObject data = json.value("data").toObject();
+        int status = data.value("status").toInt();
+        QString uname = data.value("username").toString();
+        if (status) // 开始连麦
+        {
+            if (!uname.isEmpty())
+                localNotify((uname + " 接入连麦"));
+        }
+        else // 取消连麦
+        {
+            if (!uname.isEmpty())
+                localNotify(uname + " 结束连麦");
+        }
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }

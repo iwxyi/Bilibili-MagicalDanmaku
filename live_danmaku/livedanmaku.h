@@ -22,7 +22,8 @@ enum MessageType
     MSG_BLOCK,
     MSG_MSG,
     MSG_SHARE,
-    MSG_PK_BEST
+    MSG_PK_BEST,
+    MSG_SUPER_CHAT
 };
 
 class LiveDanmaku
@@ -111,6 +112,15 @@ public:
     LiveDanmaku(QString uname, qint64 uid, int win, int votes)
         : msgType(MSG_PK_BEST), nickname(uname), uid(uid), level(win), total_coin(votes)
     {
+    }
+
+    LiveDanmaku(QString nickname, QString text, qint64 uid, int level, QDateTime time, QString unameColor, QString textColor,
+                int giftId, QString gift, int num, int price)
+        : msgType(MSG_SUPER_CHAT), nickname(nickname), text(text), uid(uid), level(level), timeline(time),
+          uname_color(unameColor), text_color(textColor), giftId(giftId), giftName(gift), number(num),
+          coin_type("gold"), total_coin(price * 1000)
+    {
+
     }
 
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
