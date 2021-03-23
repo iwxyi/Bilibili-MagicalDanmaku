@@ -284,7 +284,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 未戴粉丝勋章或者不是本直播间粉丝勋章的用户，不自动欢迎；除非是舰长或设置为强提醒：
 
 ```
-[%guard% = 0, %anchor_roomid%!=%room_id%, !%strong_notify%]**
+[%guard% = 0, %anchor_room_id%!=%room_id%, !%strong_notify%]**
 ```
 
 两个`*`表示优先级，覆盖没有`*`或1个`*`的弹幕，空弹幕表示不发送。
@@ -528,7 +528,7 @@ border-image: url(C:/Path/To/Image.png)
 | -------- | ------------------- | -------------------------------------- |
 | %{key}%  | 获取配置文件中的值  | key为setValue(key)中的键值，未设置为空 |
 | %[exp]%  | 简单的数值计算      | 暂时只支持加减乘除，不支持括号、小数   |
-| %(name)% | 将用户昵称转换为uid | 需要弹幕姬上显示才有效，允许部分昵称   |
+| %(name)% | 将用户昵称转换为uid | 需要实时弹幕上显示才有效，允许部分昵称 |
 
 `%{key}%` 如果是一个未设置的值，那么将会是空字符串，如果要转化为数字`0`，可以使用`%[%{key}%+0]%`的方式。
 
@@ -572,7 +572,7 @@ border-image: url(C:/Path/To/Image.png)
 | guard_frist      | 是否初次购买舰长         | 初次1，重新上船2，其余0                                      |
 | total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量                           |
 | total_silver     | 用户总共银瓜子           | 同上                                                         |
-| anchor_roomid    | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字                 |
+| anchor_room_id   | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字                 |
 | medal_name       | 粉丝牌名称               | 同上                                                         |
 | medal_level      | 粉丝牌等级               | 同上                                                         |
 | medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                               |
@@ -740,14 +740,14 @@ tips：
 - 粉丝牌等级介于10级到19级之间：`[%medal_level%>=10, %medal_level%<20]`
 - 名字为某某某：`[%uname%=某某某]` 或 `["%nickname%"=="某某某"]`
 - 现在是黑夜：`[%time_hour% > 17 || %time_hour% <= 6]`
-- 带粉丝牌的0级号，或非0级号：`[%level%]`
+- 带粉丝牌的0级号，或非0级号：`[%anchor_room_id%, %level%]`
 - 付费两万（2千万金瓜子）的老板：`[%total_gold% >= 20000000]`
 - 一小时内重新进入直播间：`[%come_time% > %timestamp%-3600]`
 - 几周没来：`[%come_time%>%timestamp%-3600*24*30 &&  %come_time%<%timestamp%-3600*24*7]`
 
 
 
-### 优先级覆盖
+### 优先级
 
 文本框中内容支持多行，一行为一条候选项，随机发送一条。其中每一条都可以用星号 `*` 开头（若有条件表达式 `[exp]`，则`*`位于表达式后面），星号数量越多，则优先级越高。高优先级候选应当带有条件，当满足条件时，发送该条弹幕，并无视掉所有更低优先级的候选。
 
@@ -770,6 +770,14 @@ tips：
 - 当本次礼物的金瓜子总价小于5万时，随机发送第一项、第二项；
 - 当本次礼物金瓜子总价介于5万到15万时，发送第三项；
 - 当本次礼物金瓜子总价超过15万时，发送第四项。
+
+#### 高优先级被忽略情况
+
+高优先级只是说明“**在当前情景下更适合**”，并不代表一定会发送这一条。
+
+当这一条弹幕的字数超过了设置的“弹幕最长长度”，那么高优先级的弹幕会被忽略，转而发送低优先级的。
+
+至于冷却通道，则不会影响优先级。当最高优先级的弹幕尚在冷却中时，不会发送弹幕。
 
 
 
@@ -842,6 +850,7 @@ tips：
 | block(uid, hour)                          | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
 | block(uid)                                | 同上，默认使用自动禁言的时间                                 |
 | unblock(uid)                              | 解除禁言                                                     |
+| eternalBlock(uid, markname)               | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
 | delay(msecond)                            | 延迟执行后面所有待执行的操作，单位毫秒                       |
 | addGameUser(uid)                          | 添加用户至游戏队列，使用`[%in_game_users%]`判断              |
 | removeGameUser(uid)                       | 从游戏队列中移除用户                                         |
@@ -876,7 +885,8 @@ tips：
 | runReplyAction(index)                     | 运行自动回复，index同上                                      |
 | runEventAction(index)                     | 运行其他事件动作，index同上                                  |
 | sendLongText(text)                        | 发送长文本，自动分割成多条                                   |
-| appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dir/file”下，支持变量。可用于保存送礼记录、上船记录等 |
+| appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
+| writeTextFile(dirName, fileName, text)    | 写入文本至“程序目录/dirName/fileName”                        |
 | removeFile(fileName)                      | 删除文件“程序目录/file”                                      |
 | aiReply(sessionId, text)                  | 调用AI回复某文字（随机）                                     |
 | ignoreWelcome(uid)                        | 不自动欢迎某用户                                             |
@@ -1379,7 +1389,7 @@ tips：
 [%medal_level%>=5]恭喜%ai_name%勋章升级至%medal_level%~
 ```
 
-注意：用户此时佩戴的粉丝勋章（即`%anchor_roomid%`等）不一定是当前直播间的。
+注意：用户此时佩戴的粉丝勋章（即`%anchor_room_id%`等）不一定是当前直播间的。
 
 
 

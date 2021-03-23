@@ -22,7 +22,8 @@ enum MessageType
     MSG_BLOCK,
     MSG_MSG,
     MSG_SHARE,
-    MSG_PK_BEST
+    MSG_PK_BEST,
+    MSG_SUPER_CHAT
 };
 
 class LiveDanmaku
@@ -113,6 +114,15 @@ public:
     {
     }
 
+    LiveDanmaku(QString nickname, QString text, qint64 uid, int level, QDateTime time, QString unameColor, QString textColor,
+                int giftId, QString gift, int num, int price)
+        : msgType(MSG_SUPER_CHAT), nickname(nickname), text(text), uid(uid), level(level), timeline(time),
+          uname_color(unameColor), text_color(textColor), giftId(giftId), giftName(gift), number(num),
+          coin_type("gold"), total_coin(price * 1000)
+    {
+
+    }
+
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
@@ -172,7 +182,7 @@ public:
         QJsonObject object;
         object.insert("nickname", nickname);
         object.insert("uid", uid);
-        if (msgType == MSG_DANMAKU)
+        if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT)
         {
             object.insert("text", text);
             object.insert("uname_color", uname_color);
@@ -186,7 +196,7 @@ public:
             object.insert("guard_level", guard);
             object.insert("no_reply", no_reply);
         }
-        else if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY)
+        if (msgType == MSG_GIFT || msgType == MSG_GUARD_BUY || msgType == MSG_SUPER_CHAT)
         {
             object.insert("gift_id", giftId);
             object.insert("gift_name", giftName);
@@ -280,6 +290,13 @@ public:
                     .arg(nickname)
                     .arg(giftName)
                     .arg(number);
+        }
+        else if (msgType == MSG_SUPER_CHAT)
+        {
+            return QString("%1    [醒目留言]%2\t%3")
+                    .arg(timeline.toString("hh:mm:ss"))
+                    .arg(nickname)
+                    .arg(text);
         }
         else if (msgType == MSG_WELCOME)
         {
