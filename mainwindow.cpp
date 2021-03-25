@@ -669,10 +669,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
         dayTimer->setInterval(24*3600*1000);
-        if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
+
+        // 每天重新计算
+        if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
         userComeTimes.clear();
 
+        /* // 更新每天弹幕
+        if (danmuLogFile)
+            startSaveDanmakuToFile(); */
+
+        // 触发每天事件
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
 
         // 判断每一月初
@@ -4561,6 +4568,8 @@ void MainWindow::startSaveDanmakuToFile()
     QDir dir;
     dir.mkdir(dataPath+"danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+
+    qDebug() << "开启弹幕记录：" << dataPath+"danmaku_histories/" + roomId + "_" + date + ".log";
     danmuLogFile = new QFile(dataPath+"danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
@@ -11116,7 +11125,7 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
 
-    if (!prepare)
+    if (!prepare) // 切换房间或者断开连接
     {
         pking = false;
         pkUid = "";
@@ -11140,6 +11149,12 @@ void MainWindow::releaseLiveData(bool prepare)
             msgCds[i] = 0;
         roomDanmakus.clear();
         pkGifts.clear();
+
+        finishSaveDanmuToFile();
+    }
+    else // 下播，依旧保持连接
+    {
+
     }
 
     danmuPopularQueue.clear();
@@ -11177,7 +11192,6 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->actionJoin_Battle->setEnabled(false);
 
     finishLiveRecord();
-    finishSaveDanmuToFile();
     saveCalculateDailyData();
 
     QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
@@ -12109,6 +12123,10 @@ void MainWindow::slotStartWork()
     QPixmap face = getLivingPixmap(upFace);
     setWindowIcon(face);
     tray->setIcon(face);
+
+    // 开启弹幕保存（但是之前没有开启，怕有bug）
+    if (ui->saveDanmakuToFileCheck->isChecked() && !danmuLogFile)
+        startSaveDanmakuToFile();
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString useRoom = roomId;
