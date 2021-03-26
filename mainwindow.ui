@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -989,6 +989,9 @@ QTabBar::tab:selected
           </property>
           <item>
            <widget class="QCheckBox" name="giftComboSendCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;延迟答谢连续赠送礼物&lt;/p&gt;&lt;p&gt;适用于答谢带数量的情况&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>礼物连击</string>
             </property>
@@ -2135,7 +2138,7 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="saveRecvCmdsCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合右边输入CMD，用于开发调试&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合右边输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>保存CMD</string>
@@ -2145,7 +2148,7 @@ margin: 6px;</string>
           <item>
            <widget class="QPushButton" name="pushRecvCmdsButton">
             <property name="text">
-             <string>输入CMD</string>
+             <string>输入CMDS</string>
             </property>
            </widget>
           </item>
@@ -2175,6 +2178,15 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="QSpinBox" name="timerPushCmdSpin">
+            <property name="styleSheet">
+             <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
             <property name="suffix">
              <string>百毫秒</string>
             </property>

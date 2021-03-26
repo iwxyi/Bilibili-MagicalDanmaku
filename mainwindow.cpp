@@ -47,8 +47,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
     // 隐藏用不到的工具
-    ui->saveRecvCmdsCheck->hide();
-    ui->pushRecvCmdsButton->hide();
     ui->pushNextCmdButton->hide();
     ui->timerPushCmdCheck->hide();
     ui->timerPushCmdSpin->hide();
@@ -707,13 +705,19 @@ MainWindow::MainWindow(QWidget *parent)
     });
     dayTimer->start();
 
-    // 本地调试模式
-    localDebug = settings->value("danmaku/localDebug", false).toBool();
+    // 调试模式
+    localDebug = settings->value("debug/localDebug", false).toBool();
     ui->localDebugCheck->setChecked(localDebug);
-    debugPrint = settings->value("danmaku/debugPrint", false).toBool();
+    debugPrint = settings->value("debug/debugPrint", false).toBool();
     ui->debugPrintCheck->setChecked(debugPrint);
-    saveRecvCmds = settings->value("danmaku/saveRecvCmds", false).toBool();
+    saveRecvCmds = settings->value("debug/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
+    if (saveRecvCmds)
+        on_saveRecvCmdsCheck_clicked();
+
+    // 模拟CMDS
+    ui->timerPushCmdCheck->setChecked(settings->value("debug/pushCmdsTimer", false).toBool());
+    ui->timerPushCmdSpin->setValue(settings->value("debug/pushCmdsInterval", 10).toInt());
 
     if (!settings->value("danmaku/copyright", false).toBool())
     {
@@ -944,12 +948,16 @@ void MainWindow::pullLiveDanmaku()
 
 void MainWindow::removeTimeoutDanmaku()
 {
+    if (pushCmdsFile && roomDanmakus.size() < 1000) // 不移除弹幕
+        return ;
+
     // 移除过期队列
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    if (roomDanmakus.size()) // 每次最多移除一个
+    qint64 removeTime = timestamp - removeDanmakuInterval;
+    if (roomDanmakus.size())
     {
         QDateTime dateTime = roomDanmakus.first().getTimeline();
-        if (dateTime.toMSecsSinceEpoch() + removeDanmakuInterval < timestamp)
+        if (dateTime.toMSecsSinceEpoch() < removeTime)
         {
             auto danmaku = roomDanmakus.takeFirst();
             oldLiveDanmakuRemoved(danmaku);
@@ -957,6 +965,7 @@ void MainWindow::removeTimeoutDanmaku()
     }
 
     // 移除多余的提示（一般时间更短）
+    removeTime = timestamp - removeDanmakuTipInterval;
     for (int i = 0; i < roomDanmakus.size(); i++)
     {
         auto danmaku = roomDanmakus.at(i);
@@ -968,7 +977,7 @@ void MainWindow::removeTimeoutDanmaku()
                 || danmaku.isToView() || danmaku.isPkLink())
         {
             QDateTime dateTime = danmaku.getTimeline();
-            if (dateTime.toMSecsSinceEpoch() + removeDanmakuTipInterval < timestamp)
+            if (dateTime.toMSecsSinceEpoch() < removeTime)
             {
                 roomDanmakus.removeAt(i--);
                 oldLiveDanmakuRemoved(danmaku);
@@ -2478,6 +2487,15 @@ void MainWindow::initWS()
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
         try {
             slotBinaryMessageReceived(message);
+
+            // 保存到CMDS里
+            if (saveRecvCmds && saveCmdsFile)
+            {
+                QByteArray ba = message;
+                ba.replace("\n", "__bmd__n__").replace("\r", "__bmd__r__");
+                saveCmdsFile->write(ba);
+                saveCmdsFile->write("\n");
+            }
         } catch (...) {
             qCritical() << "!!!!!!!error:slotBinaryMessageReceived";
         }
@@ -4596,10 +4614,8 @@ void MainWindow::finishSaveDanmuToFile()
         return ;
 
     delete danmuLogStream;
-
     danmuLogFile->close();
     danmuLogFile->deleteLater();
-
     danmuLogFile = nullptr;
     danmuLogStream = nullptr;
 }
@@ -6280,7 +6296,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             + ((uchar)message[10] << 8)
             + ((uchar)message[11]);
     QByteArray body = message.right(message.length() - 16);
-    SOCKET_DEB << "操作码=" << operation << "  正文=" << (body.left(35)) << "...";
+    SOCKET_DEB << "操作码=" << operation << "  大小=" << body.size() << "  正文=" << (body.left(1000)) << "...";
 
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(body, &error);
@@ -8050,8 +8066,47 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送，在结束后的不到一秒左右
     {
-        qDebug() << json;
-        triggerCmdEvent(cmd, LiveDanmaku());
+        /* {
+            "cmd": "ANCHOR_LOT_AWARD",
+            "data": {
+                "award_image": "",
+                "award_name": "兔の自拍",
+                "award_num": 1,
+                "award_users": [
+                    {
+                        "color": 5805790,
+                        "face": "http://i1.hdslb.com/bfs/face/f07a981e34985819367eb709baefd80ad5ab4746.jpg",
+                        "level": 26,
+                        "uid": 44916867,
+                        "uname": "-领主-"
+                    }
+                ],
+                "id": 1014952,
+                "lot_status": 2,
+                "url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1",
+                "web_url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html"
+            }
+        } */
+
+        QJsonObject data = json.value("data").toObject();
+        QString awardName = data.value("award_name").toString();
+        int awardNum = data.value("award_num").toInt();
+        QJsonArray awardUsers = data.value("award_users").toArray();
+        QStringList names;
+        qint64 firstUid = 0;
+        foreach (QJsonValue val, awardUsers)
+        {
+            QJsonObject user = val.toObject();
+            QString uname = user.value("uname").toString();
+            names.append(uname);
+            if (!firstUid)
+                firstUid = qint64(user.value("uid").toDouble());
+        }
+
+        QString awardRst = awardName + (awardNum > 1 ? "×" + snum(awardNum) : "");
+        localNotify("[天选] " + names.join(",") + "中奖：" + awardRst);
+
+        triggerCmdEvent(cmd, LiveDanmaku(firstUid, names.join(","), awardRst));
     }
     else if (cmd == "VOICE_JOIN_ROOM_COUNT_INFO") // 等待连麦队列数量变化
     {
@@ -11207,6 +11262,17 @@ void MainWindow::releaseLiveData(bool prepare)
         pkGifts.clear();
 
         finishSaveDanmuToFile();
+
+        if (ui->saveRecvCmdsCheck->isChecked())
+        {
+            ui->saveRecvCmdsCheck->setChecked(false);
+            on_saveRecvCmdsCheck_clicked();
+        }
+
+        if (pushCmdsFile)
+        {
+            on_pushRecvCmdsButton_clicked();
+        }
     }
     else // 下播，依旧保持连接
     {
@@ -12231,7 +12297,7 @@ void MainWindow::on_autoLOTCheck_clicked()
 
 void MainWindow::on_localDebugCheck_clicked()
 {
-    settings->setValue("danmaku/localDebug", localDebug = ui->localDebugCheck->isChecked());
+    settings->setValue("debug/localDebug", localDebug = ui->localDebugCheck->isChecked());
 }
 
 void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
@@ -12747,7 +12813,7 @@ void MainWindow::on_retryFailedDanmuCheck_clicked()
 
 void MainWindow::on_debugPrintCheck_clicked()
 {
-    settings->setValue("danmaku/debugPrint", debugPrint = ui->debugPrintCheck->isChecked());
+    settings->setValue("debug/debugPrint", debugPrint = ui->debugPrintCheck->isChecked());
 }
 
 void MainWindow::on_songLyricsToFileCheck_clicked()
@@ -12853,7 +12919,24 @@ void MainWindow::on_pkAutoMaxGoldCheck_clicked()
 void MainWindow::on_saveRecvCmdsCheck_clicked()
 {
     saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
-    settings->setValue("danmaku/saveRecvCmds", saveRecvCmds);
+    settings->setValue("debug/saveRecvCmds", saveRecvCmds);
+
+    if (saveRecvCmds)
+    {
+        QDir dir;
+        dir.mkdir(dataPath+"websocket_cmds");
+        QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
+        saveCmdsFile = new QFile(dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt");
+        saveCmdsFile->open(QIODevice::WriteOnly | QIODevice::Append);
+        qDebug() << "开始保存cmds：" << dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt";
+    }
+    else if (saveCmdsFile)
+    {
+        qDebug() << "结束保存cmds";
+        saveCmdsFile->close();
+        saveCmdsFile->deleteLater();
+        saveCmdsFile = nullptr;
+    }
 }
 
 void MainWindow::on_allowRemoteControlCheck_clicked()
@@ -12976,4 +13059,111 @@ void MainWindow::on_giftComboMergeCheck_clicked()
 void MainWindow::on_listenMedalUpgradeCheck_clicked()
 {
     settings->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
+}
+
+void MainWindow::on_pushRecvCmdsButton_clicked()
+{
+    if (!pushCmdsFile) // 开启模拟输入
+    {
+        // 输入文件
+        QString oldPath = settings->value("debug/cmdsPath", "").toString();
+        QString path = QFileDialog::getOpenFileName(this, "选择模拟输入的CMDS文件位置", oldPath, "Text (*.txt)");
+        if (path.isEmpty())
+            return ;
+        settings->setValue("debug/cmdsPath", path);
+
+        // 创建文件对象
+        pushCmdsFile = new QFile(path);
+        if (!pushCmdsFile->open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::critical(this, "模拟CMDS", "读取文件失败");
+            return ;
+        }
+
+        // 本地模式提示
+        if (!ui->localDebugCheck->isChecked())
+        {
+            if (QMessageBox::question(this, "模拟CMDS", "您的[本地模式]未开启，可能会回复奇奇怪怪的内容，是否开启[本地模式]？",
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes)
+                ui->localDebugCheck->setChecked(localDebug = true);
+        }
+        ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = false);
+
+        // 定时器
+        if (!pushCmdsTimer)
+        {
+            pushCmdsTimer = new QTimer(this);
+            pushCmdsTimer->setInterval(ui->timerPushCmdSpin->value() * 100);
+            connect(pushCmdsTimer, SIGNAL(timeout()), this, SLOT(on_pushNextCmdButton_clicked()));
+        }
+        pushCmdsTimer->setInterval(ui->timerPushCmdSpin->value() * 100);
+        if (ui->timerPushCmdCheck->isChecked())
+            pushCmdsTimer->start();
+
+        ui->pushRecvCmdsButton->setText("停止");
+        ui->pushNextCmdButton->show();
+        ui->timerPushCmdCheck->show();
+        ui->timerPushCmdSpin->show();
+    }
+    else // 关闭模拟输入
+    {
+        if (ui->localDebugCheck->isChecked() && settings->value("debug/localDebug", false).toBool())
+            ui->localDebugCheck->setChecked(localDebug = false);
+
+        if (settings->value("debug/saveRecvCmds", false).toBool())
+            ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
+
+        if (pushCmdsTimer)
+            pushCmdsTimer->stop();
+
+        ui->pushRecvCmdsButton->setText("输入CMDS");
+        ui->pushNextCmdButton->hide();
+        ui->timerPushCmdCheck->hide();
+        ui->timerPushCmdSpin->hide();
+
+        pushCmdsFile->close();
+        pushCmdsFile->deleteLater();
+        pushCmdsFile = nullptr;
+    }
+}
+
+void MainWindow::on_pushNextCmdButton_clicked()
+{
+    if (!pushCmdsFile)
+        return ;
+
+    QByteArray line = pushCmdsFile->readLine();
+    if (line.isNull())
+    {
+        localNotify("[模拟输入CMDS结束，已退出]");
+        on_pushRecvCmdsButton_clicked();
+        return ;
+    }
+
+    // 处理下一行
+    line.replace("__bmd__n__", "\n").replace("__bmd__r__", "\r");
+    slotBinaryMessageReceived(line);
+}
+
+void MainWindow::on_timerPushCmdCheck_clicked()
+{
+    bool enable = ui->timerPushCmdCheck->isChecked();
+    settings->setValue("debug/pushCmdsTimer", enable);
+
+    if (pushCmdsFile && pushCmdsTimer)
+    {
+        if (enable)
+            pushCmdsTimer->start();
+        else
+            pushCmdsTimer->stop();
+    }
+}
+
+void MainWindow::on_timerPushCmdSpin_editingFinished()
+{
+    int val = ui->timerPushCmdSpin->value();
+    settings->setValue("debug/pushCmdsInterval", val);
+
+    if (pushCmdsTimer)
+        pushCmdsTimer->setInterval(val * 100);
 }

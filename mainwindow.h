@@ -565,6 +565,14 @@ private slots:
 
     void on_listenMedalUpgradeCheck_clicked();
 
+    void on_pushRecvCmdsButton_clicked();
+
+    void on_pushNextCmdButton_clicked();
+
+    void on_timerPushCmdCheck_clicked();
+
+    void on_timerPushCmdSpin_editingFinished();
+
 private:
     void initPath();
     void readConfig();
@@ -802,6 +810,16 @@ private:
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
     LiveDanmaku lastDanmaku; // 最近一个弹幕
 
+    // 调试
+    bool localDebug = false;   // 本地调试模式
+    bool debugPrint = false;   // 调试输出模式
+
+    bool saveRecvCmds = false; // 保存收到的CMD
+    QFile* saveCmdsFile = nullptr;
+
+    QFile* pushCmdsFile = nullptr;
+    QTimer* pushCmdsTimer = nullptr;
+
     // 礼物连击
     QHash<QString, LiveDanmaku> giftCombos;
     QTimer* comboTimer = nullptr;
@@ -826,9 +844,6 @@ private:
     // 连接信息
     QString cookieUid; // 自己的UID
     QString cookieUname; // 自己的昵称
-    bool localDebug = false;   // 本地调试模式
-    bool debugPrint = false;   // 调试输出模式
-    bool saveRecvCmds = false; // 保存收到的CMD
 
     QString shortId; // 房间短号（有些没有，也没什么用）
     QString upUid; // 主播的UID
