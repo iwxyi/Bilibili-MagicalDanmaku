@@ -723,12 +723,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     if (!settings->value("danmaku/copyright", false).toBool())
     {
-        if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
+        /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
         {
             localNotify(QString(QByteArray::fromBase64("44CQ"))
                         +QApplication::applicationName()
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
-        }
+        } */
     }
 
     // 开启服务端
@@ -1682,6 +1682,8 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行定时任务
         {
             qDebug() << "未开播，不做回复(timer)" << sl;
+            if (debugPrint)
+                localNotify("[未开播，不做回复]");
             return ;
         }
         QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
@@ -1794,6 +1796,8 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
         {
             if (!danmaku.isPkLink())
                 qDebug() << "未开播，不做回复(reply)" << sl;
+            if (debugPrint)
+                localNotify("[未开播，不做回复]");
             return ;
         }
         QStringList msgs = getEditConditionStringList(sl, danmaku);
@@ -1911,6 +1915,8 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
             qDebug() << "未开播，不做操作(event)" << sl;
+            if (debugPrint)
+                localNotify("[未开播，不做操作]");
             return ;
         }
         if (!liveStatus && !manual)

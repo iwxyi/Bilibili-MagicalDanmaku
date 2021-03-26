@@ -856,8 +856,10 @@ tips：
 | unblock(uid)                              | 解禁言           | 解除禁言                                                     |
 | eternalBlock(uid, markname)               | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
 | delay(msecond)                            | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
-| addGameUser(uid)                          | 添加游戏用户     | 添加用户至游戏队列，使用`[%in_game_users%]`判断              |
-| removeGameUser(uid)                       | 移除游戏用户     | 从游戏队列中移除用户                                         |
+| addGameUser(listId, uid)                  | 添加游戏用户     | 添加用户至游戏队列，使用`[%in_game_users%]`判断。listId从0到99，重启清零 |
+| addGameUser(uid)                          | 添加游戏用户     | 同上，默认listId使用0                                        |
+| removeGameUser(listId, uid)               | 移除游戏用户     | 从游戏队列中移除用户                                         |
+| removeGameUser(uid)                       | 移除游戏用户     | 同上，默认listId使用0                                        |
 | sendGift(giftId, num)                     | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
 | execRemoteCommand(cmd)                    | 执行远程命令     | 执行远程控制（见下面）                                       |
 | execRemoteCommand(cmd, 0)                 | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
