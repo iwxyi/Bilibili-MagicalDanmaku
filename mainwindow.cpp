@@ -3697,54 +3697,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     {
         QString _var = match.captured(0);
         QString text = match.captured(1);
-        bool find = false;
-
-        // 查找弹幕和送礼
-        for (int i = roomDanmakus.size()-1; i >= 0; i--)
-        {
-            const LiveDanmaku danmaku = roomDanmakus.at(i);
-            if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
-                continue;
-
-            QString nick = danmaku.getNickname();
-            if (nick.contains(text))
-            {
-                // 就是这个人
-                msg.replace(_var, snum(danmaku.getUid()));
-                find = true;
-                break;
-            }
-        }
-
-        // 查找专属昵称
-        if (!find)
-        {
-            QSet<qint64> hadMatches;
-            for (int i = roomDanmakus.size()-1; i >= 0; i--)
-            {
-                const LiveDanmaku danmaku = roomDanmakus.at(i);
-                if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
-                    continue;
-                qint64 uid = danmaku.getUid();
-                if (hadMatches.contains(uid) || !localNicknames.contains(uid))
-                    continue;
-                QString nick = localNicknames.value(uid);
-                if (nick.contains(text))
-                {
-                    // 就是这个人
-                    msg.replace(_var, snum(danmaku.getUid()));
-                    find = true;
-                    break;
-                }
-                hadMatches.insert(uid);
-            }
-        }
-        if (!find)
-        {
-            msg.replace(_var, "0");
-            localNotify("[未找到用户：" + text + "]");
-            triggerCmdEvent("NOT_FIND_USER", LiveDanmaku(text));
-        }
+        msg.replace(_var, snum(unameToUid(text)));
     }
 
     bool find = true;
@@ -3777,7 +3730,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 一些类似函数的变量
-        re = QRegularExpression("%>(\\w+)\\s*\\(([^%>]+)\\)%");
+        re = QRegularExpression("%>(\\w+)\\s*\\(([^%>]*)\\)%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -4187,12 +4140,26 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     return true;
 }
 
-bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, const QString &funcName, const QString &args) const
+bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, const QString &funcName, const QString &args)
 {
     QRegularExpressionMatch match;
+    QStringList argList = args.split(QRegExp("\\s*,\\s*"));
     // 替换时间
     if (funcName == "time")
+    {
         msg.replace(total, QDateTime::currentDateTime().toString(args));
+    }
+    else if (funcName == "unameToUid")
+    {
+        msg.replace(total, snum(unameToUid(args)));
+    }
+    else if (funcName == "inputText")
+    {
+        QString label = argList.size() ? argList.first() : "";
+        QString def = argList.size() >= 2 ? argList.at(1) : "";
+        QString rst = QInputDialog::getText(this, QApplication::applicationName(), label, QLineEdit::Normal, def);
+        msg.replace(total, rst);
+    }
     else
         return false;
     return true;
@@ -4403,6 +4370,49 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     }
 
     return val;
+}
+
+qint64 MainWindow::unameToUid(QString text)
+{
+    // 查找弹幕和送礼
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        const LiveDanmaku danmaku = roomDanmakus.at(i);
+        if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
+            continue;
+
+        QString nick = danmaku.getNickname();
+        if (nick.contains(text))
+        {
+            // 就是这个人
+            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku);
+            return danmaku.getUid();
+        }
+    }
+
+    // 查找专属昵称
+    QSet<qint64> hadMatches;
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        const LiveDanmaku danmaku = roomDanmakus.at(i);
+        if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
+            continue;
+        qint64 uid = danmaku.getUid();
+        if (hadMatches.contains(uid) || !localNicknames.contains(uid))
+            continue;
+        QString nick = localNicknames.value(uid);
+        if (nick.contains(text))
+        {
+            // 就是这个人
+            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku);
+            return danmaku.getUid();
+        }
+        hadMatches.insert(uid);
+    }
+
+    localNotify("[未找到用户：" + text + "]");
+    triggerCmdEvent("NOT_FIND_USER", LiveDanmaku(text));
+    return 0;
 }
 
 /**
@@ -5435,6 +5445,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString data = caps.at(2);
             qDebug() << "执行命令：" << caps;
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
+                qDebug() << QString(reply->readAll());
+            });
+            return true;
+        }
+    }
+    if (msg.contains("postJson"))
+    {
+        re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString url = caps.at(1);
+            QString data = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 qDebug() << QString(reply->readAll());
             });
             return true;

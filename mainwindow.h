@@ -649,12 +649,13 @@ private:
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     bool replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
-    bool replaceDynamicVariants(QString& msg, const QString &total, const QString& funcName, const QString& args) const;
+    bool replaceDynamicVariants(QString& msg, const QString &total, const QString& funcName, const QString& args);
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
+    qint64 unameToUid(QString text);
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
     double getPaletteBgProg() const;

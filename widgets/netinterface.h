@@ -124,6 +124,25 @@ public:
         manager->post(*request, ba);
     }
 
+    void postJson(QString url, QByteArray ba, NetReplyFunc func)
+    {
+        QNetworkAccessManager* manager = new QNetworkAccessManager;
+        QNetworkRequest* request = new QNetworkRequest(url);
+        setUrlCookie(url, request);
+        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
+        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+
+        // 连接槽
+        QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
+            func(reply);
+            manager->deleteLater();
+            delete request;
+            reply->deleteLater();
+        });
+
+        manager->post(*request, ba);
+    }
+
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request)
     {
         Q_UNUSED(url)
