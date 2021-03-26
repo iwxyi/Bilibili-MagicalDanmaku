@@ -73,6 +73,7 @@
         <file alias="rice">resources/icons/rice.png</file>
         <file alias="generate">resources/icons/generate.png</file>
         <file alias="read_config">resources/icons/read_config.png</file>
+        <file alias="translation">resources/icons/translation.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">resources/musics/netease-cloud-music.png</file>

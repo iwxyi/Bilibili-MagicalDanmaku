@@ -565,6 +565,17 @@ public:
         return guard;
     }
 
+    QString getGuardName() const
+    {
+        if (guard == 1)
+            return "总督";
+        else if (guard == 2)
+            return "提督";
+        else if (guard == 3)
+            return "舰长";
+        return "";
+    }
+
     int getGiftId() const
     {
         return giftId;

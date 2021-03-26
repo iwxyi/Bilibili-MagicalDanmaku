@@ -23,6 +23,7 @@ QList<qint64> CommonValues::careUsers;               // 特别关心
 QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QList<QPair<QString, QString>> CommonValues::customVariant; // 自定义变量
+QList<QPair<QString, QString>> CommonValues::variantTranslation; // 变量翻译
 QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
 QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
@@ -44,7 +45,13 @@ MainWindow::MainWindow(QWidget *parent)
         ui->tabWidget->setPalette(pa);
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
+
+    // 隐藏用不到的工具
     ui->saveRecvCmdsCheck->hide();
+    ui->pushRecvCmdsButton->hide();
+    ui->pushNextCmdButton->hide();
+    ui->timerPushCmdCheck->hide();
+    ui->timerPushCmdSpin->hide();
     ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
     ui->AIReplyIdButton->hide();
@@ -363,6 +370,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 自定义变量
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
+
+    // 多语言翻译
+    restoreVariantTranslation(settings->value("danmaku/variantTranslation", "").toString());
 
     // 定时任务
     srand((unsigned)time(0));
@@ -3635,6 +3645,27 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, text);
     }
 
+    // 自定义变量
+    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    {
+        msg.replace(it->first, it->second);
+    }
+
+    // 翻译
+    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
+    {
+        msg.replace(it->first, it->second);
+    }
+
+    // 弹幕变量、环境变量（固定文字）
+    re = QRegularExpression("%[\\w_]+?%");
+    int matchPos = 0;
+    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+    {
+        replaceDanmakuVariants(msg, danmaku, match.captured(0));
+        matchPos = matchPos + 1;
+    }
+
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
     re = QRegularExpression("%\\(([^(%)]+?)\\)%");
     while (msg.indexOf(re, 0, &match) > -1)
@@ -3695,22 +3726,6 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     while (find)
     {
         find = false;
-
-        // 自定义变量
-        for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
-        {
-            msg.replace(it->first, it->second);
-        }
-
-        // 弹幕变量、环境变量（固定文字）
-        re = QRegularExpression("%[\\w_]+?%");
-        int matchPos = 0;
-        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
-        {
-            if (replaceDanmakuVariants(msg, danmaku, match.captured(0)))
-                find = true;
-            matchPos = matchPos + 1;
-        }
 
         // 读取配置文件的变量
         re = QRegularExpression("%\\{([^(%(\\{|\\[))]*?)\\}%");
@@ -6157,6 +6172,35 @@ QString MainWindow::saveCustomVariant()
 {
     QStringList sl;
     for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    {
+        sl << it->first + " = " + it->second;
+    }
+    return sl.join("\n");
+}
+
+void MainWindow::restoreVariantTranslation(QString text)
+{
+    variantTranslation.clear();
+    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    foreach (QString s, sl)
+    {
+        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+        QRegularExpressionMatch match;
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            variantTranslation.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "多语言翻译读取失败：" << s;
+    }
+}
+
+QString MainWindow::saveVariantTrsnalation()
+{
+    QStringList sl;
+    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
     {
         sl << it->first + " = " + it->second;
     }
@@ -10128,6 +10172,18 @@ void MainWindow::on_actionCustom_Variant_triggered()
     settings->setValue("danmaku/customVariant", text);
 
     restoreCustomVariant(text);
+}
+
+void MainWindow::on_actionVariant_Translation_triggered()
+{
+    QString text = saveVariantTrsnalation();
+    bool ok;
+    text = TextInputDialog::getText(this, "多语言翻译", "请输入翻译列表：\n示例格式：%用户昵称%=%uname%", text, &ok);
+    if (!ok)
+        return ;
+    settings->setValue("danmaku/variantTranslation", text);
+
+    restoreVariantTranslation(text);
 }
 
 void MainWindow::on_actionSend_Long_Text_triggered()

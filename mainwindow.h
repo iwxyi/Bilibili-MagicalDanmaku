@@ -337,6 +337,8 @@ private slots:
 
     void on_actionCustom_Variant_triggered();
 
+    void on_actionVariant_Translation_triggered();
+
     void on_actionSend_Long_Text_triggered();
 
     void on_actionShow_Lucky_Draw_triggered();
@@ -682,6 +684,8 @@ private:
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
+    void restoreVariantTranslation(QString text);
+    QString saveVariantTrsnalation();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();
 
