@@ -679,10 +679,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
         dayTimer->setInterval(24*3600*1000);
-        if (ui->calculateDailyDataCheck->isChecked()) // 每天重新计算
+
+        // 每天重新计算
+        if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
         userComeTimes.clear();
 
+        /* // 更新每天弹幕
+        if (danmuLogFile)
+            startSaveDanmakuToFile(); */
+
+        // 触发每天事件
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
 
         // 判断每一月初
@@ -2363,7 +2370,7 @@ void MainWindow::on_addEventButton_clicked()
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
 {
-    if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink() || danmaku.isNoReply())
+    if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink())
         return ;
     QRegularExpression re(diangeFormatString);
     QRegularExpressionMatch match;
@@ -4576,6 +4583,8 @@ void MainWindow::startSaveDanmakuToFile()
     QDir dir;
     dir.mkdir(dataPath+"danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+
+    qDebug() << "开启弹幕记录：" << dataPath+"danmaku_histories/" + roomId + "_" + date + ".log";
     danmuLogFile = new QFile(dataPath+"danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
@@ -9272,11 +9281,28 @@ void MainWindow::updateExistGuards(int page)
     const int pageSize = 29;
 
     auto judgeGuard = [=](QJsonObject user){
+        /*{
+            "face": "http://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg",
+            "guard_level": 3,
+            "guard_sub_level": 0,
+            "is_alive": 1,
+            "medal_info": {
+                "medal_color_border": 6809855,
+                "medal_color_end": 5414290,
+                "medal_color_start": 1725515,
+                "medal_level": 23,
+                "medal_name": "翊中人"
+            },
+            "rank": 71,
+            "ruid": 5988102,
+            "uid": 20285041,
+            "username": "懒一夕智能科技"
+        }*/
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
-        currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
+        currentGuards[uid] = username;
 
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
@@ -9425,7 +9451,8 @@ void MainWindow::updateOnlineGoldRank()
             {
                 QJsonObject medalInfo = item.value("medalInfo").toObject();
 
-                if (medalInfo.contains("guardLevel"))
+                QString anchorId = snum(qint64(medalInfo.value("targetId").toDouble()));
+                if (medalInfo.contains("guardLevel") && anchorId == roomId)
                     danmaku.setGuardLevel(medalInfo.value("guardLevel").toInt());
 
                 qint64 medalColor = qint64(medalInfo.value("medalColorStart").toDouble());
@@ -9433,7 +9460,7 @@ void MainWindow::updateOnlineGoldRank()
                 while (cs.size() < 6)
                     cs = "0" + cs;
 
-                danmaku.setMedal(snum(qint64(medalInfo.value("targetId").toDouble())),
+                danmaku.setMedal(anchorId,
                                  medalInfo.value("medalName").toString(),
                                  medalInfo.value("level").toInt(),
                                  "",
@@ -11154,7 +11181,7 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->roomRankLabel->setText("");
     ui->roomRankLabel->setToolTip("");
 
-    if (!prepare)
+    if (!prepare) // 切换房间或者断开连接
     {
         pking = false;
         pkUid = "";
@@ -11178,6 +11205,12 @@ void MainWindow::releaseLiveData(bool prepare)
             msgCds[i] = 0;
         roomDanmakus.clear();
         pkGifts.clear();
+
+        finishSaveDanmuToFile();
+    }
+    else // 下播，依旧保持连接
+    {
+
     }
 
     danmuPopularQueue.clear();
@@ -11215,7 +11248,6 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->actionJoin_Battle->setEnabled(false);
 
     finishLiveRecord();
-    finishSaveDanmuToFile();
     saveCalculateDailyData();
 
     QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
@@ -12147,6 +12179,10 @@ void MainWindow::slotStartWork()
     QPixmap face = getLivingPixmap(upFace);
     setWindowIcon(face);
     tray->setIcon(face);
+
+    // 开启弹幕保存（但是之前没有开启，怕有bug）
+    if (ui->saveDanmakuToFileCheck->isChecked() && !danmuLogFile)
+        startSaveDanmakuToFile();
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString useRoom = roomId;

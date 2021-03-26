@@ -503,6 +503,8 @@ border-image: url(C:/Path/To/Image.png)
 ```
 
 <div id='programing'/>
+
+
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -1362,6 +1364,18 @@ tips：
 ```
 
 有人上船则自动播放`安装目录/audios/guard.mp3`，本程序不自带，需要自己找音频文件放上去。也可以是安装目录之外的绝对路径。
+
+
+
+##### 示例：上船自动设置房管
+
+需要主播登录，添加事件：`FIRST_GUARD`，动作：
+
+```
+>postData(https://api.live.bilibili.com/live_user/v1/RoomAdmin/add, admin=%uid%&anchor_id=%room_id%&csrf_token=%csrf%&csrf=%csrf%&visit_id=)
+```
+
+
 
 
 
