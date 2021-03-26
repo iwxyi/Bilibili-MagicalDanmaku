@@ -732,7 +732,11 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 人名
         if (danmaku.isAdmin() || danmaku.isGuard())
         {
-            text += QString("舰长 %1 进入直播间")
+            if (danmaku.isAdmin())
+                text += "[房] ";
+            if (danmaku.isGuard())
+                text += danmaku.getGuardName() + " ";
+            text += QString("%1 进入直播间")
                     .arg(nameText);
         }
         else
