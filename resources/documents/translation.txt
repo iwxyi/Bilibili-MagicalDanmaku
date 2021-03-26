@@ -57,6 +57,7 @@
 %年费姥爷%=%svip%
 %正式会员%=%uidentity%
 %手机号认证%=%iphone%
+%数量%=%number%
 %当前小时%=%time_hour%
 %当前分钟%=%time_minute%
 %当前秒%=%time_second%
@@ -85,6 +86,7 @@
 %被禁言%=%blocked%
 %当前歌曲%=%playing_song%
 %当前歌曲点歌者%=%song_order_uname%
+%点歌队列数量%=%order_song_count%
 >终止(=>abort(
 >禁言(=>block(
 >解禁言(=>unblock(

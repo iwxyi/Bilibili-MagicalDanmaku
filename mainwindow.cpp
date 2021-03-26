@@ -3931,6 +3931,10 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     else if (key == "%iphone%")
         msg.replace(key, danmaku.isIphone() ? "1" : "0");
 
+    // 数量
+    else if (key == "%number%")
+        msg.replace(key, snum(danmaku.getNumber()));
+
     // 昵称长度
     else if (key == "%nickname_len%")
         msg.replace(key, snum(danmaku.getNickname().length()));
@@ -4151,6 +4155,16 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
                 name = song.addBy;
         }
         msg.replace(key, name);
+    }
+    // 点歌队列数量
+    else if (key == "%order_song_count%")
+    {
+        QString text = "0";
+        if (musicWindow)
+        {
+            text = snum(musicWindow->getOrderSongs().size());
+        }
+        msg.replace(key, text);
     }
     else
         return false;
@@ -10447,8 +10461,10 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             triggerCmdEvent("CURRENT_SONG_CHANGED", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongImproved, this, [=](Song song, int prev, int curr){
-            localNotify("提升歌曲：" + song.name + " : " + snum(prev) + "->" + snum(curr));
-            triggerCmdEvent("ORDER_SONG_IMPROVED", LiveDanmaku(song.id, song.addBy, song.name));
+            localNotify("提升歌曲：" + song.name + " : " + snum(prev+1) + "->" + snum(curr+1));
+            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+            danmaku.setNumber(curr+1);
+            triggerCmdEvent("ORDER_SONG_IMPROVED", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongCutted, this, [=](Song song){
             localNotify("已切歌");

@@ -614,6 +614,7 @@ border-image: url(C:/Path/To/Image.png)
 | svip             | 年费姥爷           | 同上                                                         |
 | uidentity        | 正式会员           | 同上                                                         |
 | iphone           | 手机号认证         | 同上                                                         |
+| number           | 数量               | 各种数量的通用写法，如礼物数量等                             |
 | time_hour        | 当前小时           |                                                              |
 | time_minute      | 当前分钟           |                                                              |
 | time_second      | 当前秒             |                                                              |
@@ -1228,7 +1229,7 @@ tips：
 | ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                                                 |
 | ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）                                   |
 | ORDER_SONG_COPY             | 点歌已复制歌名                                               |
-| ORDER_SONG_IMPROVED         | 播放顺序提前                                                 |
+| ORDER_SONG_IMPROVED         | 播放顺序提前，%number%获取当前顺序，从1开始，1为下一首       |
 | ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong`                            |
 | CURRENT_SONG_CHANGED        | 歌曲开始播放(包括手动播放的)或结束。                         |
 
