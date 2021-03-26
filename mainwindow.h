@@ -55,6 +55,7 @@ QT_END_NAMESPACE
 #define NOTIFY_CD 2000
 
 #define CHANNEL_COUNT 100
+#define MAGICAL_SPLIT_CHAR "-bdm-split-bdm-"
 
 #define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
 #define WELCOME_CD_CN 1    // 送礼冷却通道
@@ -731,6 +732,10 @@ private:
     void detectMedalUpgrade(LiveDanmaku danmaku);
 
     void startSplash();
+    void saveGameNumbers(int channel);
+    void restoreGameNumbers();
+    void saveGameTexts(int channel);
+    void restoreGameTexts();
 
     virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
 
@@ -756,6 +761,7 @@ private:
 private:
     Ui::MainWindow *ui;
     QSettings* settings;
+    QSettings* heaps;
     QString dataPath;
     QString appNewVersion;
     QString appDownloadUrl;
@@ -961,6 +967,8 @@ private:
 
     // 游戏列表
     QList<qint64> gameUsers[CHANNEL_COUNT];
+    QList<qint64> gameNumberLists[CHANNEL_COUNT];
+    QList<QString> gameTextLists[CHANNEL_COUNT];
 
     // 服务端
 #ifndef Q_OS_MAC

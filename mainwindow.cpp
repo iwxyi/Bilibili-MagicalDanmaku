@@ -62,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     initPath();
     bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
     settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
+    heaps = new QSettings(dataPath + "heaps.ini", QSettings::Format::IniFormat);
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(dataPath + "www");
 
@@ -751,6 +752,10 @@ MainWindow::MainWindow(QWidget *parent)
     {
         readDefaultCode();
     }
+
+    // 恢复游戏数据
+    restoreGameNumbers();
+    restoreGameTexts();
 
     triggerCmdEvent("START_UP", LiveDanmaku());
 }
@@ -3721,7 +3726,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
             QString key = match.captured(1);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            QVariant var = settings->value(key);
+            QVariant var = heaps->value(key);
             msg.replace(_var, var.toString()); // 默认使用变量类型吧
             find = true;
         }
@@ -4102,6 +4107,10 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // 游戏用户
     else if (key == "%in_game_users%")
         msg.replace(key, gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
+    else if (key == "%in_game_numbers%")
+        msg.replace(key, gameNumberLists[0].contains(danmaku.getUid()) ? "1" : "0");
+    else if (key == "%in_game_texts%")
+        msg.replace(key, gameTextLists[0].contains(danmaku.getText()) ? "1" : "0");
 
     // 程序路径
     else if (key == "%app_path%")
@@ -4160,6 +4169,51 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
     else if (funcName == "unameToUid")
     {
         msg.replace(total, snum(unameToUid(args)));
+    }
+    else if (funcName == "inGameUsers")
+    {
+        int ch = 0;
+        qint64 id = 0;
+        if (argList.size() == 1)
+            id = argList.first().toLongLong();
+        else if (argList.size() >= 2)
+        {
+            ch = argList.at(0).toInt();
+            id = argList.at(1).toLongLong();
+        }
+        if (ch < 0 || ch >= CHANNEL_COUNT)
+            ch = 0;
+        msg.replace(total, gameUsers[ch].contains(id) ? "1" : "0");
+    }
+    else if (funcName == "inGameNumbers")
+    {
+        int ch = 0;
+        qint64 id = 0;
+        if (argList.size() == 1)
+            id = argList.first().toLongLong();
+        else if (argList.size() >= 2)
+        {
+            ch = argList.at(0).toInt();
+            id = argList.at(1).toLongLong();
+        }
+        if (ch < 0 || ch >= CHANNEL_COUNT)
+            ch = 0;
+        msg.replace(total, gameNumberLists[ch].contains(id) ? "1" : "0");
+    }
+    else if (funcName == "inGameTexts")
+    {
+        int ch = 0;
+        QString text;
+        if (argList.size() == 1)
+            text = argList.first();
+        else if (argList.size() >= 2)
+        {
+            ch = argList.at(0).toInt();
+            text = argList.at(1);
+        }
+        if (ch < 0 || ch >= CHANNEL_COUNT)
+            ch = 0;
+        msg.replace(total, gameTextLists[ch].contains(text) ? "1" : "0");
     }
     else if (funcName == "strlen")
     {
@@ -5299,10 +5353,12 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
             gameUsers[chan].append(uid);
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             return true;
         }
 
@@ -5310,9 +5366,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameUsers[0].append(uid);
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             return true;
         }
     }
@@ -5324,10 +5380,12 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
             gameUsers[chan].removeOne(uid);
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             return true;
         }
 
@@ -5335,13 +5393,129 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameUsers[0].removeOne(uid);
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
             return true;
         }
     }
 
+    // 添加到游戏数值
+    if (msg.contains("addGameNumber"))
+    {
+        re = RE("addGameNumber\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            int chan = caps.at(1).toInt();
+            qint64 uid = caps.at(2).toLongLong();
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
+            gameNumberLists[chan].append(uid);
+            saveGameNumbers(chan);
+            return true;
+        }
+
+        re = RE("addGameNumber\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qint64 uid = caps.at(1).toLongLong();
+            gameNumberLists[0].append(uid);
+            saveGameNumbers(0);
+            return true;
+        }
+    }
+
+    // 从游戏数值中移除
+    if (msg.contains("removeGameNumber"))
+    {
+        re = RE("removeGameNumber\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            int chan = caps.at(1).toInt();
+            qint64 uid = caps.at(2).toLongLong();
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
+            gameNumberLists[chan].removeOne(uid);
+            saveGameNumbers(chan);
+            return true;
+        }
+
+        re = RE("removeGameNumber\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qint64 uid = caps.at(1).toLongLong();
+            gameNumberLists[0].removeOne(uid);
+            saveGameNumbers(0);
+            return true;
+        }
+    }
+
+
+    // 添加到文本数值
+    if (msg.contains("addGameText"))
+    {
+        re = RE("addGame\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            int chan = caps.at(1).toInt();
+            QString text = caps.at(2);
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
+            gameTextLists[chan].append(text);
+            saveGameTexts(chan);
+            return true;
+        }
+
+        re = RE("addGameText\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            QString text = caps.at(1);
+            gameTextLists[0].append(text);
+            saveGameTexts(0);
+            return true;
+        }
+    }
+
+    // 从游戏文本中移除
+    if (msg.contains("removeGameText"))
+    {
+        re = RE("removeGameText\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            int chan = caps.at(1).toInt();
+            QString text = caps.at(2);
+            if (chan < 0 || chan >= CHANNEL_COUNT)
+                chan = 0;
+            gameTextLists[chan].removeOne(text);
+            saveGameTexts(chan);
+            return true;
+        }
+
+        re = RE("removeGameText\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            QString text = caps.at(1);
+            gameTextLists[0].removeOne(text);
+            saveGameTexts(0);
+            return true;
+        }
+    }
     // 执行远程命令
     if (msg.contains("execRemoteCommand"))
     {
@@ -5661,9 +5835,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
 
     // 保存到配置
-    if (msg.contains("setValue"))
+    if (msg.contains("setSetting"))
     {
-        re = RE("setValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("setSetting\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5677,7 +5851,41 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
-    // 批量修改配置
+    // 删除配置
+    if (msg.contains("removeSetting"))
+    {
+        re = RE("removeSetting\\s*\\(\\s*(\\S+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            qDebug() << "执行命令：" << caps;
+
+            settings->remove(key);
+            return true;
+        }
+    }
+
+    // 保存到heaps
+    if (msg.contains("setValue"))
+    {
+        re = RE("setValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            QString value = caps.at(2);
+            qDebug() << "执行命令：" << caps;
+            heaps->setValue(key, value);
+            return true;
+        }
+    }
+
+    // 批量修改heaps
     if (msg.contains("setValues"))
     {
         re = RE("setValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
@@ -5688,22 +5896,22 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString value = caps.at(2);
             qDebug() << "执行命令：" << caps;
 
-            settings->beginGroup("heaps");
-            auto keys = settings->allKeys();
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
             QRegularExpression re(key);
             for (int i = 0; i < keys.size(); i++)
             {
                 if (keys.at(i).indexOf(re) > -1)
                 {
-                    settings->setValue(keys.at(i), value);
+                    heaps->setValue(keys.at(i), value);
                 }
             }
-            settings->endGroup();
+            heaps->endGroup();
             return true;
         }
     }
 
-    // 按条件批量修改配置
+    // 按条件批量修改heaps
     if (msg.contains("setValuesIf"))
     {
         re = RE("setValuesIf\\s*\\(\\s*(\\S+?)\\s*,\\s*\\[(.*?)\\]\\s*,\\s*(.*)\\s*\\)");
@@ -5716,8 +5924,8 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             qDebug() << "执行命令：" << caps;
 
             // 开始修改
-            settings->beginGroup("heaps");
-            auto keys = settings->allKeys();
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
             QRegularExpression re(key);
             QRegularExpressionMatch match2;
             for (int i = 0; i < keys.size(); i++)
@@ -5726,7 +5934,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 {
                     QString exp = VAL_EXP;
                     // _VALUE_ 替换为 当前key的值
-                    exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    exp.replace("_VALUE_", heaps->value(keys.at(i)).toString());
                     // _$1_ 替换为 match的值
                     if (exp.contains("_$"))
                     {
@@ -5742,7 +5950,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                         {
                             QString _var = match2.captured(0);
                             QString key = match2.captured(1);
-                            QVariant var = settings->value(key);
+                            QVariant var = heaps->value(key);
                             exp.replace(_var, var.toString());
                         }
                     }
@@ -5752,7 +5960,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                         if (newValue.contains("_VALUE_"))
                         {
                             // _VALUE_ 替换为 当前key的值
-                            newValue.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                            newValue.replace("_VALUE_", heaps->value(keys.at(i)).toString());
 
                             // 替换计算属性 _[]_
                             if (newValue.contains("_["))
@@ -5769,16 +5977,16 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                         }
 
                         // 真正设置
-                        settings->setValue(keys.at(i), newValue);
+                        heaps->setValue(keys.at(i), newValue);
                     }
                 }
             }
-            settings->endGroup();
+            heaps->endGroup();
             return true;
         }
     }
 
-    // 删除配置
+    // 删除heaps
     if (msg.contains("removeValue"))
     {
         re = RE("removeValue\\s*\\(\\s*(\\S+?)\\s*\\)");
@@ -5790,12 +5998,12 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 key = "heaps/" + key;
             qDebug() << "执行命令：" << caps;
 
-            settings->remove(key);
+            heaps->remove(key);
             return true;
         }
     }
 
-    // 批量删除配置
+    // 批量删除heaps
     if (msg.contains("removeValues"))
     {
         re = RE("removeValues\\s*\\(\\s*(\\S+?)\\s*\\)");
@@ -5805,22 +6013,22 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString key = caps.at(1);
             qDebug() << "执行命令：" << caps;
 
-            settings->beginGroup("heaps");
-            auto keys = settings->allKeys();
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
             QRegularExpression re(key);
             for (int i = 0; i < keys.size(); i++)
             {
                 if (keys.at(i).indexOf(re) > -1)
                 {
-                    settings->remove(keys.takeAt(i--));
+                    heaps->remove(keys.takeAt(i--));
                 }
             }
-            settings->endGroup();
+            heaps->endGroup();
             return true;
         }
     }
 
-    // 按条件批量删除配置
+    // 按条件批量删除heaps
     if (msg.contains("removeValuesIf"))
     {
         re = RE("removeValuesIf\\s*\\(\\s*(\\S+?)\\s*,\\s*\\[(.*)\\]\\s*\\)");
@@ -5831,8 +6039,8 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString VAL_EXP = caps.at(2);
             qDebug() << "执行命令：" << caps;
 
-            settings->beginGroup("heaps");
-            auto keys = settings->allKeys();
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
             QRegularExpression re(key);
             QRegularExpressionMatch match2;
             for (int i = 0; i < keys.size(); i++)
@@ -5841,7 +6049,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 {
                     QString exp = VAL_EXP;
                     // _VALUE_ 替换为 当前key的值
-                    exp.replace("_VALUE_", settings->value(keys.at(i)).toString());
+                    exp.replace("_VALUE_", heaps->value(keys.at(i)).toString());
                     // _$1_ 替换为 match的值
                     if (exp.contains("_$"))
                     {
@@ -5857,17 +6065,17 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                         {
                             QString _var = match2.captured(0);
                             QString key = match2.captured(1);
-                            QVariant var = settings->value(key);
+                            QVariant var = heaps->value(key);
                             exp.replace(_var, var.toString());
                         }
                     }
                     if (processVariantConditions(exp))
                     {
-                        settings->remove(keys.takeAt(i--));
+                        heaps->remove(keys.takeAt(i--));
                     }
                 }
             }
-            settings->endGroup();
+            heaps->endGroup();
             return true;
         }
     }
@@ -11845,6 +12053,47 @@ void MainWindow::startSplash()
 #endif
 }
 
+void MainWindow::saveGameNumbers(int channel)
+{
+    auto list = gameNumberLists[channel];
+    QStringList sl;
+    foreach (qint64 val, list)
+        sl << snum(val);
+    heaps->setValue("game_numbers/r" + snum(channel), sl.join(";"));
+}
+
+void MainWindow::restoreGameNumbers()
+{
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        if (!heaps->contains("game_numbers/r" + snum(i)))
+            continue;
+
+        QStringList sl = heaps->value("game_numbers/r" + snum(i)).toString().split(";");
+        auto& list = gameNumberLists[i];
+        foreach (QString s, sl)
+            list << s.toLongLong();
+    }
+}
+
+void MainWindow::saveGameTexts(int channel)
+{
+    auto list = gameTextLists[channel];
+    heaps->setValue("game_texts/r" + snum(channel), list.join(MAGICAL_SPLIT_CHAR));
+}
+
+void MainWindow::restoreGameTexts()
+{
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+    {
+        if (!heaps->contains("game_texts/r" + snum(i)))
+            continue;
+
+        QStringList sl = heaps->value("game_texts/r" + snum(i)).toString().split(MAGICAL_SPLIT_CHAR);
+        gameTextLists[i] = sl;
+    }
+}
+
 void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !browserCookie.isEmpty())
@@ -12340,6 +12589,9 @@ void MainWindow::slotStartWork()
             return ;
         syncMagicalRooms();
     });
+
+    // 获取舰长
+    updateExistGuards(0);
 
     triggerCmdEvent("START_WORK", LiveDanmaku());
 }

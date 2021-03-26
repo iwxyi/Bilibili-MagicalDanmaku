@@ -624,6 +624,9 @@ border-image: url(C:/Path/To/Image.png)
 | time_day_year    | 今年第几天         |                                                              |
 | timestamp        | 当前时间戳         | 10位时间戳，可用于比较进入时间、多久没来等                   |
 | timestamp13      | 当前时间戳13       | 13位时间戳                                                   |
+| in_game_users    | 在游戏用户中       | uid在gameUsers[0]中                                          |
+| in_game_numbers  | 在游戏数值中       | uid在gameNumbers[0]中                                        |
+| in_game_texts    | 在游戏文本中       | text在gameTexts[0]中，空格等都需要一模一样                   |
 | app_path         | 程序目录           |                                                              |
 | living           | 直播中             | 是：1，否：0                                                 |
 | room_id          | 直播间ID           |                                                              |
@@ -688,11 +691,16 @@ border-image: url(C:/Path/To/Image.png)
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
 
-| 函数                      | 中文       | 描述                            |
-| ------------------------- | ---------- | ------------------------------- |
-| time(format)              | 格式化时间 | 当前时间转换为数值              |
-| unameToUid(uname)         | 查找用户名 | 由部分昵称倒找弹幕记录，获得UID |
-| inputText(title, default) | 输入文本   | 输入文本，两个参数都可省略      |
+| 函数                       | 中文         | 描述                             |
+| -------------------------- | ------------ | -------------------------------- |
+| time(format)               | 格式化时间   | 当前时间转换为数值               |
+| unameToUid(uname)          | 查找用户名   | 由部分昵称倒找弹幕记录，获得UID  |
+| inputText(title, default)  | 输入文本     | 输入文本，两个参数都可省略       |
+| strlen                     | 取文本长度   | 一串文字的长度                   |
+| trim                       | 删首尾空     | 去掉字符串首尾的空格和制表符     |
+| inGameUsers(listId, uid)   | 在游戏用户中 | listId可省略。程序重启数据会清空 |
+| inGameNumbers(listId, num) | 在游戏数值中 | listId可省略，程序重启数据仍在   |
+| inGameTexts(listId, text)  | 在游戏文本中 | listId可省略，程序重启数据仍在   |
 
 已获取时间为例：
 
@@ -856,10 +864,18 @@ tips：
 | unblock(uid)                              | 解禁言           | 解除禁言                                                     |
 | eternalBlock(uid, markname)               | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
 | delay(msecond)                            | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
-| addGameUser(listId, uid)                  | 添加游戏用户     | 添加用户至游戏队列，使用`[%in_game_users%]`判断。listId从0到99，重启清零 |
-| addGameUser(uid)                          | 添加游戏用户     | 同上，默认listId使用0                                        |
+| addGameUser(listId, uid)                  | 添加游戏用户     | 添加用户至游戏队列，listId从0到99，使用`%>inGameUsers(listId, uid)%`判断在不在。**程序重启后清空**，长期保存可使用`addGameNumbers` |
+| addGameUser(uid)                          | 添加游戏用户     | 同上，默认listId使用0，可使用`[%in_game_users%]`快速判断     |
 | removeGameUser(listId, uid)               | 移除游戏用户     | 从游戏队列中移除用户                                         |
 | removeGameUser(uid)                       | 移除游戏用户     | 同上，默认listId使用0                                        |
+| addGameNumber(listId, uid)                | 添加游戏数值     | 添加用户至游戏队列，listId从0到99，使用`%>inGameNumbers(listId, uid)%`。 |
+| addGameNumber(uid)                        | 添加游戏数值     | 同上，默认listId使用0，可使用`[%in_game_numbers%]`判断       |
+| removeGameNumber(listId, uid)             | 移除游戏数值     | 从游戏队列中移除数值                                         |
+| removeGameNumber(uid)                     | 移除游戏数值     | 同上，默认listId使用0                                        |
+| addGameText(listId, uid)                  | 添加游戏文本     | 添加用户至游戏队列，listId从0到99，使用`%>inGameTexts(listId, uid)%`。 |
+| addGameText(uid)                          | 添加游戏文本     | 同上，默认listId使用0，可使用`[%in_game_texts%]`判断         |
+| removeGameText(listId, uid)               | 移除游戏文本     | 从游戏队列中移除用户                                         |
+| removeGameText(uid)                       | 移除游戏文本     | 同上，默认listId使用0                                        |
 | sendGift(giftId, num)                     | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
 | execRemoteCommand(cmd)                    | 执行远程命令     | 执行远程控制（见下面）                                       |
 | execRemoteCommand(cmd, 0)                 | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
@@ -876,6 +892,8 @@ tips：
 | sendToSockets(cmd, data)                  | 发送至socket     | 发送给所有WebSocket                                          |
 | sendToLastSocket(cmd, data)               | 发送至最后socket | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                       | 运行命令行       | 运行操作系统的命令行                                         |
+| setSetting                                | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
+| removeSetting                             | 移除某项配置     | 同上                                                         |
 | setValue(key, val)                        | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
 | setValues(exp, val)                       | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
 | setValuesIf(exp, [condition], newVal)     | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |

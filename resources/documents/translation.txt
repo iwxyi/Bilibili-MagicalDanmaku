@@ -67,6 +67,9 @@
 %今年第几天%=%time_day_year%
 %当前时间戳%=%timestamp%
 %当前时间戳13%=%timestamp13%
+%在游戏用户中%=%in_game_users%
+%在游戏数值中%=%in_game_numbers%
+%在游戏文本中%=%in_game_texts%
 %程序目录%=%app_path%
 %直播中%=%living%
 %直播间ID%=%room_id%
@@ -84,12 +87,15 @@
 %当前歌曲点歌者%=%song_order_uname%
 >终止(=>abort(
 >禁言(=>block(
->禁言(=>block(
 >解禁言(=>unblock(
 >永久禁言(=>eternalBlock(
 >延时(=>delay(
 >添加游戏用户(=>addGameUser(
 >移除游戏用户(=>removeGameUser(
+>添加游戏数值(=>addGameNumber(
+>移除游戏数值(=>removeGameNumber(
+>添加游戏文本(=>addGameText(
+>移除游戏文本(=>removeGameText(
 >赠送礼物(=>sendGift(
 >执行远程命令(=>execRemoteCommand(
 >执行远程命令(=>execRemoteCommand(
@@ -97,12 +103,10 @@
 >发送直播间弹幕(=>sendRoomMsg(
 >延迟发送(=>timerShot(
 >本地通知(=>localNotify(
->本地通知(=>localNotify(
 >播放语音(=>speakText(
 >打开网址(=>openUrl(
 >连接网址(=>connectNet(
 >post数据(=>postData(
->postJson(=>postJson(
 >发送至socket(=>sendToSockets(
 >发送至最后socket(=>sendToLastSocket(
 >运行命令行(=>runCommandLine(
@@ -115,7 +119,6 @@
 >打开文件(=>openFile(
 >播放声音(=>playSound(
 >提升点歌(=>improveSongOrder(
->切歌(=>cutOrderSong(
 >切歌(=>curOrderSong(
 >消息弹窗(=>messageBox(
 >执行定时任务(=>runTaskAction(
@@ -134,3 +137,8 @@
 >格式化时间(=>time(
 >查找用户名(=>unameToUid(
 >输入文本(=>inputText(
+>取文本长度(=>strlen(
+>删首尾空(=>trim(
+>在游戏用户中(=>inGameUsers(
+>在游戏数值中(=>inGameNumbers(
+>在游戏文本中(=>inGameTexts(
