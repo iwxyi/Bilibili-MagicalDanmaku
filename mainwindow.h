@@ -656,6 +656,7 @@ private:
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
     qint64 unameToUid(QString text);
+    QString uidToName(qint64 uid);
     QString nicknameSimplify(QString nickname) const;
     QString msgToShort(QString msg) const;
     double getPaletteBgProg() const;

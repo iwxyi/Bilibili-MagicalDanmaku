@@ -3436,7 +3436,6 @@ margin: 6px;</string>
      <string>构建</string>
     </property>
     <addaction name="actionCustom_Variant"/>
-    <addaction name="actionVariant_Translation"/>
     <addaction name="separator"/>
     <addaction name="actionPaste_Code"/>
     <addaction name="actionGenerate_Default_Code"/>

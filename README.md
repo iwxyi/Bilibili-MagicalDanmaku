@@ -544,99 +544,101 @@ border-image: url(C:/Path/To/Image.png)
 
 ### 数据变量
 
-同上，都需要带上百分号，例如`%var%`，表格中皆省略。
+同上，都需要带上百分号，例如 `%var%`，表格中皆省略。
 
-| 变量             | 描述                     | 注意事项                                                     |
-| ---------------- | ------------------------ | ------------------------------------------------------------ |
-| uid              | 用户ID                   | 是一串数字，确定唯一用户                                     |
-| uname            | 用户名                   | 需要用户值，例如定时消息，则只是空字符串                     |
-| username         | 用户名                   | 和上面一模一样                                               |
-| nickname         | 用户名                   | 同上                                                         |
-| ai_name          | 用户智能昵称             | 优先专属昵称，其次简写昵称，无简写则用原昵称                 |
-| local_name       | 用户专属昵称             | 实时弹幕中右键-设置专属昵称                                  |
-| simple_name      | 用户简写昵称             | 去除前缀后缀各种字符                                         |
-| csrf             | 用户的csrf token         |                                                              |
-| level            | 用户等级                 | 进入直播间没有level                                          |
-| text             | 当前弹幕消息             | 几乎用不到                                                   |
-| come_count       | 用户进来次数             |                                                              |
-| come_time        | 用户上次进来时间         | 第一次进来是0；自动清理一周没来的                            |
-| gift_gold        | 当前礼物金瓜子           | 非送礼答谢则没有                                             |
-| gift_silver      | 当前礼物银瓜子           |                                                              |
-| gift_coin        | 当前礼物价值(不分金银)   |                                                              |
-| coin_gold        | 是否是金瓜子礼物         | 金瓜子是1，银瓜子是0                                         |
-| gift_name        | 当前礼物名字             | 如果设置了别名，则使用别名                                   |
-| origin_gift_name | 原始礼物名字(非别名)     |                                                              |
-| gift_num         | 当前礼物数量             |                                                              |
-| gift_multi_num   | 带单位的礼物数量         | 如果为1个，则忽略，为空文本                                  |
-| guard_buy        | 是否为购买舰长的通知     | 没有瓜子，gift_name：舰长/提督/总督；guard：3舰长/2提督/1总督 |
-| guard_frist      | 是否初次购买舰长         | 初次1，重新上船2，其余0                                      |
-| total_gold       | 用户总共金瓜子           | 该用户一直以来赠送的所有金瓜子数量                           |
-| total_silver     | 用户总共银瓜子           | 同上                                                         |
-| anchor_room_id   | 粉丝牌房间ID             | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字                 |
-| medal_name       | 粉丝牌名称               | 同上                                                         |
-| medal_level      | 粉丝牌等级               | 同上                                                         |
-| medal_up         | 粉丝牌UP主名称           | 只有弹幕消息有                                               |
-| nickname_len     | 昵称长度                 |                                                              |
-| giftname_len     | 礼物名字长度             |                                                              |
-| name_sum_len     | 昵称长度+礼物名字长度    |                                                              |
-| ainame_sum_len   | 短昵称长度+礼物名字长度  |                                                              |
-| new_attention    | 是否是新关注             | 最近50个关注内                                               |
-| guard_count      | 上船次数，可判断是否初次 | 舰长+1、提督+10、总督+100（只统计程序运行时）                |
-| pking            | 当前是否在大乱斗         | 是：1，否：0                                                 |
-| pk_id            | 大乱斗的编号             |                                                              |
-| pk_room_id       | pk对面房间号             | 未在PK中则为空，下同                                         |
-| pk_uid           | pk对面主播ID             |                                                              |
-| pk_uname         | pk对面主播昵称           |                                                              |
-| pk_opposite      | pk对面进来               | 需开启串门提示                                               |
-| pk_view_return   | pk去对面串门并回来       | 需开启串门提示                                               |
-| pk_count         | pk次数                   | 未在PK中为0，下同                                            |
-| pk_touta_prob    | 对面偷塔概率百分比       | 数值部分，例如概率为50%，则为50。初次PK为0                   |
-| pk_my_votes      | 本次pk己方积分           |                                                              |
-| pk_match_votes   | 本次pk对方积分           |                                                              |
-| pk_ending        | 是否大乱斗快结束了       | 根据设置中的大乱斗【提前】值判断                             |
-| pk_trans_gold    | pk的1分等于多少金瓜子    | 按照设置来                                                   |
-| pk_max_gold      | pk最大偷塔金瓜子         |                                                              |
-| today_come       | 今日进来人次             | 每个人可能重复进入                                           |
-| today_newbie_msg | 今日新人人数             |                                                              |
-| today_danmaku    | 今日弹幕总数             |                                                              |
-| today_fans       | 今日新增粉丝数           |                                                              |
-| fans_count       | 当前总粉丝数             |                                                              |
-| today_gold       | 今日收到金瓜子总数       |                                                              |
-| today_silver     | 今日收到银瓜子总数       |                                                              |
-| today_guard      | 今日上船人次             | 续多个月算多次                                               |
-| admin            | 是否是房管               | 只有弹幕、进入才有                                           |
-| guard            | 船员等级                 | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
-| guard_name       | “舰长”/“提督”/“总督”     | 非船员为空                                                   |
-| admin_or_guard   | 是否是房管或舰长         | 只有弹幕消息有，0或1                                         |
-| vip              | 是否是姥爷               | 同上                                                         |
-| svip             | 是否是年费姥爷           | 同上                                                         |
-| uidentity        | 是否是正式会员           | 同上                                                         |
-| iphone           | 是否手机号认证           | 同上                                                         |
-| time_hour        | 当前小时                 |                                                              |
-| time_minute      | 当前分钟                 |                                                              |
-| time_second      | 当前秒                   |                                                              |
-| time_day         | 当前日期                 |                                                              |
-| time_month       | 当前月份                 |                                                              |
-| time_year        | 当前年份                 |                                                              |
-| time_day_week    | 当前星期                 | 1~7                                                          |
-| time_day_year    | 当前一年中第几天         |                                                              |
-| timestamp        | 当前10位时间戳           | 可用于比较进入时间、多久没来等                               |
-| timestamp13      | 当前13位时间戳           |                                                              |
-| app_path         | 程序运行路径             |                                                              |
-| living           | 当前是否已开播           | 是：1，否：0                                                 |
-| room_id          | 直播间ID                 |                                                              |
-| room_name        | 直播间标题               |                                                              |
-| up_uid           | 主播UID                  |                                                              |
-| up_name          | 主播名字                 |                                                              |
-| my_uid           | 机器人UID                |                                                              |
-| my_uname         | 机器人名字               |                                                              |
-| care             | 特别关系                 | 是：1，否：0                                                 |
-| strong_notify    | 强提醒                   | 是：1，否：0                                                 |
-| not_welcome      | 不自动欢迎               | 不欢迎：1，欢迎：0                                           |
-| not_reply        | 不自动回复               | 不回复：1，回复：0                                           |
-| blocked          | 被禁言中                 | 禁言：1，未禁言0                                             |
-| playing_song     | 当前播放的歌曲           | 点歌姬没有播放歌曲则为空                                     |
-| song_order_uname | 当前歌曲点歌者           | 同上                                                         |
+目前已支持中文，可直接使用形如 `%用户ID%` 的格式。
+
+| 变量             | 中文               | 说明                                                         |
+| ---------------- | ------------------ | ------------------------------------------------------------ |
+| uid              | 用户ID             | 是一串数字，确定唯一用户                                     |
+| uname            | 用户昵称           | 需要用户值，例如定时消息，则只是空字符串                     |
+| username         | 用户昵称           | 和上面一模一样                                               |
+| nickname         | 用户昵称           | 同上                                                         |
+| ai_name          | 用户智能昵称       | 优先专属昵称，其次简写昵称，无简写则用原昵称                 |
+| local_name       | 用户专属昵称       | 实时弹幕中右键-设置专属昵称                                  |
+| simple_name      | 用户简写昵称       | 去除前缀后缀各种字符                                         |
+| csrf             |                    | 用户的csrf token                                             |
+| level            | 用户等级           | 进入直播间没有level                                          |
+| text             | 弹幕消息           | 几乎用不到                                                   |
+| come_count       | 用户进来次数       |                                                              |
+| come_time        | 用户上次进来时间   | 10位时间戳，第一次进来是0；自动清理一周没来的                |
+| gift_gold        | 礼物金瓜子         | 非送礼答谢则没有                                             |
+| gift_silver      | 礼物银瓜子         |                                                              |
+| gift_coin        | 礼物瓜子           | 不分金瓜子银瓜子                                             |
+| coin_gold        | 是金瓜子礼物       | 金瓜子是1，银瓜子是0                                         |
+| gift_name        | 礼物名字           | 如果设置了别名，则使用别名                                   |
+| origin_gift_name | 礼物原始名字       | 未设置别名时等同于gift_name                                  |
+| gift_num         | 礼物数量           |                                                              |
+| gift_multi_num   | 带单位的礼物数量   | 如果为1个，则忽略，为空文本                                  |
+| guard_buy        | 开通大航海         | 上船消息，gift_name：舰长/提督/总督；guard：3舰长/2提督/1总督 |
+| guard_frist      | 初次上船           | 初次1，重新上船2，其余0                                      |
+| total_gold       | 用户总共金瓜子     | 该用户一直以来赠送的所有金瓜子数量                           |
+| total_silver     | 用户总共银瓜子     | 同上                                                         |
+| anchor_room_id   | 粉丝勋章房间ID     | 进入、弹幕才有粉丝牌，送礼只能获取粉丝牌名字                 |
+| medal_name       | 粉丝勋章名称       | 同上                                                         |
+| medal_level      | 粉丝勋章等级       | 同上                                                         |
+| medal_up         | 粉丝勋章主播昵称   | 只有弹幕消息有                                               |
+| nickname_len     |                    | 用户昵称长度                                                 |
+| giftname_len     |                    | 礼物名字长度                                                 |
+| name_sum_len     |                    | 用户昵称长度+礼物名字长度                                    |
+| ainame_sum_len   |                    | 用户短昵称长度+礼物名字长度                                  |
+| new_attention    | 新关注             | 最近50个关注内                                               |
+| guard_count      | 上船次数           | 舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船   |
+| pking            | 大乱斗中           | 是：1，否：0                                                 |
+| pk_id            | 大乱斗编号         |                                                              |
+| pk_room_id       | 对面房间号         | 未在PK中则为空，下同                                         |
+| pk_uid           | 对面主播ID         |                                                              |
+| pk_uname         | 对面主播昵称       |                                                              |
+| pk_opposite      | 对面进来           | 需开启串门提示                                               |
+| pk_view_return   | 去对面串门回来     | 需开启串门提示                                               |
+| pk_count         | 匹配次数           | 未在PK中为0，下同                                            |
+| pk_touta_prob    | 对面偷塔概率       | 百分比的数值部分，例如概率为50%，则为50。初次PK为0           |
+| pk_my_votes      | 己方积分           |                                                              |
+| pk_match_votes   | 对方积分           |                                                              |
+| pk_ending        | 大乱斗尾声         | 快结束前2秒，根据设置中的大乱斗【提前】值判断                |
+| pk_trans_gold    | 大乱斗积分转金瓜子 | pk的1分等于多少金瓜子                                        |
+| pk_max_gold      | 大乱斗偷塔上限     | 单次偷塔赠送礼物的金瓜子数量上限                             |
+| today_come       | 今日进来人次       | 每个人可能重复进入                                           |
+| today_newbie_msg | 今日新人人数       |                                                              |
+| today_danmaku    | 今日弹幕总数       |                                                              |
+| today_fans       | 今日新增粉丝数     |                                                              |
+| fans_count       | 总粉丝数           |                                                              |
+| today_gold       | 今日金瓜子总数     |                                                              |
+| today_silver     | 今日银瓜子总数     |                                                              |
+| today_guard      | 今日上船人次       | 续多个月算多次                                               |
+| admin            | 房管               | 只有弹幕、进入才有                                           |
+| guard            | 大航海级别         | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
+| guard_name       | 大航海身份         | “舰长”/“提督”/“总督”，非船员为空                             |
+| admin_or_guard   | 是否是房管或舰长   | 只有弹幕消息有，0或1                                         |
+| vip              | 姥爷               | 同上                                                         |
+| svip             | 年费姥爷           | 同上                                                         |
+| uidentity        | 正式会员           | 同上                                                         |
+| iphone           | 手机号认证         | 同上                                                         |
+| time_hour        | 当前小时           |                                                              |
+| time_minute      | 当前分钟           |                                                              |
+| time_second      | 当前秒             |                                                              |
+| time_day         | 当前日期           |                                                              |
+| time_month       | 当前月份           |                                                              |
+| time_year        | 当前年份           |                                                              |
+| time_day_week    | 当前星期           | 1~7                                                          |
+| time_day_year    | 今年第几天         |                                                              |
+| timestamp        | 当前时间戳         | 10位时间戳，可用于比较进入时间、多久没来等                   |
+| timestamp13      | 当前时间戳13       | 13位时间戳                                                   |
+| app_path         | 程序目录           |                                                              |
+| living           | 直播中             | 是：1，否：0                                                 |
+| room_id          | 直播间ID           |                                                              |
+| room_name        | 直播间标题         |                                                              |
+| up_uid           | 主播ID             |                                                              |
+| up_uname         | 主播名字           |                                                              |
+| my_uid           | 机器人ID           |                                                              |
+| my_uname         | 机器人名字         |                                                              |
+| care             | 特别关心           | 是：1，否：0                                                 |
+| strong_notify    | 强提醒             | 是：1，否：0                                                 |
+| not_welcome      | 不自动欢迎         | 不欢迎：1，欢迎：0                                           |
+| not_reply        | 不自动回复         | 不回复：1，回复：0                                           |
+| blocked          | 被禁言             | 禁言：1，未禁言0                                             |
+| playing_song     | 当前歌曲           | 点歌姬没有播放歌曲则为空                                     |
+| song_order_uname | 当前歌曲点歌者     | 同上                                                         |
 
 
 
@@ -686,11 +688,11 @@ border-image: url(C:/Path/To/Image.png)
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
 
-| 函数                      | 描述                            |
-| ------------------------- | ------------------------------- |
-| time(format)              | 当前时间转换为数值              |
-| unameToUid(uname)         | 由部分昵称倒找弹幕记录，获得UID |
-| inputText(title, default) | 输入文本，两个参数都可省略      |
+| 函数                      | 中文       | 描述                            |
+| ------------------------- | ---------- | ------------------------------- |
+| time(format)              | 格式化时间 | 当前时间转换为数值              |
+| unameToUid(uname)         | 查找用户名 | 由部分昵称倒找弹幕记录，获得UID |
+| inputText(title, default) | 输入文本   | 输入文本，两个参数都可省略      |
 
 已获取时间为例：
 
@@ -846,57 +848,57 @@ tips：
 
 有一些自定义的命令，如`>block(123456)`，如下：
 
-| 命令                                      | 说明                                                         |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| abort()                                   | 终止本流程后面弹幕                                           |
-| block(uid, hour)                          | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
-| block(uid)                                | 同上，默认使用自动禁言的时间                                 |
-| unblock(uid)                              | 解除禁言                                                     |
-| eternalBlock(uid, markname)               | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
-| delay(msecond)                            | 延迟执行后面所有待执行的操作，单位毫秒                       |
-| addGameUser(uid)                          | 添加用户至游戏队列，使用`[%in_game_users%]`判断              |
-| removeGameUser(uid)                       | 从游戏队列中移除用户                                         |
-| sendGift(giftId, num)                     | 赠送礼物，只支持 id 的方式                                   |
-| execRemoteCommand(cmd)                    | 执行远程控制（见下面）                                       |
-| execRemoteCommand(cmd, 0)                 | 执行远程控制，不发送回馈通知                                 |
-| sendPrivateMsg(uid, msg)                  | 向指定用户发送私信                                           |
-| sendRoomMsg(roomId, msg)                  | 向指定直播间发送弹幕                                         |
-| timerShot(msecond, msg)                   | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令）           |
-| localNotify(msg)                          | 发送本地消息通知（非弹幕，只有自己看得到）                   |
-| localNotify(uid, msg)                     | 同上，带用户ID                                               |
-| speakText(msg)                            | 朗读文本                                                     |
-| openUrl(url)                              | 浏览器打开网址                                               |
-| connectNet(url)                           | 后台连接网址（GET）                                          |
-| postData(url, data)                       | 同上（POST）                                                 |
-| postJson(url, data)                       | 同上，以JSON格式发送                                         |
-| sendToSockets(cmd, data)                  | 发送给所有WebSocket                                          |
-| sendToLastSocket(cmd, data)               | 发送给最后连上的WebSocket                                    |
-| runCommandLine(cmd)                       | 运行命令行                                                   |
-| setValue(key, val)                        | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
-| setValues(exp, val)                       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
-| setValuesIf(exp, [condition], newVal)     | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
-| removeValue(key)                          | 移除配置文件中的单个值                                       |
-| removeValues(exp)                         | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
-| removeValuesIf(exp, [condition])          | 按条件移除配置文件中的多个值                                 |
-| openFile(path)                            | 打开文件                                                     |
-| playSound(path)                           | 播放音频文件                                                 |
-| improveSongOrder(username, order)         | 点歌提前播放，order为提升的索引值                            |
-| cutOrderSong(username)                    | 切歌，仅限正在播放该用户自己点的歌时                         |
-| curOrderSong()                            | 立即切歌，无论是谁点的                                       |
-| messageBox(text)                          | 弹窗提示                                                     |
-| runTaskAction(index)                      | 运行定时任务，index为对应序号，从1开始（会变动）             |
-| runReplyAction(index)                     | 运行自动回复，index同上                                      |
-| runEventAction(index)                     | 运行其他事件动作，index同上                                  |
-| sendLongText(text)                        | 发送长文本，自动分割成多条                                   |
-| appendFileLine(dirName, fileName, format) | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
-| writeTextFile(dirName, fileName, text)    | 写入文本至“程序目录/dirName/fileName”                        |
-| removeFile(fileName)                      | 删除文件“程序目录/file”                                      |
-| aiReply(sessionId, text)                  | 调用AI回复某文字（随机）                                     |
-| ignoreWelcome(uid)                        | 不自动欢迎某用户                                             |
-| setNickname(uid, name)                    | 设置用户专属昵称                                             |
-| joinBattle(type)                          | 开启大乱斗，1普通，2视频                                     |
-| triggerEvent(event)                       | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
-| orderSong(songName, uname)                | 自动点歌，uname可以为任意字符                                |
+| 命令                                      | 中文             | 说明                                                         |
+| ----------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| abort()                                   | 终止             | 终止本流程后面弹幕                                           |
+| block(uid, hour)                          | 禁言             | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
+| block(uid)                                | 禁言             | 同上，默认使用自动禁言的时间                                 |
+| unblock(uid)                              | 解禁言           | 解除禁言                                                     |
+| eternalBlock(uid, markname)               | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
+| delay(msecond)                            | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
+| addGameUser(uid)                          | 添加游戏用户     | 添加用户至游戏队列，使用`[%in_game_users%]`判断              |
+| removeGameUser(uid)                       | 移除游戏用户     | 从游戏队列中移除用户                                         |
+| sendGift(giftId, num)                     | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
+| execRemoteCommand(cmd)                    | 执行远程命令     | 执行远程控制（见下面）                                       |
+| execRemoteCommand(cmd, 0)                 | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
+| sendPrivateMsg(uid, msg)                  | 发送私信         | 向指定用户发送私信                                           |
+| sendRoomMsg(roomId, msg)                  | 发送直播间弹幕   | 向指定直播间发送弹幕                                         |
+| timerShot(msecond, msg)                   | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令）           |
+| localNotify(msg)                          | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
+| localNotify(uid, msg)                     | 本地通知         | 同上，带用户ID                                               |
+| speakText(msg)                            | 播放语音         | 朗读文本                                                     |
+| openUrl(url)                              | 打开网址         | 浏览器打开网址                                               |
+| connectNet(url)                           | 连接网址         | 后台连接网址（GET）                                          |
+| postData(url, data)                       | post数据         | 同上（POST）                                                 |
+| postJson(url, data)                       | postJson         | 同上，以JSON格式发送                                         |
+| sendToSockets(cmd, data)                  | 发送至socket     | 发送给所有WebSocket                                          |
+| sendToLastSocket(cmd, data)               | 发送至最后socket | 发送给最后连上的WebSocket                                    |
+| runCommandLine(cmd)                       | 运行命令行       | 运行操作系统的命令行                                         |
+| setValue(key, val)                        | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
+| setValues(exp, val)                       | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
+| setValuesIf(exp, [condition], newVal)     | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
+| removeValue(key)                          | 移除值           | 移除配置文件中的单个值                                       |
+| removeValues(exp)                         | 批量移除值       | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
+| removeValuesIf(exp, [condition])          | 批量移除值如果   | 按条件移除配置文件中的多个值                                 |
+| openFile(path)                            | 打开文件         | 打开文件                                                     |
+| playSound(path)                           | 播放声音         | 播放音频文件                                                 |
+| improveSongOrder(username, order)         | 提升点歌         | 点歌提前播放，order为提升的索引值                            |
+| cutOrderSong(username)                    | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
+| curOrderSong()                            | 切歌             | 立即切歌，无论是谁点的                                       |
+| messageBox(text)                          | 消息弹窗         | 弹窗提示                                                     |
+| runTaskAction(index)                      | 执行定时任务     | 运行定时任务，index为对应序号，从1开始（会变动）             |
+| runReplyAction(index)                     | 执行自动回复     | 运行自动回复，index同上                                      |
+| runEventAction(index)                     | 执行事件动作     | 运行其他事件动作，index同上                                  |
+| sendLongText(text)                        | 发送长文本       | 发送长文本，自动分割成多条                                   |
+| appendFileLine(dirName, fileName, format) | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
+| writeTextFile(dirName, fileName, text)    | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
+| removeFile(fileName)                      | 删除文件         | 删除文件“程序目录/file”                                      |
+| aiReply(sessionId, text)                  | AI回复           | 调用AI回复某文字（随机）                                     |
+| ignoreWelcome(uid)                        | 不自动欢迎       | 不自动欢迎某用户                                             |
+| setNickname(uid, name)                    | 设置专属昵称     | 设置用户专属昵称                                             |
+| joinBattle(type)                          | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
+| triggerEvent(event)                       | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
+| orderSong(songName, uname)                | 点歌             | 自动点歌，uname可以为任意字符                                |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

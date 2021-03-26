@@ -370,7 +370,9 @@ MainWindow::MainWindow(QWidget *parent)
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
 
     // 多语言翻译
-    restoreVariantTranslation(settings->value("danmaku/variantTranslation", "").toString());
+    restoreVariantTranslation(readTextFile(":/documents/translation"));
+    // settings->setValue("danmaku/variantTranslation", readTextFile(":/documents/translation"));
+    // restoreVariantTranslation(settings->value("danmaku/variantTranslation", "").toString());
 
     // 定时任务
     srand((unsigned)time(0));
@@ -4061,7 +4063,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         msg.replace(key, roomId);
     else if (key == "%room_name%")
         msg.replace(key, roomTitle);
-    else if (key == "%up_name%")
+    else if (key == "%up_name%" || key == "%up_uname%")
         msg.replace(key, upName);
     else if (key == "%up_uid%")
         msg.replace(key, upUid);
@@ -4152,6 +4154,14 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
     else if (funcName == "unameToUid")
     {
         msg.replace(total, snum(unameToUid(args)));
+    }
+    else if (funcName == "strlen")
+    {
+        msg.replace(total, snum(args.size()));
+    }
+    else if (funcName == "trim")
+    {
+        msg.replace(total, args.trimmed());
     }
     else if (funcName == "inputText")
     {
@@ -4411,8 +4421,46 @@ qint64 MainWindow::unameToUid(QString text)
     }
 
     localNotify("[未找到用户：" + text + "]");
-    triggerCmdEvent("NOT_FIND_USER", LiveDanmaku(text));
+    triggerCmdEvent("NOT_FIND_USER_BY_UNAME", LiveDanmaku(text));
     return 0;
+}
+
+QString MainWindow::uidToName(qint64 uid)
+{
+    // 查找弹幕和送礼
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        const LiveDanmaku danmaku = roomDanmakus.at(i);
+        if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
+            continue;
+
+        if (danmaku.getUid() == uid)
+        {
+            // 就是这个人
+            triggerCmdEvent("FIND_USER_BY_UID", danmaku);
+            return danmaku.getNickname();
+        }
+    }
+
+    // 查找专属昵称
+    QSet<qint64> hadMatches;
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        const LiveDanmaku danmaku = roomDanmakus.at(i);
+        if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
+            continue;
+        if (danmaku.getUid() == uid)
+        {
+            // 就是这个人
+            triggerCmdEvent("FIND_USER_BY_UID", danmaku);
+            return danmaku.getNickname();
+        }
+        hadMatches.insert(uid);
+    }
+
+    localNotify("[未找到用户：" + snum(uid) + "]");
+    triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(snum(uid)));
+    return "";
 }
 
 /**
