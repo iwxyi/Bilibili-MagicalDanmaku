@@ -1330,6 +1330,7 @@ void OrderPlayerWindow::playLocalSong(Song song)
         QFile file(lyricPath(song));
         file.open(QIODevice::ReadOnly | QIODevice::Text);
         QTextStream stream(&file);
+        stream.setCodec("UTF-8");
         QString lyric;
         QString line;
         while (!stream.atEnd())
@@ -1681,6 +1682,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             QFile file(lyricPath(song));
             file.open(QIODevice::WriteOnly);
             QTextStream stream(&file);
+            stream.setCodec("UTF-8");
             stream << lrc;
             file.flush();
             file.close();
@@ -2107,6 +2109,7 @@ void OrderPlayerWindow::connectDesktopLyricSignals()
                 QFile file(lyricPath(song));
                 file.open(QIODevice::ReadOnly | QIODevice::Text);
                 QTextStream stream(&file);
+                stream.setCodec("UTF-8");
                 QString lyric;
                 QString line;
                 while (!stream.atEnd())
@@ -3103,6 +3106,7 @@ void OrderPlayerWindow::adjustCurrentLyricTime(QString lyric)
     QFile file(lyricPath(playingSong));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
     stream << lyric;
     file.flush();
     file.close();
