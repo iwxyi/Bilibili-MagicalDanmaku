@@ -453,20 +453,6 @@ MainWindow::MainWindow(QWidget *parent)
     // 启动动画
     ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", firstOpen).toBool());
 
-    // 弹幕人气
-    danmuPopularTimer = new QTimer(this);
-    danmuPopularTimer->setInterval(30000);
-    connect(danmuPopularTimer, &QTimer::timeout, this, [=]{
-        danmuPopularValue += minuteDanmuPopular;
-        danmuPopularQueue.append(minuteDanmuPopular);
-        minuteDanmuPopular = 0;
-        if (danmuPopularQueue.size() > 10)
-            danmuPopularValue -= danmuPopularQueue.takeFirst();
-        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopularValue));
-
-        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
-    });
-
     // 定时连接
     ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
     ui->startLiveHourSpin->setValue(settings->value("live/startLiveHour", 0).toInt());
@@ -600,6 +586,38 @@ MainWindow::MainWindow(QWidget *parent)
     if (settings->value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
 
+    // 每分钟定时
+    minuteTimer = new QTimer(this);
+    minuteTimer->setInterval(60000);
+    connect(minuteTimer, &QTimer::timeout, this, [=]{
+        // 直播间人气
+        if (currentPopul > 1 && liveStatus) // 为0的时候不计入内；为1时可能机器人在线
+        {
+            sumPopul += currentPopul;
+            countPopul++;
+
+            dailyAvePopul = int(sumPopul / countPopul);
+            if (dailySettings)
+                dailySettings->setValue("average_popularity", dailyAvePopul);
+        }
+        if (dailyMaxPopul < currentPopul)
+        {
+            dailyMaxPopul = currentPopul;
+            if (dailySettings)
+                dailySettings->setValue("max_popularity", dailyMaxPopul);
+        }
+
+        // 弹幕人气
+        danmuPopulValue += minuteDanmuPopul;
+        danmuPopulQueue.append(minuteDanmuPopul);
+        minuteDanmuPopul = 0;
+        if (danmuPopulQueue.size() > 5)
+            danmuPopulValue -= danmuPopulQueue.takeFirst();
+        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue));
+
+        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
+    });
+
     // 每小时的事件
     hourTimer = new QTimer(this);
     hourTimer->setInterval(3600000);
@@ -687,6 +705,8 @@ MainWindow::MainWindow(QWidget *parent)
         if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
         userComeTimes.clear();
+        sumPopul = 0;
+        countPopul = 0;
 
         /* // 更新每天弹幕
         if (danmuLogFile)
@@ -2475,7 +2495,7 @@ void MainWindow::initWS()
 
         // 定时发送心跳包
         heartTimer->start();
-        danmuPopularTimer->start();
+        minuteTimer->start();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -2493,7 +2513,7 @@ void MainWindow::initWS()
         ui->popularityLabel->setText("人气值：0");
 
         heartTimer->stop();
-        danmuPopularTimer->stop();
+        minuteTimer->stop();
 
         // 如果不是主动连接的话，这个会断开
         if (!connectServerTimer->isActive())
@@ -4016,6 +4036,14 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     else if (key == "%today_guard%")
         msg.replace(key, snum(dailyGuard));
 
+    // 今日最高人气
+    else if (key == "%today_max_ppl%")
+        msg.replace(key, snum(dailyMaxPopul));
+
+    // 当前人气
+    else if (key == "%popularity%")
+        msg.replace(key, snum(currentPopul));
+
     // 当前时间
     else if (key == "%time_hour%")
         msg.replace(key, snum(QTime::currentTime().hour()));
@@ -4121,7 +4149,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
 
     // 弹幕人气
     else if (key == "%danmu_popularity%")
-        msg.replace(key, snum(danmuPopularValue));
+        msg.replace(key, snum(danmuPopulValue));
 
     // 游戏用户
     else if (key == "%in_game_users%")
@@ -4789,6 +4817,8 @@ void MainWindow::startCalculateDailyData()
     dailyGiftSilver = dailySettings->value("gift_silver", 0).toInt();
     dailyGiftGold = dailySettings->value("gift_gold", 0).toInt();
     dailyGuard = dailySettings->value("guard", 0).toInt();
+    dailyMaxPopul = dailySettings->value("max_popularity", 0).toInt();
+    dailyAvePopul = 0;
     if (currentGuards.size())
         dailySettings->setValue("guard_count", currentGuards.size());
     else
@@ -7091,7 +7121,7 @@ void MainWindow::handleMessage(QJsonObject json)
             noReplyMsgs.removeOne(msg);
         }
         else
-            minuteDanmuPopular++;
+            minuteDanmuPopul++;
         danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
 
@@ -11597,9 +11627,9 @@ void MainWindow::releaseLiveData(bool prepare)
 
     }
 
-    danmuPopularQueue.clear();
-    minuteDanmuPopular = 0;
-    danmuPopularValue = 0;
+    danmuPopulQueue.clear();
+    minuteDanmuPopul = 0;
+    danmuPopulValue = 0;
 
     diangeHistory.clear();
     ui->diangeHistoryListWidget->clear();
@@ -13261,7 +13291,10 @@ void MainWindow::on_exportDailyButton_clicked()
                << st.value("gift_gold", 0).toInt() << ","
                << st.value("gift_silver", 0).toInt() << ","
                << st.value("guard", 0).toInt() << ","
-               << st.value("guard_count", 0).toInt() << "\n";
+               << st.value("guard_count", 0).toInt()  << ","
+               << st.value("average_popularity", 0).toInt() << ","
+               << st.value("max_popularity", 0).toInt()
+               << "\n";
     }
 
     file.close();

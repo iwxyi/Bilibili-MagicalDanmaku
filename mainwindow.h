@@ -876,6 +876,8 @@ private:
     int dailyGiftSilver = 0; // 银瓜子总价值
     int dailyGiftGold = 0; // 金瓜子总价值
     int dailyGuard = 0; // 上船/续船人次
+    int dailyMaxPopul = 0; // 最高人气
+    int dailyAvePopul = 0; // 平均人气
     bool todayIsEnding = false;
 
     // 船员
@@ -932,11 +934,16 @@ private:
     // 自动禁言
     QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
 
-    // 弹幕人气判断
-    QTimer* danmuPopularTimer;
-    int minuteDanmuPopular = 0;
-    QList<int> danmuPopularQueue;
-    int danmuPopularValue = 0;
+    // 直播间人气
+    QTimer* minuteTimer;
+    int currentPopul = 0; // 当前人气
+    qint64 sumPopul = 0;     // 自启动以来的人气
+    qint64 countPopul = 0;   // 自启动以来的人气总和
+
+    // 弹幕人气
+    int minuteDanmuPopul = 0;
+    QList<int> danmuPopulQueue;
+    int danmuPopulValue = 0;
 
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;

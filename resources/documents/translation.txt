@@ -49,6 +49,8 @@
 %今日金瓜子总数%=%today_gold%
 %今日银瓜子总数%=%today_silver%
 %今日上船人次%=%today_guard%
+%今日最高人气%=%today_max_ppl%
+%当前人气%=%popularity%
 %房管%=%admin%
 %大航海级别%=%guard%
 %大航海名称%=%guard_name%

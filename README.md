@@ -615,6 +615,8 @@ border-image: url(C:/Path/To/Image.png)
 | today_gold       | 今日金瓜子总数     |                                                              |
 | today_silver     | 今日银瓜子总数     |                                                              |
 | today_guard      | 今日上船人次       | 续多个月算多次                                               |
+| today_max_ppl    | 今日最高人气       |                                                              |
+| popularity       | 当前人气           |                                                              |
 | admin            | 房管               | 只有弹幕、进入才有                                           |
 | guard            | 大航海级别         | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
 | guard_name       | 大航海身份         | “舰长”/“提督”/“总督”，非船员为空                             |
