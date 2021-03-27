@@ -2299,6 +2299,7 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             addAutoReply(false, "", "", row);
         else if (listKey == CODE_EVENT_ACTION_KEY)
             addEventAction(false, "", "", row);
+        (this->*saveFunc)();
     })->disable(!item);
     menu->addAction("上移", [=]{
         moveToRow(row - 1);
