@@ -926,7 +926,7 @@ private:
     QSet<qint64> oppositeAudience; // 对面的观众
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
     QString pkToken;
-    QHash<qint64, int> cmAudience; // 自己这边跑过去串门了: 1串门，0已经回来/提示
+    QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
 
     // 欢迎
     qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道

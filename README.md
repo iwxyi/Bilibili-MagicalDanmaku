@@ -569,8 +569,9 @@ border-image: url(C:/Path/To/Image.png)
 | csrf             |                    | 用户的csrf token                                             |
 | level            | 用户等级           | 进入直播间没有level                                          |
 | text             | 弹幕消息           | 几乎用不到                                                   |
-| come_count       | 用户进来次数       |                                                              |
-| come_time        | 用户上次进来时间   | 10位时间戳，第一次进来是0；自动清理一周没来的                |
+| come_count       | 用户进入次数       |                                                              |
+| come_time        | 用户上次进入时间   | 10位时间戳，第一次进来是0；自动清理一周没来的。如果是串门回来，则是刚跑到对面串门的时间 |
+| come_time_delta  | 进入时间差         | 当前时间 - 用户上次进入时间                                  |
 | gift_gold        | 礼物金瓜子         | 非送礼答谢则没有                                             |
 | gift_silver      | 礼物银瓜子         |                                                              |
 | gift_coin        | 礼物瓜子           | 不分金瓜子银瓜子                                             |
@@ -598,7 +599,7 @@ border-image: url(C:/Path/To/Image.png)
 | pk_room_id       | 对面房间号         | 未在PK中则为空，下同                                         |
 | pk_uid           | 对面主播ID         |                                                              |
 | pk_uname         | 对面主播昵称       |                                                              |
-| pk_opposite      | 对面进来           | 需开启串门提示                                               |
+| pk_opposite      | 对面进入           | 需开启串门提示                                               |
 | pk_view_return   | 去对面串门回来     | 需开启串门提示                                               |
 | pk_count         | 匹配次数           | 未在PK中为0，下同                                            |
 | pk_touta_prob    | 对面偷塔概率       | 百分比的数值部分，例如概率为50%，则为50。初次PK为0           |
@@ -607,7 +608,7 @@ border-image: url(C:/Path/To/Image.png)
 | pk_ending        | 大乱斗尾声         | 快结束前2秒，根据设置中的大乱斗【提前】值判断                |
 | pk_trans_gold    | 大乱斗积分转金瓜子 | pk的1分等于多少金瓜子                                        |
 | pk_max_gold      | 大乱斗偷塔上限     | 单次偷塔赠送礼物的金瓜子数量上限                             |
-| today_come       | 今日进来人次       | 每个人可能重复进入                                           |
+| today_come       | 今日进入人次       | 每个人可能重复进入                                           |
 | today_newbie_msg | 今日新人人数       |                                                              |
 | today_danmaku    | 今日弹幕总数       |                                                              |
 | today_fans       | 今日新增粉丝数     |                                                              |

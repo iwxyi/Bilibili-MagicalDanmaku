@@ -3848,6 +3848,15 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
                                         : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong()));
     }
 
+    // 和现在的时间差
+    else if (key == "%come_time_delta%")
+    {
+        qint64 prevTime = danmaku.getMsgType() == MSG_WELCOME
+                ? danmaku.getPrevTimestamp()
+                : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
+        msg.replace(key, snum(QDateTime::currentSecsSinceEpoch() - prevTime));
+    }
+
     // 本次送礼金瓜子
     else if (key == "%gift_gold%")
         msg.replace(key, snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0));
@@ -9355,10 +9364,11 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     }
     else if (cmAudience.contains(uid))
     {
-        if (cmAudience.value(uid) == 1)
+        if (cmAudience.value(uid) > 0)
         {
-            cmAudience[uid] = 0;
             danmaku.setViewReturn(true);
+            danmaku.setPrevTimestamp(cmAudience[uid]);
+            cmAudience[uid] = 0; // 标记为串门回来
             localNotify(danmaku.getNickname() + " 去对面串门回来");
         }
     }
@@ -11411,7 +11421,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                 return ;
         }
         if (!cmAudience.contains(uid))
-            cmAudience.insert(uid, 1);
+            cmAudience.insert(uid, timestamp);
 
         // qDebug() << s8("pk观众互动：") << username << spreadDesc;
         QString localName = getLocalNickname(uid);

@@ -7,8 +7,9 @@
 %用户简写昵称%=%simple_name%
 %用户等级%=%level%
 %弹幕消息%=%text%
-%用户进来次数%=%come_count%
-%用户上次进来时间%=%come_time%
+%用户进入次数%=%come_count%
+%用户上次进入时间%=%come_time%
+%进入时间差%=%come_time_delta%
 %礼物金瓜子%=%gift_gold%
 %礼物银瓜子%=%gift_silver%
 %礼物瓜子%=%gift_coin%
@@ -32,7 +33,7 @@
 %对面房间号%=%pk_room_id%
 %对面主播ID%=%pk_uid%
 %对面主播昵称%=%pk_uname%
-%对面进来%=%pk_opposite%
+%对面进入%=%pk_opposite%
 %去对面串门回来%=%pk_view_return%
 %匹配次数%=%pk_count%
 %对面偷塔概率%=%pk_touta_prob%
@@ -41,7 +42,7 @@
 %大乱斗尾声%=%pk_ending%
 %大乱斗积分转金瓜子%=%pk_trans_gold%
 %大乱斗偷塔上限%=%pk_max_gold%
-%今日进来人次%=%today_come%
+%今日进入人次%=%today_come%
 %今日新人人数%=%today_newbie_msg%
 %今日弹幕总数%=%today_danmaku%
 %今日新增粉丝数%=%today_fans%
