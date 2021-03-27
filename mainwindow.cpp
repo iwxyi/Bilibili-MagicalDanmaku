@@ -7720,7 +7720,8 @@ void MainWindow::handleMessage(QJsonObject json)
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
         appendNewLiveDanmaku(danmaku);
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        pkGifts.append(danmaku);
+        triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
     {
