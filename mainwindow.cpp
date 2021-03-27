@@ -5526,11 +5526,10 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
-
     // 添加到文本数值
     if (msg.contains("addGameText"))
     {
-        re = RE("addGame\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        re = RE("addGameText\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5544,7 +5543,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
 
-        re = RE("addGameText\\s*\\(\\s*(\\d+)\\s*\\)");
+        re = RE("addGameText\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5559,7 +5558,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 从游戏文本中移除
     if (msg.contains("removeGameText"))
     {
-        re = RE("removeGameText\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(\\d+)\\s*\\)");
+        re = RE("removeGameText\\s*\\(\\s*(\\d{1,2})\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5573,7 +5572,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
 
-        re = RE("removeGameText\\s*\\(\\s*(\\d+)\\s*\\)");
+        re = RE("removeGameText\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5584,6 +5583,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
     }
+
     // 执行远程命令
     if (msg.contains("execRemoteCommand"))
     {
