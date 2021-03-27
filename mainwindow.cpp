@@ -66,6 +66,15 @@ MainWindow::MainWindow(QWidget *parent)
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(dataPath + "www");
 
+    appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
+    if (appVersion.startsWith("v") || appVersion.startsWith("V"))
+            appVersion.replace(0, 1, "");
+    if (appVersion != settings->value("runtime/appVersion").toString())
+    {
+        upgradeVersionToLastest(settings->value("runtime/appVersion").toString());
+        settings->setValue("runtime/appVersion", appVersion);
+    }
+
     // 页面
     int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
@@ -12245,6 +12254,46 @@ QString MainWindow::GetFileVertion(QString fullName)
 #else
     return "";
 #endif
+}
+
+/**
+ * 升级版本所所需要修改的数据
+ */
+void MainWindow::upgradeVersionToLastest(QString oldVersion)
+{
+    if (oldVersion.startsWith("v") || oldVersion.startsWith("V"))
+        oldVersion.replace(0, 1, "");
+    QStringList versions = {
+        "3.6.3",
+        appVersion // 最后一个一定是最新版本
+    };
+    int index = versions.lastIndexOf(oldVersion);
+    if (index < 0)
+        index = 0;
+    for (int i = index; i < versions.size() - 1; i++)
+    {
+        QString ver = versions.at(i);
+        qDebug() << "从旧版升级：" << ver << " -> " << versions.at(i+1);
+        upgradeOneVersionData(ver);
+    }
+}
+
+void MainWindow::upgradeOneVersionData(QString beforeVersion)
+{
+    if (beforeVersion == "3.6.3")
+    {
+        settings->beginGroup("heaps");
+        heaps->beginGroup("heaps");
+        auto keys = settings->allKeys();
+        for (int i = 0; i < keys.size(); i++)
+        {
+            QString key = keys.at(i);
+            heaps->setValue(key, settings->value(key));
+            settings->remove(key);
+        }
+        heaps->endGroup();
+        settings->endGroup();
+    }
 }
 
 void MainWindow::generateDefaultCode(QString path)

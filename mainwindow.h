@@ -756,6 +756,8 @@ private:
     void syncMagicalRooms();
 
     QString GetFileVertion(QString fullName);
+    void upgradeVersionToLastest(QString oldVersion);
+    void upgradeOneVersionData(QString beforeVersion);
 
     void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");
@@ -765,6 +767,7 @@ private:
     QSettings* settings;
     QSettings* heaps;
     QString dataPath;
+    QString appVersion; // 不带v
     QString appNewVersion;
     QString appDownloadUrl;
 
