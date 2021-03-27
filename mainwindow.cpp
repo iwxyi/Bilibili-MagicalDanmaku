@@ -11106,8 +11106,10 @@ int MainWindow::getPkMaxGold(int votes)
         return pkMaxGold;
     int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold * 10 / 1000);
     double prop = pow(money, 1.0/3);
+    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000);
+    maxProp = qMax(1.0, maxProp);
     prop = qMax(1.0, prop);
-    prop = qMin(prop, 10.0);
+    prop = qMin(prop, maxProp);
     if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
         localNotify("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
