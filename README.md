@@ -328,6 +328,16 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 
+##### 示例：不答谢禁言用户
+
+提升优先级，空弹幕，即屏蔽。
+
+```
+[%blocked%]****
+```
+
+
+
 ### 定时任务
 
 定时发送随机弹幕、执行命令。
@@ -624,7 +634,7 @@ border-image: url(C:/Path/To/Image.png)
 | time_day_year    | 今年第几天         |                                                              |
 | timestamp        | 当前时间戳         | 10位时间戳，可用于比较进入时间、多久没来等                   |
 | timestamp13      | 当前时间戳13       | 13位时间戳                                                   |
-| in_game_users    | 在游戏用户中       | uid在gameUsers[0]中                                          |
+| in_game_users    | 在游戏用户中       | uid在gameUsers[0]中（高性能，但重启清空）                    |
 | in_game_numbers  | 在游戏数值中       | uid在gameNumbers[0]中                                        |
 | in_game_texts    | 在游戏文本中       | text在gameTexts[0]中，空格等都需要一模一样                   |
 | app_path         | 程序目录           |                                                              |
@@ -635,6 +645,9 @@ border-image: url(C:/Path/To/Image.png)
 | up_uname         | 主播名字           |                                                              |
 | my_uid           | 机器人ID           |                                                              |
 | my_uname         | 机器人名字         |                                                              |
+| is_up            | 是主播             |                                                              |
+| is_me            | 是机器人           |                                                              |
+| is_room_medal    | 戴本勋章           | 戴本直播间的粉丝勋章                                         |
 | care             | 特别关心           | 是：1，否：0                                                 |
 | strong_notify    | 强提醒             | 是：1，否：0                                                 |
 | not_welcome      | 不自动欢迎         | 不欢迎：1，欢迎：0                                           |

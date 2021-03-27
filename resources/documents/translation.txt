@@ -78,6 +78,9 @@
 %主播ID%=%up_uid%
 %主播名字%=%up_uname%
 %机器人ID%=%my_uid%
+%是主播%=%is_up%
+%是机器人%=%is_me%
+%戴本勋章%=%is_room_medal%
 %机器人名字%=%my_uname%
 %特别关心%=%care%
 %强提醒%=%strong_notify%

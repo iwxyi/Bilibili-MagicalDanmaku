@@ -4092,6 +4092,16 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     else if (key == "%my_uname%")
         msg.replace(key, cookieUname);
 
+    // 是主播
+    else if (key == "%is_up%")
+        msg.replace(key, danmaku.getUid() == upUid.toLongLong() ? "1" : "0");
+    // 是机器人
+    else if (key == "%is_me%")
+        msg.replace(key, danmaku.getUid() == cookieUid.toLongLong() ? "1" : "0");
+    // 戴房间勋章
+    else if (key == "%is_room_medal%")
+        msg.replace(key, danmaku.getAnchorRoomid() == roomId ? "1" : "0");
+
     // 本地设置
     // 特别关心
     else if (key == "%care%")
