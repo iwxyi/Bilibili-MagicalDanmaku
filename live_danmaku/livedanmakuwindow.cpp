@@ -168,6 +168,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     // 模式
     simpleMode = settings->value("livedanmakuwindow/simpleMode", false).toBool();
     chatMode = settings->value("livedanmakuwindow/chatMode", false).toBool();
+    allowH5 = settings->value("livedanmakuwindow/allowH5", false).toBool();
 
     readReplyKey();
 
@@ -338,6 +339,12 @@ void LiveDanmakuWindow::drawPixmapCenter(QPainter &painter, const QPixmap &bgPix
     painter.drawPixmap(rect(), bgPixmap, QRect(x, y, width(), height()));
 }
 
+QString LiveDanmakuWindow::filterH5(QString msg)
+{
+    return msg.replace("<", "&lt;")
+            .replace(">", "&gt;");
+}
+
 void LiveDanmakuWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape)
@@ -361,13 +368,6 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
-
-    QString nameColor = danmaku.getUnameColor().isEmpty()
-            ? QVariant(msgColor).toString()
-            : danmaku.getUnameColor();
-    QString nameText = "<font color='" + nameColor + "'>"
-                       + danmaku.getNickname() + "</font> ";
-    QString text = nameText + danmaku.getText();
 
     QWidget* widget = new QWidget(listWidget);
     PortraitLabel* portrait = new PortraitLabel(PORTRAIT_SIDE, widget);
@@ -404,6 +404,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             return "share";
         case MSG_PK_BEST:
             return "pk-best";
+        case MSG_SUPER_CHAT:
+            return "super-chat";
         }
     };
 
@@ -636,6 +638,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             }
         }
 
+        // 安全过滤
+        if (!allowH5)
+            msg = filterH5(msg);
         // 彩色消息
         QString colorfulMsg = msg;
         if (simpleMode)
@@ -643,13 +648,13 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         else if (danmaku.isNoReply() || danmaku.isPkLink()) // 灰色
         {
             colorfulMsg = "<font color='gray'>"
-                    + danmaku.getText() + "</font> ";
+                    + msg + "</font> ";
         }
         else if (!isBlankColor(danmaku.getTextColor())
                  && !ignoreDanmakuColors.contains(danmaku.getTextColor()))
         {
             colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
-                    + danmaku.getText() + "</font> ";
+                    + msg + "</font> ";
         }
 
         text = nameText + " " + colorfulMsg;
@@ -1034,6 +1039,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionHlColor = new QAction("高亮颜色", this);
     QAction* actionFont = new QAction("弹幕字体", this);
     QAction* actionLabelStyleSheet = new QAction("标签样式", this);
+    QAction* actionAllowH5 = new QAction("允许H5标签", this);
 
     QMenu* pictureMenu = new QMenu("背景图片", settingMenu);
     QAction* actionPictureSelect = new QAction("选择图片", this);
@@ -1086,6 +1092,8 @@ void LiveDanmakuWindow::showMenu()
     actionPictureRatio->setChecked(aspectRatio);
     actionPictureBlur->setCheckable(true);
     actionPictureBlur->setChecked(pictureBlur);
+    actionAllowH5->setCheckable(true);
+    actionAllowH5->setChecked(allowH5);
 
     if (uid != 0)
     {
@@ -1256,6 +1264,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionHlColor);
     settingMenu->addAction(actionFont);
     settingMenu->addAction(actionLabelStyleSheet);
+    settingMenu->addAction(actionAllowH5);
     settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
@@ -1336,6 +1345,10 @@ void LiveDanmakuWindow::showMenu()
         labelStyleSheet = ss;
         settings->setValue("livedanmakuwindow/labelStyleSheet", labelStyleSheet);
         resetItemsStyleSheet();
+    });
+    connect(actionAllowH5, &QAction::triggered, this, [=]{
+        allowH5 = !allowH5;
+        settings->setValue("livedanmakuwindow/allowH5", allowH5);
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

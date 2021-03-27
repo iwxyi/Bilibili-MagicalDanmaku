@@ -130,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
     bool reply = settings->value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
     ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(settings->value("danmaku/aiReplyMsg", 0).toInt()));
+    ui->AIReplyMsgCheck->setEnabled(reply);
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
@@ -212,6 +213,7 @@ MainWindow::MainWindow(QWidget *parent)
     else if (pkMsgSync == 2)
         ui->pkMsgSyncCheck->setCheckState(Qt::Checked);
     ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
+    ui->pkMsgSyncCheck->setEnabled(pkChuanmenEnable);
 
     // 判断机器人
     judgeRobot = settings->value("danmaku/judgeRobot", 0).toInt();
@@ -1626,6 +1628,8 @@ void MainWindow::on_AIReplyCheck_stateChanged(int)
     settings->setValue("danmaku/aiReply", reply);
     if (danmakuWindow)
         danmakuWindow->setAIReply(reply);
+
+    ui->AIReplyMsgCheck->setEnabled(reply);
 }
 
 void MainWindow::on_testDanmakuEdit_returnPressed()
@@ -13513,4 +13517,9 @@ void MainWindow::on_timerPushCmdSpin_editingFinished()
 
     if (pushCmdsTimer)
         pushCmdsTimer->setInterval(val * 100);
+}
+
+void MainWindow::on_pkChuanmenCheck_stateChanged(int arg1)
+{
+    ui->pkMsgSyncCheck->setEnabled(arg1);
 }

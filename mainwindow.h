@@ -574,6 +574,8 @@ private slots:
 
     void on_timerPushCmdSpin_editingFinished();
 
+    void on_pkChuanmenCheck_stateChanged(int arg1);
+
 private:
     void initPath();
     void readConfig();

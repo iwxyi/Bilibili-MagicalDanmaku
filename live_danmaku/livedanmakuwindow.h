@@ -147,6 +147,7 @@ private:
     void selectBgPicture();
     QPixmap getBlurPixmap(QPixmap& bg);
     void drawPixmapCenter(QPainter& painter, const QPixmap& bgPixmap);
+    QString filterH5(QString msg);
 
 private:
     void setBgAlpha(int x);
@@ -186,6 +187,7 @@ private:
     bool chatMode = false; // 聊天模式：只显示弹幕，并且不使用彩色
     bool newbieTip = true;
     QList<QString> ignoreDanmakuColors;
+    bool allowH5 = false;
 
     QString headDir; // 头像保存的路径/ (带/)
 

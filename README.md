@@ -485,6 +485,7 @@ border-image: url(C:/Path/To/Image.png)
 - attention：关注
 - block：禁言
 - share：分享直播间
+- super-chat：醒目留言
 
 以下是一个示例：
 
@@ -503,8 +504,6 @@ border-image: url(C:/Path/To/Image.png)
 ```
 
 <div id='programing'/>
-
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -1308,7 +1307,7 @@ tips：
 | WARNING                       | 被警告，`%text%`可获取内容                                   |
 | room_admin_entrance           | 设置房管                                                     |
 | ROOM_ADMINS                   | 房管数量改变                                                 |
-| MEDAL_UPGRADE                 | 勋章升级，仅送礼物后（不算上船）触发。`%medal_level%`获取新等级（但用户当前勋章不一定是本直播间） |
+| MEDAL_UPGRADE                 | 勋章升级，仅送礼物后触发，需设置中开启“监听勋章升级”。`%medal_level%`获取新等级（但用户当前勋章不一定是本直播间） |
 
 > 考虑到发送弹幕的限制，如果同一个事件添加多条弹幕，那么会按队列顺序发送，而不会一口气发完。
 >
@@ -1407,6 +1406,8 @@ tips：
 
 
 ##### 示例：恭喜勋章升级
+
+需要在设置中开启“监听勋章升级”，否则不会一直刷新勋章。
 
 送完礼物后勋章升级（仅送礼，**不包括**上船、每天第一条弹幕）
 

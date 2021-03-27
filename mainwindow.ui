@@ -340,6 +340,9 @@ QTabBar::tab:selected
           </item>
           <item>
            <widget class="QCheckBox" name="retryFailedDanmuCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;尝试重新发送失败的弹幕&lt;/p&gt;&lt;p&gt;包括：超出限制长度（自动分割）、1s内过快发送、3s内重复消息&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>发送失败重试</string>
             </property>
@@ -365,7 +368,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,1,1,0,0">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -379,13 +382,6 @@ QTabBar::tab:selected
             </property>
            </widget>
           </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11" stretch="1,0,0,0">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
           <item>
            <widget class="QCheckBox" name="AIReplyCheck">
             <property name="toolTip">
@@ -446,7 +442,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,1,1">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -461,29 +457,22 @@ QTabBar::tab:selected
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="enableBlockCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在实时弹幕的菜单中添加拉黑&lt;/p&gt;&lt;p&gt;只有房管/主播才有黑名单权限&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>启用禁言(主播/房管)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="judgeRobotCheck">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;p&gt;根据关注、粉丝、投稿、作品点赞等数据智能分析，有一定几率存在误判情况，但不影响整体效果&lt;/p&gt;&lt;p&gt;进来的人很多时，不建议开启，容易出现“请求被拦截”&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>机器人判断</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="1">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="enableBlockCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在实时弹幕的菜单中添加拉黑&lt;/p&gt;&lt;p&gt;只有房管/主播才有黑名单权限&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>启用禁言（主播/房管）</string>
             </property>
            </widget>
           </item>
@@ -574,7 +563,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
           <property name="topMargin">
            <number>0</number>
           </property>
