@@ -118,6 +118,38 @@ public:
         qint64 mtime;
     };
 
+    struct GiftCombo
+    {
+        qint64 uid;
+        QString uname;
+        qint64 giftId;
+        QString giftName;
+        int count;          // 数量
+        qint64 total_coins; // 金瓜子数量
+
+        GiftCombo(qint64 uid, QString uname, qint64 giftId, QString giftName, int count, int coins)
+            : uid(uid), uname(uname), giftId(giftId), giftName(giftName), count(count), total_coins(coins)
+        {}
+
+        void merge(LiveDanmaku danmaku)
+        {
+            if (this->giftId != danmaku.getGiftId() || this->uid != danmaku.getUid())
+            {
+                qWarning() << "合并礼物数据错误：" << toString() << danmaku.toString();
+            }
+            this->count += danmaku.getNumber();
+            this->total_coins += danmaku.getTotalCoin();
+        }
+
+        QString toString() const
+        {
+            return QString("%1(%2):%3(%4)x%5(%6)")
+                    .arg(uname).arg(uname)
+                    .arg(giftName).arg(giftId)
+                    .arg(count).arg(total_coins);
+        }
+    };
+
     enum Operation
     {
         HANDSHAKE = 0,
@@ -645,6 +677,7 @@ private:
     void getBagList(qint64 sendExpire = 0);
     void updateExistGuards(int page);
     void updateOnlineGoldRank();
+    void appendLiveGift(const LiveDanmaku& danmaku);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -947,6 +980,9 @@ private:
     int minuteDanmuPopul = 0;
     QList<int> danmuPopulQueue;
     int danmuPopulValue = 0;
+
+    // 本次直播的礼物列表
+    QList<LiveDanmaku> liveGifts;
 
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;
