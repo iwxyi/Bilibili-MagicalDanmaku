@@ -780,7 +780,7 @@ private:
     void processSocketTextMsg(QWebSocket* clientSocket, const QString& message);
     void closeServer();
     void sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku);
-    void sendJsonToSockets(QString cmd, QJsonObject data, QWebSocket* socket = nullptr);
+    void sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket* socket = nullptr);
     void processServerVariant(QByteArray& doc);
     void sendTextToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
@@ -982,7 +982,7 @@ private:
     int danmuPopulValue = 0;
 
     // 本次直播的礼物列表
-    QList<LiveDanmaku> liveGifts;
+    QList<LiveDanmaku> liveAllGifts;
 
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;

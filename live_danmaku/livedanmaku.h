@@ -177,7 +177,7 @@ public:
         return danmaku;
     }
 
-    QJsonObject toJson()
+    QJsonObject toJson() const
     {
         QJsonObject object;
         object.insert("nickname", nickname);
@@ -272,6 +272,16 @@ public:
             object.insert("prev_timestamp", prev_timestamp);
 
         return object;
+    }
+
+    static QJsonArray toJsonArray(const QList<LiveDanmaku> danmakus)
+    {
+        QJsonArray array;
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            array.append(danmakus.at(i).toJson());
+        }
+        return array;
     }
 
     QString toString() const

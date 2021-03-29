@@ -9907,19 +9907,21 @@ void MainWindow::appendLiveGift(const LiveDanmaku &danmaku)
         qWarning() << "添加礼物到liveGift错误：" << danmaku.toString();
         return ;
     }
-    for (int i = 0; i < liveGifts.size(); i++)
+    for (int i = 0; i < liveAllGifts.size(); i++)
     {
-        auto his = liveGifts.at(i);
+        auto his = liveAllGifts.at(i);
         if (his.getUid() == danmaku.getUid()
                 && his.getGiftId() == danmaku.getGiftId())
         {
-            liveGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            qDebug() << "~~~~~~~~~合并礼物：" << liveAllGifts[i].toString();
             return ;
         }
     }
 
     // 新建一个
-    liveGifts.append(danmaku);
+    liveAllGifts.append(danmaku);
+    qDebug() << "~~~~~~~~~添加礼物：" << danmaku.toString();
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -11694,7 +11696,7 @@ void MainWindow::releaseLiveData(bool prepare)
     xliveHeartBeatTimer->stop();
 
     // 本次直播数据
-    liveGifts.clear();
+    liveAllGifts.clear();
 
     if (danmakuWindow)
     {
@@ -12745,7 +12747,7 @@ void MainWindow::slotStartWork()
     });
 
     // 本次直播数据
-    liveGifts.clear();
+    liveAllGifts.clear();
 
     // 获取舰长
     updateExistGuards(0);
