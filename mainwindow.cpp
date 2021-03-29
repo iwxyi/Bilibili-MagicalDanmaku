@@ -721,21 +721,45 @@ MainWindow::MainWindow(QWidget *parent)
 
         // 触发每天事件
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
 
         // 判断每一月初
         if (QDateTime::currentDateTime().date().day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku());
+            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
 
             // 判断每一年初
             if (QDateTime::currentDateTime().date().month() == 1)
             {
                 triggerCmdEvent("NEW_YEAR", LiveDanmaku());
+                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
                 triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku());
             }
         }
     });
     dayTimer->start();
+
+    // 判断第一次打开
+    int prevYear = settings->value("runtime/open_year", -1).toInt();
+    int prevMonth = settings->value("runtime/open_month", -1).toInt();
+    int prevDay = settings->value("runtime/open_day", -1).toInt();
+    QDate currDate = QDate::currentDate();
+    if (prevYear != currDate.year())
+    {
+        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_year", currDate.year());
+    }
+    if (prevMonth != currDate.month())
+    {
+        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_month", currDate.month());
+    }
+    if (prevDay != currDate.day())
+    {
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_day", currDate.month());
+    }
 
     // 调试模式
     localDebug = settings->value("debug/localDebug", false).toBool();
@@ -13539,6 +13563,11 @@ void MainWindow::on_actionPaste_Code_triggered()
             item = addEventAction(false, "", "");
             ui->tabWidget->setCurrentWidget(ui->tabEvent);
             ui->eventListWidget->scrollToBottom();
+        }
+        else
+        {
+            qWarning() << "未知格式：" << json;
+            return ;
         }
         item->fromJson(json);
     };
