@@ -697,8 +697,7 @@ private:
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
-    void restoreVariantTranslation(QString text);
-    QString saveVariantTrsnalation();
+    void restoreVariantTranslation();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();
 

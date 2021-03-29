@@ -382,9 +382,7 @@ MainWindow::MainWindow(QWidget *parent)
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
 
     // 多语言翻译
-    restoreVariantTranslation(readTextFile(":/documents/translation"));
-    // settings->setValue("danmaku/variantTranslation", readTextFile(":/documents/translation"));
-    // restoreVariantTranslation(settings->value("danmaku/variantTranslation", "").toString());
+    restoreVariantTranslation();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -6583,33 +6581,64 @@ QString MainWindow::saveCustomVariant()
     return sl.join("\n");
 }
 
-void MainWindow::restoreVariantTranslation(QString text)
+void MainWindow::restoreVariantTranslation()
 {
     variantTranslation.clear();
+
+    // 变量
+    QString text = readTextFile(":/documents/translation_variables");
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    QRegularExpressionMatch match;
     foreach (QString s, sl)
     {
-        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
-        QRegularExpressionMatch match;
         if (s.indexOf(re, 0, &match) != -1)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
+            key = "%" + key + "%";
+            val = "%" + val + "%";
             variantTranslation.append(QPair<QString, QString>(key, val));
         }
         else
             qCritical() << "多语言翻译读取失败：" << s;
     }
-}
 
-QString MainWindow::saveVariantTrsnalation()
-{
-    QStringList sl;
-    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
+    // 方法
+    text = readTextFile(":/documents/translation_methods");
+    sl = text.split("\n", QString::SkipEmptyParts);
+    re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    foreach (QString s, sl)
     {
-        sl << it->first + " = " + it->second;
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            key = ">" + key + "(";
+            val = ">" + val + "(";
+            variantTranslation.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "多语言翻译读取失败：" << s;
     }
-    return sl.join("\n");
+
+    // 函数
+    text = readTextFile(":/documents/translation_functions");
+    sl = text.split("\n", QString::SkipEmptyParts);
+    re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    foreach (QString s, sl)
+    {
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            key = ">" + key + "(";
+            val = ">" + val + "(";
+            variantTranslation.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "多语言翻译读取失败：" << s;
+    }
 }
 
 void MainWindow::saveOrderSongs(const SongList &songs)
@@ -10642,14 +10671,6 @@ void MainWindow::on_actionCustom_Variant_triggered()
 
 void MainWindow::on_actionVariant_Translation_triggered()
 {
-    QString text = saveVariantTrsnalation();
-    bool ok;
-    text = TextInputDialog::getText(this, "多语言翻译", "请输入翻译列表：\n示例格式：%用户昵称%=%uname%", text, &ok);
-    if (!ok)
-        return ;
-    settings->setValue("danmaku/variantTranslation", text);
-
-    restoreVariantTranslation(text);
 }
 
 void MainWindow::on_actionSend_Long_Text_triggered()
