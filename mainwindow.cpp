@@ -660,7 +660,8 @@ MainWindow::MainWindow(QWidget *parent)
         QDateTime current = QDateTime::currentDateTime();
         QTime t = current.time();
         if (todayIsEnding) // 已经触发最后一小时事件了
-        {}
+        {
+        }
         else if (current.time().hour() == 23
                 || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
         {
@@ -689,6 +690,12 @@ MainWindow::MainWindow(QWidget *parent)
                         triggerCmdEvent("YEAR_END", LiveDanmaku());
                     }
                 }
+
+                // 判断每周最后一天
+                if (d.dayOfWeek() == 7)
+                {
+                    triggerCmdEvent("WEEK_END", LiveDanmaku());
+                }
             });
         }
     });
@@ -703,6 +710,7 @@ MainWindow::MainWindow(QWidget *parent)
     QDateTime tomorrow(tomorrowDate, zeroTime);
     qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
     dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
+    QDate currDate = QDate::currentDate();
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
@@ -715,27 +723,34 @@ MainWindow::MainWindow(QWidget *parent)
         sumPopul = 0;
         countPopul = 0;
 
-        /* // 更新每天弹幕
-        if (danmuLogFile)
-            startSaveDanmakuToFile(); */
-
         // 触发每天事件
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_day", currDate.day());
 
         // 判断每一月初
-        if (QDateTime::currentDateTime().date().day() == 1)
+        if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku());
             triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+            settings->setValue("runtime/open_month", currDate.month());
 
             // 判断每一年初
-            if (QDateTime::currentDateTime().date().month() == 1)
+            if (currDate.month() == 1)
             {
                 triggerCmdEvent("NEW_YEAR", LiveDanmaku());
                 triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
                 triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku());
+                settings->setValue("runtime/open_year", currDate.year());
             }
+        }
+
+        // 判断每周一
+        if (currDate.dayOfWeek() == 1)
+        {
+            triggerCmdEvent("NEW_WEEK", LiveDanmaku());
+            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+            settings->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
     dayTimer->start();
@@ -744,14 +759,16 @@ MainWindow::MainWindow(QWidget *parent)
     int prevYear = settings->value("runtime/open_year", -1).toInt();
     int prevMonth = settings->value("runtime/open_month", -1).toInt();
     int prevDay = settings->value("runtime/open_day", -1).toInt();
-    QDate currDate = QDate::currentDate();
+    int prevWeekNumber = settings->value("runtime/open_week_number", -1).toInt();
     if (prevYear != currDate.year())
     {
+        prevMonth = prevDay = -1; // 避免是不同年的同一月
         triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
         settings->setValue("runtime/open_year", currDate.year());
     }
     if (prevMonth != currDate.month())
     {
+        prevDay = -1; // 避免不同月的同一天
         triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
         settings->setValue("runtime/open_month", currDate.month());
     }
@@ -759,6 +776,11 @@ MainWindow::MainWindow(QWidget *parent)
     {
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
         settings->setValue("runtime/open_day", currDate.month());
+    }
+    if (prevWeekNumber != currDate.weekNumber())
+    {
+        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
     // 调试模式
