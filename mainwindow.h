@@ -730,8 +730,7 @@ private:
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
-    void restoreVariantTranslation(QString text);
-    QString saveVariantTrsnalation();
+    void restoreVariantTranslation();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();
 
@@ -747,6 +746,7 @@ private:
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
+    void addBannedWord(QString word, QString anchor);
 
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);

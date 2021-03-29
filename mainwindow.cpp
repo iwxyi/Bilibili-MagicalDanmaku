@@ -382,9 +382,7 @@ MainWindow::MainWindow(QWidget *parent)
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
 
     // 多语言翻译
-    restoreVariantTranslation(readTextFile(":/documents/translation"));
-    // settings->setValue("danmaku/variantTranslation", readTextFile(":/documents/translation"));
-    // restoreVariantTranslation(settings->value("danmaku/variantTranslation", "").toString());
+    restoreVariantTranslation();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -662,7 +660,8 @@ MainWindow::MainWindow(QWidget *parent)
         QDateTime current = QDateTime::currentDateTime();
         QTime t = current.time();
         if (todayIsEnding) // 已经触发最后一小时事件了
-        {}
+        {
+        }
         else if (current.time().hour() == 23
                 || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
         {
@@ -691,6 +690,12 @@ MainWindow::MainWindow(QWidget *parent)
                         triggerCmdEvent("YEAR_END", LiveDanmaku());
                     }
                 }
+
+                // 判断每周最后一天
+                if (d.dayOfWeek() == 7)
+                {
+                    triggerCmdEvent("WEEK_END", LiveDanmaku());
+                }
             });
         }
     });
@@ -705,6 +710,7 @@ MainWindow::MainWindow(QWidget *parent)
     QDateTime tomorrow(tomorrowDate, zeroTime);
     qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
     dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
+    QDate currDate = QDate::currentDate();
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
@@ -717,27 +723,65 @@ MainWindow::MainWindow(QWidget *parent)
         sumPopul = 0;
         countPopul = 0;
 
-        /* // 更新每天弹幕
-        if (danmuLogFile)
-            startSaveDanmakuToFile(); */
-
         // 触发每天事件
         triggerCmdEvent("NEW_DAY", LiveDanmaku());
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_day", currDate.day());
 
         // 判断每一月初
-        if (QDateTime::currentDateTime().date().day() == 1)
+        if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku());
+            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+            settings->setValue("runtime/open_month", currDate.month());
 
             // 判断每一年初
-            if (QDateTime::currentDateTime().date().month() == 1)
+            if (currDate.month() == 1)
             {
                 triggerCmdEvent("NEW_YEAR", LiveDanmaku());
+                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
                 triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku());
+                settings->setValue("runtime/open_year", currDate.year());
             }
+        }
+
+        // 判断每周一
+        if (currDate.dayOfWeek() == 1)
+        {
+            triggerCmdEvent("NEW_WEEK", LiveDanmaku());
+            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+            settings->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
     dayTimer->start();
+
+    // 判断第一次打开
+    int prevYear = settings->value("runtime/open_year", -1).toInt();
+    int prevMonth = settings->value("runtime/open_month", -1).toInt();
+    int prevDay = settings->value("runtime/open_day", -1).toInt();
+    int prevWeekNumber = settings->value("runtime/open_week_number", -1).toInt();
+    if (prevYear != currDate.year())
+    {
+        prevMonth = prevDay = -1; // 避免是不同年的同一月
+        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_year", currDate.year());
+    }
+    if (prevMonth != currDate.month())
+    {
+        prevDay = -1; // 避免不同月的同一天
+        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_month", currDate.month());
+    }
+    if (prevDay != currDate.day())
+    {
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_day", currDate.month());
+    }
+    if (prevWeekNumber != currDate.weekNumber())
+    {
+        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+        settings->setValue("runtime/open_week_number", currDate.weekNumber());
+    }
 
     // 调试模式
     localDebug = settings->value("debug/localDebug", false).toBool();
@@ -4694,7 +4738,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
-                         "^(.{2})(不是|有点|才是|敲|很).+$", "^(.{2,})想要(.+)$",
+                         "^(.{2,})(.)不\\2.*",
+                         "^(.{2})(不|有点|才是|敲|很|能有|想).+",
                         "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -6428,9 +6473,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
 
     // 自定义事件
-    if (msg.contains("triggerEvent"))
+    if (msg.contains("triggerEvent") || msg.contains("emitEvent"))
     {
-        re = RE("triggerEvent\\s*\\(\\s*(.+)\\s*\\)");
+        re = RE("(?:trigger|emit)Event\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6468,6 +6513,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
             simulateKeys(text);
+            return true;
+        }
+    }
+
+    // 添加违禁词（到指定锚点）
+    if (msg.contains("addBannedWord"))
+    {
+        re = RE("addBannedWord\\s*\\(\\s*(.+)\\s*,\\s*(\\S+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString word = caps.at(1);
+            QString anchor = caps.at(2);
+            addBannedWord(word, anchor);
             return true;
         }
     }
@@ -6567,33 +6627,64 @@ QString MainWindow::saveCustomVariant()
     return sl.join("\n");
 }
 
-void MainWindow::restoreVariantTranslation(QString text)
+void MainWindow::restoreVariantTranslation()
 {
     variantTranslation.clear();
+
+    // 变量
+    QString text = readTextFile(":/documents/translation_variables");
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    QRegularExpressionMatch match;
     foreach (QString s, sl)
     {
-        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
-        QRegularExpressionMatch match;
         if (s.indexOf(re, 0, &match) != -1)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
+            key = "%" + key + "%";
+            val = "%" + val + "%";
             variantTranslation.append(QPair<QString, QString>(key, val));
         }
         else
             qCritical() << "多语言翻译读取失败：" << s;
     }
-}
 
-QString MainWindow::saveVariantTrsnalation()
-{
-    QStringList sl;
-    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
+    // 方法
+    text = readTextFile(":/documents/translation_methods");
+    sl = text.split("\n", QString::SkipEmptyParts);
+    re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    foreach (QString s, sl)
     {
-        sl << it->first + " = " + it->second;
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            key = ">" + key + "(";
+            val = ">" + val + "(";
+            variantTranslation.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "多语言翻译读取失败：" << s;
     }
-    return sl.join("\n");
+
+    // 函数
+    text = readTextFile(":/documents/translation_functions");
+    sl = text.split("\n", QString::SkipEmptyParts);
+    re = QRegularExpression("^\\s*(\\S+)\\s*=\\s?(.*)$");
+    foreach (QString s, sl)
+    {
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            key = ">" + key + "(";
+            val = ">" + val + "(";
+            variantTranslation.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "多语言翻译读取失败：" << s;
+    }
 }
 
 void MainWindow::saveOrderSongs(const SongList &songs)
@@ -10656,14 +10747,6 @@ void MainWindow::on_actionCustom_Variant_triggered()
 
 void MainWindow::on_actionVariant_Translation_triggered()
 {
-    QString text = saveVariantTrsnalation();
-    bool ok;
-    text = TextInputDialog::getText(this, "多语言翻译", "请输入翻译列表：\n示例格式：%用户昵称%=%uname%", text, &ok);
-    if (!ok)
-        return ;
-    settings->setValue("danmaku/variantTranslation", text);
-
-    restoreVariantTranslation(text);
 }
 
 void MainWindow::on_actionSend_Long_Text_triggered()
@@ -11525,6 +11608,45 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
         return true;
     }
     return shallAutoMsg();
+}
+
+void MainWindow::addBannedWord(QString word, QString anchor)
+{
+    if (word.isEmpty())
+        return ;
+
+    QString text = ui->autoBlockNewbieKeysEdit->toPlainText();
+    if (anchor.isEmpty())
+    {
+        if (anchor.endsWith("|") || word.startsWith("|"))
+            text += word;
+        else
+            text += "|" + word;
+    }
+    else
+    {
+        if (!anchor.startsWith("|"))
+            anchor = "|" + anchor;
+        text.replace(anchor, "|" + word + anchor);
+    }
+    ui->autoBlockNewbieKeysEdit->setPlainText(text);
+
+    text = ui->promptBlockNewbieKeysEdit->toPlainText();
+
+    if (anchor.isEmpty())
+    {
+        if (anchor.endsWith("|") || word.startsWith("|"))
+            text += word;
+        else
+            text += "|" + word;
+    }
+    else
+    {
+        if (!anchor.startsWith("|"))
+            anchor = "|" + anchor;
+        text.replace(anchor, "|" + word + anchor);
+    }
+    ui->promptBlockNewbieKeysEdit->setPlainText(text);
 }
 
 void MainWindow::saveMonthGuard()
@@ -13499,6 +13621,11 @@ void MainWindow::on_actionPaste_Code_triggered()
             item = addEventAction(false, "", "");
             ui->tabWidget->setCurrentWidget(ui->tabEvent);
             ui->eventListWidget->scrollToBottom();
+        }
+        else
+        {
+            qWarning() << "未知格式：" << json;
+            return ;
         }
         item->fromJson(json);
     };

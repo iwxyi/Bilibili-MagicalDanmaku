@@ -117,7 +117,9 @@
         <file alias="wx_qr">resources/documents/wx_qr.png</file>
         <file alias="zfb_qr">resources/documents/zfb_qr.jpg</file>
         <file alias="default_json">resources/documents/default_code.json</file>
-        <file alias="translation">resources/documents/translation.txt</file>
+        <file alias="translation_functions">resources/documents/translation_functions.txt</file>
+        <file alias="translation_methods">resources/documents/translation_methods.txt</file>
+        <file alias="translation_variables">resources/documents/translation_variables.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">resources/bubbles/bubble1.png</file>
