@@ -142,6 +142,7 @@
 >开启大乱斗(=>joinBattle(
 >触发事件(=>triggerEvent(
 >点歌(=>orderSong(
+>添加违禁词(=>addBannedWord(
 >格式化时间(=>time(
 >查找用户名(=>unameToUid(
 >输入文本(=>inputText(

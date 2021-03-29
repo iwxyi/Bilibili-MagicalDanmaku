@@ -714,6 +714,7 @@ private:
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
+    void addBannedWord(QString word, QString anchor);
 
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);

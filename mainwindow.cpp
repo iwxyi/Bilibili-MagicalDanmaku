@@ -4694,7 +4694,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
-                         "^(.{2})(不是|有点|才是|敲|很).+$", "^(.{2,})想要(.+)$",
+                         "^(.{2,})(.)不\\2.*",
+                         "^(.{2})(不|有点|才是|敲|很|能有|想).+",
                         "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -6428,9 +6429,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
 
     // 自定义事件
-    if (msg.contains("triggerEvent"))
+    if (msg.contains("triggerEvent") || msg.contains("emitEvent"))
     {
-        re = RE("triggerEvent\\s*\\(\\s*(.+)\\s*\\)");
+        re = RE("(?:trigger|emit)Event\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6468,6 +6469,21 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
             simulateKeys(text);
+            return true;
+        }
+    }
+
+    // 添加违禁词（到指定锚点）
+    if (msg.contains("addBannedWord"))
+    {
+        re = RE("addBannedWord\\s*\\(\\s*(.+)\\s*,\\s*(\\S+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString word = caps.at(1);
+            QString anchor = caps.at(2);
+            addBannedWord(word, anchor);
             return true;
         }
     }
@@ -11495,6 +11511,45 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
         return true;
     }
     return shallAutoMsg();
+}
+
+void MainWindow::addBannedWord(QString word, QString anchor)
+{
+    if (word.isEmpty())
+        return ;
+
+    QString text = ui->autoBlockNewbieKeysEdit->toPlainText();
+    if (anchor.isEmpty())
+    {
+        if (anchor.endsWith("|") || word.startsWith("|"))
+            text += word;
+        else
+            text += "|" + word;
+    }
+    else
+    {
+        if (!anchor.startsWith("|"))
+            anchor = "|" + anchor;
+        text.replace(anchor, "|" + word + anchor);
+    }
+    ui->autoBlockNewbieKeysEdit->setPlainText(text);
+
+    text = ui->promptBlockNewbieKeysEdit->toPlainText();
+
+    if (anchor.isEmpty())
+    {
+        if (anchor.endsWith("|") || word.startsWith("|"))
+            text += word;
+        else
+            text += "|" + word;
+    }
+    else
+    {
+        if (!anchor.startsWith("|"))
+            anchor = "|" + anchor;
+        text.replace(anchor, "|" + word + anchor);
+    }
+    ui->promptBlockNewbieKeysEdit->setPlainText(text);
 }
 
 void MainWindow::saveMonthGuard()
