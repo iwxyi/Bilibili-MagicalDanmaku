@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include "utils/dlog.h"
+#include "dlog.h"
 
 #ifdef Q_OS_WIN32
 // 崩溃前操作

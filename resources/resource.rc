@@ -3,7 +3,7 @@
 #else
 #include <winver.h>
 #endif
-IDI_ICON1 ICON DISCARDABLE "appicon.ico"
+IDI_ICON1 ICON DISCARDABLE "icons/appicon.ico"
 VS_VERSION_INFO VERSIONINFO
     FILEVERSION 1,0,0,0
     PRODUCTVERSION 1,0,0,0

@@ -10,7 +10,7 @@ CONFIG += c++11
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
 
-RC_FILE += resource.rc
+RC_FILE += resources/resource.rc
 
 # 图片太大，会导致 cc1plus.exe:-1: error: out of memory allocating 4198399 bytes 错误
 CONFIG += resources_big
@@ -34,9 +34,10 @@ contains(DEFINES, ENABLE_SHORTCUT) {
 }
 
 INCLUDEPATH += \
+    mainwindow/ \
     third_party/utils/ \
-    widgets/list_items/ \
-    live_danmaku/ \
+    mainwindow/list_items/ \
+    mainwindow/live_danmaku/ \
     third_party/interactive_buttons/ \
     third_party/facile_menu/ \
     third_party/qhttpserver/ \
@@ -50,6 +51,7 @@ INCLUDEPATH += \
     widgets/room_status_dialog/ \
     widgets/video_lyric_creator/ \
     widgets/ \
+    third_party/ \
     widgets/editor/ \
     third_party/gif/ \
     third_party/picture_browser/
@@ -62,11 +64,11 @@ SOURCES += \
     third_party/gif/avilib.cpp \
     third_party/gif/gif.cpp \
     third_party/interactive_buttons/interactivebuttonbase.cpp \
-    widgets/list_items/listiteminterface.cpp \
-    live_danmaku/livedanmakuwindow.cpp \
+    mainwindow/list_items/listiteminterface.cpp \
+    mainwindow/live_danmaku/livedanmakuwindow.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
-    main.cpp \
-    mainwindow.cpp \
+    mainwindow/main.cpp \
+    mainwindow/mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
     order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
@@ -82,7 +84,7 @@ SOURCES += \
     third_party/qrencode/qrspec.c \
     third_party/qrencode/rsecc.c \
     third_party/qrencode/split.c \
-    server.cpp \
+    mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
     widgets/video_player/videosurface.cpp \
     widgets/catch_you_dialog/catchyouwidget.cpp \
@@ -90,13 +92,13 @@ SOURCES += \
     widgets/escape_dialog/escapedialog.cpp \
     widgets/escape_dialog/hoverbutton.cpp \
     widgets/eternal_block_dialog/eternalblockdialog.cpp \
-    widgets/list_items/eventwidget.cpp \
+    mainwindow/list_items/eventwidget.cpp \
     widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
     widgets/login_dialog/qrcodelogindialog.cpp \
-    widgets/list_items/replywidget.cpp \
+    mainwindow/list_items/replywidget.cpp \
     widgets/room_status_dialog/roomstatusdialog.cpp \
-    widgets/list_items/taskwidget.cpp \
+    mainwindow/list_items/taskwidget.cpp \
     third_party/utils/fileutil.cpp \
     third_party/utils/stringutil.cpp \
     third_party/utils/textinputdialog.cpp \
@@ -111,14 +113,14 @@ HEADERS += \
     third_party/gif/avilib.h \
     third_party/gif/gif.h \
     third_party/interactive_buttons/interactivebuttonbase.h \
-    widgets/list_items/listiteminterface.h \
-    live_danmaku/commonvalues.h \
-    live_danmaku/freecopyedit.h \
-    live_danmaku/livedanmakuwindow.h \
-    live_danmaku/livedanmaku.h \
-    live_danmaku/portraitlabel.h \
+    mainwindow/list_items/listiteminterface.h \
+    mainwindow/live_danmaku/commonvalues.h \
+    mainwindow/live_danmaku/freecopyedit.h \
+    mainwindow/live_danmaku/livedanmakuwindow.h \
+    mainwindow/live_danmaku/livedanmaku.h \
+    mainwindow/live_danmaku/portraitlabel.h \
     widgets/lucky_draw/luckydrawwindow.h \
-    mainwindow.h \
+    mainwindow/mainwindow.h \
     order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
     order_player/itemselectionlistview.h \
@@ -151,14 +153,14 @@ HEADERS += \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
     widgets/eternal_block_dialog/eternalblockdialog.h \
-    widgets/list_items/eventwidget.h \
+    mainwindow/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/netinterface.h \
     widgets/login_dialog/qrcodelogindialog.h \
-    widgets/list_items/replywidget.h \
+    mainwindow/list_items/replywidget.h \
     widgets/room_status_dialog/roomstatusdialog.h \
-    widgets/list_items/taskwidget.h \
+    mainwindow/list_items/taskwidget.h \
     third_party/utils/dlog.h \
     third_party/utils/fileutil.h \
     third_party/utils/netutil.h \
@@ -170,7 +172,7 @@ HEADERS += \
 
 FORMS += \
     widgets/lucky_draw/luckydrawwindow.ui \
-    mainwindow.ui \
+    mainwindow/mainwindow.ui \
     order_player/logindialog.ui \
     order_player/orderplayerwindow.ui \
     third_party/picture_browser/picturebrowser.ui \
@@ -207,7 +209,7 @@ DISTFILES += \
     android/gradlew \
     android/gradlew.bat \
     android/res/values/libs.xml \
-    appicon.ico \
+    resources/icons/appicon.ico \
     pictures/神奇弹幕-用法.pdf \
     resource.rc \
     resources/LAVFilters-0.74.1-Installer.exe \
@@ -215,7 +217,7 @@ DISTFILES += \
     resources/神奇弹幕-用法.pdf
 
 RESOURCES += \
-    resource.qrc
+    resources/resource.qrc
 
 contains(ANDROID_TARGET_ARCH,) {
     ANDROID_PACKAGE_SOURCE_DIR = \
@@ -223,9 +225,9 @@ contains(ANDROID_TARGET_ARCH,) {
 }
 
 
-unix|win32: LIBS += -L$$PWD/libs/ -lqhttpserver
+unix|win32: LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
 win32: LIBS += -lversion
 
-INCLUDEPATH += $$PWD/libs \
+INCLUDEPATH += $$PWD/third_party/libs \
     qhttpserver/
-DEPENDPATH += $$PWD/libs
+DEPENDPATH += $$PWD/third_party/libs
