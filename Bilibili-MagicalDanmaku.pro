@@ -28,89 +28,96 @@ unix:!macx{
 }
 
 contains(DEFINES, ENABLE_SHORTCUT) {
-    include($$PWD/qxtglobalshortcut5/qxt.pri)
+    include($$PWD/third_party/qxtglobalshortcut5/qxt.pri)
 }else{
     message("shortcuts not support")
 }
 
 INCLUDEPATH += \
-    utils/ \
-    list_items/ \
+    third_party/utils/ \
+    widgets/list_items/ \
     live_danmaku/ \
-    interactive_buttons/ \
-    facile_menu/ \
+    third_party/interactive_buttons/ \
+    third_party/facile_menu/ \
+    third_party/qhttpserver/ \
     order_player/ \
-    color_octree/ \
-    lucky_draw/ \
-    video_player/ \
+    third_party/color_octree/ \
+    widgets/lucky_draw/ \
+    widgets/video_player/ \
+    widgets/catch_you_dialog/ \
+    widgets/eternal_block_dialog/ \
+    widgets/login_dialog/ \
+    widgets/room_status_dialog/ \
+    widgets/video_lyric_creator/ \
     widgets/ \
-    gif/ \
-    picture_browser/
+    widgets/editor/ \
+    third_party/gif/ \
+    third_party/picture_browser/
 
 SOURCES += \
-    color_octree/coloroctree.cpp \
-    color_octree/imageutil.cpp \
-    facile_menu/facilemenu.cpp \
-    facile_menu/facilemenuitem.cpp \
-    gif/avilib.cpp \
-    gif/gif.cpp \
-    interactive_buttons/interactivebuttonbase.cpp \
-    list_items/listiteminterface.cpp \
+    third_party/color_octree/coloroctree.cpp \
+    third_party/color_octree/imageutil.cpp \
+    third_party/facile_menu/facilemenu.cpp \
+    third_party/facile_menu/facilemenuitem.cpp \
+    third_party/gif/avilib.cpp \
+    third_party/gif/gif.cpp \
+    third_party/interactive_buttons/interactivebuttonbase.cpp \
+    widgets/list_items/listiteminterface.cpp \
     live_danmaku/livedanmakuwindow.cpp \
-    lucky_draw/luckydrawwindow.cpp \
+    widgets/lucky_draw/luckydrawwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
     order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
     order_player/orderplayerwindow.cpp \
-    picture_browser/picturebrowser.cpp \
-    picture_browser/resizablepicture.cpp \
-    qrencode/bitstream.c \
-    qrencode/mask.c \
-    qrencode/mmask.c \
-    qrencode/mqrspec.c \
-    qrencode/qrencode.c \
-    qrencode/qrinput.c \
-    qrencode/qrspec.c \
-    qrencode/rsecc.c \
-    qrencode/split.c \
+    third_party/picture_browser/picturebrowser.cpp \
+    third_party/picture_browser/resizablepicture.cpp \
+    third_party/qrencode/bitstream.c \
+    third_party/qrencode/mask.c \
+    third_party/qrencode/mmask.c \
+    third_party/qrencode/mqrspec.c \
+    third_party/qrencode/qrencode.c \
+    third_party/qrencode/qrinput.c \
+    third_party/qrencode/qrspec.c \
+    third_party/qrencode/rsecc.c \
+    third_party/qrencode/split.c \
     server.cpp \
-    utils/xfytts.cpp \
-    video_player/videosurface.cpp \
-    widgets/catchyouwidget.cpp \
-    widgets/conditioneditor.cpp \
+    third_party/utils/xfytts.cpp \
+    widgets/video_player/videosurface.cpp \
+    widgets/catch_you_dialog/catchyouwidget.cpp \
+    widgets/editor/conditioneditor.cpp \
     widgets/escape_dialog/escapedialog.cpp \
     widgets/escape_dialog/hoverbutton.cpp \
-    widgets/eternalblockdialog.cpp \
-    list_items/eventwidget.cpp \
+    widgets/eternal_block_dialog/eternalblockdialog.cpp \
+    widgets/list_items/eventwidget.cpp \
     widgets/fluentbutton.cpp \
     widgets/mytabwidget.cpp \
-    widgets/qrcodelogindialog.cpp \
-    list_items/replywidget.cpp \
-    widgets/roomstatusdialog.cpp \
-    list_items/taskwidget.cpp \
-    utils/fileutil.cpp \
-    utils/stringutil.cpp \
-    utils/textinputdialog.cpp \
-    video_player/livevideoplayer.cpp \
-    widgets/videolyricscreator.cpp
+    widgets/login_dialog/qrcodelogindialog.cpp \
+    widgets/list_items/replywidget.cpp \
+    widgets/room_status_dialog/roomstatusdialog.cpp \
+    widgets/list_items/taskwidget.cpp \
+    third_party/utils/fileutil.cpp \
+    third_party/utils/stringutil.cpp \
+    third_party/utils/textinputdialog.cpp \
+    widgets/video_player/livevideoplayer.cpp \
+    widgets/video_lyric_creator/videolyricscreator.cpp
 
 HEADERS += \
-    color_octree/coloroctree.h \
-    color_octree/imageutil.h \
-    facile_menu/facilemenu.h \
-    facile_menu/facilemenuitem.h \
-    gif/avilib.h \
-    gif/gif.h \
-    interactive_buttons/interactivebuttonbase.h \
-    list_items/listiteminterface.h \
+    third_party/color_octree/coloroctree.h \
+    third_party/color_octree/imageutil.h \
+    third_party/facile_menu/facilemenu.h \
+    third_party/facile_menu/facilemenuitem.h \
+    third_party/gif/avilib.h \
+    third_party/gif/gif.h \
+    third_party/interactive_buttons/interactivebuttonbase.h \
+    widgets/list_items/listiteminterface.h \
     live_danmaku/commonvalues.h \
     live_danmaku/freecopyedit.h \
     live_danmaku/livedanmakuwindow.h \
     live_danmaku/livedanmaku.h \
     live_danmaku/portraitlabel.h \
-    lucky_draw/luckydrawwindow.h \
+    widgets/lucky_draw/luckydrawwindow.h \
     mainwindow.h \
     order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
@@ -121,68 +128,68 @@ HEADERS += \
     order_player/orderplayerwindow.h \
     order_player/roundedpixmaplabel.h \
     order_player/songbeans.h \
-    picture_browser/ASCII_Art.h \
-    picture_browser/picturebrowser.h \
-    picture_browser/resizablepicture.h \
-    qrencode/bitstream.h \
-    qrencode/config.h \
-    qrencode/mask.h \
-    qrencode/mmask.h \
-    qrencode/mqrspec.h \
-    qrencode/qrencode.h \
-    qrencode/qrencode_inner.h \
-    qrencode/qrinput.h \
-    qrencode/qrspec.h \
-    qrencode/rsecc.h \
-    qrencode/split.h \
-    utils/myjson.h \
-    utils/xfytts.h \
-    video_player/videosurface.h \
+    third_party/picture_browser/ASCII_Art.h \
+    third_party/picture_browser/picturebrowser.h \
+    third_party/picture_browser/resizablepicture.h \
+    third_party/qrencode/bitstream.h \
+    third_party/qrencode/config.h \
+    third_party/qrencode/mask.h \
+    third_party/qrencode/mmask.h \
+    third_party/qrencode/mqrspec.h \
+    third_party/qrencode/qrencode.h \
+    third_party/qrencode/qrencode_inner.h \
+    third_party/qrencode/qrinput.h \
+    third_party/qrencode/qrspec.h \
+    third_party/qrencode/rsecc.h \
+    third_party/qrencode/split.h \
+    third_party/utils/myjson.h \
+    third_party/utils/xfytts.h \
+    widgets/video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
-    widgets/catchyouwidget.h \
-    widgets/conditioneditor.h \
+    widgets/catch_you_dialog/catchyouwidget.h \
+    widgets/editor/conditioneditor.h \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
-    widgets/eternalblockdialog.h \
-    list_items/eventwidget.h \
+    widgets/eternal_block_dialog/eternalblockdialog.h \
+    widgets/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
     widgets/netinterface.h \
-    widgets/qrcodelogindialog.h \
-    list_items/replywidget.h \
-    widgets/roomstatusdialog.h \
-    list_items/taskwidget.h \
-    utils/dlog.h \
-    utils/fileutil.h \
-    utils/netutil.h \
-    utils/pinyinutil.h \
-    utils/stringutil.h \
-    utils/textinputdialog.h \
-    video_player/livevideoplayer.h \
-    widgets/videolyricscreator.h
+    widgets/login_dialog/qrcodelogindialog.h \
+    widgets/list_items/replywidget.h \
+    widgets/room_status_dialog/roomstatusdialog.h \
+    widgets/list_items/taskwidget.h \
+    third_party/utils/dlog.h \
+    third_party/utils/fileutil.h \
+    third_party/utils/netutil.h \
+    third_party/utils/pinyinutil.h \
+    third_party/utils/stringutil.h \
+    third_party/utils/textinputdialog.h \
+    widgets/video_player/livevideoplayer.h \
+    widgets/video_lyric_creator/videolyricscreator.h
 
 FORMS += \
-    lucky_draw/luckydrawwindow.ui \
+    widgets/lucky_draw/luckydrawwindow.ui \
     mainwindow.ui \
     order_player/logindialog.ui \
     order_player/orderplayerwindow.ui \
-    picture_browser/picturebrowser.ui \
-    utils/textinputdialog.ui \
-    video_player/livevideoplayer.ui \
-    widgets/catchyouwidget.ui \
-    widgets/eternalblockdialog.ui \
-    widgets/qrcodelogindialog.ui \
-    widgets/roomstatusdialog.ui \
-    widgets/videolyricscreator.ui
+    third_party/picture_browser/picturebrowser.ui \
+    third_party/utils/textinputdialog.ui \
+    widgets/video_player/livevideoplayer.ui \
+    widgets/catch_you_dialog/catchyouwidget.ui \
+    widgets/eternal_block_dialog/eternalblockdialog.ui \
+    widgets/login_dialog/qrcodelogindialog.ui \
+    widgets/room_status_dialog/roomstatusdialog.ui \
+    widgets/video_lyric_creator/videolyricscreator.ui
 
 contains(DEFINES, ENABLE_HTTP_SERVER) {
 HEADERS += \
-    qhttpserver/qhttpconnection.h \
-    qhttpserver/qhttprequest.h \
-    qhttpserver/qhttpresponse.h \
-    qhttpserver/qhttpserver.h \
-    qhttpserver/qhttpserverapi.h \
-    qhttpserver/qhttpserverfwd.h
+    third_party/qhttpserver/qhttpconnection.h \
+    third_party/qhttpserver/qhttprequest.h \
+    third_party/qhttpserver/qhttpresponse.h \
+    third_party/qhttpserver/qhttpserver.h \
+    third_party/qhttpserver/qhttpserverapi.h \
+    third_party/qhttpserver/qhttpserverfwd.h
 }
 
 # Default rules for deployment.
