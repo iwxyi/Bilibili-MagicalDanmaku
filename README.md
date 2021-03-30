@@ -1715,8 +1715,10 @@ ws.onopen = function() {
 
 另外，有专门的其他CMD，如下：
 
-- SONG_LIST：点歌列表
-- LYRIC_LIST：歌词
+- `SONG_LIST`：点歌列表
+- `LYRIC_LIST`：歌词
+- `CURRENT_SONG`：正在播放的歌曲
+- `LIVE_ALL_GIFTS`：本场直播所有礼物（同一人同一礼物合并），仅接受一次
 
 以点歌姬的点歌列表为例，接收到`SONG_LIST`并显示在DOM节点中：
 

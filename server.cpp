@@ -104,23 +104,36 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             sl << val.toString();
         danmakuCmdsMaps[clientSocket] = sl;
 
+        // 点歌相关
         if (musicWindow)
         {
+            // 点歌列表
             if (sl.contains("SONG_LIST"))
             {
                 sendSongListToSockets = true;
                 sendMusicList(musicWindow->getOrderSongs(), clientSocket);
             }
+
+            // 歌词
             if (sl.contains("LYRIC_LIST"))
             {
                 sendLyricListToSockets = true;
                 sendLyricList(clientSocket);
             }
+
+            // 当前歌曲变更
             if (sl.contains("CURRENT_SONG"))
             {
                 sendCurrentSongToSockets = true;
                 sendJsonToSockets("CURRENT_SONG", musicWindow->getPlayingSong().toJson(), clientSocket);
             }
+        }
+
+        // 本场直播所有礼物
+        if (sl.contains("LIVE_ALL_GIFTS"))
+        {
+            // 这里不排序，直接发送
+            sendJsonToSockets("LIVE_ALL_GIFTS", LiveDanmaku::toJsonArray(liveAllGifts), clientSocket);
         }
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
@@ -227,7 +240,7 @@ void MainWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
     }
 }
 
-void MainWindow::sendJsonToSockets(QString cmd, QJsonObject data, QWebSocket *socket)
+void MainWindow::sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket *socket)
 {
     if (!socket && !danmakuSockets.size()) // 不需要发送，空着的
         return ;

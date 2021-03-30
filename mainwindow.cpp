@@ -7613,6 +7613,9 @@ void MainWindow::handleMessage(QJsonObject json)
             // 方便起见，直接全部保存下来了
             pkGifts.append(danmaku);
 
+            // 添加礼物记录
+            appendLiveGift(danmaku);
+
             // 正在偷塔阶段
             if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
             {
@@ -9985,6 +9988,33 @@ void MainWindow::updateOnlineGoldRank()
     });
 }
 
+/**
+ * 添加本次直播的金瓜子礼物
+ */
+void MainWindow::appendLiveGift(const LiveDanmaku &danmaku)
+{
+    if (danmaku.getTotalCoin() == 0)
+    {
+        qWarning() << "添加礼物到liveGift错误：" << danmaku.toString();
+        return ;
+    }
+    for (int i = 0; i < liveAllGifts.size(); i++)
+    {
+        auto his = liveAllGifts.at(i);
+        if (his.getUid() == danmaku.getUid()
+                && his.getGiftId() == danmaku.getGiftId())
+        {
+            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            qDebug() << "~~~~~~~~~合并礼物：" << liveAllGifts[i].toString();
+            return ;
+        }
+    }
+
+    // 新建一个
+    liveAllGifts.append(danmaku);
+    qDebug() << "~~~~~~~~~添加礼物：" << danmaku.toString();
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -11787,6 +11817,9 @@ void MainWindow::releaseLiveData(bool prepare)
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
 
+    // 本次直播数据
+    liveAllGifts.clear();
+
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
@@ -12834,6 +12867,9 @@ void MainWindow::slotStartWork()
             return ;
         syncMagicalRooms();
     });
+
+    // 本次直播数据
+    liveAllGifts.clear();
 
     // 获取舰长
     updateExistGuards(0);
