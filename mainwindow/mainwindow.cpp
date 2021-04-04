@@ -719,6 +719,8 @@ MainWindow::MainWindow(QWidget *parent)
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
+        if (danmuLogFile && !liveStatus)
+            startSaveDanmakuToFile();
         userComeTimes.clear();
         sumPopul = 0;
         countPopul = 0;
@@ -3432,6 +3434,9 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
     });
 }
 
+/**
+ * socket连接到直播间，但不一定已开播
+ */
 void MainWindow::startMsgLoop()
 {
     // 保存房间弹幕
@@ -8022,8 +8027,6 @@ void MainWindow::handleMessage(QJsonObject json)
                 "web_effective_time": 2
             }
         }*/
-        qDebug() << json;
-
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
