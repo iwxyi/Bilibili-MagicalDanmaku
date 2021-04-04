@@ -1481,7 +1481,7 @@ tips：
 | PK_BATTLE_SETTLE              |                                                              |
 | PK_BATTLE_START               | 大乱斗开始                                                   |
 | PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
-| PK_FINAL                      | 大乱斗尾声，最后几秒                                         |
+| PK_ENDING                | 大乱斗尾声，最后几秒                                         |
 | PK_BATTLE_END                 | 大乱斗结束                                                   |
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |

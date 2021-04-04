@@ -18,6 +18,10 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("iwxyi.com");
     QCoreApplication::setApplicationName("神奇弹幕");
 
+    QFont font(a.font());
+    font.setFamily("微软雅黑");
+    a.setFont(font);
+
     MainWindow w;
     if (w.getSettings()->value("runtime/debugToFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);
