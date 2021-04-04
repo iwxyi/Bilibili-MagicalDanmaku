@@ -456,8 +456,6 @@ private slots:
 
     void on_autoLOTCheck_clicked();
 
-    void on_localDebugCheck_clicked();
-
     void on_blockNotOnlyNewbieCheck_clicked();
 
     void on_autoBlockTimeSpin_editingFinished();
@@ -554,8 +552,6 @@ private slots:
 
     void on_retryFailedDanmuCheck_clicked();
 
-    void on_debugPrintCheck_clicked();
-
     void on_songLyricsToFileCheck_clicked();
 
     void on_songLyricsToFileMaxSpin_editingFinished();
@@ -609,6 +605,10 @@ private slots:
     void on_pkChuanmenCheck_stateChanged(int arg1);
 
     void on_actionLast_Candidate_triggered();
+
+    void on_actionLocal_Mode_triggered();
+
+    void on_actionDebug_Mode_triggered();
 
 private:
     void initPath();

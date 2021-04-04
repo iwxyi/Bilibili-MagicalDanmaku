@@ -785,9 +785,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 调试模式
     localDebug = settings->value("debug/localDebug", false).toBool();
-    ui->localDebugCheck->setChecked(localDebug);
+    ui->actionLocal_Mode->setChecked(localDebug);
     debugPrint = settings->value("debug/debugPrint", false).toBool();
-    ui->debugPrintCheck->setChecked(debugPrint);
+    ui->actionDebug_Mode->setChecked(debugPrint);
     saveRecvCmds = settings->value("debug/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
     if (saveRecvCmds)
@@ -12940,11 +12940,6 @@ void MainWindow::on_autoLOTCheck_clicked()
     settings->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
 }
 
-void MainWindow::on_localDebugCheck_clicked()
-{
-    settings->setValue("debug/localDebug", localDebug = ui->localDebugCheck->isChecked());
-}
-
 void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
 {
     bool enable = ui->blockNotOnlyNewbieCheck->isChecked();
@@ -13456,11 +13451,6 @@ void MainWindow::on_retryFailedDanmuCheck_clicked()
     settings->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
 }
 
-void MainWindow::on_debugPrintCheck_clicked()
-{
-    settings->setValue("debug/debugPrint", debugPrint = ui->debugPrintCheck->isChecked());
-}
-
 void MainWindow::on_songLyricsToFileCheck_clicked()
 {
     settings->setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
@@ -13734,11 +13724,11 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
         }
 
         // 本地模式提示
-        if (!ui->localDebugCheck->isChecked())
+        if (!ui->actionLocal_Mode->isChecked())
         {
             if (QMessageBox::question(this, "模拟CMDS", "您的[本地模式]未开启，可能会回复奇奇怪怪的内容，是否开启[本地模式]？",
                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes)
-                ui->localDebugCheck->setChecked(localDebug = true);
+                ui->actionLocal_Mode->setChecked(localDebug = true);
         }
         ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = false);
 
@@ -13760,8 +13750,8 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     }
     else // 关闭模拟输入
     {
-        if (ui->localDebugCheck->isChecked() && settings->value("debug/localDebug", false).toBool())
-            ui->localDebugCheck->setChecked(localDebug = false);
+        if (ui->actionLocal_Mode->isChecked() && settings->value("debug/localDebug", false).toBool())
+            ui->actionLocal_Mode->setChecked(localDebug = false);
 
         if (settings->value("debug/saveRecvCmds", false).toBool())
             ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
@@ -13830,3 +13820,14 @@ void MainWindow::on_actionLast_Candidate_triggered()
 {
     QMessageBox::information(this, "最后一次调试的候选弹幕", lastConditionDanmu + "\n\n---------------------\n\n" + lastCandidateDanmaku);
 }
+
+void MainWindow::on_actionLocal_Mode_triggered()
+{
+    settings->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
+}
+
+void MainWindow::on_actionDebug_Mode_triggered()
+{
+    settings->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
+}
+
