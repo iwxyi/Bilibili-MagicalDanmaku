@@ -3,6 +3,8 @@
 输入文本=inputText
 取文本长度=strlen
 删首尾空=trim
+取子串=substr
 在游戏用户中=inGameUsers
 在游戏数值中=inGameNumbers
 在游戏文本中=inGameTexts
+取变量值=getValue

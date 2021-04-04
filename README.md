@@ -712,11 +712,13 @@ border-image: url(C:/Path/To/Image.png)
 | time(format)               | 格式化时间   | 当前时间转换为数值               |
 | unameToUid(uname)          | 查找用户名   | 由部分昵称倒找弹幕记录，获得UID  |
 | inputText(title, default)  | 输入文本     | 输入文本，两个参数都可省略       |
-| strlen                     | 取文本长度   | 一串文字的长度                   |
-| trim                       | 删首尾空     | 去掉字符串首尾的空格和制表符     |
+| strlen(text)               | 取文本长度   | 一串文字的长度                   |
+| trim(text)                 | 删首尾空     | 去掉字符串首尾的空格和制表符     |
+| substr(text, left, length) | 取子串       | 获取文字的一部分                 |
 | inGameUsers(listId, uid)   | 在游戏用户中 | listId可省略。程序重启数据会清空 |
 | inGameNumbers(listId, num) | 在游戏数值中 | listId可省略，程序重启数据仍在   |
 | inGameTexts(listId, text)  | 在游戏文本中 | listId可省略，程序重启数据仍在   |
+| getValue(key, def)         | 取变量值     | 等同于`%{key}%`，默认值def可省略 |
 
 已获取时间为例：
 

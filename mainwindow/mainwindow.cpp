@@ -4280,6 +4280,10 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
 {
     QRegularExpressionMatch match;
     QStringList argList = args.split(QRegExp("\\s*,\\s*"));
+    auto errorArg = [=](QString tip){
+        localNotify("函数%>"+funcName+"()%参数错误: " + tip);
+        return false;
+    };
     // 替换时间
     if (funcName == "time")
     {
@@ -4342,12 +4346,37 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
     {
         msg.replace(total, args.trimmed());
     }
+    else if (funcName == "substr")
+    {
+        if (argList.size() < 2)
+            return errorArg("字符串, 起始位置, 长度");
+
+        QString text = argList.at(0);
+        int left = 0, len = text.length();
+        if (argList.size() >= 2)
+            left = argList.at(1).toInt();
+        if (argList.size() >= 3)
+            len = argList.at(2).toInt();
+        if (left < 0)
+            left = 0;
+        else if (left > text.length())
+            left = text.length();
+        msg.replace(total, text.mid(left, len));
+    }
     else if (funcName == "inputText")
     {
         QString label = argList.size() ? argList.first() : "";
         QString def = argList.size() >= 2 ? argList.at(1) : "";
         QString rst = QInputDialog::getText(this, QApplication::applicationName(), label, QLineEdit::Normal, def);
         msg.replace(total, rst);
+    }
+    else if (funcName == "getValue")
+    {
+        if (argList.size() < 1 || argList.first().trimmed().isEmpty())
+            return errorArg("键, 默认值");
+        QString key = argList.at(0);
+        QString def = argList.size() >= 2 ? argList.at(1) : "";
+        msg.replace(total, heaps->value(key, def).toString());
     }
     else
         return false;
