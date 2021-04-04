@@ -3440,7 +3440,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
 void MainWindow::startMsgLoop()
 {
     // 保存房间弹幕
-    if (ui->saveDanmakuToFileCheck)
+    if (ui->saveDanmakuToFileCheck && !danmuLogFile)
         startSaveDanmakuToFile();
 
     int hostRetry = 0; // 循环测试连接（意思一下，暂时未使用，否则应当设置为成员变量）
