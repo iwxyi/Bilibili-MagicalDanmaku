@@ -620,7 +620,7 @@ MainWindow::MainWindow(QWidget *parent)
         minuteDanmuPopul = 0;
         if (danmuPopulQueue.size() > 5)
             danmuPopulValue -= danmuPopulQueue.takeFirst();
-        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue));
+        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
 
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
     });
@@ -2565,7 +2565,7 @@ void MainWindow::initWS()
 
         SOCKET_DEB << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
-        ui->popularityLabel->setText("人气值：0");
+        ui->popularityLabel->setText("");
 
         heartTimer->stop();
         minuteTimer->stop();
@@ -6811,7 +6811,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
-        this->popularVal = popularity;
+        this->popularVal = this->currentPopul = popularity;
         if (liveStatus)
             ui->popularityLabel->setText("人气值：" + QString::number(popularity));
     }
@@ -10411,6 +10411,8 @@ void MainWindow::on_pushButton_clicked()
     text += "\n银瓜子数：" + snum(dailyGiftSilver);
     text += "\n金瓜子数：" + snum(dailyGiftGold);
     text += "\n上船次数：" + snum(dailyGuard);
+    text += "\n最高人气：" + snum(dailyMaxPopul);
+    text += "\n平均人气：" + snum(dailyAvePopul);
 
     text += "\n\n累计粉丝：" + snum(currentFans);
     QMessageBox::information(this, "今日数据", text);
