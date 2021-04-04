@@ -14,7 +14,7 @@
    <string>神奇弹幕</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resource.qrc">
+   <iconset resource="../resources/resource.qrc">
     <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>12</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -2887,7 +2887,7 @@ margin: 6px;</string>
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="resource.qrc">
+             <iconset resource="../resources/resource.qrc">
               <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
             </property>
             <property name="flat">
@@ -3441,16 +3441,23 @@ margin: 6px;</string>
     <addaction name="actionCookie_Help"/>
     <addaction name="actionUpdate_New_Version"/>
    </widget>
+   <widget class="QMenu" name="menu_6">
+    <property name="title">
+     <string>调试</string>
+    </property>
+    <addaction name="actionLast_Candidate"/>
+   </widget>
    <addaction name="menu_3"/>
    <addaction name="menu_2"/>
    <addaction name="menu"/>
+   <addaction name="menu_6"/>
    <addaction name="menu_4"/>
    <addaction name="menu_5"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionData_Path">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/egg</normaloff>:/icons/egg</iconset>
    </property>
    <property name="text">
@@ -3459,7 +3466,7 @@ margin: 6px;</string>
   </action>
   <action name="actionShow_Live_Danmaku">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/danmu</normaloff>:/icons/danmu</iconset>
    </property>
    <property name="text">
@@ -3468,7 +3475,7 @@ margin: 6px;</string>
   </action>
   <action name="actionSet_Cookie">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/cookie</normaloff>:/icons/cookie</iconset>
    </property>
    <property name="text">
@@ -3477,7 +3484,7 @@ margin: 6px;</string>
   </action>
   <action name="actionSet_Danmaku_Data_Format">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/danmu2</normaloff>:/icons/danmu2</iconset>
    </property>
    <property name="text">
@@ -3489,7 +3496,7 @@ margin: 6px;</string>
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/subtitles</normaloff>:/icons/subtitles</iconset>
    </property>
    <property name="text">
@@ -3498,7 +3505,7 @@ margin: 6px;</string>
   </action>
   <action name="actionCookie_Help">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/cookie2</normaloff>:/icons/cookie2</iconset>
    </property>
    <property name="text">
@@ -3507,7 +3514,7 @@ margin: 6px;</string>
   </action>
   <action name="actionShow_Order_Player_Window">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/order_song</normaloff>:/icons/order_song</iconset>
    </property>
    <property name="text">
@@ -3516,7 +3523,7 @@ margin: 6px;</string>
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
    </property>
    <property name="text">
@@ -3528,7 +3535,7 @@ margin: 6px;</string>
   </action>
   <action name="actionGitHub">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/github_logo</normaloff>:/icons/github_logo</iconset>
    </property>
    <property name="text">
@@ -3537,7 +3544,7 @@ margin: 6px;</string>
   </action>
   <action name="actionCustom_Variant">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/settings</normaloff>:/icons/settings</iconset>
    </property>
    <property name="text">
@@ -3546,7 +3553,7 @@ margin: 6px;</string>
   </action>
   <action name="actionSend_Long_Text">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/long_text</normaloff>:/icons/long_text</iconset>
    </property>
    <property name="text">
@@ -3558,7 +3565,7 @@ margin: 6px;</string>
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/egg</normaloff>:/icons/egg</iconset>
    </property>
    <property name="text">
@@ -3567,7 +3574,7 @@ margin: 6px;</string>
   </action>
   <action name="actionGet_Play_Url">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/video_stream</normaloff>:/icons/video_stream</iconset>
    </property>
    <property name="text">
@@ -3579,7 +3586,7 @@ margin: 6px;</string>
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/live</normaloff>:/icons/live</iconset>
    </property>
    <property name="text">
@@ -3588,7 +3595,7 @@ margin: 6px;</string>
   </action>
   <action name="actionMany_Robots">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/cry</normaloff>:/icons/cry</iconset>
    </property>
    <property name="text">
@@ -3603,7 +3610,7 @@ margin: 6px;</string>
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/video</normaloff>:/icons/video</iconset>
    </property>
    <property name="text">
@@ -3612,7 +3619,7 @@ margin: 6px;</string>
   </action>
   <action name="actionAdd_Room_To_List">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/bowknot3</normaloff>:/icons/bowknot3</iconset>
    </property>
    <property name="text">
@@ -3621,7 +3628,7 @@ margin: 6px;</string>
   </action>
   <action name="actionRoom_Status">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/video2</normaloff>:/icons/video2</iconset>
    </property>
    <property name="text">
@@ -3630,7 +3637,7 @@ margin: 6px;</string>
   </action>
   <action name="actionPicture_Browser">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/candy</normaloff>:/icons/candy</iconset>
    </property>
    <property name="text">
@@ -3639,7 +3646,7 @@ margin: 6px;</string>
   </action>
   <action name="actionCatch_You_Online">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/catch</normaloff>:/icons/catch</iconset>
    </property>
    <property name="text">
@@ -3651,7 +3658,7 @@ margin: 6px;</string>
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/update</normaloff>:/icons/update</iconset>
    </property>
    <property name="text">
@@ -3663,7 +3670,7 @@ margin: 6px;</string>
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/pk</normaloff>:/icons/pk</iconset>
    </property>
    <property name="text">
@@ -3672,7 +3679,7 @@ margin: 6px;</string>
   </action>
   <action name="actionQRCode_Login">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/qrcode</normaloff>:/icons/qrcode</iconset>
    </property>
    <property name="text">
@@ -3681,7 +3688,7 @@ margin: 6px;</string>
   </action>
   <action name="actionPaste_Code">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/code</normaloff>:/icons/code</iconset>
    </property>
    <property name="text">
@@ -3690,7 +3697,7 @@ margin: 6px;</string>
   </action>
   <action name="actionSponsor">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
    </property>
    <property name="text">
@@ -3699,7 +3706,7 @@ margin: 6px;</string>
   </action>
   <action name="actionGenerate_Default_Code">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/generate</normaloff>:/icons/generate</iconset>
    </property>
    <property name="text">
@@ -3711,7 +3718,7 @@ margin: 6px;</string>
   </action>
   <action name="actionRead_Default_Code">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/read_config</normaloff>:/icons/read_config</iconset>
    </property>
    <property name="text">
@@ -3720,7 +3727,7 @@ margin: 6px;</string>
   </action>
   <action name="actionVariant_Translation">
    <property name="icon">
-    <iconset resource="resource.qrc">
+    <iconset resource="../resources/resource.qrc">
      <normaloff>:/icons/translation</normaloff>:/icons/translation</iconset>
    </property>
    <property name="text">
@@ -3728,6 +3735,11 @@ margin: 6px;</string>
    </property>
    <property name="toolTip">
     <string>多个语言的变量翻译</string>
+   </property>
+  </action>
+  <action name="actionLast_Candidate">
+   <property name="text">
+    <string>最后一次候选</string>
    </property>
   </action>
  </widget>
@@ -3745,7 +3757,7 @@ margin: 6px;</string>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="resource.qrc"/>
+  <include location="../resources/resource.qrc"/>
  </resources>
  <connections/>
 </ui>

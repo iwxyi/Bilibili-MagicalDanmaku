@@ -3680,6 +3680,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     {
         plainText = processTimeVariants(plainText);
     }
+    lastConditionDanmu = plainText;
     CALC_DEB << "处理时间之后：" << plainText;
 
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
@@ -3730,6 +3731,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         }
     }
     CALC_DEB << "condition result:" << result;
+    lastCandidateDanmaku = result.join("\n");
 
     return result;
 }
@@ -4376,6 +4378,8 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
             return errorArg("键, 默认值");
         QString key = argList.at(0);
         QString def = argList.size() >= 2 ? argList.at(1) : "";
+        if (!key.contains("/"))
+            key = "heaps/" + key;
         msg.replace(total, heaps->value(key, def).toString());
     }
     else
@@ -13820,4 +13824,9 @@ void MainWindow::on_timerPushCmdSpin_editingFinished()
 void MainWindow::on_pkChuanmenCheck_stateChanged(int arg1)
 {
     ui->pkMsgSyncCheck->setEnabled(arg1);
+}
+
+void MainWindow::on_actionLast_Candidate_triggered()
+{
+    QMessageBox::information(this, "最后一次调试的候选弹幕", lastConditionDanmu + "\n\n---------------------\n\n" + lastCandidateDanmaku);
 }

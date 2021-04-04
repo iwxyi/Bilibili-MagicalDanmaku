@@ -608,6 +608,8 @@ private slots:
 
     void on_pkChuanmenCheck_stateChanged(int arg1);
 
+    void on_actionLast_Candidate_triggered();
+
 private:
     void initPath();
     void readConfig();
@@ -865,6 +867,9 @@ private:
 
     QFile* pushCmdsFile = nullptr;
     QTimer* pushCmdsTimer = nullptr;
+
+    QString lastConditionDanmu;
+    QString lastCandidateDanmaku;
 
     // 礼物连击
     QHash<QString, LiveDanmaku> giftCombos;
