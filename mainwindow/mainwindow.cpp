@@ -1538,6 +1538,11 @@ void MainWindow::on_testDanmakuButton_clicked()
             appendNewLiveDanmaku(danmaku);
         }
     }
+    else if (text == "测试醒目留言")
+    {
+        LiveDanmaku danmaku("测试用户", "测试弹幕", 1001, 12, QDateTime::currentDateTime(), "", "", 39, "醒目留言", 1, 30);
+        appendNewLiveDanmaku(danmaku);
+    }
     else if (text == "测试消息")
     {
         localNotify("测试通知消息");
@@ -7850,7 +7855,7 @@ void MainWindow::handleMessage(QJsonObject json)
         JS(data, message);
         JS(data, message_font_color);
         JL(data, end_time); // 秒
-        JI(data, price); // 价格：元
+        JI(data, price); // 注意这个是价格（单位元），不是金瓜子，并且30起步
 
         JO(data, gift);
         JI(gift, gift_id);

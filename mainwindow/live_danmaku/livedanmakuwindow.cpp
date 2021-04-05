@@ -677,6 +677,18 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         {
             text = text + "<br/>" + "&nbsp;&nbsp;=> " + reply;
         }
+
+        // 醒目留言
+        if (msgType == MSG_SUPER_CHAT)
+        {
+            int coin = danmaku.getTotalCoin();
+            text += " <hr><center><span style='font-weight: bold;'>￥ ";
+            if (coin % 1000 == 0)
+                text += snum(coin / 1000);
+            else
+                text += QString::number(coin / 1000.0, 'f', 1);
+            text += " 元</span></center>";
+        }
     }
     else if (msgType == MSG_GIFT)
     {
@@ -686,7 +698,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (danmaku.getNumber() > 1)
             text += "×" + snum(danmaku.getNumber());
         text += "</center>";
-        if (danmaku.isGoldCoin() && danmaku.getTotalCoin() >= 1000)
+        if (danmaku.isGoldCoin())
         {
             int coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
@@ -1060,7 +1072,6 @@ void LiveDanmakuWindow::showMenu()
     QMenu* blockMenu = new QMenu("消息屏蔽", settingMenu);
     QAction* actionBlockComing = new QAction("屏蔽用户进入消息", this);
     QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴/天选弹幕", this);
-    actionBlockSpecialGift->setEnabled(false);
 
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
