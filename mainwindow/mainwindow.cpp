@@ -1561,8 +1561,29 @@ void MainWindow::on_testDanmakuButton_clicked()
         int gift_id = 10003;
         int guard_level = 3;
         int price = 198000;
-        LiveDanmaku danmaku(username, uid, giftName, num, gift_id, guard_level, price, 2);
+        int rg = qrand() % 6;
+        if (rg < 3)
+        {
+            giftName = "舰长";
+            guard_level = 3;
+            price = 198000;
+        }
+        else if (rg < 5)
+        {
+            giftName = "提督";
+            guard_level = 2;
+            price = 1980000;
+        }
+        else
+        {
+            giftName = "总督";
+            guard_level = 1;
+            price = 19800000;
+        }
+        gift_id = 10000 + guard_level;
+        LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price, 2);
         appendNewLiveDanmaku(danmaku);
+        appendLiveGuard(danmaku);
         if (ui->saveEveryGuardCheck->isChecked())
             saveEveryGuard(danmaku);
 
@@ -8257,6 +8278,7 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
+        appendLiveGuard(danmaku);
 
         if (ui->saveEveryGuardCheck->isChecked())
             saveEveryGuard(danmaku);
@@ -10062,14 +10084,35 @@ void MainWindow::appendLiveGift(const LiveDanmaku &danmaku)
                 && his.getGiftId() == danmaku.getGiftId())
         {
             liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
-            qDebug() << "~~~~~~~~~合并礼物：" << liveAllGifts[i].toString();
             return ;
         }
     }
 
     // 新建一个
     liveAllGifts.append(danmaku);
-    qDebug() << "~~~~~~~~~添加礼物：" << danmaku.toString();
+}
+
+void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
+{
+    if (!danmaku.is(MSG_GUARD_BUY))
+    {
+        qWarning() << "添加上船到liveGuard错误：" << danmaku.toString();
+        return ;
+    }
+    for (int i = 0; i < liveAllGuards.size(); i++)
+    {
+        auto his = liveAllGuards.at(i);
+        if (his.getUid() == danmaku.getUid()
+                && his.getGiftId() == danmaku.getGiftId())
+        {
+            liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            return ;
+        }
+    }
+
+    // 新建一个
+    liveAllGuards.append(danmaku);
+    qDebug() << "添加测试舰长";
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -11878,6 +11921,7 @@ void MainWindow::releaseLiveData(bool prepare)
 
     // 本次直播数据
     liveAllGifts.clear();
+    liveAllGuards.clear();
 
     if (danmakuWindow)
     {

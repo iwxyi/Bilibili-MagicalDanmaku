@@ -680,6 +680,7 @@ private:
     void updateExistGuards(int page);
     void updateOnlineGoldRank();
     void appendLiveGift(const LiveDanmaku& danmaku);
+    void appendLiveGuard(const LiveDanmaku& danmaku);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -988,6 +989,7 @@ private:
 
     // 本次直播的礼物列表
     QList<LiveDanmaku> liveAllGifts;
+    QList<LiveDanmaku> liveAllGuards;
 
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;

@@ -133,7 +133,10 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         if (sl.contains("LIVE_ALL_GIFTS"))
         {
             // 这里不排序，直接发送
-            sendJsonToSockets("LIVE_ALL_GIFTS", LiveDanmaku::toJsonArray(liveAllGifts), clientSocket);
+            QJsonObject json;
+            json.insert("guards", LiveDanmaku::toJsonArray(liveAllGuards));
+            json.insert("gifts", LiveDanmaku::toJsonArray(liveAllGifts));
+            sendJsonToSockets("LIVE_ALL_GIFTS", json, clientSocket);
         }
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));

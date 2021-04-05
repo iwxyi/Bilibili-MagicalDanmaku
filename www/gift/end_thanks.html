@@ -17,6 +17,7 @@
                 -1px 1px 0 #fff,
                 1px 1px 0 #fff,
                 0px 2px 2px rgba(0, 0, 0, 0.2);
+            width: 80%;
         }
 
         .headLine {
@@ -28,10 +29,8 @@
 <body>
     <div id="movie">
         <marquee id="list" direction="up" height="100%">
-            <p>导演：***</p>
-            <p>编剧：***</p>
-            <p>主演：**** ** *** </p>
-            <p>友情出演：*** *** **</p><br>
+            <p>上船</p>
+            <p>礼物</p>
         </marquee><br>
     </div>
 
@@ -47,12 +46,48 @@
                 var cmd = json['cmd'];
                 switch (cmd) {
                     case 'LIVE_ALL_GIFTS':
-                        var histories = json['data']; // 是一个数组
-                        $("#list").html(mergeUserGifts(histories));
+                        var data = json['data'];
+                        var guards = data['guards'];
+                        var gifts = data['gifts']; // 是一个数组
+                        var allHtml = "<h1 class='line headLine'>感谢以下用户：</h1><hr class='line' style='width:60%'/>";
+                        if (guards.length)
+                            allHtml += getUserGuards(guards) + "<hr class='line'/>";
+                        if (gifts.length)
+                            allHtml += mergeUserGifts(gifts);
+                        $("#list").html(allHtml);
                         break;
                 }
             };
         });
+
+        /**
+         * 舰长上船记录（按时间顺序）
+         */
+        function getUserGuards(histories) {
+            var htmls = '';
+            for (var i = 0; i < histories.length; i++) {
+                // 解析JSON数据
+                var danmaku = histories[i];
+                console.log(danmaku);
+                var nickname = danmaku['nickname'];
+                var giftName = danmaku['gift_name'];
+                var number = danmaku['number'];
+                var guardLevel = danmaku['guard_level'];
+                // 送礼动作对象放入map中
+                if (number > 1)
+                    giftName = giftName + "×" + number;
+                var text = nickname + '：' + giftName;
+                var color = '';
+                if (guardLevel == 1) // 总督
+                    color = '#f7b500';
+                else if (guardLevel == 2)
+                    color = '#e17aff';
+                else
+                    color = '#00d1f1';
+                htmls += "<p class='line'><font color=" + color + ">" + text + '</font></p>';
+            }
+            return htmls;
+        }
 
         /**
          * 合并每位用户的送礼
@@ -133,9 +168,8 @@
                 htmls.push("<p class='line'>" + user.nickname + '：' + names.join('、') + '</p>');
             });
 
-            var html = "<h1 class='line headLine'>感谢以下用户的礼物：</h1><hr class='line' style='width:60%'/>";
-            html += htmls.join("\n");
-            $("#list").html(html);
+            var html = htmls.join("\n");
+            return html;
         }
     </script>
 </body>

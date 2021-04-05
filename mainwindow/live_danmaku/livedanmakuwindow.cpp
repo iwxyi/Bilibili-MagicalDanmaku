@@ -1059,7 +1059,7 @@ void LiveDanmakuWindow::showMenu()
 
     QMenu* blockMenu = new QMenu("消息屏蔽", settingMenu);
     QAction* actionBlockComing = new QAction("屏蔽用户进入消息", this);
-    QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴/天选之子", this);
+    QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴/天选弹幕", this);
     actionBlockSpecialGift->setEnabled(false);
 
     QAction* actionSendMsg = new QAction("发送框", this);
