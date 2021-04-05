@@ -6402,16 +6402,19 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 强制AI回复
     if (msg.contains("aiReply"))
     {
-        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.+?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qint64 id = caps.at(1).toLongLong();
             QString text = caps.at(2);
+            int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的
+            if (!caps.at(3).isEmpty())
+                maxLen = caps.at(3).toInt();
             qDebug() << "执行命令：" << caps;
             AIReply(id, text, [=](QString s){
                 sendLongText(s);
-            });
+            }, maxLen);
             return true;
         }
     }
@@ -12145,7 +12148,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     });
 }
 
-void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func)
+void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen, int retry)
 {
     if (text.isEmpty())
         return ;
@@ -12185,7 +12188,10 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func)
         QJsonObject json = document.object();
         if (json.value("ret").toInt() != 0)
         {
-            qDebug() << "AI回复：" << json.value("msg").toString();
+            QString msg = json.value("msg").toString();
+            qDebug() << "AI回复：" << msg << text;
+            if (msg.contains("not found") && retry > 0)
+                AIReply(id, text, func, maxLen, retry - 1);
             return ;
         }
 
@@ -12196,6 +12202,8 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func)
                 || answer.isEmpty())
             return ;
 
+        if (answer.length() > maxLen)
+            return ;
         func(answer);
     });
 }

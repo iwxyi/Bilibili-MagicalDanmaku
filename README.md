@@ -535,7 +535,6 @@ border-image: url(C:/Path/To/Image.png)
 
 <div id='programing'/>
 
-
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -953,7 +952,7 @@ tips：
 | appendFileLine(dirName, fileName, format) | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
 | writeTextFile(dirName, fileName, text)    | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
 | removeFile(fileName)                      | 删除文件         | 删除文件“程序目录/file”                                      |
-| aiReply(sessionId, text)                  | AI回复           | 调用AI回复某文字（随机）                                     |
+| aiReply(sessionId, text, maxLen)          | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
 | ignoreWelcome(uid)                        | 不自动欢迎       | 不自动欢迎某用户                                             |
 | setNickname(uid, name)                    | 设置专属昵称     | 设置用户专属昵称                                             |
 | joinBattle(type)                          | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
@@ -1705,7 +1704,6 @@ tips：
 每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
 
 <div id='web_dev'/>
-
 
 
 ## Web开发接口
