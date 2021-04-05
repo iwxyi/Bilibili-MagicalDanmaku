@@ -7929,8 +7929,6 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "SPECIAL_GIFT") // 节奏风暴（特殊礼物？）
     {
-        qDebug() << "特殊礼物：" << json;
-
         /*{
             "cmd": "SPECIAL_GIFT",
             "data": {
@@ -7945,6 +7943,18 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         }*/
+
+        QJsonObject data = json.value("data").toObject();
+        QJsonObject sg = data.value("39").toObject();
+        QString text = sg.value("content").toString();
+        int time = sg.value("time").toInt();
+        if (danmakuWindow)
+        {
+            danmakuWindow->addBlockText(text);
+            QTimer::singleShot(time * 1000, danmakuWindow, [=]{
+                danmakuWindow->removeBlockText(text);
+            });
+        }
 
         triggerCmdEvent(cmd, LiveDanmaku());
     }
@@ -8549,11 +8559,19 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 id = static_cast<qint64>(data.value("id").toDouble());
         QString danmu = data.value("danmu").toString();
         int giftId = data.value("gift_id").toInt();
+        int time = data.value("time").toInt();
         qDebug() << "天选弹幕：" << danmu;
         if (!danmu.isEmpty() && giftId <= 0 && ui->autoLOTCheck->isChecked())
         {
             int requireType = data.value("require_type").toInt();
             joinLOT(id, requireType);
+        }
+        if (danmakuWindow)
+        {
+            danmakuWindow->addBlockText(danmu);
+            QTimer::singleShot(time, danmakuWindow, [=]{
+                danmakuWindow->removeBlockText(danmu);
+            });
         }
 
         triggerCmdEvent(cmd, LiveDanmaku());

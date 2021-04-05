@@ -369,6 +369,9 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     }
     if (blockComingMsg && (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)))
         return ;
+    if (blockSpecialGift && danmaku.is(MSG_DANMAKU)
+            && blockedTexts.size() && blockedTexts.contains(danmaku.getText()))
+        return ;
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
@@ -1055,8 +1058,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionCancelPicture = new QAction("取消图片", this);
 
     QMenu* blockMenu = new QMenu("消息屏蔽", settingMenu);
-    QAction* actionBlockComing = new QAction("屏蔽进入消息", this);
-    QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴", this);
+    QAction* actionBlockComing = new QAction("屏蔽用户进入消息", this);
+    QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴/天选之子", this);
     actionBlockSpecialGift->setEnabled(false);
 
     QAction* actionSendMsg = new QAction("发送框", this);
@@ -2410,6 +2413,8 @@ void LiveDanmakuWindow::releaseLiveData(bool prepare)
             delete item;
         }
     }
+
+    blockedTexts.clear();
 }
 
 void LiveDanmakuWindow::readReplyKey()
@@ -2448,6 +2453,16 @@ void LiveDanmakuWindow::restart()
         editShortcut = nullptr;
 #endif
         emit signalChangeWindowMode();
+}
+
+void LiveDanmakuWindow::addBlockText(QString text)
+{
+    blockedTexts.append(text);
+}
+
+void LiveDanmakuWindow::removeBlockText(QString text)
+{
+    blockedTexts.removeOne(text);
 }
 
 bool LiveDanmakuWindow::isItemExist(QListWidgetItem *item)
