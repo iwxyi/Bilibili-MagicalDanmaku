@@ -169,6 +169,8 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     simpleMode = settings->value("livedanmakuwindow/simpleMode", false).toBool();
     chatMode = settings->value("livedanmakuwindow/chatMode", false).toBool();
     allowH5 = settings->value("livedanmakuwindow/allowH5", false).toBool();
+    blockComingMsg = settings->value("livedanmakuwindow/blockComingMsg", false).toBool();
+    blockSpecialGift = settings->value("livedanmakuwindow/blockSpecialGift", false).toBool();
 
     readReplyKey();
 
@@ -365,6 +367,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                 && !danmaku.is(MSG_BLOCK))
             return ;
     }
+    if (blockComingMsg && (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)))
+        return ;
 
     bool scrollEnd = listWidget->verticalScrollBar()->sliderPosition()
             >= listWidget->verticalScrollBar()->maximum()-lineEdit->height()*2;
@@ -1050,6 +1054,11 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionPictureBlur = new QAction("模糊半径", this);
     QAction* actionCancelPicture = new QAction("取消图片", this);
 
+    QMenu* blockMenu = new QMenu("消息屏蔽", settingMenu);
+    QAction* actionBlockComing = new QAction("屏蔽进入消息", this);
+    QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴", this);
+    actionBlockSpecialGift->setEnabled(false);
+
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
     QAction* actionShortCut = new QAction("快捷键", this);
@@ -1094,6 +1103,10 @@ void LiveDanmakuWindow::showMenu()
     actionPictureBlur->setChecked(pictureBlur);
     actionAllowH5->setCheckable(true);
     actionAllowH5->setChecked(allowH5);
+    actionBlockComing->setCheckable(true);
+    actionBlockComing->setChecked(blockComingMsg);
+    actionBlockSpecialGift->setCheckable(true);
+    actionBlockSpecialGift->setChecked(blockSpecialGift);
 
     if (uid != 0)
     {
@@ -1258,6 +1271,11 @@ void LiveDanmakuWindow::showMenu()
     pictureMenu->addSeparator();
     pictureMenu->addAction(actionCancelPicture);
 
+    blockMenu->addAction(actionBlockComing);
+    blockMenu->addAction(actionBlockSpecialGift);
+
+    settingMenu->addMenu(blockMenu);
+    settingMenu->addSeparator();
     settingMenu->addAction(actionNameColor);
     settingMenu->addAction(actionMsgColor);
     settingMenu->addAction(actionBgColor);
@@ -1349,6 +1367,14 @@ void LiveDanmakuWindow::showMenu()
     connect(actionAllowH5, &QAction::triggered, this, [=]{
         allowH5 = !allowH5;
         settings->setValue("livedanmakuwindow/allowH5", allowH5);
+    });
+    connect(actionBlockComing, &QAction::triggered, this, [=]{
+        blockComingMsg = !blockComingMsg;
+        settings->setValue("livedanmakuwindow/blockComingMsg", blockComingMsg);
+    });
+    connect(actionBlockSpecialGift, &QAction::triggered, this, [=]{
+        blockSpecialGift = !blockSpecialGift;
+        settings->setValue("livedanmakuwindow/blockSpecialGift", blockSpecialGift);
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

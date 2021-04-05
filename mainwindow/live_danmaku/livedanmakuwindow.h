@@ -188,6 +188,8 @@ private:
     bool newbieTip = true;
     QList<QString> ignoreDanmakuColors;
     bool allowH5 = false;
+    bool blockComingMsg = false;  // 屏蔽进入
+    bool blockSpecialGift = false; // 屏蔽节奏风暴
 
     QString headDir; // 头像保存的路径/ (带/)
 
