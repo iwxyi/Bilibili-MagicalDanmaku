@@ -10124,6 +10124,21 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
     liveAllGuards.append(danmaku);
 }
 
+void MainWindow::getPkMatchInfo()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + pkRoomId;
+    get(url, [=](QJsonObject json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data));
+    });
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     settings->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -11102,6 +11117,12 @@ void MainWindow::pkStart(QJsonObject json)
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
     localNotify(text, pkUid.toLongLong());
+
+    // 处理PK对面主播事件
+    if (hasEvent("PK_MATCH_INFO"))
+    {
+        getPkMatchInfo();
+    }
 }
 
 void MainWindow::pkProcess(QJsonObject json)

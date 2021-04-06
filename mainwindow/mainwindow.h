@@ -681,6 +681,7 @@ private:
     void updateOnlineGoldRank();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
+    void getPkMatchInfo();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

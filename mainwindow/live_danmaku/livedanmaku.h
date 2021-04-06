@@ -23,7 +23,8 @@ enum MessageType
     MSG_MSG,
     MSG_SHARE,
     MSG_PK_BEST,
-    MSG_SUPER_CHAT
+    MSG_SUPER_CHAT,
+    MSG_EXTRA
 };
 
 class LiveDanmaku
@@ -123,6 +124,11 @@ public:
 
     }
 
+    LiveDanmaku(QJsonObject json)
+        : msgType(MSG_EXTRA), extraJson(json)
+    {
+    }
+
     static LiveDanmaku fromDanmakuJson(QJsonObject object)
     {
         LiveDanmaku danmaku;
@@ -174,6 +180,7 @@ public:
         danmaku.guard = object.value("guard_level").toInt();
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         danmaku.first = object.value("first").toInt();
+        danmaku.extraJson = object.value("extra").toObject();
         return danmaku;
     }
 
@@ -270,7 +277,8 @@ public:
             object.insert("robot", robot);
         if (prev_timestamp)
             object.insert("prev_timestamp", prev_timestamp);
-
+        if (!extraJson.isEmpty())
+            object.insert("extra", extraJson);
         return object;
     }
 
@@ -780,7 +788,9 @@ private:
     qint64 prev_timestamp = 0;
     int first = 0; // 初次：1；新的：2
 
+public:
     QStringList args;
+    QJsonObject extraJson;
 };
 
 #endif // LIVEDANMAKU_H
