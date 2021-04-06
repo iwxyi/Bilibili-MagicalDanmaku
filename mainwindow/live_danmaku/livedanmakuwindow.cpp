@@ -581,7 +581,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             return ;
         }
     }
-    qDebug() << "忽略没找到的要删除的item" << danmaku.toString();
+    // qDebug() << "忽略没找到的要删除的item" << danmaku.toString();
 }
 
 void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)

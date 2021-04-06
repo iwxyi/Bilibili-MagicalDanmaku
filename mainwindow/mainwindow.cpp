@@ -7973,6 +7973,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         QJsonObject sg = data.value("39").toObject();
         QString text = sg.value("content").toString();
+        qint64 id = qint64(sg.value("id").toDouble());
         int time = sg.value("time").toInt();
         if (danmakuWindow)
         {
@@ -7980,6 +7981,11 @@ void MainWindow::handleMessage(QJsonObject json)
             QTimer::singleShot(time * 1000, danmakuWindow, [=]{
                 danmakuWindow->removeBlockText(text);
             });
+        }
+
+        if (ui->autoLOTCheck->isChecked())
+        {
+            joinStorm(id);
         }
 
         triggerCmdEvent(cmd, LiveDanmaku());
@@ -8581,7 +8587,6 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        qDebug() << "天选时刻：" << json;
         QJsonObject data = json.value("data").toObject();
         qint64 id = static_cast<qint64>(data.value("id").toDouble());
         QString danmu = data.value("danmu").toString();
@@ -10117,7 +10122,6 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
 
     // 新建一个
     liveAllGuards.append(danmaku);
-    qDebug() << "添加测试舰长";
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -12149,7 +12153,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("自动参与天选");
+            ui->autoDoSignCheck->setText("自动参与活动");
         });
         return ;
     }
@@ -12170,10 +12174,50 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         {
             ui->autoLOTCheck->setText("参与成功");
             qDebug() << "参与天选成功！";
-            ui->autoDoSignCheck->setToolTip("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+            ui->autoLOTCheck->setToolTip("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         }
         QTimer::singleShot(10000, [=]{
-            ui->autoLOTCheck->setText("自动参与天选");
+            ui->autoLOTCheck->setText("自动参与活动");
+        });
+    });
+}
+
+void MainWindow::joinStorm(qint64 id)
+{
+    if (!id )
+        return ;
+    if (csrf_token.isEmpty())
+    {
+        ui->autoDoSignCheck->setText("未设置Cookie");
+        QTimer::singleShot(10000, [=]{
+            ui->autoDoSignCheck->setText("自动参与活动");
+        });
+        return ;
+    }
+
+    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
+             "?id="+QString::number(id)+"&color=5566168&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
+    qDebug() << "参与节奏风暴：" << id << url;
+
+    post(url, QByteArray(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qCritical() << s8("返回结果不为0：") << msg;
+            ui->autoLOTCheck->setText(msg);
+            ui->autoLOTCheck->setToolTip(msg);
+        }
+        else
+        {
+            ui->autoLOTCheck->setText("参与成功");
+            qDebug() << "参与节奏风暴成功！";
+            QString content = json.value("data").toObject().value("content").toString();
+            ui->autoLOTCheck->setToolTip("最近参与时间：" +
+                                            QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")
+                                            + "\n\n" + content);
+        }
+        QTimer::singleShot(10000, [=]{
+            ui->autoLOTCheck->setText("自动参与活动");
         });
     });
 }

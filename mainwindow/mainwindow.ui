@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>465</width>
-    <height>393</height>
+    <width>529</width>
+    <height>454</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1665,10 +1665,10 @@ margin: 6px;</string>
           <item>
            <widget class="QCheckBox" name="autoLOTCheck">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖&lt;/p&gt;&lt;p&gt;只发送弹幕，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖/节奏风暴弹幕&lt;/p&gt;&lt;p&gt;只发送弹幕和关注，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>自动参与天选</string>
+             <string>自动参与活动</string>
             </property>
            </widget>
           </item>
@@ -3383,7 +3383,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>465</width>
+     <width>529</width>
      <height>21</height>
     </rect>
    </property>
