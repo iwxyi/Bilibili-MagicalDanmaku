@@ -11735,23 +11735,58 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
+
+        triggerCmdEvent("PK_" + cmd, danmaku);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
-        /*QJsonObject data = json.value("data").toObject();
+        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+            return ;
+        QJsonObject data = json.value("data").toObject();
+        int giftId = data.value("giftId").toInt();
+        int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
         QString giftName = data.value("giftName").toString();
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         int num = data.value("num").toInt();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
+        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
+        timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << s8("pk接收到送礼：") << username << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        qDebug() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
         QString localName = getLocalNickname(uid);
-        LiveDanmaku danmaku(username, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        /*if (!localName.isEmpty())
+            username = localName;*/
+        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        if (!data.value("medal_info").isNull())
+        {
+            QJsonObject medalInfo = data.value("medal_info").toObject();
+            QString anchorRoomId = snum(qint64(medalInfo.value("anchor_room_id").toDouble())); // !注意：这个一直为0！
+            QString anchorUname = medalInfo.value("anchor_uname").toString(); // !注意：也是空的
+            int guardLevel = medalInfo.value("guard_level").toInt();
+            int isLighted = medalInfo.value("is_lighted").toInt();
+            int medalColor = medalInfo.value("medal_color").toInt();
+            int medalColorBorder = medalInfo.value("medal_color_border").toInt();
+            int medalColorEnd = medalInfo.value("medal_color_end").toInt();
+            int medalColorStart = medalInfo.value("medal_color_start").toInt();
+            int medalLevel = medalInfo.value("medal_level").toInt();
+            QString medalName = medalInfo.value("medal_name").toString();
+            QString spacial = medalInfo.value("special").toString();
+            QString targetId = snum(qint64(medalInfo.value("target_id").toDouble())); // 目标用户ID
+            if (!medalName.isEmpty())
+            {
+                QString cs = QString::number(medalColor, 16);
+                while (cs.size() < 6)
+                    cs = "0" + cs;
+                danmaku.setMedal(anchorRoomId, medalName, medalLevel, cs, anchorUname);
+            }
+        }
+
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);*/
+        appendNewLiveDanmaku(danmaku);
+
+        triggerCmdEvent("PK_" + cmd, danmaku);
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -11779,10 +11814,14 @@ void MainWindow::handlePkMessage(QJsonObject json)
             if (roomId == this->roomId && msgType == 2) // 在对面关注当前主播
                 attentionToMyRoom = true;
             else
-                return ;
+                if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+                    return ;
         }
-        if (!cmAudience.contains(uid))
-            cmAudience.insert(uid, timestamp);
+        if (toView || attentionToMyRoom)
+        {
+            if (!cmAudience.contains(uid))
+                cmAudience.insert(uid, timestamp);
+        }
 
         // qDebug() << s8("pk观众互动：") << username << spreadDesc;
         QString localName = getLocalNickname(uid);
@@ -11804,22 +11843,33 @@ void MainWindow::handlePkMessage(QJsonObject json)
         }
         else if (msgType == 1)
         {
-            localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
-            triggerCmdEvent("CALL_ON_OPPOSITE", danmaku);
+            if (toView)
+            {
+                localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
+                triggerCmdEvent("CALL_ON_OPPOSITE", danmaku);
+            }
+            triggerCmdEvent("PK_" + cmd, danmaku);
         }
         else if (msgType == 2)
         {
             danmaku.transToAttention(timestamp);
-            localNotify(username + " 关注了对面直播间", uid); // XXX
-            triggerCmdEvent("ATTENTION_OPPOSITE", danmaku);
+            if (toView)
+            {
+                localNotify(username + " 关注了对面直播间", uid); // XXX
+                triggerCmdEvent("ATTENTION_OPPOSITE", danmaku);
+            }
+            triggerCmdEvent("PK_ATTENTION", danmaku);
         }
         else if (msgType == 3)
         {
             danmaku.transToShare();
-            localNotify(username + " 分享了对面直播间", uid); // XXX
-            triggerCmdEvent("SHARE_OPPOSITE", danmaku);
+            if (toView)
+            {
+                localNotify(username + " 分享了对面直播间", uid); // XXX
+                triggerCmdEvent("SHARE_OPPOSITE", danmaku);
+            }
+            triggerCmdEvent("PK_SHARE", danmaku);
         }
-
         // appendNewLiveDanmaku(danmaku);
     }
 }

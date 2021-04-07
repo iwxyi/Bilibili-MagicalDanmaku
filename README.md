@@ -735,6 +735,8 @@ border-image: url(C:/Path/To/Image.png)
 | strlen(text)               | 取文本长度   | 一串文字的长度                   |
 | trim(text)                 | 删首尾空     | 去掉字符串首尾的空格和制表符     |
 | substr(text, left, length) | 取子串       | 获取文字的一部分                 |
+| simpleName(name)           | 昵称简化     |                                  |
+| simpleNum(number)          | 数值简化     |                                  |
 | inGameUsers(listId, uid)   | 在游戏用户中 | listId可省略。程序重启数据会清空 |
 | inGameNumbers(listId, num) | 在游戏数值中 | listId可省略，程序重启数据仍在   |
 | inGameTexts(listId, text)  | 在游戏文本中 | listId可省略，程序重启数据仍在   |
@@ -1676,6 +1678,18 @@ tips：
 ```
 
 
+
+#### PK对面事件
+
+这是对面直播间的事件，均需要开启大乱斗消息同步。
+
+| 事件命令         | 说明               |
+| ---------------- | ------------------ |
+| PK_DANMU_MSG     | 对面的弹幕消息     |
+| PK_SEND_GIFT     | 对面的礼物消息     |
+| PK_INTERACT_WORD | 对面的用户进入     |
+| PK_ATTENTION     | 对面新增关注       |
+| PK_SHARE         | 对面有人分享直播间 |
 
 
 
