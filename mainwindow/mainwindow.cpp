@@ -3824,13 +3824,24 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, snum(unameToUid(text)));
     }
 
+    // 替换额外数据
+    re = QRegularExpression("%\\.([^%]+?)%");
+    matchPos = 0;
+    QJsonObject json = danmaku.extraJson;
+    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+    {
+        QString rpls = replaceDanmakuExtras(json, match.captured(1));
+        msg.replace(match.captured(0), rpls);
+        matchPos += rpls.length() - match.captured(0).length();
+    }
+
     bool find = true;
     while (find)
     {
         find = false;
 
         // 读取配置文件的变量
-        re = QRegularExpression("%\\{([^(%(\\{|\\[))]*?)\\}%");
+        re = QRegularExpression("%\\{([^(%(\\{|\\[|<))]*?)\\}%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -3843,7 +3854,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 进行数学计算的变量
-        re = QRegularExpression("%\\[([^(%(\\{|\\[))]*?)\\]%");
+        re = QRegularExpression("%\\[([^(%(\\{|\\[|<))]*?)\\]%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -3853,8 +3864,8 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
             find = true;
         }
 
-        // 一些类似函数的变量
-        re = QRegularExpression("%>(\\w+)\\s*\\(([^%>]*)\\)%");
+        // 函数替换
+        re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|<))])\\)%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -4309,6 +4320,62 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     return true;
 }
 
+/**
+ * 额外数据（JSON）替换
+ */
+QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString& key_seq) const
+{
+    QStringList keyTree = key_seq.split(".");
+    if (keyTree.size() == 0)
+        return "";
+    QJsonValue obj = json.value(keyTree.takeFirst());
+    while (keyTree.size())
+    {
+        QString key = keyTree.takeFirst();
+        if (key.isEmpty())
+        {
+            obj = QJsonValue();
+            break;
+        }
+        else if (obj.isObject())
+        {
+            obj = obj.toObject().value(key);
+        }
+        else if (obj.isArray())
+        {
+            int index = key.toInt();
+            QJsonArray array = obj.toArray();
+            if (index >= 0 && index < array.size())
+                obj = array.at(index);
+            else
+            {
+                obj = QJsonValue();
+                break;
+            }
+        }
+        else
+        {
+            obj = QJsonValue();
+            break;
+        }
+    }
+
+    if (obj.isNull() || obj.isUndefined())
+        return "";
+    if (obj.isString())
+        return obj.toString();
+    if (obj.isBool())
+        return obj.toBool(false) ? "1" : "0";
+    if (obj.isDouble())
+        return QString("%1").arg(obj.toDouble());
+    if (obj.isObject() || obj.isArray()) // 不支持转换的类型
+        return "";
+    return "";
+}
+
+/**
+ * 函数替换
+ */
 bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, const QString &funcName, const QString &args)
 {
     QRegularExpressionMatch match;
@@ -5837,44 +5904,62 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 后台网络操作
     if (msg.contains("connectNet"))
     {
-        re = RE("connectNet\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("connectNet\\s*\\(\\s*(.+?)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
+            QString callback = caps.at(2);
             qDebug() << "执行命令：" << caps;
             get(url, [=](QNetworkReply* reply){
-                qDebug() << QString(reply->readAll());
+                QByteArray ba(reply->readAll());
+                qDebug() << QString(ba);
+                if (!callback.isEmpty())
+                {
+                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                }
             });
             return true;
         }
     }
     if (msg.contains("postData"))
     {
-        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
             QString data = caps.at(2);
+            QString callback = caps.at(3);
             qDebug() << "执行命令：" << caps;
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
-                qDebug() << QString(reply->readAll());
+                QByteArray ba(reply->readAll());
+                qDebug() << QString(ba);
+                if (!callback.isEmpty())
+                {
+                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                }
             });
             return true;
         }
     }
     if (msg.contains("postJson"))
     {
-        re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
             QString data = caps.at(2);
+            QString callback = caps.at(3);
             qDebug() << "执行命令：" << caps;
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
-                qDebug() << QString(reply->readAll());
+                QByteArray ba(reply->readAll());
+                qDebug() << QString(ba);
+                if (!callback.isEmpty())
+                {
+                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                }
             });
             return true;
         }

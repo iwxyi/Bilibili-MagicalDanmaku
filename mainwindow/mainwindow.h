@@ -689,6 +689,7 @@ private:
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     bool replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
+    QString replaceDanmakuExtras(const QJsonObject& json, const QString &key_seq) const;
     bool replaceDynamicVariants(QString& msg, const QString &total, const QString& funcName, const QString& args);
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
