@@ -3869,14 +3869,14 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 函数替换
-        re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|<))])\\)%");
-        while (msg.indexOf(re, 0, &match) > -1)
+        re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|<))]*?)\\)%");
+        matchPos = 0;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
-            QString _var = match.captured(0);
-            QString func = match.captured(1);
-            QString args = match.captured(2);
-            if (replaceDynamicVariants(msg, _var, func, args))
-                find = true;
+            QString rpls = replaceDynamicVariants(match.captured(1), match.captured(2));
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
         }
     }
 
@@ -4381,22 +4381,31 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
 /**
  * 函数替换
  */
-bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, const QString &funcName, const QString &args)
+QString MainWindow::replaceDynamicVariants(const QString &funcName, const QString &args)
 {
     QRegularExpressionMatch match;
     QStringList argList = args.split(QRegExp("\\s*,\\s*"));
     auto errorArg = [=](QString tip){
         localNotify("函数%>"+funcName+"()%参数错误: " + tip);
-        return false;
+        return "";
     };
+
     // 替换时间
-    if (funcName == "time")
+    if (funcName == "simpleName")
     {
-        msg.replace(total, QDateTime::currentDateTime().toString(args));
+        return nicknameSimplify(args);
+    }
+    else if (funcName == "simpleNum")
+    {
+        return numberSimplify(args.toInt());
+    }
+    else if (funcName == "time")
+    {
+        return QDateTime::currentDateTime().toString(args);
     }
     else if (funcName == "unameToUid")
     {
-        msg.replace(total, snum(unameToUid(args)));
+        return snum(unameToUid(args));
     }
     else if (funcName == "inGameUsers")
     {
@@ -4411,7 +4420,7 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
         }
         if (ch < 0 || ch >= CHANNEL_COUNT)
             ch = 0;
-        msg.replace(total, gameUsers[ch].contains(id) ? "1" : "0");
+        return gameUsers[ch].contains(id) ? "1" : "0";
     }
     else if (funcName == "inGameNumbers")
     {
@@ -4426,7 +4435,7 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
         }
         if (ch < 0 || ch >= CHANNEL_COUNT)
             ch = 0;
-        msg.replace(total, gameNumberLists[ch].contains(id) ? "1" : "0");
+        return gameNumberLists[ch].contains(id) ? "1" : "0";
     }
     else if (funcName == "inGameTexts")
     {
@@ -4441,15 +4450,15 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
         }
         if (ch < 0 || ch >= CHANNEL_COUNT)
             ch = 0;
-        msg.replace(total, gameTextLists[ch].contains(text) ? "1" : "0");
+        return gameTextLists[ch].contains(text) ? "1" : "0";
     }
     else if (funcName == "strlen")
     {
-        msg.replace(total, snum(args.size()));
+        return snum(args.size());
     }
     else if (funcName == "trim")
     {
-        msg.replace(total, args.trimmed());
+        return args.trimmed();
     }
     else if (funcName == "substr")
     {
@@ -4466,14 +4475,14 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
             left = 0;
         else if (left > text.length())
             left = text.length();
-        msg.replace(total, text.mid(left, len));
+        return text.mid(left, len);
     }
     else if (funcName == "inputText")
     {
         QString label = argList.size() ? argList.first() : "";
         QString def = argList.size() >= 2 ? argList.at(1) : "";
         QString rst = QInputDialog::getText(this, QApplication::applicationName(), label, QLineEdit::Normal, def);
-        msg.replace(total, rst);
+        return rst;
     }
     else if (funcName == "getValue")
     {
@@ -4483,11 +4492,9 @@ bool MainWindow::replaceDynamicVariants(QString &msg, const QString& total, cons
         QString def = argList.size() >= 2 ? argList.at(1) : "";
         if (!key.contains("/"))
             key = "heaps/" + key;
-        msg.replace(total, heaps->value(key, def).toString());
+        return heaps->value(key, def).toString();
     }
-    else
-        return false;
-    return true;
+    return "";
 }
 
 /**
@@ -4935,6 +4942,14 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     if (simp.isEmpty())
         return nickname;
     return simp;
+}
+
+QString MainWindow::numberSimplify(int number) const
+{
+    if (number < 10000)
+        return QString::number(number);
+    number = (number + 5000) / 10000;
+    return QString::number(number) + "万";
 }
 
 QString MainWindow::msgToShort(QString msg) const
@@ -5913,9 +5928,9 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString url = caps.at(1);
-            QString callback = caps.at(2);
             qDebug() << "执行命令：" << caps;
+            QString url = caps.at(1);
+            QString callback = caps.size() > 2 ? caps.at(2) : "";
             get(url, [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
                 qDebug() << QString(ba);
@@ -5933,10 +5948,10 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
-            QString callback = caps.at(3);
-            qDebug() << "执行命令：" << caps;
+            QString callback = caps.size() > 3 ? caps.at(3) : "";
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
                 qDebug() << QString(ba);
@@ -5954,10 +5969,10 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
-            QString callback = caps.at(3);
-            qDebug() << "执行命令：" << caps;
+            QString callback = caps.size() > 3 ? caps.at(3) : "";
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
                 qDebug() << QString(ba);
@@ -6522,12 +6537,12 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
             qint64 id = caps.at(1).toLongLong();
             QString text = caps.at(2);
             int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的
-            if (!caps.at(3).isEmpty())
+            if (caps.size() > 3 && !caps.at(3).isEmpty())
                 maxLen = caps.at(3).toInt();
-            qDebug() << "执行命令：" << caps;
             AIReply(id, text, [=](QString s){
                 sendLongText(s);
             }, maxLen);

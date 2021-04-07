@@ -690,7 +690,7 @@ private:
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     bool replaceDanmakuVariants(QString& msg, const LiveDanmaku &danmaku, const QString& key) const;
     QString replaceDanmakuExtras(const QJsonObject& json, const QString &key_seq) const;
-    bool replaceDynamicVariants(QString& msg, const QString &total, const QString& funcName, const QString& args);
+    QString replaceDynamicVariants(const QString& funcName, const QString& args);
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
@@ -699,6 +699,7 @@ private:
     qint64 unameToUid(QString text);
     QString uidToName(qint64 uid);
     QString nicknameSimplify(QString nickname) const;
+    QString numberSimplify(int number) const;
     QString msgToShort(QString msg) const;
     double getPaletteBgProg() const;
     void setPaletteBgProg(double x);
