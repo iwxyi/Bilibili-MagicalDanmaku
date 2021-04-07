@@ -1662,6 +1662,10 @@ void MainWindow::on_testDanmakuButton_clicked()
         QByteArray ba = "{ \"cmd\": \"ENTRY_EFFECT\", \"data\": { \"basemap_url\": \"https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png\", \"business\": 3, \"copy_color\": \"#000000\", \"copy_writing\": \"欢迎 <%___君陌%> 进入直播间\", \"copy_writing_v2\": \"欢迎 <^icon^> <%___君陌%> 进入直播间\", \"effective_time\": 2, \"face\": \"https://i1.hdslb.com/bfs/face/8fb8336e1ae50001ca76b80c30b01d23b07203c9.jpg\", \"highlight_color\": \"#FFF100\", \"icon_list\": [ 2 ], \"id\": 136, \"max_delay_time\": 7, \"mock_effect\": 0, \"priority\": 1, \"privilege_type\": 0, \"show_avatar\": 1, \"target_id\": 5988102, \"uid\": 453364, \"web_basemap_url\": \"https://i0.hdslb.com/bfs/live/mlive/586f12135b6002c522329904cf623d3f13c12d2c.png\", \"web_close_time\": 900, \"web_effect_close\": 0, \"web_effective_time\": 2 } }";
         handleMessage(QJsonDocument::fromJson(ba).object());
     }
+    else if (text == "测试对面信息")
+    {
+        getPkMatchInfo();
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -3832,7 +3836,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     {
         QString rpls = replaceDanmakuExtras(json, match.captured(1));
         msg.replace(match.captured(0), rpls);
-        matchPos += rpls.length() - match.captured(0).length();
+        matchPos += rpls.length();
     }
 
     bool find = true;
@@ -4328,6 +4332,7 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
     QStringList keyTree = key_seq.split(".");
     if (keyTree.size() == 0)
         return "";
+
     QJsonValue obj = json.value(keyTree.takeFirst());
     while (keyTree.size())
     {
@@ -8212,7 +8217,6 @@ void MainWindow::handleMessage(QJsonObject json)
                 guardLevel = 3;
 
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
-            qDebug() << "~~~~~~~~~~~~~~~~读取舰长名字：" << uname << gd << guardLevel;
         }
 
         userComeEvent(danmaku);

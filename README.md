@@ -924,9 +924,9 @@ tips：
 | localNotify(uid, msg)                     | 本地通知         | 同上，带用户ID                                               |
 | speakText(msg)                            | 播放语音         | 朗读文本                                                     |
 | openUrl(url)                              | 打开网址         | 浏览器打开网址                                               |
-| connectNet(url)                           | 连接网址         | 后台连接网址（GET）                                          |
-| postData(url, data)                       | post数据         | 同上（POST）                                                 |
-| postJson(url, data)                       | postJson         | 同上，以JSON格式发送                                         |
+| connectNet(url, [callback])               | 连接网址         | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
+| postData(url, data, [callback])           | post数据         | 同上（POST）                                                 |
+| postJson(url, data, [callback])           | postJson         | 同上，以JSON格式发送                                         |
 | sendToSockets(cmd, data)                  | 发送至socket     | 发送给所有WebSocket                                          |
 | sendToLastSocket(cmd, data)               | 发送至最后socket | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                       | 运行命令行       | 运行操作系统的命令行                                         |
@@ -991,6 +991,48 @@ tips：
   `setValuesIf(signin_keep_(\d+), [!_{signin_today__$1_}_], 0)`
 - 用户上船天数+1：
   `setValuesIf(guard_days_\d+, [1], _[_VALUE_+1]_)`
+
+
+
+#### 获取网络信息回调
+
+三个联网命令：`connectNet`、`postData`、`postJson`，最后一个参数可带有一个“回调入口”。其实这是一个事件，添加该回调同名的事件，即可获取到联网返回的数据。
+
+只支持JSON格式的返回数据，使用 `%.键1.键2.键3%`  这样的格式依次获取JSON对象的值，例如：
+
+```json
+{
+    "data": {
+        "room": {
+            "roomname": "房间名字"
+        },
+        "anchor": {
+			"uname": "名字",
+        }
+    }
+}
+```
+
+其中的roomname获取方式：`%.data.room.roomname%`，uname获取方式：`%.data.anchor.uname%`
+
+
+
+##### 示例：获取主播信息
+
+添加命令至回复、事件等任意一项，动作：
+
+```
+>connectNet(https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=%room_id%, RoomInfoCallBack)
+```
+
+再添加一项事件：`RoomInfoCallBack`，动作：
+
+```
+>localNotify(舰长数量：%.data.guard_info.count%，\
+	粉丝数量：%.data.anchor_info.relation_info.attention%，\
+	粉丝团：%.data.anchor_info.medal_info.fansclub%，\
+	主播等级：%.data.anchor_info.live_info.level%)
+```
 
 
 
@@ -1513,6 +1555,7 @@ tips：
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
+| PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例 |
 
 
 
@@ -1605,6 +1648,34 @@ tips：
 ```
 [%pking%, %uid%=%pk_uid%]>sendRoomMsg(%pk_room_id%, 我也来串门啦~)
 ```
+
+
+
+##### 示例：大乱斗匹配信息
+
+添加事件：`PK_MATCH_INFO`，将在大乱斗开始的时候，获取对面直播间的信息。
+
+可参考 `https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=您的房间ID` 的结果，其 `data` 中的值。
+
+例如：
+
+- 主播名称：`%.anchor_info.base_info.uname%`
+- 勋章名称：`%.anchor_info.medal_info.medal_name%`
+- 舰长数量：`%.guard_info.count%`
+- 粉丝数量：`%.anchor_info.relation_info.attention%`
+- 粉丝团：`%.anchor_info.medal_info.fansclub%`
+- 主播等级：`%.anchor_info.live_info.level%`
+- 主播积分：`%.anchor_info.live_info.score%`
+- 房间名称：`%.room_info.title%`
+- 分区名称：`%.room_info.area_name%`
+
+示例动作：
+
+```
+匹配到：%.anchor_info.base_info.uname%，%.guard_info.count%舰长，%.anchor_info.relation_info.attention%粉丝
+```
+
+
 
 
 
@@ -1703,7 +1774,6 @@ tips：
 每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
 
 <div id='web_dev'/>
-
 ## Web开发接口
 
 ### 浏览器访问
