@@ -144,6 +144,7 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
+        reply->deleteLater();
 
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(data, &error);

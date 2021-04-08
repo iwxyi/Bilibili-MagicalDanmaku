@@ -50,6 +50,7 @@ INCLUDEPATH += \
     widgets/login_dialog/ \
     widgets/room_status_dialog/ \
     widgets/video_lyric_creator/ \
+    widgets/guard_online/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
@@ -66,6 +67,7 @@ SOURCES += \
     third_party/interactive_buttons/interactivebuttonbase.cpp \
     mainwindow/list_items/listiteminterface.cpp \
     mainwindow/live_danmaku/livedanmakuwindow.cpp \
+    widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
     mainwindow/mainwindow.cpp \
@@ -119,6 +121,7 @@ HEADERS += \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
+    widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \
     mainwindow/mainwindow.h \
     order_player/clickslider.h \
@@ -171,6 +174,7 @@ HEADERS += \
     widgets/video_lyric_creator/videolyricscreator.h
 
 FORMS += \
+    widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
     mainwindow/mainwindow.ui \
     order_player/logindialog.ui \

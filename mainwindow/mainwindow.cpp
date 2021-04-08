@@ -12,6 +12,7 @@
 #include "fileutil.h"
 #include "stringutil.h"
 #include "escape_dialog/escapedialog.h"
+#include "guardonlinedialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -8756,7 +8757,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         QString awardRst = awardName + (awardNum > 1 ? "×" + snum(awardNum) : "");
-        localNotify("[天选] " + names.join(",") + "中奖：" + awardRst);
+        localNotify("[天选] " + names.join(",") + " 中奖：" + awardRst);
 
         triggerCmdEvent(cmd, LiveDanmaku(firstUid, names.join(","), awardRst));
     }
@@ -14130,3 +14131,8 @@ void MainWindow::on_actionDebug_Mode_triggered()
     settings->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
 }
 
+void MainWindow::on_actionGuard_Online_triggered()
+{
+    GuardOnlineDialog* god = new GuardOnlineDialog(settings, roomId, upUid, this);
+    god->show();
+}

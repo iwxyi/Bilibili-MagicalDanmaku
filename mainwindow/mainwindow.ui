@@ -3418,6 +3418,7 @@ margin: 6px;</string>
     <addaction name="actionCreate_Video_LRC"/>
     <addaction name="actionGet_Play_Url"/>
     <addaction name="actionRoom_Status"/>
+    <addaction name="actionGuard_Online"/>
     <addaction name="actionCatch_You_Online"/>
    </widget>
    <widget class="QMenu" name="menu">
@@ -3771,6 +3772,11 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>调试模式</string>
+   </property>
+  </action>
+  <action name="actionGuard_Online">
+   <property name="text">
+    <string>黑听舰长捕捉</string>
    </property>
   </action>
  </widget>

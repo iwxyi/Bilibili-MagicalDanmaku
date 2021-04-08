@@ -610,6 +610,8 @@ private slots:
 
     void on_actionDebug_Mode_triggered();
 
+    void on_actionGuard_Online_triggered();
+
 private:
     void initPath();
     void readConfig();
@@ -932,6 +934,7 @@ private:
 
     // 高能榜
     QList<LiveDanmaku> onlineGoldRank;
+    QList<LiveDanmaku> onlineGuards;
 
     // 录播
     qint64 startRecordTime = 0;
