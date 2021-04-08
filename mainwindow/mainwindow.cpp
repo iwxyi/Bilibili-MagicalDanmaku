@@ -4324,6 +4324,10 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         }
         msg.replace(key, text);
     }
+    else if (key == "%random100%")
+    {
+        msg.replace(key, snum(qrand() % 100 + 1));
+    }
     else
         return false;
     return true;
@@ -4498,6 +4502,26 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         if (!key.contains("/"))
             key = "heaps/" + key;
         return heaps->value(key, def).toString();
+    }
+    else if (funcName == "random")
+    {
+        if (argList.size() < 1 || argList.first().trimmed().isEmpty())
+            return errorArg("最小值，最大值");
+        int min = 0, max = 100;
+        if (argList.size() == 1)
+            max = argList.at(0).toInt();
+        else
+        {
+            min = argList.at(0).toInt();
+            max = argList.at(1).toInt();
+        }
+        if (max < min)
+        {
+            int t = min;
+            min = max;
+            max = t;
+        }
+        return snum(qrand() % (max-min+1) + min);
     }
     return "";
 }
@@ -4807,7 +4831,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
     QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁"};
-    QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖"};
+    QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖", "Official"};
     starts += special;
     ends += special;
     for (int i = 0; i < starts.size(); i++)
@@ -11204,6 +11228,12 @@ void MainWindow::pkPre(QJsonObject json)
     ui->actionShow_PK_Video->setEnabled(true);
     ui->actionJoin_Battle->setEnabled(false);
     pkGifts.clear();
+
+    // 处理PK对面直播间事件
+    if (hasEvent("PK_MATCH_INFO"))
+    {
+        getPkMatchInfo();
+    }
 }
 
 void MainWindow::pkStart(QJsonObject json)
@@ -11288,12 +11318,7 @@ void MainWindow::pkStart(QJsonObject json)
         text += "  PK过" + QString::number(pkCount) + "次";
     localNotify(text, pkUid.toLongLong());
 
-    // 处理PK对面主播事件
-    if (hasEvent("PK_MATCH_INFO"))
-    {
-        getPkMatchInfo();
-    }
-
+    // 处理对面直播姬界面
     if (hasEvent("PK_MATCH_ONLINE_GUARD"))
     {
         getPkOnlineGuardPage(0);

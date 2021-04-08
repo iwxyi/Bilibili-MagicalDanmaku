@@ -1490,7 +1490,7 @@ void LiveDanmakuWindow::showMenu()
         if (userMarks->contains("base/" + snum(uid)))
             mark = userMarks->value("base/" + snum(uid), "").toString();
         QString tip = "设置【" + danmaku.getNickname() + "】的备注\n可通过%umark%放入至弹幕中";
-        mark = QInputDialog::getText(this, "专属昵称", tip, QLineEdit::Normal, mark, &ok);
+        mark = QInputDialog::getText(this, "用户备注", tip, QLineEdit::Normal, mark, &ok);
         if (!ok)
             return ;
         if (mark.isEmpty())

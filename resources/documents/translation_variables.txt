@@ -93,3 +93,4 @@
 当前歌曲=playing_song
 当前歌曲点歌者=song_order_uname
 点歌队列数量=order_song_count
+随机100=random100

@@ -10,3 +10,4 @@
 取变量值=getValue
 昵称简化=simpleName
 数值简化=simpleNum
+取随机数=random
