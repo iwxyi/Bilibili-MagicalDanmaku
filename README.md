@@ -1568,6 +1568,7 @@ tips：
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
 | PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例 |
+| PK_MATCH_ONLINE_GUARD | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
 
 
 
@@ -1686,6 +1687,24 @@ tips：
 ```
 匹配到：%.anchor_info.base_info.uname%，%.guard_info.count%舰长，%.anchor_info.relation_info.attention%粉丝
 ```
+
+
+
+##### 示例：对面在线舰长播报
+
+添加事件：`PK_MATCH_ONLINE_GUARD`，将在大乱斗开始的时候，获取对面直播间在线舰长人数。
+
+`%number%` 获取总人数，`%.guard1%` 总督，`%.guard2%` 提督，`%.guard3%` 舰长
+
+动作：
+
+```
+[%number%>30]*危！对面有%number%名舰长在线！
+[%number%>20, %.guard1%>0]**对面有%[%number%-%.guard1%]%名舰长在线，%.guard1%名总督
+[%number%>0]对面有%number%名舰长在线！
+```
+
+
 
 
 

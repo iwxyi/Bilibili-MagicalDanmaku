@@ -1667,6 +1667,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         getPkMatchInfo();
     }
+    else if (text == "测试对面舰长")
+    {
+        getPkOnlineGuardPage(0);
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -10128,7 +10132,7 @@ void MainWindow::updateOnlineGoldRank()
     }*/
     QString _upUid = upUid;
     QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?roomId="
-            +roomId+"&page="+snum(1)+"&ruid="+upUid+"&pageSize="+snum(50);
+            +pkRoomId+"&page="+snum(1)+"&ruid="+upUid+"&pageSize="+snum(50);
     onlineGoldRank.clear();
 
     get(url, [=](QJsonObject json){
@@ -10241,6 +10245,67 @@ void MainWindow::getPkMatchInfo()
 
         QJsonObject data = json.value("data").toObject();
         triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data));
+    });
+}
+
+void MainWindow::getPkOnlineGuardPage(int page)
+{
+    static int guard1 = 0, guard2 = 0, guard3 = 0;
+    if (page == 0)
+    {
+        page = 1;
+        guard1 = guard2 = guard3 = 0;
+    }
+
+    auto addCount = [=](MyJson user) {
+        int alive = user.i("is_alive");
+        if (!alive)
+            return ;
+        QString username = user.s("username");
+        int guard_level = user.i("guard_level");
+        if (!alive)
+            return ;
+        if (guard_level == 1)
+            guard1++;
+        else if (guard_level == 2)
+            guard2++;
+        else
+            guard3++;
+    };
+
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + pkRoomId
+            +"&page=" + QString::number(page) + "&ruid=" + pkUid + "&page_size=30";
+    get(url, [=](MyJson json){
+        MyJson data = json.data();
+        // top3
+        if (page == 1)
+        {
+            QJsonArray top3 = data.value("top3").toArray();
+            foreach (QJsonValue val, top3)
+                addCount(val.toObject());
+        }
+
+        // list
+        QJsonArray list = data.value("list").toArray();
+        foreach (QJsonValue val, list)
+            addCount(val.toObject());
+
+        // 下一页
+        QJsonObject info = data.value("info").toObject();
+        int page = info.value("page").toInt();
+        int now = info.value("now").toInt();
+        if (now < page)
+            getPkOnlineGuardPage(now+1);
+        else // 全部完成了
+        {
+            qDebug() << guard1 << guard2 << guard3;
+            LiveDanmaku danmaku;
+            danmaku.setNumber(guard1 + guard2 + guard3);
+            danmaku.extraJson.insert("guard1", guard1);
+            danmaku.extraJson.insert("guard2", guard2);
+            danmaku.extraJson.insert("guard3", guard3);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku);
+        }
     });
 }
 
@@ -11227,6 +11292,11 @@ void MainWindow::pkStart(QJsonObject json)
     if (hasEvent("PK_MATCH_INFO"))
     {
         getPkMatchInfo();
+    }
+
+    if (hasEvent("PK_MATCH_ONLINE_GUARD"))
+    {
+        getPkOnlineGuardPage(0);
     }
 }
 

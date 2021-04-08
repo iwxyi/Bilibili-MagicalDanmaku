@@ -684,6 +684,7 @@ private:
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
     void getPkMatchInfo();
+    void getPkOnlineGuardPage(int page);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -976,6 +977,9 @@ private:
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
     QString pkToken;
     QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
+
+    // 大乱斗对面信息
+    int pkOnlineGuard1, pkOnlineGuard2, pkOnlineGuard3;
 
     // 欢迎
     qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道
