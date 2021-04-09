@@ -5997,10 +5997,10 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("postData"))
     {
-        re = RE("postData\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
         if (msg.indexOf(re, 0, &match) == -1)
         {
-            re = RE("postData\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
+            re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
             if (msg.indexOf(re, 0, &match) == -1)
                 return false;
         }
@@ -6023,10 +6023,10 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("postJson"))
     {
-        re = RE("postJson\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
         if (msg.indexOf(re, 0, &match) == -1)
         {
-            re = RE("postJson\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
+            re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
             if (msg.indexOf(re, 0, &match) == -1)
                 return false;
         }
