@@ -19,6 +19,7 @@
 播放语音=speakText
 打开网址=openUrl
 连接网址=connectNet
+get数据=getData
 post数据=postData
 发送至socket=sendToSockets
 发送至最后socket=sendToLastSocket

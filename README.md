@@ -935,7 +935,8 @@ tips：
 | localNotify(uid, msg)                     | 本地通知         | 同上，带用户ID                                               |
 | speakText(msg)                            | 播放语音         | 朗读文本                                                     |
 | openUrl(url)                              | 打开网址         | 浏览器打开网址                                               |
-| connectNet(url, [callback])               | 连接网址         | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
+| connectNet(url)                           | 连接网址         | 用于连接其他API，不管返回结果                                |
+| getData(url, [callback])                  | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
 | postData(url, data, [callback])           | post数据         | 同上（POST）                                                 |
 | postJson(url, data, [callback])           | postJson         | 同上，以JSON格式发送                                         |
 | sendToSockets(cmd, data)                  | 发送至socket     | 发送给所有WebSocket                                          |
@@ -1007,7 +1008,7 @@ tips：
 
 #### 获取网络信息回调
 
-三个联网命令：`connectNet`、`postData`、`postJson`，最后一个参数可带有一个“回调入口”。其实这是一个事件，添加该回调同名的事件，即可获取到联网返回的数据。
+三个联网命令：`getData`、`postData`、`postJson`，最后一个参数可带有一个“回调入口”。其实这是一个事件，添加该回调同名的事件，即可获取到联网返回的数据。
 
 只支持JSON格式的返回数据，使用 `%.键1.键2.键3%`  这样的格式依次获取JSON对象的值，例如：
 
@@ -1033,7 +1034,7 @@ tips：
 添加命令至回复、事件等任意一项，动作：
 
 ```
->connectNet(https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=%room_id%, RoomInfoCallBack)
+>getData(https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=%room_id%, RoomInfoCallBack)
 ```
 
 再添加一项事件：`RoomInfoCallBack`，动作：

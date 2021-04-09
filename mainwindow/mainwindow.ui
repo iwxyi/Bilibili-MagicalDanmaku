@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -368,7 +368,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,1,1,0,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -382,6 +382,13 @@ QTabBar::tab:selected
             </property>
            </widget>
           </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="1,1,0,0">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="AIReplyCheck">
             <property name="toolTip">
@@ -442,7 +449,7 @@ QTabBar::tab:selected
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,1,1">
+         <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1">
           <property name="topMargin">
            <number>0</number>
           </property>
@@ -456,6 +463,13 @@ QTabBar::tab:selected
             </property>
            </widget>
           </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="enableBlockCheck">
             <property name="toolTip">
@@ -473,6 +487,44 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>机器人判断</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="pkChuanmenCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门自动欢迎（需开启自动欢迎）；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">己方到对方串门：xxx跑到对面串门
+对方到己方串门：[对面] xxx 进入直播间</string>
+            </property>
+            <property name="text">
+             <string>大乱斗串门小报告</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="pkMsgSyncCheck">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在打视频大乱斗的时候，同步显示对面直播间的弹幕消息，格式如下：&lt;/p&gt;&lt;p&gt;[同步] 灰色弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">视频大乱斗时显示对面的消息，格式如下：
+[同步] 昵称 灰色弹幕</string>
+            </property>
+            <property name="text">
+             <string>PK同步消息</string>
+            </property>
+            <property name="tristate">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -557,44 +609,6 @@ QTabBar::tab:selected
             </property>
             <property name="text">
              <string>黑名单</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="pkChuanmenCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门自动欢迎（需开启自动欢迎）；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">己方到对方串门：xxx跑到对面串门
-对方到己方串门：[对面] xxx 进入直播间</string>
-            </property>
-            <property name="text">
-             <string>大乱斗串门小报告</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="pkMsgSyncCheck">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在打视频大乱斗的时候，同步显示对面直播间的弹幕消息，格式如下：&lt;/p&gt;&lt;p&gt;[同步] 灰色弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">视频大乱斗时显示对面的消息，格式如下：
-[同步] 昵称 灰色弹幕</string>
-            </property>
-            <property name="text">
-             <string>PK同步消息</string>
-            </property>
-            <property name="tristate">
-             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -3415,11 +3429,12 @@ margin: 6px;</string>
      <string>工具</string>
     </property>
     <addaction name="actionPicture_Browser"/>
-    <addaction name="actionCreate_Video_LRC"/>
-    <addaction name="actionGet_Play_Url"/>
-    <addaction name="actionRoom_Status"/>
     <addaction name="actionGuard_Online"/>
     <addaction name="actionCatch_You_Online"/>
+    <addaction name="actionRoom_Status"/>
+    <addaction name="actionGet_Play_Url"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_Video_LRC"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -3654,6 +3669,9 @@ margin: 6px;</string>
      <normaloff>:/icons/catch</normaloff>:/icons/catch</iconset>
    </property>
    <property name="text">
+    <string>检测跑骚抓人</string>
+   </property>
+   <property name="toolTip">
     <string>跑骚抓人</string>
    </property>
   </action>
@@ -3775,6 +3793,10 @@ margin: 6px;</string>
    </property>
   </action>
   <action name="actionGuard_Online">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/catch_guard</normaloff>:/icons/catch_guard</iconset>
+   </property>
    <property name="text">
     <string>黑听舰长捕捉</string>
    </property>

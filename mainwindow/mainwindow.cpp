@@ -5545,6 +5545,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
 {
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
+    int matchResult = -1;
     if (msg.indexOf(re) == -1)
         return false;
 
@@ -5953,8 +5954,28 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 后台网络操作
     if (msg.contains("connectNet"))
     {
-        re = RE("connectNet\\s*\\(\\s*(.+?)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
+        re = RE("connectNet\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qDebug() << "执行命令：" << caps;
+            QString url = caps.at(1);
+            get(url, [=](QNetworkReply* reply){
+                QByteArray ba(reply->readAll());
+                qDebug() << QString(ba);
+            });
+            return true;
+        }
+    }
+    if (msg.contains("getData"))
+    {
+        re = RE("getData\\s*\\(\\s*(.+)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数二
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("getData\\s*\\(\\s*(.+)\\s*\\)"); // 不带参数二
+            if (msg.indexOf(re, 0, &match) == -1)
+                return false;
+        }
         {
             QStringList caps = match.capturedTexts();
             qDebug() << "执行命令：" << caps;
@@ -5973,8 +5994,13 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("postData"))
     {
-        re = RE("postData\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
-        if (msg.indexOf(re, 0, &match) > -1)
+        re = RE("postData\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("postData\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
+            if (msg.indexOf(re, 0, &match) == -1)
+                return false;
+        }
         {
             QStringList caps = match.capturedTexts();
             qDebug() << "执行命令：" << caps;
@@ -5994,8 +6020,13 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("postJson"))
     {
-        re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*(?:,\\s*(\\S+?)\\s*)?\\)");
-        if (msg.indexOf(re, 0, &match) > -1)
+        re = RE("postJson\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("postJson\\s*\\(\\s*(.+)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
+            if (msg.indexOf(re, 0, &match) == -1)
+                return false;
+        }
         {
             QStringList caps = match.capturedTexts();
             qDebug() << "执行命令：" << caps;
