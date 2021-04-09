@@ -14082,18 +14082,21 @@ void MainWindow::on_actionPaste_Code_triggered()
             item = addTimerTask(false, 1800, "");
             ui->tabWidget->setCurrentWidget(ui->tabTimer);
             ui->taskListWidget->scrollToBottom();
+            settings->setValue("task/count", ui->taskListWidget->count());
         }
         else if (anchor_key == CODE_AUTO_REPLY_KEY)
         {
             item = addAutoReply(false, "","");
             ui->tabWidget->setCurrentWidget(ui->tabReply);
             ui->replyListWidget->scrollToBottom();
+            settings->setValue("reply/count", ui->replyListWidget->count());
         }
         else if (anchor_key == CODE_EVENT_ACTION_KEY)
         {
             item = addEventAction(false, "", "");
             ui->tabWidget->setCurrentWidget(ui->tabEvent);
             ui->eventListWidget->scrollToBottom();
+            settings->setValue("event/count", ui->eventListWidget->count());
         }
         else
         {
