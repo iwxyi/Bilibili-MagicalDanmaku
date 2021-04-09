@@ -3745,7 +3745,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         {
             QString s = result.at(i);
             s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").trimmed();
-            if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest)
+            if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest && !s.contains("%"))
             {
                 if (debugPrint)
                     localNotify("[去掉过长候选：" + s + "]");
@@ -4015,6 +4015,10 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // 0续费，1第一次上船，2重新上船
     else if (key == "%guard_first%" || key == "%first%")
         msg.replace(key, snum(danmaku.getFirst()));
+
+    // 特别关注
+    else if (key == "%special%")
+        msg.replace(key, snum(danmaku.getSpecial()));
 
     // 粉丝牌房间
     else if (key == "%anchor_roomid%" || key == "%medal_roomid%" || key == "%anchor_room_id%" || key == "%medal_room_id%")
@@ -8243,10 +8247,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
-
+qDebug() << "~~~~~~~~~~~~~~~~~~~" << copy_writing;
         QStringList results = QRegularExpression("欢迎(舰长|提督|总督)?.+?<%(.+)%>").match(copy_writing).capturedTexts();
         LiveDanmaku danmaku;
-        if (results.at(1).isEmpty()) // 不是船员
+        if (results.size() < 2 || results.at(1).isEmpty()) // 不是船员
         {
             qDebug() << ">>>>>>高能榜进入：" << copy_writing;
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
@@ -8298,7 +8302,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         userComeEvent(danmaku);
-
+qDebug() << "~~~~~~~~~~~~~~~~~~~end";
         triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
@@ -8314,7 +8318,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "INTERACT_WORD")
     {
-        /*{
+        /* {
             "cmd": "INTERACT_WORD",
             "data": {
                 "contribution": {
@@ -8339,18 +8343,18 @@ void MainWindow::handleMessage(QJsonObject json)
                     1
                 ],
                 "is_spread": 0,
-                "msg_type": 2,
-                "roomid": 22532956,
-                "score": 1610445087293,
+                "msg_type": 4,
+                "roomid": 22639465,
+                "score": 1617974941375,
                 "spread_desc": "",
                 "spread_info": "",
                 "tail_icon": 0,
-                "timestamp": 1610445087,
-                "uid": 7696257,
-                "uname": "黑心帝王瓜",
+                "timestamp": 1617974941,
+                "uid": 20285041,
+                "uname": "懒一夕智能科技",
                 "uname_color": ""
             }
-        }*/
+        } */
 
         QJsonObject data = json.value("data").toObject();
         int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
@@ -8395,7 +8399,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
             triggerCmdEvent(cmd, danmaku);
         }
-        else if (msgType == 2) // 关注 5不知道是啥啊
+        else if (msgType == 2) // 2关注 4特别关注
         {
             danmaku.transToAttention(timestamp);
             appendNewLiveDanmaku(danmaku);
@@ -8418,9 +8422,26 @@ void MainWindow::handleMessage(QJsonObject json)
 
             triggerCmdEvent("SHARE", danmaku);
         }
+        else if (msgType == 4) // 特别关注
+        {
+            danmaku.transToAttention(timestamp);
+            danmaku.setSpecial(1);
+            appendNewLiveDanmaku(danmaku);
+
+            if (!justStart && ui->autoSendAttentionCheck->isChecked())
+            {
+                sendAttentionThankIfNotRobot(danmaku);
+            }
+            else
+            {
+                judgeRobotAndMark(danmaku);
+            }
+
+            triggerCmdEvent("SPECIAL_ATTENTION", danmaku); // !这个是单独修改的
+        }
         else
         {
-            qDebug() << "新的进入msgType" << msgType << json;
+            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言

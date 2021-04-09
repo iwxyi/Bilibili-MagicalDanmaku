@@ -180,6 +180,7 @@ public:
         danmaku.guard = object.value("guard_level").toInt();
         danmaku.prev_timestamp = static_cast<qint64>(object.value("prev_timestamp").toDouble());
         danmaku.first = object.value("first").toInt();
+        danmaku.special = object.value("special").toInt();
         danmaku.extraJson = object.value("extra").toObject();
         return danmaku;
     }
@@ -244,6 +245,8 @@ public:
         else if (msgType == MSG_ATTENTION)
         {
             object.insert("attention", attention);
+            if (special)
+                object.insert("special", special);
         }
         else if (msgType == MSG_MSG)
         {
@@ -353,10 +356,14 @@ public:
         }
         else if (msgType == MSG_ATTENTION)
         {
-            return QString("%3    [关注] %1 %2")
-                    .arg(nickname)
-                    .arg(attention ? "关注了主播" : "取消关注主播")
-                    .arg(timeline.toString("hh:mm:ss"));
+            if (special)
+                return QString("%2    [特别关注] %1 特别关注了主播")
+                        .arg(nickname)
+                        .arg(timeline.toString("hh:mm:ss"));
+            else
+                return QString("%3    [关注] %1 %2")
+                        .arg(nickname)
+                        .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_BLOCK)
         {
@@ -494,6 +501,11 @@ public:
     void setMedalLevel(int level)
     {
         this->medal_level = level;
+    }
+
+    void setSpecial(int s)
+    {
+        this->special = s;
     }
 
     bool equal(const LiveDanmaku& another) const
@@ -724,6 +736,11 @@ public:
         return first;
     }
 
+    int getSpecial() const
+    {
+        return special;
+    }
+
     QString getArgs(int i) const
     {
         if (i < 0 || i >= args.size())
@@ -787,6 +804,7 @@ private:
     bool robot = false;
     qint64 prev_timestamp = 0;
     int first = 0; // 初次：1；新的：2
+    int special = 0;
 
 public:
     QStringList args;

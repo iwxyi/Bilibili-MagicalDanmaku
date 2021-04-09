@@ -413,6 +413,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             return "pk-best";
         case MSG_SUPER_CHAT:
             return "super-chat";
+        case MSG_EXTRA:
+            return "extra";
         }
     };
 
@@ -496,7 +498,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     }
     else if (msgType == MSG_DIANGE
              || msgType == MSG_WELCOME_GUARD
-             || msgType == MSG_BLOCK)
+             || msgType == MSG_BLOCK
+             || (msgType == MSG_ATTENTION && danmaku.getSpecial()))
     {
         highlightItemText(item, true);
     }
@@ -810,9 +813,10 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_ATTENTION)
     {
 //        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
-        text = QString("<font color='gray'>[关注]</font> %1 %2")
+        text = QString("<font color='gray'>[%3]</font> %1 %2")
                 .arg(nameText)
-                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播");
+                .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
+                .arg(danmaku.getSpecial() ? "特别关注" : "关注");
     }
     else if (msgType == MSG_BLOCK)
     {

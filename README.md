@@ -345,6 +345,19 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 
+### 关注答谢
+
+##### 示例：特别关注
+
+```
+[%special%]*(cd21:0)谢谢%ai_name%的特别关注！
+感谢 %ai_name% 的关注%punc%
+```
+
+> 测试时不答谢关注的一个重要原因，是因为刚取消关注就重新关注了，短期内不会答谢！
+
+
+
 ### 定时任务
 
 定时发送随机弹幕、执行命令。
@@ -685,7 +698,8 @@ border-image: url(C:/Path/To/Image.png)
 | blocked          | 被禁言             | 禁言：1，未禁言0                                             |
 | playing_song     | 当前歌曲           | 点歌姬没有播放歌曲则为空                                     |
 | song_order_uname | 当前歌曲点歌者     | 同上                                                         |
-| random100        | 随机100            | 同代码块中的都将随机替换为同一个数，可用于抽奖               |
+| random100        | 随机100            | 1~100的随机数，同代码块中的都将随机替换为同一个数，可用于设置抽奖概率 |
+|                  | 特别               | 关注答谢里可用，判断特别关注                                 |
 
 
 
@@ -1408,6 +1422,7 @@ tips：
 | **INTERACT_WORD**             | 用户进入【欢迎】                                             |
 | **ATTENTION**                 | 用户关注【答谢关注】                                         |
 | **SHARE**                     | 用户分享直播间                                               |
+| SPECIAL_ATTENTION             | 特别关注直播间，可用`%special%`判断                          |
 | ROOM_REAL_TIME_MESSAGE_UPDATE | 粉丝数量改变                                                 |
 | SUPER_CHAT_MESSAGE            | 醒目留言                                                     |
 | SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                                             |
