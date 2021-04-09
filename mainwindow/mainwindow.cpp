@@ -3105,12 +3105,15 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::Text, fg);
             pa.setColor(QPalette::ButtonText, fg);
             pa.setColor(QPalette::WindowText, fg);
+            statusLabel->setStyleSheet("color:" + QVariant(sbg).toString());
+            fansLabel->setStyleSheet("color:" + QVariant(sbg).toString());
+            rankLabel->setStyleSheet("color:" + QVariant(sbg).toString());
 
             pa.setColor(QPalette::Highlight, sbg);
             pa.setColor(QPalette::HighlightedText, sfg);
             setPalette(pa);
             setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
-            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
+            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(sbg).toString()+"}");
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
