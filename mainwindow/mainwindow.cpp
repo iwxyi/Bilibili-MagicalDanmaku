@@ -3744,7 +3744,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         for (int i = 0; i < result.size() && result.size() > 1; i++)
         {
             QString s = result.at(i);
-            s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").trimmed();
+            s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
             if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest && !s.contains("%"))
             {
                 if (debugPrint)
@@ -4191,6 +4191,8 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
     // 大乱斗
     else if (key == "%pking%")
         msg.replace(key, snum(pking ? 1 : 0));
+    else if (key == "%pk_video%")
+        msg.replace(key, snum(pkVideo ? 1 : 0));
     else if (key == "%pk_room_id%")
         msg.replace(key, pkRoomId);
     else if (key == "%pk_uid%")
@@ -4971,6 +4973,13 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 一长串数字
     QRegularExpression numRe("(\\d{3})\\d{3,}");
     if (simp.indexOf(numRe, 0, &match) > -1)
+    {
+        simp = simp.replace(match.captured(0), match.captured(1) + "…");
+    }
+
+    // 一长串英文
+    QRegularExpression wRe("(\\w{5})\\w{3,}");
+    if (simp.indexOf(wRe, 0, &match) > -1)
     {
         simp = simp.replace(match.captured(0), match.captured(1) + "…");
     }

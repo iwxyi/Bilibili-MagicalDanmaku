@@ -635,6 +635,7 @@ border-image: url(C:/Path/To/Image.png)
 | new_attention    | 新关注             | 最近50个关注内                                               |
 | guard_count      | 上船次数           | 舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船   |
 | pking            | 大乱斗中           | 是：1，否：0                                                 |
+| pk_video         | 视频大乱斗         | 是：1，否：0                                                 |
 | pk_id            | 大乱斗编号         |                                                              |
 | pk_room_id       | 对面房间号         | 未在PK中则为空，下同                                         |
 | pk_uid           | 对面主播ID         |                                                              |
@@ -1587,7 +1588,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:1赢,0~~平,-1~~输；%gift_coin%总积分(=金瓜子/100) |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:1赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
 | **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
