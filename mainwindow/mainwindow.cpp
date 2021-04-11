@@ -3105,9 +3105,9 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::Text, fg);
             pa.setColor(QPalette::ButtonText, fg);
             pa.setColor(QPalette::WindowText, fg);
-            statusLabel->setStyleSheet("color:" + QVariant(sbg).toString());
-            fansLabel->setStyleSheet("color:" + QVariant(sbg).toString());
-            rankLabel->setStyleSheet("color:" + QVariant(sbg).toString());
+            statusLabel->setStyleSheet("color:" + QVariant(fg).toString());
+            fansLabel->setStyleSheet("color:" + QVariant(fg).toString());
+            rankLabel->setStyleSheet("color:" + QVariant(fg).toString());
 
             pa.setColor(QPalette::Highlight, sbg);
             pa.setColor(QPalette::HighlightedText, sfg);
@@ -7269,7 +7269,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
                 }
 
-                triggerCmdEvent(cmd, LiveDanmaku());
+                triggerCmdEvent(cmd, LiveDanmaku(json.value("data").toObject()));
             }
             else
             {
@@ -8163,7 +8163,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 danmakuWindow->removeBlockText(text);
             });
         }
-
+        qDebug() << "节奏风暴：" << text << ui->autoLOTCheck->isChecked();
         if (ui->autoLOTCheck->isChecked())
         {
             joinStorm(id);
@@ -11894,7 +11894,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
             minuteDanmuPopular++;*/
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);
+        // appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_" + cmd, danmaku);
     }
