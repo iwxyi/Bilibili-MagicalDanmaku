@@ -1,4 +1,5 @@
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QMetaEnum>
 #include "livedanmakuwindow.h"
 #include "facilemenu.h"
@@ -1693,6 +1694,12 @@ void LiveDanmakuWindow::showMenu()
         this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
         this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
         this->show();
+
+        if (settings->value("ask/transMouse", true).toBool())
+        {
+            QMessageBox::information(this, "鼠标穿透", "开启鼠标穿透后，弹幕姬中所有内容都将无法点击\n\n在程序主界面的“弹幕”选项卡中点击“关闭鼠标穿透”");
+            settings->setValue("ask/transMouse", false);
+        }
     });
     connect(actionSimpleMode, &QAction::triggered, this, [=]{
         settings->setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);

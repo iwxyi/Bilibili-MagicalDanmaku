@@ -1193,25 +1193,22 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             {
                 localNotify("[3s后重试]");
                 sendAutoMsgInFirst(msg, 3200);
-                /* QTimer::singleShot(3200, [=]{
-                    if (room != this->roomId) // 换房间了
-                        return ;
-                    sendAutoMsg(msg);
-                }); */
             }
             else if (errorMsg.contains("超出限制长度"))
             {
-                localNotify("[自动分割长度]");
-                sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), 1000);
-                /* QTimer::singleShot(1000, [=]{
-                    if (room != this->roomId) // 换房间了
-                        return ;
-                    sendLongText(msg);
-                }); */
+                if (msg.length() <= ui->danmuLongestSpin->value())
+                {
+                    localNotify("[错误的弹幕长度：超出长度" + snum(msg.length()) + " <= 设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
+                }
+                else
+                {
+                    localNotify("[自动分割长度]");
+                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), 1000);
+                }
             }
             else if (errorMsg == "f") // 敏感词
             {
-
+                // TODO: 敏感词自动替换
             }
         }
     });
@@ -14247,7 +14244,7 @@ void MainWindow::on_pkChuanmenCheck_stateChanged(int arg1)
 
 void MainWindow::on_actionLast_Candidate_triggered()
 {
-    QMessageBox::information(this, "最后一次调试的候选弹幕", lastConditionDanmu + "\n\n---------------------\n\n" + lastCandidateDanmaku);
+    QMessageBox::information(this, "最后一次调试的候选弹幕", "-------- 填充变量 --------" + lastConditionDanmu + "\n\n-------- 随机发送 --------\n\n" + lastCandidateDanmaku);
 }
 
 void MainWindow::on_actionLocal_Mode_triggered()
