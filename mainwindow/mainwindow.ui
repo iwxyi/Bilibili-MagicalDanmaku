@@ -3461,6 +3461,7 @@ margin: 6px;</string>
     <property name="title">
      <string>调试</string>
     </property>
+    <addaction name="actionData_Path"/>
     <addaction name="actionLocal_Mode"/>
     <addaction name="actionDebug_Mode"/>
     <addaction name="separator"/>

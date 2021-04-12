@@ -29,6 +29,7 @@
 新关注=new_attention
 上船次数=guard_count
 大乱斗中=pking
+视频大乱斗=pk_video
 大乱斗编号=pk_id
 对面房间号=pk_room_id
 对面主播ID=pk_uid
@@ -94,3 +95,4 @@
 当前歌曲点歌者=song_order_uname
 点歌队列数量=order_song_count
 随机100=random100
+特别=special

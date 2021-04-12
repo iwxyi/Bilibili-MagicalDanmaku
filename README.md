@@ -345,6 +345,19 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
 
+### 关注答谢
+
+##### 示例：特别关注
+
+```
+[%special%]*(cd21:0)谢谢%ai_name%的特别关注！
+感谢 %ai_name% 的关注%punc%
+```
+
+> 测试时不答谢关注的一个重要原因，是因为刚取消关注就重新关注了，短期内不会答谢！
+
+
+
 ### 定时任务
 
 定时发送随机弹幕、执行命令。
@@ -622,6 +635,7 @@ border-image: url(C:/Path/To/Image.png)
 | new_attention    | 新关注             | 最近50个关注内                                               |
 | guard_count      | 上船次数           | 舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船   |
 | pking            | 大乱斗中           | 是：1，否：0                                                 |
+| pk_video         | 视频大乱斗         | 是：1，否：0                                                 |
 | pk_id            | 大乱斗编号         |                                                              |
 | pk_room_id       | 对面房间号         | 未在PK中则为空，下同                                         |
 | pk_uid           | 对面主播ID         |                                                              |
@@ -685,7 +699,8 @@ border-image: url(C:/Path/To/Image.png)
 | blocked          | 被禁言             | 禁言：1，未禁言0                                             |
 | playing_song     | 当前歌曲           | 点歌姬没有播放歌曲则为空                                     |
 | song_order_uname | 当前歌曲点歌者     | 同上                                                         |
-| random100        | 随机100            | 同代码块中的都将随机替换为同一个数，可用于抽奖               |
+| random100        | 随机100            | 1~100的随机数，同代码块中的都将随机替换为同一个数，可用于设置抽奖概率 |
+|                  | 特别               | 关注答谢里可用，判断特别关注                                 |
 
 
 
@@ -1408,6 +1423,7 @@ tips：
 | **INTERACT_WORD**             | 用户进入【欢迎】                                             |
 | **ATTENTION**                 | 用户关注【答谢关注】                                         |
 | **SHARE**                     | 用户分享直播间                                               |
+| SPECIAL_ATTENTION             | 特别关注直播间，可用`%special%`判断                          |
 | ROOM_REAL_TIME_MESSAGE_UPDATE | 粉丝数量改变                                                 |
 | SUPER_CHAT_MESSAGE            | 醒目留言                                                     |
 | SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                                             |
@@ -1572,7 +1588,7 @@ tips：
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
-| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:1赢,0~~平,-1~~输；%gift_coin%总积分(=金瓜子/100) |
+| **PK_BEST_UNAME**             | PK最佳助攻，%uname%昵称；%level%:1赢,0平,-1输；%gift_coin%总积分(=金瓜子/100) |
 | **CALL_ON_OPPOSITE**          | 本直播间的观众跑去对面串门                                   |
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
