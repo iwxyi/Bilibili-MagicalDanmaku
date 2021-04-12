@@ -33,6 +33,7 @@ public slots:
     void slotNewDanmaku(LiveDanmaku danmaku);
     void autoResizeEdit() override;
     void triggerAction(LiveDanmaku danmaku);
+    void triggerIfMatch(QString msg, LiveDanmaku danmaku);
 
 public:
     QCheckBox* check;

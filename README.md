@@ -971,9 +971,6 @@ tips：
 | cutOrderSong(username)                    | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
 | curOrderSong()                            | 切歌             | 立即切歌，无论是谁点的                                       |
 | messageBox(text)                          | 消息弹窗         | 弹窗提示                                                     |
-| runTaskAction(index)                      | 执行定时任务     | 运行定时任务，index为对应序号，从1开始（会变动）             |
-| runReplyAction(index)                     | 执行自动回复     | 运行自动回复，index同上                                      |
-| runEventAction(index)                     | 执行事件动作     | 运行其他事件动作，index同上                                  |
 | sendLongText(text)                        | 发送长文本       | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format) | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
 | writeTextFile(dirName, fileName, text)    | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
@@ -983,6 +980,7 @@ tips：
 | setNickname(uid, name)                    | 设置专属昵称     | 设置用户专属昵称                                             |
 | joinBattle(type)                          | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
 | triggerEvent(event)                       | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
+| triggerReply(msg)                         | 触发自动回复     | 触发自动回复，可作为有参数的方法进行传递                     |
 | orderSong(songName, uname)                | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)               | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 

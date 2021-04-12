@@ -6534,71 +6534,20 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
-    // 执行其他事件任务
-    if (msg.contains("runTimerTask"))
+    // 执行自动回复任务
+    if (msg.contains("triggerReply"))
     {
-        re = RE("runTimerTask\\s*\\(\\s*(\\d+?)\\s*\\)");
+        re = RE("triggerReply\\s*\\(\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            int index = caps.at(1).toInt() - 1;
+            QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
-            if (index < 0 || index >= ui->taskListWidget->count())
+            for (int i = 0; i < ui->replyListWidget->count(); i++)
             {
-                qWarning() << "索引超出边界：" << snum(index);
-                localNotify("索引超出边界：" + snum(index));
-                return true;
+                auto rw = static_cast<ReplyWidget*>(ui->replyListWidget->itemWidget(ui->replyListWidget->item(i)));
+                rw->triggerIfMatch(text, lastDanmaku);
             }
-            auto item = ui->taskListWidget->item(index);
-            auto widget = ui->taskListWidget->itemWidget(item);
-            auto taskWidget = static_cast<TaskWidget*>(widget);
-            taskWidget->triggerAction(lastDanmaku);
-            return true;
-        }
-    }
-
-    // 执行其他事件任务
-    if (msg.contains("runReplyAction"))
-    {
-        re = RE("runReplyAction\\s*\\(\\s*(\\d+?)\\s*\\)");
-        if (msg.indexOf(re, 0, &match) > -1)
-        {
-            QStringList caps = match.capturedTexts();
-            int index = caps.at(1).toInt() - 1;
-            qDebug() << "执行命令：" << caps;
-            if (index < 0 || index >= ui->replyListWidget->count())
-            {
-                qWarning() << "索引超出边界：" << snum(index);
-                localNotify("索引超出边界：" + snum(index));
-                return true;
-            }
-            auto item = ui->replyListWidget->item(index);
-            auto widget = ui->replyListWidget->itemWidget(item);
-            auto replyWidget = static_cast<ReplyWidget*>(widget);
-            replyWidget->triggerAction(lastDanmaku);
-            return true;
-        }
-    }
-
-    // 执行其他事件任务
-    if (msg.contains("runEventAction"))
-    {
-        re = RE("runEventAction\\s*\\(\\s*(\\d+?)\\s*\\)");
-        if (msg.indexOf(re, 0, &match) > -1)
-        {
-            QStringList caps = match.capturedTexts();
-            int index = caps.at(1).toInt() - 1;
-            qDebug() << "执行命令：" << caps;
-            if (index < 0 || index >= ui->eventListWidget->count())
-            {
-                qWarning() << "索引超出边界：" << snum(index);
-                localNotify("索引超出边界：" + snum(index));
-                return true;
-            }
-            auto item = ui->eventListWidget->item(index);
-            auto widget = ui->eventListWidget->itemWidget(item);
-            auto eventWidget = static_cast<EventWidget*>(widget);
-            eventWidget->triggerAction(lastDanmaku);
             return true;
         }
     }
