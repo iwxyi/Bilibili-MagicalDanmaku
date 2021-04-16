@@ -3820,8 +3820,9 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     int matchPos = 0;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
     {
-        replaceDanmakuVariants(msg, danmaku, match.captured(0));
-        matchPos = matchPos + 1;
+        QString rpls = replaceDanmakuVariants(danmaku, match.captured(0));
+        msg.replace(match.captured(0), rpls);
+        matchPos = matchPos + rpls.length();
     }
 
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
@@ -3890,19 +3891,15 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     return msg;
 }
 
-bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku, const QString &key) const
+QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QString &key) const
 {
-    // 固定标记
-    if (key == "%n%")
-        msg.replace(key, "\n");
-
     // 用户昵称
-    else if (key == "%uname%" || key == "%username%" || key =="%nickname%")
-        msg.replace(key, danmaku.getNickname());
+    if (key == "%uname%" || key == "%username%" || key =="%nickname%")
+        return danmaku.getNickname();
 
     // 用户昵称
     else if (key == "%uid%")
-        msg.replace(key, snum(danmaku.getUid()));
+        return snum(danmaku.getUid());
 
     // 本地昵称+简化
     else if (key == "%ai_name%")
@@ -3912,7 +3909,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             name = nicknameSimplify(danmaku.getNickname());
         if (name.isEmpty())
             name = danmaku.getNickname();
-        msg.replace(key, name);
+        return name;
     }
 
     // 专属昵称
@@ -3921,37 +3918,37 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         QString local = getLocalNickname(danmaku.getUid());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        msg.replace(key, local);
+        return local;
     }
 
     // 昵称简化
     else if (key == "%simple_name%")
     {
-        msg.replace(key, nicknameSimplify(danmaku.getNickname()));
+        return nicknameSimplify(danmaku.getNickname());
     }
 
     // 用户等级
     else if (key == "%level%")
-        msg.replace(key, snum(danmaku.getLevel()));
+        return snum(danmaku.getLevel());
 
     else if (key == "%text%")
-        msg.replace(key, danmaku.getText());
+        return danmaku.getText();
 
     // 进来次数
     else if (key == "%come_count%")
     {
         if (danmaku.getMsgType() == MSG_WELCOME)
-            msg.replace(key, snum(danmaku.getNumber()));
+            return snum(danmaku.getNumber());
         else
-            msg.replace(key, snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt()));
+            return snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
     }
 
     // 上次进来
     else if (key == "%come_time%")
     {
-        msg.replace(key, snum(danmaku.getMsgType() == MSG_WELCOME
+        return snum(danmaku.getMsgType() == MSG_WELCOME
                                         ? danmaku.getPrevTimestamp()
-                                        : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong()));
+                                        : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
     }
 
     // 和现在的时间差
@@ -3960,86 +3957,86 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         qint64 prevTime = danmaku.getMsgType() == MSG_WELCOME
                 ? danmaku.getPrevTimestamp()
                 : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
-        msg.replace(key, snum(QDateTime::currentSecsSinceEpoch() - prevTime));
+        return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
     }
 
     // 本次送礼金瓜子
     else if (key == "%gift_gold%")
-        msg.replace(key, snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0));
+        return snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0);
 
     // 本次送礼银瓜子
     else if (key == "%gift_silver%")
-        msg.replace(key, snum(danmaku.isGoldCoin() ? 0 : danmaku.getTotalCoin()));
+        return snum(danmaku.isGoldCoin() ? 0 : danmaku.getTotalCoin());
 
     // 本次送礼金瓜子+银瓜子（应该只有一个，但直接相加了）
     else if (key == "%gift_coin%")
-        msg.replace(key, snum(danmaku.getTotalCoin()));
+        return snum(danmaku.getTotalCoin());
 
     // 是否是金瓜子礼物
     else if (key == "%coin_gold%")
-        msg.replace(key, danmaku.isGoldCoin() ? "1" : "0");
+        return danmaku.isGoldCoin() ? "1" : "0";
 
     // 本次送礼名字
     else if (key == "%gift_name%")
-        msg.replace(key, giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName());
+        return giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName();
 
     // 原始礼物名字
     else if (key == "%origin_gift_name%")
-        msg.replace(key, danmaku.getGiftName());
+        return danmaku.getGiftName();
 
     // 本次送礼数量
     else if (key == "%gift_num%")
-        msg.replace(key, snum(danmaku.getNumber()));
+        return snum(danmaku.getNumber());
 
     else if (key == "%gift_multi_num%")
-        msg.replace(key, danmaku.getNumber() > 1 ? snum(danmaku.getNumber()) + "个" : "");
+        return danmaku.getNumber() > 1 ? snum(danmaku.getNumber()) + "个" : "";
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
-        msg.replace(key, snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong()));
+        return snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
 
     // 总共赠送银瓜子
     else if (key == "%total_silver%")
-        msg.replace(key, snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong()));
+        return snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
 
     // 购买舰长
     else if (key == "%guard_buy%")
-        msg.replace(key, danmaku.is(MSG_GUARD_BUY) ? "1" : "0");
+        return danmaku.is(MSG_GUARD_BUY) ? "1" : "0";
 
     else if (key == "%guard_count%")
-        msg.replace(key, snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt()));
+        return snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
 
     // 0续费，1第一次上船，2重新上船
     else if (key == "%guard_first%" || key == "%first%")
-        msg.replace(key, snum(danmaku.getFirst()));
+        return snum(danmaku.getFirst());
 
     // 特别关注
     else if (key == "%special%")
-        msg.replace(key, snum(danmaku.getSpecial()));
+        return snum(danmaku.getSpecial());
 
     // 粉丝牌房间
     else if (key == "%anchor_roomid%" || key == "%medal_roomid%" || key == "%anchor_room_id%" || key == "%medal_room_id%")
-        msg.replace(key, danmaku.getAnchorRoomid());
+        return danmaku.getAnchorRoomid();
 
     // 粉丝牌名字
     else if (key == "%medal_name%")
-        msg.replace(key, danmaku.getMedalName());
+        return danmaku.getMedalName();
 
     // 粉丝牌等级
     else if (key == "%medal_level%")
-        msg.replace(key, snum(danmaku.getMedalLevel()));
+        return snum(danmaku.getMedalLevel());
 
     // 粉丝牌主播
     else if (key == "%medal_up%")
-        msg.replace(key, danmaku.getMedalUp());
+        return danmaku.getMedalUp();
 
     // 房管
     else if (key == "%admin%")
-        msg.replace(key, danmaku.isAdmin() ? "1" : (!upUid.isEmpty() && snum(danmaku.getUid())==upUid ? "1" : "0"));
+        return danmaku.isAdmin() ? "1" : (!upUid.isEmpty() && snum(danmaku.getUid())==upUid ? "1" : "0");
 
     // 舰长
     else if (key == "%guard%" || key == "%guard_level%")
-        msg.replace(key, snum(danmaku.getGuard()));
+        return snum(danmaku.getGuard());
 
     // 舰长名称
     else if (key == "%guard_name%" || key == "%guard_type%")
@@ -4052,44 +4049,44 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             name = "提督";
         else if (guard == 3)
             name = "舰长";
-        msg.replace(key, name);
+        return name;
     }
 
     // 房管或舰长
     else if (key == "%admin_or_guard%")
-        msg.replace(key, (danmaku.isGuard() || danmaku.isAdmin() || (!upUid.isEmpty() && snum(danmaku.getUid()) == upUid)) ? "1" : "0");
+        return (danmaku.isGuard() || danmaku.isAdmin() || (!upUid.isEmpty() && snum(danmaku.getUid()) == upUid)) ? "1" : "0";
 
     // 是否是姥爷
     else if (key == "%vip%")
-        msg.replace(key, danmaku.isVip() ? "1" : "0");
+        return danmaku.isVip() ? "1" : "0";
 
     // 是否是年费姥爷
     else if (key == "%svip%")
-        msg.replace(key, danmaku.isSvip() ? "1" : "0");
+        return danmaku.isSvip() ? "1" : "0";
 
     // 是否是正式会员
     else if (key == "%uidentity%")
-        msg.replace(key, danmaku.isUidentity() ? "1" : "0");
+        return danmaku.isUidentity() ? "1" : "0";
 
     // 是否有手机验证
     else if (key == "%iphone%")
-        msg.replace(key, danmaku.isIphone() ? "1" : "0");
+        return danmaku.isIphone() ? "1" : "0";
 
     // 数量
     else if (key == "%number%")
-        msg.replace(key, snum(danmaku.getNumber()));
+        return snum(danmaku.getNumber());
 
     // 昵称长度
     else if (key == "%nickname_len%")
-        msg.replace(key, snum(danmaku.getNickname().length()));
+        return snum(danmaku.getNickname().length());
 
     // 礼物名字长度
     else if (key == "%giftname_len%")
-        msg.replace(key, snum((giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
+        return snum((giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     // 昵称+礼物名字长度
     else if (key == "%name_sum_len%")
-        msg.replace(key, snum(danmaku.getNickname().length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
+        return snum(danmaku.getNickname().length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     else if (key == "%ainame_sum_len%")
     {
@@ -4098,7 +4095,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             local = nicknameSimplify(danmaku.getNickname());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        msg.replace(key, snum(local.length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length()));
+        return snum(local.length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
     }
 
     // 是否新关注
@@ -4112,92 +4109,92 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
                 isInFans = true;
                 break;
             }
-        msg.replace(key, isInFans ? "1" : "0");
+        return isInFans ? "1" : "0";
     }
 
     // 是否是对面串门
     else if (key == "%pk_opposite%")
-        msg.replace(key, danmaku.isOpposite() ? "1" : "0");
+        return danmaku.isOpposite() ? "1" : "0";
 
     // 是否是己方串门回来
     else if (key == "%pk_view_return%")
-        msg.replace(key, danmaku.isViewReturn() ? "1" : "0");
+        return danmaku.isViewReturn() ? "1" : "0";
 
     // 本次进来人次
     else if (key == "%today_come%")
-        msg.replace(key, snum(dailyCome));
+        return snum(dailyCome);
 
     // 新人发言数量
     else if (key == "%today_newbie_msg%")
-        msg.replace(key, snum(dailyNewbieMsg));
+        return snum(dailyNewbieMsg);
 
     // 今天弹幕总数
     else if (key == "%today_danmaku%")
-        msg.replace(key, snum(dailyDanmaku));
+        return snum(dailyDanmaku);
 
     // 今天新增关注
     else if (key == "%today_fans%")
-        msg.replace(key, snum(dailyNewFans));
+        return snum(dailyNewFans);
 
     // 当前粉丝数量111
     else if (key == "%fans_count%")
-        msg.replace(key, snum(dailyTotalFans));
+        return snum(dailyTotalFans);
 
     // 今天金瓜子总数
     else if (key == "%today_gold%")
-        msg.replace(key, snum(dailyGiftGold));
+        return snum(dailyGiftGold);
 
     // 今天银瓜子总数
     else if (key == "%today_silver%")
-        msg.replace(key, snum(dailyGiftSilver));
+        return snum(dailyGiftSilver);
 
     // 今天是否有新舰长
     else if (key == "%today_guard%")
-        msg.replace(key, snum(dailyGuard));
+        return snum(dailyGuard);
 
     // 今日最高人气
     else if (key == "%today_max_ppl%")
-        msg.replace(key, snum(dailyMaxPopul));
+        return snum(dailyMaxPopul);
 
     // 当前人气
     else if (key == "%popularity%")
-        msg.replace(key, snum(currentPopul));
+        return snum(currentPopul);
 
     // 当前时间
     else if (key == "%time_hour%")
-        msg.replace(key, snum(QTime::currentTime().hour()));
+        return snum(QTime::currentTime().hour());
     else if (key == "%time_minute%")
-        msg.replace(key, snum(QTime::currentTime().minute()));
+        return snum(QTime::currentTime().minute());
     else if (key == "%time_second%")
-        msg.replace(key, snum(QTime::currentTime().second()));
+        return snum(QTime::currentTime().second());
     else if (key == "%time_day%")
-        msg.replace(key, snum(QDate::currentDate().day()));
+        return snum(QDate::currentDate().day());
     else if (key == "%time_month%")
-        msg.replace(key, snum(QDate::currentDate().month()));
+        return snum(QDate::currentDate().month());
     else if (key == "%time_year%")
-        msg.replace(key, snum(QDate::currentDate().year()));
+        return snum(QDate::currentDate().year());
     else if (key == "%time_day_week%")
-        msg.replace(key, snum(QDate::currentDate().dayOfWeek()));
+        return snum(QDate::currentDate().dayOfWeek());
     else if (key == "%time_day_year%")
-        msg.replace(key, snum(QDate::currentDate().dayOfYear()));
+        return snum(QDate::currentDate().dayOfYear());
     else if (key == "%timestamp%")
-        msg.replace(key, snum(QDateTime::currentSecsSinceEpoch()));
+        return snum(QDateTime::currentSecsSinceEpoch());
     else if (key == "%timestamp13%")
-        msg.replace(key, snum(QDateTime::currentMSecsSinceEpoch()));
+        return snum(QDateTime::currentMSecsSinceEpoch());
 
     // 大乱斗
     else if (key == "%pking%")
-        msg.replace(key, snum(pking ? 1 : 0));
+        return snum(pking ? 1 : 0);
     else if (key == "%pk_video%")
-        msg.replace(key, snum(pkVideo ? 1 : 0));
+        return snum(pkVideo ? 1 : 0);
     else if (key == "%pk_room_id%")
-        msg.replace(key, pkRoomId);
+        return pkRoomId;
     else if (key == "%pk_uid%")
-        msg.replace(key, pkUid);
+        return pkUid;
     else if (key == "%pk_uname%")
-        msg.replace(key, pkUname);
+        return pkUname;
     else if (key == "%pk_count%")
-        msg.replace(key, snum(pking && !pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0));
+        return snum(pking && !pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
     else if (key == "%pk_touta_prob%")
     {
         int prob = 0;
@@ -4208,93 +4205,93 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             if (totalCount > 1)
                 prob = toutaCount * 100 / totalCount;
         }
-        msg.replace(key, snum(prob));
+        return snum(prob);
     }
 
     else if (key == "%pk_my_votes%")
-        msg.replace(key, snum(myVotes));
+        return snum(myVotes);
     else if (key == "%pk_match_votes%")
-        msg.replace(key, snum(matchVotes));
+        return snum(matchVotes);
     else if (key == "%pk_ending%")
-        msg.replace(key, snum(pkEnding ? 1 : 0));
+        return snum(pkEnding ? 1 : 0);
     else if (key == "%pk_trans_gold%")
-        msg.replace(key, snum(goldTransPk));
+        return snum(goldTransPk);
     else if (key == "%pk_max_gold%")
-        msg.replace(key, snum(pkMaxGold));
+        return snum(pkMaxGold);
 
     else if (key == "%pk_id%")
-        msg.replace(key, snum(pkId));
+        return snum(pkId);
 
     // 房间属性
     else if (key == "%living%")
-        msg.replace(key, snum(liveStatus ? 1 : 0));
+        return snum(liveStatus ? 1 : 0);
     else if (key == "%room_id%")
-        msg.replace(key, roomId);
+        return roomId;
     else if (key == "%room_name%")
-        msg.replace(key, roomTitle);
+        return roomTitle;
     else if (key == "%up_name%" || key == "%up_uname%")
-        msg.replace(key, upName);
+        return upName;
     else if (key == "%up_uid%")
-        msg.replace(key, upUid);
+        return upUid;
     else if (key == "%my_uid%")
-        msg.replace(key, cookieUid);
+        return cookieUid;
     else if (key == "%my_uname%")
-        msg.replace(key, cookieUname);
+        return cookieUname;
 
     // 是主播
     else if (key == "%is_up%")
-        msg.replace(key, danmaku.getUid() == upUid.toLongLong() ? "1" : "0");
+        return danmaku.getUid() == upUid.toLongLong() ? "1" : "0";
     // 是机器人
     else if (key == "%is_me%")
-        msg.replace(key, danmaku.getUid() == cookieUid.toLongLong() ? "1" : "0");
+        return danmaku.getUid() == cookieUid.toLongLong() ? "1" : "0";
     // 戴房间勋章
     else if (key == "%is_room_medal%")
-        msg.replace(key, danmaku.getAnchorRoomid() == roomId ? "1" : "0");
+        return danmaku.getAnchorRoomid() == roomId ? "1" : "0";
 
     // 本地设置
     // 特别关心
     else if (key == "%care%")
-        msg.replace(key, careUsers.contains(danmaku.getUid()) ? "1" : "0");
+        return careUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 强提醒
     else if (key == "%strong_notify%")
-        msg.replace(key, strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0");
+        return strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 是否被禁言
     else if (key == "%blocked%")
-        msg.replace(key, userBlockIds.contains(danmaku.getUid()) ? "1" : "0");
+        return userBlockIds.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_welcome%")
-        msg.replace(key, notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0");
+        return notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_reply%")
-        msg.replace(key, notReplyUsers.contains(danmaku.getUid()) ? "1" : "0");
+        return notReplyUsers.contains(danmaku.getUid()) ? "1" : "0";
 
     // 弹幕人气
     else if (key == "%danmu_popularity%")
-        msg.replace(key, snum(danmuPopulValue));
+        return snum(danmuPopulValue);
 
     // 游戏用户
     else if (key == "%in_game_users%")
-        msg.replace(key, gameUsers[0].contains(danmaku.getUid()) ? "1" : "0");
+        return gameUsers[0].contains(danmaku.getUid()) ? "1" : "0";
     else if (key == "%in_game_numbers%")
-        msg.replace(key, gameNumberLists[0].contains(danmaku.getUid()) ? "1" : "0");
+        return gameNumberLists[0].contains(danmaku.getUid()) ? "1" : "0";
     else if (key == "%in_game_texts%")
-        msg.replace(key, gameTextLists[0].contains(danmaku.getText()) ? "1" : "0");
+        return gameTextLists[0].contains(danmaku.getText()) ? "1" : "0";
 
     // 程序路径
     else if (key == "%app_path%")
-        msg.replace(key, dataPath);
+        return dataPath;
 
     // cookie
     else if (key == "%csrf%")
-        msg.replace(key, csrf_token);
+        return csrf_token;
 
     // 工作状态
     else if (key == "%working%")
-        msg.replace(key, (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())) ? "1" : "0");
+        return (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())) ? "1" : "0";
 
     // 用户备注
     else if (key == "%umark%")
-        msg.replace(key, userMarks->value("base/" + snum(danmaku.getUid()), "").toString());
+        return userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
 
     // 正则播放的音乐
     else if (key == "%playing_song%")
@@ -4306,7 +4303,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             if (song.isValid())
                 name = song.name;
         }
-        msg.replace(key, name);
+        return name;
     }
     // 点歌的用户
     else if (key == "%song_order_uname%")
@@ -4318,7 +4315,7 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
             if (song.isValid())
                 name = song.addBy;
         }
-        msg.replace(key, name);
+        return name;
     }
     // 点歌队列数量
     else if (key == "%order_song_count%")
@@ -4328,15 +4325,14 @@ bool MainWindow::replaceDanmakuVariants(QString &msg, const LiveDanmaku& danmaku
         {
             text = snum(musicWindow->getOrderSongs().size());
         }
-        msg.replace(key, text);
+        return text;
     }
     else if (key == "%random100%")
     {
-        msg.replace(key, snum(qrand() % 100 + 1));
+        return snum(qrand() % 100 + 1);
     }
     else
-        return false;
-    return true;
+        return "";
 }
 
 /**
