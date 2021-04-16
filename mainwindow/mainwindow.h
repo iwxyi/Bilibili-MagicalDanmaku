@@ -612,6 +612,10 @@ private slots:
 
     void on_actionGuard_Online_triggered();
 
+    void on_actionOfficial_Website_triggered();
+
+    void on_actionAnchor_Case_triggered();
+
 private:
     void initPath();
     void readConfig();

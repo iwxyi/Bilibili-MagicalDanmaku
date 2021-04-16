@@ -13361,6 +13361,7 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
  */
 void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
+    qDebug() << "触发事件：" << cmd;
     emit signalCmdEvent(cmd, danmaku);
 
     sendDanmakuToSockets(cmd, danmaku);
@@ -14243,4 +14244,14 @@ void MainWindow::on_actionGuard_Online_triggered()
 {
     GuardOnlineDialog* god = new GuardOnlineDialog(settings, roomId, upUid, this);
     god->show();
+}
+
+void MainWindow::on_actionOfficial_Website_triggered()
+{
+    QDesktopServices::openUrl(QUrl("http://danmaku.lyixi.com"));
+}
+
+void MainWindow::on_actionAnchor_Case_triggered()
+{
+    QDesktopServices::openUrl(QUrl("http://anchor.lyixi.com"));
 }

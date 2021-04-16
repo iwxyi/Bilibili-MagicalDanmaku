@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>二维码登录</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
    <item>

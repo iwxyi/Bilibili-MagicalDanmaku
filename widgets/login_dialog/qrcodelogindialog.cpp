@@ -14,6 +14,7 @@ QRCodeLoginDialog::QRCodeLoginDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose, true);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     getLoginUrl();
 
     queryTimer->setInterval(3000);

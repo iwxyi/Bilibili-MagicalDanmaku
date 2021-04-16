@@ -3448,10 +3448,12 @@ margin: 6px;</string>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
-     <string>帮助</string>
+     <string>关于</string>
     </property>
     <addaction name="actionAbout"/>
     <addaction name="actionSponsor"/>
+    <addaction name="actionOfficial_Website"/>
+    <addaction name="actionAnchor_Case"/>
     <addaction name="actionGitHub"/>
     <addaction name="separator"/>
     <addaction name="actionCookie_Help"/>
@@ -3547,7 +3549,7 @@ margin: 6px;</string>
      <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
    </property>
    <property name="text">
-    <string>关于&amp;&amp;交流</string>
+    <string>说明&amp;&amp;交流</string>
    </property>
    <property name="toolTip">
     <string>关于和交流反馈</string>
@@ -3800,6 +3802,24 @@ margin: 6px;</string>
    </property>
    <property name="text">
     <string>黑听舰长捕捉</string>
+   </property>
+  </action>
+  <action name="actionOfficial_Website">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/lyixi</normaloff>:/icons/lyixi</iconset>
+   </property>
+   <property name="text">
+    <string>软件官网</string>
+   </property>
+  </action>
+  <action name="actionAnchor_Case">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/case</normaloff>:/icons/case</iconset>
+   </property>
+   <property name="text">
+    <string>主播案例</string>
    </property>
   </action>
  </widget>

@@ -78,6 +78,8 @@
         <file alias="debug">icons/debug.png</file>
         <file alias="local">icons/local.png</file>
         <file alias="catch_guard">icons/catch_guard.png</file>
+        <file alias="lyixi">icons/lyixi.png</file>
+        <file alias="case">icons/case.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
