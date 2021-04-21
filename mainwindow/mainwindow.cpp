@@ -1115,6 +1115,8 @@ void MainWindow::addNoReplyDanmakuText(QString text)
 
 void MainWindow::localNotify(QString text)
 {
+	if (text.isEmpty())
+    	return ;
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
@@ -1178,7 +1180,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             if (!ui->retryFailedDanmuCheck->isChecked())
                 return ;
 
-            QString room = this->roomId;
+            if (roomId != this->roomId)
+                return ;
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
@@ -3989,7 +3992,37 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(danmaku.getNumber());
 
     else if (key == "%gift_multi_num%")
-        return danmaku.getNumber() > 1 ? snum(danmaku.getNumber()) + "个" : "";
+    {
+        QString danwei = "个";
+        QString giftName = danmaku.getGiftName();
+        if (giftName.endsWith("船"))
+            danwei = "艘";
+        else if (giftName.endsWith("条"))
+            danwei = "根";
+        else if (giftName.endsWith("锦鲤"))
+            danwei = "条";
+        else if (giftName.endsWith("卡"))
+            danwei = "张";
+        else if (giftName.endsWith("灯"))
+            danwei = "盏";
+        else if (giftName.endsWith("阔落"))
+            danwei = "瓶";
+        else if (giftName.endsWith("花"))
+            danwei = "朵";
+        else if (giftName.endsWith("车"))
+            danwei = "辆";
+        else if (giftName.endsWith("情书"))
+            danwei = "封";
+        else if (giftName.endsWith("城"))
+            danwei = "座";
+        else if (giftName.endsWith("心心"))
+            danwei = "颗";
+        else if (giftName.endsWith("亿圆"))
+            danwei = "枚";
+        else if (giftName.endsWith("麦克风"))
+            danwei = "支";
+        return danmaku.getNumber() > 1 ? snum(danmaku.getNumber()) + danwei : "";
+    }
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
@@ -4832,7 +4865,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 去掉前缀后缀
     QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁"};
+    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁", "的"};
     QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖", "Official"};
     starts += special;
     ends += special;
@@ -4913,7 +4946,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2})(不|有点|才是|敲|很|能有|想).+",
+                         "^(.{2}?)(不|有点|才是|敲|很|能有|想|从不|才不).+",
                         "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -5910,11 +5943,11 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送本地通知
     if (msg.contains("localNotify"))
     {
-        re = RE("localNotify\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("localNotify\\s*\\(\\s*(.+*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString msg = caps.at(1);
+            QString msg = caps.at(1);;
             qDebug() << "执行命令：" << caps;
             localNotify(msg);
             return true;
@@ -7112,6 +7145,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
+                    triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)));
                     localNotify(msg);
                 }
                 else if (cmd == "PK_BATTLE_START_NEW")
@@ -11317,11 +11351,14 @@ void MainWindow::pkStart(QJsonObject json)
     // 保存PK信息
     int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
     danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+    qDebug() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
 
     // PK提示
     QString text = "开启大乱斗：" + pkUname;
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
+    else
+        text += "  初次匹配";
     localNotify(text, pkUid.toLongLong());
 
     // 处理对面直播姬界面
@@ -11836,7 +11873,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
             minuteDanmuPopular++;*/
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
-        // appendNewLiveDanmaku(danmaku);
+        appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_" + cmd, danmaku);
     }
@@ -11886,7 +11923,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         }
 
         danmaku.setPkLink(true);
-        appendNewLiveDanmaku(danmaku);
+        // appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_" + cmd, danmaku);
     }
