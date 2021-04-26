@@ -36,9 +36,9 @@ QString CommonValues::csrf_token;
 QVariant CommonValues::userCookies;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow),
-      NetInterface(this)
+    : QMainWindow(parent),
+      NetInterface(this),
+      ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     QApplication::setQuitOnLastWindowClosed(false);
@@ -1226,8 +1226,6 @@ void MainWindow::sendAutoMsg(QString msgs)
             localNotify("[空弹幕，已忽略]");
         return ;
     }
-//    msgs = processTimeVariants(msgs);
-//    qDebug() << "@@@@@@@@@@->准备发送弹幕：" << msgs;
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(sl);
     if (!autoMsgTimer->isActive() || !inDanmakuCd)
@@ -3716,10 +3714,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     CALC_DEB << "处理变量之后：" << plainText;
 
     // 替换时间变量
-    if (removeLongerRandomDanmaku)
-    {
-        plainText = processTimeVariants(plainText);
-    }
+    plainText = processTimeVariants(plainText);
     lastConditionDanmu = plainText;
     CALC_DEB << "处理时间之后：" << plainText;
 
@@ -9200,9 +9195,6 @@ void MainWindow::initTTS()
 
 void MainWindow::speekVariantText(QString text)
 {
-    // 处理带变量的内容
-//    text = processTimeVariants(text);
-
     // 开始播放
     speakText(text);
 }
