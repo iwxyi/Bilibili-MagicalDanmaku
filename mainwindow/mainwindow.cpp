@@ -469,7 +469,7 @@ MainWindow::MainWindow(QWidget *parent)
     connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
         connectServerTimer->setInterval(900000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
-        if (liveStatus && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
+        if (isLiving() && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
         {
             connectServerTimer->stop();
             return ;
@@ -599,7 +599,7 @@ MainWindow::MainWindow(QWidget *parent)
     minuteTimer->setInterval(60000);
     connect(minuteTimer, &QTimer::timeout, this, [=]{
         // 直播间人气
-        if (currentPopul > 1 && liveStatus) // 为0的时候不计入内；为1时可能机器人在线
+        if (currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
         {
             sumPopul += currentPopul;
             countPopul++;
@@ -644,7 +644,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
 
         // 版权声明
-        if (liveStatus && !settings->value("danmaku/copyright", false).toBool()
+        if (isLiving() && !settings->value("danmaku/copyright", false).toBool()
                 && qrand() % 3 == 0)
         {
             /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
@@ -720,7 +720,7 @@ MainWindow::MainWindow(QWidget *parent)
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
-        if (danmuLogFile && !liveStatus)
+        if (danmuLogFile && !isLiving())
             startSaveDanmakuToFile();
         userComeTimes.clear();
         sumPopul = 0;
@@ -1111,6 +1111,11 @@ void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 void MainWindow::addNoReplyDanmakuText(QString text)
 {
     noReplyMsgs.append(text);
+}
+
+bool MainWindow::isLiving() const
+{
+    return liveStatus == 1;
 }
 
 void MainWindow::localNotify(QString text)
@@ -1617,7 +1622,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
             sendAutoMsg(text);
         ui->popularityLabel->setText("已开播");
-        liveStatus = true;
+        liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
             connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
@@ -1691,7 +1696,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     // 关闭旧的
     if (socket)
     {
-        liveStatus = false;
+        liveStatus = 0;
         if (socket->state() != QAbstractSocket::UnconnectedState)
             socket->abort();
     }
@@ -2036,7 +2041,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
                 localNotify("[未开播，不做操作]");
             return ;
         }
-        if (!liveStatus && !manual)
+        if (!isLiving() && !manual)
             manual = true;
 
         QStringList msgs = getEditConditionStringList(sl, danmaku);
@@ -2688,7 +2693,7 @@ void MainWindow::initWS()
     xliveHeartBeatTimer = new QTimer(this);
     xliveHeartBeatTimer->setInterval(59500);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
-        if (liveStatus)
+        if (isLiving())
             sendXliveHeartBeatX();
     });
 }
@@ -2720,7 +2725,7 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::sendXliveHeartBeatE()
 {
-    if (roomId.isEmpty() || cookieUid.isEmpty() || !liveStatus)
+    if (roomId.isEmpty() || cookieUid.isEmpty() || !isLiving())
         return ;
     xliveHeartBeatIndex = 0;
 
@@ -2902,14 +2907,24 @@ void MainWindow::getRoomInfo(bool reconnect)
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         ui->roomNameLabel->setText(roomTitle + " - " + upName);
-        if (!liveStatus)
+        if (liveStatus == 0)
         {
             ui->popularityLabel->setText("未开播");
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
         }
-        else
+        else if (liveStatus == 1)
+        {
             ui->popularityLabel->setText("已开播");
+        }
+        else if (liveStatus == 2)
+        {
+            ui->popularityLabel->setText("轮播中");
+        }
+        else
+        {
+            ui->popularityLabel->setText("未知状态" + snum(liveStatus));
+        }
 
         qDebug() << "房间信息: roomid=" << roomId
                  << "  shortid=" << shortId
@@ -2960,7 +2975,7 @@ void MainWindow::getRoomInfo(bool reconnect)
             return ;
 
         // 开始工作
-        if (liveStatus)
+        if (isLiving())
             slotStartWork();
 
         if (!reconnect)
@@ -2970,7 +2985,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         getDanmuInfo();
 
         // 录播
-        if (ui->recordCheck->isChecked() && liveStatus)
+        if (ui->recordCheck->isChecked() && isLiving())
             startLiveRecord();
     });
 
@@ -2982,7 +2997,7 @@ bool MainWindow::isLivingOrMayliving()
 {
     if (ui->timerConnectServerCheck->isChecked())
     {
-        if (!liveStatus) // 未开播，等待下一次的检测
+        if (!isLiving()) // 未开播，等待下一次的检测
         {
             // 如果是开播前一段时间，则继续保持着连接
             int start = ui->startLiveHourSpin->value();
@@ -3174,7 +3189,7 @@ void MainWindow::getUpPortrait(QString faceUrl)
         painter.drawPixmap(0, 0, side, side, pixmap);
 
         // 设置到程序
-        QPixmap face = liveStatus ? getLivingPixmap(upFace) : upFace;
+        QPixmap face = isLiving() ? getLivingPixmap(upFace) : upFace;
         setWindowIcon(face);
         tray->setIcon(face);
     });
@@ -4252,7 +4267,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房间属性
     else if (key == "%living%")
-        return snum(liveStatus ? 1 : 0);
+        return snum(liveStatus);
     else if (key == "%room_id%")
         return roomId;
     else if (key == "%room_name%")
@@ -5234,7 +5249,7 @@ void MainWindow::startRecordUrl(QString url)
     recordTimer->stop();
 
     // 可能是超时结束了，重新下载
-    if (ui->recordCheck->isChecked() && liveStatus)
+    if (ui->recordCheck->isChecked() && isLiving())
     {
         startLiveRecord();
     }
@@ -6999,7 +7014,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
         this->popularVal = this->currentPopul = popularity;
-        if (liveStatus)
+        if (isLiving())
             ui->popularityLabel->setText("人气值：" + QString::number(popularity));
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
@@ -7337,11 +7352,11 @@ void MainWindow::handleMessage(QJsonObject json)
             startLiveRecord();
         emit signalLiveStart(roomId);
 
-        if (liveStatus || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (isLiving() || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qDebug() << "忽视PK导致的开播情况";
             // 大乱斗时突然断联后恢复
-            if (!liveStatus)
+            if (!isLiving())
             {
                 if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                     connectServerTimer->stop();
@@ -7357,7 +7372,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
                 sendAutoMsg(text);
             ui->popularityLabel->setText("已开播");
-            liveStatus = true;
+            liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
             slotStartWork(); // 每个房间第一次开始工作
@@ -7378,7 +7393,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text);
             ui->popularityLabel->setText("已下播");
-            liveStatus = false;
+            liveStatus = 0;
 
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
@@ -10693,7 +10708,7 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 {
     bool enable = ui->timerConnectServerCheck->isChecked();
     settings->setValue("live/timerConnectServer", enable);
-    if (!liveStatus && enable)
+    if (!isLiving() && enable)
         startConnectRoom();
     else if (!enable && (!socket || socket->state() == QAbstractSocket::UnconnectedState))
         startConnectRoom();
@@ -11667,7 +11682,7 @@ void MainWindow::connectPkRoom()
 
     connect(pkSocket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
-        if (liveStatus && pkSocket)
+        if (isLiving() && pkSocket)
         {
             pkSocket->deleteLater();
             pkSocket = nullptr;
@@ -12014,7 +12029,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
 bool MainWindow::shallAutoMsg() const
 {
-    return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveStatus /*&& popularVal > 1*/);
+    return !ui->sendAutoOnlyLiveCheck->isChecked() || (isLiving() /*&& popularVal > 1*/);
 }
 
 bool MainWindow::shallAutoMsg(const QString &sl) const
@@ -12634,7 +12649,7 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
 
 void MainWindow::joinBattle(int type)
 {
-    if (!liveStatus || cookieUid != upUid)
+    if (!isLiving() || cookieUid != upUid)
     {
         qCritical() << "未开播或不是主播本人";
         statusLabel->setText("未开播或不是主播本人");
@@ -13099,7 +13114,7 @@ void MainWindow::on_recordCheck_clicked()
 
     if (check)
     {
-        if (!roomId.isEmpty() && liveStatus)
+        if (!roomId.isEmpty() && isLiving())
             startLiveRecord();
     }
     else
@@ -13314,7 +13329,7 @@ void MainWindow::slotStartWork()
     }
 
     // 挂小心心
-    if (ui->acquireHeartCheck->isChecked() && liveStatus)
+    if (ui->acquireHeartCheck->isChecked() && isLiving())
         sendXliveHeartBeatE();
 
     // 设置直播状态
@@ -13333,7 +13348,7 @@ void MainWindow::slotStartWork()
 #else
     QTimer::singleShot(20000, [=]{
 #endif
-        if (roomId.isEmpty() || useRoom != roomId || !liveStatus) // 使用一段时间后才算真正用上
+        if (roomId.isEmpty() || useRoom != roomId || !isLiving()) // 使用一段时间后才算真正用上
             return ;
         syncMagicalRooms();
     });
@@ -13350,7 +13365,7 @@ void MainWindow::slotStartWork()
 void MainWindow::on_autoSwitchMedalCheck_clicked()
 {
     settings->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
-    if (!roomId.isEmpty() && liveStatus)
+    if (!roomId.isEmpty() && isLiving())
     {
         switchMedalTo(roomId.toLongLong());
     }
@@ -13731,11 +13746,15 @@ void MainWindow::on_acquireHeartCheck_clicked()
     settings->setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
 
     if (ui->acquireHeartCheck->isChecked())
-        if (liveStatus)
+    {
+        if (isLiving())
             sendXliveHeartBeatE();
+    }
     else
+    {
         if (xliveHeartBeatTimer)
             xliveHeartBeatTimer->stop();
+    }
 }
 
 void MainWindow::on_sendExpireGiftCheck_clicked()

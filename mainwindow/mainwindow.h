@@ -624,6 +624,7 @@ private:
     void newLiveDanmakuAdded(LiveDanmaku danmaku);
     void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
     void addNoReplyDanmakuText(QString text);
+    bool isLiving() const;
     void localNotify(QString text);
     void localNotify(QString text, qint64 uid);
 
