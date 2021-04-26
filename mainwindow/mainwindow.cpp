@@ -5855,7 +5855,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送私信
     if (msg.contains("sendPrivateMsg"))
     {
-        re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5870,7 +5870,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送指定直播间弹幕
     if (msg.contains("sendRoomMsg"))
     {
-        re = RE("sendRoomMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
+        re = RE("sendRoomMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5885,7 +5885,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 定时操作
     if (msg.contains("timerShot"))
     {
-        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*?(.+)\\s*?\\)");
+        re = RE("timerShot\\s*\\(\\s*(\\d+)\\s*,\\s*?(.*)\\s*?\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5909,7 +5909,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送本地通知
     if (msg.contains("localNotify"))
     {
-        re = RE("localNotify\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("localNotify\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5919,7 +5919,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             return true;
         }
 
-        re = RE("localNotify\\s*\\((\\d+)\\s*,\\s*(.+?)\\s*\\)");
+        re = RE("localNotify\\s*\\((\\d+)\\s*,\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5934,7 +5934,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 朗读文本
     if (msg.contains("speakText"))
     {
-        re = RE("speakText\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("speakText\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -5977,7 +5977,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("getData"))
     {
-        re = RE("getData\\s*\\(\\s*(.+)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数二
+        re = RE("getData\\s*\\(\\s*(.+)\\s*,\\s*(\\S*?)\\s*\\)"); // 带参数二
         if (msg.indexOf(re, 0, &match) == -1)
         {
             re = RE("getData\\s*\\(\\s*(.+)\\s*\\)"); // 不带参数二
@@ -6056,7 +6056,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送socket
     if (msg.contains("sendToSockets"))
     {
-        re = RE("sendToSockets\\s*\\(\\s*(\\S+),\\s*(.+?)\\s*\\)");
+        re = RE("sendToSockets\\s*\\(\\s*(\\S+),\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6070,7 +6070,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     }
     if (msg.contains("sendToLastSocket"))
     {
-        re = RE("sendToLastSocket\\s*\\(\\s*(\\S+),\\s*(.+?)\\s*\\)");
+        re = RE("sendToLastSocket\\s*\\(\\s*(\\S+),\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6127,7 +6127,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 写入文件行
     if (msg.contains("appendFileLine"))
     {
-        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.+?)\\s*\\)");
+        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6143,7 +6143,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 写入文件行
     if (msg.contains("writeTextFile"))
     {
-        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.+?)\\s*\\)");
+        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6173,7 +6173,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
-    // 播放声音
+    // 播放音频文件
     if (msg.contains("playSound"))
     {
         re = RE("playSound\\s*\\(\\s*(.+?)\\s*\\)");
@@ -6196,7 +6196,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 保存到配置
     if (msg.contains("setSetting"))
     {
-        re = RE("setSetting\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("setSetting\\s*\\(\\s*(\\S+?)\\s*,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6230,7 +6230,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 保存到heaps
     if (msg.contains("setValue"))
     {
-        re = RE("setValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("setValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6247,7 +6247,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 批量修改heaps
     if (msg.contains("setValues"))
     {
-        re = RE("setValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("setValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6504,7 +6504,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 提醒框
     if (msg.contains("messageBox"))
     {
-        re = RE("messageBox\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("messageBox\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6518,7 +6518,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 发送长文本
     if (msg.contains("sendLongText"))
     {
-        re = RE("sendLongText\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("sendLongText\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -6550,14 +6550,16 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     // 强制AI回复
     if (msg.contains("aiReply"))
     {
-        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.+?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
+        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.*?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qDebug() << "执行命令：" << caps;
             qint64 id = caps.at(1).toLongLong();
-            QString text = caps.at(2);
-            int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的
+            QString text = caps.at(2).trimmed();
+            if (text.isEmpty())
+                return true;
+            int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的长度
             if (caps.size() > 3 && !caps.at(3).isEmpty())
                 maxLen = caps.at(3).toInt();
             AIReply(id, text, [=](QString s){
