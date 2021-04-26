@@ -9213,17 +9213,21 @@ void MainWindow::initTTS()
 {
     switch (voicePlatform) {
     case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
         if (!tts)
         {
+            qDebug() << "初始化TTS语音模块";
             tts = new QTextToSpeech(this);
             tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
             tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
             tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
         }
+#endif
         break;
     case VoiceXfy:
         if (!xfyTTS)
         {
+            qDebug() << "初始化讯飞语音模块";
             xfyTTS = new XfyTTS(dataPath,
                                 settings->value("xfytts/appid").toString(),
                                 settings->value("xfytts/apikey").toString(),
@@ -9256,11 +9260,13 @@ void MainWindow::speakText(QString text)
 
     switch (voicePlatform) {
     case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
         if (!tts)
             initTTS();
         else if (tts->state() != QTextToSpeech::Ready)
             return ;
         tts->say(text);
+#endif
         break;
     case VoiceXfy:
         if (!xfyTTS)
@@ -13134,8 +13140,10 @@ void MainWindow::on_sendWelcomeTextCheck_clicked()
 void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
     settings->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
+#if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
         initTTS();
+#endif
 }
 
 void MainWindow::on_sendGiftTextCheck_clicked()
@@ -13146,8 +13154,10 @@ void MainWindow::on_sendGiftTextCheck_clicked()
 void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
     settings->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
+#if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendGiftVoiceCheck->isChecked())
         initTTS();
+#endif
 }
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
@@ -13158,8 +13168,10 @@ void MainWindow::on_sendAttentionTextCheck_clicked()
 void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
     settings->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
+#if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
         initTTS();
+#endif
 }
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
@@ -13223,8 +13235,10 @@ void MainWindow::on_screenDanmakuColorButton_clicked()
 void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 {
     settings->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
+#if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
+#endif
 }
 
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
@@ -13504,10 +13518,12 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
 
     switch (voicePlatform) {
     case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
         if (tts)
         {
             tts->setPitch((voicePitch - 50) / 50.0);
         }
+#endif
         break;
     case VoiceXfy:
         if (xfyTTS)
@@ -13527,10 +13543,12 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 
     switch (voicePlatform) {
     case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
         if (tts)
         {
             tts->setRate((voiceSpeed - 50) / 50.0);
         }
+#endif
         break;
     case VoiceXfy:
         if (xfyTTS)
@@ -13550,10 +13568,12 @@ void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 
     switch (voicePlatform) {
     case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
         if (tts)
         {
             tts->setVolume((voiceVolume) / 100.0);
         }
+#endif
         break;
     case VoiceXfy:
         if (xfyTTS)
@@ -13573,6 +13593,7 @@ void MainWindow::on_voicePreviewButton_clicked()
 
 void MainWindow::on_voiceLocalRadio_clicked()
 {
+#if defined(ENABLE_TEXTTOSPEECH)
     QTimer::singleShot(100, [=]{
         if (!tts)
         {
@@ -13585,6 +13606,7 @@ void MainWindow::on_voiceLocalRadio_clicked()
             tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
         }
     });
+#endif
 }
 
 void MainWindow::on_voiceXfyRadio_clicked()

@@ -18,7 +18,9 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
+#if defined(ENABLE_TEXTTOSPEECH)
 #include <QtTextToSpeech/QTextToSpeech>
+#endif
 #if defined(ENABLE_HTTP_SERVER)
 #include <qhttpserver.h>
 #include <qhttprequest.h>
@@ -1024,7 +1026,9 @@ private:
 
     // 文字转语音
     VoicePlatform voicePlatform = VoiceLocal;
+#if defined(ENABLE_TEXTTOSPEECH)
     QTextToSpeech *tts = nullptr;
+#endif
     XfyTTS* xfyTTS = nullptr;
     int voicePitch = 50;
     int voiceSpeed = 50;
