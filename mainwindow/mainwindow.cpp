@@ -3731,11 +3731,6 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     plainText = processDanmakuVariants(plainText, user);
     CALC_DEB << "处理变量之后：" << plainText;
 
-    // 替换时间变量
-    plainText = processTimeVariants(plainText);
-    lastConditionDanmu = plainText;
-    CALC_DEB << "处理时间之后：" << plainText;
-
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
     // 替换变量，寻找条件
@@ -3827,6 +3822,9 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     {
         msg.replace(it->first, it->second);
     }
+
+    // 招呼变量（固定文字，随机内容）
+    msg = processTimeVariants(msg);
 
     // 弹幕变量、环境变量（固定文字）
     re = QRegularExpression("%[\\w_]+?%");
