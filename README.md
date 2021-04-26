@@ -984,7 +984,7 @@ tips：
 | setNickname(uid, name)                    | 设置专属昵称     | 设置用户专属昵称                                             |
 | joinBattle(type)                          | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
 | triggerEvent(event)                       | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
-| triggerReply(msg)                         | 触发自动回复     | 触发自动回复，可作为有参数的方法进行传递                     |
+| triggerReply(msg)                         | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
 | orderSong(songName, uname)                | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)               | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 
@@ -1420,7 +1420,7 @@ tips：
 | **DANMU_MSG**                 | 接收到弹幕【自动回复】                                       |
 | **SEND_GIFT**                 | 有人送礼【答谢送礼】                                         |
 | WELCOME_GUARD                 | 舰长进入（不会触发）                                         |
-| **ENTRY_EFFECT**              | 舰长、热门榜、老爷进入【欢迎舰长】                           |
+| **ENTRY_EFFECT**              | 舰长、高能榜、老爷进入【欢迎舰长】                           |
 | WELCOME                       | 老爷进入                                                     |
 | **INTERACT_WORD**             | 用户进入【欢迎】                                             |
 | **ATTENTION**                 | 用户关注【答谢关注】                                         |
@@ -1437,6 +1437,7 @@ tips：
 | USER_TOAST_MSG                | 上船附带的通知                                               |
 | HOT_RANK_CHANGED              | 热门榜排名改变                                               |
 | HOT_RANK_SETTLEMENT           | 荣登热门榜topX                                               |
+| HOT_RANK                      | 热门榜xx榜topX，%text%获取排名                               |
 | ONLINE_RANK_V2                | 礼物榜（高能榜）刷新                                         |
 | ONLINE_RANK_TOP3              | 高能榜TOP3改变                                               |
 | ONLINE_RANK_COUNT             | 高能榜改变                                                   |
@@ -1953,6 +1954,32 @@ JSON格式：
 - `send_variant_msg`：使主程序发送带变量的弹幕命令，例如 `%{key}%`；需要用户信息的例如 `%uid%` 均不可使用。
 
 
+
+## QA
+
+### 为什么不发送弹幕？
+
+以“欢迎”为例，`菜单—调试—调试模式`，开启后每次有人进来都会尝试欢迎，有以下几种情况：
+
+- 正常发送欢迎弹幕
+- 冷却中：还在CD中
+- **空弹幕，已跳过**：有如下两种可能：
+  - 按条件跳过（如未戴勋章）
+  - 没有符合条件的回复
+
+空弹幕时，可以打开 `菜单—调试—最后一次候选弹幕`，查看变量被替换的内容，以及弹幕随机发送的候选项，检查逻辑条件是否有误。
+
+
+
+### 实时视频不能播放？
+
+需要安装 `LAV解码器`，可直接去网上搜索下载。
+
+
+
+### 怎么提bug？
+
+加QQ群：1038738410，主动点 (〃＞＿＜;〃)
 
 
 
