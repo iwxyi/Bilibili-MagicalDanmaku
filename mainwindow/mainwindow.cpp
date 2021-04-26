@@ -4382,7 +4382,12 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
     if (obj.isBool())
         return obj.toBool(false) ? "1" : "0";
     if (obj.isDouble())
-        return QString("%1").arg(obj.toDouble());
+    {
+        double val = obj.toDouble();
+        if (qAbs(val - qint64(val)) < 1e-6) // 是整数类型的
+            return QString::number(qint64(val));
+        return QString::number(val);
+    }
     if (obj.isObject() || obj.isArray()) // 不支持转换的类型
         return "";
     return "";
