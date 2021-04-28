@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1130,7 +1130,7 @@ QTabBar::tab:selected
              <string notr="true">要求带粉丝勋章才能点歌</string>
             </property>
             <property name="text">
-             <string>带勋章点歌</string>
+             <string>戴勋章点歌</string>
             </property>
            </widget>
           </item>
@@ -3398,7 +3398,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>529</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

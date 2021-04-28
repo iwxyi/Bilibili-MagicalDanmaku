@@ -155,8 +155,22 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 {
     if (this->roomId != roomId)
         return ;
-    QTimer::singleShot(useVideoWidget ? 500 : 500, [=]{
+    QTimer::singleShot(useVideoWidget ? 1000 : 1000, [=]{
         refreshPlayUrl();
+        QTimer::singleShot(2000, [=]{
+            if (player->state() != QMediaPlayer::PlayingState)
+            {
+                qDebug() << "尝试重连2...";
+                refreshPlayUrl();
+                QTimer::singleShot(3000, [=]{
+                    if (player->state() != QMediaPlayer::PlayingState)
+                    {
+                        qDebug() << "尝试重连3...";
+                        refreshPlayUrl();
+                    }
+                });
+            }
+        });
     });
 }
 

@@ -426,7 +426,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 文字转语音
     ui->autoSpeekDanmakuCheck->setChecked(settings->value("danmaku/autoSpeek", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
-            || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck)
+            || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
 
     voicePlatform = static_cast<VoicePlatform>(settings->value("voice/platform", 0).toInt());
@@ -8247,7 +8247,6 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject data = json.value("data").toObject();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString copy_writing = data.value("copy_writing").toString();
-qDebug() << "~~~~~~~~~~~~~~~~~~~" << copy_writing;
         QStringList results = QRegularExpression("欢迎(舰长|提督|总督)?.+?<%(.+)%>").match(copy_writing).capturedTexts();
         LiveDanmaku danmaku;
         if (results.size() < 2 || results.at(1).isEmpty()) // 不是船员
@@ -8302,7 +8301,6 @@ qDebug() << "~~~~~~~~~~~~~~~~~~~" << copy_writing;
         }
 
         userComeEvent(danmaku);
-qDebug() << "~~~~~~~~~~~~~~~~~~~end";
         triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
@@ -8985,6 +8983,10 @@ qDebug() << "~~~~~~~~~~~~~~~~~~~end";
                 "uname": "每天都要学习混凝土"
             }
         }*/
+    }
+    else if (cmd == "CUT_OFF")
+    {
+        localNotify("直播间被超管切断");
     }
     else
     {
@@ -12028,6 +12030,10 @@ void MainWindow::handlePkMessage(QJsonObject json)
             triggerCmdEvent("PK_SHARE", danmaku);
         }
         // appendNewLiveDanmaku(danmaku);
+    }
+    else if (cmd == "CUT_OFF")
+    {
+        localNotify("对面直播间被超管切断");
     }
 }
 
