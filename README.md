@@ -1452,6 +1452,7 @@ tips：
 | VOICE_JOIN_LIST               | 连麦申请、取消连麦申请                                       |
 | VOICE_JOIN_STATUS             | 开始连麦、结束连麦                                           |
 | WARNING                       | 被警告，`%text%`可获取内容                                   |
+| CUT_OFF                       | 被超管切断                                                   |
 | room_admin_entrance           | 设置房管                                                     |
 | ROOM_ADMINS                   | 房管数量改变                                                 |
 | MEDAL_UPGRADE                 | 勋章升级，仅送礼物后触发，需设置中开启“监听勋章升级”。`%medal_level%`获取新等级（但用户当前勋章不一定是本直播间） |

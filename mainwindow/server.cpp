@@ -336,7 +336,7 @@ void MainWindow::syncMagicalRooms()
     if (appVersion.startsWith("v") || appVersion.startsWith("V"))
         appVersion.replace(0, 1, "");
 
-    get("http://iwxyi.com/blmagicaldanmaku/enable_room.php?room_id="
+    get("https://iwxyi.com/blmagicaldanmaku/enable_room.php?room_id="
         + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
         + "&up_uid=" + upUid + "&up_name=" + upName.toUtf8().toPercentEncoding()
         + "&title=" + roomTitle.toUtf8().toPercentEncoding() + "&version=" + appVersion, [=](QJsonObject json){

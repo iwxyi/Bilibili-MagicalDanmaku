@@ -34,10 +34,11 @@ public:
     {
         get(url, [=](QNetworkReply* reply){
             QJsonParseError error;
-            QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
+            QByteArray ba = reply->readAll();
+            QJsonDocument document = QJsonDocument::fromJson(ba, &error);
             if (error.error != QJsonParseError::NoError)
             {
-                qDebug() << error.errorString() << url;
+                qDebug() << error.errorString() << url << ba;
                 return ;
             }
             func(document.object());

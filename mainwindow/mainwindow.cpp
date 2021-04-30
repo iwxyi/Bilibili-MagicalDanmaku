@@ -12727,28 +12727,51 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
     } */
 
     if (upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0.可能是小心心，不需要判断
+    {
+        if (debugPrint)
+            localNotify("[勋章升级：免费礼物]");
         return ;
+    }
     int giftIntimacy = danmaku.getTotalCoin() / 100;
     if (!giftIntimacy) // 0瓜子
     {
         if (danmaku.getGiftId() == 30607 && danmaku.getAnchorRoomid() == roomId && danmaku.getMedalLevel() < 21)
             giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
         else
+        {
+            if (debugPrint)
+                localNotify("[勋章升级：小心心无效]");
             return ;
+        }
     }
     QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
             + snum(danmaku.getUid()) + "&target_id=" + upUid;
     get(url, [=](MyJson json){
         MyJson medalObject = json.data();
         if (medalObject.isEmpty())
+        {
+            if (debugPrint)
+                localNotify("[勋章升级：无勋章]");
             return ; // 没有勋章，更没有亲密度
+        }
         int intimacy = medalObject.i("intimacy");
         if (intimacy >= giftIntimacy) // 没有升级
+        {
+            if (debugPrint)
+                localNotify("[勋章升级：未升级]");
             return ;
+        }
         LiveDanmaku ld = danmaku;
+        int level = medalObject.i("level");
+        if (debugPrint)
+        {
+            localNotify("[勋章升级：" + snum(level) + "级]");
+        }
         if (ld.getAnchorRoomid() != roomId) // 没有戴本房间的牌子
         {
-            ld.setMedalLevel(medalObject.i("level"));
+            if (debugPrint)
+                localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
+            ld.setMedalLevel(level); // 设置为本房间的牌子
         }
         triggerCmdEvent("MEDAL_UPGRADE", ld);
     });
