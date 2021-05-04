@@ -12767,7 +12767,7 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
         {
             localNotify("[勋章升级：" + snum(level) + "级]");
         }
-        if (ld.getAnchorRoomid() != roomId) // 没有戴本房间的牌子
+        if (ld.getAnchorRoomid() != roomId && (!shortId.isEmpty() && ld.getAnchorRoomid() != shortId)) // 没有戴本房间的牌子
         {
             if (debugPrint)
                 localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
