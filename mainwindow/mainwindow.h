@@ -510,7 +510,7 @@ private slots:
 #if defined (ENABLE_HTTP_SERVER)
     void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
-    void serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp);
+    void serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp);
 #endif
     void on_serverCheck_clicked();
 
@@ -799,9 +799,11 @@ private:
     void sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku);
     void sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket* socket = nullptr);
     void processServerVariant(QByteArray& doc);
+    QByteArray getApiContent(QString url, QHash<QString, QString> params, QString *contentType);
     void sendTextToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
     void sendLyricList(QWebSocket* socket = nullptr);
+    QString webCache(QString name) const;
 
     void syncMagicalRooms();
 

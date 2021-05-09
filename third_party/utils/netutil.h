@@ -22,7 +22,7 @@ class NetUtil : public QObject
 {
     Q_OBJECT
 public:
-    static QString getWebData(QString uri)
+    static QByteArray getWebData(QString uri)
     {
         QUrl url(uri);
         QNetworkAccessManager manager;
@@ -33,7 +33,7 @@ public:
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
-        QString code_content(reply->readAll().data());
+        QByteArray code_content(reply->readAll().data());
 
         reply->deleteLater();
         return code_content;

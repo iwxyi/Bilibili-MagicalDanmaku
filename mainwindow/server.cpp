@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "fileutil.h"
 
 void MainWindow::openServer(int port)
 {
@@ -204,6 +205,9 @@ void MainWindow::initServerData()
         }
         line = suffixIn.readLine();
     }
+
+    // 创建缓存文件夹
+    ensureDirExist(webCache(""));
 }
 
 void MainWindow::closeServer()
@@ -330,6 +334,11 @@ void MainWindow::sendLyricList(QWebSocket *socket)
     }
 }
 
+QString MainWindow::webCache(QString name) const
+{
+    return dataPath + "cache/" + name;
+}
+
 void MainWindow::syncMagicalRooms()
 {
     QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
@@ -384,17 +393,44 @@ void MainWindow::syncMagicalRooms()
 #if defined(ENABLE_HTTP_SERVER)
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
-    QString urlPath = req->path(); // 示例：/user/abc
+    // 解析参数
+    QString fullUrl = req->url().toString(); // 包含：/user/header?uid=123
+    QHash<QString, QString> params;
+    QString urlPath = fullUrl;
+    if (fullUrl.contains("?"))
+    {
+        int pos = fullUrl.indexOf("?");
+        urlPath = fullUrl.left(pos);
+        QStringList sl = fullUrl.right(fullUrl.length() - pos - 1).split("&"); // a=1&b=2的参数
+        foreach (auto s, sl)
+        {
+            int pos = s.indexOf("=");
+            if (pos == -1)
+            {
+                params.insert(QByteArray::fromPercentEncoding(s.toUtf8()), "");
+                continue;
+            }
+
+            QString key = s.left(pos);
+            QString val = s.right(s.length() - pos - 1);
+            params.insert(QByteArray::fromPercentEncoding(key.toUtf8()),
+                          QByteArray::fromPercentEncoding(val.toUtf8()));
+        }
+    }
+
+    // 路径
+    // QString urlPath = req->path(); // 示例：/user/abc，不包括 域名/
     if (urlPath.startsWith("/"))
         urlPath = urlPath.right(urlPath.length() - 1);
     if (urlPath.endsWith("/"))
         urlPath = urlPath.left(urlPath.length() - 1);
     urlPath = urlPath.trimmed();
+
 //    qDebug() << "request ->" << urlPath;
-    serverHandleUrl(urlPath, req, resp);
+    serverHandleUrl(urlPath, params, req, resp);
 }
 
-void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpResponse *resp)
+void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray doc;
 
@@ -409,8 +445,9 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
         return errorResp(str.toStdString().data(), code);
     };
 
-    auto toIndex = [=]() -> void {
-        return serverHandleUrl(urlPath + "/index.html", req, resp);
+
+    auto toIndex = [&]() -> void {
+        return serverHandleUrl(urlPath + "/index.html", params, req, resp);
     };
 
     // 判断文件类型
@@ -418,6 +455,7 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     QString suffix;
     if (urlPath.indexOf(QRegularExpression("\\.(\\w{1,4})$"), 0, &match) > -1)
         suffix = match.captured(1);
+
     auto isFileType = [=](QString types) -> bool {
         if (suffix.isEmpty())
             return false;
@@ -427,12 +465,15 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     // 内容类型
     QString contentType = suffix.isEmpty() ? "text/html"
                                            : contentTypeMap.value(suffix, "application/octet-stream");
-    if (contentType.startsWith("text/"))
-        contentType += ";charset=utf-8";
-    resp->setHeader("Content-Type", contentType);
 
     // 开始特判
-    if (urlPath == "danmaku") // 弹幕姬
+    // ========== 各类接口 ==========
+    if (urlPath.startsWith("api/"))
+    {
+        doc = getApiContent(urlPath.right(urlPath.length() - 4), params, &contentType);
+    }
+    // ========== 固定类型 ==========
+    else if (urlPath == "danmaku") // 弹幕姬
     {
         return toIndex();
     }
@@ -446,12 +487,6 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     {
         return toIndex();
     }
-    else if (urlPath == "favicon.ico")
-    {
-        QBuffer buffer(&doc);
-        buffer.open(QIODevice::WriteOnly);
-        QPixmap(":/icons/star").save(&buffer,"PNG");
-    }
     else if (urlPath.isEmpty() // 显示默认的
              && !QFileInfo(wwwDir.absoluteFilePath("index.html")).exists())
     {
@@ -460,6 +495,20 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     else if (suffix.isEmpty()) // 没有后缀名，也没有特判的
     {
         return toIndex();
+    }
+    // ========== 特殊文件 ==========
+    else if (urlPath == "favicon.ico")
+    {
+        QBuffer buffer(&doc);
+        buffer.open(QIODevice::WriteOnly);
+        QPixmap(":/icons/star").save(&buffer,"PNG");
+    }
+    // ========== 普通文件 ==========
+    else if (urlPath == "favicon.ico")
+    {
+        QBuffer buffer(&doc);
+        buffer.open(QIODevice::WriteOnly);
+        QPixmap(":/icons/star").save(&buffer,"PNG");
     }
     else // 设置文件
     {
@@ -472,12 +521,6 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
         }
         else if (isFileType("png|jpg|jpeg|bmp")) // 图片文件
         {
-            QByteArray imageType = "png";
-            if (suffix == "gif")
-                imageType = "gif";
-            else if (suffix == "jpg" || suffix == "jpeg")
-                imageType = "jpeg";
-
             // 图片文件，需要特殊加载
             QBuffer buffer(&doc);
             buffer.open(QIODevice::WriteOnly);
@@ -495,7 +538,11 @@ void MainWindow::serverHandleUrl(QString urlPath, QHttpRequest *req, QHttpRespon
     }
 
     // 开始返回
+    if (contentType.startsWith("text/"))
+        contentType += ";charset=utf-8";
+    resp->setHeader("Content-Type", contentType);
     resp->setHeader("Content-Length", snum(doc.size()));
+    resp->setHeader("Access-Control-Allow-Origin", "*");
     resp->writeHead(QHttpResponse::STATUS_OK);
     resp->write(doc);
     resp->end();
@@ -507,4 +554,34 @@ void MainWindow::processServerVariant(QByteArray &doc)
     doc.replace("__DOMAIN__", serverDomain.toUtf8())
             .replace("__PORT__", snum(serverPort).toUtf8())
             .replace("__WS_PORT__", snum(serverPort+1).toUtf8());
+}
+
+/// 一些header相关的
+/// @param url 不包括前缀api/，直达动作本身
+QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType)
+{
+    QByteArray ba;
+    if (url == "header")
+    {
+        *contentType = "image/jpeg";
+        if (!params.contains("uid"))
+            return ba;
+
+        QString uid = params.value("uid");
+        QString filePath = webCache("header_" + uid);
+        if (!isFileExist(filePath))
+        {
+            // 获取封面URL并下载封面
+            MyJson json(NetUtil::getWebData("http://api.bilibili.com/x/space/acc/info?mid=" + uid));
+            NetUtil::downloadWebFile(json.data().s("face"), filePath);
+        }
+
+        // 返回文件
+        QFile f(filePath);
+        f.open(QIODevice::ReadOnly);
+        ba = f.readAll();
+        f.close();
+    }
+
+    return ba;
 }

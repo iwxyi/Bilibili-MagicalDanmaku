@@ -894,6 +894,9 @@ MainWindow::~MainWindow()
     triggerCmdEvent("SHUT_DOWN", LiveDanmaku());
 
     delete ui;
+
+    if (isFileExist(webCache("")))
+        deleteDir(webCache(""));
 }
 
 const QSettings* MainWindow::getSettings() const
@@ -7021,6 +7024,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         if (!json.isEmpty())
         {
             cmd = json.value("cmd").toString();
+
+            if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "NOTICE_MSG")
+                return ;
+
             qDebug() << "普通CMD：" << cmd;
             SOCKET_INF << json;
         }
@@ -7075,6 +7082,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
+
+                if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "WIDGET_BANNER")
+                    return ;
+
                 qDebug() << ">消息命令UNZC：" << cmd;
 
                 if (cmd == "ROOM_RANK")
@@ -8987,6 +8998,10 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "CUT_OFF")
     {
         localNotify("直播间被超管切断");
+    }
+    else if (cmd == "STOP_LIVE_ROOM_LIST")
+    {
+        return ;
     }
     else
     {
