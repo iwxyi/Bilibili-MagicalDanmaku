@@ -6953,6 +6953,8 @@ void MainWindow::saveOrderSongs(const SongList &songs)
                 .replace("{当前用户}", currentSong.addBy);
         sl.append(text);
     }
+    if (!sl.size()) // 直播姬会跳过空文本文件，所以需要设置个空格
+        sl.append(" ");
 
     // 获取路径
     QDir dir(wwwDir.absoluteFilePath("music"));
@@ -6971,6 +6973,8 @@ void MainWindow::saveOrderSongs(const SongList &songs)
 void MainWindow::saveSongLyrics()
 {
     QStringList lyrics = musicWindow->getSongLyrics(ui->songLyricsToFileMaxSpin->value());
+    if (!lyrics.size()) // 直播姬会跳过空文本文件，所以需要设置个空格
+        lyrics.append(" ");
 
     // 获取路径
     QDir dir(wwwDir.absoluteFilePath("music"));
@@ -9654,7 +9658,7 @@ bool MainWindow::handlePK(QJsonObject json)
         return false;
     }
 
-    triggerCmdEvent(cmd, LiveDanmaku());
+    triggerCmdEvent(cmd, LiveDanmaku(json));
     return true;
 }
 
@@ -11562,18 +11566,22 @@ void MainWindow::pkEnd(QJsonObject json)
     bool ping = winnerType1 == winnerType2;
     bool result = winnerType > 0;
 
+    qint64 bestUid = 0;
+    int winCode = 0;
+    if (!ping)
+        winCode = winnerType;
     if (myVotes > 0)
     {
-        qint64 uid = 0;
         for (int i = pkGifts.size()-1; i >= 0; i--)
             if (pkGifts.at(i).getNickname() == bestName)
             {
-                uid = pkGifts.at(i).getUid();
+                bestUid = pkGifts.at(i).getUid();
                 break;
             }
-        LiveDanmaku danmaku(bestName, uid, ping ? 0 : result, myVotes);
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku);
     }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes));
 
     localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
