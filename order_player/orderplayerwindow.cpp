@@ -1132,10 +1132,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
                 ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
         menu->addAction("打开分享的歌单", [=]{
-            QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
-            if (url.isEmpty())
-                return ;
-            openPlayList(url);
+            inputPlayList();
         });
 
         menu->exec();
@@ -1170,10 +1167,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
 
         FacileMenu* menu = new FacileMenu(this);
         menu->addAction("打开分享的歌单", [=]{
-            QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
-            if (url.isEmpty())
-                return ;
-            openPlayList(url);
+            inputPlayList();
         });
         menu->exec();
     }
@@ -1814,12 +1808,25 @@ void OrderPlayerWindow::setCurrentLyric(QString lyric)
     emit signalLyricChanged();
 }
 
+void OrderPlayerWindow::inputPlayList()
+{
+    QString def = "";
+    QString clip = QApplication::clipboard()->text();
+    if (clip.startsWith("http"))
+        def = clip;
+    QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接", QLineEdit::Normal, def);
+    if (url.isEmpty())
+        return ;
+    openPlayList(url);
+}
+
 void OrderPlayerWindow::openPlayList(QString shareUrl)
 {
     MusicSource source = UnknowMusic;
     QString playlistUrl;
     QString id;
     qDebug() << "歌单URL：" << shareUrl;
+    shareUrl = shareUrl.trimmed();
     if (shareUrl.contains("music.163.com")) // 网易云音乐的分享
     {
         // http://music.163.com/playlist?id=425710029&userid=306646638
@@ -1853,7 +1860,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         }, QQMusic);
         return ;
     }
-    else if (shareUrl.contains("y.qq.com/w/taoge.html")) // QQ音乐短网址第一次重定向
+    else if (shareUrl.contains("qq.com") && shareUrl.contains(QRegularExpression("[\\?&]id=(\\d+)"))) // QQ音乐短网址第一次重定向
     {
         // https://y.qq.com/w/taoge.html?ADTAG=erweimashare&channelId=10036163&id=7845417918&openinqqmusic=1
         source = QQMusic;
@@ -2740,10 +2747,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
     })->disable(!songs.size());
 
     menu->split()->addAction("打开分享的歌单", [=]{
-        QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
-        if (url.isEmpty())
-            return ;
-        openPlayList(url);
+        inputPlayList();
     });
 
     menu->exec();
@@ -2796,10 +2800,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
     })->disable(!songs.size());
 
     menu->split()->addAction("打开分享的歌单", [=]{
-        QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
-        if (url.isEmpty())
-            return ;
-        openPlayList(url);
+        inputPlayList();
     });
 
     menu->exec();
@@ -2882,10 +2883,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
     })->disable(!songs.size());
 
     menu->split()->addAction("打开分享的歌单", [=]{
-        QString url = QInputDialog::getText(this, "查看歌单", "支持网易云音乐、QQ音乐的分享链接");
-        if (url.isEmpty())
-            return ;
-        openPlayList(url);
+        inputPlayList();
     });
 
     menu->exec();

@@ -242,6 +242,7 @@ private:
     void downloadSongCover(Song song);
     void downloadSongCoverJpg(Song song, QString url);
     void setCurrentLyric(QString lyric);
+    void inputPlayList();
     void openPlayList(QString shareUrl);
     void clearDownloadFiles();
     void clearHoaryFiles();
