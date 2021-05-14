@@ -1025,6 +1025,7 @@ void LiveDanmakuWindow::showMenu()
 
     QMenu* menu = new QMenu(this);
     QAction* actionUserInfo = new QAction(QIcon(":/danmaku/home"), "用户主页", this);
+    QAction* actionCopyUid = new QAction(QIcon(":/icons/code"), "复制UID", this);
     QAction* actionMedal = new QAction(QIcon(":/danmaku/medal"), "粉丝勋章", this);
     QAction* actionValue = new QAction(QIcon(":/icons/egg"), "礼物价值", this);
     QAction* actionHistory = new QAction(QIcon(":/danmaku/message"), "消息记录", this);
@@ -1219,6 +1220,7 @@ void LiveDanmakuWindow::showMenu()
     if (!item)
     {
         operMenu->setEnabled(false);
+        actionCopyUid->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
@@ -1233,6 +1235,7 @@ void LiveDanmakuWindow::showMenu()
     }
 
     menu->addAction(actionUserInfo);
+    menu->addAction(actionCopyUid);
     menu->addAction(actionMedal);
     if (danmaku.is(MSG_GIFT))
         menu->addAction(actionValue);
@@ -1713,6 +1716,9 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
+    });
+    connect(actionCopyUid, &QAction::triggered, this, [=]{
+        QApplication::clipboard()->setText(snum(uid));
     });
     connect(actionMedal, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
