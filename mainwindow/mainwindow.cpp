@@ -3733,6 +3733,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 {
     plainText = processDanmakuVariants(plainText, user);
     CALC_DEB << "处理变量之后：" << plainText;
+    lastConditionDanmu = plainText;
 
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
@@ -4962,7 +4963,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2}?)(不|有点|才是|敲|很|能有|想|从不|才不).+",
+                         "^(.{2}?)(不|有点|才是|敲|很|能有|想|从不|才不|跟你).+",
                         "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
@@ -4978,7 +4979,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
 
     // xxx哥哥
-    QRegularExpression gegeRe("^(.{2,}?)(大|小|老)?(鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
+    QRegularExpression gegeRe("^(.{2,}?)(大|小|老)?(公|婆|鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
