@@ -3730,6 +3730,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
 {
     plainText = processDanmakuVariants(plainText, user);
     CALC_DEB << "处理变量之后：" << plainText;
+    lastConditionDanmu = plainText;
 
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
