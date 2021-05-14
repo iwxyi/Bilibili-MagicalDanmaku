@@ -1587,8 +1587,9 @@ tips：
 | PK_BATTLE_SETTLE              |                                                              |
 | PK_BATTLE_START               | 大乱斗开始                                                   |
 | PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
-| PK_ENDING                | 大乱斗尾声，最后几秒                                         |
+| **PK_ENDING**            | 大乱斗尾声，最后几秒                                         |
 | PK_BATTLE_END                 | 大乱斗结束                                                   |
+| **PK_END** | %level%判断胜负，-1输，0平，1赢，可用来计算连胜 |
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
@@ -1716,6 +1717,31 @@ tips：
 
 ```
 匹配到：%.anchor_info.base_info.uname%，%.guard_info.count%舰长，%.anchor_info.relation_info.attention%粉丝
+```
+
+
+
+##### 示例：大乱斗连胜
+
+> v3.7.4 添加此事件
+
+添加事件：`PK_END`，动作：
+
+```
+[%level%>0]>setValue(winCount, %[%{winCount}%+1]%)\n>triggerEvent(winCountReport)
+[%level%<0]>setValue(winCount, 0)
+```
+
+添加事件：`winCountReport`，动作：
+
+```
+[%{winCount}%>=1]目前连胜场数：%{winCount}%
+```
+
+如果要手动调整连胜数量（例如5），可以添加以下动作，手动点击“发送”，事件可以留空：
+
+```
+>setValue(winCount,5)
 ```
 
 

@@ -1217,9 +1217,11 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
                     sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), 1000);
                 }
             }
-            else if (errorMsg == "f") // 敏感词
+            else if (errorMsg == "f") // 系统敏感词
             {
-                // TODO: 敏感词自动替换
+            }
+            else if (errorMsg == "k") // 主播设置的直播间敏感词
+            {
             }
         }
     });
