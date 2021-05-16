@@ -268,8 +268,6 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
                          hint.height() * (100 - clipTop - clipBottom) / 100);
         QSize maxSize = aw->maximumSize();
         aw->setFixedSize(hint);
-        aw->setMinimumSize(QSize(1, 1));
-        aw->setMaximumSize(maxSize);
 
         hint.setHeight(hint.height() + addin);
         this->resize(hint);
@@ -277,6 +275,8 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
 #if defined(Q_OS_WIN)
         this->adjustSize();
 #endif
+        aw->setMinimumSize(QSize(1, 1));
+        aw->setMaximumSize(maxSize);
     };
 
     auto setScale = [=]{
