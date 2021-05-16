@@ -21,6 +21,8 @@ GuardOnlineDialog::GuardOnlineDialog(QSettings *settings, QString roomId, QStrin
     setAttribute(Qt::WA_DeleteOnClose, true);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
+
     refreshOnlineGuards(0);
 }
 
