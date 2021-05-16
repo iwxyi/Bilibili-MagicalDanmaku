@@ -1902,10 +1902,9 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
         settings->setValue("reply/r"+QString::number(row)+"Enable", enable);
     });
 
-    connect(rw->keyEdit, &QLineEdit::textEdited, this, [=]{
-        QString content = rw->keyEdit->text();
+    connect(rw->keyEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->replyListWidget->row(item);
-        settings->setValue("reply/r"+QString::number(row)+"Key", content);
+        settings->setValue("reply/r"+QString::number(row)+"Key", text);
     });
 
     connect(rw->replyEdit, &ConditionEditor::textChanged, this, [=]{
@@ -2022,10 +2021,9 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
         settings->setValue("event/r"+QString::number(row)+"Enable", enable);
     });
 
-    connect(rw->eventEdit, &QLineEdit::textEdited, this, [=]{
-        QString content = rw->eventEdit->text();
+    connect(rw->eventEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->eventListWidget->row(item);
-        settings->setValue("event/r"+QString::number(row)+"Cmd", content);
+        settings->setValue("event/r"+QString::number(row)+"Cmd", text);
     });
 
     connect(rw->actionEdit, &ConditionEditor::textChanged, this, [=]{
