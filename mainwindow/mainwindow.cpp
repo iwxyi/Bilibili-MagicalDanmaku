@@ -2408,7 +2408,7 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
     };
 
     auto menu = new FacileMenu(this);
-    menu->addAction("插入", [=]{
+    menu->addAction("插入 (&a)", [=]{
         if (listKey == CODE_TIMER_TASK_KEY)
             addTimerTask(false, 1800, "", row);
         else if (listKey == CODE_AUTO_REPLY_KEY)
@@ -2417,13 +2417,13 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             addEventAction(false, "", "", row);
         (this->*saveFunc)();
     })->disable(!item);
-    menu->addAction("上移", [=]{
+    menu->addAction("上移 (&w)", [=]{
         moveToRow(row - 1);
     })->disable(!item || row <= 0);
-    menu->addAction("下移", [=]{
+    menu->addAction("下移 (&s)", [=]{
         moveToRow(row + 1);
     })->disable(!item || row >= listWidget->count()-1);
-    menu->split()->addAction("复制", [=]{
+    menu->split()->addAction("复制 (&c)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         QApplication::clipboard()->setText(tw->toJson().toBa());
@@ -2446,14 +2446,14 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             QApplication::clipboard()->setText(QJsonDocument(array).toJson());
         }
     })->disable(!item)->hide(!canContinueCopy);
-    menu->addAction("粘贴", [=]{
+    menu->addAction("粘贴 (&v)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         tw->fromJson(clipJson);
 
         (this->*saveFunc)();
     })->disable(!canPaste);
-    menu->split()->addAction("删除", [=]{
+    menu->split()->addAction("删除 (&d)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
 
