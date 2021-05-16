@@ -19,7 +19,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
     setMinimumSize(32, 32);
 
     // 设置模式
-    useVideoWidget = settings->value("videoplayer/useVideoWidget", false).toBool();
+    useVideoWidget = settings->value("videoplayer/useVideoWidget", true).toBool();
 
     /*QTimer* timer = new QTimer(this);
     timer->setInterval(5000);
