@@ -56,6 +56,7 @@ INCLUDEPATH += \
     widgets/room_status_dialog/ \
     widgets/video_lyric_creator/ \
     widgets/guard_online/ \
+    widgets/smooth_scroll/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
@@ -93,6 +94,7 @@ SOURCES += \
     third_party/qrencode/split.c \
     mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
+    widgets/smooth_scroll/smoothlistwidget.cpp \
     widgets/video_player/videosurface.cpp \
     widgets/catch_you_dialog/catchyouwidget.cpp \
     widgets/editor/conditioneditor.cpp \
@@ -154,6 +156,8 @@ HEADERS += \
     third_party/qrencode/split.h \
     third_party/utils/myjson.h \
     third_party/utils/xfytts.h \
+    widgets/smooth_scroll/smoothlistwidget.h \
+    widgets/smooth_scroll/smoothscrollbean.h \
     widgets/video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
     widgets/catch_you_dialog/catchyouwidget.h \

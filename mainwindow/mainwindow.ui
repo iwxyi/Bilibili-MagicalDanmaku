@@ -54,7 +54,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -1859,7 +1859,7 @@ margin: 6px;</string>
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="taskListWidget">
+         <widget class="SmoothListWidget" name="taskListWidget">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -1904,7 +1904,7 @@ margin: 6px;</string>
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="replyListWidget">
+         <widget class="SmoothListWidget" name="replyListWidget">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -1949,7 +1949,7 @@ margin: 6px;</string>
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="eventListWidget">
+         <widget class="SmoothListWidget" name="eventListWidget">
           <property name="contextMenuPolicy">
            <enum>Qt::CustomContextMenu</enum>
           </property>
@@ -3834,6 +3834,11 @@ margin: 6px;</string>
    <class>ConditionEditor</class>
    <extends>QPlainTextEdit</extends>
    <header>conditioneditor.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SmoothListWidget</class>
+   <extends>QListWidget</extends>
+   <header>smoothlistwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>
