@@ -4540,6 +4540,38 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             left = text.length();
         return text.mid(left, len);
     }
+    else if (funcName == "replace")
+    {
+        if (argList.size() < 3)
+            return errorArg("字符串, 原文本, 新文本");
+
+        QString text = argList.at(0);
+        return text.replace(argList.at(1), argList.at(2));
+    }
+    else if (funcName == "relaceReg" || funcName == "regReplace")
+    {
+        if (argList.size() < 3)
+            return errorArg("字符串, 原正则, 新文本");
+
+        QString text = argList.at(0);
+        return text.replace(QRegularExpression(argList.at(1)), argList.at(2));
+    }
+    else if (funcName == "reg")
+    {
+        if (argList.size() < 2)
+            return errorArg("字符串, 正则表达式");
+        int index = args.lastIndexOf(",");
+        if (index == -1) // 不应该没找到的
+            return "";
+        QString full = args.left(index);
+        QString reg = args.right(args.length() - index - 1).trimmed();
+
+        QRegularExpressionMatch match;
+        qDebug() << full << reg;
+        if (full.indexOf(QRegularExpression(reg), 0, &match) == -1)
+            return "";
+        return match.captured(0);
+    }
     else if (funcName == "inputText")
     {
         QString label = argList.size() ? argList.first() : "";
@@ -11825,7 +11857,10 @@ void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
         if (!this->isHidden())
             this->hide();
         else
+        {
             this->showNormal();
+            this->activateWindow();
+        }
         break;
     case QSystemTrayIcon::MiddleClick:
         on_actionShow_Live_Danmaku_triggered();

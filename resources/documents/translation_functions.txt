@@ -4,6 +4,9 @@
 取文本长度=strlen
 删首尾空=trim
 取子串=substr
+文本替换=replace
+正则替换=replaceReg
+正则提取=reg
 在游戏用户中=inGameUsers
 在游戏数值中=inGameNumbers
 在游戏文本中=inGameTexts
