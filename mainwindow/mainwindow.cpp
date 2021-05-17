@@ -10545,11 +10545,12 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
                     .arg(roomId).arg(uid).arg(hour).arg(csrf_token).arg(csrf_token);
-
+    qInfo() << "禁言：" << uid << hour;
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             statusLabel->setText(json.value("message").toString());
+            qWarning() << "禁言失败：" << json.value("message").toString();
             return ;
         }
         QJsonObject d = json.value("data").toObject();
@@ -12167,6 +12168,7 @@ void MainWindow::saveMonthGuard()
     QFile file(filePath);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
 
     stream << QString("UID,昵称,级别,备注\n").toUtf8();
     auto getGuardName = [=](int level) {
@@ -12198,6 +12200,7 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开上船记录文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,累计,UID,备注\n").toUtf8();
@@ -12227,6 +12230,7 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开礼物记录文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,金瓜子,UID\n").toUtf8();
@@ -12254,6 +12258,7 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
 
     stream << processDanmakuVariants(format, danmaku) << "\n";
 
@@ -14076,6 +14081,7 @@ void MainWindow::on_exportDailyButton_clicked()
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setCodec("UTF-8");
 
     // 拼接数据
     QString dirPath = dataPath + "live_daily";
