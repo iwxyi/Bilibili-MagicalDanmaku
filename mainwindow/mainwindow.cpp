@@ -778,7 +778,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (prevDay != currDate.day())
     {
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
-        settings->setValue("runtime/open_day", currDate.month());
+        settings->setValue("runtime/open_day", currDate.day());
     }
     if (prevWeekNumber != currDate.weekNumber())
     {
