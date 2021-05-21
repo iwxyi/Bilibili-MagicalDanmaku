@@ -977,7 +977,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         replyWidget->autoResizeEdit();
     }
 
-    /*for (int row = 0; row < ui->eventListWidget->count(); row++)
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
         auto item = ui->eventListWidget->item(row);
         auto widget = ui->eventListWidget->itemWidget(item);
@@ -987,7 +987,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         auto eventWidget = static_cast<EventWidget*>(widget);
         eventWidget->resize(size);
         eventWidget->autoResizeEdit();
-    }*/
+    }
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -14223,7 +14223,51 @@ void MainWindow::on_actionPaste_Code_triggered()
             qWarning() << "未知格式：" << json;
             return ;
         }
+
         item->fromJson(json);
+
+        if (anchor_key == CODE_AUTO_REPLY_KEY)
+        {
+            for (int row = 0; row < ui->replyListWidget->count() - 1; row++)
+            {
+                auto rowItem = ui->replyListWidget->item(row);
+                auto widget = ui->replyListWidget->itemWidget(rowItem);
+                if (!widget)
+                    continue;
+                QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
+                auto replyWidget = static_cast<ReplyWidget*>(widget);
+
+                auto rw = static_cast<ReplyWidget*>(item);
+                if (rw->keyEdit->text() == replyWidget->keyEdit->text()
+                        && rw->replyEdit->toPlainText() == replyWidget->replyEdit->toPlainText())
+                {
+                    rw->check->setChecked(false);
+                    rw->keyEdit->setText(rw->keyEdit->text() + "_重复");
+                    break;
+                }
+            }
+        }
+        else if (anchor_key == CODE_EVENT_ACTION_KEY)
+        {
+            for (int row = 0; row < ui->eventListWidget->count() - 1; row++)
+            {
+                auto rowItem = ui->eventListWidget->item(row);
+                auto widget = ui->eventListWidget->itemWidget(rowItem);
+                if (!widget)
+                    continue;
+                QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+                auto eventWidget = static_cast<EventWidget*>(widget);
+
+                auto rw = static_cast<EventWidget*>(item);
+                if (rw->eventEdit->text() == eventWidget->eventEdit->text()
+                        && rw->actionEdit->toPlainText() == eventWidget->actionEdit->toPlainText())
+                {
+                    rw->check->setChecked(false);
+                    rw->eventEdit->setText(rw->eventEdit->text() + "_重复");
+                    break;
+                }
+            }
+        }
     };
 
     if (doc.isObject())

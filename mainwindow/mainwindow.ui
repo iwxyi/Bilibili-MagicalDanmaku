@@ -3398,7 +3398,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>529</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -3406,8 +3406,8 @@ margin: 6px;</string>
      <string>功能</string>
     </property>
     <addaction name="actionShow_Live_Danmaku"/>
-    <addaction name="actionShow_Live_Video"/>
     <addaction name="actionShow_Order_Player_Window"/>
+    <addaction name="actionShow_Live_Video"/>
     <addaction name="separator"/>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionShow_PK_Video"/>
@@ -3492,7 +3492,7 @@ margin: 6px;</string>
      <normaloff>:/icons/danmu</normaloff>:/icons/danmu</iconset>
    </property>
    <property name="text">
-    <string>显示实时弹幕</string>
+    <string>显示弹幕姬</string>
    </property>
   </action>
   <action name="actionSet_Cookie">
