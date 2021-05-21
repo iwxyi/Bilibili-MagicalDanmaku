@@ -1332,6 +1332,7 @@ void FacileMenu::keyPressEvent(QKeyEvent *event)
     {
         if (item->isKey((Qt::Key)key))
         {
+            _showing_animation = false; // 在showing的时候，点击是无效的，所以要关掉
             item->simulateStatePress(); // 确定是这个action的快捷键
             return ;
         }
