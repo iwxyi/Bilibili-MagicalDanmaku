@@ -552,12 +552,14 @@ border-image: url(C:/Path/To/Image.png)
 }
 #gift, #guard-buy {
     background: #FFDAB9;
-	padding: 5px;
+    padding: 5px;
     border-radius: 10px; 
 }
 ```
 
 <div id='programing'/>
+---
+
 ## 可编程变量与运算
 
 > 这一块比较专业，所以单独拎出来写教程。
@@ -896,6 +898,8 @@ tips：
 受于B站后台的限制，多条弹幕将调整为每隔1.5秒发送一次，数量无上限。
 
 <div id='cd_channel'/>
+---
+
 ### 冷却通道
 
 >  `v2.9.0`版本新增
@@ -914,7 +918,7 @@ tips：
 [%guard%]**(cd12:5)欢迎舰长%ai_name%回家！
 ```
 
-内置100个冷却通道，其中0~9已被系统使用，用户自定义建议为10~99，应该够用了。
+内置100个冷却通道，其中`0~9`已被系统使用，用户自定义建议为`10~99`，应该够用了。
 
 >  注意：B站连续发送弹幕的冷却时间为1秒，与本程序的弹幕冷却系统无关。
 
@@ -998,7 +1002,7 @@ tips：
 
 #### 批量修改配置
 
-针对 `setValuesIf(exp, [condition], newVal)` 、`removeValuesIf(exp, [condition])` 这两个较为复杂命令。
+针对 `setValuesIf(exp, [condition], newVal)` 、`removeValuesIf(exp, [condition])` 这两个较为复杂的命令。
 
 `exp`为正则表达式，将会操作所有key满足该表达式的配置。
 
@@ -1036,7 +1040,7 @@ tips：
             "roomname": "房间名字"
         },
         "anchor": {
-			"uname": "名字",
+            "uname": "名字",
         }
     }
 }
@@ -1290,6 +1294,8 @@ tips：
 
 - `NEW_DAY`：如果神奇弹幕没开，那么第二天启动时**需要手动点**事件中对应的“发送”按钮
 - `NEW_DAY_FIRST`：启动时会自动执行新的一天的操作
+
+> 注意：v3.7.4版本之前，`NEW_DAY_FIRST`有 bug，每次启动都会触发
 
 
 
@@ -1655,7 +1661,7 @@ tips：
 
 添加大乱斗即将结束事件：`PK_FINAL`
 
-此事件的时间为大乱斗结束前几秒，具体值由偷塔提前量决定。
+此事件的时间为大乱斗结束前几秒，具体值由偷塔提前时间决定。
 
 添加动作：
 
@@ -1678,6 +1684,8 @@ tips：
 ```
 
 其中`1`为普通大乱斗，`2`为视频大乱斗。
+
+仅支持 obs，**使用直播姬的主播无效**。
 
 第一次大乱斗需手动点“发送”开启。
 
@@ -1873,6 +1881,8 @@ tips：
 每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
 
 <div id='web_dev'/>
+---
+
 ## Web开发接口
 
 ### 浏览器访问
@@ -1925,12 +1935,12 @@ ws.onmessage = function(e) {
     switch (cmd) {
         case 'SONG_LIST':
             var songs = json['data']; // 歌曲对象组成的数组
-		    var olHtml = '';
+            var olHtml = '';
             for (var i = 0; i < songs.length; i++) {
                 var song = songs[i]; // 歌曲对象，可获取歌名、歌手、用户等
                 olHtml += '<li>' + song['name'] + "</li>";
             }
-		    $("#songs").html(olHtml);
+            $("#songs").html(olHtml);
             break;
     }
 };
@@ -1955,7 +1965,7 @@ JSON格式：
 
 - `cmds`：指定ws需要接收的类型，不在其中的不会发送，可提高性能
 
-- `forward`：将`data`中的数据发送给其他socket，`data`中要同样再包含一层cmd和data。整体JSON示例如下：
+- `forward`：将`data`中的数据发送给其他socket，`data`中要同样再包含一层`cmd`和`data`。整体JSON示例如下：
 
   ```json
   {
@@ -1972,7 +1982,7 @@ JSON格式：
   ```json
   "data": {
       "key": "[key]",
-      "value": "[value]" // 可以是字符串，也可以是数值
+      "value": "[value]" // 可以是字符串，也可以是整数
   }
   ```
 
@@ -2004,6 +2014,12 @@ JSON格式：
 
 
 
+### 一直在获取房间信息？
+
+安装VC_redist：https://aka.ms/vs/15/release/vc_redist.x64.exe 后重启神奇弹幕。
+
+
+
 ### 实时视频不能播放？
 
 需要安装 `LAV解码器`，可直接去网上搜索下载。
@@ -2025,6 +2041,8 @@ JSON格式：
 ### 怎么提bug？
 
 加QQ群：**1038738410**，主动点 (〃＞＿＜;〃)
+
+
 
 
 
