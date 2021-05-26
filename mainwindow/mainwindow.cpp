@@ -6995,7 +6995,8 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     QFile file(dir.absoluteFilePath("songs.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!externFileCodec.isEmpty())
+        stream.setCodec(externFileCodec.toUtf8());
     stream << sl.join("\n");
     file.flush();
     file.close();
@@ -7015,7 +7016,8 @@ void MainWindow::saveSongLyrics()
     QFile file(dir.absoluteFilePath("lyrics.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!externFileCodec.isEmpty())
+        stream.setCodec(externFileCodec.toUtf8());
     stream << lyrics.join("\n");
     file.flush();
     file.close();
@@ -12168,7 +12170,8 @@ void MainWindow::saveMonthGuard()
     QFile file(filePath);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!recordFileCodec.isEmpty())
+        stream.setCodec(recordFileCodec.toUtf8());
 
     stream << QString("UID,昵称,级别,备注\n").toUtf8();
     auto getGuardName = [=](int level) {
@@ -12200,7 +12203,8 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开上船记录文件失败：" << filePath;
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!recordFileCodec.isEmpty())
+        stream.setCodec(recordFileCodec.toUtf8());
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,累计,UID,备注\n").toUtf8();
@@ -12230,7 +12234,8 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开礼物记录文件失败：" << filePath;
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!recordFileCodec.isEmpty())
+        stream.setCodec(recordFileCodec.toUtf8());
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,金瓜子,UID\n").toUtf8();
@@ -12258,7 +12263,8 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qDebug() << "打开文件失败：" << filePath;
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!codeFileCodec.isEmpty())
+        stream.setCodec(codeFileCodec.toUtf8());
 
     stream << processDanmakuVariants(format, danmaku) << "\n";
 
@@ -14081,7 +14087,8 @@ void MainWindow::on_exportDailyButton_clicked()
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
-    stream.setCodec("UTF-8");
+    if (!recordFileCodec.isEmpty())
+        stream.setCodec(recordFileCodec.toUtf8());
 
     // 拼接数据
     QString dirPath = dataPath + "live_daily";

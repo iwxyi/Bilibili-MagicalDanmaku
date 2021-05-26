@@ -938,6 +938,10 @@ private:
     int dailyAvePopul = 0; // 平均人气
     bool todayIsEnding = false;
 
+    QString recordFileCodec = ""; // 自动保存上船、礼物记录、每月船员等编码
+    QString codeFileCodec = "UTF-8"; // 代码保存的文件编码
+    QString externFileCodec = "UTF-8"; // 提供给外界读取例如歌曲文件编码
+
     // 船员
     bool updateGuarding = false;
     QList<LiveDanmaku> guardInfos;
