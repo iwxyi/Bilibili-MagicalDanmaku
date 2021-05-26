@@ -1906,12 +1906,6 @@ ws.onopen = function() {
 
 其中，`__DOMAIN__::__WS_PORT__`会自动替换为用户设置的`域名:端口`，若未设置，则默认为`localhost:5520`。
 
-通过WebSocket，在网页中可接收几乎所有的弹幕消息，显示各种动画特效。
-
-
-
-### 接收弹幕消息
-
 在`onopen`方法中，必须向服务端发送格式为`{"cmd": "cmds","data":[需要接收的cmd列表]}`的JSON数据，其中`cmd列表`为接收服务端的哪些类型，可用**事件**中的命令。
 
 另外，有专门的其他CMD，如下：
@@ -1920,6 +1914,30 @@ ws.onopen = function() {
 - `LYRIC_LIST`：歌词
 - `CURRENT_SONG`：正在播放的歌曲
 - `LIVE_ALL_GIFTS`：本场直播所有礼物（同一人同一礼物合并），仅接受一次
+
+通过WebSocket，在网页中可接收几乎所有的弹幕消息，显示各种动画特效。
+
+
+
+### 主程序发送消息
+
+发送给网页WS使用，使用 `sendToSockets(cmd, data)` 命令。示例如下：
+
+```
+sendToSockets(SOME_CMD, \
+	{\
+		"action": "SOME_ACTION",\
+	    "data": {"key1": "value1", "key2": 222}\
+	})
+```
+
+第一个参数的 `SOME_CMD` 用于过滤 socket，即在 onopen 发送过来的 cmd 类型才会接收，不会把接收弹幕消息发到只接收礼物消息的 socket 对象上。
+
+第二个参数是一个 JSON 字符串，即网页端接收到的 data。
+
+
+
+### 接收主程序消息
 
 以点歌姬的点歌列表为例，接收到`SONG_LIST`并显示在DOM节点中：
 
@@ -1945,6 +1963,8 @@ ws.onmessage = function(e) {
     }
 };
 ```
+
+> 注意：本处代码中有个 `cmd` 变量，这个 `cmd` 不是 `sendToSockets` 的参数一（不过恰好也是 `"SONG_LIST"`），而是参数二中的 `action`。
 
 
 

@@ -531,7 +531,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
             // html、txt、JS、CSS等，直接读取文件
             file.open(QIODevice::ReadOnly);
             doc = file.readAll();
-            if (contentType.startsWith("text/"))
+            if (contentType.startsWith("text/") || contentType.endsWith("script"))
                 processServerVariant(doc);
             file.close();
         }
