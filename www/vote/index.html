@@ -75,7 +75,7 @@
                         bgcolor: getRandomColor(),
                     }
                 ],
-                nextItemId: 2
+                nextItemId: 3
             },
             methods: {
                 // 添加一个新的item
@@ -97,10 +97,20 @@
                     this.voteItems.forEach(function (item, index) {
                         item.id = index + 1;
                     });
-                    recalculatePercent();
+                    this.recalculatePercent();
+                    this.nextItemId--;
 
                     // 修改或者取消用户记录
-
+                    for (let uv of userVotes.entries()) {
+                        console.log(uv);
+                        var ind = uv[1] - 1;
+                        if (ind == index) { // 移除了
+                            userVotes.delete(uv[0]);
+                        } else if (ind > index) { // 后面的，-1
+                            userVotes.set(uv[0], ind - 1 + 1); // +1是因为ID和index的差
+                        }
+                    }
+                    console.log(userVotes);
                 },
                 // 进行投票或者取消投票操作
                 changeVote: function (index, count) {
@@ -127,7 +137,7 @@
             }
         });
 
-        let votedUsers = new Map();
+        let userVotes = new Map();
 
         // Socket通讯
         $(document).ready(function () {
@@ -143,7 +153,7 @@
                     case 'VOTE':
                         var id = json['id'];
                         var uid = json['uid'];
-                        if (votedUsers.has(uid)) { // 已经投票过了
+                        if (userVotes.has(uid)) { // 已经投票过了
                             console.log("已投过票");
                             ws.send('{"cmd": "send_msg", "data": "您已投过票"}');
                             return;
@@ -153,7 +163,7 @@
                             ws.send('{"cmd": "send_msg", "data": "无效的投票ID：' + id + '"}');
                             return;
                         }
-                        votedUsers.set(uid, id);
+                        userVotes.set(uid, id);
                         vm.changeVote(id - 1, 1);
                         break;
                     case 'CANCEL':
