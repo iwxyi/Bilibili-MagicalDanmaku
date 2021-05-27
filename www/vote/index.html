@@ -17,9 +17,10 @@
 
         <table class="vote-box-list" id="voteBox">
             <tr is="vote-item" v-for="(item, index) in voteItems" v-bind:key="item.id" v-bind:id="item.id"
-                v-bind:uniqueid="item.uniqueid" v-bind:name="item.name" v-bind:votes="item.votes"
-                v-bind:percentage="item.percentage" v-bind:bgcolor="item.bgcolor" v-on:inc1="changeVote(index, 1)"
-                v-on:dec1="changeVote(index, -1)" v-on:remove="removeItem(index)" v-bind:menutarget="item.menutarget">
+                v-bind:uniqueid="item.uniqueid" v-bind:menutarget="item.menutarget" v-bind:name="item.name"
+                v-bind:votes="item.votes" v-bind:percentage="item.percentage" v-bind:bgcolor="item.bgcolor"
+                v-on:inc1="changeVote(index, 1)" v-on:dec1="changeVote(index, -1)" v-on:remove="removeItem(index)"
+                v-on:showlist="showList(index)">
             </tr>
         </table>
 
@@ -29,6 +30,9 @@
                     id="new-item" placeholder="投票项名称" />
             </div>
         </form>
+
+        <div id="votedList">
+        </div>
 
     </div>
 
@@ -52,7 +56,7 @@
                                 <td><div contentEditable="true" class="vote-item-name editable-div" onKeyDown={this.handleKeyDown}>{{name}}</div></td>\
                                 <td><div class="vote-item-wrap">\
                                         <p class="vote-item-bar-bg">\
-                                            <span class="vote-item-bar-fg mdui-ripple" :style="{background: bgcolor }"></span>\
+                                            <span class="vote-item-bar-fg mdui-ripple" :style="{background: bgcolor}" v-on:click="$emit(\'showlist\')""></span>\
                                         </p>\
                                     </div>\
                                 </td>\
@@ -78,6 +82,20 @@
                         </tr>',
             props: ['uniqueid', 'id', 'name', 'votes', 'percentage', 'bgcolor', 'menutarget']
         });
+
+        let userVotes = new Map(); // 这个是存谁投过票了
+        var votedUsers = []; // 这个是投票的有哪些用户（按顺序排序）
+
+        votedUsers.push([]);
+        votedUsers.push([]);
+
+        // 将投票的用户名字显示出来
+        function appendVotedUser(uid, uname) {
+            $("#votedList").append('<a class="mdui-chip" style="margin: 10px;" href="https://space.bilibili.com/'+uid + '" target="_blank">\
+                                    <img class="mdui-chip-icon" src="http://__DOMAIN__:__PORT__/api/header?uid='+ uid + '" />\
+                                    <span class="mdui-chip-title">'+ uname + '</span>\
+                                </a>');
+        }
 
         var vm = new Vue({
             el: '#vote-container',
@@ -106,7 +124,7 @@
                 }],
                 nextItemId: 3,
                 nextUniqueId: 3,
-                uniqueIds: 'uni3'
+                currentVotedUserList: 0,
             },
             methods: {
                 // 添加一个新的item
@@ -122,7 +140,7 @@
                     })
                     this.newItemText = '';
                     this.nextUniqueId++;
-                    this.uniqueIds = 'uni' + nextUniqueId;
+                    votedUsers.push([]);
                 },
                 removeItem: function (index) {
                     releaseRandomColor(this.voteItems[index].bgcolor);
@@ -145,7 +163,16 @@
                             userVotes.set(uv[0], ind - 1 + 1); // +1是因为ID和index的差
                         }
                     }
-                    console.log(userVotes);
+                    votedUsers.slice(index, 1);
+                    // console.log(userVotes);
+                    // console.log(votedUsers);
+
+                    // 修改显示
+                    if (this.currentVotedUserList == index) {
+                        this.currentVotedUserList = -1;
+                    } else if (this.currentVotedUserList > index) {
+                        this.currentVotedUserList--;
+                    }
                 },
                 // 进行投票或者取消投票操作
                 changeVote: function (index, count) {
@@ -171,10 +198,19 @@
                         }, 'slow');
                     });
                 },
+                // 显示该投票的用户
+                showList: function (index) {
+                    $("#votedList").empty();
+                    var list = votedUsers[index];
+                    this.currentVotedUserList = index;
+                    for (var i = 0; i < list.length; i++) {
+                        var uid = list[i].uid;
+                        var uname = list[i].uname;
+                        appendVotedUser(uid, uname);
+                    }
+                },
             }
         });
-
-        let userVotes = new Map();
 
         // Socket通讯
         $(document).ready(function () {
@@ -190,7 +226,8 @@
                     case 'VOTE':
                         var id = json['id'];
                         var uid = json['uid'];
-                        if (userVotes.has(uid)) { // 已经投票过了
+                        var uname = json['uname'];
+                        if (false && userVotes.has(uid)) { // 已经投票过了
                             console.log("已投过票");
                             ws.send('{"cmd": "send_msg", "data": "您已投过票"}');
                             return;
@@ -200,8 +237,14 @@
                             ws.send('{"cmd": "send_msg", "data": "无效的投票ID：' + id + '"}');
                             return;
                         }
-                        userVotes.set(uid, id);
-                        vm.changeVote(id - 1, 1);
+                        var index = id - 1; ''
+                        vm.changeVote(index, 1); // 投票操作
+                        userVotes.set(uid, id); // 标记为已投过票
+                        votedUsers[index].push({ "uid": uid, "uname": uname });
+                        if (vm.currentVotedUserList == index) {
+                            appendVotedUser(uid, uname);
+                        }
+                        // appendVotedUser(uid, uname, id); // 显示出来
                         break;
                     case 'CANCEL':
                         break;
