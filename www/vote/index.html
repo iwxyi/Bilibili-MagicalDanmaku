@@ -24,6 +24,9 @@
             </tr>
         </table>
 
+        <div id="newVoteList" style="white-space: nowrap; overflow-x: scroll;">
+        </div>
+
         <form v-on:submit.prevent="addNewItem">
             <div class="mdui-textfield">
                 <input class="mdui-textfield-input" style="display: inline;" type="text" v-model="newItemText"
@@ -89,9 +92,24 @@
         votedUsers.push([]);
         votedUsers.push([]);
 
+        // 新投票的用户
+        function appendNewVote(uid, uname) {
+            // 设置最多几个元素
+            const maxCount = 5;
+            if ($("#newVoteList").children().length >= maxCount) {
+                $("#newVoteList").children().last().remove();
+            }
+
+            // 插入到开头
+            $("#newVoteList").prepend('<a class="mdui-chip" style="margin: 10px;" href="https://space.bilibili.com/' + uid + '" target="_blank">\
+                                    <img class="mdui-chip-icon" src="http://__DOMAIN__:__PORT__/api/header?uid='+ uid + '" />\
+                                    <span class="mdui-chip-title">'+ uname + '</span>\
+                                </a>');
+        }
+
         // 将投票的用户名字显示出来
         function appendVotedUser(uid, uname) {
-            $("#votedList").append('<a class="mdui-chip" style="margin: 10px;" href="https://space.bilibili.com/'+uid + '" target="_blank">\
+            $("#votedList").append('<a class="mdui-chip" style="margin: 10px;" href="https://space.bilibili.com/' + uid + '" target="_blank">\
                                     <img class="mdui-chip-icon" src="http://__DOMAIN__:__PORT__/api/header?uid='+ uid + '" />\
                                     <span class="mdui-chip-title">'+ uname + '</span>\
                                 </a>');
@@ -124,7 +142,7 @@
                 }],
                 nextItemId: 3,
                 nextUniqueId: 3,
-                currentVotedUserList: 0,
+                currentVotedUserList: -1,
             },
             methods: {
                 // 添加一个新的item
@@ -244,6 +262,7 @@
                         if (vm.currentVotedUserList == index) {
                             appendVotedUser(uid, uname);
                         }
+                        appendNewVote(uid, uname);
                         // appendVotedUser(uid, uname, id); // 显示出来
                         break;
                     case 'CANCEL':
