@@ -8,20 +8,21 @@
 
 <body>
     <div id="vote-container">
-        <h1>{{title}}</h1>
-        <form v-on:submit.prevent="addNewItem">
-            <label for="new-item">投票项</label>
-            <input v-model="newItemText" id="new-item" placeholder="投票项名字">
-            <button>添加</button>
-        </form>
+        <div contenteditable="true" v-html="title" blur="title=$event.target.innerText" class="title-edit"></div>
 
-        <table class="vote-box-list clearfix" id="voteBox">
+        <table class="vote-box-list" id="voteBox">
             <tr is="vote-item" v-for="(item, index) in voteItems" v-bind:key="item.id" v-bind:id="item.id"
                 v-bind:name="item.name" v-bind:votes="item.votes" v-bind:percentage="item.percentage"
                 v-bind:bgcolor="item.bgcolor" v-on:inc1="changeVote(index, 1)" v-on:dec1="changeVote(index, -1)"
                 v-on:remove="removeItem(index)">
             </tr>
         </table>
+
+        <form v-on:submit.prevent="addNewItem">
+            <label for="new-item">投票项</label>
+            <input v-model="newItemText" id="new-item" placeholder="投票项名字">
+            <button>添加</button>
+        </form>
     </div>
 
     <script type="text/javascript">
@@ -38,16 +39,22 @@
         }
 
         /* 投票每一项的组件 */
+        // <td><input type="text" class="vote-item-name" /></td>\
         Vue.component('vote-item', {
             template: '<tr class="vl-item">\
-                                <td><h4>{{id}}</h4></td>\
-                                <td><h4>{{name}}</h4></td>\
-                                <td><div class="vote-item-wrap clearfix"><p class="litem">\
-                                    <span class="showSpan" :style="{background: bgcolor }"></span></p>\
-                                    <span class="vnum">{{votes}} ({{percentage}}%)</span></div></td>\
-                                    &nbsp;&nbsp;&nbsp;&nbsp; <td><button v-on:click="$emit(\'inc1\')">+1</button></td>\
-                                    <td><button v-on:click="$emit(\'dec1\')">-1</button></td>\
-                                    <td><button v-on:click="$emit(\'remove\')">移除</button></td>\
+                                <td><h4 class="vote-item-id">{{id}}</h4></td>\
+                                <td><div contentEditable="true" class="vote-item-name editable-div" onKeyDown={this.handleKeyDown}>{{name}}</div></td>\
+                                <td><div class="vote-item-wrap">\
+                                        <p class="vote-item-bar-bg">\
+                                            <span class="vote-item-bar-fg" :style="{background: bgcolor }"></span>\
+                                        </p>\
+                                        <span class="vote-item-num">{{votes}} ({{percentage}}%)</span>\
+                                    </div>\
+                                </td>\
+                                &nbsp;&nbsp;&nbsp;&nbsp;\
+                                <td><button v-on:click="$emit(\'inc1\')">+1</button></td>\
+                                <td><button v-on:click="$emit(\'dec1\')">-1</button></td>\
+                                <td><button v-on:click="$emit(\'remove\')">移除</button></td>\
                         </tr>',
             props: ['id', 'name', 'votes', 'percentage', 'bgcolor']
         });
@@ -59,22 +66,19 @@
                 newItemText: '',
                 totalVotes: 0, // 总的票数
                 totalWidth: 200,
-                voteItems: [
-                    {
-                        id: 1,
-                        name: '赞同',
-                        votes: 0,
-                        percentage: 0,
-                        bgcolor: getRandomColor(),
-                    },
-                    {
-                        id: 2,
-                        name: '不赞同',
-                        votes: 0,
-                        percentage: 0,
-                        bgcolor: getRandomColor(),
-                    }
-                ],
+                voteItems: [{
+                    id: 1,
+                    name: '赞同',
+                    votes: 0,
+                    percentage: 0,
+                    bgcolor: getRandomColor(),
+                }, {
+                    id: 2,
+                    name: '不赞同',
+                    votes: 0,
+                    percentage: 0,
+                    bgcolor: getRandomColor(),
+                }],
                 nextItemId: 3
             },
             methods: {
@@ -126,12 +130,14 @@
                     });
                     this.totalVotes = total;
 
-                    var spans = $(".showSpan");
+                    var spans = $(".vote-item-bar-fg");
                     this.voteItems.forEach(function (item, index) {
                         item.percentage = Math.round(item.votes * 100 / total);
                         var w = item.votes * width / total;
                         // $(spans[index]).width(w);
-                        $(spans[index]).animate({ width: w + "px" }, 'slow');
+                        $(spans[index]).animate({
+                            width: w + "px"
+                        }, 'slow');
                     });
                 },
             }
