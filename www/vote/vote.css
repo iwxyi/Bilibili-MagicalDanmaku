@@ -8,24 +8,29 @@ p {
 
 /* 标题 */
 
+.title-edit,
+.sub-title-edit {
+    margin: 10px;
+    border: none;
+}
+
 .title-edit {
     font-size  : 24px;
-    margin     : 10px;
     font-weight: 700;
-    border     : none;
 }
 
 
 /*投票列表*/
 
 .vote-box-list {
-    border : 1px solid red;
+    border : 0px solid red;
     padding: 10px;
 }
 
 .vote-item-name {
     border     : none;
     font-weight: 700;
+    margin : -4px 0px 0px 0px;
 }
 
 .vote-item-id,
@@ -60,9 +65,9 @@ p {
 }
 
 .editable-div {
-    white-space     : nowrap;
-    overflow-x      : hidden;
-    display         : inline-block;
-    padding         : 2px 8px 2px 4px;
-    max-width       : 100%;
+    white-space  : nowrap;
+    overflow-x   : hidden;
+    /* display      : inline-block; */
+    padding      : 2px 8px 2px 8px;
+    max-width    : 100%;
 }
