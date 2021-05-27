@@ -1,0 +1,59 @@
+/*样式重置*/
+ul,
+h4,
+p {
+    margin: 0;
+    padding: 0;
+}
+
+/*清除浮动*/
+.clearfix:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+}
+
+body {
+    font: 12px/1.5 arial, 宋体;
+}
+
+/*投票css*/
+.vote-box-list {
+    border: 0px solid red;
+    position: absolute;
+    padding: 10px;
+}
+
+.vote-box-list li {
+    list-style: none;
+    margin: 10px 0;
+}
+
+.vote-item-wrap h4,
+.vote-item-wrap .vnum {
+    float: left;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 16px;
+}
+
+.vote-item-wrap p {
+    float: left;
+    height: 14px;
+    width: 200px;
+    border: 1px solid #E2E2E2;
+    background-color: #EFEFEF;
+    margin: 0 10px;
+}
+
+.vote-item-wrap p span {
+    float: left;
+    height: 14px;
+}
+
+.showSpan {
+    background-color: red;
+}

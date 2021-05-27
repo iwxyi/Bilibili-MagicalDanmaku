@@ -1,0 +1,165 @@
+<head>
+    <title>神奇弹幕投票</title>
+    <script src="../js/jquery-2.1.0.js"></script>
+    <script src="../js/vue.js"></script>
+    <link rel="stylesheet" href="vote.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+    <div id="vote-container">
+        <h1>{{title}}</h1>
+        <form v-on:submit.prevent="addNewItem">
+            <label for="new-item">投票项</label>
+            <input v-model="newItemText" id="new-item" placeholder="投票项名字">
+            <button>添加</button>
+        </form>
+
+        <table class="vote-box-list clearfix" id="voteBox">
+            <tr is="vote-item" v-for="(item, index) in voteItems" v-bind:key="item.id" v-bind:id="item.id"
+                v-bind:name="item.name" v-bind:votes="item.votes" v-bind:percentage="item.percentage"
+                v-bind:bgcolor="item.bgcolor" v-on:inc1="changeVote(index, 1)" v-on:dec1="changeVote(index, -1)"
+                v-on:remove="removeItem(index)">
+            </tr>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        var randColors = ["#5dbc5b", "#6c81b6", "#9eb5f0", "#a5cbd6", "#aee7f8", "#c2f263", "#d843b3", "#d8e929", "#e58652", "#e7ab6d", "#ee335f", "#fbe096", "#ffc535"];
+
+        function getRandomColor() {
+            var index = Math.floor(Math.random() * randColors.length);
+            randColors.slice(index, 1);
+            return randColors[index];
+        }
+
+        function releaseRandomColor(color) {
+            randColors.push(color);
+        }
+
+        /* 投票每一项的组件 */
+        Vue.component('vote-item', {
+            template: '<tr class="vl-item">\
+                                <td><h4>{{id}}</h4></td>\
+                                <td><h4>{{name}}</h4></td>\
+                                <td><div class="vote-item-wrap clearfix"><p class="litem">\
+                                    <span class="showSpan" :style="{background: bgcolor }"></span></p>\
+                                    <span class="vnum">{{votes}} ({{percentage}}%)</span></div></td>\
+                                    &nbsp;&nbsp;&nbsp;&nbsp; <td><button v-on:click="$emit(\'inc1\')">+1</button></td>\
+                                    <td><button v-on:click="$emit(\'dec1\')">-1</button></td>\
+                                    <td><button v-on:click="$emit(\'remove\')">移除</button></td>\
+                        </tr>',
+            props: ['id', 'name', 'votes', 'percentage', 'bgcolor']
+        });
+
+        var vm = new Vue({
+            el: '#vote-container',
+            data: {
+                title: '神奇弹幕投票',
+                newItemText: '',
+                totalVotes: 0, // 总的票数
+                totalWidth: 200,
+                voteItems: [
+                    {
+                        id: 1,
+                        name: '赞同',
+                        votes: 0,
+                        percentage: 0,
+                        bgcolor: getRandomColor(),
+                    },
+                    {
+                        id: 2,
+                        name: '不赞同',
+                        votes: 0,
+                        percentage: 0,
+                        bgcolor: getRandomColor(),
+                    }
+                ],
+                nextItemId: 2
+            },
+            methods: {
+                // 添加一个新的item
+                addNewItem: function () {
+                    this.voteItems.push({
+                        id: this.nextItemId++,
+                        name: this.newItemText,
+                        votes: 0,
+                        percentage: 0,
+                        bgcolor: getRandomColor(),
+                    })
+                    this.newItemText = ''
+                },
+                removeItem: function (index) {
+                    releaseRandomColor(this.voteItems[index].bgcolor);
+                    this.voteItems.splice(index, 1);
+
+                    // 修改投票索引与比例
+                    this.voteItems.forEach(function (item, index) {
+                        item.id = index + 1;
+                    });
+                    recalculatePercent();
+
+                    // 修改或者取消用户记录
+
+                },
+                // 进行投票或者取消投票操作
+                changeVote: function (index, count) {
+                    this.voteItems[index].votes += count;
+                    this.recalculatePercent();
+                },
+                // 重新计算所有的比例
+                recalculatePercent: function () {
+                    var total = 0;
+                    var width = this.totalWidth;
+                    this.voteItems.forEach(function (item) {
+                        total += item.votes;
+                    });
+                    this.totalVotes = total;
+
+                    var spans = $(".showSpan");
+                    this.voteItems.forEach(function (item, index) {
+                        item.percentage = Math.round(item.votes * 100 / total);
+                        var w = item.votes * width / total;
+                        // $(spans[index]).width(w);
+                        $(spans[index]).animate({ width: w + "px" }, 'slow');
+                    });
+                },
+            }
+        });
+
+        let votedUsers = new Map();
+
+        // Socket通讯
+        $(document).ready(function () {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function () {
+                ws.send('{"cmd": "cmds", "data": ["VOTE"]}');
+            };
+            ws.onmessage = function (e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'VOTE':
+                        var id = json['id'];
+                        var uid = json['uid'];
+                        if (votedUsers.has(uid)) { // 已经投票过了
+                            console.log("已投过票");
+                            ws.send('{"cmd": "send_msg", "data": "您已投过票"}');
+                            return;
+                        }
+                        if (id < 1 || id > vm.voteItems.length) { // 超过下标
+                            console.log("无效的投票ID：${id}");
+                            ws.send('{"cmd": "send_msg", "data": "无效的投票ID：' + id + '"}');
+                            return;
+                        }
+                        votedUsers.set(uid, id);
+                        vm.changeVote(id - 1, 1);
+                        break;
+                    case 'CANCEL':
+                        break;
+                }
+            };
+        });
+    </script>
+</body>

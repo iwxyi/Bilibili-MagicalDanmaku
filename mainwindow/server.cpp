@@ -45,10 +45,10 @@ void MainWindow::openSocketServer()
                 // 一直都是连接状态，不会触发
             });
             connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-                qDebug() << "danmaku message received:" << message;
+                qDebug() << "danmaku binary message received:" << message;
             });
             connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-                qDebug() << "danmaku text message received:" << message;
+                qDebug() << "danmaku message received:" << message;
                 processSocketTextMsg(clientSocket, message);
             });
             connect(clientSocket, &QWebSocket::disconnected, this, [=]{
@@ -82,7 +82,7 @@ void MainWindow::openSocketServer()
     }
     else
     {
-        qWarning() << "弹幕服务开启失败，端口：" << quint16(serverPort + DANMAKU_SERVER_PORT);
+        qCritical() << "弹幕服务开启失败，端口：" << quint16(serverPort + DANMAKU_SERVER_PORT);
     }
 }
 
@@ -92,7 +92,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     QJsonDocument document = QJsonDocument::fromJson(message.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError)
     {
-        qDebug() << error.errorString() << message;
+        qCritical() << error.errorString() << message;
         return ;
     }
     QJsonObject json = document.object();
@@ -144,6 +144,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     }
     else if (!ui->allowWebControlCheck->isChecked())
     {
+        qWarning() << "无效的CMD，或者未开启网页控制：" << cmd;
         return ;
     }
     else if (cmd == "FORWARD") // 转发给其他socket
