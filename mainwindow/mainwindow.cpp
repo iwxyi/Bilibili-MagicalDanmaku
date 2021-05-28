@@ -68,6 +68,9 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
+    roomCoverLabel = new QLabel(ui->roomInfoMainWidget);
+    upHeaderLabel = new QLabel(this);
+
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
     ui->timerPushCmdCheck->hide();
@@ -937,6 +940,9 @@ void MainWindow::showEvent(QShowEvent *event)
         startSplash();
     }
     settings->setValue("mainwindow/autoShow", true);
+
+    if (!roomCover.isNull())
+        adjustCoverSizeByRoomCover(roomCover);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -964,13 +970,14 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     // 自动调整封面大小
     if (!roomCover.isNull())
     {
-        QPixmap pixmap = roomCover;
-        int w = ui->roomCoverLabel->width();
+        adjustCoverSizeByRoomCover(roomCover);
+
+        /* int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
         ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
-        ui->roomCoverLabel->setMinimumSize(1, 1);
+        ui->roomCoverLabel->setMinimumSize(1, 1); */
     }
 
     // 自动调整任务列表大小
@@ -3110,12 +3117,14 @@ void MainWindow::getRoomCover(QString url)
         if (roomCover.isNull())
             return ;
 
-        int w = ui->roomCoverLabel->width();
+        adjustCoverSizeByRoomCover(roomCover);
+
+        /* int w = ui->roomCoverLabel->width();
         if (w > ui->tabWidget->contentsRect().width())
             w = ui->tabWidget->contentsRect().width();
         pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
         ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
-        ui->roomCoverLabel->setMinimumSize(1, 1);
+        ui->roomCoverLabel->setMinimumSize(1, 1); */
 
         // 设置程序主题
         QColor bg, fg, sbg, sfg;
@@ -3159,6 +3168,30 @@ void MainWindow::getRoomCover(QString url)
         // 设置主要界面主题
         ui->tabWidget->setBg(roomCover);
     });
+}
+
+void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
+{
+    // 计算尺寸
+    int w = ui->roomInfoMainWidget->width();
+    int oh = pixmap.height(); // 原始高度（最高不能超过这个高度）
+    pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+    int showH = pixmap.height();
+    if (showH > oh)
+        showH = oh;
+    int spacingH = showH - (ui->upNameLabel->y() - ui->upHeaderLabel->y()) - ui->roomCoverSpacingLabel->y();
+    spacingH -= 12;
+    ui->roomCoverSpacingLabel->setFixedHeight(spacingH);
+
+    // 因为布局原因，实际上显示的不一定是完整图片所需的尺寸（至少宽度是够的）
+    int h = ui->upNameLabel->y() - 6; // 最适合的高度
+    if (h < showH)
+    {
+        pixmap = pixmap.copy(0, (pixmap.height() - h) / 2, pixmap.width(), h);
+    }
+    roomCoverLabel->setPixmap(pixmap);
+    roomCoverLabel->resize(pixmap.size());
+    roomCoverLabel->lower();
 }
 
 QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
@@ -3213,10 +3246,14 @@ void MainWindow::getUpPortrait(QString faceUrl)
         painter.setClipPath(path);
         painter.drawPixmap(0, 0, side, side, pixmap);
 
-        // 设置到程序
+        // 设置到窗口图标
         QPixmap face = isLiving() ? getLivingPixmap(upFace) : upFace;
         setWindowIcon(face);
         tray->setIcon(face);
+
+        // 设置到UP头像
+        face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->upHeaderLabel->setPixmap(face);
     });
 }
 
