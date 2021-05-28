@@ -3,7 +3,7 @@
 #include <QMovie>
 #include <QClipboard>
 #include "basewindow.h"
-#include "ui_mainwindow.h"
+#include "ui_baseindow.h"
 #include "videolyricscreator.h"
 #include "roomstatusdialog.h"
 #include "RoundedAnimationLabel.h"
@@ -38,7 +38,7 @@ QVariant CommonValues::userCookies;
 BaseWindow::BaseWindow(QWidget *parent)
     : QMainWindow(parent),
       NetInterface(this),
-      ui(new Ui::MainWindow)
+      ui(new Ui::BaseWindow)
 {
     ui->setupUi(this);
     QApplication::setQuitOnLastWindowClosed(false);

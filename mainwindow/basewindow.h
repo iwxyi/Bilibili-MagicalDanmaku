@@ -44,7 +44,7 @@
 #include "netinterface.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui { class BaseWindow; }
 QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
@@ -815,7 +815,7 @@ private:
     void readDefaultCode(QString path = "");
 
 private:
-    Ui::MainWindow *ui;
+    Ui::BaseWindow *ui;
     QSettings* settings;
     QSettings* heaps;
     QString dataPath;

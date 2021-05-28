@@ -2,6 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+#include <QFont>
 
 namespace Ui {
 class MainWindow;
