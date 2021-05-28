@@ -889,6 +889,8 @@ private:
     int danmuLongest = 20;
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
     LiveDanmaku lastDanmaku; // 最近一个弹幕
+    int robotTotalSendMsg = 0; // 机器人发送的弹幕数量
+    int liveTotalDanmaku = 0; // 本场直播的弹幕数量
 
     // 调试
     bool localDebug = false;   // 本地调试模式

@@ -163,6 +163,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 单条弹幕最长长度
     danmuLongest = settings->value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
+    robotTotalSendMsg = settings->value("danmaku/robotTotalSend", 0).toInt();
 
     // 失败重试
     ui->retryFailedDanmuCheck->setChecked(settings->value("danmaku/retryFailedDanmu", true).toBool());
@@ -1358,6 +1359,8 @@ void MainWindow::slotSendAutoMsg(bool timeout)
         addNoReplyDanmakuText(msg);
         sendMsg(msg);
         inDanmakuCd = true;
+        settings->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
+        ui->totalSendMsgLabel->setText("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
     }
     else // 是执行命令，发送下一条弹幕就不需要延迟了
     {
@@ -7658,6 +7661,9 @@ void MainWindow::handleMessage(QJsonObject json)
             minuteDanmuPopul++;
         danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
+
+        // 进入累计
+        ui->danmuCountLabel->setText(snum(++liveTotalDanmaku));
 
         // 新人发言
         if (danmuCount == 1)

@@ -70,6 +70,9 @@
        </property>
        <item>
         <widget class="InteractiveButtonBase" name="roomPageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;房间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -81,6 +84,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="danmakuPageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -92,6 +98,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="thankPageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;答谢&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -103,6 +112,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="musicPageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -114,6 +126,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="extensionPageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;扩展&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -125,6 +140,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="preferencePageButton">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;设置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -787,6 +805,12 @@ background-repeat:none;</string>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_21">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QLabel" name="robotHeaderLabel">
             <property name="minimumSize">
@@ -817,10 +841,10 @@ background-repeat:none;</string>
              <string/>
             </property>
             <property name="styleSheet">
-             <string notr="true">font-size: 14px;</string>
+             <string notr="true">font-size: 16px;</string>
             </property>
             <property name="text">
-             <string>点击登录</string>
+             <string>点击登录机器人</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -837,6 +861,65 @@ background-repeat:none;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_13">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>9</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_6" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background: lightgray;
+margin: 10px;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>9</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="totalSendMsgLabel">
+            <property name="text">
+             <string>累计发送弹幕 0 条</string>
             </property>
            </widget>
           </item>
