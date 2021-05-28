@@ -1,8 +1,8 @@
-#include "mainwindow.h"
+#include "basewindow.h"
 #include "ui_mainwindow.h"
 #include "fileutil.h"
 
-void MainWindow::openServer(int port)
+void BaseWindow::openServer(int port)
 {
     if (!port)
         port = ui->serverPortSpin->value();
@@ -29,7 +29,7 @@ void MainWindow::openServer(int port)
 #endif
 }
 
-void MainWindow::openSocketServer()
+void BaseWindow::openSocketServer()
 {
     // 弹幕socket
     danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
@@ -86,7 +86,7 @@ void MainWindow::openSocketServer()
     }
 }
 
-void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &message)
+void BaseWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &message)
 {
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(message.toUtf8(), &error);
@@ -182,7 +182,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     }
 }
 
-void MainWindow::initServerData()
+void BaseWindow::initServerData()
 {
     static bool first = true;
     if (!first) // 懒加载
@@ -211,7 +211,7 @@ void MainWindow::initServerData()
     ensureDirExist(webCache(""));
 }
 
-void MainWindow::closeServer()
+void BaseWindow::closeServer()
 {
 #if defined(ENABLE_HTTP_SERVER)
     qDebug() << "关闭服务端";
@@ -230,7 +230,7 @@ void MainWindow::closeServer()
     danmakuSockets.clear();
 }
 
-void MainWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
+void BaseWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
 {
     if (!danmakuSocketServer || !danmakuSockets.size()) // 不需要发送，空着的
         return ;
@@ -248,7 +248,7 @@ void MainWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
     }
 }
 
-void MainWindow::sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket *socket)
+void BaseWindow::sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket *socket)
 {
     if (!socket && !danmakuSockets.size()) // 不需要发送，空着的
         return ;
@@ -260,7 +260,7 @@ void MainWindow::sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket *soc
     sendTextToSockets(cmd, ba, socket);
 }
 
-void MainWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *socket)
+void BaseWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *socket)
 {
     if (!socket && !danmakuSockets.size())
         return ;
@@ -282,7 +282,7 @@ void MainWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *soc
     }
 }
 
-void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
+void BaseWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
 {
     if (!sendSongListToSockets || (!socket && !danmakuSockets.size()) || !musicWindow) // 不需要发送，空着的
         return ;
@@ -309,7 +309,7 @@ void MainWindow::sendMusicList(const SongList& songs, QWebSocket *socket)
     }
 }
 
-void MainWindow::sendLyricList(QWebSocket *socket)
+void BaseWindow::sendLyricList(QWebSocket *socket)
 {
     if (!sendLyricListToSockets || (!socket && !danmakuSockets.size()) || !musicWindow)
         return ;
@@ -335,12 +335,12 @@ void MainWindow::sendLyricList(QWebSocket *socket)
     }
 }
 
-QString MainWindow::webCache(QString name) const
+QString BaseWindow::webCache(QString name) const
 {
     return dataPath + "cache/" + name;
 }
 
-void MainWindow::syncMagicalRooms()
+void BaseWindow::syncMagicalRooms()
 {
     QString appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (appVersion.startsWith("v") || appVersion.startsWith("V"))
@@ -392,7 +392,7 @@ void MainWindow::syncMagicalRooms()
 }
 
 #if defined(ENABLE_HTTP_SERVER)
-void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
+void BaseWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
     // 解析参数
     QString fullUrl = req->url().toString(); // 包含：/user/header?uid=123
@@ -431,7 +431,7 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
     serverHandleUrl(urlPath, params, req, resp);
 }
 
-void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp)
+void BaseWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray doc;
 
@@ -550,7 +550,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
 }
 #endif
 
-void MainWindow::processServerVariant(QByteArray &doc)
+void BaseWindow::processServerVariant(QByteArray &doc)
 {
     doc.replace("__DOMAIN__", serverDomain.toUtf8())
             .replace("__PORT__", snum(serverPort).toUtf8())
@@ -560,7 +560,7 @@ void MainWindow::processServerVariant(QByteArray &doc)
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
 /// 示例地址：http://__DOMAIN__:__PORT__/api/header?uid=123456
-QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType)
+QByteArray BaseWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType)
 {
     QByteArray ba;
     if (url == "header")

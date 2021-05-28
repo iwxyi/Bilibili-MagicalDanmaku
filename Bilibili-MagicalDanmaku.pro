@@ -39,6 +39,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 }
 
 INCLUDEPATH += \
+    global/ \
     mainwindow/ \
     third_party/utils/ \
     mainwindow/list_items/ \
@@ -64,6 +65,10 @@ INCLUDEPATH += \
     third_party/picture_browser/
 
 SOURCES += \
+    global/runtime.cpp \
+    global/usettings.cpp \
+    mainwindow/basewindow.cpp \
+    mainwindow/mainwindow.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -76,7 +81,6 @@ SOURCES += \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
-    mainwindow/mainwindow.cpp \
     order_player/desktoplyricwidget.cpp \
     order_player/logindialog.cpp \
     order_player/numberanimation.cpp \
@@ -115,6 +119,12 @@ SOURCES += \
     widgets/video_lyric_creator/videolyricscreator.cpp
 
 HEADERS += \
+    global/defines.h \
+    global/runtime.h \
+    global/signaltransfer.h \
+    global/usettings.h \
+    mainwindow/basewindow.h \
+    mainwindow/mainwindow.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
     third_party/facile_menu/facilemenu.h \
@@ -128,9 +138,9 @@ HEADERS += \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
+    third_party/utils/mysettings.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \
-    mainwindow/mainwindow.h \
     order_player/clickslider.h \
     order_player/desktoplyricwidget.h \
     order_player/itemselectionlistview.h \
@@ -183,9 +193,10 @@ HEADERS += \
     widgets/video_lyric_creator/videolyricscreator.h
 
 FORMS += \
+    mainwindow/basewindow.ui \
+    mainwindow/mainwindow.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
-    mainwindow/mainwindow.ui \
     order_player/logindialog.ui \
     order_player/orderplayerwindow.ui \
     third_party/picture_browser/picturebrowser.ui \

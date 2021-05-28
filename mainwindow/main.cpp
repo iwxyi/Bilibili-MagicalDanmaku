@@ -1,4 +1,3 @@
-#include "mainwindow.h"
 #include <QApplication>
 #include "dlog.h"
 
@@ -22,12 +21,12 @@ int main(int argc, char *argv[])
     font.setFamily("微软雅黑");
     a.setFont(font);
 
-    MainWindow w;
+    /* BaseWindow w;
     if (w.getSettings()->value("runtime/debugToFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);
 #if defined(ENABLE_TRAY)
     if (w.getSettings()->value("mainwindow/autoShow", true).toBool())
 #endif
-        w.show();
+        w.show(); */
     return a.exec();
 }
