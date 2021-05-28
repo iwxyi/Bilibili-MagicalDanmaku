@@ -175,7 +175,7 @@
            <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="roomMainTopHLayout">
+           <layout class="QHBoxLayout" name="roomMainTopHLayout" stretch="0,1">
             <property name="leftMargin">
              <number>6</number>
             </property>
@@ -190,19 +190,34 @@
             </property>
             <item>
              <widget class="QLineEdit" name="roomIdEdit">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>24</height>
+               </size>
+              </property>
               <property name="styleSheet">
                <string notr="true">QLineEdit
 {
-	background: transparent;
+	background: white;
+	border-radius: 12px;
+	padding-left: 4px;
+	padding-right: 4px;
 }</string>
               </property>
               <property name="text">
                <string/>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
               <property name="placeholderText">
                <string>请输入房间号</string>
               </property>
              </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="roomIdSpacingWidget" native="true"/>
             </item>
            </layout>
           </item>
@@ -334,6 +349,12 @@
              </item>
              <item>
               <widget class="WaterFallButtonGroup" name="tagsButtonGroup" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
                <property name="styleSheet">
                 <string notr="true"/>
                </property>

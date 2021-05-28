@@ -119,7 +119,6 @@ void WaterFallButtonGroup::updateButtonPositions()
             btn->move(w, total_h);
             w += btn_w + space_h;
         }
-        qDebug() << "    " << btn->geometry();
     }
     if (btns.size())
         total_h += btns.last()->height();

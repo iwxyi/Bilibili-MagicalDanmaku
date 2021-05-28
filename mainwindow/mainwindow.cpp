@@ -71,6 +71,16 @@ MainWindow::MainWindow(QWidget *parent)
     roomCoverLabel = new QLabel(ui->roomInfoMainWidget);
     upHeaderLabel = new QLabel(this);
 
+    // 房号位置
+    roomIdBgWidget = new QWidget(this);
+    roomIdBgWidget->setObjectName("roomIdBgWidget");
+    ui->roomIdEdit->setFixedSize(ui->roomIdEdit->size());
+    QHBoxLayout* ril = new QHBoxLayout(roomIdBgWidget);
+    ril->addWidget(ui->roomIdEdit);
+    ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    ui->roomIdSpacingWidget->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    // adjustRoomIdPos();
+
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
     ui->timerPushCmdCheck->hide();
@@ -937,6 +947,7 @@ void MainWindow::showEvent(QShowEvent *event)
     {
         firstShow = false;
         startSplash();
+        adjustRoomIdPos();
     }
     settings->setValue("mainwindow/autoShow", true);
 
@@ -3196,6 +3207,20 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     roomCoverLabel->setPixmap(pixmap);
     roomCoverLabel->resize(pixmap.size());
     roomCoverLabel->lower();
+}
+
+void MainWindow::adjustRoomIdPos()
+{
+    QSize editSize = ui->roomIdEdit->size();
+    QSize sz = QSize(ui->roomIdSpacingWidget->x() + editSize.width() + editSize.height() * 2, editSize.height() + roomIdBgWidget->layout()->margin() * 2);
+    roomIdBgWidget->setFixedSize(sz);
+    ui->roomIdSpacingWidget->setFixedHeight(sz.height() - 9); // 有个间距
+    QPoint sidePos = ui->sideBarWidget->mapTo(this, QPoint(0, 0));
+    roomIdBgWidget->move(sidePos.x() + ui->sideBarWidget->width() / 20, sidePos.y());
+    roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: #0d276b; border-radius: " + snum(sz.height()/2) + "px; }");
+    roomIdBgWidget->lower();
+    ui->roomIdSpacingWidget->stackUnder(roomIdBgWidget);
+    roomIdBgWidget->stackUnder(ui->sideBarWidget);
 }
 
 QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const

@@ -663,6 +663,7 @@ private:
     bool isLivingOrMayliving();
     void getRoomCover(QString url);
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
+    void adjustRoomIdPos();
     QPixmap getRoundedPixmap(QPixmap pixmap) const;
     void getUpFace(QString uid);
     void getUpPortrait(QString faceUrl);
@@ -827,6 +828,7 @@ private:
     // 控件
     QLabel* upHeaderLabel;
     QLabel* roomCoverLabel;
+    QWidget* roomIdBgWidget;
 
     // 房间信息
     QString roomId;
