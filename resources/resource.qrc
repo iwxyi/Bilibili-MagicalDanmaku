@@ -83,6 +83,10 @@
         <file alias="thank">icons/thank.png</file>
         <file alias="extension">icons/extension.png</file>
         <file alias="room">icons/room.png</file>
+        <file alias="header1">icons/header1.png</file>
+        <file alias="default_cover">icons/default_cover.png</file>
+        <file alias="sailor">icons/sailor.png</file>
+        <file alias="hot">icons/hot.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

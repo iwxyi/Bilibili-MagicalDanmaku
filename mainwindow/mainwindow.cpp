@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
     const int widgetSizeL = 40;
     const int fluentRadius = 5;
 
-    auto sideButtonList = { ui->roomPageButton,
+    QList<InteractiveButtonBase*> sideButtonList = { ui->roomPageButton,
                   ui->danmakuPageButton,
                   ui->thankPageButton,
                   ui->musicPageButton,
@@ -63,6 +63,9 @@ MainWindow::MainWindow(QWidget *parent)
         button->setFixedForePos();
         button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
         button->setRadius(fluentRadius);
+        connect(button, &InteractiveButtonBase::clicked, this, [=]{
+            ui->stackedWidget->setCurrentIndex(sideButtonList.indexOf(button));
+        });
     }
 
     // 隐藏用不到的工具
@@ -2927,7 +2930,8 @@ void MainWindow::getRoomInfo(bool reconnect)
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
-        ui->roomNameLabel->setText(roomTitle + " - " + upName);
+        ui->roomNameLabel->setText(roomTitle);
+        ui->upNameLabel->setText(upName);
         if (liveStatus == 0)
         {
             ui->popularityLabel->setText("未开播");
