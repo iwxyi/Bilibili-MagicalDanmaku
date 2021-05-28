@@ -47,9 +47,6 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
-    const int widgetSizeL = 40;
-    const int fluentRadius = 5;
-
     QList<InteractiveButtonBase*> sideButtonList = { ui->roomPageButton,
                   ui->danmakuPageButton,
                   ui->thankPageButton,
@@ -94,10 +91,30 @@ MainWindow::MainWindow(QWidget *parent)
     ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     QFontMetrics fm(ui->roomDescriptionBrowser->font());
     ui->roomDescriptionBrowser->setMaximumHeight(fm.lineSpacing() * 5);
-    ui->guardCountWidget->setFixedHeight(ui->guardCountWidget->sizeHint().height());
-    ui->hotCountWidget->setFixedHeight(ui->hotCountWidget->sizeHint().height());
+    ui->guardCountWidget->setMinimumSize(ui->guardCountWidget->sizeHint());
+    ui->hotCountWidget->setMinimumSize(ui->hotCountWidget->sizeHint());
     int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->liveStatusLabel->sizeHint().height();
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
+    ui->roomInfoMainWidget->setStyleSheet("#roomInfoMainWidget\
+                        {\
+                            background: white;\
+                            border-radius: " + snum(fluentRadius) + "px;\
+                        }");
+    ui->guardCountWidget->setStyleSheet("#guardCountWidget\
+                        {\
+                            background: #f7f7ff;\
+                            border: none;\
+                            border-radius: " + snum(fluentRadius) + "px;\
+                        }");
+    ui->hotCountWidget->setStyleSheet("#hotCountWidget\
+                       {\
+                           background: #f7f7ff;\
+                           border: none;\
+                           border-radius: " + snum(fluentRadius) + "px;\
+                       }");
+
+    // 避免压缩
+    ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -2956,7 +2973,11 @@ void MainWindow::getRoomInfo(bool reconnect)
         tray->setToolTip(roomTitle + " - " + upName);
         ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
+
+//        roomDesc.replace(QRegularExpression(" "), "</p><p>");
+        qDebug() << roomDesc;
         ui->roomDescriptionBrowser->setText(roomDesc);
+
         if (liveStatus == 0)
         {
             ui->liveStatusLabel->setText("未开播");
@@ -3201,11 +3222,11 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
 {
     // 计算尺寸
     int w = ui->roomInfoMainWidget->width();
-    int originH = pixmap.height(); // 原始高度（最高不能超过这个高度）
+    int maxH = this->height() / 2; // 封面最大高度
     pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
     int showH = pixmap.height(); // 当前高度下图片应当显示的高度
-    if (showH > originH) // 不能超过原始高度
-        showH = originH;
+    if (showH > maxH) // 不能超过原始高度
+        showH = maxH;
     int spacingH = showH - (ui->upNameLabel->y() - ui->upHeaderLabel->y()) - ui->roomCoverSpacingLabel->y(); // 间隔控件的高度
     spacingH -= 18;
     ui->roomCoverSpacingLabel->setFixedHeight(spacingH);
@@ -3215,7 +3236,7 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     int suitH = ui->upNameLabel->y() - 6; // 最适合的高度
     if (suitH < pixmap.height())
         pixmap = pixmap.copy(0, (pixmap.height() - suitH) / 2, pixmap.width(), suitH);
-    roomCoverLabel->setPixmap(pixmap);
+    roomCoverLabel->setPixmap(getTopRoundedPixmap(pixmap, fluentRadius));
     roomCoverLabel->resize(pixmap.size());
     roomCoverLabel->lower();
 }
@@ -3242,6 +3263,25 @@ QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
     QRect rect = QRect(0, 0, pixmap.width(), pixmap.height());
     QPainterPath path;
     path.addRoundedRect(rect, 5, 5);
+    painter.setClipPath(path);
+    painter.drawPixmap(rect, pixmap);
+    return dest;
+}
+
+QPixmap MainWindow::getTopRoundedPixmap(QPixmap pixmap, int radius) const
+{
+    QPixmap dest(pixmap.size());
+    dest.fill(Qt::transparent);
+    QPainter painter(&dest);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QRect rect = QRect(0, 0, pixmap.width(), pixmap.height());
+    QPainterPath path;
+    path.addRoundedRect(rect, radius, radius);
+    QPainterPath cutPath;
+    cutPath.addRect(0, radius, rect.width(), rect.height() - radius);
+    path -= cutPath;
+    path.addRect(0, radius, rect.width(), rect.height() - radius);
     painter.setClipPath(path);
     painter.drawPixmap(rect, pixmap);
     return dest;

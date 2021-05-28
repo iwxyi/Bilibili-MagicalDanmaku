@@ -665,6 +665,7 @@ private:
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
     void adjustRoomIdPos();
     QPixmap getRoundedPixmap(QPixmap pixmap) const;
+    QPixmap getTopRoundedPixmap(QPixmap pixmap, int radius) const;
     void getUpFace(QString uid);
     void getUpPortrait(QString faceUrl);
     QPixmap getLivingPixmap(QPixmap pixmap) const;
@@ -826,6 +827,8 @@ private:
     QString appDownloadUrl;
 
     // 控件
+    const int widgetSizeL = 40;
+    const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
 
