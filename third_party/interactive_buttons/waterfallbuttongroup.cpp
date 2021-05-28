@@ -21,6 +21,7 @@ void WaterFallButtonGroup::initStringList(QStringList list, QStringList selected
             continue;
         addButton(s, selected.contains(s));
     }
+    updateButtonPositions();
 }
 
 void WaterFallButtonGroup::setSelects(QStringList list)

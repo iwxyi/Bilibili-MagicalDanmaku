@@ -69,17 +69,15 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     roomCoverLabel = new QLabel(ui->roomInfoMainWidget);
-    upHeaderLabel = new QLabel(this);
 
     // 房号位置
-    roomIdBgWidget = new QWidget(this);
+    roomIdBgWidget = new QWidget(this->centralWidget());
     roomIdBgWidget->setObjectName("roomIdBgWidget");
     ui->roomIdEdit->setFixedSize(ui->roomIdEdit->size());
     QHBoxLayout* ril = new QHBoxLayout(roomIdBgWidget);
     ril->addWidget(ui->roomIdEdit);
     ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     ui->roomIdSpacingWidget->setAttribute(Qt::WA_TransparentForMouseEvents, true);
-    // adjustRoomIdPos();
 
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
@@ -94,6 +92,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 设置控件
     ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+    QFontMetrics fm(ui->roomDescriptionBrowser->font());
+    ui->roomDescriptionBrowser->setMaximumHeight(fm.lineSpacing() * 5);
+    ui->guardCountWidget->setFixedHeight(ui->guardCountWidget->sizeHint().height());
+    ui->hotCountWidget->setFixedHeight(ui->hotCountWidget->sizeHint().height());
+    int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->liveStatusLabel->sizeHint().height();
+    ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -343,6 +347,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 状态栏
     statusLabel = new QLabel(this);
+    statusLabel->setObjectName("statusLabel");
     this->statusBar()->addWidget(statusLabel, 1);
     statusLabel->setAlignment(Qt::AlignLeft);
 
@@ -367,6 +372,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(quitAction, SIGNAL(triggered()), this, SLOT(prepareQuit()));
 
     trayMenu = new QMenu(this);
+    trayMenu->setObjectName("trayMenu");
     trayMenu->addAction(windowAction);
     trayMenu->addAction(liveDanmakuAction);
     trayMenu->addAction(orderPlayerAction);
@@ -656,7 +662,7 @@ MainWindow::MainWindow(QWidget *parent)
             danmuPopulValue -= danmuPopulQueue.takeFirst();
         ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
 
-        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
+        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
 
     // 每小时的事件
@@ -3011,6 +3017,7 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 设置标签
         ui->tagsButtonGroup->initStringList(tags);
+        qDebug() << tags;
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
@@ -3158,6 +3165,11 @@ void MainWindow::getRoomCover(QString url)
             QColor bg, fg, sbg, sfg;
             bfs.toColors(&bg, &fg, &sbg, &sfg);
 
+            themeBg = bg;
+            themeFg = fg;
+            themeSbg = sbg;
+            themeSfg = sfg;
+
             QPalette pa;
             pa.setColor(QPalette::Window, bg);
             pa.setColor(QPalette::Background, bg);
@@ -3175,6 +3187,7 @@ void MainWindow::getRoomCover(QString url)
             setPalette(pa);
             setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
             ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(sbg).toString()+"}");
+            roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -3188,22 +3201,20 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
 {
     // 计算尺寸
     int w = ui->roomInfoMainWidget->width();
-    int oh = pixmap.height(); // 原始高度（最高不能超过这个高度）
+    int originH = pixmap.height(); // 原始高度（最高不能超过这个高度）
     pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-    int showH = pixmap.height();
-    if (showH > oh)
-        showH = oh;
-    int spacingH = showH - (ui->upNameLabel->y() - ui->upHeaderLabel->y()) - ui->roomCoverSpacingLabel->y();
+    int showH = pixmap.height(); // 当前高度下图片应当显示的高度
+    if (showH > originH) // 不能超过原始高度
+        showH = originH;
+    int spacingH = showH - (ui->upNameLabel->y() - ui->upHeaderLabel->y()) - ui->roomCoverSpacingLabel->y(); // 间隔控件的高度
     spacingH -= 18;
     ui->roomCoverSpacingLabel->setFixedHeight(spacingH);
     ui->roomInfoMainWidget->layout()->activate(); // 不激活一下布局的话，在启动时会有问题
 
     // 因为布局原因，实际上显示的不一定是完整图片所需的尺寸（至少宽度是够的）
-    int h = ui->upNameLabel->y() - 6; // 最适合的高度
-    if (h < showH)
-    {
-        pixmap = pixmap.copy(0, (pixmap.height() - h) / 2, pixmap.width(), h);
-    }
+    int suitH = ui->upNameLabel->y() - 6; // 最适合的高度
+    if (suitH < pixmap.height())
+        pixmap = pixmap.copy(0, (pixmap.height() - suitH) / 2, pixmap.width(), suitH);
     roomCoverLabel->setPixmap(pixmap);
     roomCoverLabel->resize(pixmap.size());
     roomCoverLabel->lower();
@@ -3215,11 +3226,9 @@ void MainWindow::adjustRoomIdPos()
     QSize sz = QSize(ui->roomIdSpacingWidget->x() + editSize.width() + editSize.height() * 2, editSize.height() + roomIdBgWidget->layout()->margin() * 2);
     roomIdBgWidget->setFixedSize(sz);
     ui->roomIdSpacingWidget->setFixedHeight(sz.height() - 9); // 有个间距
-    QPoint sidePos = ui->sideBarWidget->mapTo(this, QPoint(0, 0));
-    roomIdBgWidget->move(sidePos.x() + ui->sideBarWidget->width() / 20, sidePos.y());
-    roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: #0d276b; border-radius: " + snum(sz.height()/2) + "px; }");
-    roomIdBgWidget->lower();
-    ui->roomIdSpacingWidget->stackUnder(roomIdBgWidget);
+    roomIdBgWidget->move(ui->sideBarWidget->x() + ui->sideBarWidget->width() / 20, ui->sideBarWidget->y());
+    roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
+    ui->sideBarWidget->raise();
     roomIdBgWidget->stackUnder(ui->sideBarWidget);
 }
 
@@ -13608,9 +13617,10 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
 /**
  * 所有事件的槽都在这里触发
  */
-void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
+void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku, bool debug)
 {
-    qDebug() << "触发事件：" << cmd;
+    if (debug)
+        qDebug() << "触发事件：" << cmd;
     emit signalCmdEvent(cmd, danmaku);
 
     sendDanmakuToSockets(cmd, danmaku);

@@ -462,7 +462,7 @@ private slots:
 
     void on_autoBlockTimeSpin_editingFinished();
 
-    void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
+    void triggerCmdEvent(QString cmd, LiveDanmaku danmaku, bool debug = true);
 
     void on_voiceLocalRadio_toggled(bool checked);
 
@@ -826,7 +826,6 @@ private:
     QString appDownloadUrl;
 
     // 控件
-    QLabel* upHeaderLabel;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
 
@@ -857,6 +856,12 @@ private:
     double paletteProg = 0;
     BFSColor prevPa;
     BFSColor currentPa;
+
+    // 颜色
+    QColor themeBg = Qt::white;
+    QColor themeFg = Qt::black;
+    QColor themeSbg = Qt::white;
+    QColor themeSfg = Qt::blue;
 
     // 粉丝数量
     int currentFans = 0;

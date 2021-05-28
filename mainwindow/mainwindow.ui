@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>798</width>
-    <height>590</height>
+    <height>619</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -290,7 +290,7 @@
                 </widget>
                </item>
                <item>
-                <layout class="QVBoxLayout" name="verticalLayout_17">
+                <layout class="QVBoxLayout" name="upNameVLayout">
                  <item>
                   <widget class="QWidget" name="widget_5" native="true">
                    <property name="minimumSize">
@@ -422,7 +422,7 @@
                  <property name="minimumSize">
                   <size>
                    <width>140</width>
-                   <height>80</height>
+                   <height>0</height>
                   </size>
                  </property>
                  <property name="styleSheet">
@@ -596,7 +596,7 @@ background-repeat:none;</string>
                  <property name="minimumSize">
                   <size>
                    <width>140</width>
-                   <height>80</height>
+                   <height>0</height>
                   </size>
                  </property>
                  <property name="styleSheet">
@@ -4190,7 +4190,7 @@ margin: 6px;</string>
      <x>0</x>
      <y>0</y>
      <width>798</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
