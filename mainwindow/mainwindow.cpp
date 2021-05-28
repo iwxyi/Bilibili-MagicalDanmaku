@@ -47,6 +47,24 @@ MainWindow::MainWindow(QWidget *parent)
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
+    const int widgetSizeL = 40;
+    const int fluentRadius = 5;
+
+    auto sideButtonList = { ui->roomPageButton,
+                  ui->danmakuPageButton,
+                  ui->thankPageButton,
+                  ui->musicPageButton,
+                  ui->extensionPageButton,
+                  ui->preferencePageButton
+                };
+    foreach (auto button, sideButtonList)
+    {
+        button->setSquareSize();
+        button->setFixedForePos();
+        button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
+        button->setRadius(fluentRadius);
+    }
+
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
     ui->timerPushCmdCheck->hide();

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>454</height>
+    <width>570</width>
+    <height>521</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,96 @@
     <normaloff>:/icons/star</normaloff>:/icons/star</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout_10">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="InteractiveButtonBase" name="roomPageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/icons/room</normaloff>:/icons/room</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="InteractiveButtonBase" name="danmakuPageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/danmaku/message</normaloff>:/danmaku/message</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="InteractiveButtonBase" name="thankPageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/icons/thank</normaloff>:/icons/thank</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="InteractiveButtonBase" name="musicPageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/icons/order_song</normaloff>:/icons/order_song</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="InteractiveButtonBase" name="extensionPageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/icons/extension</normaloff>:/icons/extension</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="InteractiveButtonBase" name="preferencePageButton">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/resource.qrc">
+          <normaloff>:/danmaku/settings</normaloff>:/danmaku/settings</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_10">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
     <item>
      <widget class="MyTabWidget" name="tabWidget">
       <property name="styleSheet">
@@ -54,7 +143,7 @@ QTabBar::tab:selected
 </string>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -3397,7 +3486,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>529</width>
+     <width>570</width>
      <height>21</height>
     </rect>
    </property>
@@ -3839,6 +3928,11 @@ margin: 6px;</string>
    <class>SmoothListWidget</class>
    <extends>QListWidget</extends>
    <header>smoothlistwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>InteractiveButtonBase</class>
+   <extends>QPushButton</extends>
+   <header>interactivebuttonbase.h</header>
   </customwidget>
  </customwidgets>
  <resources>

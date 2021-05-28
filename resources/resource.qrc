@@ -80,6 +80,9 @@
         <file alias="catch_guard">icons/catch_guard.png</file>
         <file alias="lyixi">icons/lyixi.png</file>
         <file alias="case">icons/case.png</file>
+        <file alias="thank">icons/thank.png</file>
+        <file alias="extension">icons/extension.png</file>
+        <file alias="room">icons/room.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
