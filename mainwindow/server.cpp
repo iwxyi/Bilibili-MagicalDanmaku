@@ -493,7 +493,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     {
         doc = "<html><head><title>神奇弹幕</title></head><body><h1>服务开启成功！</h1></body></html>";
     }
-    else if (suffix.isEmpty()) // 没有后缀名，也没有特判的
+    else if (suffix.isEmpty() && !isFileExist(wwwDir.absoluteFilePath(urlPath))) // 没有后缀名，也没有特判的
     {
         return toIndex();
     }
@@ -559,6 +559,7 @@ void MainWindow::processServerVariant(QByteArray &doc)
 
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
+/// 示例地址：http://__DOMAIN__:__PORT__/api/header?uid=123456
 QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType)
 {
     QByteArray ba;

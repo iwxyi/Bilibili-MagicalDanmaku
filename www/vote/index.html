@@ -245,7 +245,7 @@
                         var id = json['id'];
                         var uid = json['uid'];
                         var uname = json['uname'];
-                        if (false && userVotes.has(uid)) { // 已经投票过了
+                        if (userVotes.has(uid)) { // 已经投票过了
                             console.log("已投过票");
                             ws.send('{"cmd": "send_msg", "data": "您已投过票"}');
                             return;
