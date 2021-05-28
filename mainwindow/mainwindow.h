@@ -911,8 +911,6 @@ private:
     // 控件
     QTimer* sendMsgTimer;
     QLabel* statusLabel;
-    QLabel* fansLabel;
-    QLabel* rankLabel;
 
     // 连接信息
     QString cookieUid; // 自己的UID

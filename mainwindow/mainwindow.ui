@@ -32,16 +32,16 @@
      <number>0</number>
     </property>
     <property name="leftMargin">
-     <number>0</number>
+     <number>6</number>
     </property>
     <property name="topMargin">
-     <number>0</number>
+     <number>6</number>
     </property>
     <property name="rightMargin">
-     <number>0</number>
+     <number>6</number>
     </property>
     <property name="bottomMargin">
-     <number>0</number>
+     <number>6</number>
     </property>
     <item>
      <widget class="QWidget" name="sideBarWidget" native="true">
@@ -210,8 +210,8 @@
            <widget class="QWidget" name="roomInfoMainWidget" native="true">
             <property name="minimumSize">
              <size>
-              <width>128</width>
-              <height>128</height>
+              <width>0</width>
+              <height>1</height>
              </size>
             </property>
             <property name="styleSheet">
@@ -222,6 +222,9 @@
 }</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_29">
+             <property name="spacing">
+              <number>12</number>
+             </property>
              <item>
               <widget class="QLabel" name="roomCoverSpacingLabel">
                <property name="minimumSize">
@@ -303,7 +306,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="popularityLabel">
+                  <widget class="QLabel" name="liveStatusLabel">
                    <property name="styleSheet">
                     <string notr="true">color: gray;</string>
                    </property>
@@ -330,12 +333,36 @@
               </layout>
              </item>
              <item>
+              <widget class="WaterFallButtonGroup" name="tagsButtonGroup" native="true">
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QLabel" name="roomNameLabel">
                <property name="styleSheet">
                 <string notr="true">font-size: 18px;</string>
                </property>
                <property name="text">
                 <string>房间标题</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTextBrowser" name="roomDescriptionBrowser">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">#roomDescriptionBrowser
+{
+	background: transparent;
+	border: none;
+}</string>
                </property>
               </widget>
              </item>
@@ -625,7 +652,7 @@ background-repeat:none;</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLabel" name="guardCountTextLabel_2">
+                       <widget class="QLabel" name="roomRankTextLabel">
                         <property name="styleSheet">
                          <string notr="true">color: gray;</string>
                         </property>
@@ -642,7 +669,7 @@ background-repeat:none;</string>
                     <item>
                      <layout class="QVBoxLayout" name="verticalLayout_26">
                       <item>
-                       <widget class="QLabel" name="fansCountLabel_2">
+                       <widget class="QLabel" name="popularityLabel">
                         <property name="styleSheet">
                          <string notr="true">font-size: 16px;</string>
                         </property>
@@ -655,7 +682,7 @@ background-repeat:none;</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLabel" name="fansCountTextLabel_2">
+                       <widget class="QLabel" name="popularityTextLabel">
                         <property name="styleSheet">
                          <string notr="true">color: gray;</string>
                         </property>
@@ -672,7 +699,7 @@ background-repeat:none;</string>
                     <item>
                      <layout class="QVBoxLayout" name="verticalLayout_27">
                       <item>
-                       <widget class="QLabel" name="fansClubCountLabel_2">
+                       <widget class="QLabel" name="danmuCountLabel">
                         <property name="styleSheet">
                          <string notr="true">font-size: 16px;</string>
                         </property>
@@ -685,7 +712,7 @@ background-repeat:none;</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QLabel" name="fansClubCountTextLabel_2">
+                       <widget class="QLabel" name="danmuCountTextLabel">
                         <property name="styleSheet">
                          <string notr="true">color: gray;</string>
                         </property>
@@ -726,7 +753,7 @@ background-repeat:none;</string>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>20</width>
+                 <width>1</width>
                  <height>246</height>
                 </size>
                </property>
@@ -769,10 +796,10 @@ background-repeat:none;</string>
              <string/>
             </property>
             <property name="styleSheet">
-             <string notr="true">font-size: 18px;</string>
+             <string notr="true">font-size: 14px;</string>
             </property>
             <property name="text">
-             <string>机器人未登录</string>
+             <string>点击登录</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -4588,6 +4615,12 @@ margin: 6px;</string>
    <class>InteractiveButtonBase</class>
    <extends>QPushButton</extends>
    <header>interactivebuttonbase.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterFallButtonGroup</class>
+   <extends>QWidget</extends>
+   <header>waterfallbuttongroup.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

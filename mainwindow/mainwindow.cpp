@@ -79,6 +79,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pkMelonValButton->hide();
     ui->AIReplyIdButton->hide();
     ui->AIReplyKeyButton->hide();
+//    ui->menubar->hide();
+//    ui->statusbar->hide();
+
+    // 设置控件
+    ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
@@ -328,14 +333,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 状态栏
     statusLabel = new QLabel(this);
-    fansLabel = new QLabel(this);
-    rankLabel = new QLabel(this);
     this->statusBar()->addWidget(statusLabel, 1);
-    this->statusBar()->addWidget(fansLabel, 1);
-    this->statusBar()->addWidget(rankLabel, 1);
     statusLabel->setAlignment(Qt::AlignLeft);
-    fansLabel->setAlignment(Qt::AlignCenter);
-    rankLabel->setAlignment(Qt::AlignRight);
 
     // 托盘
     tray = new QSystemTrayIcon(this);//初始化托盘对象tray
@@ -645,7 +644,7 @@ MainWindow::MainWindow(QWidget *parent)
         minuteDanmuPopul = 0;
         if (danmuPopulQueue.size() > 5)
             danmuPopulValue -= danmuPopulQueue.takeFirst();
-        ui->popularityLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
+        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
 
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku());
     });
@@ -1654,7 +1653,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         QString text = ui->startLiveWordsEdit->text();
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
             sendAutoMsg(text);
-        ui->popularityLabel->setText("已开播");
+        ui->liveStatusLabel->setText("已开播");
         liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
             connectServerTimer->stop();
@@ -2217,7 +2216,6 @@ void MainWindow::getUserInfo()
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameLabel->setText(cookieUname);
-        statusLabel->setText(cookieUname);
     });
 }
 
@@ -2634,7 +2632,7 @@ void MainWindow::initWS()
 
         SOCKET_DEB << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
-        ui->popularityLabel->setText("");
+        ui->liveStatusLabel->setText("");
 
         heartTimer->stop();
         minuteTimer->stop();
@@ -2935,27 +2933,30 @@ void MainWindow::getRoomInfo(bool reconnect)
             danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
+        QString roomDesc = roomInfo.value("description").toString();
+        QStringList tags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
+        ui->roomDescriptionBrowser->setText(roomDesc);
         if (liveStatus == 0)
         {
-            ui->popularityLabel->setText("未开播");
+            ui->liveStatusLabel->setText("未开播");
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
         }
         else if (liveStatus == 1)
         {
-            ui->popularityLabel->setText("已开播");
+            ui->liveStatusLabel->setText("已开播");
         }
         else if (liveStatus == 2)
         {
-            ui->popularityLabel->setText("轮播中");
+            ui->liveStatusLabel->setText("轮播中");
         }
         else
         {
-            ui->popularityLabel->setText("未知状态" + snum(liveStatus));
+            ui->liveStatusLabel->setText("未知状态" + snum(liveStatus));
         }
 
         qDebug() << "房间信息: roomid=" << roomId
@@ -2993,8 +2994,12 @@ void MainWindow::getRoomInfo(bool reconnect)
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
 //        qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
-        fansLabel->setText("粉丝:" + snum(currentFans));
+        ui->fansCountLabel->setText(snum(currentFans));
+        ui->fansClubCountLabel->setText(snum(currentFansClub));
         // getFansAndUpdate();
+
+        // 设置标签
+        ui->tagsButtonGroup->initStringList(tags);
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
@@ -3153,8 +3158,6 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::ButtonText, fg);
             pa.setColor(QPalette::WindowText, fg);
             statusLabel->setStyleSheet("color:" + QVariant(fg).toString());
-            fansLabel->setStyleSheet("color:" + QVariant(fg).toString());
-            rankLabel->setStyleSheet("color:" + QVariant(fg).toString());
 
             pa.setColor(QPalette::Highlight, sbg);
             pa.setColor(QPalette::HighlightedText, sfg);
@@ -3180,8 +3183,9 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     if (showH > oh)
         showH = oh;
     int spacingH = showH - (ui->upNameLabel->y() - ui->upHeaderLabel->y()) - ui->roomCoverSpacingLabel->y();
-    spacingH -= 12;
+    spacingH -= 18;
     ui->roomCoverSpacingLabel->setFixedHeight(spacingH);
+    ui->roomInfoMainWidget->layout()->activate(); // 不激活一下布局的话，在启动时会有问题
 
     // 因为布局原因，实际上显示的不一定是完整图片所需的尺寸（至少宽度是够的）
     int h = ui->upNameLabel->y() - 6; // 最适合的高度
@@ -7113,7 +7117,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         SOCKET_DEB << "人气值=" << popularity;
         this->popularVal = this->currentPopul = popularity;
         if (isLiving())
-            ui->popularityLabel->setText("人气值：" + QString::number(popularity));
+            ui->popularityLabel->setText(QString::number(popularity));
     }
     else if (operation == SEND_MSG_REPLY) // 普通包
     {
@@ -7214,8 +7218,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
 //                    if (delta_fans) // 如果有变动，实时更新
 //                        getFansAndUpdate();
-                    fansLabel->setText("粉丝:" + snum(fans));
-                    fansLabel->setToolTip("粉丝数量：" + snum(fans) + "，粉丝团：" + snum(fans_club) + (currentGuards.size() ? "，船员数：" + snum(currentGuards.size()) : ""));
+                    ui->fansCountLabel->setText(snum(fans));
                 }
                 else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
                 {}
@@ -7244,8 +7247,9 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (area_name.endsWith("榜"))
                         area_name.replace(area_name.length()-1, 1, "");
                     QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
-                    rankLabel->setText(area_name + "榜 " + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
-                    rankLabel->setToolTip(msg);
+                    ui->roomRankLabel->setText(snum(rank));
+                    ui->roomRankTextLabel->setText(area_name + "榜");
+                    ui->roomRankTextLabel->setToolTip(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
                 {
@@ -7477,7 +7481,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
                 sendAutoMsg(text);
-            ui->popularityLabel->setText("已开播");
+            ui->liveStatusLabel->setText("已开播");
             liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
@@ -7498,7 +7502,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text);
-            ui->popularityLabel->setText("已下播");
+            ui->liveStatusLabel->setText("已下播");
             liveStatus = 0;
 
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
@@ -10270,6 +10274,7 @@ void MainWindow::updateExistGuards(int page)
             if (dailySettings)
                 dailySettings->setValue("guard_count", currentGuards.size());
             updateGuarding = false;
+            ui->guardCountLabel->setText(snum(currentGuards.size()));
         }
     });
 }
@@ -12332,8 +12337,14 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
 
 void MainWindow::releaseLiveData(bool prepare)
 {
-    ui->roomRankLabel->setText("");
+    ui->guardCountLabel->setText("0");
+    ui->fansCountLabel->setText("0");
+    ui->fansClubCountLabel->setText("0");
+    ui->roomRankLabel->setText("0");
     ui->roomRankLabel->setToolTip("");
+    ui->roomRankTextLabel->setText("热门榜");
+    ui->popularityLabel->setText("0");
+    ui->danmuCountLabel->setText("0");
 
     if (!prepare) // 切换房间或者断开连接
     {
@@ -12386,9 +12397,6 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->diangeHistoryListWidget->clear();
 
     statusLabel->setText("");
-    rankLabel->setText("");
-    rankLabel->setToolTip("");
-    fansLabel->setText("");
     popularVal = 0;
 
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
