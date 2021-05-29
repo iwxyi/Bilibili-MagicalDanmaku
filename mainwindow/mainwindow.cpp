@@ -87,6 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     ril->addWidget(ui->roomIdEdit);
     ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     ui->roomIdSpacingWidget->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+    ui->upLevelLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
 
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
@@ -2990,6 +2991,37 @@ void MainWindow::getRoomInfo(bool reconnect)
         ui->upNameLabel->setText(upName);
 
         ui->roomDescriptionBrowser->setText(roomDesc);
+        {
+            QString text = ui->roomDescriptionBrowser->toPlainText();
+            QTextCursor cursor = ui->roomDescriptionBrowser->textCursor();
+
+            // 删除前面空白
+            int count = 0;
+            int len = text.length();
+            while (count < len && QString("\n\r ").contains(QString(text.mid(count, 1))))
+                count++;
+            if (count)
+            {
+                cursor.setPosition(0);
+                cursor.setPosition(count, QTextCursor::KeepAnchor);
+                cursor.removeSelectedText();
+            }
+
+            // 删除后面空白
+            text = ui->roomDescriptionBrowser->toPlainText();
+            count = 0;
+            len = text.length();
+            while (count < len && QString("\n\r ").contains(QString(text.mid(len - count - 1, 1))))
+                count++;
+            if (count)
+            {
+                cursor.setPosition(len);
+                cursor.setPosition(len - count, QTextCursor::KeepAnchor);
+                cursor.removeSelectedText();
+            }
+
+            // 删除
+        }
 
         if (liveStatus == 0)
         {
@@ -3051,7 +3083,6 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 设置标签
         ui->tagsButtonGroup->initStringList(tags);
-        qDebug() << tags;
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
@@ -3347,11 +3378,18 @@ void MainWindow::getUpInfo(QString uid)
         }
         QJsonObject data = json.value("data").toObject();
 
+        // 设置签名
         QString sign = data.value("sign").toString();
-        QString face = data.value("face").toString();
-        ui->upLevelLabel->setText(sign);
+        {
+            // 删除首尾空
+            sign.replace(QRegularExpression("\n[\n\r ]*\n"), "\n")
+                    .replace(QRegularExpression("^[\n\r ]+"), "")
+                    .replace(QRegularExpression("[\n\r ]+$"), "");
+            ui->upLevelLabel->setText(sign.trimmed());
+        }
 
         // 开始下载头像
+        QString face = data.value("face").toString();
         getUpFace(face);
     });
 }
