@@ -307,7 +307,9 @@
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">background-image:url(:/icons/header1);
+background-position:center;
+background-repeat:none;</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -844,7 +846,7 @@ background-repeat:none;</string>
              <string/>
             </property>
             <property name="scaledContents">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>

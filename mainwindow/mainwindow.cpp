@@ -108,6 +108,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->hotCountWidget->setMinimumSize(ui->hotCountWidget->sizeHint());
     int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->upLevelLabel->sizeHint().height();
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
+    ui->robotHeaderLabel->setMinimumSize(ui->upHeaderLabel->size());
+    ui->robotHeaderLabel->setFixedHeight(ui->upHeaderLabel->height());
     ui->roomInfoMainWidget->setStyleSheet("#roomInfoMainWidget\
                         {\
                             background: white;\
@@ -271,7 +273,7 @@ MainWindow::MainWindow(QWidget *parent)
     if (posr == -1) posr = browserCookie.length();
     csrf_token = browserCookie.mid(posl, posr - posl);
     userCookies = getCookies();
-    getUserInfo();
+    getCookieAccount();
 
     // 保存弹幕
     bool saveDanmuToFile = settings->value("danmaku/saveDanmakuToFile", false).toBool();
@@ -2204,7 +2206,7 @@ void MainWindow::autoSetCookie(QString s)
         return ;
 
     userCookies = getCookies();
-    getUserInfo();
+    getCookieAccount();
 
     // 自动设置弹幕格式
     int posl = browserCookie.indexOf("bili_jct=") + 9;
@@ -2248,7 +2250,7 @@ QVariant MainWindow::getCookies()
 /**
  * 获取用户信息
  */
-void MainWindow::getUserInfo()
+void MainWindow::getCookieAccount()
 {
     if (browserCookie.isEmpty())
         return ;
@@ -2266,6 +2268,49 @@ void MainWindow::getUserInfo()
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameLabel->setText(cookieUname);
+
+        getRobotInfo();
+    });
+}
+
+void MainWindow::getRobotInfo()
+{
+    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + cookieUid;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+
+        // 开始下载头像
+        QString face = data.value("face").toString();
+        get(face, [=](QNetworkReply* reply){
+            QByteArray jpegData = reply->readAll();
+            QPixmap pixmap;
+            pixmap.loadFromData(jpegData);
+            if (pixmap.isNull())
+            {
+                qWarning() << "获取头像出错";
+                return ;
+            }
+
+            // 设置成圆角
+            int side = qMin(pixmap.width(), pixmap.height());
+            QPixmap p(side, side);
+            p.fill(Qt::transparent);
+            QPainter painter(&p);
+            painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+            QPainterPath path;
+            path.addEllipse(0, 0, side, side);
+            painter.setClipPath(path);
+            painter.drawPixmap(0, 0, side, side, pixmap);
+
+            // 设置到Robot头像
+            QPixmap f = p.scaled(ui->robotHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            ui->robotHeaderLabel->setPixmap(f);
+        });
     });
 }
 

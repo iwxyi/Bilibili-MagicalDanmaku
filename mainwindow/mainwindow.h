@@ -651,7 +651,8 @@ private:
 
     void autoSetCookie(QString s);
     QVariant getCookies();
-    void getUserInfo();
+    void getCookieAccount();
+    void getRobotInfo();
     void getRoomUserInfo();
     void initWS();
     void startConnectRoom();
