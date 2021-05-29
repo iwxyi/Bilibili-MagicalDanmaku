@@ -619,8 +619,12 @@ private slots:
     void on_actionAnchor_Case_triggered();
 
 private:
+    void initView();
+    void initStyle();
     void initPath();
+    void initRuntime();
     void readConfig();
+    void initEvent();
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);

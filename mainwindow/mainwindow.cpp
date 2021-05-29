@@ -41,6 +41,19 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    initView();
+    initStyle();
+
+    // 路径
+    initPath();
+    readConfig();
+    initEvent();
+
+    triggerCmdEvent("START_UP", LiveDanmaku());
+}
+
+void MainWindow::initView()
+{
     QApplication::setQuitOnLastWindowClosed(false);
     connect(qApp, &QApplication::paletteChanged, this, [=](const QPalette& pa){
         ui->tabWidget->setPalette(pa);
@@ -110,6 +123,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
     ui->robotHeaderLabel->setMinimumSize(ui->upHeaderLabel->size());
     ui->robotHeaderLabel->setFixedHeight(ui->upHeaderLabel->height());
+
+    // 避免压缩
+    ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
+
+    // 限制
+    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
+}
+
+void MainWindow::initStyle()
+{
     ui->roomInfoMainWidget->setStyleSheet("#roomInfoMainWidget\
                         {\
                             background: white;\
@@ -126,16 +149,39 @@ MainWindow::MainWindow(QWidget *parent)
                            background: #f7f7ff;\
                            border: none;\
                            border-radius: " + snum(fluentRadius) + "px;\
-                       }");
+                                      }");
+}
 
-    // 避免压缩
-    ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
+void MainWindow::initPath()
+{
+    dataPath = QApplication::applicationDirPath() + "/";
+#ifdef Q_OS_WIN
+    // 如果没有设置通用目录，则选择安装文件夹
+    if (QFileInfo(dataPath+"green_version").exists()
+            || QFileInfo(dataPath+"green_version.txt").exists())
+    {
+        // 安装路径，不需要改
 
-    // 限制
-    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
+    }
+    else // 通用文件夹
+    {
+        dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        // C:/Users/Administrator/AppData/Roaming/神奇弹幕    (未定义ApplicationName时为exe名)
+        SOCKET_DEB << "路径：" << dataPath;
+    }
+#else
+    dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
+    QDir().mkPath(dataPath);
+#endif
+}
 
-    // 路径
-    initPath();
+void MainWindow::initRuntime()
+{
+
+}
+
+void MainWindow::readConfig()
+{
     bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
     settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
     heaps = new QSettings(dataPath + "heaps.ini", QSettings::Format::IniFormat);
@@ -906,34 +952,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 恢复游戏数据
     restoreGameNumbers();
     restoreGameTexts();
-
-    triggerCmdEvent("START_UP", LiveDanmaku());
 }
 
-void MainWindow::initPath()
-{
-    dataPath = QApplication::applicationDirPath() + "/";
-#ifdef Q_OS_WIN
-    // 如果没有设置通用目录，则选择安装文件夹
-    if (QFileInfo(dataPath+"green_version").exists()
-            || QFileInfo(dataPath+"green_version.txt").exists())
-    {
-        // 安装路径，不需要改
-
-    }
-    else // 通用文件夹
-    {
-        dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-        // C:/Users/Administrator/AppData/Roaming/神奇弹幕    (未定义ApplicationName时为exe名)
-        SOCKET_DEB << "路径：" << dataPath;
-    }
-#else
-    dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
-    QDir().mkPath(dataPath);
-#endif
-}
-
-void MainWindow::readConfig()
+void MainWindow::initEvent()
 {
 
 }
