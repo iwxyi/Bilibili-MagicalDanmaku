@@ -71,6 +71,8 @@ void WaterFallButtonGroup::addButton(QString s, QColor c, bool selected)
     btn->setAutoTextColor(false);
     btn->setTextColor(c);
     connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+        if (!selectable)
+            return ;
         selectBtn(btn);
         if (btn->getState())
             emit signalSelected(s);
@@ -86,6 +88,11 @@ void WaterFallButtonGroup::clearButtons()
     btns.clear();
 }
 
+void WaterFallButtonGroup::setSelecteable(bool en)
+{
+    this->selectable = en;
+}
+
 void WaterFallButtonGroup::setColors(QColor normal_bg, QColor hover_bg, QColor press_bg, QColor selected_bg, QColor normal_ft, QColor selected_ft)
 {
     this->normal_bg = normal_bg;
@@ -97,6 +104,23 @@ void WaterFallButtonGroup::setColors(QColor normal_bg, QColor hover_bg, QColor p
         this->selected_ft = selected_ft;
     else
         selected_ft = getReverseColor(selected_bg);
+
+    foreach (InteractiveButtonBase* btn, btns)
+    {
+        btn->setTextColor(normal_ft);
+        btn->setBgColor(normal_bg);
+        btn->setBgColor(hover_bg, press_bg);
+    }
+}
+
+void WaterFallButtonGroup::setMouseColor(QColor hover_bg, QColor press_bg)
+{
+    this->hover_bg = hover_bg;
+    this->press_bg = press_bg;
+    foreach (InteractiveButtonBase* btn, btns)
+    {
+        btn->setBgColor(hover_bg, press_bg);
+    }
 }
 
 void WaterFallButtonGroup::updateButtonPositions()

@@ -15,7 +15,9 @@ public:
     void addButton(QString s, QColor c, bool selected = false);
     void clearButtons();
 
+    void setSelecteable(bool en);
     void setColors(QColor normal_bg, QColor hover_bg, QColor press_bg, QColor selected_bg, QColor normal_ft, QColor selected_ft = Qt::transparent);
+    void setMouseColor(QColor hover_bg, QColor press_bg);
 
     void updateButtonPositions();
 
@@ -34,6 +36,7 @@ signals:
 
 private:
     QList<InteractiveButtonBase*>btns;
+    bool selectable = true;
     QColor normal_bg, hover_bg, press_bg, selected_bg, normal_ft, selected_ft;
 };
 

@@ -193,7 +193,7 @@
            <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" name="roomMainTopHLayout" stretch="0,1">
+           <layout class="QHBoxLayout" name="roomMainTopHLayout" stretch="0,1,0,1">
             <property name="leftMargin">
              <number>6</number>
             </property>
@@ -236,6 +236,19 @@
             </item>
             <item>
              <widget class="QWidget" name="roomIdSpacingWidget" native="true"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="roomNameLabel">
+              <property name="styleSheet">
+               <string notr="true">font-size: 18px;</string>
+              </property>
+              <property name="text">
+               <string>房间标题</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="roomIdSpacingWidget_2" native="true"/>
             </item>
            </layout>
           </item>
@@ -309,6 +322,9 @@
                </item>
                <item>
                 <layout class="QVBoxLayout" name="upNameVLayout">
+                 <property name="spacing">
+                  <number>7</number>
+                 </property>
                  <item>
                   <widget class="QWidget" name="widget_5" native="true">
                    <property name="minimumSize">
@@ -320,7 +336,7 @@
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
-                     <height>20</height>
+                     <height>32</height>
                     </size>
                    </property>
                   </widget>
@@ -339,12 +355,12 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="liveStatusLabel">
+                  <widget class="QLabel" name="upLevelLabel">
                    <property name="styleSheet">
                     <string notr="true">color: gray;</string>
                    </property>
                    <property name="text">
-                    <string>未开播</string>
+                    <string>UL0</string>
                    </property>
                   </widget>
                  </item>
@@ -363,6 +379,16 @@
                  </property>
                 </spacer>
                </item>
+               <item>
+                <widget class="QLabel" name="liveStatusLabel">
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string>未开播</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>
@@ -375,16 +401,6 @@
                </property>
                <property name="styleSheet">
                 <string notr="true"/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="roomNameLabel">
-               <property name="styleSheet">
-                <string notr="true">font-size: 18px;</string>
-               </property>
-               <property name="text">
-                <string>房间标题</string>
                </property>
               </widget>
              </item>

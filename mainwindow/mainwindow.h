@@ -663,11 +663,13 @@ private:
     bool isLivingOrMayliving();
     void getRoomCover(QString url);
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
-    void adjustRoomIdPos();
+    void adjustRoomIdWidgetPos();
+    void showRoomIdWidget();
+    void hideRoomIdWidget();
     QPixmap getRoundedPixmap(QPixmap pixmap) const;
     QPixmap getTopRoundedPixmap(QPixmap pixmap, int radius) const;
-    void getUpFace(QString uid);
-    void getUpPortrait(QString faceUrl);
+    void getUpInfo(QString uid);
+    void getUpFace(QString faceUrl);
     QPixmap getLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();

@@ -54,14 +54,25 @@ MainWindow::MainWindow(QWidget *parent)
                   ui->extensionPageButton,
                   ui->preferencePageButton
                 };
-    foreach (auto button, sideButtonList)
+    for (int i = 0; i < sideButtonList.size(); i++)
     {
+        auto button = sideButtonList.at(i);
         button->setSquareSize();
         button->setFixedForePos();
         button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
         button->setRadius(fluentRadius);
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
             ui->stackedWidget->setCurrentIndex(sideButtonList.indexOf(button));
+
+            if (i == 0)
+            {
+                adjustRoomIdWidgetPos();
+                showRoomIdWidget();
+            }
+            else
+            {
+                hideRoomIdWidget();
+            }
         });
     }
 
@@ -71,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     roomIdBgWidget = new QWidget(this->centralWidget());
     roomIdBgWidget->setObjectName("roomIdBgWidget");
     ui->roomIdEdit->setFixedSize(ui->roomIdEdit->size());
+    ui->roomIdSpacingWidget->setMinimumWidth(ui->roomIdEdit->width() + ui->roomIdEdit->height());
     QHBoxLayout* ril = new QHBoxLayout(roomIdBgWidget);
     ril->addWidget(ui->roomIdEdit);
     ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -93,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->roomDescriptionBrowser->setMaximumHeight(fm.lineSpacing() * 5);
     ui->guardCountWidget->setMinimumSize(ui->guardCountWidget->sizeHint());
     ui->hotCountWidget->setMinimumSize(ui->hotCountWidget->sizeHint());
-    int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->liveStatusLabel->sizeHint().height();
+    int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->upLevelLabel->sizeHint().height();
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
     ui->roomInfoMainWidget->setStyleSheet("#roomInfoMainWidget\
                         {\
@@ -971,7 +983,7 @@ void MainWindow::showEvent(QShowEvent *event)
     {
         firstShow = false;
         startSplash();
-        adjustRoomIdPos();
+        adjustRoomIdWidgetPos();
     }
     settings->setValue("mainwindow/autoShow", true);
 
@@ -2977,8 +2989,6 @@ void MainWindow::getRoomInfo(bool reconnect)
         ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
 
-//        roomDesc.replace(QRegularExpression(" "), "</p><p>");
-        qDebug() << roomDesc;
         ui->roomDescriptionBrowser->setText(roomDesc);
 
         if (liveStatus == 0)
@@ -3047,7 +3057,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         getRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
-        getUpFace(upUid);
+        getUpInfo(upUid);
 
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayliving())
@@ -3212,6 +3222,9 @@ void MainWindow::getRoomCover(QString url)
             setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
             ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(sbg).toString()+"}");
             roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
+
+            ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
+                                               [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -3225,7 +3238,7 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
 {
     // 计算尺寸
     int w = ui->roomInfoMainWidget->width();
-    int maxH = this->height() / 2; // 封面最大高度
+    int maxH = this->height() * (1 - 0.618); // 封面最大高度
     pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
     int showH = pixmap.height(); // 当前高度下图片应当显示的高度
     if (showH > maxH) // 不能超过原始高度
@@ -3244,7 +3257,7 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     roomCoverLabel->lower();
 }
 
-void MainWindow::adjustRoomIdPos()
+void MainWindow::adjustRoomIdWidgetPos()
 {
     QSize editSize = ui->roomIdEdit->size();
     QSize sz = QSize(ui->roomIdSpacingWidget->x() + editSize.width() + editSize.height() * 2, editSize.height() + roomIdBgWidget->layout()->margin() * 2);
@@ -3254,6 +3267,39 @@ void MainWindow::adjustRoomIdPos()
     roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
     ui->sideBarWidget->raise();
     roomIdBgWidget->stackUnder(ui->sideBarWidget);
+}
+
+void MainWindow::showRoomIdWidget()
+{
+    QPropertyAnimation* ani = new QPropertyAnimation(roomIdBgWidget, "pos");
+    if (roomIdBgWidget->isHidden())
+        ani->setStartValue(QPoint(-roomIdBgWidget->width(), roomIdBgWidget->y()));
+    else
+        ani->setStartValue(roomIdBgWidget->pos());
+    ani->setEndValue(roomIdBgWidget->pos());
+    ani->setDuration(300);
+    ani->setEasingCurve(QEasingCurve::OutCirc);
+    connect(ani, &QPropertyAnimation::finished, this, [=]{
+        ani->deleteLater();
+    });
+    roomIdBgWidget->show();
+    ani->start();
+}
+
+void MainWindow::hideRoomIdWidget()
+{
+    if (roomIdBgWidget->isHidden())
+        return ;
+    QPropertyAnimation* ani = new QPropertyAnimation(roomIdBgWidget, "pos");
+    ani->setStartValue(roomIdBgWidget->pos());
+    ani->setEndValue(QPoint(-roomIdBgWidget->width(), roomIdBgWidget->y()));
+    ani->setDuration(300);
+    ani->setEasingCurve(QEasingCurve::OutCirc);
+    connect(ani, &QPropertyAnimation::finished, this, [=]{
+        roomIdBgWidget->hide();
+        ani->deleteLater();
+    });
+    ani->start();
 }
 
 QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
@@ -3290,7 +3336,7 @@ QPixmap MainWindow::getTopRoundedPixmap(QPixmap pixmap, int radius) const
     return dest;
 }
 
-void MainWindow::getUpFace(QString uid)
+void MainWindow::getUpInfo(QString uid)
 {
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
     get(url, [=](QJsonObject json){
@@ -3299,16 +3345,18 @@ void MainWindow::getUpFace(QString uid)
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
-
         QJsonObject data = json.value("data").toObject();
+
+        QString sign = data.value("sign").toString();
         QString face = data.value("face").toString();
+        ui->upLevelLabel->setText(sign);
 
         // 开始下载头像
-        getUpPortrait(face);
+        getUpFace(face);
     });
 }
 
-void MainWindow::getUpPortrait(QString faceUrl)
+void MainWindow::getUpFace(QString faceUrl)
 {
     get(faceUrl, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
@@ -7326,7 +7374,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString msg = QString("热门榜 " + area_name + "榜 排名：" + snum(rank) + " " + (trend == 1 ? "↑" : "↓"));
                     ui->roomRankLabel->setText(snum(rank));
                     ui->roomRankTextLabel->setText(area_name + "榜");
-                    ui->roomRankTextLabel->setToolTip(msg);
+                    ui->roomRankLabel->setToolTip(msg);
                 }
                 else if (cmd == "HOT_RANK_SETTLEMENT")
                 {
