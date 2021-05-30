@@ -13,6 +13,7 @@
 #include "stringutil.h"
 #include "escape_dialog/escapedialog.h"
 #include "guardonlinedialog.h"
+#include "watercirclebutton.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -114,8 +115,10 @@ void MainWindow::initView()
 
     // 房号位置
     roomIdBgWidget = new QWidget(this->centralWidget());
+    roomSelectorBtn = new WaterCircleButton(QIcon(":/icons/account_link"), ui->roomIdEdit);
     roomIdBgWidget->setObjectName("roomIdBgWidget");
     ui->roomIdEdit->setFixedSize(ui->roomIdEdit->size());
+    roomSelectorBtn->setGeometry(ui->roomIdEdit->width() - ui->roomIdEdit->height(), 0, ui->roomIdEdit->height(), ui->roomIdEdit->height());
     ui->roomIdSpacingWidget->setMinimumWidth(ui->roomIdEdit->width() + ui->roomIdEdit->height());
     QHBoxLayout* ril = new QHBoxLayout(roomIdBgWidget);
     ril->addWidget(ui->roomIdEdit);
@@ -134,7 +137,7 @@ void MainWindow::initView()
 //    ui->menubar->hide();
 //    ui->statusbar->hide();
 
-    // 设置控件
+    // 设置属性
     ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     QFontMetrics fm(ui->roomDescriptionBrowser->font());
     ui->roomDescriptionBrowser->setMaximumHeight(fm.lineSpacing() * 5);
@@ -144,12 +147,40 @@ void MainWindow::initView()
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
     ui->robotHeaderLabel->setMinimumSize(ui->upHeaderLabel->size());
     ui->robotHeaderLabel->setFixedHeight(ui->upHeaderLabel->height());
+    roomSelectorBtn->setSquareSize();
+    roomSelectorBtn->setRadius(fluentRadius);
+    roomSelectorBtn->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 
     // 避免压缩
     ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
 
     // 限制
     ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
+
+    // 切换房间
+    roomSelectorBtn->show();
+    connect(roomSelectorBtn, &InteractiveButtonBase::clicked, this, [=]{
+        newFacileMenu;
+
+        menu->addAction(ui->actionAdd_Room_To_List);
+        menu->split();
+
+        QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+        for (int i = 0; i < list.size(); i++)
+        {
+            QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
+            if (texts.size() < 1)
+                continue ;
+            QString id = texts.first();
+            QString name = texts.size() >= 2 ? texts.at(1) : id;
+            menu->addAction(name, [=]{
+                ui->roomIdEdit->setText(id);
+                on_roomIdEdit_editingFinished();
+            });
+        }
+
+        menu->exec();
+    });
 }
 
 void MainWindow::initStyle()
@@ -3344,13 +3375,17 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::Text, fg);
             pa.setColor(QPalette::ButtonText, fg);
             pa.setColor(QPalette::WindowText, fg);
-            statusLabel->setStyleSheet("color:" + QVariant(fg).toString());
+
+            // 设置背景透明
+            QString labelStyle = "color:" + QVariant(fg).toString() + ";";
+            statusLabel->setStyleSheet(labelStyle);
+            ui->roomNameLabel->setStyleSheet(labelStyle + "font-size: 18px;");
 
             pa.setColor(QPalette::Highlight, sbg);
             pa.setColor(QPalette::HighlightedText, sfg);
             setPalette(pa);
             setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
-            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(sbg).toString()+"}");
+            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
             roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
             sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
             ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),

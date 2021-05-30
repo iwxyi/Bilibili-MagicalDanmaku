@@ -73,6 +73,7 @@ SOURCES += \
     third_party/interactive_buttons/interactivebuttonbase.cpp \
     mainwindow/list_items/listiteminterface.cpp \
     mainwindow/live_danmaku/livedanmakuwindow.cpp \
+    third_party/interactive_buttons/watercirclebutton.cpp \
     third_party/interactive_buttons/waterfallbuttongroup.cpp \
     third_party/interactive_buttons/waterfloatbutton.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
@@ -130,6 +131,7 @@ HEADERS += \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
+    third_party/interactive_buttons/watercirclebutton.h \
     third_party/interactive_buttons/waterfallbuttongroup.h \
     third_party/interactive_buttons/waterfloatbutton.h \
     widgets/guard_online/guardonlinedialog.h \

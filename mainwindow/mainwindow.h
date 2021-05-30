@@ -839,6 +839,7 @@ private:
     QList<InteractiveButtonBase*> sideButtonList;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
+    InteractiveButtonBase* roomSelectorBtn;
 
     // 房间信息
     QString roomId;

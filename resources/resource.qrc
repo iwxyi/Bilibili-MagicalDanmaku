@@ -87,6 +87,7 @@
         <file alias="default_cover">icons/default_cover.png</file>
         <file alias="sailor">icons/sailor.png</file>
         <file alias="hot">icons/hot.png</file>
+        <file alias="account_link">icons/account_link.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
