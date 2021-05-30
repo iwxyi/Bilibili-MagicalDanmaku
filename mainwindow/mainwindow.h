@@ -618,6 +618,8 @@ private slots:
 
     void on_actionAnchor_Case_triggered();
 
+    void on_robotNameButton_clicked();
+
 private:
     void initView();
     void initStyle();

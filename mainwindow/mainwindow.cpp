@@ -95,11 +95,6 @@ void MainWindow::initView()
                 hideRoomIdWidget();
             }
 
-            // 更新界面
-            /*auto lay = ui->stackedWidget->widget(i)->layout();
-            if (lay)
-                lay->activate();*/
-
             // 当前项
             settings->setValue("mainwindow/stackIndex", i);
             foreach (auto btn, sideButtonList)
@@ -125,6 +120,11 @@ void MainWindow::initView()
     ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     ui->roomIdSpacingWidget->setAttribute(Qt::WA_TransparentForMouseEvents, true);
     ui->upLevelLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->robotNameButton->setRadius(fluentRadius);
+    ui->robotNameButton->setTextDynamicSize();
+    ui->robotNameButton->setFontSize(12);
+    ui->robotNameButton->setFixedForePos();
+    ui->robotNameButton->setPaddings(6);
 
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
@@ -159,6 +159,7 @@ void MainWindow::initView()
 
     // 切换房间
     roomSelectorBtn->show();
+    roomSelectorBtn->setCursor(Qt::PointingHandCursor);
     connect(roomSelectorBtn, &InteractiveButtonBase::clicked, this, [=]{
         newFacileMenu;
 
@@ -2352,7 +2353,7 @@ void MainWindow::getCookieAccount()
         cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         cookieUname = dataObj.value("uname").toString();
         qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
-        ui->robotNameLabel->setText(cookieUname);
+        ui->robotNameButton->setText(cookieUname);
 
         getRobotInfo();
     });
@@ -3390,6 +3391,7 @@ void MainWindow::getRoomCover(QString url)
             sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
             ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
                                                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
+            ui->robotNameButton->setTextColor(fg);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -14837,4 +14839,13 @@ void MainWindow::on_actionOfficial_Website_triggered()
 void MainWindow::on_actionAnchor_Case_triggered()
 {
     QDesktopServices::openUrl(QUrl("http://anchor.lyixi.com"));
+}
+
+void MainWindow::on_robotNameButton_clicked()
+{
+    newFacileMenu;
+    menu->addAction(ui->actionQRCode_Login);
+    menu->addAction(ui->actionSet_Cookie);
+    menu->addAction(ui->actionSet_Danmaku_Data_Format);
+    menu->exec();
 }

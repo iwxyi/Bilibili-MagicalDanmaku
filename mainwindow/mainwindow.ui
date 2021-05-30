@@ -854,18 +854,12 @@ background-repeat:none;</string>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="robotNameLabel">
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-size: 16px;</string>
+           <widget class="InteractiveButtonBase" name="robotNameButton">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="text">
-             <string>点击登录机器人</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <string> 点击登录机器人</string>
             </property>
            </widget>
           </item>
