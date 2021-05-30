@@ -60,7 +60,7 @@ void MainWindow::initView()
     });
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
-    QList<InteractiveButtonBase*> sideButtonList = { ui->roomPageButton,
+    sideButtonList = { ui->roomPageButton,
                   ui->danmakuPageButton,
                   ui->thankPageButton,
                   ui->musicPageButton,
@@ -75,17 +75,38 @@ void MainWindow::initView()
         button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
         button->setRadius(fluentRadius);
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
+            int prevIndex = ui->stackedWidget->currentIndex();
+            if (prevIndex == i) // 同一个索引，不用重复切换
+                return ;
+
             ui->stackedWidget->setCurrentIndex(sideButtonList.indexOf(button));
 
+            // 房间ID
             if (i == 0)
             {
                 adjustRoomIdWidgetPos();
                 showRoomIdWidget();
+                if (!roomCover.isNull())
+                    adjustCoverSizeByRoomCover(roomCover);
             }
             else
             {
                 hideRoomIdWidget();
             }
+
+            // 更新界面
+            /*auto lay = ui->stackedWidget->widget(i)->layout();
+            if (lay)
+                lay->activate();*/
+
+            // 当前项
+            settings->setValue("mainwindow/stackIndex", i);
+            foreach (auto btn, sideButtonList)
+            {
+                btn->setNormalColor(Qt::transparent);
+                btn->update();
+            }
+            sideButtonList.at(i)->setNormalColor(themeSbg);
         });
     }
 
@@ -180,6 +201,9 @@ void MainWindow::initRuntime()
 
 }
 
+/// 读取 settings 中的变量，并进行一系列初始化操作
+/// 可能会读取多次，并且随用户命令重复读取
+/// 所以里面的所有变量都要做好重复初始化的准备
 void MainWindow::readConfig()
 {
     bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
@@ -198,6 +222,11 @@ void MainWindow::readConfig()
     }
 
     // 页面
+    int stackIndex = settings->value("mainwindow/stackIndex", 0).toInt();
+    if (stackIndex >= 0 && stackIndex < ui->stackedWidget->count())
+        ui->stackedWidget->setCurrentIndex(stackIndex);
+
+    // 标签组
     int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
         ui->tabWidget->setCurrentIndex(tabIndex);
@@ -1007,7 +1036,11 @@ void MainWindow::showEvent(QShowEvent *event)
     {
         firstShow = false;
         startSplash();
+
+        // 显示 RoomIdEdit 动画
         adjustRoomIdWidgetPos();
+        if (ui->stackedWidget->currentIndex() != 0)
+            roomIdBgWidget->hide();
     }
     settings->setValue("mainwindow/autoShow", true);
 
@@ -3319,7 +3352,7 @@ void MainWindow::getRoomCover(QString url)
             setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
             ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(sbg).toString()+"}");
             roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
-
+            sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
             ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
                                                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
         });

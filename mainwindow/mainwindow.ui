@@ -171,7 +171,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -961,22 +961,8 @@ margin: 10px;</string>
       <widget class="QWidget" name="danmakuPage"/>
       <widget class="QWidget" name="thankPage"/>
       <widget class="QWidget" name="musicPage"/>
-      <widget class="QWidget" name="extensionPage"/>
-      <widget class="QWidget" name="preferencePage"/>
-      <widget class="QWidget" name="tempPage">
-       <layout class="QVBoxLayout" name="verticalLayout_16">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
+      <widget class="QWidget" name="extensionPage">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="MyTabWidget" name="tabWidget">
           <property name="styleSheet">
@@ -1014,59 +1000,6 @@ QTabBar::tab:selected
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="tab">
-           <attribute name="title">
-            <string>房间</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout"/>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_12">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_27">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <spacer name="horizontalSpacer_9">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
             <string>弹幕</string>
@@ -4281,6 +4214,7 @@ margin: 6px;</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="preferencePage"/>
      </widget>
     </item>
    </layout>

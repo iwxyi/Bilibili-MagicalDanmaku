@@ -836,6 +836,7 @@ private:
     // 控件
     const int widgetSizeL = 40;
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
+    QList<InteractiveButtonBase*> sideButtonList;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
 
