@@ -185,6 +185,7 @@ void MainWindow::initView()
 
     // 弹幕设置瀑布流
     ui->scrollArea->setItemSpacing(15, 15);
+//    ui->scrollArea->enableRandomSizeChildren();
     ui->scrollArea->initFixedChildren();
     ui->scrollArea->adjustWidgetsBySizeHint();
     ui->scrollArea->setWidgetsEqualWidth();

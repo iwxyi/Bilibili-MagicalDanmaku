@@ -37,6 +37,11 @@ void WaterfallScrollArea::setAlignment(Qt::Alignment align)
     this->alignment = align;
 }
 
+void WaterfallScrollArea::enableRandomSizeChildren()
+{
+    this->useEqualWidth = false;
+}
+
 /// 固定的子项，就是以后resize的时候不需要重复获取子项了
 /// 理论上来说能够提高一些速度
 /// 动态添加控件时不建议使用，若要使用务必在更新后手动调用 updateChildWidgets
@@ -48,21 +53,31 @@ void WaterfallScrollArea::initFixedChildren()
 
 void WaterfallScrollArea::adjustWidgetPos()
 {
-    QRect cr = this->contentsRect();
     if (!fixedChildren)
     {
         updateChildWidgets();
 
         if (colCount > 0) // 仅根据列数变化
         {
-            colWidth = (cr.width() - itemMarginH * 2 + itemSpacingH) / colCount - itemSpacingH;
+            colWidth = (this->contentsRect().width() - itemMarginH * 2 + itemSpacingH) / colCount - itemSpacingH;
             colWidth = qMax(colWidth, 1);
         }
     }
     if (widgets.isEmpty())
         return ;
 
+    if (useEqualWidth)
+        adjustWaterfallPos();
+    else
+        adjustRandomSizePos();
+}
+
+/// 全部子控件宽度一致的瀑布流
+void WaterfallScrollArea::adjustWaterfallPos()
+{
     // 计算各类数值
+    QRect cr = this->contentsRect();
+    cr.setWidth(qMax(1, cr.width() - this->verticalScrollBar()->width()));
     int colCount = this->colCount; // 使用列数
     if (colCount <= 0)
         colCount = (cr.width() - itemMarginH * 2 + itemSpacingH) / (colWidth + itemSpacingH);
@@ -126,6 +141,13 @@ void WaterfallScrollArea::adjustWidgetPos()
         if (b > maxHeight)
             maxHeight = b;
     this->widget()->setMinimumHeight(maxHeight + itemMarginV);
+}
+
+/// 全部子控件宽度不一定一致的任意瀑布流
+/// 能支持任意大小的控件，但是中间可能会空出一部分
+void WaterfallScrollArea::adjustRandomSizePos()
+{
+
 }
 
 QList<QWidget *> WaterfallScrollArea::getWidgets()

@@ -15,6 +15,7 @@ public:
     void setItemMargin(int h, int v);
     void setColCount(int c);
     void setAlignment(Qt::Alignment align);
+    void enableRandomSizeChildren();
 
     void initFixedChildren();
     void updateChildWidgets();
@@ -33,6 +34,9 @@ public:
     bool isToBottoming() const;
 
 private:
+    void adjustWaterfallPos();
+    void adjustRandomSizePos();
+
     void addSmoothScrollThread(int distance, int duration);
 
 signals:
@@ -53,6 +57,7 @@ private:
     int itemSpacingH = 9;
     int itemSpacingV = 9;
     Qt::Alignment alignment = Qt::AlignCenter;
+    bool useEqualWidth = true;
 
     QList<QWidget*> widgets;
     bool fixedChildren = false;

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>698</width>
-    <height>527</height>
+    <width>1165</width>
+    <height>943</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -971,8 +971,8 @@ margin: 10px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>630</width>
-             <height>425</height>
+             <width>1097</width>
+             <height>841</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1643,7 +1643,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>280</y>
               <width>151</width>
-              <height>131</height>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1709,16 +1709,18 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <widget class="QPushButton" name="pkMaxGoldButton">
+                <widget class="InteractiveButtonBase" name="pkMaxGoldButton">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
+                  <string notr="true"/>
                  </property>
                  <property name="text">
                   <string>上限</string>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -1737,13 +1739,9 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <item>
-                <widget class="QPushButton" name="pkMelonValButton">
+                <widget class="InteractiveButtonBase" name="pkMelonValButton">
                  <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
+                  <string notr="true"/>
                  </property>
                  <property name="text">
                   <string>乱斗值</string>
@@ -1751,13 +1749,9 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pkJudgeEarlyButton">
+                <widget class="InteractiveButtonBase" name="pkJudgeEarlyButton">
                  <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
+                  <string notr="true"/>
                  </property>
                  <property name="text">
                   <string>偷塔时间</string>
@@ -1767,13 +1761,9 @@ margin: 40px;</string>
               </layout>
              </item>
              <item>
-              <widget class="QPushButton" name="pkBlankButton">
+              <widget class="InteractiveButtonBase" name="pkBlankButton">
                <property name="styleSheet">
-                <string notr="true">QPushButton
-{
-	background: transparent;
-	border: none;
-}</string>
+                <string notr="true"/>
                </property>
                <property name="text">
                 <string>黑名单房间</string>
@@ -1857,6 +1847,917 @@ margin: 40px;</string>
               <widget class="QPushButton" name="closeTransMouseButton">
                <property name="text">
                 <string>关闭鼠标穿透</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="liveGreetSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>460</y>
+              <width>161</width>
+              <height>141</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#liveGreetSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_37">
+             <item>
+              <widget class="QLabel" name="label_24">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>开播问候</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_19" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="startLiveSendCheck">
+               <property name="text">
+                <string>启用</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <item>
+                <widget class="QLabel" name="label_4">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;收到开播时发送开场白&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>上播</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="startLiveWordsEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string>恭迎主播开播~</string>
+                 </property>
+                 <property name="placeholderText">
+                  <string>留空则不发送</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_14">
+               <item>
+                <widget class="QLabel" name="label_5">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;下播信号发送结束语&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>下播</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="endLiveWordsEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string>下播了，大家散了吧~</string>
+                 </property>
+                 <property name="placeholderText">
+                  <string>留空则不发送</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoSwitchMedalCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开播后自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>自动更换勋章</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="timerConnectSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>370</x>
+              <y>290</y>
+              <width>161</width>
+              <height>126</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#timerConnectSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_38">
+             <item>
+              <widget class="QLabel" name="label_25">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>定时连接</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_20" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_12">
+               <item>
+                <widget class="QCheckBox" name="timerConnectServerCheck">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于长期挂在服务器上，在开播前连接B站服务器，下播后暂停&lt;/p&gt;&lt;p&gt;注：长期连接直播间很容易被冻结&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>启用</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="doveCheck">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于挂在服务器上临时开启&lt;/p&gt;&lt;p&gt;主播放鸽子了，今天不开播&lt;/p&gt;&lt;p&gt;等到开播时间不连接服务器&lt;/p&gt;&lt;p&gt;下一次下播时间或重启后自动关闭&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>鸽一天</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <item>
+                <widget class="QSpinBox" name="startLiveHourSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早的开播时间&lt;/p&gt;&lt;p&gt;将在开播前半小时内预先连接B站弹幕服务器&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string>点</string>
+                 </property>
+                 <property name="prefix">
+                  <string>开播</string>
+                 </property>
+                 <property name="maximum">
+                  <number>23</number>
+                 </property>
+                 <property name="value">
+                  <number>7</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="endLiveHourSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早下播时间&lt;/p&gt;&lt;p&gt;下播后自动断开与服务器的连接，直到下次开播前&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string>点</string>
+                 </property>
+                 <property name="prefix">
+                  <string>下播</string>
+                 </property>
+                 <property name="maximum">
+                  <number>23</number>
+                 </property>
+                 <property name="value">
+                  <number>13</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="autoOperatorSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>370</x>
+              <y>430</y>
+              <width>151</width>
+              <height>126</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#autoOperatorSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_39">
+             <item>
+              <widget class="QLabel" name="label_26">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>自动操作</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_21" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoLOTCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖/节奏风暴弹幕&lt;/p&gt;&lt;p&gt;只发送弹幕和关注，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>自动参与活动</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoDoSignCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，按打开自动签到/启动程序的时间来算&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>每日自动签到</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="acquireHeartCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>挂机领小心心</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="sendExpireGiftCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有2天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>赠送到期礼物</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="liveOperatorSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>190</x>
+              <y>410</y>
+              <width>151</width>
+              <height>91</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#liveOperatorSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_40">
+             <item>
+              <widget class="QLabel" name="label_27">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>监听</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_22" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>仅直播时回复</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="listenMedalUpgradeCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;监听赠送礼物后的勋章升级状况&lt;/p&gt;&lt;p&gt;产生 MEDAL_UPGRADE 事件&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>监听勋章升级</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="recordSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>190</x>
+              <y>530</y>
+              <width>161</width>
+              <height>91</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#recordSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_41">
+             <item>
+              <widget class="QLabel" name="label_28">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>录播姬</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_23" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="recordCheck">
+               <property name="text">
+                <string>自动原画录播</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="recordSplitSpin">
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔一段时间保存已录制的文字，并继续重新录制&lt;/p&gt;&lt;p&gt;免得文件太大，也避免程序闪退导致大量数据丢失&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+               </property>
+               <property name="frame">
+                <bool>false</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+               <property name="buttonSymbols">
+                <enum>QAbstractSpinBox::UpDownArrows</enum>
+               </property>
+               <property name="suffix">
+                <string>分钟</string>
+               </property>
+               <property name="prefix">
+                <string>自动分割每</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>600</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="value">
+                <number>30</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="dailySettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>620</y>
+              <width>161</width>
+              <height>101</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#dailySettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_42">
+             <item>
+              <widget class="QLabel" name="label_29">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string> 每日统计</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_24" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="calculateDailyDataCheck">
+               <property name="toolTip">
+                <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+               </property>
+               <property name="text">
+                <string>每日数据统计</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <widget class="InteractiveButtonBase" name="pushButton">
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string>今日</string>
+                 </property>
+                 <property name="autoDefault">
+                  <bool>true</bool>
+                 </property>
+                 <property name="default">
+                  <bool>false</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="exportDailyButton">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string>导出</string>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="giftHistorySettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>190</x>
+              <y>640</y>
+              <width>161</width>
+              <height>111</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#giftHistorySettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_43">
+             <item>
+              <widget class="QLabel" name="label_30">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>礼物历史</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_25" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="saveEveryGiftCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>记录礼物历史</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="saveEveryGuardCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>记录每次上船</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="saveMonthGuardCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>记录每月船员</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="debugSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>370</x>
+              <y>570</y>
+              <width>161</width>
+              <height>151</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#debugSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_44">
+             <item>
+              <widget class="QLabel" name="label_31">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>调试</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_26" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="saveRecvCmdsCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合右边输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>保存CMD</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="InteractiveButtonBase" name="pushRecvCmdsButton">
+                 <property name="text">
+                  <string>输入CMDS</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="pushNextCmdButton">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="text">
+                  <string>下一条</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="timerPushCmdCheck">
+               <property name="text">
+                <string>定时下一条</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="timerPushCmdSpin">
+               <property name="styleSheet">
+                <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+               </property>
+               <property name="frame">
+                <bool>false</bool>
+               </property>
+               <property name="suffix">
+                <string>百毫秒</string>
+               </property>
+               <property name="prefix">
+                <string>每隔</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>600</number>
                </property>
               </widget>
              </item>
@@ -2390,7 +3291,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="tab_8">
            <attribute name="title">
@@ -2686,484 +3587,6 @@ QTabBar::tab:selected
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_5">
-           <attribute name="title">
-            <string>开播</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_46">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="startLiveSendCheck">
-                <property name="text">
-                 <string> 一键启用</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_25">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="startOnRebootCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>开机自启</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13">
-              <item>
-               <widget class="QLabel" name="label_4">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;收到开播时发送开场白&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>开播欢迎语</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="startLiveWordsEdit">
-                <property name="styleSheet">
-                 <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="text">
-                 <string>恭迎主播开播~</string>
-                </property>
-                <property name="placeholderText">
-                 <string>留空则不发送</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14">
-              <item>
-               <widget class="QLabel" name="label_5">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;下播信号发送结束语&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>下播结束语</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="endLiveWordsEdit">
-                <property name="styleSheet">
-                 <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="text">
-                 <string>下播了，大家散了吧~</string>
-                </property>
-                <property name="placeholderText">
-                 <string>留空则不发送</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QWidget" name="widget_2" native="true">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background: rgba(88, 88, 88, 64);
-margin: 6px;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_26">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="timerConnectServerCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于长期挂在服务器上，在开播前连接B站服务器，下播后暂停&lt;/p&gt;&lt;p&gt;注：长期连接直播间很容易被冻结&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>定时连接B站服务器</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_7">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="doveCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于挂在服务器上临时开启&lt;/p&gt;&lt;p&gt;主播放鸽子了，今天不开播&lt;/p&gt;&lt;p&gt;等到开播时间不连接服务器&lt;/p&gt;&lt;p&gt;下一次下播时间或重启后自动关闭&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>鸽一天</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_23">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <spacer name="horizontalSpacer_15">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="startLiveHourSpin">
-                <property name="contextMenuPolicy">
-                 <enum>Qt::NoContextMenu</enum>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早的开播时间&lt;/p&gt;&lt;p&gt;将在开播前半小时内预先连接B站弹幕服务器&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="frame">
-                 <bool>false</bool>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="suffix">
-                 <string>点</string>
-                </property>
-                <property name="prefix">
-                 <string>开播</string>
-                </property>
-                <property name="maximum">
-                 <number>23</number>
-                </property>
-                <property name="value">
-                 <number>7</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="endLiveHourSpin">
-                <property name="contextMenuPolicy">
-                 <enum>Qt::NoContextMenu</enum>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;最早下播时间&lt;/p&gt;&lt;p&gt;下播后自动断开与服务器的连接，直到下次开播前&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="frame">
-                 <bool>false</bool>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="suffix">
-                 <string>点</string>
-                </property>
-                <property name="prefix">
-                 <string>下播</string>
-                </property>
-                <property name="maximum">
-                 <number>23</number>
-                </property>
-                <property name="value">
-                 <number>13</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_16">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QWidget" name="widget_4" native="true">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background: rgba(88, 88, 88, 64);
-margin: 6px;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_25">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string>仅直播时回复</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="autoLOTCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖/节奏风暴弹幕&lt;/p&gt;&lt;p&gt;只发送弹幕和关注，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>自动参与活动</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="autoSwitchMedalCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开播后自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>自动更换勋章</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="autoDoSignCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，按打开自动签到/启动程序的时间来算&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string>每日自动签到</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_44">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="acquireHeartCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>挂机领小心心</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="sendExpireGiftCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有2天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>赠送到期礼物</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="QWidget" name="widget" native="true">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>1</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background: rgba(88, 88, 88, 64);
-margin: 6px;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
-              <property name="spacing">
-               <number>6</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="recordCheck">
-                <property name="text">
-                 <string>自动原画录播</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="recordSplitSpin">
-                <property name="contextMenuPolicy">
-                 <enum>Qt::NoContextMenu</enum>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔一段时间保存已录制的文字，并继续重新录制&lt;/p&gt;&lt;p&gt;免得文件太大，也避免程序闪退导致大量数据丢失&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="frame">
-                 <bool>false</bool>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                </property>
-                <property name="buttonSymbols">
-                 <enum>QAbstractSpinBox::UpDownArrows</enum>
-                </property>
-                <property name="suffix">
-                 <string>分钟</string>
-                </property>
-                <property name="prefix">
-                 <string>自动分割每</string>
-                </property>
-                <property name="minimum">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <number>600</number>
-                </property>
-                <property name="singleStep">
-                 <number>10</number>
-                </property>
-                <property name="value">
-                 <number>30</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </widget>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
             <string>定时</string>
@@ -3293,218 +3716,6 @@ margin: 6px;</string>
                <enum>QAbstractItemView::ScrollPerPixel</enum>
               </property>
              </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tab_13">
-           <attribute name="title">
-            <string>数据</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_14">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="0,0,0">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="calculateDailyDataCheck">
-                <property name="toolTip">
-                 <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-                </property>
-                <property name="text">
-                 <string>每日数据统计</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton">
-                <property name="styleSheet">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string>今日</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>true</bool>
-                </property>
-                <property name="default">
-                 <bool>false</bool>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="exportDailyButton">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string>导出</string>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_51">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="saveEveryGiftCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>记录礼物历史</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="saveEveryGuardCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>记录每次上船</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="saveMonthGuardCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>记录每月船员</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_54">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="listenMedalUpgradeCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;监听赠送礼物后的勋章升级状况&lt;/p&gt;&lt;p&gt;产生 MEDAL_UPGRADE 事件&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>监听勋章升级</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>215</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_52">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="saveRecvCmdsCheck">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合右边输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>保存CMD</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushRecvCmdsButton">
-                <property name="text">
-                 <string>输入CMDS</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushNextCmdButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>下一条</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_55">
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="timerPushCmdCheck">
-                <property name="text">
-                 <string>定时下一条</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="timerPushCmdSpin">
-                <property name="styleSheet">
-                 <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                </property>
-                <property name="frame">
-                 <bool>false</bool>
-                </property>
-                <property name="suffix">
-                 <string>百毫秒</string>
-                </property>
-                <property name="prefix">
-                 <string>每隔</string>
-                </property>
-                <property name="minimum">
-                 <number>1</number>
-                </property>
-                <property name="maximum">
-                 <number>600</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_31">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
             </item>
            </layout>
           </widget>
@@ -4682,6 +4893,16 @@ margin: 6px;</string>
       <widget class="QWidget" name="preferencePage">
        <layout class="QVBoxLayout" name="verticalLayout_16">
         <item>
+         <widget class="QCheckBox" name="startOnRebootCheck">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>开机自启</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="startupAnimationCheck">
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4715,7 +4936,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>698</width>
+     <width>1165</width>
      <height>21</height>
     </rect>
    </property>
