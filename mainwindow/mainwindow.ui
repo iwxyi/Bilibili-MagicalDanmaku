@@ -955,7 +955,14 @@ margin: 10px;</string>
       <widget class="QWidget" name="danmakuPage">
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <widget class="QScrollArea" name="scrollArea">
+         <widget class="WaterfallScrollArea" name="scrollArea">
+          <property name="styleSheet">
+           <string notr="true">#scrollArea
+{
+	border: none;
+	background: transparent;
+}</string>
+          </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
@@ -964,9 +971,16 @@ margin: 10px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>628</width>
-             <height>423</height>
+             <width>630</width>
+             <height>425</height>
             </rect>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#scrollAreaWidgetContents
+{
+	border: none;
+	background: transparent;
+}</string>
            </property>
            <widget class="QWidget" name="danmakuTimerSettingsCard" native="true">
             <property name="geometry">
@@ -5159,6 +5173,12 @@ margin: 6px;</string>
    <class>WaterFloatButton</class>
    <extends>QPushButton</extends>
    <header>waterfloatbutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterfallScrollArea</class>
+   <extends>QScrollArea</extends>
+   <header>waterfallscrollarea.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

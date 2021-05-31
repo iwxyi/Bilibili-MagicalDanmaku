@@ -688,13 +688,7 @@ void MainWindow::readConfig()
     if (!settings->value("danmaku/touta", false).toBool())
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
-        ui->pkAutoMelonCheck->hide();
-        ui->pkMaxGoldButton->hide();
-        ui->pkMelonValButton->hide();
-        ui->pkJudgeEarlyButton->hide();
-        ui->pkBlankButton->hide();
-        ui->pkAutoMaxGoldCheck->hide();
-        ui->pkAutoMelonCheck->setChecked(false);
+        ui->danmakuToutaSettingsCard->hide();
     }
 
     // 粉丝勋章
