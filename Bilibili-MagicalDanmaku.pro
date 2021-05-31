@@ -98,6 +98,7 @@ SOURCES += \
     mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
     widgets/smooth_scroll/smoothlistwidget.cpp \
+    widgets/smooth_scroll/waterfallscrollarea.cpp \
     widgets/video_player/videosurface.cpp \
     widgets/catch_you_dialog/catchyouwidget.cpp \
     widgets/editor/conditioneditor.cpp \
@@ -164,6 +165,7 @@ HEADERS += \
     third_party/utils/xfytts.h \
     widgets/smooth_scroll/smoothlistwidget.h \
     widgets/smooth_scroll/smoothscrollbean.h \
+    widgets/smooth_scroll/waterfallscrollarea.h \
     widgets/video_player/videosurface.h \
     widgets/RoundedAnimationLabel.h \
     widgets/catch_you_dialog/catchyouwidget.h \
