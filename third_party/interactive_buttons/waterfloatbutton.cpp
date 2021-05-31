@@ -153,6 +153,10 @@ void WaterFloatButton::paintEvent(QPaintEvent *event)
                     text_color.blue() + (aim_color.blue() - text_color.blue()) * pro / 100,
                     255);
             }
+            else
+            {
+                color = text_color;
+            }
             painter.setPen(color);
         }
         else

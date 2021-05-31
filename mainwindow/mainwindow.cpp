@@ -124,6 +124,9 @@ void MainWindow::initView()
     ui->robotNameButton->setFontSize(12);
     ui->robotNameButton->setFixedForePos();
     ui->robotNameButton->setPaddings(6);
+    ui->liveStatusButton->setTextDynamicSize(true);
+    ui->liveStatusButton->setText("");
+    ui->liveStatusButton->setRadius(fluentRadius);
 
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
@@ -1829,7 +1832,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         QString text = ui->startLiveWordsEdit->text();
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
             sendAutoMsg(text);
-        ui->liveStatusLabel->setText("已开播");
+        ui->liveStatusButton->setText("已开播");
         liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
             connectServerTimer->stop();
@@ -2851,7 +2854,7 @@ void MainWindow::initWS()
 
         SOCKET_DEB << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
-        ui->liveStatusLabel->setText("");
+        ui->liveStatusButton->setText("");
 
         heartTimer->stop();
         minuteTimer->stop();
@@ -3194,21 +3197,21 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         if (liveStatus == 0)
         {
-            ui->liveStatusLabel->setText("未开播");
+            ui->liveStatusButton->setText("未开播");
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
         }
         else if (liveStatus == 1)
         {
-            ui->liveStatusLabel->setText("已开播");
+            ui->liveStatusButton->setText("已开播");
         }
         else if (liveStatus == 2)
         {
-            ui->liveStatusLabel->setText("轮播中");
+            ui->liveStatusButton->setText("轮播中");
         }
         else
         {
-            ui->liveStatusLabel->setText("未知状态" + snum(liveStatus));
+            ui->liveStatusButton->setText("未知状态" + snum(liveStatus));
         }
 
         qDebug() << "房间信息: roomid=" << roomId
@@ -7822,7 +7825,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
                 sendAutoMsg(text);
-            ui->liveStatusLabel->setText("已开播");
+            ui->liveStatusButton->setText("已开播");
             liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
@@ -7843,7 +7846,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text);
-            ui->liveStatusLabel->setText("已下播");
+            ui->liveStatusButton->setText("已下播");
             liveStatus = 0;
 
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
@@ -14903,6 +14906,7 @@ void MainWindow::on_thankWelcomeTabButton_clicked()
         btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(themeSfg);
 }
 
 void MainWindow::on_thankGiftTabButton_clicked()
@@ -14916,6 +14920,7 @@ void MainWindow::on_thankGiftTabButton_clicked()
         btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(themeSfg);
 }
 
 void MainWindow::on_thankAttentionTabButton_clicked()
@@ -14929,6 +14934,7 @@ void MainWindow::on_thankAttentionTabButton_clicked()
         btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(themeSfg);
 }
 
 void MainWindow::on_sendMsgMoreButton_clicked()
@@ -14943,4 +14949,11 @@ void MainWindow::on_sendMsgMoreButton_clicked()
 void MainWindow::on_showLiveDanmakuWindowButton_clicked()
 {
     on_actionShow_Live_Danmaku_triggered();
+}
+
+void MainWindow::on_liveStatusButton_clicked()
+{
+    if (!liveStatus)
+        return ;
+    on_actionShow_Live_Video_triggered();
 }

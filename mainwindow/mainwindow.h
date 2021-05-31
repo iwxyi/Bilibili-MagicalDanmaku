@@ -631,6 +631,8 @@ private slots:
 
     void on_showLiveDanmakuWindowButton_clicked();
 
+    void on_liveStatusButton_clicked();
+
 private:
     void initView();
     void initStyle();

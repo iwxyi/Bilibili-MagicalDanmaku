@@ -23,6 +23,12 @@ public:
     static bool getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sg);
 
     static bool getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sbg, QColor *sfg);
+
+    static QColor getFastestColor(QColor bg, QList<QColor> palette);
+
+    static QColor getFastestColor(QColor bg, QList<ColorOctree::ColorCount> palette, int enableCount = 2);
+
+    static QColor randomColor();
 };
 
 #endif // PIXMAPUTIL_H
