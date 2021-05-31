@@ -26,9 +26,9 @@
  ×
  * 邮箱：wxy@iwxyi.com
  * QQ号：482582886
- * 时间：2020.09.09
+ * 时间：2020.12.28
  *
- * 说明：灵性的自定义按钮，简单又又去
+ * 说明：灵性的自定义按钮，简单又有趣
  * 源码：https://github.com/MRXY001/Interactive-Windows-Buttons
  *
  * 本代码为本人编写方便自己使用，现在无私送给大家免费使用。
@@ -86,7 +86,7 @@ public:
     /**
      * 前景额外的图标（可以多个）
      * 可能是角标（比如展开箭头）
-     * 可能时前缀（图例）
+     * 可能是前缀（图例）
      */
     struct PaintAddin
     {
@@ -105,8 +105,8 @@ public:
      */
     struct Jitter
     {
-        Jitter(QPoint p, qint64 t) : point(p), timestamp(t) {}
-        QPoint point;     // 要运动到的目标坐标
+        Jitter(QPointF p, qint64 t) : point(p), timestamp(t) {}
+        QPointF point;     // 要运动到的目标坐标
         qint64 timestamp; // 运动到目标坐标应该的时间戳，结束后删除本次抖动路径对象
     };
 
@@ -117,9 +117,9 @@ public:
      */
     struct Water
     {
-        Water(QPoint p, qint64 t) : point(p), progress(0), press_timestamp(t),
+        Water(QPointF p, qint64 t) : point(p), progress(0), press_timestamp(t),
                                     release_timestamp(0), finish_timestamp(0), finished(false) {}
-        QPoint point;
+        QPointF point;
         int progress;             // 水波纹进度100%（已弃用，当前使用时间戳）
         qint64 press_timestamp;   // 鼠标按下时间戳
         qint64 release_timestamp; // 鼠标松开时间戳。与按下时间戳、现行时间戳一起成为水波纹进度计算参数
@@ -205,6 +205,7 @@ public:
 
     QString getText();
     void setMenu(QMenu *menu);
+    void adjustMinimumSize();
     void setState(bool s = true);
     bool getState();
     virtual void simulateStatePress(bool s = true, bool a = false);
@@ -254,11 +255,12 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
     virtual bool inArea(QPoint point);
+    virtual bool inArea(QPointF point);
     virtual QPainterPath getBgPainterPath();
     virtual QPainterPath getWaterPainterPath(Water water);
     virtual void drawIconBeforeText(QPainter &painter, QRect icon_rect);
 
-    QRect getUnifiedGeometry();
+    QRectF getUnifiedGeometry();
     void updateUnifiedGeometry();
     void paintWaterRipple(QPainter &painter);
     void setJitter();
@@ -293,10 +295,10 @@ signals:
     void signalMouseEnterLater(); // 进入后延迟信号（以渐变动画完成为准，相当于可手动设置）
     void signalMouseLeave();
     void signalMouseLeaveLater(); // 离开后延迟的信号（直至渐变动画完成（要是划过一下子离开，这个也会变快））
-    void signalMousePress(QMouseEvent* event);
-    void signalMousePressLater(QMouseEvent* event);
-    void signalMouseRelease(QMouseEvent* event);
-    void signalMouseReleaseLater(QMouseEvent* event);
+    void signalMousePress(QMouseEvent *event);
+    void signalMousePressLater(QMouseEvent *event);
+    void signalMouseRelease(QMouseEvent *event);
+    void signalMouseReleaseLater(QMouseEvent *event);
 
 public slots:
     virtual void anchorTimeOut();
@@ -321,13 +323,13 @@ protected:
     int show_duration;
     qint64 show_timestamp, hide_timestamp;
     int show_ani_progress;
-    QPoint show_ani_point;
-    QRect paint_rect;
+    QPointF show_ani_point;
+    QRectF paint_rect;
 
     // 鼠标开始悬浮、按下、松开、离开的坐标和时间戳
     // 鼠标锚点、目标锚点、当前锚点的坐标；当前XY的偏移量
-    QPoint enter_pos, press_pos, release_pos, mouse_pos, anchor_pos /*目标锚点渐渐靠近鼠标*/;
-    QPoint offset_pos /*当前偏移量*/, effect_pos, release_offset;                // 相对中心、相对左上角、弹起时的平方根偏移
+    QPointF enter_pos, press_pos, release_pos, mouse_pos, anchor_pos /*目标锚点渐渐靠近鼠标*/;
+    QPointF offset_pos /*当前偏移量*/, effect_pos, release_offset;                // 相对中心、相对左上角、弹起时的平方根偏移
     bool hovering, pressing;                                                     // 是否悬浮和按下的状态机
     qint64 hover_timestamp, leave_timestamp, press_timestamp, release_timestamp; // 各种事件的时间戳
     int hover_bg_duration, press_bg_duration, click_ani_duration;                // 各种动画时长
@@ -360,7 +362,7 @@ protected:
 
     // 统一绘制图标的区域（从整个按钮变为中心三分之二，并且根据偏移计算）
     bool unified_geometry; // 上面用不到的话，这个也用不到……
-    int _l, _t, _w, _h;
+    double _l, _t, _w, _h;
 
     // 鼠标拖拽弹起来回抖动效果
     bool jitter_animation;      // 是否开启鼠标松开时的抖动效果

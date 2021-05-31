@@ -3162,6 +3162,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
 
+        // 设置房间描述
         ui->roomDescriptionBrowser->setText(roomDesc);
         {
             QString text = ui->roomDescriptionBrowser->toPlainText();
@@ -3192,7 +3193,10 @@ void MainWindow::getRoomInfo(bool reconnect)
                 cursor.removeSelectedText();
             }
 
-            // 删除
+            if (ui->roomDescriptionBrowser->toPlainText().isEmpty())
+                ui->roomDescriptionBrowser->hide();
+            else
+                ui->roomDescriptionBrowser->show();
         }
 
         if (liveStatus == 0)
