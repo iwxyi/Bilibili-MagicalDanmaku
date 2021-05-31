@@ -182,6 +182,12 @@ void MainWindow::initView()
 
         menu->exec();
     });
+
+    // 弹幕设置瀑布流
+    ui->scrollArea->setItemSpacing(15, 15);
+    ui->scrollArea->initFixedChildren();
+    ui->scrollArea->adjustWidgetsBySizeHint();
+    ui->scrollArea->setWidgetsEqualWidth();
 }
 
 void MainWindow::initStyle()

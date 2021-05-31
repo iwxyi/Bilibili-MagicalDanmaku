@@ -1,6 +1,7 @@
 #include <QWheelEvent>
 #include <QDebug>
 #include <QPropertyAnimation>
+#include <QScrollBar>
 #include "waterfallscrollarea.h"
 
 WaterfallScrollArea::WaterfallScrollArea(QWidget *parent) : QScrollArea(parent)
@@ -38,7 +39,7 @@ void WaterfallScrollArea::setAlignment(Qt::Alignment align)
 
 /// 固定的子项，就是以后resize的时候不需要重复获取子项了
 /// 理论上来说能够提高一些速度
-/// 禁止动态添加控件时使用，或者添加假手动更新子控件
+/// 动态添加控件时不建议使用，若要使用务必在更新后手动调用 updateChildWidgets
 void WaterfallScrollArea::initFixedChildren()
 {
     fixedChildren = true;
@@ -134,11 +135,23 @@ QList<QWidget *> WaterfallScrollArea::getWidgets()
 
 /// 固定所有子控件的大小
 /// 需要先 updateChildWidgets
-void WaterfallScrollArea::setChildrenFixedSize()
+void WaterfallScrollArea::adjustWidgetsBySizeHint()
 {
+    if (widgets.isEmpty())
+        updateChildWidgets();
     foreach (auto w, widgets)
     {
         w->setFixedSize(w->sizeHint());
+    }
+}
+
+void WaterfallScrollArea::setWidgetsEqualWidth()
+{
+    if (widgets.isEmpty())
+        updateChildWidgets();
+    foreach (auto w, widgets)
+    {
+        w->setFixedWidth(colWidth);
     }
 }
 
@@ -169,9 +182,95 @@ void WaterfallScrollArea::updateChildWidgets()
     }
 }
 
+/// ===================================== 瀑布流 =====================================
+
+void WaterfallScrollArea::setSmoothScrollEnabled(bool e)
+{
+    this->enabledSmoothScroll = e;
+}
+
+void WaterfallScrollArea::setSmoothScrollSpeed(int speed)
+{
+    this->smoothScrollSpeed = speed;
+}
+
+void WaterfallScrollArea::setSmoothScrollDuration(int duration)
+{
+    this->smoothScrollDuration = duration;
+}
+
+void WaterfallScrollArea::scrollToBottom()
+{
+    if (!enabledSmoothScroll)
+        return verticalScrollBar()->setSliderPosition(verticalScrollBar()->maximum());
+
+    auto scrollBar = verticalScrollBar();
+    int delta = scrollBar->maximum() + scrollBar->pageStep() - scrollBar->sliderPosition();
+    if (delta <= 1)
+        return verticalScrollBar()->setSliderPosition(verticalScrollBar()->maximum());
+    addSmoothScrollThread(delta, smoothScrollDuration);
+
+    toBottoming++;
+    connect(smooth_scrolls.last(), &SmoothScrollBean::signalSmoothScrollFinished, this, [=]{
+        toBottoming--;
+        if (toBottoming < 0) // 到底部可能会提前中止
+            toBottoming = 0;
+    });
+}
+
+bool WaterfallScrollArea::isToBottoming() const
+{
+    return toBottoming;
+}
+
+void WaterfallScrollArea::addSmoothScrollThread(int distance, int duration)
+{
+    SmoothScrollBean* bean = new SmoothScrollBean(distance, duration);
+    smooth_scrolls.append(bean);
+    connect(bean, SIGNAL(signalSmoothScrollDistance(SmoothScrollBean*, int)), this, SLOT(slotSmoothScrollDistance(SmoothScrollBean*, int)));
+    connect(bean, &SmoothScrollBean::signalSmoothScrollFinished, [=]{
+        delete bean;
+        smooth_scrolls.removeOne(bean);
+    });
+}
+
+void WaterfallScrollArea::slotSmoothScrollDistance(SmoothScrollBean *bean, int dis)
+{
+    int slide = verticalScrollBar()->sliderPosition();
+    slide += dis;
+    if (slide < 0)
+    {
+        slide = 0;
+        smooth_scrolls.removeOne(bean);
+    }
+    else if (slide > verticalScrollBar()->maximum())
+    {
+        slide = verticalScrollBar()->maximum();
+        smooth_scrolls.removeOne(bean);
+    }
+    verticalScrollBar()->setSliderPosition(slide);
+}
+
 void WaterfallScrollArea::wheelEvent(QWheelEvent *event)
 {
-
-
-    return QScrollArea::wheelEvent(event);
+    if (enabledSmoothScroll)
+    {
+        if (event->delta() > 0) // 上滚
+        {
+            if (verticalScrollBar()->sliderPosition() == verticalScrollBar()->minimum() && !smooth_scrolls.size()) // 到顶部了
+                emit signalLoadTop();
+            addSmoothScrollThread(-smoothScrollSpeed, smoothScrollDuration);
+            toBottoming = 0;
+        }
+        else if (event->delta() < 0) // 下滚
+        {
+            if (verticalScrollBar()->sliderPosition() == verticalScrollBar()->maximum() && !smooth_scrolls.size()) // 到顶部了
+                emit signalLoadBottom();
+            addSmoothScrollThread(smoothScrollSpeed, smoothScrollDuration);
+        }
+    }
+    else
+    {
+        QScrollArea::wheelEvent(event);
+    }
 }
