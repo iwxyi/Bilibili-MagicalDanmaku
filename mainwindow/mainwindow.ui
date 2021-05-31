@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>563</width>
-    <height>548</height>
+    <width>626</width>
+    <height>516</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -171,7 +171,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -954,6 +954,72 @@ margin: 10px;</string>
       </widget>
       <widget class="QWidget" name="danmakuPage">
        <layout class="QVBoxLayout" name="verticalLayout_5">
+        <property name="leftMargin">
+         <number>9</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>9</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_21" stretch="1,0,1">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="widget" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background: lightgray;
+margin: 6px;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="WaterFloatButton" name="showLiveDanmakuWindowButton">
+            <property name="text">
+             <string>召唤弹幕姬</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_2" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>1</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background: lightgray;
+margin: 6px;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item>
          <widget class="WaterfallScrollArea" name="scrollArea">
           <property name="styleSheet">
@@ -971,8 +1037,8 @@ margin: 10px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>495</width>
-             <height>446</height>
+             <width>558</width>
+             <height>400</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2776,7 +2842,10 @@ margin: 40px;</string>
             <property name="styleSheet">
              <string notr="true">QLineEdit
 {
-	background: transparent;
+	background: white;
+	border-radius: 5px;
+	padding-left: 9px;
+	padding-right: 9px;
 }</string>
             </property>
             <property name="placeholderText">
@@ -2785,12 +2854,23 @@ margin: 40px;</string>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="SendMsgButton">
+           <widget class="InteractiveButtonBase" name="SendMsgButton">
             <property name="text">
              <string>发送弹幕</string>
             </property>
             <property name="flat">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="InteractiveButtonBase" name="sendMsgMoreButton">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="../resources/resource.qrc">
+              <normaloff>:/icons/dotdotdot</normaloff>:/icons/dotdotdot</iconset>
             </property>
            </widget>
           </item>
@@ -5035,7 +5115,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>563</width>
+     <width>626</width>
      <height>21</height>
     </rect>
    </property>

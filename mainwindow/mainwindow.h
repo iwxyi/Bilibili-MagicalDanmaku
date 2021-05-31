@@ -627,6 +627,10 @@ private slots:
 
     void on_thankAttentionTabButton_clicked();
 
+    void on_sendMsgMoreButton_clicked();
+
+    void on_showLiveDanmakuWindowButton_clicked();
+
 private:
     void initView();
     void initStyle();

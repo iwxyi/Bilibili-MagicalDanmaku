@@ -50,6 +50,9 @@ void WaterFallButtonGroup::addButton(QString s, bool selected)
 
     btn->setAutoTextColor(false);
     connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+        if (!selectable)
+            return ;
+
         selectBtn(btn);
         if (btn->getState())
             emit signalSelected(s);

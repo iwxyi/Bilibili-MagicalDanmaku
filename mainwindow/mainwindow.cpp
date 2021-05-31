@@ -149,6 +149,7 @@ void MainWindow::initView()
     roomSelectorBtn->setSquareSize();
     roomSelectorBtn->setRadius(fluentRadius);
     roomSelectorBtn->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
+    ui->tagsButtonGroup->setSelecteable(false);
 
     // 避免压缩
     ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
@@ -182,20 +183,10 @@ void MainWindow::initView()
         menu->exec();
     });
 
-    // 答谢页面
-    thankTabButtons = {
-        ui->thankWelcomeTabButton,
-        ui->thankGiftTabButton,
-        ui->thankAttentionTabButton
-    };
-    foreach (auto btn, thankTabButtons)
-    {
-        btn->setAutoTextColor(false);
-        btn->setPaddings(18, 18, 0, 0);
-    }
-    ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
-
     // 弹幕设置瀑布流
+    ui->showLiveDanmakuWindowButton->setAutoTextColor(false);
+    ui->showLiveDanmakuWindowButton->setPaddings(16, 16, 4, 4);
+    ui->showLiveDanmakuWindowButton->setFixedForeSize();
     ui->scrollArea->setItemSpacing(24, 24);
     ui->scrollArea->initFixedChildren();
     ui->scrollArea->adjustWidgetsBySizeHint();
@@ -209,6 +200,27 @@ void MainWindow::initView()
         effect->setYOffset(4);
         w->setGraphicsEffect(effect);
     }
+
+    ui->SendMsgButton->setFixedForeSize();
+    ui->sendMsgMoreButton->setSquareSize();
+    ui->SendMsgButton->setRadius(fluentRadius);
+    ui->sendMsgMoreButton->setRadius(fluentRadius);
+
+    // 答谢页面
+    thankTabButtons = {
+        ui->thankWelcomeTabButton,
+        ui->thankGiftTabButton,
+        ui->thankAttentionTabButton
+    };
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setAutoTextColor(false);
+        btn->setPaddings(18, 18, 0, 0);
+    }
+    ui->thankTopTabGroup->layout()->activate();
+    ui->thankTopTabGroup->setFixedHeight(ui->thankTopTabGroup->sizeHint().height());
+    ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
+
 }
 
 void MainWindow::initStyle()
@@ -1926,9 +1938,9 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
 
 void MainWindow::on_SendMsgButton_clicked()
 {
-    QString msg = ui->SendMsgEdit->text();
-    msg = processDanmakuVariants(msg, LiveDanmaku());
-    sendAutoMsg(msg);
+//    QString msg = ui->SendMsgEdit->text();
+//    msg = processDanmakuVariants(msg, LiveDanmaku());
+//    sendAutoMsg(msg);
 }
 
 void MainWindow::on_AIReplyCheck_stateChanged(int)
@@ -3419,6 +3431,9 @@ void MainWindow::getRoomCover(QString url)
                                                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
             ui->robotNameButton->setTextColor(fg);
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
+            thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
+            ui->showLiveDanmakuWindowButton->setTextColor(fg);
+            ui->SendMsgButton->setTextColor(fg);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -14885,6 +14900,7 @@ void MainWindow::on_thankWelcomeTabButton_clicked()
     foreach (auto btn, thankTabButtons)
     {
         btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
 }
@@ -14897,6 +14913,7 @@ void MainWindow::on_thankGiftTabButton_clicked()
     foreach (auto btn, thankTabButtons)
     {
         btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
 }
@@ -14909,6 +14926,21 @@ void MainWindow::on_thankAttentionTabButton_clicked()
     foreach (auto btn, thankTabButtons)
     {
         btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
     }
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+}
+
+void MainWindow::on_sendMsgMoreButton_clicked()
+{
+    newFacileMenu;
+
+    menu->addAction(ui->actionSend_Long_Text);
+
+    menu->exec();
+}
+
+void MainWindow::on_showLiveDanmakuWindowButton_clicked()
+{
+    on_actionShow_Live_Danmaku_triggered();
 }
