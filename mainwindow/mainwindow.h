@@ -42,6 +42,7 @@
 #include "eternalblockdialog.h"
 #include "picturebrowser.h"
 #include "netinterface.h"
+#include "waterfloatbutton.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -620,6 +621,12 @@ private slots:
 
     void on_robotNameButton_clicked();
 
+    void on_thankWelcomeTabButton_clicked();
+
+    void on_thankGiftTabButton_clicked();
+
+    void on_thankAttentionTabButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -842,6 +849,7 @@ private:
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;
+    QList<WaterFloatButton*> thankTabButtons;
 
     // 房间信息
     QString roomId;

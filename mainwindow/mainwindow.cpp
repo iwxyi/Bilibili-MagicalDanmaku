@@ -100,7 +100,6 @@ void MainWindow::initView()
             foreach (auto btn, sideButtonList)
             {
                 btn->setNormalColor(Qt::transparent);
-                btn->update();
             }
             sideButtonList.at(i)->setNormalColor(themeSbg);
         });
@@ -182,6 +181,19 @@ void MainWindow::initView()
 
         menu->exec();
     });
+
+    // 答谢页面
+    thankTabButtons = {
+        ui->thankWelcomeTabButton,
+        ui->thankGiftTabButton,
+        ui->thankAttentionTabButton
+    };
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setAutoTextColor(false);
+        btn->setPaddings(18, 18, 0, 0);
+    }
+    ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
     // 弹幕设置瀑布流
     ui->scrollArea->setItemSpacing(24, 24);
@@ -277,6 +289,11 @@ void MainWindow::readConfig()
     int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
         ui->tabWidget->setCurrentIndex(tabIndex);
+
+    // 答谢标签
+    int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
+    if (thankStackIndex >= 0 && thankStackIndex < ui->thankStackedWidget->count())
+        ui->thankStackedWidget->setCurrentIndex(thankStackIndex);
 
     // 房间号
     roomId = settings->value("danmaku/roomId", "").toString();
@@ -3401,6 +3418,7 @@ void MainWindow::getRoomCover(QString url)
             ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
                                                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
             ui->robotNameButton->setTextColor(fg);
+            thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -14857,4 +14875,40 @@ void MainWindow::on_robotNameButton_clicked()
     menu->addAction(ui->actionSet_Cookie);
     menu->addAction(ui->actionSet_Danmaku_Data_Format);
     menu->exec();
+}
+
+void MainWindow::on_thankWelcomeTabButton_clicked()
+{
+    ui->thankStackedWidget->setCurrentIndex(0);
+    settings->setValue("mainwindow/thankStackIndex", 0);
+
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+    }
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+}
+
+void MainWindow::on_thankGiftTabButton_clicked()
+{
+    ui->thankStackedWidget->setCurrentIndex(1);
+    settings->setValue("mainwindow/thankStackIndex", 1);
+
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+    }
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+}
+
+void MainWindow::on_thankAttentionTabButton_clicked()
+{
+    ui->thankStackedWidget->setCurrentIndex(2);
+    settings->setValue("mainwindow/thankStackIndex", 2);
+
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+    }
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
 }

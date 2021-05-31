@@ -438,6 +438,7 @@ void InteractiveButtonBase::setBgColor(QColor hover, QColor press)
 void InteractiveButtonBase::setNormalColor(QColor color)
 {
     normal_bg = color;
+    update();
 }
 
 /**

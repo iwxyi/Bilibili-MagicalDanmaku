@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1165</width>
-    <height>943</height>
+    <width>563</width>
+    <height>548</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -171,7 +171,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -971,8 +971,8 @@ margin: 10px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1097</width>
-             <height>841</height>
+             <width>495</width>
+             <height>446</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2800,6 +2800,18 @@ margin: 40px;</string>
       </widget>
       <widget class="QWidget" name="thankPage">
        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="leftMargin">
+         <number>9</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
@@ -2816,25 +2828,69 @@ margin: 40px;</string>
            </spacer>
           </item>
           <item>
-           <widget class="WaterFloatButton" name="pushButton_2">
-            <property name="text">
-             <string>欢迎</string>
+           <widget class="QWidget" name="thankTopTabGroup" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">#thankTopTabGroup
+{
+	background: white;
+	border-radius: 10px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_18">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="WaterFloatButton" name="thankWelcomeTabButton">
+               <property name="text">
+                <string>欢迎</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="WaterFloatButton" name="thankGiftTabButton">
+               <property name="text">
+                <string>送礼</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="WaterFloatButton" name="thankAttentionTabButton">
+               <property name="text">
+                <string>关注</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <widget class="WaterFloatButton" name="pushButton_3">
-            <property name="text">
-             <string>送礼</string>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="WaterFloatButton" name="pushButton_4">
-            <property name="text">
-             <string>关注</string>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
             </property>
-           </widget>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>6</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <spacer name="horizontalSpacer_17">
@@ -2853,11 +2909,30 @@ margin: 40px;</string>
         </item>
         <item>
          <widget class="QStackedWidget" name="thankStackedWidget">
+          <property name="styleSheet">
+           <string notr="true">#thankStackedWidget, #page, #page_2, #page_3
+{
+	background: white;
+	border-radius: 5px;
+}</string>
+          </property>
           <property name="currentIndex">
            <number>2</number>
           </property>
           <widget class="QWidget" name="page">
            <layout class="QVBoxLayout" name="verticalLayout_35">
+            <property name="leftMargin">
+             <number>9</number>
+            </property>
+            <property name="topMargin">
+             <number>9</number>
+            </property>
+            <property name="rightMargin">
+             <number>9</number>
+            </property>
+            <property name="bottomMargin">
+             <number>9</number>
+            </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_15">
               <property name="topMargin">
@@ -2965,6 +3040,18 @@ margin: 40px;</string>
           </widget>
           <widget class="QWidget" name="page_2">
            <layout class="QVBoxLayout" name="verticalLayout_10">
+            <property name="leftMargin">
+             <number>9</number>
+            </property>
+            <property name="topMargin">
+             <number>9</number>
+            </property>
+            <property name="rightMargin">
+             <number>9</number>
+            </property>
+            <property name="bottomMargin">
+             <number>9</number>
+            </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_16">
               <property name="topMargin">
@@ -3150,6 +3237,18 @@ margin: 40px;</string>
           </widget>
           <widget class="QWidget" name="page_3">
            <layout class="QVBoxLayout" name="verticalLayout_36">
+            <property name="leftMargin">
+             <number>9</number>
+            </property>
+            <property name="topMargin">
+             <number>9</number>
+            </property>
+            <property name="rightMargin">
+             <number>9</number>
+            </property>
+            <property name="bottomMargin">
+             <number>9</number>
+            </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_17">
               <property name="topMargin">
@@ -4936,7 +5035,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1165</width>
+     <width>563</width>
      <height>21</height>
     </rect>
    </property>
