@@ -2150,7 +2150,7 @@ margin: 40px;</string>
              <rect>
               <x>370</x>
               <y>430</y>
-              <width>151</width>
+              <width>171</width>
               <height>126</height>
              </rect>
             </property>
@@ -2209,7 +2209,7 @@ margin: 40px;</string>
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖/节奏风暴弹幕&lt;/p&gt;&lt;p&gt;只发送弹幕和关注，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>自动参与活动</string>
+                <string>参与天选之子/节奏风暴</string>
                </property>
               </widget>
              </item>
@@ -2392,7 +2392,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="recordCheck">
                <property name="text">
-                <string>自动原画录播</string>
+                <string>原画录播</string>
                </property>
               </widget>
              </item>
@@ -2701,7 +2701,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="saveRecvCmdsCheck">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合右边输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>保存CMD</string>

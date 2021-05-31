@@ -184,11 +184,19 @@ void MainWindow::initView()
     });
 
     // 弹幕设置瀑布流
-    ui->scrollArea->setItemSpacing(15, 15);
-//    ui->scrollArea->enableRandomSizeChildren();
+    ui->scrollArea->setItemSpacing(24, 24);
     ui->scrollArea->initFixedChildren();
     ui->scrollArea->adjustWidgetsBySizeHint();
     ui->scrollArea->setWidgetsEqualWidth();
+    foreach (auto w, ui->scrollArea->getWidgets())
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(w);
+        effect->setColor(QColor(63, 63, 63, 32));
+        effect->setBlurRadius(12);
+        effect->setXOffset(4);
+        effect->setYOffset(4);
+        w->setGraphicsEffect(effect);
+    }
 }
 
 void MainWindow::initStyle()
