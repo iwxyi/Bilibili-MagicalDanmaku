@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>1227</height>
+    <height>644</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -4351,9 +4351,9 @@ margin: 40px;</string>
 	border-radius: 5px;
 }</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_53" stretch="0,1,0,0,0,1">
+          <layout class="QVBoxLayout" name="verticalLayout_53" stretch="0,1,0,0,0,0">
            <property name="spacing">
-            <number>20</number>
+            <number>18</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_27">
@@ -4379,7 +4379,7 @@ margin: 40px;</string>
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;如果已开启点歌姬，则自动点歌并播放&lt;/p&gt;&lt;p&gt;否则自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>启用</string>
+                <string>总开关</string>
                </property>
               </widget>
              </item>
@@ -4703,198 +4703,249 @@ background-repeat:none;</string>
             </layout>
            </item>
            <item>
-            <widget class="QWidget" name="musicConfigCardWidget" native="true">
-             <property name="styleSheet">
-              <string notr="true">#musicConfigCardWidget
+            <layout class="QHBoxLayout" name="horizontalLayout_33" stretch="1,6,1">
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QWidget" name="musicConfigCardWidget" native="true">
+               <property name="styleSheet">
+                <string notr="true">#musicConfigCardWidget
 {
 	background: #f2f2f2;
 	border-radius: 5px;
 }</string>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_54">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_45" stretch="0,0,0">
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_54">
                 <item>
-                 <widget class="QCheckBox" name="orderSongsToFileCheck">
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <layout class="QHBoxLayout" name="horizontalLayout_45" stretch="0,0,0">
+                  <property name="topMargin">
+                   <number>0</number>
                   </property>
-                  <property name="text">
-                   <string>列表读取接口</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="orderSongsToFileFormatEdit">
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}、&lt;/p&gt;&lt;p&gt;{当前歌名}、{当前歌手}、{当前用户}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QLineEdit
+                  <item>
+                   <widget class="QCheckBox" name="orderSongsToFileCheck">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="text">
+                     <string>列表读取接口</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="orderSongsToFileFormatEdit">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}、&lt;/p&gt;&lt;p&gt;{当前歌名}、{当前歌手}、{当前用户}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLineEdit
 {
 	background: transparent;
 }</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSpinBox" name="orderSongsToFileMaxSpin">
-                  <property name="contextMenuPolicy">
-                   <enum>Qt::NoContextMenu</enum>
-                  </property>
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示在列表中的最多数量（不影响实际点歌上限）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QAbstractSpinBox
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="orderSongsToFileMaxSpin">
+                    <property name="contextMenuPolicy">
+                     <enum>Qt::NoContextMenu</enum>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;显示在列表中的最多数量（不影响实际点歌上限）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QAbstractSpinBox
 {
 	background: transparent;
 }</string>
-                  </property>
-                  <property name="frame">
-                   <bool>false</bool>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                  <property name="suffix">
-                   <string>行</string>
-                  </property>
-                  <property name="prefix">
-                   <string>最多</string>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>99</number>
-                  </property>
-                  <property name="value">
-                   <number>99</number>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_49">
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QCheckBox" name="songLyricsToFileCheck">
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="text">
-                   <string>歌词读取接口</string>
-                  </property>
-                 </widget>
+                    </property>
+                    <property name="frame">
+                     <bool>false</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="suffix">
+                     <string>行</string>
+                    </property>
+                    <property name="prefix">
+                     <string>最多</string>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>99</number>
+                    </property>
+                    <property name="value">
+                     <number>99</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
-                 <widget class="QSpinBox" name="songLyricsToFileMaxSpin">
-                  <property name="contextMenuPolicy">
-                   <enum>Qt::NoContextMenu</enum>
+                 <layout class="QHBoxLayout" name="horizontalLayout_49">
+                  <property name="topMargin">
+                   <number>0</number>
                   </property>
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;当前歌词及其后面的行数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QAbstractSpinBox
+                  <item>
+                   <widget class="QCheckBox" name="songLyricsToFileCheck">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="text">
+                     <string>歌词读取接口</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="songLyricsToFileMaxSpin">
+                    <property name="contextMenuPolicy">
+                     <enum>Qt::NoContextMenu</enum>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;当前歌词及其后面的行数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QAbstractSpinBox
 {
 	background: transparent;
 }</string>
-                  </property>
-                  <property name="frame">
-                   <bool>false</bool>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                  <property name="suffix">
-                   <string>行</string>
-                  </property>
-                  <property name="prefix">
-                   <string>最多</string>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>999</number>
-                  </property>
-                  <property name="value">
-                   <number>2</number>
-                  </property>
-                 </widget>
+                    </property>
+                    <property name="frame">
+                     <bool>false</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="suffix">
+                     <string>行</string>
+                    </property>
+                    <property name="prefix">
+                     <string>最多</string>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>999</number>
+                    </property>
+                    <property name="value">
+                     <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_27">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
                 </item>
                 <item>
-                 <spacer name="horizontalSpacer_27">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                 <layout class="QHBoxLayout" name="horizontalLayout_43">
+                  <property name="topMargin">
+                   <number>0</number>
                   </property>
-                  <property name="sizeHint" stdset="0">
+                  <item>
+                   <widget class="QCheckBox" name="autoPauseOuterMusicCheck">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌开始播放时，自动调用外部播放器（例如网易云）快捷键，使其自动暂停&lt;/p&gt;&lt;p&gt;点的所有歌曲都播放结束后，再次自动调用外部播放器快捷键，恢复其播放&lt;/p&gt;&lt;p&gt;无法判断播放状态，例如播放器没有播放时，会误让它播放&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="text">
+                     <string>自动暂停其他播放器</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="outerMusicKeyEdit">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;音乐播放器全局暂停快捷键&lt;/p&gt;&lt;p&gt;没有的话，需要在对应软件中设置&lt;/p&gt;&lt;p&gt;并填入到本输入框中，不分大小写&lt;/p&gt;&lt;p&gt;例如：ctrl+alt+p&lt;/p&gt;&lt;p&gt;暂时支持：ctrl、shift、alt、a-z、0-9&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                    </property>
+                    <property name="placeholderText">
+                     <string>音乐软件暂停快捷键：ctrl+p</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="diangeHistoryListWidget">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
                    <size>
-                    <width>40</width>
-                    <height>20</height>
+                    <width>0</width>
+                    <height>0</height>
                    </size>
                   </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_43">
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QCheckBox" name="autoPauseOuterMusicCheck">
-                  <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌开始播放时，自动调用外部播放器（例如网易云）快捷键，使其自动暂停&lt;/p&gt;&lt;p&gt;点的所有歌曲都播放结束后，再次自动调用外部播放器快捷键，恢复其播放&lt;/p&gt;&lt;p&gt;无法判断播放状态，例如播放器没有播放时，会误让它播放&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>80</height>
+                   </size>
                   </property>
-                  <property name="text">
-                   <string>自动暂停其他播放器</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="outerMusicKeyEdit">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;音乐播放器全局暂停快捷键&lt;/p&gt;&lt;p&gt;没有的话，需要在对应软件中设置&lt;/p&gt;&lt;p&gt;并填入到本输入框中，不分大小写&lt;/p&gt;&lt;p&gt;例如：ctrl+alt+p&lt;/p&gt;&lt;p&gt;暂时支持：ctrl、shift、alt、a-z、0-9&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌历史&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="styleSheet">
-                   <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                  </property>
-                  <property name="placeholderText">
-                   <string>音乐软件暂停快捷键：ctrl+p</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QListWidget" name="diangeHistoryListWidget">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌历史&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QListWidget
+                   <string notr="true">QListWidget
 {
 	background: transparent;
 	border: none;
 }</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -5592,7 +5643,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel2">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，请开发者喝杯咖啡吧：&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;捐赠&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者喝杯咖啡&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>

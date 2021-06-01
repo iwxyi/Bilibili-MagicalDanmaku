@@ -865,6 +865,7 @@ private:
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;
     QList<WaterFloatButton*> thankTabButtons;
+    InteractiveButtonBase* extensionButton;
 
     // 房间信息
     QString roomId;

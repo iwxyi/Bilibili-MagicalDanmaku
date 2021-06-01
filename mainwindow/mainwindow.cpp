@@ -243,6 +243,31 @@ void MainWindow::initView()
         effect->setYOffset(4);
         ui->showOrderPlayerButton->setGraphicsEffect(effect);
     }
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(ui->musicConfigCardWidget);
+        effect->setColor(QColor(63, 63, 63, 32));
+        effect->setBlurRadius(24);
+        effect->setXOffset(2);
+        effect->setYOffset(2);
+        ui->musicConfigCardWidget->setGraphicsEffect(effect);
+    }
+
+    // 扩展页面
+    extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
+    extensionButton->setRadius(fluentRadius);
+    extensionButton->setSquareSize();
+    int tabBarHeight = ui->tabWidget->tabBar()->height();
+    extensionButton->setFixedSize(tabBarHeight, tabBarHeight);
+    extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
+    extensionButton->show();
+    connect(extensionButton, &InteractiveButtonBase::clicked, this, [=]{
+        newFacileMenu;
+        menu->addAction(ui->actionCustom_Variant);
+        menu->split()->addAction(ui->actionPaste_Code);
+        menu->addAction(ui->actionGenerate_Default_Code);
+        menu->addAction(ui->actionRead_Default_Code);
+        menu->exec();
+    });
 }
 
 void MainWindow::initStyle()
@@ -1175,6 +1200,9 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
         ui->roomCoverLabel->setMinimumSize(1, 1); */
     }
+
+    // 按钮大小
+    extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
 
     // 自动调整任务列表大小
     for (int row = 0; row < ui->taskListWidget->count(); row++)
