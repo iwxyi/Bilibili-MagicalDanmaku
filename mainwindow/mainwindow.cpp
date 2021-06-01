@@ -251,6 +251,14 @@ void MainWindow::initView()
         effect->setYOffset(2);
         ui->musicConfigCardWidget->setGraphicsEffect(effect);
     }
+    ui->musicImageWidget->setPixmap(QPixmap(":/bg/bg"));
+    ui->musicImageWidget->setPart([=](QRect canvas) -> QPainterPath {
+        int w = canvas.width(), h = canvas.height();
+        QPainterPath path;
+        path.addRoundedRect(w / 9, h / 3, w / 3, h * 2 / 3, fluentRadius, fluentRadius);
+        path.addRoundedRect(w * 5 / 9, 0, w / 3, h * 2 / 3, fluentRadius, fluentRadius);
+        return path;
+    });
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);

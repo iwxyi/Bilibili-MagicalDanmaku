@@ -163,6 +163,7 @@ HEADERS += \
     third_party/qrencode/split.h \
     third_party/utils/myjson.h \
     third_party/utils/xfytts.h \
+    widgets/partimagewidget.h \
     widgets/smooth_scroll/smoothlistwidget.h \
     widgets/smooth_scroll/smoothscrollbean.h \
     widgets/smooth_scroll/waterfallscrollarea.h \

@@ -1040,8 +1040,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>1111</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4351,9 +4351,9 @@ margin: 40px;</string>
 	border-radius: 5px;
 }</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_53" stretch="0,1,0,0,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_53" stretch="0,1,0,0">
            <property name="spacing">
-            <number>18</number>
+            <number>6</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_27">
@@ -4387,7 +4387,7 @@ margin: 40px;</string>
            </item>
            <item>
             <widget class="QWidget" name="musicBigTitleWidget" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_23" stretch="1,1">
+             <layout class="QHBoxLayout" name="horizontalLayout_23" stretch="5,7">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_49">
                 <item>
@@ -4446,259 +4446,281 @@ font-weight: 500;</string>
                </layout>
               </item>
               <item>
-               <widget class="QWidget" name="widget_4" native="true"/>
+               <widget class="PartImageWidget" name="musicImageWidget" native="true"/>
               </item>
              </layout>
             </widget>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_34">
+            <layout class="QVBoxLayout" name="verticalLayout_9">
+             <property name="spacing">
+              <number>20</number>
+             </property>
              <property name="topMargin">
-              <number>0</number>
+              <number>18</number>
+             </property>
+             <property name="bottomMargin">
+              <number>18</number>
              </property>
              <item>
-              <spacer name="horizontalSpacer_25">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+              <layout class="QHBoxLayout" name="horizontalLayout_34">
+               <property name="topMargin">
+                <number>0</number>
                </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="diangeFormatEdit">
-               <property name="styleSheet">
-                <string notr="true">QLineEdit
+               <item>
+                <spacer name="horizontalSpacer_25">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="diangeFormatEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
 {
 	background: transparent;
 	border: none;
 }</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="placeholderText">
-                <string>弹幕点歌的正则表达式</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_31">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_24">
-             <item>
-              <spacer name="horizontalSpacer_7">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_50">
-               <item>
-                <widget class="QLabel" name="label_41">
-                 <property name="minimumSize">
-                  <size>
-                   <width>32</width>
-                   <height>32</height>
-                  </size>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-image:url(:/icons/music_medal);
-background-position:center;
-background-repeat:none;</string>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
                  </property>
-                 <property name="text">
-                  <string/>
+                 <property name="placeholderText">
+                  <string>弹幕点歌的正则表达式</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="diangeNeedMedalCheck">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;带有主播粉丝勋章的点歌弹幕才有效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <spacer name="horizontalSpacer_31">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">要求带粉丝勋章才能点歌</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
                  </property>
-                 <property name="text">
-                  <string>戴勋章点歌</string>
-                 </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
              </item>
              <item>
-              <spacer name="horizontalSpacer_15">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_51">
+              <layout class="QHBoxLayout" name="horizontalLayout_24">
                <item>
-                <widget class="QLabel" name="label_43">
-                 <property name="minimumSize">
+                <spacer name="horizontalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
                   <size>
-                   <width>32</width>
-                   <height>32</height>
+                   <width>40</width>
+                   <height>20</height>
                   </size>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-image:url(:/icons/music_reply);
-background-position:center;
-background-repeat:none;</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
+                </spacer>
                </item>
                <item>
-                <widget class="QCheckBox" name="diangeReplyCheck">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌成功的回复消息，并带有预计多长时间播放&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <layout class="QVBoxLayout" name="verticalLayout_50">
+                 <property name="spacing">
+                  <number>4</number>
                  </property>
-                 <property name="text">
-                  <string>成功回复</string>
+                 <item>
+                  <widget class="QLabel" name="label_41">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>32</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-image:url(:/icons/music_medal);
+background-position:center;
+background-repeat:none;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="diangeNeedMedalCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;带有主播粉丝勋章的点歌弹幕才有效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">要求带粉丝勋章才能点歌</string>
+                   </property>
+                   <property name="text">
+                    <string>戴勋章点歌</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_15">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
-                </widget>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_51">
+                 <property name="spacing">
+                  <number>4</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_43">
+                   <property name="minimumSize">
+                    <size>
+                     <width>32</width>
+                     <height>32</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-image:url(:/icons/music_reply);
+background-position:center;
+background-repeat:none;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="diangeReplyCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌成功的回复消息，并带有预计多长时间播放&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>成功回复</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_16">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_52">
+                 <property name="spacing">
+                  <number>4</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_44">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>32</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>32</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-image:url(:/icons/music_frequency);
+background-position:center;
+background-repeat:none;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="diangeShuaCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>避免刷歌</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_23">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </item>
              <item>
-              <spacer name="horizontalSpacer_16">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_52">
+              <layout class="QHBoxLayout" name="horizontalLayout_25">
                <item>
-                <widget class="QLabel" name="label_44">
-                 <property name="minimumSize">
+                <spacer name="horizontalSpacer_38">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
                   <size>
-                   <width>0</width>
-                   <height>32</height>
+                   <width>40</width>
+                   <height>20</height>
                   </size>
                  </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>32</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">background-image:url(:/icons/music_frequency);
-background-position:center;
-background-repeat:none;</string>
-                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="WaterFloatButton" name="showOrderPlayerButton">
                  <property name="text">
-                  <string/>
+                  <string>召唤点歌姬</string>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="diangeShuaCheck">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <spacer name="horizontalSpacer_39">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
-                 <property name="text">
-                  <string>避免刷歌</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
                  </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_23">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_25">
-             <item>
-              <spacer name="horizontalSpacer_38">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="WaterFloatButton" name="showOrderPlayerButton">
-               <property name="text">
-                <string>召唤点歌姬</string>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_39">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </item>
@@ -4730,6 +4752,18 @@ background-repeat:none;</string>
 }</string>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_54">
+                <property name="leftMargin">
+                 <number>12</number>
+                </property>
+                <property name="topMargin">
+                 <number>12</number>
+                </property>
+                <property name="rightMargin">
+                 <number>12</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>12</number>
+                </property>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_45" stretch="0,0,0">
                   <property name="topMargin">
@@ -4914,7 +4948,7 @@ background-repeat:none;</string>
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>80</height>
+                    <height>60</height>
                    </size>
                   </property>
                   <property name="toolTip">
@@ -6330,6 +6364,12 @@ font-weight: 500;</string>
    <class>WaterfallScrollArea</class>
    <extends>QScrollArea</extends>
    <header>waterfallscrollarea.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PartImageWidget</class>
+   <extends>QWidget</extends>
+   <header>partimagewidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
