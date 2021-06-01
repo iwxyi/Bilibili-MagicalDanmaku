@@ -232,6 +232,17 @@ void MainWindow::initView()
     ui->thankTopTabGroup->setFixedHeight(ui->thankTopTabGroup->sizeHint().height());
     ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
+    // 点歌页面
+    ui->showOrderPlayerButton->setFixedForeSize(true, 12);
+    ui->showOrderPlayerButton->setAutoTextColor(false);
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(ui->showOrderPlayerButton);
+        effect->setColor(QColor(63, 63, 63, 64));
+        effect->setBlurRadius(24);
+        effect->setXOffset(4);
+        effect->setYOffset(4);
+        ui->showOrderPlayerButton->setGraphicsEffect(effect);
+    }
 }
 
 void MainWindow::initStyle()
@@ -3450,6 +3461,8 @@ void MainWindow::getRoomCover(QString url)
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
             ui->showLiveDanmakuWindowButton->setTextColor(fg);
             ui->SendMsgButton->setTextColor(fg);
+            ui->showOrderPlayerButton->setNormalColor(sbg);
+            ui->showOrderPlayerButton->setTextColor(sfg);
 
             // 纯文字label的
             pa = ui->appNameLabel->palette();
