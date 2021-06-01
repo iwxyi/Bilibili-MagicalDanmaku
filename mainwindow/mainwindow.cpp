@@ -259,6 +259,22 @@ void MainWindow::initView()
         path.addRoundedRect(w * 5 / 9, 0, w / 3, h * 2 / 3, fluentRadius, fluentRadius);
         return path;
     });
+    musicTitleDecorateWidget = new CustomPaintWidget(ui->musicContainerWidget);
+    QFont musicTitleColFont(ui->musicBigTitleLabel->font());
+    musicTitleColFont.setPointSize(qMax(musicTitleColFont.pointSize(), 20) * 4 / 3);
+    fm = QFontMetrics(musicTitleColFont);
+    const QString musicTitleDecorate = "ORDER MUSIC";
+    musicTitleDecorateWidget->setFixedSize(fm.height(), fm.horizontalAdvance(musicTitleDecorate));
+    musicTitleDecorateWidget->setPaint([=](QRect geom, QPainter* painter) -> void {
+        QString text = ui->musicBigTitleLabel->text();
+        painter->translate(geom.width(), 0);
+        painter->rotate(90);
+        painter->setFont(musicTitleColFont);
+        painter->setPen(QPen(QColor(128, 128, 128, 32)));
+        painter->drawText(QRect(0, 0, geom.height(), geom.width()), Qt::AlignCenter, musicTitleDecorate);
+    });
+    musicTitleDecorateWidget->lower();
+    musicTitleDecorateWidget->stackUnder(ui->musicBigTitleLabel);
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
@@ -266,7 +282,7 @@ void MainWindow::initView()
     extensionButton->setSquareSize();
     int tabBarHeight = ui->tabWidget->tabBar()->height();
     extensionButton->setFixedSize(tabBarHeight, tabBarHeight);
-    extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
+    // extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
     extensionButton->show();
     connect(extensionButton, &InteractiveButtonBase::clicked, this, [=]{
         newFacileMenu;
@@ -1209,8 +1225,12 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         ui->roomCoverLabel->setMinimumSize(1, 1); */
     }
 
-    // 按钮大小
+    // 一些控件的大小
     extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
+    {
+        QRect g = ui->musicBigTitleLabel->geometry();
+        musicTitleDecorateWidget->move(g.right() - g.width()/4, g.top() - musicTitleDecorateWidget->height()/2 + g.height());
+    }
 
     // 自动调整任务列表大小
     for (int row = 0; row < ui->taskListWidget->count(); row++)

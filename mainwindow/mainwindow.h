@@ -43,6 +43,7 @@
 #include "picturebrowser.h"
 #include "netinterface.h"
 #include "waterfloatbutton.h"
+#include "custompaintwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -866,6 +867,7 @@ private:
     InteractiveButtonBase* roomSelectorBtn;
     QList<WaterFloatButton*> thankTabButtons;
     InteractiveButtonBase* extensionButton;
+    CustomPaintWidget* musicTitleDecorateWidget;
 
     // 房间信息
     QString roomId;

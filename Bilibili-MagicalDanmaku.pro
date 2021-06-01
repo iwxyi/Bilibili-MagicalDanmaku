@@ -135,6 +135,7 @@ HEADERS += \
     third_party/interactive_buttons/watercirclebutton.h \
     third_party/interactive_buttons/waterfallbuttongroup.h \
     third_party/interactive_buttons/waterfloatbutton.h \
+    widgets/custompaintwidget.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \
     mainwindow/mainwindow.h \
