@@ -148,4 +148,12 @@
         <file alias="bear">illustrations/bear.png</file>
         <file alias="bowknot">illustrations/bowknot.png</file>
     </qresource>
+    <qresource prefix="/widgets">
+        <file alias="checked">widgets/checked.png</file>
+        <file alias="checked_hover">widgets/checked_hover.png</file>
+        <file alias="unchecked">widgets/unchecked.png</file>
+        <file alias="checked_press">widgets/checked_press.png</file>
+        <file alias="unchecked_press">widgets/unchecked_press.png</file>
+        <file alias="unchecked_hover">widgets/unckeced_hover.png</file>
+    </qresource>
 </RCC>

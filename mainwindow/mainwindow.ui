@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1040,8 +1040,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>65</width>
-             <height>16</height>
+             <width>760</width>
+             <height>528</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4378,6 +4378,40 @@ margin: 40px;</string>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌格式：点歌 歌名&lt;/p&gt;&lt;p&gt;如果已开启点歌姬，则自动点歌并播放&lt;/p&gt;&lt;p&gt;否则自动复制歌名到剪贴板&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
+               </property>
                <property name="text">
                 <string>总开关</string>
                </property>
@@ -4618,7 +4652,38 @@ background-repeat:none;</string>
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;带有主播粉丝勋章的点歌弹幕才有效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">要求带粉丝勋章才能点歌</string>
+                    <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
                    </property>
                    <property name="text">
                     <string>戴勋章点歌</string>
@@ -4667,6 +4732,40 @@ background-repeat:none;</string>
                   <widget class="QCheckBox" name="diangeReplyCheck">
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌成功的回复消息，并带有预计多长时间播放&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
                    </property>
                    <property name="text">
                     <string>成功回复</string>
@@ -4721,6 +4820,40 @@ background-repeat:none;</string>
                   <widget class="QCheckBox" name="diangeShuaCheck">
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
                    </property>
                    <property name="text">
                     <string>避免刷歌</string>
@@ -4852,6 +4985,40 @@ background-repeat:none;</string>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
+                    <property name="styleSheet">
+                     <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
+                    </property>
                     <property name="text">
                      <string>列表读取接口</string>
                     </property>
@@ -4919,6 +5086,40 @@ background-repeat:none;</string>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
+                    <property name="styleSheet">
+                     <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
+                    </property>
                     <property name="text">
                      <string>歌词读取接口</string>
                     </property>
@@ -4985,6 +5186,40 @@ background-repeat:none;</string>
                    <widget class="QCheckBox" name="autoPauseOuterMusicCheck">
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌开始播放时，自动调用外部播放器（例如网易云）快捷键，使其自动暂停&lt;/p&gt;&lt;p&gt;点的所有歌曲都播放结束后，再次自动调用外部播放器快捷键，恢复其播放&lt;/p&gt;&lt;p&gt;无法判断播放状态，例如播放器没有播放时，会误让它播放&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
                     </property>
                     <property name="text">
                      <string>自动暂停其他播放器</string>
