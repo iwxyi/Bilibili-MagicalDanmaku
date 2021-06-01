@@ -196,6 +196,14 @@ void MainWindow::initView()
     ui->scrollArea->setWidgetsEqualWidth();
     foreach (auto w, ui->scrollArea->getWidgets())
     {
+        // 设置样式
+        w->setStyleSheet("#" + w->objectName() + "{"
+                                                 "background: white;"
+                                                 "border: none;"
+                                                 "border-radius:" + snum(fluentRadius) + ";"
+                                                 "}");
+
+        // 设置阴影
         QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(w);
         effect->setColor(QColor(63, 63, 63, 32));
         effect->setBlurRadius(12);

@@ -154,7 +154,7 @@
          </property>
          <property name="icon">
           <iconset resource="../resources/resource.qrc">
-           <normaloff>:/icons/case</normaloff>:/icons/case</iconset>
+           <normaloff>:/icons/wa</normaloff>:/icons/wa</iconset>
          </property>
         </widget>
        </item>
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1040,8 +1040,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>715</width>
-             <height>314</height>
+             <width>581</width>
+             <height>434</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3559,7 +3559,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_8">
            <attribute name="title">
@@ -5432,7 +5432,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel4">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;this://capture_manager&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;视频截图管理&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://start_pk&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;开启大乱斗&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://guard_catch&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;黑听舰长捕捉&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://catch_you&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;跑骚抓人检测&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://live_status&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;直播状态查询&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://lyrics&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;歌词字幕投稿&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;this://capture_manager&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;视频截图管理&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://start_pk&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;开启大乱斗&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://guard_catch&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;黑听舰长捕捉&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://catch_you&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;跑骚抓人检测&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://live_status&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;直播状态查询&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://lyrics&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;歌词字幕投稿&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
