@@ -278,9 +278,13 @@ void MainWindow::initView()
     connect(extensionButton, &InteractiveButtonBase::clicked, this, [=]{
         newFacileMenu;
         menu->addAction(ui->actionCustom_Variant);
+        menu->addAction(ui->actionData_Path);
         menu->split()->addAction(ui->actionPaste_Code);
         menu->addAction(ui->actionGenerate_Default_Code);
         menu->addAction(ui->actionRead_Default_Code);
+        menu->split()->addAction(ui->actionLocal_Mode);
+        menu->addAction(ui->actionDebug_Mode);
+        menu->addAction(ui->actionLast_Candidate);
         menu->exec();
     });
 }
@@ -1274,7 +1278,9 @@ void MainWindow::switchPageAnimation(int page)
     }
     else if (page == PAGE_THANK)
     {
-
+        QRect g(ui->thankTopTabGroup->geometry());
+        startGeometryAni(ui->thankTopTabGroup,
+                         QRect(g.center().x(), g.top(), 1, g.height()), g);
     }
     else if (page == PAGE_MUSIC)
     {

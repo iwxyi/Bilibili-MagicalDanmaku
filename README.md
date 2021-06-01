@@ -706,7 +706,7 @@ border-image: url(C:/Path/To/Image.png)
 | playing_song     | 当前歌曲           | 点歌姬没有播放歌曲则为空                                     |
 | song_order_uname | 当前歌曲点歌者     | 同上                                                         |
 | random100        | 随机100            | 1~100的随机数，同代码块中的都将随机替换为同一个数，可用于设置抽奖概率 |
-|                  | 特别               | 关注答谢里可用，判断特别关注                                 |
+| special          | 特别关注           | 关注答谢里可用，判断特别关注                                 |
 
 
 

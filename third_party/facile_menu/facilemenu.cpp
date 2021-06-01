@@ -94,7 +94,10 @@ FacileMenuItem *FacileMenu::addAction(QAction *action, bool deleteWithMenu)
     }
     else // 普通的action
     {
-        return addAction(action->icon(), action->text(), [=]{ action->trigger(); });
+        auto ac = addAction(action->icon(), action->text(), [=]{ action->trigger(); });
+        if (action->isChecked())
+            ac->check();
+        return ac;
     }
 }
 
