@@ -95,7 +95,7 @@ void WaterfallScrollArea::adjustWaterfallPos()
     }
     if (alignment == Qt::AlignCenter || alignment == Qt::AlignHCenter) // 居中对齐
     {
-        allLeft = cr.left() + itemMarginH + (cr.width() - itemMarginH * 2 - colCount * (colWidth + itemSpacingH)) / 2 + itemSpacingH;
+        allLeft = cr.left() + (cr.width() - colCount * (colWidth + itemSpacingH)) / 2 + itemSpacingH / 2;
     }
     else if (alignment == Qt::AlignRight) // 靠右对齐
     {
