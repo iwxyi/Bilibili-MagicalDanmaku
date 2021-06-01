@@ -73,6 +73,13 @@ QT_END_NAMESPACE
 #define DANMAKU_SERVER_PORT 1
 #define MUSIC_SERVER_PORT 2
 
+#define PAGE_ROOM 0
+#define PAGE_DANMAKU 1
+#define PAGE_THANK 2
+#define PAGE_MUSIC 3
+#define PAGE_EXTENSION 4
+#define PAGE_PREFENCE 5
+
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
@@ -649,6 +656,9 @@ private:
     void initRuntime();
     void readConfig();
     void initEvent();
+    void adjustPageSize(int page);
+    void switchPageAnimation(int page);
+
     void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
     void appendNewLiveDanmaku(LiveDanmaku danmaku);
     void newLiveDanmakuAdded(LiveDanmaku danmaku);

@@ -82,18 +82,8 @@ void MainWindow::initView()
 
             ui->stackedWidget->setCurrentIndex(sideButtonList.indexOf(button));
 
-            // 房间ID
-            if (i == 0)
-            {
-                adjustRoomIdWidgetPos();
-                showRoomIdWidget();
-                if (!roomCover.isNull())
-                    adjustCoverSizeByRoomCover(roomCover);
-            }
-            else
-            {
-                hideRoomIdWidget();
-            }
+            adjustPageSize(i);
+            switchPageAnimation(i);
 
             // 当前项
             settings->setValue("mainwindow/stackIndex", i);
@@ -188,6 +178,7 @@ void MainWindow::initView()
 
     // 弹幕设置瀑布流
     ui->showLiveDanmakuWindowButton->setAutoTextColor(false);
+    ui->showLiveDanmakuWindowButton->setFontSize(12);
     ui->showLiveDanmakuWindowButton->setPaddings(16, 16, 4, 4);
     ui->showLiveDanmakuWindowButton->setFixedForeSize();
     ui->scrollArea->setItemSpacing(24, 24);
@@ -1130,6 +1121,189 @@ void MainWindow::initEvent()
 
 }
 
+void MainWindow::adjustPageSize(int page)
+{
+    if (page == PAGE_ROOM)
+    {
+        // 自动调整封面大小
+        if (!roomCover.isNull())
+        {
+            adjustCoverSizeByRoomCover(roomCover);
+
+            /* int w = ui->roomCoverLabel->width();
+            if (w > ui->tabWidget->contentsRect().width())
+                w = ui->tabWidget->contentsRect().width();
+            pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+            ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
+            ui->roomCoverLabel->setMinimumSize(1, 1); */
+        }
+    }
+    else if (page == PAGE_DANMAKU)
+    {
+
+    }
+    else if (page == PAGE_THANK)
+    {
+
+    }
+    else if (page == PAGE_MUSIC)
+    {
+        {
+            QRect g = ui->musicBigTitleLabel->geometry();
+            musicTitleDecorateWidget->move(g.right() - g.width()/4, g.top() - musicTitleDecorateWidget->height()/2 + g.height());
+        }
+    }
+    else if (page == PAGE_EXTENSION)
+    {
+        extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
+
+        // 自动调整任务列表大小
+        for (int row = 0; row < ui->taskListWidget->count(); row++)
+        {
+            auto item = ui->taskListWidget->item(row);
+            auto widget = ui->taskListWidget->itemWidget(item);
+            if (!widget)
+                continue;
+            QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
+            auto taskWidget = static_cast<TaskWidget*>(widget);
+            taskWidget->resize(size);
+            taskWidget->autoResizeEdit();
+        }
+
+        for (int row = 0; row < ui->replyListWidget->count(); row++)
+        {
+            auto item = ui->replyListWidget->item(row);
+            auto widget = ui->replyListWidget->itemWidget(item);
+            if (!widget)
+                continue;
+            QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
+            auto replyWidget = static_cast<ReplyWidget*>(widget);
+            replyWidget->resize(size);
+            replyWidget->autoResizeEdit();
+        }
+
+        for (int row = 0; row < ui->eventListWidget->count(); row++)
+        {
+            auto item = ui->eventListWidget->item(row);
+            auto widget = ui->eventListWidget->itemWidget(item);
+            if (!widget)
+                continue;
+            QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+            auto eventWidget = static_cast<EventWidget*>(widget);
+            eventWidget->resize(size);
+            eventWidget->autoResizeEdit();
+        }
+    }
+    else if (page == PAGE_PREFENCE)
+    {
+
+    }
+}
+
+void MainWindow::switchPageAnimation(int page)
+{
+    // 房间ID，可能经常触发
+    if (page == PAGE_ROOM)
+    {
+        adjustRoomIdWidgetPos();
+        showRoomIdWidget();
+        if (!roomCover.isNull())
+            adjustCoverSizeByRoomCover(roomCover);
+    }
+    else
+    {
+        hideRoomIdWidget();
+    }
+
+    auto startGeometryAni = [=](QWidget* widget, QVariant start, QVariant end, int duration = 400, QEasingCurve curve = QEasingCurve::OutCubic){
+        QPropertyAnimation* ani = new QPropertyAnimation(widget, "geometry");
+        ani->setStartValue(start);
+        ani->setEndValue(end);
+        ani->setEasingCurve(curve);
+        ani->setDuration(duration);
+        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        ani->start();
+    };
+
+    auto startGeometryAniDelay = [&](int delay, QWidget* widget, QVariant start, QVariant end, int duration = 400, QEasingCurve curve = QEasingCurve::OutCubic){
+        widget->resize(0, 0);
+        QTimer::singleShot(delay, [=]{
+            startGeometryAni(widget, start, end, duration, curve);
+        });
+    };
+
+    if (page == PAGE_ROOM)
+    {
+        if (ui->upHeaderLabel->pixmap())
+        {
+            QLabel* label = new QLabel(this);
+            label->setFixedSize(ui->upHeaderLabel->size());
+            QPixmap pixmap = *ui->upHeaderLabel->pixmap();
+            label->setPixmap(pixmap);
+            label->show();
+            QPoint pos(ui->upHeaderLabel->mapTo(this, QPoint(0, 0)));
+
+            QPropertyAnimation* ani = new QPropertyAnimation(label, "pos");
+            ani->setStartValue(QPoint(pos.x(), this->height()));
+            ani->setEndValue(pos);
+            ani->setEasingCurve(QEasingCurve::OutBack);
+            ani->setDuration(400);
+            connect(ani, &QPropertyAnimation::finished, this, [=]{
+                ani->deleteLater();
+                label->deleteLater();
+                ui->upHeaderLabel->setPixmap(pixmap);
+            });
+            ani->start();
+
+            QPixmap emptyPixmap(pixmap.size());
+            emptyPixmap.fill(Qt::transparent);
+            ui->upHeaderLabel->setStyleSheet("");
+            ui->upHeaderLabel->setPixmap(emptyPixmap);
+        }
+
+    }
+    else if (page == PAGE_DANMAKU)
+    {
+        QRect g(ui->danmakuTitleSplitWidget1->geometry());
+        startGeometryAni(ui->danmakuTitleSplitWidget1,
+                         QRect(g.right()-1, g.top(), 1, 1), g);
+
+        g = QRect(ui->danmakuTitleSplitWidget2->geometry());
+        startGeometryAni(ui->danmakuTitleSplitWidget2,
+                         QRect(g.left(), g.top(), 1, 1), g);
+    }
+    else if (page == PAGE_THANK)
+    {
+
+    }
+    else if (page == PAGE_MUSIC)
+    {
+        QRect g(musicTitleDecorateWidget->geometry());
+        startGeometryAni(musicTitleDecorateWidget,
+                         QRect(g.left(), -g.height(), g.width(), g.height()), g);
+
+        g = QRect(ui->musicSplitWidget1->geometry());
+        startGeometryAniDelay(500, ui->musicSplitWidget1,
+                         QRect(g.center().x(), g.top(), 1, 1), g);
+    }
+    else if (page == PAGE_EXTENSION)
+    {
+
+    }
+    else if (page == PAGE_PREFENCE)
+    {
+        QRect g(ui->label_36->geometry());
+        startGeometryAni(ui->label_36,
+                         QRect(g.center(), QSize(1,1)), g,
+                         400, QEasingCurve::OutCubic);
+
+        g = QRect(ui->label_39->geometry());
+        startGeometryAniDelay(400, ui->label_39,
+                         QRect(g.center(), QSize(1,1)), g,
+                         400, QEasingCurve::OutCubic);
+    }
+}
+
 MainWindow::~MainWindow()
 {
     if (danmuLogFile)
@@ -1212,62 +1386,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
 
-    // 自动调整封面大小
-    if (!roomCover.isNull())
-    {
-        adjustCoverSizeByRoomCover(roomCover);
-
-        /* int w = ui->roomCoverLabel->width();
-        if (w > ui->tabWidget->contentsRect().width())
-            w = ui->tabWidget->contentsRect().width();
-        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
-        ui->roomCoverLabel->setMinimumSize(1, 1); */
-    }
-
-    // 一些控件的大小
-    extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
-    {
-        QRect g = ui->musicBigTitleLabel->geometry();
-        musicTitleDecorateWidget->move(g.right() - g.width()/4, g.top() - musicTitleDecorateWidget->height()/2 + g.height());
-    }
-
-    // 自动调整任务列表大小
-    for (int row = 0; row < ui->taskListWidget->count(); row++)
-    {
-        auto item = ui->taskListWidget->item(row);
-        auto widget = ui->taskListWidget->itemWidget(item);
-        if (!widget)
-            continue;
-        QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
-        auto taskWidget = static_cast<TaskWidget*>(widget);
-        taskWidget->resize(size);
-        taskWidget->autoResizeEdit();
-    }
-
-    for (int row = 0; row < ui->replyListWidget->count(); row++)
-    {
-        auto item = ui->replyListWidget->item(row);
-        auto widget = ui->replyListWidget->itemWidget(item);
-        if (!widget)
-            continue;
-        QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
-        auto replyWidget = static_cast<ReplyWidget*>(widget);
-        replyWidget->resize(size);
-        replyWidget->autoResizeEdit();
-    }
-
-    for (int row = 0; row < ui->eventListWidget->count(); row++)
-    {
-        auto item = ui->eventListWidget->item(row);
-        auto widget = ui->eventListWidget->itemWidget(item);
-        if (!widget)
-            continue;
-        QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
-        auto eventWidget = static_cast<EventWidget*>(widget);
-        eventWidget->resize(size);
-        eventWidget->autoResizeEdit();
-    }
+    adjustPageSize(ui->stackedWidget->currentIndex());
 }
 
 void MainWindow::changeEvent(QEvent *event)

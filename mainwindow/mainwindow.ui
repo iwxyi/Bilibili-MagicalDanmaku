@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -389,6 +389,9 @@ background-repeat:none;</string>
                </item>
                <item>
                 <widget class="InteractiveButtonBase" name="liveStatusButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>未开播</string>
                  </property>
@@ -975,7 +978,7 @@ margin: 10px;</string>
            <number>0</number>
           </property>
           <item>
-           <widget class="QWidget" name="widget" native="true">
+           <widget class="QWidget" name="danmakuTitleSplitWidget1" native="true">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -996,13 +999,16 @@ margin: 6px;</string>
           </item>
           <item>
            <widget class="WaterFloatButton" name="showLiveDanmakuWindowButton">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string>召唤弹幕姬</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="widget_2" native="true">
+           <widget class="QWidget" name="danmakuTitleSplitWidget2" native="true">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -4423,7 +4429,7 @@ QCheckBox::indicator:checked:pressed {
             <widget class="QWidget" name="musicBigTitleWidget" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_23" stretch="5,7">
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_49">
+               <layout class="QVBoxLayout" name="verticalLayout_49" stretch="3,0,0,1">
                 <property name="spacing">
                  <number>12</number>
                 </property>
@@ -4461,7 +4467,7 @@ QCheckBox::indicator:checked:pressed {
                   <item>
                    <widget class="QLabel" name="musicBigTitleLabel">
                     <property name="styleSheet">
-                     <string notr="true">font-size: 20px;
+                     <string notr="true">font-size: 24px;
 font-weight: 500;</string>
                     </property>
                     <property name="text">
@@ -4552,6 +4558,11 @@ font-weight: 500;</string>
                </item>
                <item>
                 <widget class="QLineEdit" name="diangeFormatEdit">
+                 <property name="toolTip">
+                  <string>点歌的正则表达式
+默认格式：点歌 歌名
+允许空格、逗号、冒号分隔</string>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit
 {
@@ -4588,7 +4599,7 @@ font-weight: 500;</string>
                 <number>0</number>
                </property>
                <item>
-                <widget class="QWidget" name="widget_3" native="true">
+                <widget class="QWidget" name="musicSplitWidget1" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -4910,6 +4921,9 @@ QCheckBox::indicator:checked:pressed {
                </item>
                <item>
                 <widget class="WaterFloatButton" name="showOrderPlayerButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>召唤点歌姬</string>
                  </property>
@@ -4976,7 +4990,7 @@ QCheckBox::indicator:checked:pressed {
                  <number>12</number>
                 </property>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_45" stretch="0,0,0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_45" stretch="0,0,0,0">
                   <property name="topMargin">
                    <number>0</number>
                   </property>
@@ -5026,6 +5040,12 @@ QCheckBox::indicator:checked:pressed {
                   </item>
                   <item>
                    <widget class="QLineEdit" name="orderSongsToFileFormatEdit">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}、&lt;/p&gt;&lt;p&gt;{当前歌名}、{当前歌手}、{当前用户}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -5033,6 +5053,10 @@ QCheckBox::indicator:checked:pressed {
                      <string notr="true">QLineEdit
 {
 	background: transparent;
+	border-radius: 5px;
+	border: 1px solid #444444;
+	padding-left: 5px;
+	padding-right: 5px;
 }</string>
                     </property>
                    </widget>
@@ -5073,6 +5097,19 @@ QCheckBox::indicator:checked:pressed {
                      <number>99</number>
                     </property>
                    </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_12">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -5228,6 +5265,12 @@ QCheckBox::indicator:checked:pressed {
                   </item>
                   <item>
                    <widget class="QLineEdit" name="outerMusicKeyEdit">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;音乐播放器全局暂停快捷键&lt;/p&gt;&lt;p&gt;没有的话，需要在对应软件中设置&lt;/p&gt;&lt;p&gt;并填入到本输入框中，不分大小写&lt;/p&gt;&lt;p&gt;例如：ctrl+alt+p&lt;/p&gt;&lt;p&gt;暂时支持：ctrl、shift、alt、a-z、0-9&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -5235,12 +5278,29 @@ QCheckBox::indicator:checked:pressed {
                      <string notr="true">QLineEdit
 {
 	background: transparent;
+	border-radius: 5px;
+	border: 1px solid #444444;
+	padding-left: 5px;
+	padding-right: 5px;
 }</string>
                     </property>
                     <property name="placeholderText">
-                     <string>音乐软件暂停快捷键：ctrl+p</string>
+                     <string>暂停快捷键：ctrl+p</string>
                     </property>
                    </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_13">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -5342,7 +5402,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -5351,6 +5411,9 @@ QTabBar::tab:selected
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
              <widget class="QPushButton" name="addTaskButton">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加定时发送弹幕的任务&lt;/p&gt;&lt;p&gt;针对每一项定时任务，如果有多行，则随机发送其中一行&lt;/p&gt;&lt;p&gt;多项定时任务互不影响&lt;/p&gt;&lt;p&gt;也可以用来存放常用弹幕，一键发送&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -5396,6 +5459,9 @@ QTabBar::tab:selected
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
              <widget class="QPushButton" name="addReplyButton">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
@@ -5440,6 +5506,9 @@ QTabBar::tab:selected
              <widget class="QPushButton" name="addEventButton">
               <property name="enabled">
                <bool>true</bool>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -5895,6 +5964,9 @@ QTabBar::tab:selected
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>永久禁言列表</string>
                 </property>
@@ -5912,7 +5984,7 @@ QTabBar::tab:selected
        </layout>
       </widget>
       <widget class="QWidget" name="preferencePage">
-       <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,0,1">
+       <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,1">
         <property name="spacing">
          <number>12</number>
         </property>
@@ -5923,25 +5995,48 @@ QTabBar::tab:selected
          <number>0</number>
         </property>
         <item>
-         <widget class="QLabel" name="appNameLabel">
-          <property name="styleSheet">
-           <string notr="true">font-size: 18px;
+         <layout class="QHBoxLayout" name="horizontalLayout_41">
+          <property name="leftMargin">
+           <number>20</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>20</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_12">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="appNameLabel">
+              <property name="styleSheet">
+               <string notr="true">font-size: 18px;
 font-weight: 500;</string>
-          </property>
-          <property name="text">
-           <string>神奇弹幕</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="appDescLabel">
-          <property name="text">
-           <string>Bilibili直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬</string>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
+              </property>
+              <property name="text">
+               <string>神奇弹幕</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="appDescLabel">
+              <property name="text">
+               <string>Bilibili直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout_3" rowstretch="3,1" columnminimumwidth="0,0">
@@ -5990,7 +6085,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel2">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者喝杯咖啡&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者恰顿饭&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
