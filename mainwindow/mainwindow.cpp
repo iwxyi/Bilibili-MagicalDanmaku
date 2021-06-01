@@ -136,8 +136,8 @@ void MainWindow::initView()
     ui->pkMelonValButton->hide();
     ui->AIReplyIdButton->hide();
     ui->AIReplyKeyButton->hide();
-//    ui->menubar->hide();
-//    ui->statusbar->hide();
+    ui->menubar->hide();
+    ui->statusbar->hide();
 
     // 设置属性
     ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -14028,8 +14028,12 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
     {
         voicePlatform = VoiceLocal;
         settings->setValue("voice/platform", voicePlatform);
-        ui->voiceStack->setCurrentIndex(voicePlatform);
         ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
+
+        ui->voiceXfySettingsCard->hide();
+        ui->voiceCustomSettingsCard->hide();
+        ui->scrollArea->updateChildWidgets();
+        ui->scrollArea->adjustWidgetPos();
     }
 }
 
@@ -14039,8 +14043,12 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
     {
         voicePlatform = VoiceXfy;
         settings->setValue("voice/platform", voicePlatform);
-        ui->voiceStack->setCurrentIndex(voicePlatform);
         ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
+
+        ui->voiceXfySettingsCard->show();
+        ui->voiceCustomSettingsCard->hide();
+        ui->scrollArea->updateChildWidgets();
+        ui->scrollArea->adjustWidgetPos();
     }
 }
 
@@ -14050,8 +14058,12 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
     {
         voicePlatform = VoiceCustom;
         settings->setValue("voice/platform", voicePlatform);
-        ui->voiceStack->setCurrentIndex(voicePlatform);
         ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
+
+        ui->voiceXfySettingsCard->hide();
+        ui->voiceCustomSettingsCard->show();
+        ui->scrollArea->updateChildWidgets();
+        ui->scrollArea->adjustWidgetPos();
     }
 }
 
