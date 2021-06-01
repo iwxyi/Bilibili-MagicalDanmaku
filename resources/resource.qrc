@@ -138,4 +138,8 @@
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
     </qresource>
+    <qresource prefix="/illustrations">
+        <file alias="balloon">illustrations/balloon.png</file>
+        <file alias="heart">illustrations/heart.png</file>
+    </qresource>
 </RCC>

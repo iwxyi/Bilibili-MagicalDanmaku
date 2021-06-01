@@ -294,6 +294,7 @@ void MainWindow::readConfig()
         upgradeVersionToLastest(settings->value("runtime/appVersion").toString());
         settings->setValue("runtime/appVersion", appVersion);
     }
+    ui->appNameLabel->setText("神奇弹幕 v" + appVersion);
 
     // 页面
     int stackIndex = settings->value("mainwindow/stackIndex", 0).toInt();
@@ -3441,6 +3442,15 @@ void MainWindow::getRoomCover(QString url)
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
             ui->showLiveDanmakuWindowButton->setTextColor(fg);
             ui->SendMsgButton->setTextColor(fg);
+
+            // 纯文字label的
+            pa = ui->appNameLabel->palette();
+            pa.setColor(QPalette::Foreground, fg);
+            pa.setColor(QPalette::Text, fg);
+            pa.setColor(QPalette::ButtonText, fg);
+            pa.setColor(QPalette::WindowText, fg);
+            ui->appNameLabel->setPalette(pa);
+            ui->appDescLabel->setPalette(pa);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
@@ -13343,6 +13353,54 @@ void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
         request->setHeader(QNetworkRequest::CookieHeader, userCookies);
 }
 
+void MainWindow::openLink(QString link)
+{
+    if (!link.startsWith("this://"))
+    {
+        QDesktopServices::openUrl(link);
+        return ;
+    }
+
+    link = link.right(link.length() - 7);
+
+    if (link == "capture_manager")
+    {
+        on_actionPicture_Browser_triggered();
+    }
+    else if (link == "start_pk")
+    {
+        on_actionJoin_Battle_triggered();
+    }
+    else if (link == "guard_catch")
+    {
+        on_actionGuard_Online_triggered();
+    }
+    else if (link == "catch_you")
+    {
+        on_actionCatch_You_Online_triggered();
+    }
+    else if (link == "live_status")
+    {
+        on_actionRoom_Status_triggered();
+    }
+    else if (link == "lyrics")
+    {
+        on_actionCreate_Video_LRC_triggered();
+    }
+    else if (link == "video_stream")
+    {
+        on_actionGet_Play_Url_triggered();
+    }
+    else if (link == "donation")
+    {
+        on_actionSponsor_triggered();
+    }
+    else if (link == "copy_qq")
+    {
+        QApplication::clipboard()->setText("1038738410");
+    }
+}
+
 QString MainWindow::GetFileVertion(QString fullName)
 {
 #if defined(Q_OS_WIN)
@@ -14960,4 +15018,24 @@ void MainWindow::on_liveStatusButton_clicked()
     if (!liveStatus)
         return ;
     on_actionShow_Live_Video_triggered();
+}
+
+void MainWindow::on_tenCardLabel1_linkActivated(const QString &link)
+{
+    openLink(link);
+}
+
+void MainWindow::on_tenCardLabel2_linkActivated(const QString &link)
+{
+    openLink(link);
+}
+
+void MainWindow::on_tenCardLabel3_linkActivated(const QString &link)
+{
+    openLink(link);
+}
+
+void MainWindow::on_tenCardLabel4_linkActivated(const QString &link)
+{
+    openLink(link);
 }

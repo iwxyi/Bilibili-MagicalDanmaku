@@ -633,6 +633,14 @@ private slots:
 
     void on_liveStatusButton_clicked();
 
+    void on_tenCardLabel1_linkActivated(const QString &link);
+
+    void on_tenCardLabel2_linkActivated(const QString &link);
+
+    void on_tenCardLabel3_linkActivated(const QString &link);
+
+    void on_tenCardLabel4_linkActivated(const QString &link);
+
 private:
     void initView();
     void initStyle();
@@ -815,6 +823,7 @@ private:
     void restoreGameTexts();
 
     virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
+    void openLink(QString link);
 
     void initServerData();
     void openServer(int port = 0);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>626</width>
-    <height>516</height>
+    <width>659</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,6 +45,12 @@
     </property>
     <item>
      <widget class="QWidget" name="sideBarWidget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>48</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true">#sideBarWidget
 {
@@ -85,7 +91,7 @@
        <item>
         <widget class="InteractiveButtonBase" name="danmakuPageButton">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>弹幕设置</string>
          </property>
          <property name="text">
           <string/>
@@ -141,14 +147,14 @@
        <item>
         <widget class="InteractiveButtonBase" name="preferencePageButton">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;设置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>关于</string>
          </property>
          <property name="text">
           <string/>
          </property>
          <property name="icon">
           <iconset resource="../resources/resource.qrc">
-           <normaloff>:/danmaku/settings</normaloff>:/danmaku/settings</iconset>
+           <normaloff>:/icons/case</normaloff>:/icons/case</iconset>
          </property>
         </widget>
        </item>
@@ -171,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1034,8 +1040,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>558</width>
-             <height>400</height>
+             <width>715</width>
+             <height>314</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2826,6 +2832,86 @@ margin: 40px;</string>
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="startupSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>740</y>
+              <width>161</width>
+              <height>91</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#startupSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_45">
+             <item>
+              <widget class="QLabel" name="label_32">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>开机</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_27" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="startOnRebootCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>开机自启</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="startupAnimationCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>启动动画</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -3432,6 +3518,12 @@ margin: 40px;</string>
       <widget class="QWidget" name="musicPage"/>
       <widget class="QWidget" name="extensionPage">
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <widget class="MyTabWidget" name="tabWidget">
           <property name="styleSheet">
@@ -5067,39 +5159,296 @@ margin: 6px;</string>
        </layout>
       </widget>
       <widget class="QWidget" name="preferencePage">
-       <layout class="QVBoxLayout" name="verticalLayout_16">
+       <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,0,1">
+        <property name="spacing">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>9</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
-         <widget class="QCheckBox" name="startOnRebootCheck">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <widget class="QLabel" name="appNameLabel">
+          <property name="styleSheet">
+           <string notr="true">font-size: 18px;
+font-weight: 500;</string>
           </property>
           <property name="text">
-           <string>开机自启</string>
+           <string>神奇弹幕</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="startupAnimationCheck">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
+         <widget class="QLabel" name="appDescLabel">
           <property name="text">
-           <string>启动动画</string>
+           <string>Bilibili直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_9">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <layout class="QGridLayout" name="gridLayout_3" rowstretch="3,1" columnminimumwidth="0,0">
+          <property name="topMargin">
+           <number>0</number>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>267</height>
-           </size>
+          <property name="spacing">
+           <number>12</number>
           </property>
-         </spacer>
+          <item row="0" column="1">
+           <widget class="QWidget" name="tenCard2" native="true">
+            <property name="styleSheet">
+             <string notr="true">#tenCard2
+{
+	background: #f3dbc5;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0,0,1">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>12</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>12</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_37">
+               <property name="styleSheet">
+                <string notr="true">font-size: 16px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>开发团队</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="tenCardLabel2">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，请开发者喝杯咖啡吧：&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;捐赠&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_39">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>100</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">border-image:url(:/illustrations/balloon);
+background-position:center;
+background-repeat:none;</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QWidget" name="tenCard1" native="true">
+            <property name="styleSheet">
+             <string notr="true">#tenCard1
+{
+	background: #e7e2d6;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,1">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>12</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>12</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_34">
+               <property name="styleSheet">
+                <string notr="true">font-size: 16px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>程序简介</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="tenCardLabel1">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://danmaku.lyixi.com&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f78198;&quot;&gt;神奇弹幕&lt;/span&gt;&lt;/a&gt;支持弹幕聊天、观众互动、自动点歌、数据统计、原画录播等。&lt;/p&gt;&lt;p&gt;最大的特点是可编程控制，自由制定规则，拥有无限可能！&lt;/p&gt;&lt;p&gt;点此查看&lt;a href=&quot;http://anchor.lyixi.com&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f78198;&quot;&gt;主播案例&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_36">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>100</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">border-image:url(:/illustrations/heart);
+background-position:center;
+background-repeat:none;</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QWidget" name="tenCard3" native="true">
+            <property name="styleSheet">
+             <string notr="true">#tenCard3
+{
+	background: #e7e5ff;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_47" stretch="0,1">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>12</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>12</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_42">
+               <property name="styleSheet">
+                <string notr="true">font-size: 16px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>新闻动态</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="tenCardLabel3">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;暂无公告，可前往&lt;a href=&quot;http://lyixi.com&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#ea8394;&quot;&gt;官网&lt;/span&gt;&lt;/a&gt;查看历史动态&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QWidget" name="tenCard4" native="true">
+            <property name="styleSheet">
+             <string notr="true">#tenCard4
+{
+	background: #efff8f;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_46" stretch="0,1">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+             <property name="leftMargin">
+              <number>12</number>
+             </property>
+             <property name="topMargin">
+              <number>12</number>
+             </property>
+             <property name="rightMargin">
+              <number>12</number>
+             </property>
+             <property name="bottomMargin">
+              <number>12</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_40">
+               <property name="styleSheet">
+                <string notr="true">font-size: 16px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>附加组件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="tenCardLabel4">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;this://capture_manager&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;视频截图管理&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://start_pk&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;开启大乱斗&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://guard_catch&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;黑听舰长捕捉&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://catch_you&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;跑骚抓人检测&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://live_status&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;直播状态查询&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://lyrics&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#f5b670;&quot;&gt;歌词字幕投稿&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -5112,7 +5461,7 @@ margin: 6px;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>626</width>
+     <width>659</width>
      <height>21</height>
     </rect>
    </property>
