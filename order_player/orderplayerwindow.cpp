@@ -1119,7 +1119,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
             appendOrderSongs(songs);
         })->disable(!currentSong.isValid());
 
-        menu->addAction("添加固定播放", [=]{
+        menu->addAction("添加空闲播放", [=]{
             addNormal(songs);
         })->disable(!currentSong.isValid());
 
@@ -1194,7 +1194,7 @@ void OrderPlayerWindow::playNext()
 {
     if (!orderSongs.size()) // 播放列表全部结束
     {
-        // 播放固定列表
+        // 播放空闲列表
         playNextRandomSong();
         return ;
     }
@@ -2022,7 +2022,7 @@ void OrderPlayerWindow::clearHoaryFiles()
 
 void OrderPlayerWindow::playNextRandomSong()
 {
-    if (!normalSongs.size()) // 固定列表没有歌曲
+    if (!normalSongs.size()) // 空闲列表没有歌曲
         return ;
 
     // int r = qrand() % normalSongs.size();
@@ -2722,7 +2722,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         appendNextSongs(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("添加固定播放", [=]{
+    menu->split()->addAction("添加空闲播放", [=]{
         addNormal(songs);
     })->disable(!currentSong.isValid());
 
@@ -2783,7 +2783,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
         appendOrderSongs(songs);
     })->disable(!songs.size());
 
-    menu->addAction("添加固定播放", [=]{
+    menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
     })->disable(!currentSong.isValid());
 
@@ -2882,7 +2882,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(songs.size() != 1 || row >= normalSongs.size()-1);
 
-    menu->split()->addAction("移出固定播放", [=]{
+    menu->split()->addAction("移出空闲播放", [=]{
         removeNormal(songs);
     })->disable(!songs.size());
 
@@ -2926,7 +2926,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         appendOrderSongs(songs);
     })->disable(!songs.size());
 
-    menu->addAction("添加固定播放", [=]{
+    menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
     })->disable(!currentSong.isValid());
 
