@@ -21,12 +21,12 @@ void ConditionHighlighter::highlightBlock(const QString &text)
     static QList<QSSRule> qss_rules = {
         // [condition]
         QSSRule{QRegularExpression("^(\\[.*?\\])"), getTCF(QColor(128, 34, 172))},
-        // 执行函数 func(args)
-        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)($|\\\\n)"), getTCF(QColor(136, 80, 80))},
+        // 执行函数 >func(args)
+        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)($|\\\\n|//.*)"), getTCF(QColor(136, 80, 80))},
         // 变量 %val%
         QSSRule{QRegularExpression("%\\S+?%"), getTCF(QColor(204, 85, 0))},
         // 取值 %{}%
-        QSSRule{QRegularExpression("%\\{\\S+?\\}%"), getTCF(QColor(232, 204, 94))},
+        QSSRule{QRegularExpression("%\\{\\S+?\\}%"), getTCF(QColor(153, 107, 31))},
         // 计算 %[]%
         QSSRule{QRegularExpression("%\\[\\S+?\\]%"), getTCF(QColor(82, 165, 190))},
         // 名字类变量 %xxx_name%
@@ -38,7 +38,7 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // 优先级 []**
         QSSRule{QRegularExpression("(?<=\\])\\s*(\\*)+"), getTCF(QColor(82, 165, 190))},
         // 标签 <h1>
-        QSSRule{QRegularExpression("(<.+?>|\\\\n)"), getTCF(QColor(216, 167, 9))},
+        QSSRule{QRegularExpression("(<[^\\],]+?>|\\\\n)"), getTCF(QColor(216, 167, 9))},
         // 冷却通道 (cd5:10)
         QSSRule{QRegularExpression("\\(cd\\d{1,2}:\\d+\\)"), getTCF(QColor(0, 128, 0))},
         // 注释
