@@ -748,6 +748,12 @@ public:
         return args.at(i);
     }
 
+    LiveDanmaku& with(QJsonObject json)
+    {
+        this->extraJson = json;
+        return *this;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 

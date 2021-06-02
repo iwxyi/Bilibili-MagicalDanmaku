@@ -649,6 +649,8 @@ private slots:
 
     void on_tenCardLabel4_linkActivated(const QString &link);
 
+    void on_musicBlackListButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -1087,6 +1089,9 @@ private:
     int judgeRobot = 0;
     QSettings* robotRecord;
     QList<QWebSocket*> robots_sockets;
+
+    // 点歌
+    QStringList orderSongBlackList;
 
     // 托盘
     QMenu *trayMenu;//托盘菜单

@@ -206,8 +206,8 @@ void MainWindow::initView()
     }
 
     ui->SendMsgButton->setFixedForeSize();
-    ui->sendMsgMoreButton->setSquareSize();
     ui->SendMsgButton->setRadius(fluentRadius);
+    ui->sendMsgMoreButton->setSquareSize();
     ui->sendMsgMoreButton->setRadius(fluentRadius);
 
     // 答谢页面
@@ -268,6 +268,8 @@ void MainWindow::initView()
     });
     musicTitleDecorateWidget->lower();
     musicTitleDecorateWidget->stackUnder(ui->musicBigTitleLabel);
+    ui->musicBlackListButton->setRadius(fluentRadius);
+    ui->musicBlackListButton->adjustMinimumSize();
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
@@ -467,6 +469,7 @@ void MainWindow::readConfig()
     // 点歌姬
     if (settings->value("danmaku/playerWindow", false).toBool())
         on_actionShow_Order_Player_Window_triggered();
+    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ");
 
     // 录播
     if (settings->value("danmaku/record", false).toBool())
@@ -2994,8 +2997,21 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
     ui->diangeHistoryListWidget->insertItem(0, text + " - " + danmaku.getNickname());
 
-    if (!diangeAutoCopy) // 是否进行复制操作
+    // 总开关，是否进行复制/播放操作
+    if (!diangeAutoCopy)
         return ;
+
+    // 判断关键词
+    foreach (QString s, orderSongBlackList)
+    {
+        if (text.contains(s)) // 有违禁词
+        {
+            MyJson json;
+            json.insert("key", s);
+            triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json));
+            return ;
+        }
+    }
 
     if (musicWindow && !musicWindow->isHidden()) // 自动播放
     {
@@ -15362,4 +15378,15 @@ void MainWindow::on_tenCardLabel3_linkActivated(const QString &link)
 void MainWindow::on_tenCardLabel4_linkActivated(const QString &link)
 {
     openLink(link);
+}
+
+void MainWindow::on_musicBlackListButton_clicked()
+{
+    QString blackList = orderSongBlackList.join(",");
+    bool ok;
+    blackList = TextInputDialog::getText(this, "点歌黑名单", "带有关键词的点歌都将被阻止，并触发“ORDER_SONG_BLOCKED”事件\n多个关键词用空格隔开", blackList, &ok);
+    if (!ok)
+        return ;
+    orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);
+    settings->setValue("music/blackListKeys", blackList);
 }
