@@ -414,7 +414,7 @@ void MainWindow::readConfig()
     diangeAutoCopy = settings->value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
     ui->diangeNeedMedalCheck->setChecked(settings->value("danmaku/diangeNeedMedal", true).toBool());
-    QString defaultDiangeFormat = "^点歌[ :：,，]+(.+)";
+    QString defaultDiangeFormat = "^[点點]歌[ :：,，]+(.+)";
     diangeFormatString = settings->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
