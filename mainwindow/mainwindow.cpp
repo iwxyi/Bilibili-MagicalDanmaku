@@ -4265,7 +4265,7 @@ QString MainWindow::processTimeVariants(QString msg) const
     if (msg.contains("%greet%"))
     {
         QStringList rsts;
-        rsts << "您好" << "你好";
+        rsts << "你好";
         if (hour <= 3)
             rsts << "晚上好";
         else if (hour <= 5)
