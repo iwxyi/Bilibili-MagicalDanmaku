@@ -52,7 +52,7 @@
 今日上船人次=today_guard
 今日最高人气=today_max_ppl
 当前人气=popularity
-上船人数=guard_count
+大航海人数=guard_count
 总粉丝数=fans_count
 总粉丝团=fans_club
 房管=admin

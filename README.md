@@ -664,7 +664,7 @@ border-image: url(C:/Path/To/Image.png)
 | today_guard      | 今日上船人次       | 续多个月算多次                                               |
 | today_max_ppl    | 今日最高人气       |                                                              |
 | popularity       | 当前人气           |                                                              |
-| guard_count      | 上船人数           |                                                              |
+| guard_count      | 大航海人数         |                                                              |
 | fans_count       | 总粉丝数           |                                                              |
 | fans_club        | 总粉丝团           |                                                              |
 | admin            | 房管               | 只有弹幕、进入才有                                           |
