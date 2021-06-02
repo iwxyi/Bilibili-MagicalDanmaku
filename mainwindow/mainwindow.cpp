@@ -4595,7 +4595,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 进来次数
     else if (key == "%come_count%")
     {
-        if (danmaku.getMsgType() == MSG_WELCOME)
+        if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
             return snum(danmaku.getNumber());
         else
             return snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
@@ -4604,7 +4604,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 上次进来
     else if (key == "%come_time%")
     {
-        return snum(danmaku.getMsgType() == MSG_WELCOME
+        return snum(danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                                         ? danmaku.getPrevTimestamp()
                                         : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
     }
@@ -4612,7 +4612,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 和现在的时间差
     else if (key == "%come_time_delta%")
     {
-        qint64 prevTime = danmaku.getMsgType() == MSG_WELCOME
+        qint64 prevTime = danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                 ? danmaku.getPrevTimestamp()
                 : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
         return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
