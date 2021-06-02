@@ -146,7 +146,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     QPalette pa;
     pa.setColor(QPalette::Highlight, QColor(100, 149, 237, 88));
-    QApplication::setPalette(pa);
+    this->setPalette(pa);
 
     connect(ui->searchResultTable->horizontalHeader(), SIGNAL(sectionClicked(int)), this, SLOT(sortSearchResult(int)));
 
@@ -2259,8 +2259,12 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
         pa.setColor(QPalette::Highlight, sbg);
         pa.setColor(QPalette::HighlightedText, sfg);
 
-        QApplication::setPalette(pa);
-        setPalette(pa);
+        this->setPalette(pa);
+        ui->orderSongsListView->setPalette(pa);
+        ui->normalSongsListView->setPalette(pa);
+        ui->favoriteSongsListView->setPalette(pa);
+        ui->listSongsListView->setPalette(pa);
+        ui->historySongsListView->setPalette(pa);
 
         ui->lyricWidget->setColors(sfg, fg);
         desktopLyric->setColors(sfg, fg);

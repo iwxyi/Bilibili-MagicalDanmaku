@@ -388,7 +388,7 @@ public:
         {
             if (selectTop == -1) // 没有选中，或者判断失误？
             {
-                painter->fillRect(option.rect, QApplication::palette().color(QPalette::Highlight));
+                painter->fillRect(option.rect, option.palette.color(QPalette::Highlight));
             }
             else // 绘制圆角矩形
             {
@@ -455,13 +455,13 @@ public:
                     }
                 }
                 painter->setRenderHint(QPainter::Antialiasing);
-                painter->fillPath(path, QApplication::palette().color(QPalette::Highlight));
+                painter->fillPath(path, option.palette.color(QPalette::Highlight));
             }
         }
 
         QRect rect = option.rect;
         rect.setLeft(rect.left() + 4);
-        painter->setPen(QApplication::palette().color(QPalette::Text));
+        painter->setPen(option.palette.color(QPalette::Text));
         painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, index.data(Qt::DisplayRole).toString());
     }
 
