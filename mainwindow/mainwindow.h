@@ -541,6 +541,10 @@ private slots:
 
     void on_orderSongsToFileMaxSpin_editingFinished();
 
+    void on_playingSongToFileCheck_clicked();
+
+    void on_playingSongToFileFormatEdit_textEdited(const QString &arg1);
+
     void on_actionCatch_You_Online_triggered();
 
     void on_pkBlankButton_clicked();
@@ -793,6 +797,7 @@ private:
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
     void restoreVariantTranslation();
+    void savePlayingSong();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();
 

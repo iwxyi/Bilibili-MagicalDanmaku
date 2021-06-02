@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>663</height>
+    <height>708</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -4438,6 +4438,9 @@ QCheckBox::indicator:checked:pressed {
              </item>
              <item>
               <widget class="InteractiveButtonBase" name="musicBlackListButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>黑名单</string>
                </property>
@@ -5120,6 +5123,93 @@ QCheckBox::indicator:checked:pressed {
                   </item>
                   <item>
                    <spacer name="horizontalSpacer_12">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_44">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QCheckBox" name="playingSongToFileCheck">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存播放的歌曲至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/playing.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将歌曲显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QCheckBox{
+    spacing: 3px;
+}
+
+QCheckBox::indicator{
+    width: 15px;
+    height: 15px;
+}
+
+QCheckBox::indicator:unchecked{
+    image:url(:/widgets/unchecked);
+}
+
+QCheckBox::indicator:checked{
+    image:url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:unchecked:hover {
+    image: url(:/widgets/unchecked_press);
+}
+
+QCheckBox::indicator:unchecked:pressed {
+    image: url(:/widgets/checked_press);
+}
+
+QCheckBox::indicator:checked:hover {
+    image: url(:/widgets/checked_hover);
+}
+
+QCheckBox::indicator:checked:pressed {
+    image: url(:/widgets/checked_press);
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>播放读取接口</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="playingSongToFileFormatEdit">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;支持变量：&lt;/p&gt;&lt;p&gt;{序号}、{歌名}、{歌手}、{用户}、{时长}、{专辑}、&lt;/p&gt;&lt;p&gt;{当前歌名}、{当前歌手}、{当前用户}&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLineEdit
+{
+	background: transparent;
+	border-radius: 5px;
+	border: 1px solid #444444;
+	padding-left: 5px;
+	padding-right: 5px;
+}</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_14">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
