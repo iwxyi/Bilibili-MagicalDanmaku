@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>644</height>
+    <height>975</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1047,7 +1047,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>528</height>
+             <height>859</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3365,7 +3365,7 @@ margin: 40px;</string>
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string> 讯飞语音</string>
+                <string>讯飞语音</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -3389,6 +3389,19 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_33">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>部分设备可能无法播放</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

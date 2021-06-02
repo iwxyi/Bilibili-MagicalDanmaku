@@ -6951,6 +6951,25 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
         }
     }
 
+    // 添加值
+    if (msg.contains("addValue"))
+    {
+        re = RE("addValue\\s*\\(\\s*(\\S+?)\\s*,\\s*(-?\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            qint64 value = heaps->value(key).toLongLong();
+            qint64 modify = caps.at(2).toLongLong();
+            value += modify;
+            heaps->setValue(key, value);
+            qDebug() << "执行命令：" << caps;
+            return true;
+        }
+    }
+
     // 批量修改heaps
     if (msg.contains("setValues"))
     {
@@ -6970,6 +6989,32 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
                 if (keys.at(i).indexOf(re) > -1)
                 {
                     heaps->setValue(keys.at(i), value);
+                }
+            }
+            heaps->endGroup();
+            return true;
+        }
+    }
+
+    // 批量添加heaps
+    if (msg.contains("addValues"))
+    {
+        re = RE("addValues\\s*\\(\\s*(\\S+?)\\s*,\\s*(-?\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            qint64 modify = caps.at(2).toLongLong();
+            qDebug() << "执行命令：" << caps;
+
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
+            QRegularExpression re(key);
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re) > -1)
+                {
+                    heaps->setValue(keys.at(i), heaps->value(keys.at(i)).toLongLong() + modify);
                 }
             }
             heaps->endGroup();
@@ -7044,6 +7089,61 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
 
                         // 真正设置
                         heaps->setValue(keys.at(i), newValue);
+                    }
+                }
+            }
+            heaps->endGroup();
+            return true;
+        }
+    }
+
+    // 按条件批量添加heaps
+    if (msg.contains("addValuesIf"))
+    {
+        re = RE("addValuesIf\\s*\\(\\s*(\\S+?)\\s*,\\s*\\[(.*?)\\]\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString key = caps.at(1);
+            QString VAL_EXP = caps.at(2);
+            qint64 modify = caps.at(3).toLongLong();
+            qDebug() << "执行命令：" << caps;
+
+            // 开始修改
+            heaps->beginGroup("heaps");
+            auto keys = heaps->allKeys();
+            QRegularExpression re(key);
+            QRegularExpressionMatch match2;
+            for (int i = 0; i < keys.size(); i++)
+            {
+                if (keys.at(i).indexOf(re, 0, &match2) > -1)
+                {
+                    QString exp = VAL_EXP;
+                    // _VALUE_ 替换为 当前key的值
+                    exp.replace("_VALUE_", heaps->value(keys.at(i)).toString());
+                    // _$1_ 替换为 match的值
+                    if (exp.contains("_$"))
+                    {
+                        auto caps = match2.capturedTexts();
+                        for (int i = 0; i < caps.size(); i++)
+                            exp.replace("_$" + snum(i) + "_", caps.at(i));
+                    }
+                    // 替换获取配置的值 _{}_
+                    if (exp.contains("_{"))
+                    {
+                        QRegularExpression re2("_\\{(.*?)\\}_");
+                        while (exp.indexOf(re2, 0, &match2) > -1)
+                        {
+                            QString _var = match2.captured(0);
+                            QString key = match2.captured(1);
+                            QVariant var = heaps->value(key);
+                            exp.replace(_var, var.toString());
+                        }
+                    }
+
+                    if (processVariantConditions(exp))
+                    {
+                        heaps->setValue(keys.at(i), heaps->value(keys.at(i)).toLongLong() + modify);
                     }
                 }
             }

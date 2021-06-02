@@ -968,8 +968,11 @@ tips：
 | setSetting                                | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
 | removeSetting                             | 移除某项配置     | 同上                                                         |
 | setValue(key, val)                        | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
+| addValue(key, delta)                      | 添加值           | 在原先值的基础上，添加delta大小                              |
 | setValues(exp, val)                       | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
+| addValues(exp, val)                       | 批量添加值       | 批量添加已有的值                                             |
 | setValuesIf(exp, [condition], newVal)     | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
+| addValuesIf(exp, [condition], delta)      | 批量添加值如果   | 按条件批量添加已有的值                                       |
 | removeValue(key)                          | 移除值           | 移除配置文件中的单个值                                       |
 | removeValues(exp)                         | 批量移除值       | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
 | removeValuesIf(exp, [condition])          | 批量移除值如果   | 按条件移除配置文件中的多个值                                 |
