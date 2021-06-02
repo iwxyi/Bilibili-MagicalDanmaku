@@ -4,7 +4,7 @@
 
 SmoothListWidget::SmoothListWidget(QWidget *parent) : QListWidget(parent)
 {
-
+    setVerticalScrollMode(QListWidget::ScrollPerPixel);
 }
 
 void SmoothListWidget::setSmoothScrollEnabled(bool e)
@@ -22,16 +22,29 @@ void SmoothListWidget::setSmoothScrollDuration(int duration)
     this->smoothScrollDuration = duration;
 }
 
-void SmoothListWidget::scrollToBottom()
+void SmoothListWidget::scrollToTop()
+{
+    scrollTo(verticalScrollBar()->minimum());
+}
+
+void SmoothListWidget::scrollTo(int pos)
 {
     if (!enabledSmoothScroll)
-        return QListWidget::scrollToBottom();
+        return verticalScrollBar()->setSliderPosition(pos);
 
     auto scrollBar = verticalScrollBar();
-    int delta = scrollBar->maximum() + scrollBar->pageStep() - scrollBar->sliderPosition();
-    if (delta <= 1)
-        return QListWidget::scrollToBottom();
+    int delta = pos - scrollBar->sliderPosition();
+    if (qAbs(delta) <= 1)
+        return verticalScrollBar()->setSliderPosition(pos);
     addSmoothScrollThread(delta, smoothScrollDuration);
+}
+
+void SmoothListWidget::scrollToBottom()
+{
+    int count = smooth_scrolls.size();
+    scrollTo(verticalScrollBar()->maximum());
+    if (!count || count >= smooth_scrolls.size()) // 理论上来说size会+1
+        return ;
 
     toBottoming++;
     connect(smooth_scrolls.last(), &SmoothScrollBean::signalSmoothScrollFinished, this, [=]{

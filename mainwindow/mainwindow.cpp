@@ -181,10 +181,12 @@ void MainWindow::initView()
     ui->showLiveDanmakuWindowButton->setFontSize(12);
     ui->showLiveDanmakuWindowButton->setPaddings(16, 16, 4, 4);
     ui->showLiveDanmakuWindowButton->setFixedForeSize();
+
     ui->scrollArea->setItemSpacing(24, 24);
     ui->scrollArea->initFixedChildren();
-    ui->scrollArea->adjustWidgetsBySizeHint();
-    ui->scrollArea->setWidgetsEqualWidth();
+    ui->scrollArea->resizeWidgetsToEqualWidth();
+//    ui->scrollArea->setAllowDifferentWidth(true);
+//    ui->scrollArea->resizeWidgetsToSizeHint();
     foreach (auto w, ui->scrollArea->getWidgets())
     {
         // 设置样式
@@ -14214,7 +14216,7 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
         ui->voiceXfySettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
         ui->scrollArea->updateChildWidgets();
-        ui->scrollArea->adjustWidgetPos();
+        ui->scrollArea->adjustWidgetsPos();
     }
 }
 
@@ -14229,7 +14231,7 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
         ui->voiceXfySettingsCard->show();
         ui->voiceCustomSettingsCard->hide();
         ui->scrollArea->updateChildWidgets();
-        ui->scrollArea->adjustWidgetPos();
+        ui->scrollArea->adjustWidgetsPos();
     }
 }
 
@@ -14244,7 +14246,7 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
         ui->voiceXfySettingsCard->hide();
         ui->voiceCustomSettingsCard->show();
         ui->scrollArea->updateChildWidgets();
-        ui->scrollArea->adjustWidgetPos();
+        ui->scrollArea->adjustWidgetsPos();
     }
 }
 

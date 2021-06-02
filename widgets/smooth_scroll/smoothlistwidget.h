@@ -16,6 +16,8 @@ public:
     void setSmoothScrollSpeed(int speed);
     void setSmoothScrollDuration(int duration);
 
+    void scrollToTop();
+    void scrollTo(int pos);
     void scrollToBottom();
     bool isToBottoming() const;
 
