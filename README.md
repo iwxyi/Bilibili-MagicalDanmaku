@@ -639,7 +639,7 @@ border-image: url(C:/Path/To/Image.png)
 | name_sum_len     |                    | 用户昵称长度+礼物名字长度                                    |
 | ainame_sum_len   |                    | 用户短昵称长度+礼物名字长度                                  |
 | new_attention    | 新关注             | 最近50个关注内                                               |
-| guard_count      | 上船次数           | 舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船   |
+| guard_buy_count  | 上船次数           | 舰长+1、提督+10、总督+100（只统计程序运行时），0为初次上船   |
 | pking            | 大乱斗中           | 是：1，否：0                                                 |
 | pk_video         | 视频大乱斗         | 是：1，否：0                                                 |
 | pk_id            | 大乱斗编号         |                                                              |
@@ -659,12 +659,14 @@ border-image: url(C:/Path/To/Image.png)
 | today_newbie_msg | 今日新人人数       |                                                              |
 | today_danmaku    | 今日弹幕总数       |                                                              |
 | today_fans       | 今日新增粉丝数     |                                                              |
-| fans_count       | 总粉丝数           |                                                              |
 | today_gold       | 今日金瓜子总数     |                                                              |
 | today_silver     | 今日银瓜子总数     |                                                              |
 | today_guard      | 今日上船人次       | 续多个月算多次                                               |
 | today_max_ppl    | 今日最高人气       |                                                              |
 | popularity       | 当前人气           |                                                              |
+| guard_count      | 上船人数           |                                                              |
+| fans_count       | 总粉丝数           |                                                              |
+| fans_club        | 总粉丝团           |                                                              |
 | admin            | 房管               | 只有弹幕、进入才有                                           |
 | guard            | 大航海级别         | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
 | guard_name       | 大航海身份         | “舰长”/“提督”/“总督”，非船员为空                             |

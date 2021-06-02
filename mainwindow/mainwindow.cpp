@@ -4673,7 +4673,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%guard_buy%")
         return danmaku.is(MSG_GUARD_BUY) ? "1" : "0";
 
-    else if (key == "%guard_count%")
+    else if (key == "%guard_buy_count%")
         return snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
 
     // 0续费，1第一次上船，2重新上船
@@ -4806,9 +4806,11 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%today_fans%")
         return snum(dailyNewFans);
 
-    // 当前粉丝数量111
+    // 当前粉丝数量
     else if (key == "%fans_count%")
-        return snum(dailyTotalFans);
+        return snum(currentFans);
+    else if (key == "%fans_club%")
+        return snum(currentFansClub);
 
     // 今天金瓜子总数
     else if (key == "%today_gold%")

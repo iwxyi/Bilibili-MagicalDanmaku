@@ -27,7 +27,7 @@
 粉丝勋章等级=medal_level
 粉丝勋章主播昵称=medal_up
 新关注=new_attention
-上船次数=guard_count
+上船次数=guard_buy_count
 大乱斗中=pking
 视频大乱斗=pk_video
 大乱斗编号=pk_id
@@ -47,12 +47,14 @@
 今日新人人数=today_newbie_msg
 今日弹幕总数=today_danmaku
 今日新增粉丝数=today_fans
-总粉丝数=fans_count
 今日金瓜子总数=today_gold
 今日银瓜子总数=today_silver
 今日上船人次=today_guard
 今日最高人气=today_max_ppl
 当前人气=popularity
+上船人数=guard_count
+总粉丝数=fans_count
+总粉丝团=fans_club
 房管=admin
 大航海级别=guard
 大航海名称=guard_name
