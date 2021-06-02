@@ -13427,17 +13427,23 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
         }
     } */
 
-    if (upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0.可能是小心心，不需要判断
+    if (upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0，不需要判断
     {
         if (debugPrint)
             localNotify("[勋章升级：免费礼物]");
         return ;
     }
     int giftIntimacy = danmaku.getTotalCoin() / 100;
-    if (!giftIntimacy) // 0瓜子
+    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
     {
-        if (danmaku.getGiftId() == 30607 && danmaku.getAnchorRoomid() == roomId && danmaku.getMedalLevel() < 21)
+        return ;
+    }
+    if (danmaku.getGiftId() == 30607)
+    {
+        if (danmaku.getAnchorRoomid() == roomId && danmaku.getMedalLevel() < 21 && !danmaku.isGuard())
+        {
             giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
+        }
         else
         {
             if (debugPrint)
