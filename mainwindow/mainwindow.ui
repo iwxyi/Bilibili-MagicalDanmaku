@@ -5512,29 +5512,13 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
             <string>定时</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
-            <item>
-             <widget class="WaterFloatButton" name="addTaskButton">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加定时发送弹幕的任务&lt;/p&gt;&lt;p&gt;针对每一项定时任务，如果有多行，则随机发送其中一行&lt;/p&gt;&lt;p&gt;多项定时任务互不影响&lt;/p&gt;&lt;p&gt;也可以用来存放常用弹幕，一键发送&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string> 添加定时任务</string>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="SmoothListWidget" name="taskListWidget">
               <property name="contextMenuPolicy">
@@ -5569,22 +5553,6 @@ QTabBar::tab:selected
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
-             <widget class="WaterFloatButton" name="addReplyButton">
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>添加自动回复</string>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="SmoothListWidget" name="replyListWidget">
               <property name="contextMenuPolicy">
                <enum>Qt::CustomContextMenu</enum>
@@ -5614,25 +5582,6 @@ QTabBar::tab:selected
             <string>事件</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_13">
-            <item>
-             <widget class="WaterFloatButton" name="addEventButton">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="cursor">
-               <cursorShape>PointingHandCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;添加关键词自动回复&lt;/p&gt;&lt;p&gt;关键词支持正则表达式，多个词语使用“|”隔开&lt;/p&gt;&lt;p&gt;若一条弹幕适配多条关键词表达式，则只回复最上面的一条回复&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>添加事件动作</string>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="SmoothListWidget" name="eventListWidget">
               <property name="contextMenuPolicy">

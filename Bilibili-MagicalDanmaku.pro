@@ -70,12 +70,24 @@ SOURCES += \
     third_party/facile_menu/facilemenuitem.cpp \
     third_party/gif/avilib.cpp \
     third_party/gif/gif.cpp \
+    third_party/interactive_buttons/appendbutton.cpp \
+    third_party/interactive_buttons/generalbuttoninterface.cpp \
+    third_party/interactive_buttons/infobutton.cpp \
     third_party/interactive_buttons/interactivebuttonbase.cpp \
     mainwindow/list_items/listiteminterface.cpp \
     mainwindow/live_danmaku/livedanmakuwindow.cpp \
+    third_party/interactive_buttons/pointmenubutton.cpp \
+    third_party/interactive_buttons/threedimenbutton.cpp \
     third_party/interactive_buttons/watercirclebutton.cpp \
     third_party/interactive_buttons/waterfallbuttongroup.cpp \
     third_party/interactive_buttons/waterfloatbutton.cpp \
+    third_party/interactive_buttons/waterzoombutton.cpp \
+    third_party/interactive_buttons/winclosebutton.cpp \
+    third_party/interactive_buttons/winmaxbutton.cpp \
+    third_party/interactive_buttons/winmenubutton.cpp \
+    third_party/interactive_buttons/winminbutton.cpp \
+    third_party/interactive_buttons/winrestorebutton.cpp \
+    third_party/interactive_buttons/winsidebarbutton.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
@@ -125,6 +137,9 @@ HEADERS += \
     third_party/facile_menu/facilemenuitem.h \
     third_party/gif/avilib.h \
     third_party/gif/gif.h \
+    third_party/interactive_buttons/appendbutton.h \
+    third_party/interactive_buttons/generalbuttoninterface.h \
+    third_party/interactive_buttons/infobutton.h \
     third_party/interactive_buttons/interactivebuttonbase.h \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/commonvalues.h \
@@ -132,9 +147,18 @@ HEADERS += \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
+    third_party/interactive_buttons/pointmenubutton.h \
+    third_party/interactive_buttons/threedimenbutton.h \
     third_party/interactive_buttons/watercirclebutton.h \
     third_party/interactive_buttons/waterfallbuttongroup.h \
     third_party/interactive_buttons/waterfloatbutton.h \
+    third_party/interactive_buttons/waterzoombutton.h \
+    third_party/interactive_buttons/winclosebutton.h \
+    third_party/interactive_buttons/winmaxbutton.h \
+    third_party/interactive_buttons/winmenubutton.h \
+    third_party/interactive_buttons/winminbutton.h \
+    third_party/interactive_buttons/winrestorebutton.h \
+    third_party/interactive_buttons/winsidebarbutton.h \
     widgets/custompaintwidget.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \

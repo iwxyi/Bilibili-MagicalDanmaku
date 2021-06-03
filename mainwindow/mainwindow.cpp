@@ -291,6 +291,20 @@ void MainWindow::initView()
         menu->addAction(ui->actionLast_Candidate);
         menu->exec();
     });
+
+    appendListItemButton = new AppendButton(ui->tabWidget);
+    appendListItemButton->setFixedSize(widgetSizeL, widgetSizeL);
+    appendListItemButton->setRadius(widgetSizeL);
+    appendListItemButton->setCursor(Qt::PointingHandCursor);
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(appendListItemButton);
+        effect->setColor(QColor(63, 63, 63, 64));
+        effect->setBlurRadius(24);
+        effect->setXOffset(4);
+        effect->setYOffset(4);
+        appendListItemButton->setGraphicsEffect(effect);
+    }
+    connect(appendListItemButton, SIGNAL(clicked()), this, SLOT(addListItemOnCurrentPage()));
 }
 
 void MainWindow::initStyle()
@@ -372,6 +386,10 @@ void MainWindow::readConfig()
     int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
         ui->tabWidget->setCurrentIndex(tabIndex);
+    if (tabIndex > 2)
+        appendListItemButton->hide();
+    else
+        appendListItemButton->show();
 
     // 答谢标签
     int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
@@ -1167,6 +1185,9 @@ void MainWindow::adjustPageSize(int page)
     else if (page == PAGE_EXTENSION)
     {
         extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);
+
+        appendListItemButton->move(ui->tabWidget->width() - appendListItemButton->width() * 1.25 - 9 - 15, // 减去滚动条宽度
+                                   ui->tabWidget->height() - appendListItemButton->height() * 1.25 - 9); // 还有减去margin
 
         // 自动调整任务列表大小
         for (int row = 0; row < ui->taskListWidget->count(); row++)
@@ -2145,6 +2166,10 @@ void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
     settings->setValue("mainwindow/tabIndex", index);
+    if (index > 2)
+        appendListItemButton->hide();
+    else
+        appendListItemButton->show();
 }
 
 void MainWindow::on_SendMsgButton_clicked()
@@ -2404,6 +2429,44 @@ void MainWindow::restoreReplyList()
         QString key = settings->value("reply/r"+QString::number(row)+"Key").toString();
         QString reply = settings->value("reply/r"+QString::number(row)+"Reply").toString();
         addAutoReply(enable, key, reply);
+    }
+}
+
+void MainWindow::addListItemOnCurrentPage()
+{
+    auto w = ui->tabWidget->currentWidget();
+    if (w == ui->tabTimer)
+    {
+        addTimerTask(false, 1800, "");
+        saveTaskList();
+        auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
+        auto tw = static_cast<TaskWidget*>(widget);
+        QTimer::singleShot(0, [=]{
+            ui->taskListWidget->scrollToBottom();
+        });
+        tw->edit->setFocus();
+    }
+    else if (w == ui->tabReply)
+    {
+        addAutoReply(false, "", "");
+        saveReplyList();
+        auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(ui->replyListWidget->count()-1));
+        auto rw = static_cast<ReplyWidget*>(widget);
+        QTimer::singleShot(0, [=]{
+            ui->replyListWidget->scrollToBottom();
+        });
+        rw->keyEdit->setFocus();
+    }
+    else if (w == ui->tabEvent)
+    {
+        addEventAction(false, "", "");
+        saveEventList();
+        auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
+        auto ew = static_cast<EventWidget*>(widget);
+        QTimer::singleShot(0, [=]{
+            ui->eventListWidget->scrollToBottom();
+        });
+        ew->eventEdit->setFocus();
     }
 }
 
@@ -2934,36 +2997,6 @@ void MainWindow::on_replyListWidget_customContextMenuRequested(const QPoint &)
 void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &)
 {
     showListMenu<EventWidget>(ui->eventListWidget, CODE_EVENT_ACTION_KEY, &MainWindow::saveEventList);
-}
-
-void MainWindow::on_addTaskButton_clicked()
-{
-    addTimerTask(false, 1800, "");
-    saveTaskList();
-    auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(ui->taskListWidget->count()-1));
-    auto tw = static_cast<TaskWidget*>(widget);
-    ui->taskListWidget->scrollToBottom();
-    tw->edit->setFocus();
-}
-
-void MainWindow::on_addReplyButton_clicked()
-{
-    addAutoReply(false, "", "");
-    saveReplyList();
-    auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(ui->replyListWidget->count()-1));
-    auto rw = static_cast<ReplyWidget*>(widget);
-    ui->replyListWidget->scrollToBottom();
-    rw->keyEdit->setFocus();
-}
-
-void MainWindow::on_addEventButton_clicked()
-{
-    addEventAction(false, "", "");
-    saveEventList();
-    auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(ui->eventListWidget->count()-1));
-    auto ew = static_cast<EventWidget*>(widget);
-    ui->eventListWidget->scrollToBottom();
-    ew->eventEdit->setFocus();
 }
 
 void MainWindow::slotDiange(LiveDanmaku danmaku)
@@ -3663,6 +3696,8 @@ void MainWindow::getRoomCover(QString url)
             ui->SendMsgButton->setTextColor(fg);
             ui->showOrderPlayerButton->setNormalColor(sbg);
             ui->showOrderPlayerButton->setTextColor(sfg);
+            appendListItemButton->setBgColor(sbg);
+            appendListItemButton->setIconColor(sfg);
 
             // 纯文字label的
             pa = ui->appNameLabel->palette();
@@ -15078,28 +15113,48 @@ void MainWindow::on_actionPaste_Code_triggered()
         return ;
     }
 
-    auto pasteFromJson = [=](QJsonObject json) {
+    bool scrolled[3] = {};
+
+    auto pasteFromJson = [&](QJsonObject json) {
         QString anchor_key = json.value("anchor_key").toString();
         ListItemInterface* item = nullptr;
         if (anchor_key == CODE_TIMER_TASK_KEY)
         {
             item = addTimerTask(false, 1800, "");
             ui->tabWidget->setCurrentWidget(ui->tabTimer);
-            ui->taskListWidget->scrollToBottom();
+            if (!scrolled[0])
+            {
+                scrolled[0] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->taskListWidget->scrollToBottom();
+                });
+            }
             settings->setValue("task/count", ui->taskListWidget->count());
         }
         else if (anchor_key == CODE_AUTO_REPLY_KEY)
         {
             item = addAutoReply(false, "","");
             ui->tabWidget->setCurrentWidget(ui->tabReply);
-            ui->replyListWidget->scrollToBottom();
+            if (!scrolled[1])
+            {
+                scrolled[1] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->replyListWidget->scrollToBottom();
+                });
+            }
             settings->setValue("reply/count", ui->replyListWidget->count());
         }
         else if (anchor_key == CODE_EVENT_ACTION_KEY)
         {
             item = addEventAction(false, "", "");
             ui->tabWidget->setCurrentWidget(ui->tabEvent);
-            ui->eventListWidget->scrollToBottom();
+            if (!scrolled[2])
+            {
+                scrolled[2] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->eventListWidget->scrollToBottom();
+                });
+            }
             settings->setValue("event/count", ui->eventListWidget->count());
         }
         else

@@ -44,6 +44,7 @@
 #include "netinterface.h"
 #include "waterfloatbutton.h"
 #include "custompaintwidget.h"
+#include "interactive_buttons/appendbutton.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -79,6 +80,10 @@ QT_END_NAMESPACE
 #define PAGE_MUSIC 3
 #define PAGE_EXTENSION 4
 #define PAGE_PREFENCE 5
+
+#define TAB_TIMER_TASK 0
+#define TAB_AUTO_REPLY 1
+#define TAB_EVENT_ACTION 2
 
 class MainWindow;
 
@@ -244,11 +249,7 @@ private slots:
 
     void on_eventListWidget_customContextMenuRequested(const QPoint &);
 
-    void on_addTaskButton_clicked();
-
-    void on_addReplyButton_clicked();
-
-    void on_addEventButton_clicked();
+    void addListItemOnCurrentPage();
 
     void slotDiange(LiveDanmaku danmaku);
 
@@ -885,6 +886,7 @@ private:
     QList<WaterFloatButton*> thankTabButtons;
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;
+    AppendButton* appendListItemButton;
 
     // 房间信息
     QString roomId;
