@@ -2996,10 +2996,10 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         auto tw = static_cast<ListItemInterface*>(widget);
 
         // 特殊操作
-        if (listKey == CODE_EVENT_ACTION_KEY)
+        /* if (listKey == CODE_EVENT_ACTION_KEY)
         {
             setFilter(tw->title(), "");
-        }
+        } */
 
         listWidget->removeItemWidget(item);
         listWidget->takeItem(listWidget->currentRow());
@@ -3073,6 +3073,9 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         }
     }
 
+    if (isFilterRejected("FILTER_MUSIC_ORDER", danmaku))
+        return ;
+
     if (musicWindow && !musicWindow->isHidden()) // 自动播放
     {
         int count = 0;
@@ -3087,13 +3090,13 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
             musicWindow->slotSearchAndAutoAppend(text, danmaku.getNickname());
         }
     }
-    else
+    else // 复制到剪贴板
     {
         QClipboard* clip = QApplication::clipboard();
         clip->setText(text);
         triggerCmdEvent("ORDER_SONG_COPY", danmaku);
 
-        addNoReplyDanmakuText(danmaku.getText()); // 点歌不限制长度
+        addNoReplyDanmakuText(danmaku.getText()); // 点歌回复
         QTimer::singleShot(10, [=]{
             appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
         });
@@ -5523,7 +5526,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     return val;
 }
 
-bool MainWindow::isFilterAccepted(QString filterName, const LiveDanmaku &danmaku)
+bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku)
 {
     // 查找所有事件，查看有没有对应的过滤器
     bool reject = false;
@@ -5537,13 +5540,12 @@ bool MainWindow::isFilterAccepted(QString filterName, const LiveDanmaku &danmaku
         if (eventWidget->isEnabled() && eventWidget->title() == filterName)
         {
             QString filterText = eventWidget->body();
-            qDebug() << "遍历到：" << row << filterText;
             if (!processFilter(filterText, danmaku))
                 reject = true;
         }
     }
 
-    return !reject;
+    return reject;
 }
 
 bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
@@ -5562,6 +5564,9 @@ bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
     QString s = msgs.at(r);
 
     bool reject = s.contains(QRegularExpression(">\\s*reject\\s*(\\s*)"));
+    if (reject)
+        qInfo() << "过滤器已阻止操作:" << filterText;
+
     if (reject && !s.contains("\\n")) // 拒绝，且不需要其他操作，直接返回
     {
         return false;
@@ -11815,17 +11820,17 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](LiveDanmaku danmaku) {
             if (danmaku.is(MSG_DANMAKU))
             {
-                if (!isFilterAccepted("FILTER_DANMAKU_MSG", danmaku))
+                if (isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
                     return ;
             }
             else if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
             {
-                if (!isFilterAccepted("FILTER_DANMAKU_COME", danmaku))
+                if (isFilterRejected("FILTER_DANMAKU_COME", danmaku))
                     return ;
             }
             else if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
             {
-                if (!isFilterAccepted("FILTER_DANMAKU_GIFT", danmaku))
+                if (isFilterRejected("FILTER_DANMAKU_GIFT", danmaku))
                     return ;
             }
 

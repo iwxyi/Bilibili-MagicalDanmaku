@@ -766,7 +766,7 @@ private:
     qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
-    bool isFilterAccepted(QString filterName, const LiveDanmaku& danmaku);
+    bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);
     bool processFilter(QString filterText, const LiveDanmaku& danmaku);
 
     qint64 unameToUid(QString text);
