@@ -217,25 +217,19 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 ![弹幕](pictures/screenshot2.png)
 
-![自动欢迎](pictures/screenshot3.png)
+![答谢](pictures/screenshot3.png)
 
-![答谢](pictures/screenshot4.png)
+![点歌](pictures/screenshot4.png)
 
-![点歌](pictures/screenshot5.png)
+![扩展](pictures/screenshot5.png)
 
-![开播、录播](pictures/screenshot6.png)
-
-![定时任务](pictures/screenshot7.png)
-
-![全屏滚动、语音朗读](pictures/screenshot8.png)
-
-![喷子禁言](pictures/screenshot9.png)
+![关于](pictures/screenshot6.png)
 
 ![实时弹幕](pictures/danmaku.png)
 
-![音乐](pictures/music1.png)
+![音乐1](pictures/music1.png)
 
-![音乐](pictures/music2.png)
+![音乐2](pictures/music2.png)
 
 ![视频字幕制作](pictures/subtitle1.png)
 
