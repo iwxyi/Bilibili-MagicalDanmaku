@@ -452,6 +452,8 @@ private slots:
 
     void on_diangeShuaCheck_clicked();
 
+    void on_orderSongShuaSpin_editingFinished();
+
     void on_pkMelonValButton_clicked();
 
     void slotPkEnding();

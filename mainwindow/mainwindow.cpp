@@ -450,6 +450,7 @@ void MainWindow::readConfig()
     ui->orderSongsToFileMaxSpin->setValue(settings->value("danmaku/orderSongsToFileMax", 9).toInt());
     ui->songLyricsToFileCheck->setChecked(settings->value("danmaku/songLyricsToFile", false).toBool());
     ui->songLyricsToFileMaxSpin->setValue(settings->value("danmaku/songLyricsToFileMax", 2).toInt());
+    ui->orderSongShuaSpin->setValue(settings->value("danmaku/diangeShuaCount", 0).toInt());
 
     // 自动翻译
     bool trans = settings->value("danmaku/autoTrans", true).toBool();
@@ -3055,9 +3056,11 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
 
     if (musicWindow && !musicWindow->isHidden()) // 自动播放
     {
-        if (ui->diangeShuaCheck->isChecked() && musicWindow->hasSongInOrder(danmaku.getNickname())) // 已经点了
+        int count = 0;
+        if (ui->diangeShuaCheck->isChecked() && (count = musicWindow->userOrderCount(danmaku.getNickname())) >= ui->orderSongShuaSpin->value()) // 已经点了
         {
-            localNotify("已阻止频繁点歌");
+            localNotify("已阻止频繁点歌：" + snum(count));
+            danmaku.setNumber(count);
             triggerCmdEvent("ORDER_SONG_FREQUENCY", danmaku);
         }
         else
@@ -14243,6 +14246,11 @@ void MainWindow::on_showOrderPlayerButton_clicked()
 void MainWindow::on_diangeShuaCheck_clicked()
 {
     settings->setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
+}
+
+void MainWindow::on_orderSongShuaSpin_editingFinished()
+{
+    settings->setValue("danmaku/diangeShuaCount", ui->orderSongShuaSpin->value());
 }
 
 void MainWindow::on_pkMelonValButton_clicked()

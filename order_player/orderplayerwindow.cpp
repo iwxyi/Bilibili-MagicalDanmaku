@@ -353,14 +353,15 @@ const QStringList OrderPlayerWindow::getSongLyrics(int rowCount) const
     return ui->lyricWidget->getLyrics(rowCount);
 }
 
-bool OrderPlayerWindow::hasSongInOrder(QString by)
+int OrderPlayerWindow::userOrderCount(QString by)
 {
+    int count = 0;
     foreach (Song song, orderSongs)
     {
         if (song.addBy == by)
-            return true;
+            count++;
     }
-    return false;
+    return count;
 }
 
 void OrderPlayerWindow::on_searchEdit_returnPressed()
