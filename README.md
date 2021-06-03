@@ -1371,7 +1371,7 @@ tips：
 
 | 事件命令                    | 说明                                                         |
 | --------------------------- | ------------------------------------------------------------ |
-| ORDER_SONG_SUCCEED          | 点歌成功，`%text%`获取歌名，`%prev_time%`获取几秒钟后播放，`%first%`获取第几首播放 |
+| ORDER_SONG_SUCCEED          | 点歌成功，`%text%`获取歌名，`%prev_time%`获取几秒钟后播放，`%first%`获取第几首播放，`%.addBy%`获取点歌用户昵称 |
 | ORDER_SONG_SUCCEED_OVERRIDE | 同上，但是会**覆盖掉**自带的点歌成功回复                     |
 | ORDER_SONG_PLAY             | 点歌开始播放，`%text%`歌名，`%uname%`点歌的用户名，`%come_time%`点歌时间戳(秒) |
 | ORDER_SONG_FREQUENCY        | 点歌过于频繁                                                 |

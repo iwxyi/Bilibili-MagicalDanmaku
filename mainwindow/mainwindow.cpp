@@ -8000,7 +8000,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             if (desc != ui->roomRankLabel->text()) // 排名有更新
                 localNotify("当前排名：" + desc);
 
-            triggerCmdEvent(cmd, LiveDanmaku());
+            triggerCmdEvent(cmd, LiveDanmaku().with(data));
         }
         else if (handlePK(json))
         {
@@ -8113,7 +8113,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
-                    triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)));
+                    triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data));
                     localNotify(msg);
                 }
                 else if (cmd == "PK_BATTLE_START_NEW")
@@ -8328,7 +8328,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 connectServerTimer->stop();
             slotStartWork(); // 每个房间第一次开始工作
         }
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "PREPARING") // 下播
     {
@@ -8351,12 +8351,12 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         releaseLiveData(true);
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ROOM_CHANGE")
     {
         getRoomInfo(false);
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
     {
@@ -8531,7 +8531,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!blocked)
             markNotRobot(uid);
 
-        triggerCmdEvent("DANMU_MSG", danmaku);
+        triggerCmdEvent("DANMU_MSG", danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -8831,7 +8831,7 @@ void MainWindow::handleMessage(QJsonObject json)
             detectMedalUpgrade(danmaku);
         }
 
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "COMBO_SEND") // 连击礼物
     {
@@ -8910,7 +8910,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE") // 醒目留言
     {
@@ -9019,7 +9019,7 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(danmaku);
 
         pkGifts.append(danmaku);
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
     {
@@ -9074,12 +9074,12 @@ void MainWindow::handleMessage(QJsonObject json)
             },
             "roomid": "1010"
         }*/
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
         qDebug() << "删除醒目留言：" << json;
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "SPECIAL_GIFT") // 节奏风暴（特殊礼物？）
     {
@@ -9116,7 +9116,7 @@ void MainWindow::handleMessage(QJsonObject json)
             joinStorm(id);
         }
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
     else if (cmd == "WELCOME_GUARD") // 舰长进入（不会触发），通过guard_level=1/2/3分辨总督/提督/舰长
     {
@@ -9137,7 +9137,7 @@ void MainWindow::handleMessage(QJsonObject json)
                                         , true, unameColor, spreadDesc, spreadInfo));
         appendNewLiveDanmaku(danmaku);
 
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else  if (cmd == "ENTRY_EFFECT") // 舰长进入、高能榜（不知道到榜几）、姥爷的同时会出现
     {
@@ -9257,7 +9257,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         userComeEvent(danmaku);
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
     {
@@ -9268,7 +9268,7 @@ void MainWindow::handleMessage(QJsonObject json)
         bool isAdmin = data.value("isAdmin").toBool();
         qDebug() << s8("欢迎观众：") << username << isAdmin;
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -9351,7 +9351,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             userComeEvent(danmaku);
 
-            triggerCmdEvent(cmd, danmaku);
+            triggerCmdEvent(cmd, danmaku.with(data));
         }
         else if (msgType == 2) // 2关注 4特别关注
         {
@@ -9367,14 +9367,14 @@ void MainWindow::handleMessage(QJsonObject json)
                 judgeRobotAndMark(danmaku);
             }
 
-            triggerCmdEvent("ATTENTION", danmaku); // !这个是单独修改的
+            triggerCmdEvent("ATTENTION", danmaku.with(data)); // !这个是单独修改的
         }
         else if (msgType == 3) // 分享直播间
         {
             danmaku.transToShare();
             localNotify(username + "分享了直播间", uid);
 
-            triggerCmdEvent("SHARE", danmaku);
+            triggerCmdEvent("SHARE", danmaku.with(data));
         }
         else if (msgType == 4) // 特别关注
         {
@@ -9391,7 +9391,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 judgeRobotAndMark(danmaku);
             }
 
-            triggerCmdEvent("SPECIAL_ATTENTION", danmaku); // !这个是单独修改的
+            triggerCmdEvent("SPECIAL_ATTENTION", danmaku.with(data)); // !这个是单独修改的
         }
         else
         {
@@ -9406,7 +9406,7 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(danmaku);
         blockedQueue.append(danmaku);
 
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(json));
     }
     else if (handlePK(json))
     {
@@ -9438,7 +9438,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!guardCount)
         {
-            triggerCmdEvent("FIRST_GUARD", danmaku);
+            triggerCmdEvent("FIRST_GUARD", danmaku.with(data));
         }
         currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
@@ -9477,7 +9477,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (dailySettings)
             dailySettings->setValue("guard", dailyGuard);
 
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "USER_TOAST_MSG") // 续费舰长会附带的；购买不知道
     {
@@ -9505,7 +9505,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ONLINE_RANK_V2") // 礼物榜（高能榜）更新
     {
@@ -9562,7 +9562,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ONLINE_RANK_TOP3") // 高能榜前3变化（不知道会不会跟着 ONLINE_RANK_V2）
     {
@@ -9578,7 +9578,7 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ONLINE_RANK_COUNT") // 高能榜数量变化（但必定会跟着 ONLINE_RANK_V2）
     {
@@ -9592,7 +9592,7 @@ void MainWindow::handleMessage(QJsonObject json)
         // 数量变化了，那还是得刷新一下
         updateOnlineGoldRank();
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "NOTICE_MSG") // 为什么压缩的消息还有一遍？
     {
@@ -9653,11 +9653,11 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ANCHOR_LOT_CHECKSTATUS") //  开启天选前的审核，审核过了才是真正开启
     {
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ANCHOR_LOT_START") // 开启天选
     {
@@ -9748,11 +9748,11 @@ void MainWindow::handleMessage(QJsonObject json)
             });
         }
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
     else if (cmd == "ANCHOR_LOT_END") // 天选结束
     {
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "ANCHOR_LOT_AWARD") // 天选结果推送，在结束后的不到一秒左右
     {
@@ -9813,7 +9813,7 @@ void MainWindow::handleMessage(QJsonObject json)
             "roomid": 22532956
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "VOICE_JOIN_LIST") // 连麦申请、取消连麦申请；和VOICE_JOIN_ROOM_COUNT_INFO一起收到
     {
@@ -9833,7 +9833,7 @@ void MainWindow::handleMessage(QJsonObject json)
         int point = data.value("red_point").toInt();
         localNotify("连麦队列：" + snum(point));
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
     else if (cmd == "VOICE_JOIN_STATUS") // 连麦状态，连麦开始/结束
     {
@@ -9886,7 +9886,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 localNotify(uname + " 结束连麦");
         }
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
     else if (cmd == "WARNING") // 被警告
     {
@@ -9898,7 +9898,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString msg = json.value("msg").toString();
         localNotify(msg);
 
-        triggerCmdEvent(cmd, LiveDanmaku(msg));
+        triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
     }
     else if (cmd == "room_admin_entrance")
     {
@@ -9912,7 +9912,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (snum(uid) == cookieUid) // 不是自己的话，不用理会
         {
             localNotify(msg, uid);
-            triggerCmdEvent(cmd, LiveDanmaku(msg));
+            triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
         }
     }
     else if (cmd == "ROOM_ADMINS")
@@ -9924,7 +9924,7 @@ void MainWindow::handleMessage(QJsonObject json)
             ]
         }*/
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json));
     }
     else if (cmd == "LIVE_INTERACTIVE_GAME")
     {
@@ -9951,7 +9951,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else
     {
         qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
-        triggerCmdEvent(cmd, LiveDanmaku());
+        triggerCmdEvent(cmd, LiveDanmaku().with(json));
     }
 }
 
@@ -10608,6 +10608,9 @@ bool MainWindow::handlePK2(QJsonObject json)
     if (cmd == "PK_BATTLE_PRE") // 开始前的等待状态
     {
         pkPre(json);
+
+        triggerCmdEvent(cmd, LiveDanmaku().with(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
     {
@@ -10625,7 +10628,9 @@ bool MainWindow::handlePK2(QJsonObject json)
         }*/
         // result_type: 2赢，-1输
 
-        triggerCmdEvent(cmd, LiveDanmaku());
+        // 因为这个不只是data，比较特殊
+        triggerCmdEvent(cmd, LiveDanmaku().with(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_PRE_NEW")
     {
@@ -10678,7 +10683,7 @@ bool MainWindow::handlePK2(QJsonObject json)
         return false;
     }
 
-    triggerCmdEvent(cmd, LiveDanmaku());
+    triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
 
     return true;
 }
@@ -11967,6 +11972,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setPrevTimestamp(latency / 1000); // 毫秒转秒
             danmaku.setFirst(waiting);
+            danmaku.with(song.toJson());
             triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
             triggerCmdEvent("ORDER_SONG_SUCCEED_OVERRIDE", danmaku);
             if (hasEvent("ORDER_SONG_SUCCEED_OVERRIDE"))
@@ -11997,6 +12003,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             localNotify("开始播放：" + song.simpleString());
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setPrevTimestamp(song.addTime);
+            danmaku.with(song.toJson());
             triggerCmdEvent("ORDER_SONG_PLAY", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalCurrentSongChanged, this, [=](Song song){
@@ -12005,6 +12012,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
 
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setPrevTimestamp(song.addTime);
+            danmaku.with(song.toJson());
             triggerCmdEvent("CURRENT_SONG_CHANGED", danmaku);
 
             if (ui->playingSongToFileCheck)
@@ -12016,11 +12024,12 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             localNotify("提升歌曲：" + song.name + " : " + snum(prev+1) + "->" + snum(curr+1));
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setNumber(curr+1);
+            danmaku.with(song.toJson());
             triggerCmdEvent("ORDER_SONG_IMPROVED", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongCutted, this, [=](Song song){
             localNotify("已切歌");
-            triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name));
+            triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name).with(song.toJson()));
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongModified, this, [=](const SongList& songs){
             if (ui->orderSongsToFileCheck->isChecked())
@@ -12545,9 +12554,9 @@ void MainWindow::pkEnd(QJsonObject json)
                 break;
             }
         LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
-        triggerCmdEvent("PK_BEST_UNAME", danmaku);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data));
     }
-    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes));
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data));
 
     localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
@@ -12888,7 +12897,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
 
-        triggerCmdEvent("PK_DANMU_MSG", danmaku);
+        triggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -12938,7 +12947,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setPkLink(true);
         // appendNewLiveDanmaku(danmaku);
 
-        triggerCmdEvent("PK_" + cmd, danmaku);
+        triggerCmdEvent("PK_" + cmd, danmaku.with(data));
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -12991,16 +13000,16 @@ void MainWindow::handlePkMessage(QJsonObject json)
         {
             danmaku.transToAttention(timestamp);
             localNotify("对面的 " + username + " 关注了本直播间", uid);
-            triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku);
+            triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku.with(data));
         }
         else if (msgType == 1)
         {
             if (toView)
             {
                 localNotify(username + " 跑去对面串门", uid); // 显示一个短通知，就不作为一个弹幕了
-                triggerCmdEvent("CALL_ON_OPPOSITE", danmaku);
+                triggerCmdEvent("CALL_ON_OPPOSITE", danmaku.with(data));
             }
-            triggerCmdEvent("PK_" + cmd, danmaku);
+            triggerCmdEvent("PK_" + cmd, danmaku.with(data));
         }
         else if (msgType == 2)
         {
@@ -13008,9 +13017,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
             if (toView)
             {
                 localNotify(username + " 关注了对面直播间", uid); // XXX
-                triggerCmdEvent("ATTENTION_OPPOSITE", danmaku);
+                triggerCmdEvent("ATTENTION_OPPOSITE", danmaku.with(data));
             }
-            triggerCmdEvent("PK_ATTENTION", danmaku);
+            triggerCmdEvent("PK_ATTENTION", danmaku.with(data));
         }
         else if (msgType == 3)
         {
@@ -13018,9 +13027,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
             if (toView)
             {
                 localNotify(username + " 分享了对面直播间", uid); // XXX
-                triggerCmdEvent("SHARE_OPPOSITE", danmaku);
+                triggerCmdEvent("SHARE_OPPOSITE", danmaku.with(data));
             }
-            triggerCmdEvent("PK_SHARE", danmaku);
+            triggerCmdEvent("PK_SHARE", danmaku.with(data));
         }
         // appendNewLiveDanmaku(danmaku);
     }
@@ -13783,7 +13792,7 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
                 localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
             ld.setMedalLevel(level); // 设置为本房间的牌子
         }
-        triggerCmdEvent("MEDAL_UPGRADE", ld);
+        triggerCmdEvent("MEDAL_UPGRADE", ld.with(json));
     });
 }
 
