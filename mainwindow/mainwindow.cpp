@@ -624,10 +624,12 @@ void MainWindow::readConfig()
     userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
     // 过滤器
-    filter_musicOrder = settings->value("filter/musicOrder", "").toString();
+    enableFilter = settings->value("danmaku/enableFilter", enableFilter).toBool();
+    ui->enableFilterCheck->setChecked(enableFilter);
+    /* filter_musicOrder = settings->value("filter/musicOrder", "").toString();
     filter_musicOrderRe = QRegularExpression(filter_musicOrder);
     filter_danmakuCome = settings->value("filter/danmakuCome", "").toString();
-    filter_danmakuGift = settings->value("filter/danmakuGift").toString();
+    filter_danmakuGift = settings->value("filter/danmakuGift").toString();*/
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -5528,6 +5530,9 @@ qint64 MainWindow::calcIntExpression(QString exp) const
 
 bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku)
 {
+    if (!enableFilter)
+        return false;
+
     // 查找所有事件，查看有没有对应的过滤器
     bool reject = false;
     for (int row = 0; row < ui->eventListWidget->count(); row++)
@@ -5540,6 +5545,7 @@ bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
         if (eventWidget->isEnabled() && eventWidget->title() == filterName)
         {
             QString filterText = eventWidget->body();
+            // 判断事件
             if (!processFilter(filterText, danmaku))
                 reject = true;
         }
@@ -11833,6 +11839,11 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
                 if (isFilterRejected("FILTER_DANMAKU_GIFT", danmaku))
                     return ;
             }
+            else if (danmaku.is(MSG_ATTENTION))
+            {
+                if (isFilterRejected("FILTER_DANMAKU_ATTENTION", danmaku))
+                    return ;
+            }
 
             danmakuWindow->slotNewLiveDanmaku(danmaku);
         });
@@ -15665,4 +15676,9 @@ void MainWindow::setFilter(QString filterName, QString content)
         return ;
     settings->setValue(filterKey, content);
     qDebug() << "设置过滤器：" << filterKey << content;
+}
+
+void MainWindow::on_enableFilterCheck_clicked()
+{
+    settings->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
 }

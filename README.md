@@ -1794,14 +1794,17 @@ tips：
 
 若有多行，同其他代码一样，随机获取一行；其他弹幕或命令正常发送。
 
-| 过滤事件            | 说明（reject时）           |
-| ------------------- | -------------------------- |
-| FILTER_MUSIC_ORDER  | 阻止点歌                   |
-| FILTER_DANMAKU_MSG  | 阻止弹幕消息显示在弹幕姬上 |
-| FILTER_DANMAKU_COME | 阻止进入消息显示在弹幕姬上 |
-| FILTER_DANMAKU_GIFT | 阻止礼物消息显示在弹幕姬上 |
+| 过滤事件                 | 说明（reject时）                |
+| ------------------------ | ------------------------------- |
+| FILTER_MUSIC_ORDER       | 阻止点歌                        |
+| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上      |
+| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上      |
+| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上 |
+| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上      |
 
 若有多个相同过滤器，只要任意其中一个包括 `>reject()` 命令，则本操作不允许。
+
+注意：过滤器可能会在一定程度上造成卡顿，请酌情开启。
 
 
 

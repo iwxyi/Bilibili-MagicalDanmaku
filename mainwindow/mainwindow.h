@@ -665,6 +665,8 @@ private slots:
 
     void setFilter(QString filterName, QString content);
 
+    void on_enableFilterCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -974,6 +976,8 @@ private:
     QString lastCandidateDanmaku;
 
     // 过滤器
+    bool enableFilter = true;
+    // 过滤器（已废弃方案）
     QString filter_musicOrder; // 点歌过滤
     QRegularExpression filter_musicOrderRe;
     QString filter_danmakuMsg; // 弹幕姬：消息

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>838</width>
-    <height>708</height>
+    <width>1089</width>
+    <height>1001</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1046,8 +1046,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>592</height>
+             <width>1011</width>
+             <height>885</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2329,7 +2329,7 @@ margin: 40px;</string>
               <x>190</x>
               <y>410</y>
               <width>151</width>
-              <height>91</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2404,13 +2404,23 @@ margin: 40px;</string>
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QCheckBox" name="enableFilterCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启过滤器功能&lt;/p&gt;&lt;p&gt;可能会造成用户进场等情况的卡顿&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>启用过滤器</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="recordSettingsCard" native="true">
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>530</y>
+              <y>560</y>
               <width>161</width>
               <height>91</height>
              </rect>
@@ -2629,7 +2639,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>640</y>
+              <y>670</y>
               <width>161</width>
               <height>111</height>
              </rect>
@@ -6418,7 +6428,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>838</width>
+     <width>1089</width>
      <height>21</height>
     </rect>
    </property>
