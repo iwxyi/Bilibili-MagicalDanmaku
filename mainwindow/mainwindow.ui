@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1046,8 +1046,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>547</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5512,7 +5512,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -5520,7 +5520,7 @@ QTabBar::tab:selected
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="QPushButton" name="addTaskButton">
+             <widget class="WaterFloatButton" name="addTaskButton">
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
@@ -5541,9 +5541,10 @@ QTabBar::tab:selected
                <enum>Qt::CustomContextMenu</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">QListWidget
+               <string notr="true">#taskListWidget
 {
 	background: transparent;
+	border: none;
 }</string>
               </property>
               <property name="editTriggers">
@@ -5568,7 +5569,7 @@ QTabBar::tab:selected
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
-             <widget class="QPushButton" name="addReplyButton">
+             <widget class="WaterFloatButton" name="addReplyButton">
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
@@ -5589,9 +5590,10 @@ QTabBar::tab:selected
                <enum>Qt::CustomContextMenu</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">QListWidget
+               <string notr="true">#replyListWidget
 {
 	background: transparent;
+	border: none;
 }</string>
               </property>
               <property name="selectionMode">
@@ -5613,7 +5615,7 @@ QTabBar::tab:selected
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_13">
             <item>
-             <widget class="QPushButton" name="addEventButton">
+             <widget class="WaterFloatButton" name="addEventButton">
               <property name="enabled">
                <bool>true</bool>
               </property>
@@ -5637,9 +5639,10 @@ QTabBar::tab:selected
                <enum>Qt::CustomContextMenu</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">QListWidget
+               <string notr="true">#eventListWidget
 {
 	background: transparent;
+	border: none;
 }</string>
               </property>
               <property name="selectionMode">

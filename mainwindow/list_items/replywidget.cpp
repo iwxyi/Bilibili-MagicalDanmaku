@@ -14,11 +14,9 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
     hlayout->addWidget(btn);
     hlayout->setStretch(1, 1);
 
-    QVBoxLayout* vlayout = new QVBoxLayout(this);
     vlayout->addLayout(hlayout);
     vlayout->addWidget(keyEdit);
     vlayout->addWidget(replyEdit);
-    setLayout(vlayout);
     vlayout->activate();
 
     keyEdit->setPlaceholderText("关键词正则表达式");

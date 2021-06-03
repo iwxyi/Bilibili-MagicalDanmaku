@@ -14,11 +14,9 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     hlayout->addWidget(btn);
     hlayout->setStretch(1, 1);
 
-    QVBoxLayout* vlayout = new QVBoxLayout(this);
     vlayout->addLayout(hlayout);
     vlayout->addWidget(eventEdit);
     vlayout->addWidget(actionEdit);
-    setLayout(vlayout);
     vlayout->activate();
 
     eventEdit->setPlaceholderText("事件命令");

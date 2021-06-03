@@ -16,10 +16,8 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     hlayout->addWidget(btn);
     hlayout->setStretch(2, 1);
 
-    QVBoxLayout* vlayout = new QVBoxLayout(this);
     vlayout->addLayout(hlayout);
     vlayout->addWidget(edit);
-    setLayout(vlayout);
     vlayout->activate();
 
     spin->setSuffix("秒");

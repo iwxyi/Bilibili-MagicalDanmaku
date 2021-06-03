@@ -5,6 +5,7 @@ WaterFloatButton::WaterFloatButton(QWidget *parent) : InteractiveButtonBase(pare
 {
     fore_enabled = false;
     fore_paddings.left = fore_paddings.right = radius;
+    setAutoTextColor(false);
 }
 
 WaterFloatButton::WaterFloatButton(QString s, QWidget *parent) : InteractiveButtonBase(s, parent),

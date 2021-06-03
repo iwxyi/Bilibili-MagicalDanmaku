@@ -2252,7 +2252,6 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     tw->edit->setPlainText(text);
     tw->autoResizeEdit();
     tw->adjustSize();
-//    item->setSizeHint(tw->sizeHint());
 
     return tw;
 }

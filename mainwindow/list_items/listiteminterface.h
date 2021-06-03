@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <QApplication>
+#include <QResizeEvent>
+#include <QLabel>
+#include <QVBoxLayout>
 #include "myjson.h"
 
 class ListItemInterface : public QWidget
@@ -11,18 +14,12 @@ class ListItemInterface : public QWidget
 public:
     explicit ListItemInterface(QWidget *parent = nullptr);
 
-    virtual void fromJson(MyJson) = 0;
-    virtual MyJson toJson() const = 0;
+    virtual void fromJson(MyJson) {}
+    virtual MyJson toJson() const {}
 
-    void setRow(int row)
-    {
-        this->_row = row;
-    }
+    void setRow(int row);
 
-    int getRow() const
-    {
-        return _row;
-    }
+    int getRow() const;
 
 signals:
     void signalResized();
@@ -31,8 +28,16 @@ public slots:
     virtual void autoResizeEdit()
     {}
 
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
+protected:
+    QLabel* _bgLabel;
+    QVBoxLayout* vlayout;
+
 private:
     int _row;
+    int _cardMargin = 9;
 };
 
 #endif // LISTITEMINTERFACE_H
