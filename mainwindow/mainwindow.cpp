@@ -1143,6 +1143,16 @@ void MainWindow::readConfig()
     // 恢复游戏数据
     restoreGameNumbers();
     restoreGameTexts();
+
+    /* QTimer::singleShot(3000, [=]{
+        QDate date = QDate::currentDate();
+        if (date.month() != 6 || date.day() > 5)
+        {
+            QMessageBox::warning(this, QByteArray::fromBase64("56We5aWH5by55bmVIDbmnIjliJ3kuJPniYg="),
+                                 QByteArray::fromBase64("5b2T5YmN54mI5pys5bey6L+H5pyf77yM6K+35L2/55So5Y+R5biD54mI5pys77yB"));
+            qApp->quit();
+        }
+    }); */
 }
 
 void MainWindow::initEvent()
@@ -8267,7 +8277,7 @@ void MainWindow::handleMessage(QJsonObject json)
         getRoomInfo(false);
         triggerCmdEvent(cmd, LiveDanmaku());
     }
-    else if (cmd == "DANMU_MSG") // 收到弹幕
+    else if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
     {
         QJsonArray info = json.value("info").toArray();
         if (info.size() <= 2)
@@ -8440,7 +8450,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!blocked)
             markNotRobot(uid);
 
-        triggerCmdEvent(cmd, danmaku);
+        triggerCmdEvent("DANMU_MSG", danmaku);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -12730,7 +12740,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
     qDebug() << s8(">pk消息命令：") << cmd;
-    if (cmd == "DANMU_MSG") // 收到弹幕
+    if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
     {
         if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
             return ;
@@ -12778,7 +12788,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
 
-        triggerCmdEvent("PK_" + cmd, danmaku);
+        triggerCmdEvent("PK_DANMU_MSG", danmaku);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {

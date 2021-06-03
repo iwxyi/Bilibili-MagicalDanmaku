@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -6057,46 +6057,36 @@ QTabBar::tab:selected
          <number>0</number>
         </property>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_41">
-          <property name="leftMargin">
-           <number>20</number>
-          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_12">
           <property name="topMargin">
            <number>0</number>
           </property>
-          <property name="rightMargin">
-           <number>20</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_12">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="appNameLabel">
-              <property name="styleSheet">
-               <string notr="true">font-size: 18px;
+           <widget class="QLabel" name="appNameLabel">
+            <property name="styleSheet">
+             <string notr="true">font-size: 20px;
 font-weight: 500;</string>
-              </property>
-              <property name="text">
-               <string>神奇弹幕</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="appDescLabel">
-              <property name="text">
-               <string>Bilibili直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬</string>
-              </property>
-              <property name="wordWrap">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            </property>
+            <property name="text">
+             <string>神奇弹幕</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="appDescLabel">
+            <property name="text">
+             <string>哔哩哔哩直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
