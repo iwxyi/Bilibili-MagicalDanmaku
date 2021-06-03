@@ -2522,12 +2522,12 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
         int row = ui->eventListWidget->row(item);
         settings->setValue("event/r"+QString::number(row)+"Action", content);
 
-        // 处理特殊操作，比如过滤器
+        /* // 处理特殊操作，比如过滤器
         QString event = rw->title();
         if (!event.isEmpty())
         {
             setFilter(event, content);
-        }
+        } */
     });
 
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
@@ -5523,7 +5523,30 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     return val;
 }
 
-bool MainWindow::isFilterAccepted(QString filterText, const LiveDanmaku &danmaku)
+bool MainWindow::isFilterAccepted(QString filterName, const LiveDanmaku &danmaku)
+{
+    // 查找所有事件，查看有没有对应的过滤器
+    bool reject = false;
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto rowItem = ui->eventListWidget->item(row);
+        auto widget = ui->eventListWidget->itemWidget(rowItem);
+        if (!widget)
+            continue;
+        auto eventWidget = static_cast<EventWidget*>(widget);
+        if (eventWidget->isEnabled() && eventWidget->title() == filterName)
+        {
+            QString filterText = eventWidget->body();
+            qDebug() << "遍历到：" << row << filterText;
+            if (!processFilter(filterText, danmaku))
+                reject = true;
+        }
+    }
+
+    return !reject;
+}
+
+bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 {
     if (filterText.isEmpty())
         return true;
@@ -5539,7 +5562,6 @@ bool MainWindow::isFilterAccepted(QString filterText, const LiveDanmaku &danmaku
     QString s = msgs.at(r);
 
     bool reject = s.contains(QRegularExpression(">\\s*reject\\s*(\\s*)"));
-
     if (reject && !s.contains("\\n")) // 拒绝，且不需要其他操作，直接返回
     {
         return false;
@@ -11785,7 +11807,26 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     {
         danmakuWindow = new LiveDanmakuWindow(settings, dataPath, this);
 
-        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotNewLiveDanmaku(LiveDanmaku)));
+        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](LiveDanmaku danmaku) {
+            if (danmaku.is(MSG_DANMAKU))
+            {
+                if (!isFilterAccepted("FILTER_DANMAKU_MSG", danmaku))
+                    return ;
+            }
+            else if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
+            {
+                if (!isFilterAccepted("FILTER_DANMAKU_COME", danmaku))
+                    return ;
+            }
+            else if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
+            {
+                if (!isFilterAccepted("FILTER_DANMAKU_GIFT", danmaku))
+                    return ;
+            }
+
+            danmakuWindow->slotNewLiveDanmaku(danmaku);
+        });
+
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
         connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
