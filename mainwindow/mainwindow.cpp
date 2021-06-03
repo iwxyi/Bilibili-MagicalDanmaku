@@ -491,7 +491,7 @@ void MainWindow::readConfig()
     // 点歌姬
     if (settings->value("danmaku/playerWindow", false).toBool())
         on_actionShow_Order_Player_Window_triggered();
-    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ");
+    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
     if (settings->value("danmaku/record", false).toBool())
@@ -3068,6 +3068,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         {
             MyJson json;
             json.insert("key", s);
+            qInfo() << "阻止点歌，关键词：" << s;
             triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json));
             return ;
         }
@@ -5551,7 +5552,7 @@ bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
 bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 {
     if (filterText.isEmpty())
-        return true;
+        return false;
 
     // 获取符合的所有结果
     QStringList msgs = getEditConditionStringList(filterText, danmaku);
