@@ -85,6 +85,11 @@ QT_END_NAMESPACE
 #define TAB_AUTO_REPLY 1
 #define TAB_EVENT_ACTION 2
 
+#define FILTER_MUSIC_ORDER "FILTER_MUSIC_ORDER"
+#define FILTER_DANMAKU_MSG "FILTER_DANMAKU_MSG"
+#define FILTER_DANMAKU_COME "FILTER_DANMAKU_COME"
+#define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
+
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
@@ -658,6 +663,8 @@ private slots:
 
     void on_musicBlackListButton_clicked();
 
+    void setFilter(QString filterName, QString content);
+
 private:
     void initView();
     void initStyle();
@@ -759,6 +766,8 @@ private:
     qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
+    bool isFilterAccepted(QString filterText, const LiveDanmaku& danmaku);
+
     qint64 unameToUid(QString text);
     QString uidToName(qint64 uid);
     QString nicknameSimplify(QString nickname) const;
@@ -962,6 +971,13 @@ private:
 
     QString lastConditionDanmu;
     QString lastCandidateDanmaku;
+
+    // 过滤器
+    QString filter_musicOrder; // 点歌过滤
+    QRegularExpression filter_musicOrderRe;
+    QString filter_danmakuMsg; // 弹幕姬：消息
+    QString filter_danmakuCome; // 弹幕姬：用户进入过滤
+    QString filter_danmakuGift; // 弹幕姬：礼物过滤
 
     // 礼物连击
     QHash<QString, LiveDanmaku> giftCombos;

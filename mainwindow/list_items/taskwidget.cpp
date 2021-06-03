@@ -77,6 +77,16 @@ MyJson TaskWidget::toJson() const
     return json;
 }
 
+bool TaskWidget::isEnabled() const
+{
+    return check->isChecked();
+}
+
+QString TaskWidget::body() const
+{
+    return edit->toPlainText();
+}
+
 void TaskWidget::slotSpinChanged(int val)
 {
     timer->setInterval(val * 1000);

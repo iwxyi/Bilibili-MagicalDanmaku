@@ -70,6 +70,21 @@ MyJson ReplyWidget::toJson() const
     return json;
 }
 
+bool ReplyWidget::isEnabled() const
+{
+    return check->isChecked();
+}
+
+QString ReplyWidget::title() const
+{
+    return keyEdit->text();
+}
+
+QString ReplyWidget::body() const
+{
+    return replyEdit->toPlainText();
+}
+
 void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
 {
     if (!check->isChecked() || !danmaku.is(MSG_DANMAKU) || danmaku.isNoReply())

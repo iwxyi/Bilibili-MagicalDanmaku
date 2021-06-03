@@ -65,6 +65,21 @@ MyJson EventWidget::toJson() const
     return json;
 }
 
+bool EventWidget::isEnabled() const
+{
+    return check->isChecked();
+}
+
+QString EventWidget::title() const
+{
+    return eventEdit->text();
+}
+
+QString EventWidget::body() const
+{
+    return actionEdit->toPlainText();
+}
+
 void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     if (!check->isChecked() || cmdKey != cmd)

@@ -27,6 +27,9 @@ public:
     virtual void fromJson(MyJson json) override;
     virtual MyJson toJson() const override;
 
+    virtual bool isEnabled() const override;
+    virtual QString body() const override;
+
 signals:
     void signalSendMsgs(QString msgs, bool manual);
     void spinChanged(int val);

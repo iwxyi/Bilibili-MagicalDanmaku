@@ -623,6 +623,12 @@ void MainWindow::readConfig()
     // 用户备注
     userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
+    // 过滤器
+    filter_musicOrder = settings->value("filter/musicOrder", "").toString();
+    filter_musicOrderRe = QRegularExpression(filter_musicOrder);
+    filter_danmakuCome = settings->value("filter/danmakuCome", "").toString();
+    filter_danmakuGift = settings->value("filter/danmakuGift").toString();
+
     // 状态栏
     statusLabel = new QLabel(this);
     statusLabel->setObjectName("statusLabel");
@@ -2515,6 +2521,13 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
         QString content = rw->actionEdit->toPlainText();
         int row = ui->eventListWidget->row(item);
         settings->setValue("event/r"+QString::number(row)+"Action", content);
+
+        // 处理特殊操作，比如过滤器
+        QString event = rw->title();
+        if (!event.isEmpty())
+        {
+            setFilter(event, content);
+        }
     });
 
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
@@ -2981,6 +2994,12 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
     menu->split()->addAction("删除 (&d)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
+
+        // 特殊操作
+        if (listKey == CODE_EVENT_ACTION_KEY)
+        {
+            setFilter(tw->title(), "");
+        }
 
         listWidget->removeItemWidget(item);
         listWidget->takeItem(listWidget->currentRow());
@@ -5504,6 +5523,36 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     return val;
 }
 
+bool MainWindow::isFilterAccepted(QString filterText, const LiveDanmaku &danmaku)
+{
+    if (filterText.isEmpty())
+        return true;
+
+    // 获取符合的所有结果
+    QStringList msgs = getEditConditionStringList(filterText, danmaku);
+
+    if (!msgs.size())
+        return true;
+
+    // 如果有多个，随机取一个
+    int r = qrand() % msgs.size();
+    QString s = msgs.at(r);
+
+    bool reject = s.contains(QRegularExpression(">\\s*reject\\s*(\\s*)"));
+
+    if (reject && !s.contains("\\n")) // 拒绝，且不需要其他操作，直接返回
+    {
+        return false;
+    }
+
+    if (!s.trimmed().isEmpty()) // 可能还有其他的操作
+    {
+        sendAutoMsg(s);
+    }
+
+    return !reject;
+}
+
 qint64 MainWindow::unameToUid(QString text)
 {
     // 查找弹幕和送礼
@@ -6331,6 +6380,17 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };
+
+    // 过滤器
+    if (msg.contains("reject"))
+    {
+        re = RE("reject\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            return true;
+        }
+        return false;
+    }
 
     // 禁言
     if (msg.contains("block"))
@@ -15518,4 +15578,36 @@ void MainWindow::on_musicBlackListButton_clicked()
         return ;
     orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);
     settings->setValue("music/blackListKeys", blackList);
+}
+
+/// 添加或者删除过滤器
+/// 也不一定是过滤器，任何内容都有可能
+void MainWindow::setFilter(QString filterName, QString content)
+{
+    QString filterKey;
+    if (filterName == FILTER_MUSIC_ORDER)
+    {
+        filterKey = "filter/musicOrder";
+        filter_musicOrder = content;
+        filter_musicOrderRe = QRegularExpression(filter_musicOrder);
+    }
+    else if (filterName == FILTER_DANMAKU_MSG)
+    {
+        filterKey = "filter/danmakuMsg";
+        filter_danmakuMsg = content;
+    }
+    else if (filterName == FILTER_DANMAKU_COME)
+    {
+        filterKey = "filter/danmakuCome";
+        filter_danmakuCome = content;
+    }
+    else if (filterName == FILTER_DANMAKU_GIFT)
+    {
+        filterKey = "filter/danmakuGift";
+        filter_danmakuGift = content;
+    }
+    else // 不是系统过滤器
+        return ;
+    settings->setValue(filterKey, content);
+    qDebug() << "设置过滤器：" << filterKey << content;
 }

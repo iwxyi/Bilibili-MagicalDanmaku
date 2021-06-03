@@ -14,8 +14,23 @@ class ListItemInterface : public QWidget
 public:
     explicit ListItemInterface(QWidget *parent = nullptr);
 
-    virtual void fromJson(MyJson) {}
-    virtual MyJson toJson() const {}
+    virtual void fromJson(MyJson) = 0;
+    virtual MyJson toJson() const = 0;
+
+    virtual bool isEnabled() const
+    {
+        return false;
+    }
+
+    virtual QString title() const
+    {
+        return "";
+    }
+
+    virtual QString body() const
+    {
+        return "";
+    }
 
     void setRow(int row);
 
