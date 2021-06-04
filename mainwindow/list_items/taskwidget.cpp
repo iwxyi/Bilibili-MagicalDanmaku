@@ -6,7 +6,7 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     timer = new QTimer(this);
     check = new QCheckBox("启用", this);
     spin = new QSpinBox(this);
-    btn = new QPushButton("发送", this);
+    btn = new InteractiveButtonBase("发送", this);
     edit = new ConditionEditor(this);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
@@ -20,6 +20,10 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     vlayout->addWidget(edit);
     vlayout->activate();
 
+    btn->setBorderColor(Qt::black);
+    btn->setCursor(Qt::PointingHandCursor);
+    btn->setFixedForePos();
+    check->setCursor(Qt::PointingHandCursor);
     spin->setSuffix("秒");
     spin->setRange(1, 86400);
     spin->setSingleStep(10);

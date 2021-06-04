@@ -15,6 +15,7 @@
 #include <QDebug>
 #include "listiteminterface.h"
 #include "livedanmaku.h"
+#include "interactivebuttonbase.h"
 
 #define CODE_TIMER_TASK_KEY (QApplication::applicationName() + ":TimerTask")
 
@@ -43,7 +44,7 @@ public:
     QTimer* timer;
     QCheckBox* check;
     QSpinBox* spin;
-    QPushButton* btn;
+    InteractiveButtonBase* btn;
     QPlainTextEdit* edit;
 };
 

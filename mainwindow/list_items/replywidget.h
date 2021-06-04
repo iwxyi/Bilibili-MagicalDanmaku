@@ -14,6 +14,7 @@
 #include <QDebug>
 #include "livedanmaku.h"
 #include "listiteminterface.h"
+#include "interactivebuttonbase.h"
 
 #define CODE_AUTO_REPLY_KEY (QApplication::applicationName() + ":AutoReply")
 
@@ -41,7 +42,7 @@ public slots:
 
 public:
     QCheckBox* check;
-    QPushButton* btn;
+    InteractiveButtonBase* btn;
     QLineEdit* keyEdit;
     QPlainTextEdit* replyEdit;
 

@@ -181,6 +181,7 @@ void MainWindow::initView()
     ui->showLiveDanmakuWindowButton->setFontSize(12);
     ui->showLiveDanmakuWindowButton->setPaddings(16, 16, 4, 4);
     ui->showLiveDanmakuWindowButton->setFixedForeSize();
+    ui->showLiveDanmakuWindowButton->setBgColor(Qt::white);
 
     ui->scrollArea->setItemSpacing(24, 24);
     ui->scrollArea->initFixedChildren();
@@ -296,9 +297,10 @@ void MainWindow::initView()
     appendListItemButton->setFixedSize(widgetSizeL, widgetSizeL);
     appendListItemButton->setRadius(widgetSizeL);
     appendListItemButton->setCursor(Qt::PointingHandCursor);
+    appendListItemButton->setBgColor(Qt::white);
     {
         QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(appendListItemButton);
-        effect->setColor(QColor(63, 63, 63, 64));
+        effect->setColor(QColor(63, 63, 63, 128));
         effect->setBlurRadius(24);
         effect->setXOffset(4);
         effect->setYOffset(4);
@@ -491,7 +493,7 @@ void MainWindow::readConfig()
     // 点歌姬
     if (settings->value("danmaku/playerWindow", false).toBool())
         on_actionShow_Order_Player_Window_triggered();
-    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ");
+    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
     if (settings->value("danmaku/record", false).toBool())
@@ -3070,6 +3072,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         {
             MyJson json;
             json.insert("key", s);
+            qInfo() << "阻止点歌，关键词：" << s;
             triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json));
             return ;
         }
@@ -3725,7 +3728,8 @@ void MainWindow::getRoomCover(QString url)
             ui->robotNameButton->setTextColor(fg);
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
-            ui->showLiveDanmakuWindowButton->setTextColor(fg);
+            ui->showLiveDanmakuWindowButton->setBgColor(sbg);
+            ui->showLiveDanmakuWindowButton->setTextColor(sfg);
             ui->SendMsgButton->setTextColor(fg);
             ui->showOrderPlayerButton->setNormalColor(sbg);
             ui->showOrderPlayerButton->setTextColor(sfg);
@@ -5557,7 +5561,7 @@ bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
 bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 {
     if (filterText.isEmpty())
-        return true;
+        return false;
 
     // 获取符合的所有结果
     QStringList msgs = getEditConditionStringList(filterText, danmaku);
