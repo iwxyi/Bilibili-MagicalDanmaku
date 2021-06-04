@@ -230,6 +230,7 @@ void MainWindow::initView()
     // 点歌页面
     ui->showOrderPlayerButton->setFixedForeSize(true, 12);
     ui->showOrderPlayerButton->setAutoTextColor(false);
+    ui->showOrderPlayerButton->setBgColor(QColor(180, 166, 211));
     {
         QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(ui->showOrderPlayerButton);
         effect->setColor(QColor(63, 63, 63, 64));
@@ -15751,3 +15752,4 @@ void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
 {
     settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
+

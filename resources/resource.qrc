@@ -88,11 +88,15 @@
         <file alias="sailor">icons/sailor.png</file>
         <file alias="hot">icons/hot.png</file>
         <file alias="account_link">icons/account_link.png</file>
-        <file alias="wa">icons/wa_medal.png</file>
+        <file alias="wa_medal">icons/wa_medal.png</file>
         <file alias="music_frequency">icons/music_frequency.png</file>
         <file alias="music_reply">icons/music_reply.png</file>
-        <file alias="music_medal">icons/music_medal.png</file>
         <file alias="replace">icons/replace.png</file>
+        <file alias="up_arrow">icons/up_arrow.png</file>
+        <file alias="down_arrow">icons/down_arrow.png</file>
+        <file alias="music_medal2">icons/music_medal2.png</file>
+        <file alias="quiet_reply">icons/quiet_reply.png</file>
+        <file alias="circle_reply">icons/circle_reply.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

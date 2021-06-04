@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>930</width>
-    <height>999</height>
+    <width>767</width>
+    <height>738</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -153,7 +153,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="../resources/resource.qrc">
+          <iconset>
            <normaloff>:/icons/wa</normaloff>:/icons/wa</iconset>
          </property>
         </widget>
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -4828,7 +4828,7 @@ font-weight: 500;</string>
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_50">
                  <property name="spacing">
-                  <number>4</number>
+                  <number>6</number>
                  </property>
                  <item>
                   <widget class="QLabel" name="label_41">
@@ -4839,7 +4839,7 @@ font-weight: 500;</string>
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">background-image:url(:/icons/music_medal);
+                    <string notr="true">background-image:url(:/icons/wa_medal);
 background-position:center;
 background-repeat:none;</string>
                    </property>
@@ -4913,7 +4913,7 @@ QCheckBox::indicator:checked:pressed {
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_51">
                  <property name="spacing">
-                  <number>4</number>
+                  <number>6</number>
                  </property>
                  <item>
                   <widget class="QLabel" name="label_43">
@@ -4924,7 +4924,7 @@ QCheckBox::indicator:checked:pressed {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">background-image:url(:/icons/music_reply);
+                    <string notr="true">background-image:url(:/icons/circle_reply);
 background-position:center;
 background-repeat:none;</string>
                    </property>
@@ -4998,7 +4998,7 @@ QCheckBox::indicator:checked:pressed {
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_52">
                  <property name="spacing">
-                  <number>4</number>
+                  <number>6</number>
                  </property>
                  <item>
                   <widget class="QLabel" name="label_44">
@@ -5015,7 +5015,7 @@ QCheckBox::indicator:checked:pressed {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">background-image:url(:/icons/music_frequency);
+                    <string notr="true">background-image:url(:/icons/music_medal2);
 background-position:center;
 background-repeat:none;</string>
                    </property>
@@ -5025,15 +5025,23 @@ background-repeat:none;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="diangeShuaCheck">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
+                  <layout class="QHBoxLayout" name="horizontalLayout_46">
+                   <property name="spacing">
+                    <number>0</number>
                    </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <property name="topMargin">
+                    <number>0</number>
                    </property>
-                   <property name="styleSheet">
-                    <string notr="true">QCheckBox{
+                   <item>
+                    <widget class="QCheckBox" name="diangeShuaCheck">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">QCheckBox{
     spacing: 3px;
 }
 
@@ -5065,11 +5073,65 @@ QCheckBox::indicator:checked:hover {
 QCheckBox::indicator:checked:pressed {
     image: url(:/widgets/checked_press);
 }</string>
-                   </property>
-                   <property name="text">
-                    <string>避免刷歌</string>
-                   </property>
-                  </widget>
+                     </property>
+                     <property name="text">
+                      <string>避免刷歌</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="orderSongShuaSpin">
+                     <property name="contextMenuPolicy">
+                      <enum>Qt::NoContextMenu</enum>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;超过这个数量则视作刷屏点歌，点歌无效，并触发 ORDER_SONG_FREQUENCY 事件&lt;/p&gt;&lt;p&gt;未开启“避免刷歌”选项时无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+	margin: 0px;
+	padding: 0px;
+	border: none;
+}
+
+QSpinBox::up-button
+{
+	border-image:url(:/icons/up_arrow);
+	width: 0px;
+}
+
+QSpinBox::down-button
+{
+	border-image:url(:/icons/down_arrow);
+	width: 0px;
+}</string>
+                     </property>
+                     <property name="frame">
+                      <bool>false</bool>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                     <property name="suffix">
+                      <string/>
+                     </property>
+                     <property name="prefix">
+                      <string/>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>9</number>
+                     </property>
+                     <property name="value">
+                      <number>3</number>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </item>
@@ -5604,63 +5666,6 @@ QCheckBox::indicator:checked:pressed {
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_41">
-                  <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QSpinBox" name="orderSongShuaSpin">
-                    <property name="contextMenuPolicy">
-                     <enum>Qt::NoContextMenu</enum>
-                    </property>
-                    <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;超过这个数量则视作刷屏点歌，点歌无效，并触发 ORDER_SONG_FREQUENCY 事件&lt;/p&gt;&lt;p&gt;未开启“避免刷歌”选项时无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                    </property>
-                    <property name="frame">
-                     <bool>false</bool>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="suffix">
-                     <string>首视作刷歌</string>
-                    </property>
-                    <property name="prefix">
-                     <string>超过</string>
-                    </property>
-                    <property name="minimum">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <number>99</number>
-                    </property>
-                    <property name="value">
-                     <number>3</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_19">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-                <item>
                  <widget class="QListWidget" name="diangeHistoryListWidget">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -5758,7 +5763,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -5919,16 +5924,6 @@ QTabBar::tab:selected
                  </size>
                 </property>
                </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_12">
-                <property name="styleSheet">
-                 <string notr="true">color: gray;</string>
-                </property>
-                <property name="text">
-                 <string>未完成,开发中</string>
-                </property>
-               </widget>
               </item>
              </layout>
             </item>
@@ -6607,7 +6602,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>930</width>
+     <width>767</width>
      <height>21</height>
     </rect>
    </property>
