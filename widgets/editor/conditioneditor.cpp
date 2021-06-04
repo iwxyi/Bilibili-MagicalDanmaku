@@ -127,7 +127,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
             setTextCursor(cursor);
         };
 
-        QString lineLeft = left.right(left.length() - (left.lastIndexOf("\n") + 1));
+        QString lineLeft = left.right(left.length() - (left.lastIndexOf("\n") + 1)); // 不包含正在输入的符号
         int v = 0;
         if (lp != rp) // 左右不一样的括号
         {
@@ -139,7 +139,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
                 else if (c == rp)
                     v--;
             }
-            if (v > 0)
+            if (v >= 0)
             {
                 insertRight();
             }
@@ -152,7 +152,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
                 if (c == lp)
                     v++;
             }
-            if (v % 2)
+            if (v % 2 == 0)
             {
                 insertRight();
             }
