@@ -40,7 +40,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     }
     auto key = e->key();
 
-    // 查找
+    // ========== 自动提示 ==========
     if (completer->popup() && completer->popup()->isVisible())
     {
         if (key == Qt::Key_Escape || key == Qt::Key_Enter || key == Qt::Key_Return || key == Qt::Key_Tab)
@@ -50,15 +50,34 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         }
     }
 
+    QString fullText = toPlainText();
+    int cursorPos = textCursor().position();
+    QString left = fullText.left(cursorPos);
+
+    // Tab跳转
+    if (fullText.length() > cursorPos)
+    {
+        if (key == Qt::Key_Tab)
+        {
+            QString rightChar = fullText.mid(cursorPos, 1);
+            if (rightChar == ")" || rightChar == "]" || rightChar == "\"")
+            {
+                QTextCursor cursor = textCursor();
+                cursor.setPosition(cursor.position() + 1);
+                setTextCursor(cursor);
+                e->accept();
+                return ;
+            }
+        }
+    }
+
     QPlainTextEdit::keyPressEvent(e);
 
     // 回车键
-    QString left = toPlainText().left(textCursor().position());
     if (key == Qt::Key_Return || key == Qt::Key_Enter)
     {
         if (left.isEmpty())
             return ;
-        left = left.left(left.length() - 1);
         // 判断左边是否有表示软换行的反斜杠
         if (!left.contains(QRegularExpression("\\\\\\s*(//.*)?$")))
             return ;
@@ -99,7 +118,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         completer->popup()->hide();
     }
 
-    // 括号补全
+    // ========== 括号补全 ==========
     auto judgeAndInsert = [&](QString lp, QString rp) {
         auto insertRight = [&]{
             QTextCursor cursor = textCursor();
@@ -145,18 +164,22 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     if (key == 40) // (
     {
         judgeAndInsert("(", ")");
+        return ;
     }
     else if (key == 91) // [
     {
         judgeAndInsert("[", "]");
+        return ;
     }
     else if (key == 123)
     {
         judgeAndInsert("{", "}");
+        return ;
     }
     else if (key == 34) // "
     {
         judgeAndInsert("\"", "\"");
+        return ;
     }
 }
 
