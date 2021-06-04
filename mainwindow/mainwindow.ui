@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
+    <width>781</width>
     <height>738</height>
    </rect>
   </property>
@@ -420,7 +420,7 @@ background-repeat:none;</string>
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="toolTip">
-                  <string>显示直播视频</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;程序内查看直播视频&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>未开播</string>
@@ -444,6 +444,12 @@ background-repeat:none;</string>
              </item>
              <item>
               <widget class="QTextBrowser" name="roomDescriptionBrowser">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -950,7 +956,7 @@ background-repeat:none;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">background: lightgray;
-margin: 10px;</string>
+margin: 20px;</string>
             </property>
            </widget>
           </item>
@@ -971,11 +977,140 @@ margin: 10px;</string>
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="totalSendMsgLabel">
-            <property name="text">
-             <string>累计发送弹幕 0 条</string>
+           <layout class="QHBoxLayout" name="horizontalLayout_52">
+            <property name="topMargin">
+             <number>0</number>
             </property>
-           </widget>
+            <item>
+             <widget class="QWidget" name="robotSendCountCard" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">#robotSendCountCard
+{
+	background: white;
+	border-radius: 5px;
+}</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_61">
+               <property name="spacing">
+                <number>6</number>
+               </property>
+               <property name="leftMargin">
+                <number>9</number>
+               </property>
+               <property name="topMargin">
+                <number>9</number>
+               </property>
+               <property name="rightMargin">
+                <number>9</number>
+               </property>
+               <property name="bottomMargin">
+                <number>9</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_41">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_12">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">color: transparent;</string>
+                   </property>
+                   <property name="text">
+                    <string>条</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="robotSendCountLabel">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="sizeIncrement">
+                    <size>
+                     <width>0</width>
+                     <height>2</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QLabel
+{
+	font-size: 16px;
+}</string>
+                   </property>
+                   <property name="text">
+                    <string>0</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_51">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">color: gray;</string>
+                   </property>
+                   <property name="text">
+                    <string>条</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QLabel" name="robotSendCountTextLabel">
+                 <property name="styleSheet">
+                  <string notr="true">color: gray;</string>
+                 </property>
+                 <property name="text">
+                  <string>累计发送</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="verticalSpacer_11">
@@ -6640,7 +6775,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>767</width>
+     <width>781</width>
      <height>21</height>
     </rect>
    </property>

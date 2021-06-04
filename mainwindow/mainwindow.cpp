@@ -463,7 +463,8 @@ void MainWindow::readConfig()
     danmuLongest = settings->value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
     robotTotalSendMsg = settings->value("danmaku/robotTotalSend", 0).toInt();
-    ui->totalSendMsgLabel->setText("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
+    ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
+    ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
 
     // 失败重试
     ui->retryFailedDanmuCheck->setChecked(settings->value("danmaku/retryFailedDanmu", true).toBool());
@@ -1207,7 +1208,7 @@ void MainWindow::readConfig()
     // 回复统计数据
     int appOpenCount = settings->value("mainwindow/appOpenCount", 0).toInt();
     settings->setValue("mainwindow/appOpenCount", ++appOpenCount);
-    ui->totalSendMsgLabel->setToolTip("累计启动 " + snum(appOpenCount) + " 次");
+    ui->robotSendCountTextLabel->setToolTip("累计启动 " + snum(appOpenCount) + " 次");
 }
 
 void MainWindow::initEvent()
@@ -1808,7 +1809,8 @@ void MainWindow::slotSendAutoMsg(bool timeout)
         sendMsg(msg);
         inDanmakuCd = true;
         settings->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
-        ui->totalSendMsgLabel->setText("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
+        ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
+        ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
     }
     else // 是执行命令，发送下一条弹幕就不需要延迟了
     {
