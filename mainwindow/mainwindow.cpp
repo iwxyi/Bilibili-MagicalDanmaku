@@ -755,6 +755,9 @@ void MainWindow::readConfig()
 
     // 多语言翻译
     restoreVariantTranslation();
+    ui->autoWelcomeWordsEdit->updateCompleterModel();
+    ui->autoThankWordsEdit->updateCompleterModel();
+    ui->autoAttentionWordsEdit->updateCompleterModel();
 
     // 定时任务
     srand((unsigned)time(0));
@@ -7851,6 +7854,7 @@ QString MainWindow::saveCustomVariant()
 void MainWindow::restoreVariantTranslation()
 {
     variantTranslation.clear();
+    QStringList allVariants;
 
     // 变量
     QString text = readTextFile(":/documents/translation_variables");
@@ -7866,6 +7870,8 @@ void MainWindow::restoreVariantTranslation()
             key = "%" + key + "%";
             val = "%" + val + "%";
             variantTranslation.append(QPair<QString, QString>(key, val));
+            allVariants.append(key);
+            allVariants.append(val);
         }
         else
             qCritical() << "多语言翻译读取失败：" << s;
@@ -7884,6 +7890,8 @@ void MainWindow::restoreVariantTranslation()
             key = ">" + key + "(";
             val = ">" + val + "(";
             variantTranslation.append(QPair<QString, QString>(key, val));
+            allVariants.append(key);
+            allVariants.append(val);
         }
         else
             qCritical() << "多语言翻译读取失败：" << s;
@@ -7899,13 +7907,17 @@ void MainWindow::restoreVariantTranslation()
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            key = ">" + key + "(";
-            val = ">" + val + "(";
+            key = "%>" + key + "(";
+            val = "%>" + val + "(";
             variantTranslation.append(QPair<QString, QString>(key, val));
+            allVariants.append(key);
+            allVariants.append(val);
         }
         else
             qCritical() << "多语言翻译读取失败：" << s;
     }
+
+    ConditionEditor::allCompletes = allVariants;
 }
 
 void MainWindow::restoreReplaceVariant(QString text)

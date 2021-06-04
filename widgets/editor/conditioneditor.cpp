@@ -1,19 +1,65 @@
+#include <QDebug>
+#include <QAbstractItemView>
+#include <QStringListModel>
 #include "conditioneditor.h"
+
+QStringList ConditionEditor::allCompletes;
+int ConditionEditor::completerWidth = 200;
 
 ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
+    // 设置高亮
     new ConditionHighlighter(document());
-    //    setWordWrapMode(QTextOption::NoWrap); // 不自动换行
+
+    // 设置自动补全
+    completer = new QCompleter(allCompletes, this);
+    completer->setWidget(this);
+    completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
+    connect(completer, SIGNAL(activated(QString)), this, SLOT(onCompleterActivated(QString)));
+
+    static bool first = true;
+    if (!first)
+    {
+        first = true;
+        QFontMetrics fm(this->font());
+        completerWidth = fm.horizontalAdvance(">QwertyuiopAsdfghjklZxcvbnm");
+    }
+}
+
+void ConditionEditor::updateCompleterModel()
+{
+    completer->setModel(new QStringListModel(allCompletes));
 }
 
 void ConditionEditor::keyPressEvent(QKeyEvent *e)
 {
+    auto mod = e->modifiers();
+    if (mod != Qt::NoModifier && mod != Qt::ShiftModifier)
+    {
+        return QPlainTextEdit::keyPressEvent(e);
+    }
+    auto key = e->key();
+
+    // 查找
+    if (completer->popup() && completer->popup()->isVisible())
+    {
+        if (key == Qt::Key_Escape || key == Qt::Key_Enter || key == Qt::Key_Return || key == Qt::Key_Tab)
+        {
+            e->ignore();
+            return ;
+        }
+    }
+
     QPlainTextEdit::keyPressEvent(e);
 
-    if (e->modifiers() == Qt::NoModifier && (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter))
+    // 回车键
+    QString left = toPlainText().left(textCursor().position());
+    if (key == Qt::Key_Return || key == Qt::Key_Enter)
     {
+        if (left.isEmpty())
+            return ;
+        left = left.left(left.length() - 1);
         // 判断左边是否有表示软换行的反斜杠
-        QString left = toPlainText().left(textCursor().position()-1);
         if (!left.contains(QRegularExpression("\\\\\\s*(//.*)?$")))
             return ;
 
@@ -21,11 +67,95 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         QString indent = QRegularExpression("\\s*").match(left.mid(left.lastIndexOf("\n")+1)).captured();
         textCursor().insertText(indent.isEmpty() ? "\t" : indent);
     }
+
+    // 其他键
+    else if ((key >= Qt::Key_A &&key <= Qt::Key_Z) || key == Qt::Key_Minus) // 变量
+    {
+        // 获取当前单词
+        QRegularExpressionMatch match;
+        if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_4e00-\u9fa5]+)$"), 0, &match) == -1)
+            return ;
+        QString word = match.captured(1);
+        // qInfo() << "当前单词：" << word;
+
+        // 开始提示
+        showCompleter(word);
+    }
+    else if (key == Qt::Key_Percent) // 百分号%
+    {
+        showCompleter("%");
+    }
+    else if (key == Qt::Key_Greater)
+    {
+        showCompleter(">");
+    }
+    else
+    {
+        if (completer->popup() && completer->popup()->isVisible())
+        {
+            completer->popup()->hide();
+        }
+    }
+}
+
+void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
+{
+    QPlainTextEdit::inputMethodEvent(e);
+    // 获取当前单词
+    QString left = toPlainText().left(textCursor().position());
+    QRegularExpressionMatch match;
+    if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_4e00-\u9fa5]+)$"), 0, &match) == -1)
+        return ;
+    QString word = match.captured(1);
+    // qInfo() << "当前单词：" << word;
+
+    // 开始提示
+    showCompleter(word);
+}
+
+void ConditionEditor::showCompleter(QString prefix)
+{
+    completer->setCompletionPrefix(prefix);
+    QRect cr = cursorRect();
+    completer->complete(QRect(cr.left(), cr.bottom(), completerWidth, completer->popup()->sizeHint().height()));
+    completer->popup()->move(mapToGlobal(cr.bottomLeft()));
+}
+
+void ConditionEditor::onCompleterActivated(const QString &completion)
+{
+    QString completionPrefix = completer->completionPrefix(),
+            shouldInertText = completion;
+    QTextCursor cursor = this->textCursor();
+    if (!completion.contains(completionPrefix))
+    {
+        cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, completionPrefix.size());
+        cursor.clearSelection();
+    }
+    else // 补全相应的字符
+    {
+        shouldInertText = shouldInertText.replace(
+                    shouldInertText.indexOf(completionPrefix),
+                    completionPrefix.size(), "");
+    }
+    cursor.insertText(shouldInertText);
+
+    // 补全右括号
+    QString suffixStr = "";
+    if (completion.endsWith("("))
+        suffixStr = ")";
+    if (completion.startsWith("%") && !completion.endsWith("%"))
+        suffixStr += "%";
+
+    if (!suffixStr.isEmpty())
+    {
+        cursor.insertText(suffixStr);
+        cursor.setPosition(cursor.position() - suffixStr.length());
+        setTextCursor(cursor);
+    }
 }
 
 ConditionHighlighter::ConditionHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
 {
-
 }
 
 void ConditionHighlighter::highlightBlock(const QString &text)

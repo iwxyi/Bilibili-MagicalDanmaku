@@ -4,6 +4,7 @@
 #include <QPlainTextEdit>
 #include <QSyntaxHighlighter>
 #include <QRegularExpression>
+#include <QCompleter>
 
 class ConditionEditor : public QPlainTextEdit
 {
@@ -11,8 +12,23 @@ class ConditionEditor : public QPlainTextEdit
 public:
     ConditionEditor(QWidget* parent = nullptr);
 
+    void updateCompleterModel();
+
 protected:
     void keyPressEvent(QKeyEvent *e) override;
+    void inputMethodEvent(QInputMethodEvent *e) override;
+
+private slots:
+    void showCompleter(QString prefix);
+    void onCompleterActivated(const QString &completion);
+
+public:
+    static QStringList allCompletes; // 所有默认填充的
+    static int completerWidth;
+
+private:
+    QCompleter* completer;
+    QString currentPrefix;
 };
 
 class ConditionHighlighter : public QSyntaxHighlighter
@@ -28,5 +44,6 @@ public:
 protected:
     void highlightBlock(const QString &text) override;
 };
+
 
 #endif // CONDITIONEDITOR_H
