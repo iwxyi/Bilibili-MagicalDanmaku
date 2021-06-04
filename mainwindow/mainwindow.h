@@ -260,12 +260,12 @@ private slots:
 
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
-    void sendAutoMsg(QString msgs);
-    void sendAutoMsgInFirst(QString msgs, int interval = 0);
+    void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
+    void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
     void slotSendAutoMsg(bool timeout);
-    void sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual = false);
-    void sendGiftMsg(QString msg);
-    void sendAttentionMsg(QString msg);
+    void sendCdMsg(QString msg, const LiveDanmaku& danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual);
+    void sendGiftMsg(QString msg, const LiveDanmaku& danmaku);
+    void sendAttentionMsg(QString msg, const LiveDanmaku& danmaku);
     void sendNotifyMsg(QString msg, bool manual = false);
     void slotComboSend();
 
@@ -806,7 +806,7 @@ private:
     void finishLiveRecord();
 
     void processRemoteCmd(QString msg, bool response = true);
-    bool execFunc(QString msg, CmdResponse& res, int& resVal);
+    bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
     void simulateKeys(QString seq);
     QStringList splitLongDanmu(QString text) const;
     void sendLongText(QString text);
@@ -995,7 +995,7 @@ private:
     QTimer* comboTimer = nullptr;
 
     // 发送弹幕队列
-    QList<QStringList> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
+    QList<QPair<QStringList, LiveDanmaku>> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
     QTimer* autoMsgTimer;
     bool inDanmakuCd = false;
 

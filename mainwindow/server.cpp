@@ -171,14 +171,14 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     {
         QString text = json.value("data").toString();
         qDebug() << "发送远程弹幕：" << text;
-        sendAutoMsg(text);
+        sendAutoMsg(text, LiveDanmaku());
     }
     else if (cmd == "SEND_VARIANT_MSG") // 发送带有变量的弹幕
     {
         QString text = json.value("data").toString();
         text = processDanmakuVariants(text, LiveDanmaku());
         qDebug() << "发送远程弹幕或命令：" << text;
-        sendAutoMsg(text);
+        sendAutoMsg(text, LiveDanmaku());
     }
 }
 

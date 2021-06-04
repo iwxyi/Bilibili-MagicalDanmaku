@@ -1684,7 +1684,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
  * 发送多条消息
  * 使用“\n”进行多行换行
  */
-void MainWindow::sendAutoMsg(QString msgs)
+void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
 {
     if (msgs.trimmed().isEmpty())
     {
@@ -1701,7 +1701,7 @@ void MainWindow::sendAutoMsg(QString msgs)
 
     // 分割与发送
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
-    autoMsgQueues.append(sl);
+    autoMsgQueues.append(qMakePair(sl, danmaku));
     if (!autoMsgTimer->isActive() || !inDanmakuCd)
     {
         slotSendAutoMsg(false); // 先运行一次
@@ -1709,7 +1709,7 @@ void MainWindow::sendAutoMsg(QString msgs)
     }
 }
 
-void MainWindow::sendAutoMsgInFirst(QString msgs, int interval)
+void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, int interval)
 {
     if (msgs.trimmed().isEmpty())
     {
@@ -1718,7 +1718,7 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, int interval)
         return ;
     }
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
-    autoMsgQueues.insert(0, sl);
+    autoMsgQueues.insert(0, qMakePair(sl, danmaku));
     if (interval > 0)
         autoMsgTimer->setInterval(interval);
     if (!autoMsgTimer->isActive())
@@ -1743,7 +1743,8 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前命令修改过延时
         autoMsgTimer->setInterval(AUTO_MSG_CD);
 
-    QStringList& sl = autoMsgQueues[0];
+    QStringList& sl = autoMsgQueues[0].first;
+    LiveDanmaku& danmaku = autoMsgQueues[0].second;
     QString msg = sl.takeFirst();
     if (sl.isEmpty())
         autoMsgQueues.removeFirst();
@@ -1752,7 +1753,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
 
     CmdResponse res = NullRes;
     int resVal = 0;
-    if (!execFunc(msg, res, resVal)) // 先判断能否执行命令，如果是发送弹幕
+    if (!execFunc(msg, danmaku, res, resVal)) // 先判断能否执行命令，如果是发送弹幕
     {
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
@@ -1781,7 +1782,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     // 如果后面是命令的话，尝试立刻执行
     if (autoMsgQueues.size())
     {
-        QString nextMsg = autoMsgQueues.first().first();
+        QString nextMsg = autoMsgQueues.first().first.first();
         QRegularExpression re("^\\s*>");
         if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
         {
@@ -1793,7 +1794,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
 /**
  * 发送前确保没有需要调整的变量了
  */
-void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bool enableVoice, bool manual)
+void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual)
 {
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
@@ -1825,27 +1826,27 @@ void MainWindow::sendCdMsg(QString msg, int cd, int channel, bool enableText, bo
     {
 //        if (debugPrint)
 //            localNotify("[发送弹幕：" + msg + "]");
-        sendAutoMsg(msg);
+        sendAutoMsg(msg, danmaku);
     }
     if (enableVoice)
         speekVariantText(msg);
 }
 
-void MainWindow::sendGiftMsg(QString msg)
+void MainWindow::sendGiftMsg(QString msg, const LiveDanmaku &danmaku)
 {
-    sendCdMsg(msg, ui->sendGiftCDSpin->value() * 1000, GIFT_CD_CN,
-              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+    sendCdMsg(msg, danmaku, ui->sendGiftCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
 }
 
-void MainWindow::sendAttentionMsg(QString msg)
+void MainWindow::sendAttentionMsg(QString msg, const LiveDanmaku &danmaku)
 {
-    sendCdMsg(msg, ui->sendAttentionCDSpin->value() * 1000, GIFT_CD_CN,
-              ui->sendAttentionTextCheck->isChecked(), ui->sendAttentionVoiceCheck->isChecked());
+    sendCdMsg(msg, danmaku, ui->sendAttentionCDSpin->value() * 1000, GIFT_CD_CN,
+              ui->sendAttentionTextCheck->isChecked(), ui->sendAttentionVoiceCheck->isChecked(), false);
 }
 
 void MainWindow::sendNotifyMsg(QString msg, bool manual)
 {
-    sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
+    sendCdMsg(msg, LiveDanmaku(), NOTIFY_CD, NOTIFY_CD_CN,
               true, false, manual);
 }
 
@@ -1873,12 +1874,12 @@ void MainWindow::slotComboSend()
             {
                 if (debugPrint)
                     localNotify("[强提醒]");
-                sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
             else
             {
-                sendGiftMsg(msg);
+                sendGiftMsg(msg, danmaku);
             }
             return true;
         }
@@ -2071,8 +2072,8 @@ void MainWindow::on_testDanmakuButton_clicked()
             {
                 int r = qrand() % words.size();
                 QString msg = words.at(r);
-                sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
-                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
             else if (debugPrint)
             {
@@ -2088,7 +2089,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         QString text = ui->startLiveWordsEdit->text();
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
-            sendAutoMsg(text);
+            sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已开播");
         liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
@@ -2228,7 +2229,7 @@ void MainWindow::on_SendMsgEdit_returnPressed()
 {
     QString msg = ui->SendMsgEdit->text();
     msg = processDanmakuVariants(msg, LiveDanmaku());
-    sendAutoMsg(msg);
+    sendAutoMsg(msg, LiveDanmaku());
     ui->SendMsgEdit->clear();
 }
 
@@ -2287,7 +2288,7 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendAutoMsg(s);
+                sendAutoMsg(s, LiveDanmaku());
             }
         }
     });
@@ -2406,7 +2407,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
                     else
                         s = "\\n" + s; // 延迟一次发送的时间
                 }
-                sendCdMsg(s, 0, REPLY_CD_CN, true, false, manual);
+                sendCdMsg(s, danmaku, 0, REPLY_CD_CN, true, false, manual);
             }
         }
     });
@@ -2565,7 +2566,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendCdMsg(s, 0, EVENT_CD_CN, true, false, manual);
+                sendCdMsg(s, danmaku, 0, EVENT_CD_CN, true, false, manual);
             }
         }
     });
@@ -5595,7 +5596,7 @@ bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 
     if (!s.trimmed().isEmpty()) // 可能还有其他的操作
     {
-        sendAutoMsg(s);
+        sendAutoMsg(s, danmaku);
     }
 
     return !reject;
@@ -6416,7 +6417,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     qDebug() << "执行远程命令：" << msg;
 }
 
-bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
+bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, int &resVal)
 {
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
@@ -6770,15 +6771,16 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             int time = caps.at(1).toInt();
             QString msg = caps.at(2);
             QTimer::singleShot(time, this, [=]{
+                LiveDanmaku ld = danmaku;
                 QRegularExpression re("^\\s*>");
                 if (msg.indexOf(re) > -1)
                 {
                     CmdResponse res;
                     int resVal;
-                    execFunc(msg, res, resVal);
+                    execFunc(msg, ld, res, resVal);
                 }
                 else
-                    sendAutoMsg(msg);
+                    sendAutoMsg(msg, danmaku);
             });
             return true;
         }
@@ -7519,7 +7521,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             for (int i = 0; i < ui->replyListWidget->count(); i++)
             {
                 auto rw = static_cast<ReplyWidget*>(ui->replyListWidget->itemWidget(ui->replyListWidget->item(i)));
-                rw->triggerIfMatch(text, lastDanmaku);
+                rw->triggerIfMatch(text, danmaku);
             }
             return true;
         }
@@ -7650,7 +7652,7 @@ bool MainWindow::execFunc(QString msg, CmdResponse &res, int &resVal)
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             qDebug() << "执行命令：" << caps;
-            triggerCmdEvent(text, lastDanmaku);
+            triggerCmdEvent(text, danmaku);
             return true;
         }
     }
@@ -7764,7 +7766,7 @@ QStringList MainWindow::splitLongDanmu(QString text) const
 
 void MainWindow::sendLongText(QString text)
 {
-    sendAutoMsg(splitLongDanmu(text).join("\\n"));
+    sendAutoMsg(splitLongDanmu(text).join("\\n"), LiveDanmaku());
 }
 
 void MainWindow::restoreCustomVariant(QString text)
@@ -8376,7 +8378,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
-                sendAutoMsg(text);
+                sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已开播");
             liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
@@ -8397,7 +8399,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
-                sendAutoMsg(text);
+                sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已下播");
             liveStatus = 0;
 
@@ -8806,11 +8808,11 @@ void MainWindow::handleMessage(QJsonObject json)
                         {
                             if (debugPrint)
                                 localNotify("[强提醒]");
-                            sendCdMsg(msg, NOTIFY_CD, GIFT_CD_CN,
-                                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                            sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
+                                      ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
                         }
                         else
-                            sendGiftMsg(msg);
+                            sendGiftMsg(msg, danmaku);
                     }
                     else if (debugPrint)
                     {
@@ -9505,8 +9507,8 @@ void MainWindow::handleMessage(QJsonObject json)
             {
                 int r = qrand() % words.size();
                 QString msg = words.at(r);
-                sendCdMsg(msg, NOTIFY_CD, NOTIFY_CD_CN,
-                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked());
+                sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
+                          ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
             else if (debugPrint)
             {
@@ -10182,13 +10184,13 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     {
         if (debugPrint)
             localNotify("[强提醒]");
-        sendCdMsg(msg, 2000, NOTIFY_CD_CN,
-                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
+        sendCdMsg(msg, danmaku, 2000, NOTIFY_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked(), false);
     }
     else
     {
-        sendCdMsg(msg, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
-                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked());
+        sendCdMsg(msg, danmaku, ui->sendWelcomeCDSpin->value() * 1000, WELCOME_CD_CN,
+                  ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked(), false);
     }
 }
 
@@ -10203,7 +10205,7 @@ void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
     }
     int r = qrand() % words.size();
     QString msg = words.at(r);
-    sendAttentionMsg(msg);
+    sendAttentionMsg(msg, danmaku);
 }
 
 void MainWindow::judgeRobotAndMark(LiveDanmaku danmaku)
@@ -14885,7 +14887,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
         {
             sl << reply.mid(i * maxOne, maxOne);
         }
-        sendAutoMsg(sl.join("\\n"));
+        sendAutoMsg(sl.join("\\n"), LiveDanmaku());
     }
 }
 
