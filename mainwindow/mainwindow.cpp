@@ -951,7 +951,7 @@ void MainWindow::readConfig()
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
 
-    // 每小时的事件
+    // 每小时的事件（不准时，每隔一小时执行）
     hourTimer = new QTimer(this);
     hourTimer->setInterval(3600000);
     connect(hourTimer, &QTimer::timeout, this, [=]{
@@ -1057,6 +1057,7 @@ void MainWindow::readConfig()
         settings->setValue("runtime/open_day", currDate.day());
 
         // 判断每一月初
+        const QDate currDate = QDate::currentDate();
         if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku());
