@@ -3,7 +3,24 @@
 ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
     new ConditionHighlighter(document());
-//    setWordWrapMode(QTextOption::NoWrap); // 不自动换行
+    //    setWordWrapMode(QTextOption::NoWrap); // 不自动换行
+}
+
+void ConditionEditor::keyPressEvent(QKeyEvent *e)
+{
+    QPlainTextEdit::keyPressEvent(e);
+
+    if (e->modifiers() == Qt::NoModifier && (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter))
+    {
+        // 判断左边是否有表示软换行的反斜杠
+        QString left = toPlainText().left(textCursor().position()-1);
+        if (!left.contains(QRegularExpression("\\\\\\s*(//.*)?$")))
+            return ;
+
+        // 软换行，回车跟随上一行的缩进，或者起码有一个Tab缩进
+        QString indent = QRegularExpression("\\s*").match(left.mid(left.lastIndexOf("\n")+1)).captured();
+        textCursor().insertText(indent.isEmpty() ? "\t" : indent);
+    }
 }
 
 ConditionHighlighter::ConditionHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
@@ -22,7 +39,7 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // [condition]
         QSSRule{QRegularExpression("^(\\[.*?\\])"), getTCF(QColor(128, 34, 172))},
         // 执行函数 >func(args)
-        QSSRule{QRegularExpression(">\\s*\\w+\\s*\\(.*?\\)($|\\\\n|//.*)"), getTCF(QColor(136, 80, 80))},
+        QSSRule{QRegularExpression("(^|[\\]\\)\\*])\\s*>\\s*\\w+\\s*\\(.*?\\)\\s*($|\\\\n|\\\\|//.*)"), getTCF(QColor(136, 80, 80))},
         // 变量 %val%
         QSSRule{QRegularExpression("%\\S+?%"), getTCF(QColor(204, 85, 0))},
         // 取值 %{}%

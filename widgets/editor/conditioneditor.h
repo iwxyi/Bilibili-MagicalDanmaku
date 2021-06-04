@@ -10,6 +10,9 @@ class ConditionEditor : public QPlainTextEdit
     Q_OBJECT
 public:
     ConditionEditor(QWidget* parent = nullptr);
+
+protected:
+    void keyPressEvent(QKeyEvent *e) override;
 };
 
 class ConditionHighlighter : public QSyntaxHighlighter
