@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1089</width>
-    <height>1001</height>
+    <width>842</width>
+    <height>916</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -177,7 +177,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1046,8 +1046,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1011</width>
-             <height>885</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3865,6 +3865,9 @@ margin: 40px;</string>
              </property>
              <item>
               <widget class="WaterFloatButton" name="thankWelcomeTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>欢迎</string>
                </property>
@@ -3872,6 +3875,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="WaterFloatButton" name="thankGiftTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>送礼</string>
                </property>
@@ -3879,6 +3885,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="WaterFloatButton" name="thankAttentionTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>关注</string>
                </property>
@@ -3951,6 +3960,9 @@ margin: 40px;</string>
               </property>
               <item>
                <widget class="QCheckBox" name="autoSendWelcomeCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送欢迎观众进入直播间的弹幕（除非在冷却）&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -3974,6 +3986,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendWelcomeTextCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>文字</string>
                 </property>
@@ -3984,6 +3999,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendWelcomeVoiceCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>语音</string>
                 </property>
@@ -4070,6 +4088,9 @@ margin: 40px;</string>
               </property>
               <item>
                <widget class="QCheckBox" name="autoSendGiftCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动发送感谢送礼的弹幕&lt;/p&gt;&lt;p&gt;内容采用下方的随机一行句子（建议每行不超过20字）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -4093,6 +4114,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendGiftTextCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>文字</string>
                 </property>
@@ -4103,6 +4127,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendGiftVoiceCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>语音</string>
                 </property>
@@ -4170,6 +4197,9 @@ margin: 40px;</string>
               </property>
               <item>
                <widget class="QCheckBox" name="giftComboSendCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;延迟答谢连续赠送礼物&lt;/p&gt;&lt;p&gt;适用于答谢带数量的情况&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -4221,6 +4251,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="giftComboTopCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;多人同时赠送礼物，等待所有人送完，并只答谢最贵的一项&lt;/p&gt;&lt;p&gt;开盲盒时容易出不同礼物，开启此项可减少刷屏&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
@@ -4267,6 +4300,9 @@ margin: 40px;</string>
               </property>
               <item>
                <widget class="QCheckBox" name="autoSendAttentionCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>感谢关注</string>
                 </property>
@@ -4287,6 +4323,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendAttentionTextCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>文字</string>
                 </property>
@@ -4297,6 +4336,9 @@ margin: 40px;</string>
               </item>
               <item>
                <widget class="QCheckBox" name="sendAttentionVoiceCheck">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>语音</string>
                 </property>
@@ -4692,6 +4734,9 @@ background-repeat:none;</string>
                  </item>
                  <item>
                   <widget class="QCheckBox" name="diangeNeedMedalCheck">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;带有主播粉丝勋章的点歌弹幕才有效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -4774,6 +4819,9 @@ background-repeat:none;</string>
                  </item>
                  <item>
                   <widget class="QCheckBox" name="diangeReplyCheck">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌成功的回复消息，并带有预计多长时间播放&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -4862,6 +4910,9 @@ background-repeat:none;</string>
                  </item>
                  <item>
                   <widget class="QCheckBox" name="diangeShuaCheck">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;避免频繁点歌&lt;/p&gt;&lt;p&gt;在之前已经点歌但尚未播放的时候，本次点歌无效&lt;/p&gt;&lt;p&gt;需打开点歌姬界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -5029,6 +5080,9 @@ QCheckBox::indicator:checked:pressed {
                   </property>
                   <item>
                    <widget class="QCheckBox" name="orderSongsToFileCheck">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存实时点歌列表至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/songs.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -5153,6 +5207,9 @@ QCheckBox::indicator:checked:pressed {
                   </property>
                   <item>
                    <widget class="QCheckBox" name="playingSongToFileCheck">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存播放的歌曲至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/playing.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将歌曲显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -5240,6 +5297,9 @@ QCheckBox::indicator:checked:pressed {
                   </property>
                   <item>
                    <widget class="QCheckBox" name="songLyricsToFileCheck">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存点歌姬的歌词至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/lyrics.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将列表显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -5341,6 +5401,9 @@ QCheckBox::indicator:checked:pressed {
                   </property>
                   <item>
                    <widget class="QCheckBox" name="autoPauseOuterMusicCheck">
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌开始播放时，自动调用外部播放器（例如网易云）快捷键，使其自动暂停&lt;/p&gt;&lt;p&gt;点的所有歌曲都播放结束后，再次自动调用外部播放器快捷键，恢复其播放&lt;/p&gt;&lt;p&gt;无法判断播放状态，例如播放器没有播放时，会误让它播放&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
@@ -6428,7 +6491,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1089</width>
+     <width>842</width>
      <height>21</height>
     </rect>
    </property>
@@ -6472,6 +6535,7 @@ font-weight: 500;</string>
      <string>构建</string>
     </property>
     <addaction name="actionCustom_Variant"/>
+    <addaction name="actionReplace_Variant"/>
     <addaction name="separator"/>
     <addaction name="actionPaste_Code"/>
     <addaction name="actionGenerate_Default_Code"/>
@@ -6851,6 +6915,18 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>主播案例</string>
+   </property>
+  </action>
+  <action name="actionReplace_Variant">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/replace</normaloff>:/icons/replace</iconset>
+   </property>
+   <property name="text">
+    <string>发送前替换</string>
+   </property>
+   <property name="toolTip">
+    <string>用于处理敏感词</string>
    </property>
   </action>
  </widget>

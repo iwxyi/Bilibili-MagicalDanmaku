@@ -667,6 +667,8 @@ private slots:
 
     void on_enableFilterCheck_clicked();
 
+    void on_actionReplace_Variant_triggered();
+
 private:
     void initView();
     void initStyle();
@@ -812,6 +814,10 @@ private:
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
     void restoreVariantTranslation();
+
+    void restoreReplaceVariant(QString text);
+    QString saveReplaceVariant();
+
     void savePlayingSong();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();

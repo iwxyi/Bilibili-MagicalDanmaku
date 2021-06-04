@@ -92,6 +92,7 @@
         <file alias="music_frequency">icons/music_frequency.png</file>
         <file alias="music_reply">icons/music_reply.png</file>
         <file alias="music_medal">icons/music_medal.png</file>
+        <file alias="replace">icons/replace.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

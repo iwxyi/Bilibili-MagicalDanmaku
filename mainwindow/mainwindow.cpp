@@ -26,6 +26,7 @@ QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
 QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
 QList<QPair<QString, QString>> CommonValues::customVariant; // 自定义变量
 QList<QPair<QString, QString>> CommonValues::variantTranslation; // 变量翻译
+QList<QPair<QString, QString>> CommonValues::replaceVariant; // 替换变量
 QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
 QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
@@ -283,6 +284,7 @@ void MainWindow::initView()
     connect(extensionButton, &InteractiveButtonBase::clicked, this, [=]{
         newFacileMenu;
         menu->addAction(ui->actionCustom_Variant);
+        menu->addAction(ui->actionReplace_Variant);
         menu->addAction(ui->actionData_Path);
         menu->split()->addAction(ui->actionPaste_Code);
         menu->addAction(ui->actionGenerate_Default_Code);
@@ -708,6 +710,7 @@ void MainWindow::readConfig()
 
     // 自定义变量
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
+    restoreReplaceVariant(settings->value("danmaku/replaceVariant", "").toString());
 
     // 多语言翻译
     restoreVariantTranslation();
@@ -1689,6 +1692,14 @@ void MainWindow::sendAutoMsg(QString msgs)
             localNotify("[空弹幕，已忽略]");
         return ;
     }
+
+    // 发送前替换
+    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
+    {
+        msgs.replace(QRegularExpression(it->first), it->second);
+    }
+
+    // 分割与发送
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(sl);
     if (!autoMsgTimer->isActive() || !inDanmakuCd)
@@ -7843,6 +7854,35 @@ void MainWindow::restoreVariantTranslation()
         else
             qCritical() << "多语言翻译读取失败：" << s;
     }
+}
+
+void MainWindow::restoreReplaceVariant(QString text)
+{
+    replaceVariant.clear();
+    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    foreach (QString s, sl)
+    {
+        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+        QRegularExpressionMatch match;
+        if (s.indexOf(re, 0, &match) != -1)
+        {
+            QString key = match.captured(1);
+            QString val = match.captured(2);
+            replaceVariant.append(QPair<QString, QString>(key, val));
+        }
+        else
+            qCritical() << "替换变量读取失败：" << s;
+    }
+}
+
+QString MainWindow::saveReplaceVariant()
+{
+    QStringList sl;
+    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
+    {
+        sl << it->first + " = " + it->second;
+    }
+    return sl.join("\n");
 }
 
 void MainWindow::savePlayingSong()
@@ -15685,4 +15725,16 @@ void MainWindow::setFilter(QString filterName, QString content)
 void MainWindow::on_enableFilterCheck_clicked()
 {
     settings->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
+}
+
+void MainWindow::on_actionReplace_Variant_triggered()
+{
+    QString text = saveReplaceVariant();
+    bool ok;
+    text = TextInputDialog::getText(this, "替换变量", "请输入发送前的替换内容，支持正则表达式：\n示例格式：发送前内容=发送后内容\n仅影响自动发送的弹幕", text, &ok);
+    if (!ok)
+        return ;
+    settings->setValue("danmaku/replaceVariant", text);
+
+    restoreReplaceVariant(text);
 }
