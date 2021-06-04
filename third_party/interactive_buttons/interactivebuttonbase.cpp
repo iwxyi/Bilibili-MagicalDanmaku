@@ -698,7 +698,7 @@ void InteractiveButtonBase::setPaddings(int x)
 
 /**
  * 设置Icon模式旁边空多少
- * @param x 0~1.0，越大越空
+ * @param x 0~0.5，越大越空
  */
 void InteractiveButtonBase::setIconPaddingProper(double x)
 {

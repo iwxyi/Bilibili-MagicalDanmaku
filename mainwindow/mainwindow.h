@@ -44,7 +44,8 @@
 #include "netinterface.h"
 #include "waterfloatbutton.h"
 #include "custompaintwidget.h"
-#include "interactive_buttons/appendbutton.h"
+#include "appendbutton.h"
+#include "waterzoombutton.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -902,9 +903,9 @@ private:
     QString appDownloadUrl;
 
     // 控件
-    const int widgetSizeL = 40;
+    const int widgetSizeL = 48;
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
-    QList<InteractiveButtonBase*> sideButtonList;
+    QList<WaterZoomButton*> sideButtonList;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;

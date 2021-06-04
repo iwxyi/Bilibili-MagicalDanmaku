@@ -47,35 +47,38 @@
      <widget class="QWidget" name="sideBarWidget" native="true">
       <property name="minimumSize">
        <size>
-        <width>48</width>
+        <width>50</width>
         <height>0</height>
        </size>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::RightToLeft</enum>
       </property>
       <property name="styleSheet">
        <string notr="true">#sideBarWidget
 {
 	background: white;
-	border-radius: 24px;
+	border-radius: 25px;
 }</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_28">
        <property name="spacing">
-        <number>6</number>
+        <number>0</number>
        </property>
        <property name="leftMargin">
-        <number>5</number>
+        <number>1</number>
        </property>
        <property name="topMargin">
         <number>18</number>
        </property>
        <property name="rightMargin">
-        <number>5</number>
+        <number>1</number>
        </property>
        <property name="bottomMargin">
         <number>18</number>
        </property>
        <item>
-        <widget class="InteractiveButtonBase" name="roomPageButton">
+        <widget class="WaterZoomButton" name="roomPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -92,7 +95,7 @@
         </widget>
        </item>
        <item>
-        <widget class="InteractiveButtonBase" name="danmakuPageButton">
+        <widget class="WaterZoomButton" name="danmakuPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -109,7 +112,7 @@
         </widget>
        </item>
        <item>
-        <widget class="InteractiveButtonBase" name="thankPageButton">
+        <widget class="WaterZoomButton" name="thankPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -126,7 +129,7 @@
         </widget>
        </item>
        <item>
-        <widget class="InteractiveButtonBase" name="musicPageButton">
+        <widget class="WaterZoomButton" name="musicPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -143,7 +146,7 @@
         </widget>
        </item>
        <item>
-        <widget class="InteractiveButtonBase" name="extensionPageButton">
+        <widget class="WaterZoomButton" name="extensionPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -160,7 +163,7 @@
         </widget>
        </item>
        <item>
-        <widget class="InteractiveButtonBase" name="preferencePageButton">
+        <widget class="WaterZoomButton" name="preferencePageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
@@ -1217,8 +1220,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>703</width>
-             <height>622</height>
+             <width>61</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -6776,7 +6779,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>781</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -7263,6 +7266,11 @@ font-weight: 500;</string>
    <class>ClickableLabel</class>
    <extends>QLabel</extends>
    <header>clickablelabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterZoomButton</class>
+   <extends>QPushButton</extends>
+   <header>waterzoombutton.h</header>
   </customwidget>
  </customwidgets>
  <resources>

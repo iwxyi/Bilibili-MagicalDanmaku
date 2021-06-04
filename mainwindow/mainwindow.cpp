@@ -75,7 +75,9 @@ void MainWindow::initView()
         button->setSquareSize();
         button->setFixedForePos();
         button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
-        button->setRadius(fluentRadius);
+        button->setRadius(fluentRadius, fluentRadius);
+        button->setIconPaddingProper(0.23);
+//        button->setChokingProp(0.08);
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
             int prevIndex = ui->stackedWidget->currentIndex();
             if (prevIndex == i) // 同一个索引，不用重复切换
@@ -406,6 +408,15 @@ void MainWindow::initRuntime()
 void MainWindow::readConfig()
 {
     bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
+    if (!firstOpen)
+    {
+        // 备份当前配置：settings和heaps
+        ensureDirExist(dataPath + "backup");
+        QString ts = QDateTime::currentDateTime().toString("yyyy_MM_dd_hh_mm");
+        copyFile(dataPath + "settings.ini", dataPath + "/backup/settings_" + ts + ".ini");
+        copyFile(dataPath + "heaps.ini", dataPath + "/backup/heaps_" + ts + ".ini");
+    }
+
     settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
     heaps = new QSettings(dataPath + "heaps.ini", QSettings::Format::IniFormat);
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
@@ -1439,8 +1450,20 @@ MainWindow::~MainWindow()
 
     delete ui;
 
+    // 删除缓存
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
+
+    // 清理过期备份
+    auto files = QDir(dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
+    qint64 overdue = QDateTime::currentSecsSinceEpoch() - 3600 * 24 * qMax(ui->autoClearComeIntervalSpin->value(), 7); // 至少备份7天
+    foreach (auto info, files)
+    {
+        if (info.lastModified().toSecsSinceEpoch() < overdue)
+        {
+            deleteFile(info.absoluteFilePath());
+        }
+    }
 }
 
 const QSettings* MainWindow::getSettings() const
