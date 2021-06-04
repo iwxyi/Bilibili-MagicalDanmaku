@@ -137,6 +137,12 @@ void WaterfallScrollArea::addWidget(QWidget *w)
     this->widget()->setMinimumHeight(maxHeight + itemMarginV);
 }
 
+void WaterfallScrollArea::removeWidget(QWidget *w)
+{
+    Q_ASSERT(w->parentWidget() == this->widget());
+    widgets.removeOne(w);
+}
+
 /// 全部子控件宽度一致的瀑布流
 void WaterfallScrollArea::adjustWaterfallPos()
 {
@@ -413,7 +419,6 @@ void WaterfallScrollArea::resizeWidgetsToEqualWidth()
     {
         colWidth = (this->contentsRect().width() - itemMarginH * 2 + itemSpacingH) / fixedColCount - itemSpacingH;
         colWidth = qMax(colWidth, 1);
-        qDebug() << "设置colWidth:" << colWidth;
     }
 
     foreach (auto w, widgets)

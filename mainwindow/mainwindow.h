@@ -669,6 +669,8 @@ private slots:
 
     void on_actionReplace_Variant_triggered();
 
+    void on_autoClearComeIntervalSpin_editingFinished();
+
 private:
     void initView();
     void initStyle();

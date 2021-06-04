@@ -840,6 +840,7 @@ void MainWindow::readConfig()
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->danmakuToutaSettingsCard->hide();
+        ui->scrollArea->removeWidget(ui->danmakuToutaSettingsCard);
     }
 
     // 粉丝勋章
@@ -1109,6 +1110,9 @@ void MainWindow::readConfig()
         triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
         settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
+
+    // 数据清理
+    ui->autoClearComeIntervalSpin->setValue(settings->value("danmaku/clearDidntComeInterval", 7).toInt());
 
     // 调试模式
     localDebug = settings->value("debug/localDebug", false).toBool();
@@ -13371,10 +13375,11 @@ void MainWindow::releaseLiveData(bool prepare)
     tray->setIcon(face);
 
     // 清理一周没来的用户
+    int day = ui->autoClearComeIntervalSpin->value();
     danmakuCounts->beginGroup("comeTime");
     QStringList removedKeys;
     auto keys = danmakuCounts->allKeys();
-    qint64 week = QDateTime::currentSecsSinceEpoch() - 7 * 24 * 3600;
+    qint64 week = QDateTime::currentSecsSinceEpoch() - day * 24 * 3600;
     foreach (auto key, keys)
     {
         qint64 value = danmakuCounts->value(key).toLongLong();
@@ -15739,4 +15744,9 @@ void MainWindow::on_actionReplace_Variant_triggered()
     settings->setValue("danmaku/replaceVariant", text);
 
     restoreReplaceVariant(text);
+}
+
+void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
+{
+    settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
