@@ -263,6 +263,9 @@
             </item>
             <item>
              <widget class="ClickableLabel" name="roomNameLabel">
+              <property name="toolTip">
+               <string>修改直播间标题（仅限主播）</string>
+              </property>
               <property name="styleSheet">
                <string notr="true">font-size: 18px;</string>
               </property>
@@ -331,7 +334,7 @@
                   </size>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开直播间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;前往直播间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">background-image:url(:/icons/header1);
@@ -373,7 +376,7 @@ background-repeat:none;</string>
                  <item>
                   <widget class="ClickableLabel" name="upNameLabel">
                    <property name="toolTip">
-                    <string>打开主播主页</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;查看主播主页&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="styleSheet">
                     <string notr="true">font-size: 18px;</string>
@@ -415,6 +418,9 @@ background-repeat:none;</string>
                 <widget class="InteractiveButtonBase" name="liveStatusButton">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>显示直播视频</string>
                  </property>
                  <property name="text">
                   <string>未开播</string>
@@ -869,6 +875,9 @@ background-repeat:none;</string>
               <width>64</width>
               <height>64</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看用户主页&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">background-image:url(:/icons/header1);

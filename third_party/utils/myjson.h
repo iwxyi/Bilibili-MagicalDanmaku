@@ -132,6 +132,15 @@ public:
     {
         return o("data");
     }
+
+    QString msg() const
+    {
+        if (contains("msg"))
+            return s("msg");
+        if (contains("message"))
+            return s("message");
+        return "";
+    }
 };
 
 #endif // MYJSON_H

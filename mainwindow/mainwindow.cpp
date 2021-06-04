@@ -177,6 +177,45 @@ void MainWindow::initView()
         menu->exec();
     });
 
+    connect(ui->robotHeaderLabel, &ClickableLabel::clicked, this, [=]{
+        if (!cookieUid.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + cookieUid));
+    });
+
+    connect(ui->upHeaderLabel, &ClickableLabel::clicked, this, [=]{
+        if (!roomId.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomId));
+    });
+
+    connect(ui->upNameLabel, &ClickableLabel::clicked, this, [=]{
+        if (!upUid.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + upUid));
+    });
+
+    connect(ui->roomNameLabel, &ClickableLabel::clicked, this, [=]{
+        if (upUid.isEmpty() || upUid != cookieUid)
+            return ;
+
+        QString title = ui->roomNameLabel->text();
+        bool ok = false;
+        title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
+        if (!ok)
+            return ;
+
+        post("https://api.live.bilibili.com/room/v1/Room/update",
+             QStringList{
+                 "room_id", roomId,
+                 "title", title,
+                 "csrf_token", csrf_token,
+                 "csrf", csrf_token
+             }, [=](MyJson json) {
+            if (json.code() != 0)
+            {
+                showError(json.msg());
+            }
+        });
+    });
+
     // 弹幕设置瀑布流
     ui->showLiveDanmakuWindowButton->setAutoTextColor(false);
     ui->showLiveDanmakuWindowButton->setFontSize(12);
@@ -14197,6 +14236,12 @@ void MainWindow::readDefaultCode(QString path)
     {
         ui->promptBlockNewbieKeysEdit->setPlainText(json.s("block_tip"));
     }
+}
+
+void MainWindow::showError(QString s)
+{
+    statusLabel->setText(s);
+    qWarning() << s;
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

@@ -890,6 +890,7 @@ private:
 
     void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");
+    void showError(QString s);
 
 private:
     Ui::MainWindow *ui;
