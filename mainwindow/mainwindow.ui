@@ -76,6 +76,9 @@
        </property>
        <item>
         <widget class="InteractiveButtonBase" name="roomPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;房间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -90,6 +93,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="danmakuPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>弹幕设置</string>
          </property>
@@ -104,6 +110,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="thankPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;答谢&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -118,6 +127,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="musicPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;点歌&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -132,6 +144,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="extensionPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;扩展&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -146,6 +161,9 @@
        </item>
        <item>
         <widget class="InteractiveButtonBase" name="preferencePageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="toolTip">
           <string>关于</string>
          </property>
@@ -153,8 +171,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/icons/wa</normaloff>:/icons/wa</iconset>
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/crown</normaloff>:/icons/crown</iconset>
          </property>
         </widget>
        </item>
@@ -177,7 +195,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -244,7 +262,7 @@
              <widget class="QWidget" name="roomIdSpacingWidget" native="true"/>
             </item>
             <item>
-             <widget class="QLabel" name="roomNameLabel">
+             <widget class="ClickableLabel" name="roomNameLabel">
               <property name="styleSheet">
                <string notr="true">font-size: 18px;</string>
               </property>
@@ -299,7 +317,7 @@
              <item>
               <layout class="QHBoxLayout" name="upNameHLayout">
                <item>
-                <widget class="QLabel" name="upHeaderLabel">
+                <widget class="ClickableLabel" name="upHeaderLabel">
                  <property name="minimumSize">
                   <size>
                    <width>64</width>
@@ -311,6 +329,9 @@
                    <width>64</width>
                    <height>64</height>
                   </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开直播间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">background-image:url(:/icons/header1);
@@ -350,7 +371,10 @@ background-repeat:none;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="upNameLabel">
+                  <widget class="ClickableLabel" name="upNameLabel">
+                   <property name="toolTip">
+                    <string>打开主播主页</string>
+                   </property>
                    <property name="styleSheet">
                     <string notr="true">font-size: 18px;</string>
                    </property>
@@ -426,6 +450,9 @@ background-repeat:none;</string>
 	background: transparent;
 	border: none;
 }</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -836,7 +863,7 @@ background-repeat:none;</string>
            <number>6</number>
           </property>
           <item>
-           <widget class="QLabel" name="robotHeaderLabel">
+           <widget class="ClickableLabel" name="robotHeaderLabel">
             <property name="minimumSize">
              <size>
               <width>64</width>
@@ -1046,8 +1073,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>852</width>
-             <height>883</height>
+             <width>689</width>
+             <height>622</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5739,6 +5766,7 @@ QCheckBox::indicator:checked:pressed {
 QTabWidget::tab-bar
 {
 	border: none;
+	alignment: center;
 }
 
 QTabBar::tab
@@ -5749,6 +5777,7 @@ QTabBar::tab
 	padding-right: 8px;
 	min-width: 8ex;
 	margin: 0px;
+	border-radius: 5px;
 }
 
 QTabBar::tab:hover
@@ -5763,7 +5792,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -7085,6 +7114,11 @@ font-weight: 500;</string>
    <extends>QWidget</extends>
    <header>partimagewidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ClickableLabel</class>
+   <extends>QLabel</extends>
+   <header>clickablelabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>

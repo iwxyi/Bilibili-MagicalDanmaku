@@ -671,6 +671,8 @@ private slots:
 
     void on_autoClearComeIntervalSpin_editingFinished();
 
+    void on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1);
+
 private:
     void initView();
     void initStyle();

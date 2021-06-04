@@ -97,6 +97,9 @@
         <file alias="music_medal2">icons/music_medal2.png</file>
         <file alias="quiet_reply">icons/quiet_reply.png</file>
         <file alias="circle_reply">icons/circle_reply.png</file>
+        <file alias="crown">icons/crown.png</file>
+        <file alias="about">icons/about.png</file>
+        <file alias="extension2">icons/extension2.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

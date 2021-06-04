@@ -159,6 +159,7 @@ HEADERS += \
     third_party/interactive_buttons/winminbutton.h \
     third_party/interactive_buttons/winrestorebutton.h \
     third_party/interactive_buttons/winsidebarbutton.h \
+    widgets/clickablelabel.h \
     widgets/custompaintwidget.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \

@@ -1348,7 +1348,10 @@ void MainWindow::switchPageAnimation(int page)
     }
     else if (page == PAGE_EXTENSION)
     {
-
+        QRect g(appendListItemButton->geometry());
+        startGeometryAni(appendListItemButton,
+                         QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
+                         400, QEasingCurve::OutBack);
     }
     else if (page == PAGE_PREFENCE)
     {
@@ -15753,3 +15756,8 @@ void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
     settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
 
+
+void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
+{
+    QDesktopServices::openUrl(arg1);
+}
