@@ -80,21 +80,83 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
 
         // 开始提示
         showCompleter(word);
+        return ;
     }
     else if (key == Qt::Key_Percent) // 百分号%
     {
         showCompleter("%");
+        return ;
     }
     else if (key == Qt::Key_Greater)
     {
         showCompleter(">");
+        return ;
     }
-    else
+
+    // 隐藏提示
+    if (completer->popup() && completer->popup()->isVisible())
     {
-        if (completer->popup() && completer->popup()->isVisible())
+        completer->popup()->hide();
+    }
+
+    // 括号补全
+    auto judgeAndInsert = [&](QString lp, QString rp) {
+        auto insertRight = [&]{
+            QTextCursor cursor = textCursor();
+            cursor.insertText(rp);
+            cursor.setPosition(cursor.position() - 1);
+            setTextCursor(cursor);
+        };
+
+        QString lineLeft = left.right(left.length() - (left.lastIndexOf("\n") + 1));
+        int v = 0;
+        if (lp != rp) // 左右不一样的括号
         {
-            completer->popup()->hide();
+            for (int i = 0; i < lineLeft.length(); i++)
+            {
+                QString c = lineLeft.at(i);
+                if (c == lp)
+                    v++;
+                else if (c == rp)
+                    v--;
+            }
+            if (v > 0)
+            {
+                insertRight();
+            }
         }
+        else
+        {
+            for (int i = 0; i < lineLeft.length(); i++)
+            {
+                QString c = lineLeft.at(i);
+                if (c == lp)
+                    v++;
+            }
+            if (v % 2)
+            {
+                insertRight();
+            }
+        }
+
+    };
+
+    // 判断左边是否是奇数个括号
+    if (key == 40) // (
+    {
+        judgeAndInsert("(", ")");
+    }
+    else if (key == 91) // [
+    {
+        judgeAndInsert("[", "]");
+    }
+    else if (key == 123)
+    {
+        judgeAndInsert("{", "}");
+    }
+    else if (key == 34) // "
+    {
+        judgeAndInsert("\"", "\"");
     }
 }
 
