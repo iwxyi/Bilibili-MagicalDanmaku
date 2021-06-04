@@ -54,19 +54,42 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     int cursorPos = textCursor().position();
     QString left = fullText.left(cursorPos);
 
+    QString leftPairs = "([\"{（【";
+    QString rightPairs = ")]\"}）】";
+
     // Tab跳转
     if (fullText.length() > cursorPos)
     {
         if (key == Qt::Key_Tab)
         {
             QString rightChar = fullText.mid(cursorPos, 1);
-            if (rightChar == ")" || rightChar == "]" || rightChar == "\"")
+            if (rightPairs.contains(rightChar))
             {
                 QTextCursor cursor = textCursor();
                 cursor.setPosition(cursor.position() + 1);
                 setTextCursor(cursor);
                 e->accept();
                 return ;
+            }
+        }
+        else if (key == Qt::Key_Backspace)
+        {
+            if (!left.isEmpty())
+            {
+                QString leftChar = left.right(1);
+                QString rightChar = fullText.mid(cursorPos, 1);
+                int leftIndex = leftPairs.indexOf(leftChar);
+                int rightIndex = rightPairs.indexOf(rightChar);
+                if (leftIndex != -1 && leftIndex == rightIndex) // 成对括号
+                {
+                    QTextCursor cursor = textCursor();
+                    cursor.setPosition(cursorPos - 1);
+                    cursor.setPosition(cursorPos + 1, QTextCursor::KeepAnchor);
+                    cursor.removeSelectedText();
+                    setTextCursor(cursor);
+                    e->accept();
+                    return ;
+                }
             }
         }
     }
@@ -120,6 +143,9 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
 
     // ========== 括号补全 ==========
     auto judgeAndInsert = [&](QString lp, QString rp) {
+        if (fullText.length() > cursorPos && fullText.mid(cursorPos, 1) == rp) // 正好是右边的括号
+            return ;
+
         auto insertRight = [&]{
             QTextCursor cursor = textCursor();
             cursor.insertText(rp);
