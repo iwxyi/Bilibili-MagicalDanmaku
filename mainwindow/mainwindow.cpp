@@ -5411,6 +5411,36 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         return snum(qrand() % (max-min+1) + min);
     }
+    else if (funcName == "inFilterList") // 匹配过滤器的内容，空白符分隔
+    {
+        if (argList.size() < 2)
+            return errorArg("过滤器名, 全部内容");
+        int index = args.indexOf(",");
+        if (index == -1) // 不应该没找到的
+            return "";
+        QString filterName = args.left(index);
+        QString content = args.right(args.length() - index - 1).trimmed();
+
+        for (int row = 0; row < ui->eventListWidget->count(); row++)
+        {
+            auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+            auto tw = static_cast<EventWidget*>(widget);
+            if (tw->eventEdit->text() != filterName || !tw->check->isChecked())
+                continue;
+
+            QStringList sl = tw->body().split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
+            foreach (QString s, sl)
+            {
+                if (content.contains(s))
+                    return "1";
+            }
+        }
+        return "0";
+    }
+    else if (funcName == "inFilterMatch") // 匹配过滤器的正则
+    {
+
+    }
     return "";
 }
 
