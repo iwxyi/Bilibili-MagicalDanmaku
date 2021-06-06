@@ -273,6 +273,7 @@ contains(ANDROID_TARGET_ARCH,) {
         $$PWD/android
 }
 
+# android: include(third_party/android_openssl/openssl.pri)
 
 unix|win32: LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
 win32: LIBS += -lversion
