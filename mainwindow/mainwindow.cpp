@@ -4697,7 +4697,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         matchPos = 0;
         while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
-            QString rpls = replaceDynamicVariants(match.captured(1), match.captured(2));
+            QString rpls = replaceDynamicVariants(match.captured(1), match.captured(2), danmaku);
             msg.replace(match.captured(0), rpls);
             matchPos += rpls.length();
             find = true;
@@ -5247,7 +5247,7 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
 /**
  * 函数替换
  */
-QString MainWindow::replaceDynamicVariants(const QString &funcName, const QString &args)
+QString MainWindow::replaceDynamicVariants(const QString &funcName, const QString &args, const LiveDanmaku& danmaku)
 {
     QRegularExpressionMatch match;
     QStringList argList = args.split(QRegExp("\\s*,\\s*"));
@@ -5411,6 +5411,13 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         return snum(qrand() % (max-min+1) + min);
     }
+    else if (funcName == "filterReject")
+    {
+        if (argList.size() < 1 || argList.first().trimmed().isEmpty())
+            return errorArg("最小值，最大值");
+        QString filterName = args;
+        return isFilterRejected(filterName, danmaku) ? "1" : "0";
+    }
     else if (funcName == "inFilterList") // 匹配过滤器的内容，空白符分隔
     {
         if (argList.size() < 2)
@@ -5439,7 +5446,29 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     }
     else if (funcName == "inFilterMatch") // 匹配过滤器的正则
     {
+        if (argList.size() < 2)
+            return errorArg("过滤器名, 全部内容");
+        int index = args.indexOf(",");
+        if (index == -1) // 不应该没找到的
+            return "";
+        QString filterName = args.left(index);
+        QString content = args.right(args.length() - index - 1).trimmed();
 
+        for (int row = 0; row < ui->eventListWidget->count(); row++)
+        {
+            auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
+            auto tw = static_cast<EventWidget*>(widget);
+            if (tw->eventEdit->text() != filterName || !tw->check->isChecked())
+                continue;
+
+            QStringList sl = tw->body().split("\n", QString::SkipEmptyParts);
+            foreach (QString s, sl)
+            {
+                if (content.indexOf(QRegularExpression(s)) > -1)
+                    return "1";
+            }
+        }
+        return "0";
     }
     return "";
 }

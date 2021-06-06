@@ -772,21 +772,24 @@ border-image: url(C:/Path/To/Image.png)
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
 
-| 函数                       | 中文         | 描述                             |
-| -------------------------- | ------------ | -------------------------------- |
-| time(format)               | 格式化时间   | 当前时间转换为数值               |
-| unameToUid(uname)          | 查找用户名   | 由部分昵称倒找弹幕记录，获得UID  |
-| inputText(title, default)  | 输入文本     | 输入文本，两个参数都可省略       |
-| strlen(text)               | 取文本长度   | 一串文字的长度                   |
-| trim(text)                 | 删首尾空     | 去掉字符串首尾的空格和制表符     |
-| substr(text, left, length) | 取子串       | 获取文字的一部分                 |
-| simpleName(name)           | 昵称简化     |                                  |
-| simpleNum(number)          | 数值简化     |                                  |
-| inGameUsers(listId, uid)   | 在游戏用户中 | listId可省略。程序重启数据会清空 |
-| inGameNumbers(listId, num) | 在游戏数值中 | listId可省略，程序重启数据仍在   |
-| inGameTexts(listId, text)  | 在游戏文本中 | listId可省略，程序重启数据仍在   |
-| getValue(key, def)         | 取变量值     | 等同于`%{key}%`，默认值def可省略 |
-| random(min, max)           | 取随机数     | 包含两端数字                     |
+| 函数                           | 中文         | 描述                                                |
+| ------------------------------ | ------------ | --------------------------------------------------- |
+| time(format)                   | 格式化时间   | 当前时间转换为数值                                  |
+| unameToUid(uname)              | 查找用户名   | 由部分昵称倒找弹幕记录，获得UID                     |
+| inputText(title, default)      | 输入文本     | 输入文本，两个参数都可省略                          |
+| strlen(text)                   | 取文本长度   | 一串文字的长度                                      |
+| trim(text)                     | 删首尾空     | 去掉字符串首尾的空格和制表符                        |
+| substr(text, left, length)     | 取子串       | 获取文字的一部分                                    |
+| simpleName(name)               | 昵称简化     |                                                     |
+| simpleNum(number)              | 数值简化     |                                                     |
+| inGameUsers(listId, uid)       | 在游戏用户中 | listId可省略。程序重启数据会清空                    |
+| inGameNumbers(listId, num)     | 在游戏数值中 | listId可省略，程序重启数据仍在                      |
+| inGameTexts(listId, text)      | 在游戏文本中 | listId可省略，程序重启数据仍在                      |
+| getValue(key, def)             | 取变量值     | 等同于`%{key}%`，默认值def可省略                    |
+| random(min, max)               | 取随机数     | 包含两端数字                                        |
+| filterReject(filter)           | 过滤器拒绝   | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例） |
+| inFilterList(filter, content)  | 在过滤列表中 | 包含在空格分隔的词库中则返回1（参考过滤器示例）     |
+| inFilterMatch(filter, content) | 在过滤正则中 | 满足正则则返回1（参考过滤器示例）                   |
 
 已获取时间为例：
 
@@ -1821,10 +1824,11 @@ tips：
 | FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上      |
 | FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上 |
 | FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上      |
+|                          |                                 |
 
 若有多个相同过滤器，只要任意其中一个包括 `>reject()` 命令，则本操作不允许。
 
-注意：过滤器可能会在一定程度上造成卡顿，可在弹幕设置中关闭。
+注意：默认的过滤器可能会在一定程度上造成卡顿，可在弹幕设置中关闭。
 
 
 
@@ -1865,6 +1869,40 @@ tips：
 ```
 
 
+
+##### 示例：自定义过滤器
+
+相关函数：`filterReject(filter)`
+
+在事件中，事件为自定义的**过滤器名字**，即参数中的`filter`。相应动作带有`>reject()`则表示**拒绝**，返回1；若不拒绝，则**默认通过**，返回0。
+
+除了 `>reject()`，过滤器中的其余操作都会如普通弹幕命令一样**正常执行**。
+
+![](README.assets/filterReject.png)
+
+
+
+##### 示例：自定义词库过滤
+
+相关函数：`inFilterList(filter, content)`
+
+返回的弹幕改为词库，多个词语之间用空格或者换行分隔。
+
+只要词库中其中一个词语在 `content` 中，则返回 1。否则返回 0。
+
+![](pictures/inFilterList.png)
+
+
+
+##### 示例：自定义正则过滤
+
+相关函数：`inFilterMatch(filter, content)`
+
+返回的弹幕改为正则表达式，多个表达式用多行表示。
+
+只要 `content` 满足其中一个表达式，则返回 1。否则返回 0。
+
+![](pictures/inFilterMatch.png)
 
 
 

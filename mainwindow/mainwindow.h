@@ -771,7 +771,7 @@ private:
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key) const;
     QString replaceDanmakuExtras(const QJsonObject& json, const QString &key_seq) const;
-    QString replaceDynamicVariants(const QString& funcName, const QString& args);
+    QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
     qint64 calcIntExpression(QString exp) const;
