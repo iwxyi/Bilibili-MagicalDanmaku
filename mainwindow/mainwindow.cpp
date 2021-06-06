@@ -4669,7 +4669,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         find = false;
 
         // 读取配置文件的变量
-        re = QRegularExpression("%\\{([^(%(\\{|\\[|<))]*?)\\}%");
+        re = QRegularExpression("%\\{([^(%(\\{|\\[|>))]*?)\\}%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -4682,7 +4682,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 进行数学计算的变量
-        re = QRegularExpression("%\\[([^(%(\\{|\\[|<))]*?)\\]%");
+        re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
@@ -4693,7 +4693,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 函数替换
-        re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|<))]*?)\\)%");
+        re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|>))]*?)\\)%");
         matchPos = 0;
         while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
