@@ -1,6 +1,6 @@
 终止=abort
 禁言=block
-解禁言=unblock
+解禁=unblock
 永久禁言=eternalBlock
 延时=delay
 添加游戏用户=addGameUser

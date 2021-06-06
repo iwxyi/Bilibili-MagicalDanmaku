@@ -53,7 +53,6 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     QString fullText = toPlainText();
     int cursorPos = textCursor().position();
     QString left = fullText.left(cursorPos);
-
     QString leftPairs = "([\"{（【";
     QString rightPairs = ")]\"}）】";
 
@@ -96,12 +95,18 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
 
     QPlainTextEdit::keyPressEvent(e);
 
+    // 修改内容后，所有都需要更新
+    fullText = toPlainText();
+    cursorPos = textCursor().position();
+    left = fullText.left(cursorPos);
+
     // 回车键
     if (key == Qt::Key_Return || key == Qt::Key_Enter)
     {
         if (left.isEmpty())
             return ;
         // 判断左边是否有表示软换行的反斜杠
+        left = left.left(left.length() - 1);
         if (!left.contains(QRegularExpression("\\\\\\s*(//.*)?$")))
             return ;
 
@@ -118,7 +123,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_4e00-\u9fa5]+)$"), 0, &match) == -1)
             return ;
         QString word = match.captured(1);
-        // qInfo() << "当前单词：" << word;
+        // qInfo() << "当前单词：" << word << left;
 
         // 开始提示
         showCompleter(word);
@@ -153,7 +158,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
             setTextCursor(cursor);
         };
 
-        QString lineLeft = left.right(left.length() - (left.lastIndexOf("\n") + 1)); // 不包含正在输入的符号
+        QString lineLeft = left.right(left.length() - (left.lastIndexOf("\n") + 1));
         int v = 0;
         if (lp != rp) // 左右不一样的括号
         {
@@ -165,7 +170,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
                 else if (c == rp)
                     v--;
             }
-            if (v >= 0)
+            if (v > 0)
             {
                 insertRight();
             }
@@ -178,7 +183,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
                 if (c == lp)
                     v++;
             }
-            if (v % 2 == 0)
+            if (v % 2 == 1)
             {
                 insertRight();
             }
@@ -236,6 +241,7 @@ void ConditionEditor::onCompleterActivated(const QString &completion)
 {
     QString completionPrefix = completer->completionPrefix(),
             shouldInertText = completion;
+    qDebug() << completionPrefix << " -> " << shouldInertText;
     QTextCursor cursor = this->textCursor();
     if (!completion.contains(completionPrefix))
     {
