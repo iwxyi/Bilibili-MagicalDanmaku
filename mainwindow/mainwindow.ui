@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>781</width>
-    <height>738</height>
+    <height>797</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1220,8 +1220,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>61</width>
-             <height>16</height>
+             <width>701</width>
+             <height>659</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1381,7 +1381,7 @@ margin: 40px;</string>
               <x>190</x>
               <y>10</y>
               <width>151</width>
-              <height>96</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1473,6 +1473,16 @@ margin: 40px;</string>
                </property>
                <property name="value">
                 <number>20</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="adjustDanmakuLongestCheck">
+               <property name="toolTip">
+                <string>根据UL等级和大航海等级，自动调整弹幕字数上限</string>
+               </property>
+               <property name="text">
+                <string>自动调整字数</string>
                </property>
               </widget>
              </item>
@@ -1613,7 +1623,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>130</y>
+              <y>170</y>
               <width>151</width>
               <height>131</height>
              </rect>
@@ -2025,7 +2035,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>280</y>
+              <y>320</y>
               <width>151</width>
               <height>111</height>
              </rect>
@@ -2501,7 +2511,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>410</y>
+              <y>450</y>
               <width>151</width>
               <height>131</height>
              </rect>
@@ -2594,7 +2604,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>560</y>
+              <y>600</y>
               <width>161</width>
               <height>91</height>
              </rect>
@@ -2813,7 +2823,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>670</y>
+              <y>710</y>
               <width>161</width>
               <height>111</height>
              </rect>
@@ -6554,7 +6564,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel2">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a href=&quot;this://copy_qq&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者恰顿饭&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a target=&quot;_blank&quot; href=&quot;https://qm.qq.com/cgi-bin/qm/qr?k=aEmgi6tVdIvdxzxJ27Fwc6Feootcr7XO&amp;jump_from=webapi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者恰顿饭&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>

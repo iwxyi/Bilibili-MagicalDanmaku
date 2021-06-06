@@ -674,6 +674,8 @@ private slots:
 
     void on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1);
 
+    void on_adjustDanmakuLongestCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -859,6 +861,7 @@ private:
     void AIReply(qint64 id, QString text, NetStringFunc func, int maxLen = 50, int retry = 3);
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
+    void adjustDanmakuLongest();
 
     void startSplash();
     void saveGameNumbers(int channel);
@@ -1018,11 +1021,14 @@ private:
     // 连接信息
     QString cookieUid; // 自己的UID
     QString cookieUname; // 自己的昵称
+    QString token;
+    int cookieULevel = 0; // 自己的等级
+    int cookieGuardLevel = 0; // 自己的大航海
 
     QString shortId; // 房间短号（有些没有，也没什么用）
     QString upUid; // 主播的UID
+
     QList<HostInfo> hostList;
-    QString token;
     QWebSocket* socket;
     QTimer* heartTimer;
     QTimer* connectServerTimer;

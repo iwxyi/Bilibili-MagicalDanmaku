@@ -473,6 +473,7 @@ void MainWindow::readConfig()
     // 单条弹幕最长长度
     danmuLongest = settings->value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
+    ui->adjustDanmakuLongestCheck->setChecked(settings->value("danmaku/adjustDanmakuLongest", true).toBool());
     robotTotalSendMsg = settings->value("danmaku/robotTotalSend", 0).toInt();
     ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
     ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
@@ -11208,6 +11209,13 @@ void MainWindow::updateExistGuards(int page)
         guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
         currentGuards[uid] = username;
 
+        if (uid == this->cookieUid.toLongLong())
+        {
+            this->cookieGuardLevel = guardLevel;
+            if (ui->adjustDanmakuLongestCheck->isChecked())
+                adjustDanmakuLongest();
+        }
+
         int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {
@@ -13407,6 +13415,10 @@ void MainWindow::releaseLiveData(bool prepare)
         {
             on_pushRecvCmdsButton_clicked();
         }
+
+        cookieGuardLevel = 0;
+        if (ui->adjustDanmakuLongestCheck->isChecked())
+            adjustDanmakuLongest();
     }
     else // 下播，依旧保持连接
     {
@@ -13942,6 +13954,22 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
         }
         triggerCmdEvent("MEDAL_UPGRADE", ld.with(json));
     });
+}
+
+/// 根据UL等级或者舰长自动调整字数
+void MainWindow::adjustDanmakuLongest()
+{
+    int longest = 20;
+    // UL等级：20级30字
+    if (cookieULevel >= 20)
+        longest = qMin(longest, 30);
+
+    // 大航海：舰长20，提督30，总督40
+    if (cookieGuardLevel == 1 || cookieGuardLevel == 2)
+        longest = qMin(longest, 40);
+
+    ui->danmuLongestSpin->setValue(longest);
+    on_danmuLongestSpin_editingFinished();
 }
 
 void MainWindow::startSplash()
@@ -15842,4 +15870,14 @@ void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
 void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
 {
     QDesktopServices::openUrl(arg1);
+}
+
+void MainWindow::on_adjustDanmakuLongestCheck_clicked()
+{
+    bool en = ui->adjustDanmakuLongestCheck->isChecked();
+    settings->setValue("danmaku/adjustDanmakuLongest", en);
+    if (en)
+    {
+        adjustDanmakuLongest();
+    }
 }
