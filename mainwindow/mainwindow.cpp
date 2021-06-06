@@ -8000,6 +8000,9 @@ void MainWindow::restoreVariantTranslation()
             qCritical() << "多语言翻译读取失败：" << s;
     }
 
+    // 添加自定义关键词
+    allVariants.append(">reject(");
+    allVariants.append("%up_name%");
     ConditionEditor::allCompletes = allVariants;
 }
 

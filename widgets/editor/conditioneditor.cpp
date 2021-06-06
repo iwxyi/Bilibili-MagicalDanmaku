@@ -115,7 +115,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         textCursor().insertText(indent.isEmpty() ? "\t" : indent);
     }
 
-    // 其他键
+    // 字母数字键
     else if ((key >= Qt::Key_A &&key <= Qt::Key_Z) || key == Qt::Key_Minus) // 变量
     {
         // 获取当前单词
@@ -232,6 +232,14 @@ void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
 void ConditionEditor::showCompleter(QString prefix)
 {
     completer->setCompletionPrefix(prefix);
+    if (completer->currentRow() == -1) // 没有匹配的
+    {
+        if (completer->popup()->isVisible())
+        {
+            completer->popup()->hide();
+        }
+        return ;
+    }
     QRect cr = cursorRect();
     completer->complete(QRect(cr.left(), cr.bottom(), completerWidth, completer->popup()->sizeHint().height()));
     completer->popup()->move(mapToGlobal(cr.bottomLeft()));
@@ -241,7 +249,6 @@ void ConditionEditor::onCompleterActivated(const QString &completion)
 {
     QString completionPrefix = completer->completionPrefix(),
             shouldInertText = completion;
-    qDebug() << completionPrefix << " -> " << shouldInertText;
     QTextCursor cursor = this->textCursor();
     if (!completion.contains(completionPrefix))
     {
