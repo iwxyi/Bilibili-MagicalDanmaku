@@ -4778,6 +4778,11 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
     }
 
+    else if (key == "%prev_time%")
+    {
+        return snum(danmaku.getPrevTimestamp());
+    }
+
     // 本次送礼金瓜子
     else if (key == "%gift_gold%")
         return snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0);
@@ -5643,7 +5648,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
         }
         else if (ops[i] == "/")
         {
-            qDebug() << "除法" << ops << vals;
+            // qDebug() << "除法" << ops << vals;
             if (vals[i+1] == 0)
             {
                 qWarning() << "!!!被除数是0 ：" << exp;
@@ -12188,7 +12193,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             qDebug() << "点歌成功" << song.simpleString() << latency;
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setPrevTimestamp(latency / 1000); // 毫秒转秒
-            danmaku.setFirst(waiting);
+            danmaku.setFirst(waiting); // 当前歌曲在第几首，例如1，则是下一首
             danmaku.with(song.toJson());
             triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
             triggerCmdEvent("ORDER_SONG_SUCCEED_OVERRIDE", danmaku);
