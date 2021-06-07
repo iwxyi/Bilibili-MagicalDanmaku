@@ -194,7 +194,26 @@ void VariantViewer::showTableMenu()
     int row = index.row();
 
     FacileMenu* menu = new FacileMenu(this);
-    menu->addAction("删除值", [=]{
+
+    menu->addAction("复制选中行", [=]{
+        QStringList sl;
+        auto selects = tableView->selectionModel()->selectedRows(0);
+        for (int i = 0; i < selects.size(); i++)
+        {
+            int row = selects.at(i).row();
+            QStringList l;
+            for (int col = 0; col < model->columnCount(); col++)
+            {
+                auto item = model->item(row, col);
+                l.append(item->data(Qt::DisplayRole).toString());
+            }
+            sl.append(l.join("\t"));
+        }
+        QString ss = sl.join("\n");
+        QApplication::clipboard()->setText(ss);
+    });
+
+    menu->split()->addAction("删除值", [=]{
         int col = index.column();
         auto item = model->item(row, col);
         QString key = item->data(Qt::UserRole).toString();
