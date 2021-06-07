@@ -2,6 +2,9 @@
 #include <QListView>
 #include <QMovie>
 #include <QClipboard>
+#include <QTableView>
+#include <QStandardItemModel>
+#include <QHeaderView>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -7812,6 +7815,109 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 列表值
+    // showTable(loop-key, title1:key1, title2:key2...)
+    // 示例：showTable(integral_(\d+), ID:"_ID_", 昵称:name__ID_, 积分:integral__ID_)
+    if (msg.contains("showTable"))
+    {
+        re = RE("showTable\\s*\\((.+)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList tableFileds = match.captured(1).trimmed().split(QRegularExpression("\\s*,\\s*"));
+            QString loopKeyStr = tableFileds.takeFirst();
+            if (loopKeyStr.trimmed().isEmpty()) // 关键词是空的，不知道要干嘛
+                return true;
+            if (!loopKeyStr.contains("/"))
+                loopKeyStr = "heaps/" + loopKeyStr;
+            QRegularExpression loopKeyRe(loopKeyStr);
+            QStringList keys = heaps->allKeys();
+            QRegularExpressionMatch match;
+
+            QTableView* tableView = new QTableView(nullptr);
+            QStandardItemModel* model = new QStandardItemModel(tableView);
+            int tableRow = 0;
+
+            // 获取标题
+            QStringList titleNames, titleKeys;
+            model->setColumnCount(tableFileds.size());
+            for (int tableCol = 0; tableCol < tableFileds.size(); tableCol++)
+            {
+                QString field = tableFileds.at(tableCol);
+                QString title, key;
+                int colonPos = field.indexOf(":");
+                if (colonPos == -1)
+                {
+                    title = "";
+                    key = field;
+                }
+                else
+                {
+                    title = field.left(colonPos).trimmed();
+                    key = field.right(field.length() - colonPos - 1).trimmed();
+                }
+                if (field.isEmpty()) // 如果是空的，则全部忽略掉
+                    continue;
+
+                model->setHeaderData(tableCol, Qt::Horizontal, title);
+                titleNames.append(title);
+                titleKeys.append(key);
+            }
+
+            // 获取变量值
+            foreach (auto key, keys)
+            {
+                if (key.indexOf(loopKeyRe, 0, &match) == -1)
+                    continue;
+                // 匹配到这个key
+                QStringList caps = match.capturedTexts();
+                // 获取用来循环的KEY：如果有捕获组，则默认第一个；否则默认全部
+                QString loopKey = caps.size() > 1 ? caps.at(1) : caps.at(0);
+                for (int tableCol = 0; tableCol < titleKeys.size(); tableCol++)
+                {
+                    QString keyExp = titleKeys.at(tableCol);
+                    bool plain = keyExp.length() >= 2 && keyExp.startsWith("\"") && keyExp.endsWith("\""); // 显示纯文本，而不是读取设置
+                    if (plain)
+                    {
+                        keyExp = keyExp.mid(1, keyExp.length() - 2);
+                    }
+                    else
+                    {
+                        if (!keyExp.contains("/"))
+                            keyExp = "heaps/" + keyExp;
+                    }
+
+                    // 替换 _KEY_
+                    keyExp.replace("_KEY_", loopKey)
+                            .replace("_ID_", loopKey);
+
+                    // 替换 _$1_ 等
+                    if (keyExp.contains("_$"))
+                    {
+                        for (int i = 0; i < caps.size(); i++)
+                            keyExp.replace("_$" + snum(i) + "_", caps.at(i));
+                    }
+
+                    if (plain)
+                    {
+                        model->setItem(tableRow, tableCol, new QStandardItem(keyExp));
+                    }
+                    else
+                    {
+                        QVariant val = heaps->value(keyExp, "");
+                        model->setItem(tableRow, tableCol, new QStandardItem(val.toString()));
+                    }
+                }
+
+                tableRow++;
+            }
+
+            tableView->setModel(model);
+            tableView->show();
+
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -12185,6 +12291,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             triggerCmdEvent("ORDER_SONG_SUCCEED_OVERRIDE", danmaku);
             if (hasEvent("ORDER_SONG_SUCCEED_OVERRIDE"))
                 return ;
+
             if (latency < 180000) // 小于3分钟
             {
                 QString tip = "成功点歌：【" + song.simpleString() + "】";
