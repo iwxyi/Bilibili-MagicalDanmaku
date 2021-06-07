@@ -6423,39 +6423,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         int hour = ui->autoBlockTimeSpin->value();
         if (!hours.isEmpty())
             hour = hours.toInt();
-        for (int i = roomDanmakus.size()-1; i >= 0; i--)
-        {
-            const LiveDanmaku danmaku = roomDanmakus.at(i);
-            if (!danmaku.is(MSG_DANMAKU))
-                continue;
 
-            QString nick = danmaku.getNickname();
-            if (nick.contains(nickname))
-            {
-                // 是这个人了，判断是不是房管
-                if (snum(danmaku.getUid()) == upUid)
-                {
-                    localNotify("无法禁言主播");
-                }
-                else if (snum(danmaku.getUid()) == cookieUid)
-                {
-                    localNotify("无法禁言自己");
-                }
-                else if (danmaku.isAdmin())
-                {
-                    localNotify("无法禁言房管");
-                }
-                else
-                {
-                    addBlockUser(danmaku.getUid(), hour);
-                    if (!hasEvent("REMOTE_BLOCK_OVERRIDE"))
-                        sendNotifyMsg(">已禁言：" + nick, true);
-                }
-                triggerCmdEvent("REMOTE_BLOCK", danmaku);
-                triggerCmdEvent("REMOTE_BLOCK_OVERRIDE", danmaku);
-                return ;
-            }
-        }
     }
     else if (ui->enableBlockCheck->isChecked() &&
              (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 ")))
@@ -12191,10 +12159,28 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         musicWindow = new OrderPlayerWindow(dataPath, nullptr);
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qDebug() << "点歌成功" << song.simpleString() << latency;
-            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+
+            // 获取UID
+            qint64 uid = 0;
+            for (int i = roomDanmakus.size()-1; i >= 0; i--)
+            {
+                const LiveDanmaku danmaku = roomDanmakus.at(i);
+                if (!danmaku.is(MSG_DANMAKU))
+                    continue;
+
+                QString nick = danmaku.getNickname();
+                if (nick == song.addBy)
+                {
+                    uid = danmaku.getUid();
+                    break;
+                }
+            }
+
+            LiveDanmaku danmaku(uid, song.addBy, song.name);
             danmaku.setPrevTimestamp(latency / 1000); // 毫秒转秒
             danmaku.setFirst(waiting); // 当前歌曲在第几首，例如1，则是下一首
             danmaku.with(song.toJson());
+
             triggerCmdEvent("ORDER_SONG_SUCCEED", danmaku);
             triggerCmdEvent("ORDER_SONG_SUCCEED_OVERRIDE", danmaku);
             if (hasEvent("ORDER_SONG_SUCCEED_OVERRIDE"))
