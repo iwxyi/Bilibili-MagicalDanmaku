@@ -7903,16 +7903,53 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                     }
                     else
                     {
-                        QVariant val = heaps->value(keyExp, "");
-                        model->setItem(tableRow, tableCol, new QStandardItem(val.toString()));
+                        QString val = heaps->value(keyExp, "").toString();
+                        model->setItem(tableRow, tableCol, new QStandardItem(val));
+                        model->setData(model->index(tableRow, tableCol), keyExp, Qt::UserRole); // 用来修改的
                     }
                 }
 
                 tableRow++;
             }
 
+            // 设置数据，调整列宽
             tableView->setModel(model);
+            tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+            QTimer::singleShot(0, [=]{
+                tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+            });
+
+            // 自动调整宽高
+            int needHeight = tableView->height();
+            if (model->rowCount())
+            {
+                int rowHeight = tableView->rowHeight(0);
+                int shouldHeight = rowHeight * model->rowCount();
+                shouldHeight = qMax(shouldHeight, needHeight);
+                needHeight = qMin(this->height(), shouldHeight);
+            }
+
+            int needWidth = tableView->width();
+            int shouldWidth = 0;
+            for (int i = 0; i < model->columnCount(); i++)
+                shouldWidth += tableView->columnWidth(i);
+            shouldWidth += tableView->verticalHeader()->width() + tableView->verticalScrollBar()->width();
+            shouldWidth = qMax(needWidth, shouldWidth);
+            needWidth = qMin(shouldWidth, this->width());
+
+            tableView->resize(needWidth, needHeight);
+            tableView->move(this->geometry().center() - QPoint(needWidth / 2, needHeight / 2));
             tableView->show();
+
+            // 修改事件
+            connect(model, &QStandardItemModel::itemChanged, this, [=](QStandardItem* item) {
+                QString key = item->data(Qt::UserRole).toString();
+                if (!key.isEmpty())
+                {
+                    qInfo() << "修改heaps:" << key << item->data(Qt::DisplayRole);
+                    heaps->setValue(key, item->data(Qt::DisplayRole));
+                }
+            });
 
             return true;
         }
