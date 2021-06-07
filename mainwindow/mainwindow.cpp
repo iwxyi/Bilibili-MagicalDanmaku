@@ -17,6 +17,7 @@
 #include "escape_dialog/escapedialog.h"
 #include "guardonlinedialog.h"
 #include "watercirclebutton.h"
+#include "variantviewer.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -7829,153 +7830,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 return true;
             if (!loopKeyStr.contains("/"))
                 loopKeyStr = "heaps/" + loopKeyStr;
-            QRegularExpression loopKeyRe(loopKeyStr);
-            QStringList keys = heaps->allKeys();
-            QRegularExpressionMatch match;
 
-            QTableView* tableView = new QTableView(nullptr);
-            QStandardItemModel* model = new QStandardItemModel(tableView);
-            int tableRow = 0;
-
-            // 获取标题
-            QStringList titleNames, titleKeys;
-            model->setColumnCount(tableFileds.size());
-            for (int tableCol = 0; tableCol < tableFileds.size(); tableCol++)
-            {
-                QString field = tableFileds.at(tableCol);
-                QString title, key;
-                int colonPos = field.indexOf(":");
-                if (colonPos == -1)
-                {
-                    title = "";
-                    key = field;
-                }
-                else
-                {
-                    title = field.left(colonPos).trimmed();
-                    key = field.right(field.length() - colonPos - 1).trimmed();
-                }
-                if (field.isEmpty()) // 如果是空的，则全部忽略掉
-                    continue;
-
-                model->setHeaderData(tableCol, Qt::Horizontal, title);
-                titleNames.append(title);
-                titleKeys.append(key);
-            }
-
-            // 获取变量值
-            foreach (auto key, keys)
-            {
-                if (key.indexOf(loopKeyRe, 0, &match) == -1)
-                    continue;
-                // 匹配到这个key
-                QStringList caps = match.capturedTexts();
-                // 获取用来循环的KEY：如果有捕获组，则默认第一个；否则默认全部
-                QString loopKey = caps.size() > 1 ? caps.at(1) : caps.at(0);
-                for (int tableCol = 0; tableCol < titleKeys.size(); tableCol++)
-                {
-                    QString keyExp = titleKeys.at(tableCol);
-                    bool plain = keyExp.length() >= 2 && keyExp.startsWith("\"") && keyExp.endsWith("\""); // 显示纯文本，而不是读取设置
-                    if (plain)
-                    {
-                        keyExp = keyExp.mid(1, keyExp.length() - 2);
-                    }
-                    else
-                    {
-                        if (!keyExp.contains("/"))
-                            keyExp = "heaps/" + keyExp;
-                    }
-
-                    // 替换 _KEY_
-                    keyExp.replace("_KEY_", loopKey)
-                            .replace("_ID_", loopKey);
-
-                    // 替换 _$1_ 等
-                    if (keyExp.contains("_$"))
-                    {
-                        for (int i = 0; i < caps.size(); i++)
-                            keyExp.replace("_$" + snum(i) + "_", caps.at(i));
-                    }
-
-                    if (plain)
-                    {
-                        model->setItem(tableRow, tableCol, new QStandardItem(keyExp));
-                    }
-                    else
-                    {
-                        QString val = heaps->value(keyExp, "").toString();
-                        model->setItem(tableRow, tableCol, new QStandardItem(val));
-                        model->setData(model->index(tableRow, tableCol), keyExp, Qt::UserRole); // 用来修改的
-                    }
-                }
-
-                tableRow++;
-            }
-
-            // 设置数据，调整列宽
-            tableView->setModel(model);
-            tableView->setItemDelegate(new NoFocusDelegate(tableView, model->columnCount()));
-            tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-            QTimer::singleShot(0, [=]{
-                tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-            });
-
-            // 自动调整宽高
-            int needHeight = tableView->height();
-            if (model->rowCount())
-            {
-                int rowHeight = tableView->rowHeight(0);
-                int shouldHeight = rowHeight * model->rowCount();
-                shouldHeight = qMax(shouldHeight, needHeight);
-                needHeight = qMin(this->height(), shouldHeight);
-            }
-
-            int needWidth = tableView->width();
-            int shouldWidth = 0;
-            for (int i = 0; i < model->columnCount(); i++)
-                shouldWidth += tableView->columnWidth(i);
-            shouldWidth += tableView->verticalHeader()->width() + tableView->verticalScrollBar()->width();
-            shouldWidth = qMax(needWidth, shouldWidth);
-            needWidth = qMin(shouldWidth, this->width());
-
-            tableView->resize(needWidth, needHeight);
-            tableView->move(this->geometry().center() - QPoint(needWidth / 2, needHeight / 2));
-            tableView->show();
-
-            // 修改事件
-            connect(model, &QStandardItemModel::itemChanged, tableView, [=](QStandardItem* item) {
-                QString key = item->data(Qt::UserRole).toString();
-                if (!key.isEmpty())
-                {
-                    qInfo() << "修改heaps:" << key << item->data(Qt::DisplayRole);
-                    heaps->setValue(key, item->data(Qt::DisplayRole));
-                }
-            });
-
-            // 菜单事件
-            tableView->setContextMenuPolicy(Qt::CustomContextMenu);
-            connect(tableView, &QTableView::customContextMenuRequested, tableView, [=](const QPoint&) {
-                QModelIndex index = tableView->currentIndex();
-                int row = index.row();
-
-                newFacileMenu;
-                menu->addAction("删除行", [=]{
-                    for (int col = 0; col < model->columnCount(); col++)
-                    {
-                        auto item = model->item(row, col);
-                        QString key = item->data(Qt::UserRole).toString();
-                        if (!key.isEmpty())
-                        {
-                            heaps->remove(key);
-                        }
-                    }
-                    model->removeRow(row);
-
-                })->disable(row < 0);
-
-                menu->exec();
-            });
-
+            auto viewer = new VariantViewer(heaps, loopKeyStr, tableFileds, this);
+            viewer->show();
             return true;
         }
     }
