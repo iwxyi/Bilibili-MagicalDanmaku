@@ -11,7 +11,7 @@ class VariantViewer : public QDialog
 {
     Q_OBJECT
 public:
-    explicit VariantViewer(QSettings* heaps, QString loopKeyStr, QStringList keys, QWidget *parent = nullptr);
+    explicit VariantViewer(QString caption, QSettings* heaps, QString loopKeyStr, QStringList keys, QWidget *parent = nullptr);
 
 signals:
 

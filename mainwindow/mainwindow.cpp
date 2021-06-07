@@ -7817,21 +7817,22 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 列表值
-    // showTable(loop-key, title1:key1, title2:key2...)
-    // 示例：showTable(integral_(\d+), ID:"_ID_", 昵称:name__ID_, 积分:integral__ID_)
-    if (msg.contains("showTable"))
+    // showValueTable(title, loop-key, title1:key1, title2:key2...)
+    // 示例：showValueTable(title, integral_(\d+), ID:"_ID_", 昵称:name__ID_, 积分:integral__ID_)
+    if (msg.contains("showValueTable"))
     {
-        re = RE("showTable\\s*\\((.+)\\)");
+        re = RE("showValueTable\\s*\\((.+)\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList tableFileds = match.captured(1).trimmed().split(QRegularExpression("\\s*,\\s*"));
+            QString caption = tableFileds.takeFirst();
             QString loopKeyStr = tableFileds.takeFirst();
             if (loopKeyStr.trimmed().isEmpty()) // 关键词是空的，不知道要干嘛
                 return true;
             if (!loopKeyStr.contains("/"))
                 loopKeyStr = "heaps/" + loopKeyStr;
 
-            auto viewer = new VariantViewer(heaps, loopKeyStr, tableFileds, this);
+            auto viewer = new VariantViewer(caption, heaps, loopKeyStr, tableFileds, this);
             viewer->show();
             return true;
         }

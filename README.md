@@ -947,72 +947,73 @@ tips：
 
 有一些自定义的命令，如`>block(123456)`，如下：
 
-| 命令                                      | 中文             | 说明                                                         |
-| ----------------------------------------- | ---------------- | ------------------------------------------------------------ |
-| abort()                                   | 终止             | 终止本流程后面弹幕                                           |
-| block(uid, hour)                          | 禁言             | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
-| block(uid)                                | 禁言             | 同上，默认使用自动禁言的时间                                 |
-| unblock(uid)                              | 解禁             | 解除禁言                                                     |
-| eternalBlock(uid, markname)               | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
-| delay(msecond)                            | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
-| addGameUser(listId, uid)                  | 添加游戏用户     | 添加用户至游戏队列，listId从0到99，使用`%>inGameUsers(listId, uid)%`判断在不在。**程序重启后清空**，长期保存可使用`addGameNumbers` |
-| addGameUser(uid)                          | 添加游戏用户     | 同上，默认listId使用0，可使用`[%in_game_users%]`快速判断     |
-| removeGameUser(listId, uid)               | 移除游戏用户     | 从游戏队列中移除用户                                         |
-| removeGameUser(uid)                       | 移除游戏用户     | 同上，默认listId使用0                                        |
-| addGameNumber(listId, uid)                | 添加游戏数值     | 添加用户至游戏队列，listId从0到99，使用`%>inGameNumbers(listId, uid)%`。 |
-| addGameNumber(uid)                        | 添加游戏数值     | 同上，默认listId使用0，可使用`[%in_game_numbers%]`判断       |
-| removeGameNumber(listId, uid)             | 移除游戏数值     | 从游戏队列中移除数值                                         |
-| removeGameNumber(uid)                     | 移除游戏数值     | 同上，默认listId使用0                                        |
-| addGameText(listId, uid)                  | 添加游戏文本     | 添加用户至游戏队列，listId从0到99，使用`%>inGameTexts(listId, uid)%`。 |
-| addGameText(uid)                          | 添加游戏文本     | 同上，默认listId使用0，可使用`[%in_game_texts%]`判断         |
-| removeGameText(listId, uid)               | 移除游戏文本     | 从游戏队列中移除用户                                         |
-| removeGameText(uid)                       | 移除游戏文本     | 同上，默认listId使用0                                        |
-| sendGift(giftId, num)                     | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
-| execRemoteCommand(cmd)                    | 执行远程命令     | 执行远程控制（见下面）                                       |
-| execRemoteCommand(cmd, 0)                 | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
-| sendPrivateMsg(uid, msg)                  | 发送私信         | 向指定用户发送私信                                           |
-| sendRoomMsg(roomId, msg)                  | 发送直播间弹幕   | 向指定直播间发送弹幕                                         |
-| timerShot(msecond, msg)                   | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令）           |
-| localNotify(msg)                          | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
-| localNotify(uid, msg)                     | 本地通知         | 同上，带用户ID                                               |
-| speakText(msg)                            | 播放语音         | 朗读文本                                                     |
-| openUrl(url)                              | 打开网址         | 浏览器打开网址                                               |
-| connectNet(url)                           | 连接网址         | 用于连接其他API，不管返回结果                                |
-| getData(url, [callback])                  | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
-| postData(url, data, [callback])           | post数据         | 同上（POST）                                                 |
-| postJson(url, data, [callback])           | postJson         | 同上，以JSON格式发送                                         |
-| sendToSockets(cmd, data)                  | 发送至socket     | 发送给所有WebSocket                                          |
-| sendToLastSocket(cmd, data)               | 发送至最后socket | 发送给最后连上的WebSocket                                    |
-| runCommandLine(cmd)                       | 运行命令行       | 运行操作系统的命令行                                         |
-| setSetting                                | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
-| removeSetting                             | 移除某项配置     | 同上                                                         |
-| setValue(key, val)                        | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
-| addValue(key, delta)                      | 添加值           | 在原先值的基础上，添加delta大小                              |
-| setValues(exp, val)                       | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
-| addValues(exp, val)                       | 批量添加值       | 批量添加已有的值                                             |
-| setValuesIf(exp, [condition], newVal)     | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
-| addValuesIf(exp, [condition], delta)      | 批量添加值如果   | 按条件批量添加已有的值                                       |
-| removeValue(key)                          | 移除值           | 移除配置文件中的单个值                                       |
-| removeValues(exp)                         | 批量移除值       | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
-| removeValuesIf(exp, [condition])          | 批量移除值如果   | 按条件移除配置文件中的多个值                                 |
-| openFile(path)                            | 打开文件         | 打开文件                                                     |
-| playSound(path)                           | 播放声音         | 播放音频文件                                                 |
-| improveSongOrder(username, order)         | 提升点歌         | 点歌提前播放，order为提升的索引值                            |
-| cutOrderSong(username)                    | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
-| curOrderSong()                            | 切歌             | 立即切歌，无论是谁点的                                       |
-| messageBox(text)                          | 消息弹窗         | 弹窗提示                                                     |
-| sendLongText(text)                        | 发送长文本       | 发送长文本，自动分割成多条                                   |
-| appendFileLine(dirName, fileName, format) | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
-| writeTextFile(dirName, fileName, text)    | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
-| removeFile(fileName)                      | 删除文件         | 删除文件“程序目录/file”                                      |
-| aiReply(sessionId, text, maxLen)          | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
-| ignoreWelcome(uid)                        | 不自动欢迎       | 不自动欢迎某用户                                             |
-| setNickname(uid, name)                    | 设置专属昵称     | 设置用户专属昵称                                             |
-| joinBattle(type)                          | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
-| triggerEvent(event)                       | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
-| triggerReply(msg)                         | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
-| orderSong(songName, uname)                | 点歌             | 自动点歌，uname可以为任意字符                                |
-| addBannedWord(word, anchor)               | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
+| 命令                                               | 中文             | 说明                                                         |
+| -------------------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| abort()                                            | 终止             | 终止本流程后面弹幕                                           |
+| block(uid, hour)                                   | 禁言             | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
+| block(uid)                                         | 禁言             | 同上，默认使用自动禁言的时间                                 |
+| unblock(uid)                                       | 解禁             | 解除禁言                                                     |
+| eternalBlock(uid, markname)                        | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
+| delay(msecond)                                     | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
+| addGameUser(listId, uid)                           | 添加游戏用户     | 添加用户至游戏队列，listId从0到99，使用`%>inGameUsers(listId, uid)%`判断在不在。**程序重启后清空**，长期保存可使用`addGameNumbers` |
+| addGameUser(uid)                                   | 添加游戏用户     | 同上，默认listId使用0，可使用`[%in_game_users%]`快速判断     |
+| removeGameUser(listId, uid)                        | 移除游戏用户     | 从游戏队列中移除用户                                         |
+| removeGameUser(uid)                                | 移除游戏用户     | 同上，默认listId使用0                                        |
+| addGameNumber(listId, uid)                         | 添加游戏数值     | 添加用户至游戏队列，listId从0到99，使用`%>inGameNumbers(listId, uid)%`。 |
+| addGameNumber(uid)                                 | 添加游戏数值     | 同上，默认listId使用0，可使用`[%in_game_numbers%]`判断       |
+| removeGameNumber(listId, uid)                      | 移除游戏数值     | 从游戏队列中移除数值                                         |
+| removeGameNumber(uid)                              | 移除游戏数值     | 同上，默认listId使用0                                        |
+| addGameText(listId, uid)                           | 添加游戏文本     | 添加用户至游戏队列，listId从0到99，使用`%>inGameTexts(listId, uid)%`。 |
+| addGameText(uid)                                   | 添加游戏文本     | 同上，默认listId使用0，可使用`[%in_game_texts%]`判断         |
+| removeGameText(listId, uid)                        | 移除游戏文本     | 从游戏队列中移除用户                                         |
+| removeGameText(uid)                                | 移除游戏文本     | 同上，默认listId使用0                                        |
+| showValueTable(caption, key, field1, field2, ....) | 显示值表格       | 显示多个值的表格，详见下方示例                               |
+| sendGift(giftId, num)                              | 赠送礼物         | 赠送礼物，只支持 id 的方式                                   |
+| execRemoteCommand(cmd)                             | 执行远程命令     | 执行远程控制（见下面）                                       |
+| execRemoteCommand(cmd, 0)                          | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
+| sendPrivateMsg(uid, msg)                           | 发送私信         | 向指定用户发送私信                                           |
+| sendRoomMsg(roomId, msg)                           | 发送直播间弹幕   | 向指定直播间发送弹幕                                         |
+| timerShot(msecond, msg)                            | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令）           |
+| localNotify(msg)                                   | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
+| localNotify(uid, msg)                              | 本地通知         | 同上，带用户ID                                               |
+| speakText(msg)                                     | 播放语音         | 朗读文本                                                     |
+| openUrl(url)                                       | 打开网址         | 浏览器打开网址                                               |
+| connectNet(url)                                    | 连接网址         | 用于连接其他API，不管返回结果                                |
+| getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
+| postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
+| postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送                                         |
+| sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有WebSocket                                          |
+| sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket                                    |
+| runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |
+| setSetting                                         | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
+| removeSetting                                      | 移除某项配置     | 同上                                                         |
+| setValue(key, val)                                 | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
+| addValue(key, delta)                               | 添加值           | 在原先值的基础上，添加delta大小                              |
+| setValues(exp, val)                                | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
+| addValues(exp, val)                                | 批量添加值       | 批量添加已有的值                                             |
+| setValuesIf(exp, [condition], newVal)              | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
+| addValuesIf(exp, [condition], delta)               | 批量添加值如果   | 按条件批量添加已有的值                                       |
+| removeValue(key)                                   | 移除值           | 移除配置文件中的单个值                                       |
+| removeValues(exp)                                  | 批量移除值       | 移除配置文件中的多个值（不允许带“/”），exp为正则表达式       |
+| removeValuesIf(exp, [condition])                   | 批量移除值如果   | 按条件移除配置文件中的多个值                                 |
+| openFile(path)                                     | 打开文件         | 打开文件                                                     |
+| playSound(path)                                    | 播放声音         | 播放音频文件                                                 |
+| improveSongOrder(username, order)                  | 提升点歌         | 点歌提前播放，order为提升的索引值                            |
+| cutOrderSong(username)                             | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
+| curOrderSong()                                     | 切歌             | 立即切歌，无论是谁点的                                       |
+| messageBox(text)                                   | 消息弹窗         | 弹窗提示                                                     |
+| sendLongText(text)                                 | 发送长文本       | 发送长文本，自动分割成多条                                   |
+| appendFileLine(dirName, fileName, format)          | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
+| writeTextFile(dirName, fileName, text)             | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
+| removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/file”                                      |
+| aiReply(sessionId, text, maxLen)                   | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
+| ignoreWelcome(uid)                                 | 不自动欢迎       | 不自动欢迎某用户                                             |
+| setNickname(uid, name)                             | 设置专属昵称     | 设置用户专属昵称                                             |
+| joinBattle(type)                                   | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
+| triggerEvent(event)                                | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
+| triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
+| orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
+| addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
@@ -1046,6 +1047,42 @@ tips：
   `setValuesIf(signin_keep_(\d+), [!_{signin_today__$1_}_], 0)`
 - 用户上船天数+1：
   `setValuesIf(guard_days_\d+, [1], _[_VALUE_+1]_)`
+
+
+
+#### 显示值表格
+
+`showValueTable(caption, key, field1, field2, field3...)`
+
+显示一个对话框，列出所有需要的值。
+
+`caption` 是最顶上的标题，支持变量。
+
+`key` 为用来遍历的带有可变值的正则表达式，例如 `integral_(\d+)`，将会遍历所有使用`setValue`存储的键满足这个表达式的数值。其中必须有带括号的捕获组形如 `(\d+)`作为变化的源头，用来影响所有`field`的变化；而在各 `field` 中可以使用 `_KEY_` 或者 `_ID_` 来替换为该值。
+
+`field` 允许多个，每个的格式为：`标题:键`，标题是表格的标题（第一行），键是用来读取响应设置的。标题及中间的冒号可忽略。用 `_KEY_` 或 `_ID_` 来替换为表达式中变化源。
+
+
+
+##### 示例：显示所有用户积分
+
+显示签到的用户ID、昵称、积分。
+
+> 在之前的默认签到代码中，未加上保存昵称，所以是空的
+
+```
+showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_)
+```
+
+假定某个用户 id 是 123456，那么通过 `integral_(\d+)` 遍历到 `integral_123456` ，则 `_ID_` 是 123456，通过这一行来获取后面的 `name_123456`、`integral_123456` 等的值。
+
+
+
+##### 示例：显示所有打卡记录
+
+```
+>showValueTable(今天共第%[%{daka}%+0]%人打卡, integral_(\d+), ID:"_ID_", 累计:daka_sum__ID_, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)
+```
 
 
 

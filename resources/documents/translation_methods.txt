@@ -33,6 +33,7 @@ post数据=postData
 移除值=removeValue
 批量移除值=removeValues
 批量移除值如果=removeValuesIf
+显示值表格=showValueTable
 打开文件=openFile
 播放声音=playSound
 提升点歌=improveSongOrder

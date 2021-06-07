@@ -6,7 +6,7 @@
 #include "facilemenu.h"
 #include "orderplayerwindow.h"
 
-VariantViewer::VariantViewer(QSettings *heaps, QString loopKeyStr, QStringList tableFileds, QWidget *parent)
+VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyStr, QStringList tableFileds, QWidget *parent)
     : QDialog(parent), heaps(heaps)
 {
     setModal(false);
@@ -18,9 +18,14 @@ VariantViewer::VariantViewer(QSettings *heaps, QString loopKeyStr, QStringList t
     QRegularExpressionMatch match;
 
     QVBoxLayout* lay = new QVBoxLayout(this);
+    if (!caption.isEmpty())
+    {
+        QLabel* label = new QLabel(caption, this);
+        label->setAlignment(Qt::AlignCenter);
+        lay->addWidget(label);
+    }
     tableView = new QTableView(this);
     lay->addWidget(tableView);
-    lay->setMargin(0);
 
     model = new QStandardItemModel(tableView);
     int tableRow = 0;
@@ -104,7 +109,7 @@ VariantViewer::VariantViewer(QSettings *heaps, QString loopKeyStr, QStringList t
     tableView->setModel(model);
     tableView->setItemDelegate(new NoFocusDelegate(tableView, model->columnCount()));
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    tableView->setSelectionMode(QAbstractItemView::MultiSelection);
+    tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     QTimer::singleShot(0, [=]{
         tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
