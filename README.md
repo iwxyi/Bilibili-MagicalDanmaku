@@ -1060,18 +1060,18 @@ tips：
 
 `key` 为用来遍历的带有可变值的正则表达式，例如 `integral_(\d+)`，将会遍历所有使用`setValue`存储的键满足这个表达式的数值。其中必须有带括号的捕获组形如 `(\d+)`作为变化的源头，用来影响所有`field`的变化；而在各 `field` 中可以使用 `_KEY_` 或者 `_ID_` 来替换为该值。
 
-`field` 允许多个，每个的格式为：`标题:键`，标题是表格的标题（第一行），键是用来读取响应设置的。标题及中间的冒号可忽略。用 `_KEY_` 或 `_ID_` 来替换为表达式中变化源。
+`field` 允许多个，每个的格式为：`标题:键`，标题是表格的标题（第一行），键是用来读取响应设置的。标题及中间的冒号可忽略。用 `_KEY_` 或 `_ID_` 来替换为表达式中变化源。单个 `field` 末尾允许用 `:<` 从小到大、`:>` 从大到小排序。
 
 
 
 ##### 示例：显示所有用户积分
 
-显示签到的用户ID、昵称、积分。
+显示签到的用户ID、昵称、积分，按积分排序
 
 > 在之前的默认签到代码中，未加上保存昵称，所以是空的
 
 ```
-showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_)
+showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_:>)
 ```
 
 假定某个用户 id 是 123456，那么通过 `integral_(\d+)` 遍历到 `integral_123456` ，则 `_ID_` 是 123456，通过这一行来获取后面的 `name_123456`、`integral_123456` 等的值。
@@ -1081,7 +1081,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 ##### 示例：显示所有打卡记录
 
 ```
->showValueTable(今天共第%[%{daka}%+0]%人打卡, integral_(\d+), ID:"_ID_", 累计:daka_sum__ID_, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)
+>showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\d+), ID:"_ID_", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)
 ```
 
 

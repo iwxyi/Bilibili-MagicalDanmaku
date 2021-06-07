@@ -33,9 +33,12 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
     // 获取标题
     QStringList titleNames, titleKeys;
     model->setColumnCount(tableFileds.size());
+    int sortCol = -1;
+    bool desc = false; // 从小到大false，从大到小true
     for (int tableCol = 0; tableCol < tableFileds.size(); tableCol++)
     {
         QString field = tableFileds.at(tableCol);
+        // 分割标题和键
         QString title, key;
         int colonPos = field.indexOf(":");
         if (colonPos == -1)
@@ -53,6 +56,20 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
 
         model->setHeaderData(tableCol, Qt::Horizontal, title);
         titleNames.append(title);
+
+        // 分割排序
+        if (key.endsWith(":<"))
+        {
+            sortCol = tableCol;
+            desc = false;
+            key = key.left(key.length() - 2);
+        }
+        else if (key.endsWith(">"))
+        {
+            sortCol = tableCol;
+            desc = true;
+            key = key.left(key.length() - 2);
+        }
         titleKeys.append(key);
     }
 
@@ -97,7 +114,17 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
             else
             {
                 QString val = heaps->value(keyExp, "").toString();
-                model->setItem(tableRow, tableCol, new QStandardItem(val));
+                if (tableCol == sortCol) // 排序，肯定是数值
+                {
+                    auto item = new QStandardItem();
+                    item->setData(val.toLongLong(), Qt::DisplayRole);
+                    model->setItem(tableRow, tableCol, item);
+                }
+                else
+                {
+                    model->setItem(tableRow, tableCol, new QStandardItem(val));
+                }
+
                 model->setData(model->index(tableRow, tableCol), keyExp, Qt::UserRole); // 用来修改的
             }
         }
@@ -114,6 +141,12 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
     QTimer::singleShot(0, [=]{
         tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     });
+
+    // 排序
+    if (sortCol >= 0)
+    {
+        tableView->sortByColumn(sortCol, desc ? Qt::DescendingOrder : Qt::AscendingOrder);
+    }
 
     // 自动调整宽高
     int titleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
@@ -143,7 +176,7 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
         QString key = item->data(Qt::UserRole).toString();
         if (!key.isEmpty())
         {
-            qInfo() << "修改heaps:" << key << item->data(Qt::DisplayRole);
+            qInfo() << "修改heaps值:" << key << item->data(Qt::DisplayRole);
             heaps->setValue(key, item->data(Qt::DisplayRole));
         }
     });
@@ -161,6 +194,17 @@ void VariantViewer::showTableMenu()
     int row = index.row();
 
     FacileMenu* menu = new FacileMenu(this);
+    menu->addAction("删除值", [=]{
+        int col = index.column();
+        auto item = model->item(row, col);
+        QString key = item->data(Qt::UserRole).toString();
+        if (!key.isEmpty())
+            heaps->remove(key);
+        qInfo() << "删除heaps值:" << key << item->data(Qt::DisplayRole);
+        item->setData("", Qt::UserRole); // 先取消键，否则下面的留空还是会引发修改值，剩下一个空值键
+        item->setData("", Qt::DisplayRole);
+    })->disable(row < 0);
+
     menu->addAction("删除行", [=]{
         auto selects = tableView->selectionModel()->selectedRows(0);
         QList<int> deletedRows;
