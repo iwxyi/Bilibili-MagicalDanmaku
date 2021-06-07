@@ -7914,6 +7914,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
 
             // 设置数据，调整列宽
             tableView->setModel(model);
+            tableView->setItemDelegate(new NoFocusDelegate(tableView, model->columnCount()));
             tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
             QTimer::singleShot(0, [=]{
                 tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
@@ -7942,13 +7943,37 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             tableView->show();
 
             // 修改事件
-            connect(model, &QStandardItemModel::itemChanged, this, [=](QStandardItem* item) {
+            connect(model, &QStandardItemModel::itemChanged, tableView, [=](QStandardItem* item) {
                 QString key = item->data(Qt::UserRole).toString();
                 if (!key.isEmpty())
                 {
                     qInfo() << "修改heaps:" << key << item->data(Qt::DisplayRole);
                     heaps->setValue(key, item->data(Qt::DisplayRole));
                 }
+            });
+
+            // 菜单事件
+            tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(tableView, &QTableView::customContextMenuRequested, tableView, [=](const QPoint&) {
+                QModelIndex index = tableView->currentIndex();
+                int row = index.row();
+
+                newFacileMenu;
+                menu->addAction("删除行", [=]{
+                    for (int col = 0; col < model->columnCount(); col++)
+                    {
+                        auto item = model->item(row, col);
+                        QString key = item->data(Qt::UserRole).toString();
+                        if (!key.isEmpty())
+                        {
+                            heaps->remove(key);
+                        }
+                    }
+                    model->removeRow(row);
+
+                })->disable(row < 0);
+
+                menu->exec();
             });
 
             return true;
