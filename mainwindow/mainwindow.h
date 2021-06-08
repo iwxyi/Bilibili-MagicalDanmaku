@@ -46,6 +46,7 @@
 #include "custompaintwidget.h"
 #include "appendbutton.h"
 #include "waterzoombutton.h"
+#include "tipbox.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -894,6 +895,7 @@ private:
 
     void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");
+    void showError(QString title, QString s);
     void showError(QString s);
 
 private:
@@ -916,6 +918,7 @@ private:
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;
     AppendButton* appendListItemButton;
+    TipBox* tip_box;
 
     // 房间信息
     QString roomId;

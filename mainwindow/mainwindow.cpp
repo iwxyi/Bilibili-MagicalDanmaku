@@ -356,6 +356,15 @@ void MainWindow::initView()
         appendListItemButton->setGraphicsEffect(effect);
     }
     connect(appendListItemButton, SIGNAL(clicked()), this, SLOT(addListItemOnCurrentPage()));
+
+    // 通知
+    tip_box = new TipBox(this);
+    connect(tip_box, &TipBox::signalCardClicked, [=](NotificationEntry* n){
+        qInfo() << "卡片点击：" << n->toString();
+    });
+    connect(tip_box, &TipBox::signalBtnClicked, [=](NotificationEntry* n){
+        qInfo() << "卡片按钮点击：" << n->toString();
+    });
 }
 
 void MainWindow::initStyle()
@@ -1506,7 +1515,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 #if defined(ENABLE_TRAY)
     event->ignore();
     this->hide();
-
     QTimer::singleShot(5000, [=]{
         if (!this->isHidden())
             return ;
@@ -1522,6 +1530,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     QMainWindow::resizeEvent(event);
 
     adjustPageSize(ui->stackedWidget->currentIndex());
+    tip_box->adjustPosition();
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -1681,7 +1690,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 {
     if (browserCookie.isEmpty() || browserData.isEmpty())
     {
-        statusLabel->setText("未设置Cookie信息");
+        showError("未设置Cookie信息");
         return ;
     }
     if (msg.isEmpty() || roomId.isEmpty())
@@ -1715,8 +1724,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         statusLabel->setText("");
         if (!errorMsg.isEmpty())
         {
-            statusLabel->setText(errorMsg);
-            qCritical() << s8("warning: 发送失败：") << errorMsg << msg;
+            showError("发送弹幕", errorMsg);
             localNotify(errorMsg + " -> " + msg);
 
             if (!ui->retryFailedDanmuCheck->isChecked())
@@ -1880,7 +1888,7 @@ void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku, int cd, int 
 {
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
-        qDebug() << "未开播，不做操作(cd)" << msg;
+        qInfo() << "未开播，不做操作(cd)" << msg;
         if (debugPrint)
             localNotify("[未开播，不做操作]");
         return ;
@@ -2071,7 +2079,7 @@ void MainWindow::on_testDanmakuButton_clicked()
             saveEveryGift(danmaku);
 
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
-        qDebug() << "条件替换结果：" << words;
+        qInfo() << "条件替换结果：" << words;
 
         triggerCmdEvent("SEND_GIFT", danmaku);
     }
@@ -2191,7 +2199,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         data.insert("uname", "测试用户");
         json.insert("data", data);
         handleMessage(json);
-        qDebug() << pkUid << oppositeAudience;
+        qInfo() << pkUid << oppositeAudience;
     }
     else if (text == "测试花灯")
     {
@@ -2358,7 +2366,7 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行定时任务
         {
-            qDebug() << "未开播，不做回复(timer)" << sl;
+            qInfo() << "未开播，不做回复(timer)" << sl;
             if (debugPrint)
                 localNotify("[未开播，不做回复]");
             return ;
@@ -2470,7 +2478,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
         if ((!manual && !shallAutoMsg(sl, manual)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
         {
             if (!danmaku.isPkLink())
-                qDebug() << "未开播，不做回复(reply)" << sl;
+                qInfo() << "未开播，不做回复(reply)" << sl;
             if (debugPrint)
                 localNotify("[未开播，不做回复]");
             return ;
@@ -2633,7 +2641,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
-            qDebug() << "未开播，不做操作(event)" << sl;
+            qInfo() << "未开播，不做操作(event)" << sl;
             if (debugPrint)
                 localNotify("[未开播，不做操作]");
             return ;
@@ -2730,14 +2738,14 @@ void MainWindow::autoSetCookie(QString s)
     int posr = browserCookie.indexOf(";", posl);
     if (posr == -1) posr = browserCookie.length();
     csrf_token = browserCookie.mid(posl, posr - posl);
-    qDebug() << "检测到csrf_token:" << csrf_token;
+    qInfo() << "检测到csrf_token:" << csrf_token;
 
     if (browserData.isEmpty())
         browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
     browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
     browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
     settings->setValue("danmaku/browserData", browserData);
-    qDebug() << "设置弹幕格式：" << browserData;
+    qInfo() << "设置弹幕格式：" << browserData;
 }
 
 QVariant MainWindow::getCookies()
@@ -2772,8 +2780,7 @@ void MainWindow::getCookieAccount()
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            qCritical() << s8("账号登录返回结果不为0：") << json.value("message").toString();
+            showError("登录返回不为0", json.value("message").toString());
             return ;
         }
 
@@ -2781,7 +2788,7 @@ void MainWindow::getCookieAccount()
         QJsonObject dataObj = json.value("data").toObject();
         cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         cookieUname = dataObj.value("uname").toString();
-        qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
+        qInfo() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameButton->setText(cookieUname);
 
         getRobotInfo();
@@ -2987,7 +2994,7 @@ void MainWindow::getRoomUserInfo()
         cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
         cookieUname = info.value("uname").toString();
         QString uface = info.value("uface").toString(); // 头像地址
-        qDebug() << "当前cookie用户：" << cookieUid << cookieUname;
+        qInfo() << "当前cookie用户：" << cookieUid << cookieUname;
     });
 }
 
@@ -3011,7 +3018,7 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             {
                 clipJson = doc.object();
                 JS(clipJson, anchor_key);
-                qDebug() << anchor_key << listKey;
+                qInfo() << anchor_key << listKey;
                 canPaste = (anchor_key == listKey);
             }
             else if (doc.isArray())
@@ -3134,7 +3141,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
 
     if (match.capturedTexts().size() < 2)
     {
-        statusLabel->setText("无法获取点歌内容，请检测点歌格式");
+        showError("无法获取点歌内容，请检测点歌格式");
         return ;
     }
     if (ui->diangeNeedMedalCheck->isChecked())
@@ -3151,7 +3158,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     // 记录到历史（先不复制）
     QString text = match.capturedTexts().at(1);
     text = text.trimmed();
-    qDebug() << s8("检测到点歌：") << text;
+    qInfo() << s8("检测到点歌：") << text;
     diangeHistory.append(Diange{danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()});
     ui->diangeHistoryListWidget->insertItem(0, text + " - " + danmaku.getNickname());
 
@@ -3205,8 +3212,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 {
-    qCritical() << "error" << socket->errorString();
-    statusLabel->setText(socket->errorString());
+    showError("socket", socket->errorString());
 }
 
 void MainWindow::initWS()
@@ -3248,7 +3254,7 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-//        qDebug() << "binaryMessageReceived" << message;
+//        qInfo() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
         try {
             slotBinaryMessageReceived(message);
@@ -3268,11 +3274,11 @@ void MainWindow::initWS()
     });
 
     connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
-        qDebug() << "textFrameReceived";
+        qInfo() << "textFrameReceived";
     });
 
     connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-        qDebug() << "textMessageReceived";
+        qInfo() << "textMessageReceived";
     });
 
     connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
@@ -3384,7 +3390,7 @@ void MainWindow::sendXliveHeartBeatE()
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            statusLabel->setText(message);
+            showError("发送失败", message);
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
 
@@ -3432,7 +3438,7 @@ void MainWindow::sendXliveHeartBeatX()
 
     post(encServer, QJsonDocument(calcText).toJson(), [=](QNetworkReply* reply){
         QByteArray repBa = reply->readAll();
-        // qDebug() << "加密直播心跳包数据返回：" << repBa;
+        // qInfo() << "加密直播心跳包数据返回：" << repBa;
         sendXliveHeartBeatX(QString(repBa), timestamp);
     });
 }
@@ -3462,7 +3468,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            statusLabel->setText(message);
+            showError("发送直播心跳失败", message);
             qCritical() << s8("warning: 发送直播心跳失败：") << message << datas.join("&");
             return ;
         }
@@ -3509,7 +3515,7 @@ void MainWindow::getRoomInit()
         }
 
         int realRoom = json.value("data").toObject().value("room_id").toInt();
-        qDebug() << "真实房间号：" << realRoom;
+        qInfo() << "真实房间号：" << realRoom;
     });
 }
 
@@ -3601,7 +3607,7 @@ void MainWindow::getRoomInfo(bool reconnect)
             ui->liveStatusButton->setText("未知状态" + snum(liveStatus));
         }
 
-        qDebug() << "房间信息: roomid=" << roomId
+        qInfo() << "房间信息: roomid=" << roomId
                  << "  shortid=" << shortId
                  << "  upName=" << upName
                  << "  uid=" << upUid;
@@ -3616,7 +3622,7 @@ void MainWindow::getRoomInfo(bool reconnect)
                 pking = true;
                 // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
                 getPkInfoById(roomId, pkId);
-                qDebug() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
+                qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
             }
         }
         else
@@ -3635,7 +3641,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
         currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-//        qDebug() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
+//        qInfo() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
         ui->fansCountLabel->setText(snum(currentFans));
         ui->fansClubCountLabel->setText(snum(currentFansClub));
         // getFansAndUpdate();
@@ -3688,20 +3694,20 @@ bool MainWindow::isLivingOrMayliving()
             qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
             if (start < end) // 白天档
             {
-                qDebug() << "白天档" << currentVal << start * 3600000 << end * 3600000;
+                qInfo() << "白天档" << currentVal << start * 3600000 << end * 3600000;
                 if (nextVal >= start * 3600000
                         && currentVal <= end * 3600000)
                 {
                     if (ui->doveCheck->isChecked()) // 今天鸽了
                     {
                         abort = true;
-                        qDebug() << "今天鸽了";
+                        qInfo() << "今天鸽了";
                     }
                     // 即将开播
                 }
                 else // 直播时间之外
                 {
-                    qDebug() << "未开播，继续等待";
+                    qInfo() << "未开播，继续等待";
                     abort = true;
                     if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
                         ui->doveCheck->setChecked(false);
@@ -3709,7 +3715,7 @@ bool MainWindow::isLivingOrMayliving()
             }
             else if (start > end) // 熬夜档
             {
-                qDebug() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
+                qInfo() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
                 if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
                         || currentVal <= end * 3600000)
                 {
@@ -3719,7 +3725,7 @@ bool MainWindow::isLivingOrMayliving()
                 }
                 else // 直播时间之外
                 {
-                    qDebug() << "未开播，继续等待";
+                    qInfo() << "未开播，继续等待";
                     abort = true;
                     if (currentVal > end * 3600000 && currentVal < start * 3600000
                             && ui->doveCheck->isChecked())
@@ -3729,7 +3735,7 @@ bool MainWindow::isLivingOrMayliving()
 
             if (abort)
             {
-                qDebug() << "短期内不会开播，暂且断开连接";
+                qInfo() << "短期内不会开播，暂且断开连接";
                 if (!connectServerTimer->isActive())
                     connectServerTimer->start();
                 ui->connectStateLabel->setText("等待连接");
@@ -3742,7 +3748,7 @@ bool MainWindow::isLivingOrMayliving()
         }
         else // 已开播，则停下
         {
-            qDebug() << "开播，停止定时连接";
+            qInfo() << "开播，停止定时连接";
             if (connectServerTimer->isActive())
                 connectServerTimer->stop();
             if (ui->doveCheck->isChecked())
@@ -4092,10 +4098,10 @@ void MainWindow::getFansAndUpdate()
             QString uname = fan.value("uname").toString();
 
             newFans.append(FanBean{mid, uname, attribute & 2, mtime});
-//qDebug() << "    粉丝信息：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
+//qInfo() << "    粉丝信息：" << mid << uname << attribute << QDateTime::fromSecsSinceEpoch(mtime);
         }
 
-//qDebug() << "    现有粉丝数(第一页)：" << newFans.size();
+//qInfo() << "    现有粉丝数(第一页)：" << newFans.size();
 
         // 第一次加载
         if (!fansList.size())
@@ -4123,21 +4129,20 @@ void MainWindow::getFansAndUpdate()
             if (find >= 0)
                 break;
         }
-//qDebug() << ">>>>>>>>>>" << "index:" << index << "           find:" << find;
 
         // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
         if (!fansList.size())
         {}
         else if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
-            qDebug() << s8("没有被关注过，或之前关注的全部取关了？");
+            qInfo() << s8("没有被关注过，或之前关注的全部取关了？");
         }
         else // index==0没有人取关，index>0则有人取关
         {
             for (int i = 0; i < index; i++)
             {
                 FanBean fan = fansList.at(i);
-                qDebug() << s8("取消关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+                qInfo() << s8("取消关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
                 appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, false, QDateTime::fromSecsSinceEpoch(fan.mtime)));
             }
             while (index--)
@@ -4148,7 +4153,7 @@ void MainWindow::getFansAndUpdate()
         for (int i = find-1; i >= 0; i--)
         {
             FanBean fan = newFans.at(i);
-            qDebug() << s8("新增关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
+            qInfo() << s8("新增关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
             LiveDanmaku danmaku(fan.uname, fan.mid, true, QDateTime::fromSecsSinceEpoch(fan.mtime));
             appendNewLiveDanmaku(danmaku);
 
@@ -4233,7 +4238,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << "PK查询结果不为0：" << json.value("message").toString();
+            qWarning() << "PK查询结果不为0：" << json.value("message").toString();
             return ;
         }
 
@@ -4282,7 +4287,7 @@ void MainWindow::getPkInfoById(QString roomId, QString pkId)
             QTimer::singleShot(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)), [=]{
                 if (!pking || roomId != this->roomId) // 比如换房间了
                 {
-                    qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
+                    qWarning() << "大乱斗结束前，逻辑不正确" << pking << roomId
                              << QDateTime::currentSecsSinceEpoch() << pkEndTime;
                     return ;
                 }
@@ -6042,7 +6047,7 @@ void MainWindow::startSaveDanmakuToFile()
     dir.mkdir(dataPath+"danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
 
-    qDebug() << "开启弹幕记录：" << dataPath+"danmaku_histories/" + roomId + "_" + date + ".log";
+    qInfo() << "开启弹幕记录：" << dataPath+"danmaku_histories/" + roomId + "_" + date + ".log";
     danmuLogFile = new QFile(dataPath+"danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
@@ -6124,7 +6129,7 @@ void MainWindow::startLiveRecord()
     getRoomLiveVideoUrl([=](QString url){
         recordUrl = "";
 
-        qDebug() << "开始录播：" << url;
+        qInfo() << "开始录播：" << url;
         QNetworkAccessManager manager;
         QNetworkRequest* request = new QNetworkRequest(QUrl(url));
         QEventLoop* loop = new QEventLoop();
@@ -6134,7 +6139,7 @@ void MainWindow::startLiveRecord()
         connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 bytesReceived, qint64 bytesTotal){
             if (bytesReceived > 0)
             {
-                qDebug() << "原始地址可直接下载";
+                qInfo() << "原始地址可直接下载";
                 recordUrl = url;
                 loop->quit();
                 reply->deleteLater();
@@ -6152,7 +6157,7 @@ void MainWindow::startLiveRecord()
                 if (headers.at(i).first.toLower() == "location")
                 {
                     recordUrl = headers.at(i).second;
-                    qDebug() << "重定向下载地址：" << recordUrl;
+                    qInfo() << "重定向下载地址：" << recordUrl;
                     break;
                 }*/
             reply->deleteLater();
@@ -6160,7 +6165,7 @@ void MainWindow::startLiveRecord()
         delete request;
         if (recordUrl.isEmpty())
         {
-            qDebug() << "无法获取下载地址";
+            qWarning() << "无法获取下载地址";
             return ;
         }
 
@@ -6189,7 +6194,7 @@ void MainWindow::startRecordUrl(QString url)
     recordLoop->exec(); //开启子事件循环
     recordLoop->deleteLater();
     recordLoop = nullptr;
-    qDebug() << "录播结束：" << path;
+    qInfo() << "录播结束：" << path;
 
     QFile file(path);
     if (!file.open(QFile::WriteOnly))
@@ -6224,7 +6229,7 @@ void MainWindow::finishLiveRecord()
 {
     if (!recordLoop)
         return ;
-    qDebug() << "结束录播";
+    qInfo() << "结束录播";
     recordLoop->quit();
     recordLoop = nullptr;
 }
@@ -6528,7 +6533,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     }
     else
         return ;
-    qDebug() << "执行远程命令：" << msg;
+    qInfo() << "执行远程命令：" << msg;
 }
 
 bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, int &resVal)
@@ -6539,7 +6544,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     if (msg.indexOf(re) == -1)
         return false;
 
-    qDebug() << "尝试执行命令：" << msg;
+    qInfo() << "尝试执行命令：" << msg;
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };
@@ -6562,7 +6567,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = caps.at(2).toInt();
             addBlockUser(uid, hour);
@@ -6572,7 +6577,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = ui->autoBlockTimeSpin->value();
             addBlockUser(uid, hour);
@@ -6587,7 +6592,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             delBlockUser(uid);
             return true;
@@ -6601,7 +6606,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             QString uname = caps.at(2);
             eternalBlockUser(uid, uname);
@@ -6616,7 +6621,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             int giftId = caps.at(1).toInt();
             int num = caps.at(2).toInt();
             sendGift(giftId, num);
@@ -6642,7 +6647,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             int delay = caps.at(1).toInt(); // 单位：毫秒
             res = DelayRes;
             resVal = delay;
@@ -6657,7 +6662,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            qInfo() << "执行命令：" << caps << gameUsers[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6670,7 +6675,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            qInfo() << "执行命令：" << caps << gameUsers[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameUsers[0].append(uid);
             return true;
@@ -6684,7 +6689,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            qInfo() << "执行命令：" << caps << gameUsers[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6697,7 +6702,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameUsers[0].size();
+            qInfo() << "执行命令：" << caps << gameUsers[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameUsers[0].removeOne(uid);
             return true;
@@ -6711,7 +6716,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qInfo() << "执行命令：" << caps << gameNumberLists[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6725,7 +6730,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qInfo() << "执行命令：" << caps << gameNumberLists[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameNumberLists[0].append(uid);
             saveGameNumbers(0);
@@ -6740,7 +6745,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qInfo() << "执行命令：" << caps << gameNumberLists[0].size();
             int chan = caps.at(1).toInt();
             qint64 uid = caps.at(2).toLongLong();
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6754,7 +6759,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameNumberLists[0].size();
+            qInfo() << "执行命令：" << caps << gameNumberLists[0].size();
             qint64 uid = caps.at(1).toLongLong();
             gameNumberLists[0].removeOne(uid);
             saveGameNumbers(0);
@@ -6769,7 +6774,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            qInfo() << "执行命令：" << caps << gameTextLists[0].size();
             int chan = caps.at(1).toInt();
             QString text = caps.at(2);
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6783,7 +6788,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            qInfo() << "执行命令：" << caps << gameTextLists[0].size();
             QString text = caps.at(1);
             gameTextLists[0].append(text);
             saveGameTexts(0);
@@ -6798,7 +6803,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            qInfo() << "执行命令：" << caps << gameTextLists[0].size();
             int chan = caps.at(1).toInt();
             QString text = caps.at(2);
             if (chan < 0 || chan >= CHANNEL_COUNT)
@@ -6812,7 +6817,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps << gameTextLists[0].size();
+            qInfo() << "执行命令：" << caps << gameTextLists[0].size();
             QString text = caps.at(1);
             gameTextLists[0].removeOne(text);
             saveGameTexts(0);
@@ -6829,7 +6834,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
             int response = caps.at(2).toInt();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             processRemoteCmd(cmd, response);
             return true;
         }
@@ -6839,7 +6844,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             processRemoteCmd(cmd);
             return true;
         }
@@ -6854,7 +6859,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qint64 uid = caps.at(1).toLongLong();
             QString msg = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             sendPrivateMsg(uid, msg);
             return true;
         }
@@ -6869,7 +6874,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString roomId = caps.at(1);
             QString msg = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             sendRoomMsg(roomId, msg);
             return true;
         }
@@ -6908,7 +6913,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString msg = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             localNotify(msg);
             return true;
         }
@@ -6919,7 +6924,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString uid = caps.at(1);
             QString msg = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             localNotify(msg, uid.toLongLong());
             return true;
         }
@@ -6933,7 +6938,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             speakText(text);
             return true;
         }
@@ -6947,7 +6952,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QDesktopServices::openUrl(url);
             return true;
         }
@@ -6960,11 +6965,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             get(url, [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
-                qDebug() << QString(ba);
+                qInfo() << QString(ba);
             });
             return true;
         }
@@ -6980,12 +6985,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString callback = caps.size() > 2 ? caps.at(2) : "";
             get(url, [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
-                qDebug() << QString(ba);
+                qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
                     triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
@@ -7005,13 +7010,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
-                qDebug() << QString(ba);
+                qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
                     triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
@@ -7031,13 +7036,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
-                qDebug() << QString(ba);
+                qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
                     triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
@@ -7057,7 +7062,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString cmd = caps.at(1);
             QString data = caps.at(2);
 
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             sendTextToSockets(cmd, data.toUtf8());
             return true;
         }
@@ -7071,7 +7076,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString cmd = caps.at(1);
             QString data = caps.at(2);
 
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (danmakuSockets.size())
                 sendTextToSockets(cmd, data.toUtf8(), danmakuSockets.last());
             return true;
@@ -7086,12 +7091,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QProcess p(nullptr);
             p.start(cmd);
             p.waitForStarted();
             p.waitForFinished();
-            qDebug() << QString::fromLocal8Bit(p.readAllStandardError());
+            qInfo() << QString::fromLocal8Bit(p.readAllStandardError());
             return true;
         }
     }
@@ -7104,12 +7109,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString path = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 #ifdef Q_OS_WIN32
             path = QString("file:///") + path;
             bool is_open = QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
             if(!is_open)
-                qDebug() << "打开文件失败";
+                qWarning() << "打开文件失败";
 #else
             QString  cmd = QString("xdg-open ")+ path; //在linux下，可以通过system来xdg-open命令调用默认程序打开文件；
             system(cmd.toStdString().c_str());
@@ -7125,7 +7130,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString format = caps.at(3);
@@ -7141,7 +7146,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString text = caps.at(3);
@@ -7157,7 +7162,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (fileName.startsWith("/"))
                 fileName.replace(0, 1, "");
@@ -7175,7 +7180,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString path = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QMediaPlayer* player = new QMediaPlayer(this);
             player->setMedia(QUrl::fromLocalFile(path));
             connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
@@ -7198,7 +7203,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (!key.contains("/"))
                 key = "heaps/" + key;
             QString value = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             settings->setValue(key, value);
             return true;
         }
@@ -7214,7 +7219,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString key = caps.at(1);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             settings->remove(key);
             return true;
@@ -7232,7 +7237,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (!key.contains("/"))
                 key = "heaps/" + key;
             QString value = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             heaps->setValue(key, value);
             return true;
         }
@@ -7252,7 +7257,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 modify = caps.at(2).toLongLong();
             value += modify;
             heaps->setValue(key, value);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             return true;
         }
     }
@@ -7266,7 +7271,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString key = caps.at(1);
             QString value = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             heaps->beginGroup("heaps");
             auto keys = heaps->allKeys();
@@ -7292,7 +7297,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString key = caps.at(1);
             qint64 modify = caps.at(2).toLongLong();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             heaps->beginGroup("heaps");
             auto keys = heaps->allKeys();
@@ -7319,7 +7324,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString key = caps.at(1);
             QString VAL_EXP = caps.at(2);
             QString newValue = caps.at(3);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             // 开始修改
             heaps->beginGroup("heaps");
@@ -7394,7 +7399,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString key = caps.at(1);
             QString VAL_EXP = caps.at(2);
             qint64 modify = caps.at(3).toLongLong();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             // 开始修改
             heaps->beginGroup("heaps");
@@ -7449,7 +7454,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString key = caps.at(1);
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             heaps->remove(key);
             return true;
@@ -7464,7 +7469,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString key = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             heaps->beginGroup("heaps");
             auto keys = heaps->allKeys();
@@ -7490,7 +7495,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString key = caps.at(1);
             QString VAL_EXP = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             heaps->beginGroup("heaps");
             auto keys = heaps->allKeys();
@@ -7542,7 +7547,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString uname = caps.at(1);
             int promote = caps.at(2).toInt();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
                 musicWindow->improveUserSongByOrder(uname, promote);
@@ -7564,7 +7569,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString uname = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
                 musicWindow->cutSongIfUser(uname);
@@ -7581,7 +7586,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
                 musicWindow->cutSong();
@@ -7603,7 +7608,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QMessageBox::information(this, "神奇弹幕", text);
             return true;
         }
@@ -7617,7 +7622,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             sendLongText(text);
             return true;
         }
@@ -7631,7 +7636,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             for (int i = 0; i < ui->replyListWidget->count(); i++)
             {
                 auto rw = static_cast<ReplyWidget*>(ui->replyListWidget->itemWidget(ui->replyListWidget->item(i)));
@@ -7648,7 +7653,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             qint64 id = caps.at(1).toLongLong();
             QString text = caps.at(2).trimmed();
             if (text.isEmpty())
@@ -7671,7 +7676,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qint64 uid = caps.at(1).toLongLong();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             if (!notWelcomeUsers.contains(uid))
             {
@@ -7695,7 +7700,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qint64 uid = caps.at(1).toLongLong();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
 
             if (notWelcomeUsers.contains(uid))
             {
@@ -7720,7 +7725,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qint64 uid = caps.at(1).toLongLong();
             QString name = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (name.isEmpty()) // 移除
             {
                 if (localNicknames.contains(uid))
@@ -7751,7 +7756,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             int type = caps.at(1).toInt();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             joinBattle(type);
             return true;
         }
@@ -7765,7 +7770,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             triggerCmdEvent(text, danmaku);
             return true;
         }
@@ -7780,7 +7785,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             QString uname = caps.at(2);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             if (!musicWindow)
                 on_actionShow_Order_Player_Window_triggered();
             musicWindow->slotSearchAndAutoAppend(text, uname);
@@ -7796,7 +7801,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             simulateKeys(text);
             return true;
         }
@@ -7809,7 +7814,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            qDebug() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps;
             QString word = caps.at(1);
             QString anchor = caps.at(2);
             addBannedWord(word, anchor);
@@ -8201,7 +8206,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "NOTICE_MSG")
                 return ;
 
-            qDebug() << "普通CMD：" << cmd;
+            qInfo() << "普通CMD：" << cmd;
             SOCKET_INF << json;
         }
 
@@ -8259,7 +8264,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "WIDGET_BANNER")
                     return ;
 
-                qDebug() << ">消息命令UNZC：" << cmd;
+                qInfo() << ">消息命令UNZC：" << cmd;
 
                 if (cmd == "ROOM_RANK")
                 {
@@ -8278,7 +8283,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     }
                     currentFans = fans;
                     currentFansClub = fans_club;
-                    qDebug() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
+                    qInfo() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
                     // appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
 
                     dailyNewFans += delta_fans;
@@ -8449,7 +8454,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
             else
             {
                 qWarning() << s8("未知协议：") << protover << s8("，若有必要请处理");
-                qDebug() << s8("未知正文：") << body;
+                qWarning() << s8("未知正文：") << body;
             }
         }
     }
@@ -8527,7 +8532,7 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
 void MainWindow::handleMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
-    qDebug() << s8(">消息命令ZCOM：") << cmd;
+    qInfo() << s8(">消息命令ZCOM：") << cmd;
     if (cmd == "LIVE") // 开播？
     {
         if (ui->recordCheck->isChecked())
@@ -8536,7 +8541,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (isLiving() || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
-            qDebug() << "忽视PK导致的开播情况";
+            qInfo() << "忽视PK导致的开播情况";
             // 大乱斗时突然断联后恢复
             if (!isLiving())
             {
@@ -8622,7 +8627,7 @@ void MainWindow::handleMessage(QJsonObject json)
                      snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
-        qDebug() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
+        qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
         /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;*/
@@ -8714,7 +8719,7 @@ void MainWindow::handleMessage(QJsonObject json)
                         QString blockKey = match.captured(1); // 第一个括号的
                         localNotify("检测到新人说【" + blockKey + "】，自动禁言");
                     }
-                    qDebug() << "检测到新人违禁词，自动拉黑：" << username << msg;
+                    qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
                     // 拉黑
                     addBlockUser(uid, ui->autoBlockTimeSpin->value());
@@ -8926,7 +8931,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -9309,7 +9314,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_DELETE") // 删除醒目留言
     {
-        qDebug() << "删除醒目留言：" << json;
+        qInfo() << "删除醒目留言：" << json;
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "SPECIAL_GIFT") // 节奏风暴（特殊礼物？）
@@ -9341,7 +9346,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 danmakuWindow->removeBlockText(text);
             });
         }
-        qDebug() << "节奏风暴：" << text << ui->autoLOTCheck->isChecked();
+        qInfo() << "节奏风暴：" << text << ui->autoLOTCheck->isChecked();
         if (ui->autoLOTCheck->isChecked())
         {
             joinStorm(id);
@@ -9360,7 +9365,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString unameColor = data.value("uname_color").toString();
         QString spreadDesc = data.value("spread_desc").toString();
         QString spreadInfo = data.value("spread_info").toString();
-        qDebug() << s8("舰长进入：") << username;
+        qInfo() << s8("舰长进入：") << username;
         /*QString localName = danmakuWindow->getLocalNickname(uid);
         if (!localName.isEmpty())
             username = localName;*/
@@ -9438,7 +9443,7 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku;
         if (results.size() < 2 || results.at(1).isEmpty()) // 不是船员
         {
-            qDebug() << ">>>>>>高能榜进入：" << copy_writing;
+            qInfo() << ">>>>>>高能榜进入：" << copy_writing;
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
@@ -9454,7 +9459,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 {
                     danmaku = onlineGoldRank.at(i); // 就是这个用户了
                     danmaku.setTime(QDateTime::currentDateTime());
-                    qDebug() << "                guard:" << danmaku.getGuard();
+                    qInfo() << "                guard:" << danmaku.getGuard();
                     break;
                 }
             }
@@ -9470,7 +9475,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else // 舰长进入
         {
-            qDebug() << ">>>>>>舰长进入：" << copy_writing;
+            qInfo() << ">>>>>>舰长进入：" << copy_writing;
 
             QString gd = results.at(1);
             QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
@@ -9493,11 +9498,11 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
     {
         QJsonObject data = json.value("data").toObject();
-        qDebug() << data;
+        qInfo() << data;
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         bool isAdmin = data.value("isAdmin").toBool();
-        qDebug() << s8("欢迎观众：") << username << isAdmin;
+        qInfo() << s8("欢迎观众：") << username << isAdmin;
 
         triggerCmdEvent(cmd, LiveDanmaku().with(data));
     }
@@ -9554,7 +9559,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         QString roomId = snum(qint64(data.value("room_id").toDouble()));
 
-        qDebug() << s8("观众交互：") << username << msgType;
+        qInfo() << s8("观众交互：") << username << msgType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -9574,7 +9579,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (roomId != "0" && roomId != this->roomId) // 关注对面主播，也会引发关注事件
         {
-            qDebug() << "不是本房间，已忽略：" << roomId << "!=" << this->roomId;
+            qInfo() << "不是本房间，已忽略：" << roomId << "!=" << this->roomId;
             return ;
         }
 
@@ -9626,7 +9631,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else
         {
-            qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
+            qWarning() << "~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
         }
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
@@ -9658,7 +9663,7 @@ void MainWindow::handleMessage(QJsonObject json)
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
         int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
-        qDebug() << username << s8("购买") << giftName << num << guardCount;
+        qInfo() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
@@ -9965,7 +9970,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString danmu = data.value("danmu").toString();
         int giftId = data.value("gift_id").toInt();
         int time = data.value("time").toInt();
-        qDebug() << "天选弹幕：" << danmu;
+        qInfo() << "天选弹幕：" << danmu;
         if (!danmu.isEmpty() && giftId <= 0 && ui->autoLOTCheck->isChecked())
         {
             int requireType = data.value("require_type").toInt();
@@ -10246,9 +10251,10 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
+            if (code == 403)
+                showError("机器人判断粉丝", "您没有权限");
+            else
+                showError("机器人判断:粉丝", json.value("message").toString());
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
@@ -10257,7 +10263,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
         bool robot =  (following >= 100 && follower <= 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
-//        qDebug() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
         if (robot)
         {
             // 进一步使用投稿数量判断
@@ -10279,9 +10285,10 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
+            if (code == 403)
+                showError("机器人判断:点击量", "您没有权限");
+            else
+                showError("机器人判断:点击量", json.value("message").toString());
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
@@ -10289,7 +10296,7 @@ void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot,
         int article_view = obj.value("article").toObject().value("view").toInt();
         int article_like = obj.value("article").toObject().value("like").toInt();
         bool robot = (achive_view + article_view + article_like < 10); // 机器人，或者小号
-//        qDebug() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
 //                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
         robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
@@ -10314,15 +10321,16 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
+            if (code == 403)
+                showError("机器人判断:投稿", "您没有权限");
+            else
+                showError("机器人判断:投稿", json.value("message").toString());
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
         int allCount = obj.value("all_count").toInt();
         bool robot = (allCount <= 1); // 机器人，或者小号（1是因为有默认成为会员的相簿）
-        qDebug() << "判断机器人：" << danmaku.getNickname() << "    投稿数量：" << allCount << robot;
+        qInfo() << "判断机器人：" << danmaku.getNickname() << "    投稿数量：" << allCount << robot;
         robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
         if (robot)
         {
@@ -10409,7 +10417,7 @@ void MainWindow::initTTS()
 #if defined(ENABLE_TEXTTOSPEECH)
         if (!tts)
         {
-            qDebug() << "初始化TTS语音模块";
+            qInfo() << "初始化TTS语音模块";
             tts = new QTextToSpeech(this);
             tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
             tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
@@ -10420,7 +10428,7 @@ void MainWindow::initTTS()
     case VoiceXfy:
         if (!xfyTTS)
         {
-            qDebug() << "初始化讯飞语音模块";
+            qInfo() << "初始化讯飞语音模块";
             xfyTTS = new XfyTTS(dataPath,
                                 settings->value("xfytts/appid").toString(),
                                 settings->value("xfytts/apikey").toString(),
@@ -10641,7 +10649,7 @@ bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
         return false;
 
     // 开始合并
-    qDebug() << "合并相同礼物至：" << merged->toString();
+    qInfo() << "合并相同礼物至：" << merged->toString();
     merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
 
     // 合并实时弹幕
@@ -10975,7 +10983,7 @@ void MainWindow::refreshBlockList()
 {
     if (browserData.isEmpty())
     {
-        statusLabel->setText("请先设置用户数据");
+        showError("请先设置用户数据");
         return ;
     }
 
@@ -10985,9 +10993,10 @@ void MainWindow::refreshBlockList()
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
+            if (code == 403)
+                showError("获取禁言", "您没有权限");
+            else
+                showError("获取禁言", json.value("message").toString());
             return ;
         }
         QJsonArray list = json.value("data").toArray();
@@ -10999,7 +11008,7 @@ void MainWindow::refreshBlockList()
             qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
             QString uname = obj.value("uname").toString();
             userBlockIds.insert(uid, id);
-//            qDebug() << "已屏蔽:" << id << uname << uid;
+//            qInfo() << "已屏蔽:" << id << uname << uid;
         }
 
     });
@@ -11058,7 +11067,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         statusLabel->setText("");
         if (message != "success")
         {
-            statusLabel->setText(message);
+            showError("赠送礼物", message);
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
@@ -11105,7 +11114,7 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
         statusLabel->setText("");
         if (message != "success")
         {
-            statusLabel->setText(message);
+            showError("赠送包裹礼物失败", message);
             qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
@@ -11224,7 +11233,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                 int giftNum = bag.value("gift_num").toInt();
                 qint64 bagId = qint64(bag.value("bag_id").toDouble());
                 QString cornerMark = bag.value("corner_mark").toString();
-                // qDebug() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
+                // qInfo() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
             }
         }
 
@@ -11247,7 +11256,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                 int giftNum = bag.value("gift_num").toInt();
                 qint64 bagId = qint64(bag.value("bag_id").toDouble());
                 QString cornerMark = bag.value("corner_mark").toString();
-                qDebug() << "赠送过期礼物：" << giftId << giftName << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
+                qInfo() << "赠送过期礼物：" << giftId << giftName << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
                 sendBagGift(giftId, giftNum, bagId);
             }
         }
@@ -11317,7 +11326,7 @@ void MainWindow::updateExistGuards(int page)
             else
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
             danmakuCounts->setValue("guard/" + snum(uid), count);
-            qDebug() << "设置舰长：" << username << uid << count;
+            qInfo() << "设置舰长：" << username << uid << count;
         }
     };
 
@@ -11470,7 +11479,7 @@ void MainWindow::updateOnlineGoldRank()
 
             onlineGoldRank.append(danmaku);
         }
-        qDebug() << "高能榜：" << names;
+        qInfo() << "高能榜：" << names;
     });
 }
 
@@ -11586,7 +11595,7 @@ void MainWindow::getPkOnlineGuardPage(int page)
             getPkOnlineGuardPage(now+1);
         else // 全部完成了
         {
-            qDebug() << guard1 << guard2 << guard3;
+            qInfo() << "舰长数量：" << guard1 << guard2 << guard3;
             LiveDanmaku danmaku;
             danmaku.setNumber(guard1 + guard2 + guard3);
             danmaku.extraJson.insert("guard1", guard1);
@@ -11685,7 +11694,7 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
 {
     if(browserData.isEmpty())
     {
-        statusLabel->setText("请先设置登录信息");
+        showError("请先设置登录信息");
         return ;
     }
 
@@ -11702,7 +11711,7 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            statusLabel->setText(json.value("message").toString());
+            showError("禁言失败", json.value("message").toString());
             qWarning() << "禁言失败：" << json.value("message").toString();
             return ;
         }
@@ -11721,7 +11730,7 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
 {
     if(browserData.isEmpty())
     {
-        statusLabel->setText("请先设置登录信息");
+        showError("请先设置登录信息");
         return ;
     }
 
@@ -11733,7 +11742,7 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
 
     if (userBlockIds.contains(uid))
     {
-        qDebug() << "取消用户：" << uid << "  id =" << userBlockIds.value(uid);
+        qInfo() << "取消禁言：" << uid << "  id =" << userBlockIds.value(uid);
         delRoomBlockUser(userBlockIds.value(uid));
         userBlockIds.remove(uid);
         return ;
@@ -11745,9 +11754,10 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
+            if (code == 403)
+                showError("取消禁言", "您没有权限");
+            else
+                showError("取消禁言", json.value("message").toString());
             return ;
         }
         QJsonArray list = json.value("data").toArray();
@@ -11773,7 +11783,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            statusLabel->setText(json.value("message").toString());
+            showError("取消禁言", json.value("message").toString());
             return ;
         }
 
@@ -11794,7 +11804,7 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, upName, roomTitle, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
-    qDebug() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
+    qInfo() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
@@ -11805,7 +11815,7 @@ void MainWindow::cancelEternalBlockUser(qint64 uid)
 
     eternalBlockUsers.removeOne(user);
     saveEternalBlockUsers();
-    qDebug() << "移除永久禁言：" << uid << "    当前人数：" << eternalBlockUsers.size();
+    qInfo() << "移除永久禁言：" << uid << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
@@ -11822,7 +11832,7 @@ void MainWindow::saveEternalBlockUsers()
     for (int i = 0; i < size; i++)
         array.append(eternalBlockUsers.at(i).toJson());
     settings->setValue("danmaku/eternalBlockUsers", array);
-    qDebug() << "保存永久禁言，当前人数：" << eternalBlockUsers.size();
+    qInfo() << "保存永久禁言，当前人数：" << eternalBlockUsers.size();
 }
 
 /**
@@ -11843,7 +11853,7 @@ void MainWindow::detectEternalBlockUsers()
 
         // 该补上禁言啦
         blocked = true;
-        qDebug() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
+        qInfo() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
         addBlockUser(user.uid, user.roomId, MAX_BLOCK_HOUR);
 
         user.time = currentSecond;
@@ -12091,7 +12101,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, &LiveDanmakuWindow::signalSendMsgToPk, this, [=](QString msg){
             if (!pking || pkRoomId.isEmpty())
                 return ;
-            qDebug() << "发送PK对面消息：" << pkRoomId << msg;
+            qInfo() << "发送PK对面消息：" << pkRoomId << msg;
             sendRoomMsg(pkRoomId, msg);
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
@@ -12211,7 +12221,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     {
         musicWindow = new OrderPlayerWindow(dataPath, nullptr);
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
-            qDebug() << "点歌成功" << song.simpleString() << latency;
+            qInfo() << "点歌成功" << song.simpleString() << latency;
 
             // 获取UID
             qint64 uid = 0;
@@ -12520,7 +12530,7 @@ void MainWindow::pkPre(QJsonObject json)
     pkRoomId = room_id;
     pkUid = uid;
 
-    qDebug() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble());
+    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble());
     if (danmakuWindow)
     {
         if (uname.isEmpty())
@@ -12532,7 +12542,7 @@ void MainWindow::pkPre(QJsonObject json)
             if(pkCount > 0)
                 text += "[" + QString::number(pkCount) + "]";
             danmakuWindow->setStatusText(text);
-            qDebug() << "主播：" << uname << pkUid << pkRoomId;
+            qInfo() << "主播：" << uname << pkUid << pkRoomId;
             danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
         }
     }
@@ -12592,7 +12602,7 @@ void MainWindow::pkStart(QJsonObject json)
     if (pkVideo)
     {
         pkToLive = currentTime;
-        qDebug() << "开始视频大乱斗";
+        qInfo() << "开始视频大乱斗";
     }
 
     // 结束后
@@ -12605,7 +12615,7 @@ void MainWindow::pkStart(QJsonObject json)
     QTimer::singleShot(deltaEnd*1000 - pkJudgeEarly, [=]{
         if (!pking || roomId != this->roomId) // 比如换房间了
         {
-            qDebug() << "大乱斗结束前，逻辑不正确" << pking << roomId
+            qInfo() << "大乱斗结束前，逻辑不正确" << pking << roomId
                      << QDateTime::currentSecsSinceEpoch() << pkEndTime;
             return ;
         }
@@ -12620,7 +12630,7 @@ void MainWindow::pkStart(QJsonObject json)
         danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
-    qDebug() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
+    qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
 
     // 1605757123 1605757123 1605757433 时间测试
     // qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
@@ -12628,7 +12638,7 @@ void MainWindow::pkStart(QJsonObject json)
     // 保存PK信息
     int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
     danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
-    qDebug() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
+    qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
 
     // PK提示
     QString text = "开启大乱斗：" + pkUname;
@@ -12685,7 +12695,7 @@ void MainWindow::pkProcess(QJsonObject json)
 
     if (pkEnding)
     {
-        qDebug() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        qInfo() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
         int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
 
         // 显示偷塔情况
@@ -12710,7 +12720,7 @@ void MainWindow::pkProcess(QJsonObject json)
                 QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
                             .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(maxGold).arg(goldTransPk).arg(oppositeTouta)
                             .arg(num);
-                qDebug() << s;
+                // qInfo() << "pk偷塔信息：" << s;
                 if (danmuLogStream)
                 {
                     (*danmuLogStream) << s << "\n";
@@ -12731,7 +12741,7 @@ void MainWindow::pkProcess(QJsonObject json)
             sendGift(20004, num);
             localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
             pkVoting += melon * num;
-            qDebug() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+            qInfo() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
             toutaCount++;
             chiguaCount += num;
             saveTouta();
@@ -12739,7 +12749,7 @@ void MainWindow::pkProcess(QJsonObject json)
     }
     else
     {
-        qDebug() << "大乱斗进度：" << myVotes << matchVotes;
+        qInfo() << "大乱斗进度：" << myVotes << matchVotes;
     }
 }
 
@@ -12824,7 +12834,7 @@ void MainWindow::pkEnd(QJsonObject json)
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
                                      .arg(myVotes)
                                      .arg(matchVotes));
-    qDebug() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
+    qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
     myVotes = 0;
     matchVotes = 0;
     QTimer::singleShot(60000, [=]{
@@ -12900,12 +12910,12 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
         }
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-//        qDebug() << "初始化房间" << roomId << "观众：";
+//        qInfo() << "初始化房间" << roomId << "观众：";
         for (int i = 0; i < danmakus.size(); i++)
         {
             LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
 //            if (!audiences.contains(danmaku.getUid()))
-//                qDebug() << "    添加观众：" << danmaku.getNickname();
+//                qInfo() << "    添加观众：" << danmaku.getNickname();
             audiences.insert(danmaku.getUid());
         }
     });
@@ -13026,7 +13036,7 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
         if (!json.isEmpty())
         {
             cmd = json.value("cmd").toString();
-            qDebug() << "pk普通CMD：" << cmd;
+            qInfo() << "pk普通CMD：" << cmd;
             SOCKET_INF << json;
         }
 
@@ -13110,7 +13120,7 @@ void MainWindow::uncompressPkBytes(const QByteArray &body)
 void MainWindow::handlePkMessage(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
-    qDebug() << s8(">pk消息命令：") << cmd;
+    qInfo() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
     {
         if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
@@ -13134,7 +13144,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                      snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
-        qDebug() << s8("pk接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
+        qInfo() << s8("pk接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
 
         // 添加到列表
         QString cs = QString::number(textColor, 16);
@@ -13177,7 +13187,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         int totalCoin = data.value("total_coin").toInt();
 
-        qDebug() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
         QString localName = getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
@@ -13246,7 +13256,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
                 cmAudience.insert(uid, timestamp);
         }
 
-        // qDebug() << s8("pk观众互动：") << username << spreadDesc;
+        // qInfo() << s8("pk观众互动：") << username << spreadDesc;
         QString localName = getLocalNickname(uid);
         LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
                             unameColor, spreadDesc, spreadInfo);
@@ -13404,7 +13414,7 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
     QFile file(filePath);
     bool exists = file.exists();
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
-        qDebug() << "打开上船记录文件失败：" << filePath;
+        qWarning() << "打开上船记录文件失败：" << filePath;
     QTextStream stream(&file);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
@@ -13435,7 +13445,7 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     QFile file(filePath);
     bool exists = file.exists();
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
-        qDebug() << "打开礼物记录文件失败：" << filePath;
+        qWarning() << "打开礼物记录文件失败：" << filePath;
     QTextStream stream(&file);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
@@ -13464,7 +13474,7 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
-        qDebug() << "打开文件失败：" << filePath;
+        qWarning() << "打开文件失败：" << filePath;
     QTextStream stream(&file);
     if (!codeFileCodec.isEmpty())
         stream.setCodec(codeFileCodec.toUtf8());
@@ -13702,7 +13712,7 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
                 return ;
             }
         }
-        qDebug() << "未检测到粉丝勋章，无法自动切换";
+        qWarning() << "未检测到粉丝勋章，无法自动切换";
 
     });
 }
@@ -13724,7 +13734,7 @@ void MainWindow::wearMedal(qint64 medalId)
             qCritical() << s8("返回结果不为0：") << json.value("message").toString();
             return ;
         }
-        qDebug() << "佩戴主播粉丝勋章成功";
+        qInfo() << "佩戴主播粉丝勋章成功";
     });
 }
 
@@ -13778,7 +13788,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
              "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
-    qDebug() << "参与天选：" << id << follow << url;
+    qInfo() << "参与天选：" << id << follow << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -13791,7 +13801,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         else
         {
             ui->autoLOTCheck->setText("参与成功");
-            qDebug() << "参与天选成功！";
+            qInfo() << "参与天选成功！";
             ui->autoLOTCheck->setToolTip("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
         }
         QTimer::singleShot(10000, [=]{
@@ -13815,7 +13825,7 @@ void MainWindow::joinStorm(qint64 id)
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
              "?id="+QString::number(id)+"&color=5566168&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
-    qDebug() << "参与节奏风暴：" << id << url;
+    qInfo() << "参与节奏风暴：" << id << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -13828,7 +13838,7 @@ void MainWindow::joinStorm(qint64 id)
         else
         {
             ui->autoLOTCheck->setText("参与成功");
-            qDebug() << "参与节奏风暴成功！";
+            qInfo() << "参与节奏风暴成功！";
             QString content = json.value("data").toObject().value("content").toString();
             ui->autoLOTCheck->setToolTip("最近参与时间：" +
                                             QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")
@@ -13902,7 +13912,7 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
 
     QString sign = QString(QCryptographicHash::hash(pinjie.toLocal8Bit(), QCryptographicHash::Md5).toHex().data()).toUpper();
     params << "sign" << sign;
-//    qDebug() << pinjie << sign;
+//    qInfo() << pinjie << sign;
 
     // 获取信息
     connect(new NetUtil(url, params), &NetUtil::finished, this, [=](QString result){
@@ -13910,7 +13920,7 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << "AI回复：" << error.errorString();
+            qInfo() << "AI回复：" << error.errorString();
             return ;
         }
 
@@ -13918,7 +13928,7 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
         if (json.value("ret").toInt() != 0)
         {
             QString msg = json.value("msg").toString();
-            qDebug() << "AI回复：" << msg << text;
+            qInfo() << "AI回复：" << msg << text;
             if (msg.contains("not found") && retry > 0)
                 AIReply(id, text, func, maxLen, retry - 1);
             return ;
@@ -13941,8 +13951,7 @@ void MainWindow::joinBattle(int type)
 {
     if (!isLiving() || cookieUid != upUid)
     {
-        qCritical() << "未开播或不是主播本人";
-        statusLabel->setText("未开播或不是主播本人");
+        showError("大乱斗", "未开播或不是主播本人");
         return ;
     }
 
@@ -13955,10 +13964,10 @@ void MainWindow::joinBattle(int type)
     };
     post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
-            statusLabel->setText(json.value("message").toString());
+            showError("开启大乱斗", json.value("message").toString());
         else if (danmakuWindow)
             danmakuWindow->setStatusText("正在匹配...");
-        qDebug() << json;
+        qInfo() << "匹配大乱斗" << json;
     });
 }
 
@@ -14221,22 +14230,21 @@ QString MainWindow::GetFileVertion(QString fullName)
     dwLen = GetFileVersionInfoSize( str_path, &vHandle);
     if (0 == dwLen)
     {
-        qDebug()<<"获取版本字节信息失败!";
-        return"";
+        qCritical()<<"获取版本字节信息失败!";
+        return "";
     }
 
     lpData =(char*)malloc(dwLen+1);
     if (NULL == lpData)
     {
-        qDebug()<<"分配内存失败";
+        qCritical()<<"分配内存失败";
         return "";
     }
     bSuccess = GetFileVersionInfo( fullName.toStdWString().c_str(),0, dwLen+1, lpData);
     if (!bSuccess)
     {
-        qDebug()<<"获取文件版本信息错误!";
-
-        return"";
+        qCritical()<<"获取文件版本信息错误!";
+        return "";
     }
     LPVOID lpBuffer = NULL;
     UINT uLen = 0;
@@ -14268,8 +14276,7 @@ QString MainWindow::GetFileVertion(QString fullName)
                              &uLen);
     if (!bSuccess)
     {
-        qDebug()<<"获取产品版本信息错误!";
-
+        qCritical()<<"获取产品版本信息错误!";
     }
     else
     {
@@ -14298,7 +14305,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
     for (int i = index; i < versions.size() - 1; i++)
     {
         QString ver = versions.at(i);
-        qDebug() << "从旧版升级：" << ver << " -> " << versions.at(i+1);
+        qInfo() << "从旧版升级：" << ver << " -> " << versions.at(i+1);
         upgradeOneVersionData(ver);
     }
 }
@@ -14410,10 +14417,19 @@ void MainWindow::readDefaultCode(QString path)
     }
 }
 
+void MainWindow::showError(QString title, QString s)
+{
+    s = title + ": " + s;
+    statusLabel->setText(s);
+    qWarning() << s;
+    tip_box->createTipCard(new NotificationEntry("", title, s));
+}
+
 void MainWindow::showError(QString s)
 {
     statusLabel->setText(s);
     qWarning() << s;
+    tip_box->createTipCard(new NotificationEntry("", "", s));
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
@@ -14432,7 +14448,7 @@ void MainWindow::on_actionMany_Robots_triggered()
     {
         QWebSocket* socket = new QWebSocket();
         connect(socket, &QWebSocket::connected, this, [=]{
-            qDebug() << "rSocket" << i << "connected";
+            qInfo() << "rSocket" << i << "connected";
             // 5秒内发送认证包
             sendVeriPacket(socket, pkRoomId, pkToken);
         });
@@ -14664,7 +14680,7 @@ void MainWindow::on_pkMelonValButton_clicked()
 
 void MainWindow::slotPkEnding()
 {
-    qDebug() << "大乱斗结束前情况：" << myVotes << matchVotes
+    qInfo() << "大乱斗结束前情况：" << myVotes << matchVotes
              << QDateTime::currentSecsSinceEpoch() << pkEndTime;
 
     pkEnding = true;
@@ -14682,7 +14698,7 @@ void MainWindow::slotPkEnding()
         sendGift(20004, num);
         localNotify("[偷塔] " + snum(myVotes) + ":" + snum(matchVotes) + "，赠送 " + snum(num) + " 个吃瓜");
         pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
-        qDebug() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
+        qInfo() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
         toutaCount++;
         chiguaCount += num;
         saveTouta();
@@ -14811,7 +14827,7 @@ void MainWindow::on_autoBlockTimeSpin_editingFinished()
 void MainWindow::triggerCmdEvent(QString cmd, LiveDanmaku danmaku, bool debug)
 {
     if (debug)
-        qDebug() << "触发事件：" << cmd;
+        qInfo() << "触发事件：" << cmd;
     emit signalCmdEvent(cmd, danmaku);
 
     sendDanmakuToSockets(cmd, danmaku);
@@ -15468,11 +15484,11 @@ void MainWindow::on_saveRecvCmdsCheck_clicked()
         QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
         saveCmdsFile = new QFile(dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt");
         saveCmdsFile->open(QIODevice::WriteOnly | QIODevice::Append);
-        qDebug() << "开始保存cmds：" << dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt";
+        qInfo() << "开始保存cmds：" << dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt";
     }
     else if (saveCmdsFile)
     {
-        qDebug() << "结束保存cmds";
+        qInfo() << "结束保存cmds";
         saveCmdsFile->close();
         saveCmdsFile->deleteLater();
         saveCmdsFile = nullptr;
@@ -15948,7 +15964,7 @@ void MainWindow::setFilter(QString filterName, QString content)
     else // 不是系统过滤器
         return ;
     settings->setValue(filterKey, content);
-    qDebug() << "设置过滤器：" << filterKey << content;
+    qInfo() << "设置过滤器：" << filterKey << content;
 }
 
 void MainWindow::on_enableFilterCheck_clicked()

@@ -61,7 +61,8 @@ INCLUDEPATH += \
     third_party/ \
     widgets/editor/ \
     third_party/gif/ \
-    third_party/picture_browser/
+    third_party/picture_browser/ \
+    third_party/notification/
 
 SOURCES += \
     third_party/color_octree/coloroctree.cpp \
@@ -88,6 +89,8 @@ SOURCES += \
     third_party/interactive_buttons/winminbutton.cpp \
     third_party/interactive_buttons/winrestorebutton.cpp \
     third_party/interactive_buttons/winsidebarbutton.cpp \
+    third_party/notification/tipbox.cpp \
+    third_party/notification/tipcard.cpp \
     widgets/csvviewer.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
@@ -161,6 +164,9 @@ HEADERS += \
     third_party/interactive_buttons/winminbutton.h \
     third_party/interactive_buttons/winrestorebutton.h \
     third_party/interactive_buttons/winsidebarbutton.h \
+    third_party/notification/notificationentry.h \
+    third_party/notification/tipbox.h \
+    third_party/notification/tipcard.h \
     widgets/clickablelabel.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \

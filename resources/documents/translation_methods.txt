@@ -51,3 +51,4 @@ AI回复=aiReply
 触发回复=triggerReply
 点歌=orderSong
 添加违禁词=addBannedWord
+显示CSV=showCSV
