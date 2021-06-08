@@ -15,8 +15,9 @@ public:
 signals:
 
 public slots:
-    void showTableMenu();
+    void read();
     void save();
+    void showTableMenu();
 
 private:
     QString filePath;

@@ -1050,7 +1050,7 @@ tips：
 
 
 
-#### 显示值表格
+#### 显示表格
 
 `showValueTable(caption, key, field1, field2, field3...)`
 
