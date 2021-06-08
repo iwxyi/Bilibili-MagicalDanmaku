@@ -35,6 +35,7 @@ protected:
     static QHash<int, QString> giftNames; // 礼物名字
     static QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
     static QHash<qint64, QString> currentGuards; // 当前船员ID-Name
+    static QHash<qint64, QPixmap> giftImages; // 礼物图片（因为数量不多，直接用即可）
 
     // 登陆信息
     static QString browserCookie;

@@ -37,6 +37,7 @@ QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
 QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QHash<qint64, QString> CommonValues::currentGuards;  // 当前船员
+QHash<qint64, QPixmap> CommonValues::giftImages;     // 礼物图片
 QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
@@ -223,6 +224,12 @@ void MainWindow::initView()
             }
         });
     });
+
+    // 礼物列表
+    const int giftImgSize = ui->upHeaderLabel->width(); // 礼物小图片的高度
+    int listHeight = giftImgSize + ui->guardCountLabel->height() + ui->guardCountTextLabel->height();
+    ui->giftListWidget->setFixedHeight(listHeight);
+
 
     // 弹幕设置瀑布流
     ui->showLiveDanmakuWindowButton->setAutoTextColor(false);
@@ -2815,10 +2822,9 @@ void MainWindow::getRobotInfo()
             pixmap.loadFromData(jpegData);
             if (pixmap.isNull())
             {
-                qWarning() << "获取头像出错";
+                showError("获取账号头像出错");
                 return ;
             }
-            pixmap.save("B:/1.png");
 
             // 设置成圆角
             int side = qMin(pixmap.width(), pixmap.height());
@@ -3827,7 +3833,6 @@ void MainWindow::getRoomCover(QString url)
             sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
             ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
                                                [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
-            ui->robotNameButton->setTextColor(fg);
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
             thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
             ui->showLiveDanmakuWindowButton->setBgColor(sbg);
@@ -8968,6 +8973,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (!merged)
         {
             appendNewLiveDanmaku(danmaku);
+            addGuiGiftList(danmaku);
         }
         if (ui->saveEveryGiftCheck->isChecked())
             saveEveryGift(danmaku);
@@ -10996,10 +11002,11 @@ void MainWindow::refreshBlockList()
         int code = json.value("code").toInt();
         if (code != 0)
         {
-            if (code == 403)
+            qWarning() << "获取禁言：" << json.value("message").toString();
+            /* if (code == 403)
                 showError("获取禁言", "您没有权限");
             else
-                showError("获取禁言", json.value("message").toString());
+                showError("获取禁言", json.value("message").toString()); */
             return ;
         }
         QJsonArray list = json.value("data").toArray();
@@ -14218,6 +14225,114 @@ void MainWindow::openLink(QString link)
     }
 }
 
+/// 显示礼物在界面上
+/// 只显示超过一定金额的礼物
+void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
+{
+    // 设置上限
+    if (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000)
+        return ;
+
+    // 测试代码：
+    // addGuiGiftList(LiveDanmaku("测试用户", 30607, "超级心心", qrand() % 20, 123456, QDateTime::currentDateTime(), "gold", 1000));
+
+    auto addToList = [=](const QPixmap& pixmap){
+        // 创建控件
+        QWidget* card = new QWidget(this);
+        QVBoxLayout* layout = new QVBoxLayout(card);
+        QLabel* imgLabel = new QLabel(card);
+        QLabel* giftNameLabel = new QLabel(danmaku.getGiftName(), card);
+        QLabel* userNameLabel = new QLabel(danmaku.getNickname(), card);
+        layout->addWidget(imgLabel);
+        layout->addWidget(giftNameLabel);
+        layout->addWidget(userNameLabel);
+        card->setLayout(layout);
+        card->show();
+
+        card->setObjectName("giftCard");
+        imgLabel->setFixedSize(giftImgSize, giftImgSize);
+        imgLabel->setAlignment(Qt::AlignCenter);
+        giftNameLabel->setAlignment(Qt::AlignCenter);
+        userNameLabel->setAlignment(Qt::AlignCenter);
+        if (danmaku.getNumber() > 1)
+        {
+            giftNameLabel->setText(danmaku.getGiftName() + "×" + snum(danmaku.getNumber()));
+            giftNameLabel->adjustSize();
+        }
+        card->setToolTip("价值：" + snum(danmaku.getTotalCoin() / 1000) + "元");
+
+        // 获取图片
+        imgLabel->setScaledContents(true);
+        imgLabel->setPixmap(pixmap);
+
+        // 添加到列表
+        auto item = new QListWidgetItem();
+        ui->giftListWidget->insertItem(0, item);
+        ui->giftListWidget->setItemWidget(item, card);
+
+        // 设置样式
+        card->setStyleSheet("#giftCard { background: transparent;"
+                            "border: 0px solid lightgray; "
+                            "border-radius: " + snum(fluentRadius) + "px; }"
+                            "#giftCard:hover { border: 1px solid lightgray; }");
+        giftNameLabel->setStyleSheet("font-size: 14px;");
+        userNameLabel->setStyleSheet("color: gray;");
+
+        layout->activate();
+        card->setFixedSize(card->sizeHint());
+        item->setSizeHint(card->size());
+    };
+
+    // 移除过多的
+    int giftListMax = 100; // 最大保留几个（过多可能会占内存）
+    if (ui->giftListWidget->count() >= giftListMax)
+    {
+        auto item = ui->giftListWidget->item(ui->giftListWidget->count() - 1);
+        auto widget = ui->giftListWidget->itemWidget(item);
+        widget->deleteLater();
+        ui->giftListWidget->takeItem(ui->giftListWidget->count() - 1);
+    }
+
+    // 本地已有，直接设置
+    qint64 id = danmaku.getGiftId();
+    if (giftImages.contains(id))
+    {
+        addToList(giftImages[id]);
+        return ;
+    }
+
+    // 先下载图片，然后进行设置
+    QString url = "http://openapi.zbmate.com/gift_icons/b/";
+    if (danmaku.isGuard()) // 舰长礼物的话，是静态的图片
+    {
+        int guard = danmaku.getGuard();
+        QString name = "jz";
+        if (guard == 2)
+            name = "td";
+        else if (guard == 1)
+            name = "zd";
+        url += name + ".png";
+    }
+    else
+    {
+        url += snum(id) + ".gif";
+    }
+    get(url, [=](QNetworkReply* reply){
+        QByteArray jpegData = reply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(jpegData);
+        if (pixmap.isNull())
+        {
+            showError("获取礼物图片出错");
+            qWarning() << "礼物地址：" << url;
+            return ;
+        }
+
+        giftImages[id] = pixmap;
+        addToList(pixmap);
+    });
+}
+
 QString MainWindow::GetFileVertion(QString fullName)
 {
 #if defined(Q_OS_WIN)
@@ -14422,9 +14537,8 @@ void MainWindow::readDefaultCode(QString path)
 
 void MainWindow::showError(QString title, QString s)
 {
-    s = title + ": " + s;
-    statusLabel->setText(s);
-    qWarning() << s;
+    statusLabel->setText(title + ": " + s);
+    qWarning() << title << ":" << s;
     tip_box->createTipCard(new NotificationEntry("", title, s));
 }
 

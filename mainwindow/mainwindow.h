@@ -872,6 +872,7 @@ private:
 
     virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
     void openLink(QString link);
+    void addGuiGiftList(const LiveDanmaku& danmaku);
 
     void initServerData();
     void openServer(int port = 0);
@@ -910,6 +911,7 @@ private:
     // 控件
     const int widgetSizeL = 48;
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
+    const int giftImgSize = 60;
     QList<WaterZoomButton*> sideButtonList;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
