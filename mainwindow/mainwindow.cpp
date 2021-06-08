@@ -9677,6 +9677,7 @@ void MainWindow::handleMessage(QJsonObject json)
                             guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
+        addGuiGiftList(danmaku);
 
         if (ui->saveEveryGuardCheck->isChecked())
             saveEveryGuard(danmaku);
@@ -14234,7 +14235,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         return ;
 
     // 测试代码：
-    // addGuiGiftList(LiveDanmaku("测试用户", 30607, "超级心心", qrand() % 20, 123456, QDateTime::currentDateTime(), "gold", 1000));
+    // addGuiGiftList(LiveDanmaku("测试用户", 30607, "测试心心", qrand() % 20, 123456, QDateTime::currentDateTime(), "gold", 10000));
 
     auto addToList = [=](const QPixmap& pixmap){
         // 创建控件
@@ -14249,8 +14250,10 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         card->setLayout(layout);
         card->show();
 
+        layout->setSpacing(1);
+        layout->setMargin(3);
         card->setObjectName("giftCard");
-        imgLabel->setFixedSize(giftImgSize, giftImgSize);
+        imgLabel->setFixedHeight(giftImgSize);
         imgLabel->setAlignment(Qt::AlignCenter);
         giftNameLabel->setAlignment(Qt::AlignCenter);
         userNameLabel->setAlignment(Qt::AlignCenter);
@@ -14262,8 +14265,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         card->setToolTip("价值：" + snum(danmaku.getTotalCoin() / 1000) + "元");
 
         // 获取图片
-        imgLabel->setScaledContents(true);
-        imgLabel->setPixmap(pixmap);
+        imgLabel->setPixmap(pixmap.scaled(giftImgSize, giftImgSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         // 添加到列表
         auto item = new QListWidgetItem();
