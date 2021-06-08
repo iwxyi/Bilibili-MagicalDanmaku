@@ -151,6 +151,7 @@ void MainWindow::initView()
     roomSelectorBtn->setRadius(fluentRadius);
     roomSelectorBtn->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
     ui->tagsButtonGroup->setSelecteable(false);
+    ui->robotInfoWidget->setMinimumWidth(upHeaderSize * 2);
 
     // 避免压缩
     ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
@@ -2817,6 +2818,7 @@ void MainWindow::getRobotInfo()
                 qWarning() << "获取头像出错";
                 return ;
             }
+            pixmap.save("B:/1.png");
 
             // 设置成圆角
             int side = qMin(pixmap.width(), pixmap.height());
@@ -3882,6 +3884,7 @@ void MainWindow::adjustRoomIdWidgetPos()
     QSize sz = QSize(ui->roomIdSpacingWidget->x() + editSize.width() + editSize.height() * 2, editSize.height() + roomIdBgWidget->layout()->margin() * 2);
     roomIdBgWidget->setFixedSize(sz);
     ui->roomIdSpacingWidget->setFixedHeight(sz.height() - 9); // 有个间距
+    ui->roomIdSpacingWidget_3->setFixedHeight(sz.height() - 9); // 有个间距
     roomIdBgWidget->move(ui->sideBarWidget->x() + ui->sideBarWidget->width() / 20, ui->sideBarWidget->y());
     roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
     ui->sideBarWidget->raise();
