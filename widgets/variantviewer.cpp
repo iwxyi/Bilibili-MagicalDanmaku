@@ -1,7 +1,5 @@
 #include <QDebug>
 #include <QHeaderView>
-#include <algorithm>
-#include <iostream>
 #include "variantviewer.h"
 #include "facilemenu.h"
 #include "orderplayerwindow.h"
@@ -28,7 +26,6 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
     lay->addWidget(tableView);
 
     model = new QStandardItemModel(tableView);
-    int tableRow = 0;
 
     // 获取标题
     QStringList titleNames, titleKeys;
@@ -74,6 +71,7 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
     }
 
     // 获取变量值
+    int tableRow = 0;
     foreach (auto key, keys)
     {
         if (key.indexOf(loopKeyRe, 0, &match) == -1)

@@ -17,6 +17,7 @@
 
 QString readTextFile(QString path, QTextCodec* codec = QTextCodec::codecForName("utf-8"));
 QString readTextFile(QString path, QString codec);
+QString readTextFileAutoCodec(QString path, QString *usedCodec = nullptr); // 自动判断GBK或UTF-8
 QString readExistedTextFile(QString path); // 文件不存在则创建
 QString readTextFileIfExist(QString path); // 如果文件不存在，则不管，只返回空字符串
 bool writeTextFile(QString path, const QString &text, QTextCodec* codec = QTextCodec::codecForName("utf-8"));

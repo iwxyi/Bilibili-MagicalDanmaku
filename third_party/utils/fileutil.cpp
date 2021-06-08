@@ -16,14 +16,12 @@ QString readTextFile(QString path, QTextCodec *codec)
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        qDebug() << "无法打开文件：" << path;
-//        QMessageBox::critical(nullptr, QObject::tr("错误"), QObject::tr("无法打开文件\n路径：%1").arg(path));
+        qWarning() << "无法打开文件：" << path;
         return "";
     }
     if (!file.isReadable())
     {
-        qDebug() << "无法打开文件：" << path;
-//        QMessageBox::critical(nullptr, QObject::tr("错误"), QObject::tr("该文件不可读\n路径：%1").arg(path));
+        qWarning() << "无法打开文件：" << path;
         return "";
     }
     QTextStream text_stream(&file);
@@ -33,6 +31,34 @@ QString readTextFile(QString path, QTextCodec *codec)
         text = text_stream.readAll();
     }
     file.close();
+    return text;
+}
+
+/// 根据UTF-8和GBK，自动判断编码
+QString readTextFileAutoCodec(QString path, QString* usedCodec)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning() << "无法打开文件：" << path;
+        return "";
+    }
+    QByteArray ba = file.readAll();
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    QTextCodec::ConverterState state;
+    QString text = codec->toUnicode(ba.constData(), ba.size(), &state);
+    if (state.invalidChars > 0)
+    {
+        text = QTextCodec::codecForName("GBK")->toUnicode(ba);
+        if (usedCodec)
+            *usedCodec = "GBK";
+    }
+    else
+    {
+        text = ba;
+        if (usedCodec)
+            *usedCodec = "UTF-8";
+    }
     return text;
 }
 

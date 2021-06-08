@@ -88,6 +88,7 @@ SOURCES += \
     third_party/interactive_buttons/winminbutton.cpp \
     third_party/interactive_buttons/winrestorebutton.cpp \
     third_party/interactive_buttons/winsidebarbutton.cpp \
+    widgets/csvviewer.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
@@ -161,6 +162,7 @@ HEADERS += \
     third_party/interactive_buttons/winrestorebutton.h \
     third_party/interactive_buttons/winsidebarbutton.h \
     widgets/clickablelabel.h \
+    widgets/csvviewer.h \
     widgets/custompaintwidget.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \

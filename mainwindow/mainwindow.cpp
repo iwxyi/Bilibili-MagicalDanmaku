@@ -18,6 +18,7 @@
 #include "guardonlinedialog.h"
 #include "watercirclebutton.h"
 #include "variantviewer.h"
+#include "csvviewer.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -7825,8 +7826,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList tableFileds = match.captured(1).trimmed().split(QRegularExpression("\\s*,\\s*"));
-            QString caption = tableFileds.takeFirst();
-            QString loopKeyStr = tableFileds.takeFirst();
+            QString caption, loopKeyStr;
+            if (tableFileds.size() >= 2)
+                caption = tableFileds.takeFirst();
+            if (tableFileds.size() >= 1)
+                loopKeyStr = tableFileds.takeFirst();
             if (loopKeyStr.trimmed().isEmpty()) // 关键词是空的，不知道要干嘛
                 return true;
             if (!loopKeyStr.contains("/"))
@@ -7834,6 +7838,29 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
 
             auto viewer = new VariantViewer(caption, heaps, loopKeyStr, tableFileds, this);
             viewer->show();
+            return true;
+        }
+    }
+
+    if (msg.contains("showCSV"))
+    {
+        re = RE("showCSV\\s*\\((.*)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString path = match.captured(1);
+            auto showCSV = [=](QString path){
+                CSVViewer * view = new CSVViewer(path, this);
+                view->show();
+            };
+
+            if (isFileExist(path))
+            {
+                showCSV(path);
+            }
+            else if (isFileExist(this->dataPath + path))
+            {
+                showCSV(this->dataPath + path);
+            }
             return true;
         }
     }
