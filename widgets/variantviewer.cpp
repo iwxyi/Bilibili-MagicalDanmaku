@@ -222,7 +222,7 @@ void VariantViewer::showTableMenu()
         item->setData("", Qt::DisplayRole);
     })->disable(row < 0);
 
-    menu->addAction("删除行", [=]{
+    menu->addAction("删除选中行", [=]{
         auto selects = tableView->selectionModel()->selectedRows(0);
         QList<int> deletedRows;
 

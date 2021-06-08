@@ -19,6 +19,9 @@ public slots:
     void save();
     void showTableMenu();
 
+    void startModify();
+    void endModify();
+
 private:
     QString filePath;
     QString fileCodec;

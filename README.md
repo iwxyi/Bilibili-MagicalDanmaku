@@ -1014,6 +1014,7 @@ tips：
 | triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
+| showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
@@ -1050,7 +1051,7 @@ tips：
 
 
 
-#### 显示表格
+#### 显示值列表
 
 `showValueTable(caption, key, field1, field2, field3...)`
 

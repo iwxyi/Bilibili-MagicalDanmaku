@@ -33,6 +33,7 @@ CSVViewer::CSVViewer(QString filePath, QWidget *parent) : QDialog(parent)
     {
         int rowHeight = tableView->rowHeight(0);
         int shouldHeight = rowHeight * model->rowCount();
+        shouldHeight += tableView->horizontalHeader()->height() + tableView->horizontalScrollBar()->height();
         shouldHeight = qMax(shouldHeight, needHeight);
         needHeight = qMin(parent->height() - titleBarHeight, shouldHeight);
     }
@@ -59,7 +60,7 @@ CSVViewer::CSVViewer(QString filePath, QWidget *parent) : QDialog(parent)
 void CSVViewer::read()
 {
     model->clear();
-    disconnect(model, &QStandardItemModel::itemChanged, this, &CSVViewer::save);
+    startModify();
     QString content = readTextFileAutoCodec(filePath, &fileCodec);
     QStringList lines = content.split("\n", QString::SkipEmptyParts);
     if (lines.size())
@@ -75,7 +76,7 @@ void CSVViewer::read()
             model->setItem(i, j, new QStandardItem(cells.at(j)));
         }
     }
-    connect(model, &QStandardItemModel::itemChanged, this, &CSVViewer::save);
+    endModify();
 
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     QTimer::singleShot(0, [=]{
@@ -92,7 +93,10 @@ void CSVViewer::save()
         for (int col = 0; col < model->columnCount(); col++)
         {
             auto item = model->item(row, col);
-            l.append(item->data(Qt::DisplayRole).toString());
+            if (item)
+                l.append(item->data(Qt::DisplayRole).toString());
+            else
+                l.append("");
         }
         sl.append(l.join(","));
     }
@@ -107,7 +111,33 @@ void CSVViewer::showTableMenu()
 
     FacileMenu* menu = new FacileMenu(this);
 
-    menu->addAction("复制选中行", [=]{
+    menu->addAction("上方插入行 (&W)", [=]{
+        auto selects = tableView->selectionModel()->selectedRows(0);
+        QList<int> insertRows;
+        for (int i = 0; i < selects.size(); i++)
+            insertRows.append(selects.at(i).row());
+        std::sort(insertRows.begin(), insertRows.end(), [=](int a, int b) { return a > b; });
+        startModify();
+        for (int i = 0; i < insertRows.size(); i++)
+            model->insertRow(insertRows.at(i));
+        endModify();
+        save();
+    });
+
+    menu->addAction("下方插入行 (&S)", [=]{
+        auto selects = tableView->selectionModel()->selectedRows(0);
+        QList<int> insertRows;
+        for (int i = 0; i < selects.size(); i++)
+            insertRows.append(selects.at(i).row());
+        std::sort(insertRows.begin(), insertRows.end(), [=](int a, int b) { return a > b; });
+        startModify();
+        for (int i = 0; i < insertRows.size(); i++)
+            model->insertRow(insertRows.at(i) + 1);
+        endModify();
+        save();
+    });
+
+    menu->addAction("复制选中行 (&C)", [=]{
         QStringList sl;
         auto selects = tableView->selectionModel()->selectedRows(0);
         for (int i = 0; i < selects.size(); i++)
@@ -125,11 +155,7 @@ void CSVViewer::showTableMenu()
         QApplication::clipboard()->setText(ss);
     });
 
-    menu->addAction("刷新", [=]{
-        read();
-    });
-
-    menu->split()->addAction("删除行", [=]{
+    menu->addAction("删除选中行 (&D)", [=]{
         auto selects = tableView->selectionModel()->selectedRows(0);
         QList<int> deletedRows;
 
@@ -142,11 +168,60 @@ void CSVViewer::showTableMenu()
 
         // 倒序删除项
         std::sort(deletedRows.begin(), deletedRows.end(), [=](int a, int b) { return a > b; });
+        startModify();
         for (int i = 0; i < deletedRows.size(); i++)
             model->removeRow(deletedRows.at(i));
+        endModify();
 
+        save();
     })->disable(row < 0);
 
+    auto colMenu = menu->addMenu("列操作");
+
+    colMenu->addAction("左边插入列", [=]{
+        int currentCol = tableView->currentIndex().column();
+        if (currentCol < 0)
+            return ;
+        startModify();
+        model->insertColumn(currentCol);
+        endModify();
+        save();
+    });
+
+    colMenu->addAction("右边插入列", [=]{
+        int currentCol = tableView->currentIndex().column();
+        if (currentCol < 0)
+            return ;
+        startModify();
+        model->insertColumn(currentCol + 1);
+        endModify();
+        save();
+    });
+
+    colMenu->split()->addAction("删除列", [=]{
+        int currentCol = tableView->currentIndex().column();
+        if (currentCol < 0)
+            return ;
+        startModify();
+        model->removeColumn(currentCol);
+        endModify();
+        save();
+    });
+
+    menu->split()->addAction("刷新 (&R)", [=]{
+        read();
+    });
+
     menu->exec();
+}
+
+void CSVViewer::startModify()
+{
+    disconnect(model, &QStandardItemModel::itemChanged, this, &CSVViewer::save);
+}
+
+void CSVViewer::endModify()
+{
+    connect(model, &QStandardItemModel::itemChanged, this, &CSVViewer::save);
 }
 
