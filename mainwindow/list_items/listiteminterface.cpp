@@ -2,9 +2,9 @@
 
 ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
 {
-    _bgLabel = new QLabel(this);
+    _bgLabel = new CustomPaintWidget(this);
     _bgLabel->move(_cardMargin, _cardMargin);
-    _bgLabel->setStyleSheet("background: white; border-radius: 5px;");
+    // _bgLabel->setStyleSheet("background: white; border-radius: 5px;");
 
     vlayout = new QVBoxLayout(this);
     setLayout(vlayout);
@@ -25,6 +25,22 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     btn->setCursor(Qt::PointingHandCursor);
     btn->setFixedForePos();
     check->setCursor(Qt::PointingHandCursor);
+
+    const int radius = 5;
+    _bgLabel->setPaint([=](QRect, QPainter* painter) {
+        QPainterPath path;
+        path.addRoundedRect(_bgLabel->rect(), radius, radius);
+        /* {
+            int left = check->geometry().right() + (check->x() - _bgLabel->x()) * 2;
+            int right = btn->x() - (_bgLabel->geometry().right() - btn->geometry().right()) * 2;
+            int bottom = check->geometry().bottom() + vlayout->spacing() / 2;
+            QPainterPath cutted;
+            cutted.addRoundedRect(QRect(left, 0, right - left, bottom), radius, radius);
+            path -= cutted;
+        } */
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->fillPath(path, Qt::white);
+    });
 }
 
 void ListItemInterface::setRow(int row)

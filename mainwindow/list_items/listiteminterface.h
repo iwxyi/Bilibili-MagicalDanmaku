@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include "myjson.h"
 #include "interactivebuttonbase.h"
+#include "custompaintwidget.h"
 
 class ListItemInterface : public QWidget
 {
@@ -53,7 +54,7 @@ public:
     InteractiveButtonBase* btn;
 
 protected:
-    QLabel* _bgLabel;
+    CustomPaintWidget* _bgLabel;
     QVBoxLayout* vlayout;
     QHBoxLayout* hlayout;
 
