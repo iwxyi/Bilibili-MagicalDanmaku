@@ -42,9 +42,7 @@ public slots:
 
 public:
     QTimer* timer;
-    QCheckBox* check;
     QSpinBox* spin;
-    InteractiveButtonBase* btn;
     QPlainTextEdit* edit;
 };
 

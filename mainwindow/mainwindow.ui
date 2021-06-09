@@ -1065,6 +1065,11 @@ background-repeat:none;</string>
 	background: transparent;
 	border-radius: 5px;
 	border: 1px solid lightgray;
+}
+
+#robotSendCountCard:hover
+{
+	background: #F7F7FF;
 }</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_61">

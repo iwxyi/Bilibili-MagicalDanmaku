@@ -3,26 +3,13 @@
 
 ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
 {
-    check = new QCheckBox("启用", this);
-    btn = new InteractiveButtonBase("发送", this);
     keyEdit = new QLineEdit(this);
     replyEdit = new ConditionEditor(this);
 
-    QHBoxLayout* hlayout = new QHBoxLayout;
-    hlayout->addWidget(check);
-    hlayout->addWidget(new QWidget(this));
-    hlayout->addWidget(btn);
-    hlayout->setStretch(1, 1);
-
-    vlayout->addLayout(hlayout);
     vlayout->addWidget(keyEdit);
     vlayout->addWidget(replyEdit);
     vlayout->activate();
 
-    btn->setBorderColor(Qt::black);
-    btn->setCursor(Qt::PointingHandCursor);
-    btn->setFixedForePos();
-    check->setCursor(Qt::PointingHandCursor);
     keyEdit->setPlaceholderText("关键词正则表达式");
     keyEdit->setStyleSheet("QLineEdit{background: transparent;}");
     replyEdit->setPlaceholderText("自动回复，多行则随机发送");

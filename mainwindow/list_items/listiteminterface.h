@@ -6,7 +6,9 @@
 #include <QResizeEvent>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QCheckBox>
 #include "myjson.h"
+#include "interactivebuttonbase.h"
 
 class ListItemInterface : public QWidget
 {
@@ -46,9 +48,14 @@ public slots:
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
+public:
+    QCheckBox* check;
+    InteractiveButtonBase* btn;
+
 protected:
     QLabel* _bgLabel;
     QVBoxLayout* vlayout;
+    QHBoxLayout* hlayout;
 
 private:
     int _row;

@@ -3,26 +3,13 @@
 
 EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 {
-    check = new QCheckBox("启用", this);
-    btn = new InteractiveButtonBase("发送", this);
     eventEdit = new QLineEdit(this);
     actionEdit = new ConditionEditor(this);
 
-    QHBoxLayout* hlayout = new QHBoxLayout;
-    hlayout->addWidget(check);
-    hlayout->addWidget(new QWidget(this));
-    hlayout->addWidget(btn);
-    hlayout->setStretch(1, 1);
-
-    vlayout->addLayout(hlayout);
     vlayout->addWidget(eventEdit);
     vlayout->addWidget(actionEdit);
     vlayout->activate();
 
-    btn->setBorderColor(Qt::black);
-    btn->setCursor(Qt::PointingHandCursor);
-    btn->setFixedForePos();
-    check->setCursor(Qt::PointingHandCursor);
     eventEdit->setPlaceholderText("事件命令");
     eventEdit->setStyleSheet("QLineEdit{background: transparent;}");
     actionEdit->setPlaceholderText("响应动作，多行则随机执行一行");

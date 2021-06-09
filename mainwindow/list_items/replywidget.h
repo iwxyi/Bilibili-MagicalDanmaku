@@ -41,8 +41,6 @@ public slots:
     void triggerIfMatch(QString msg, LiveDanmaku danmaku);
 
 public:
-    QCheckBox* check;
-    InteractiveButtonBase* btn;
     QLineEdit* keyEdit;
     QPlainTextEdit* replyEdit;
 

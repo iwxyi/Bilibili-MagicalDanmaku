@@ -9,6 +9,22 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     vlayout = new QVBoxLayout(this);
     setLayout(vlayout);
     vlayout->setMargin(vlayout->margin() + _cardMargin);
+
+    check = new QCheckBox("启用", this);
+    btn = new InteractiveButtonBase("发送", this);
+
+    hlayout = new QHBoxLayout;
+    hlayout->addWidget(check);
+    hlayout->addWidget(new QWidget(this));
+    hlayout->addWidget(btn);
+    hlayout->setStretch(1, 1);
+    hlayout->setMargin(0);
+    vlayout->addLayout(hlayout);
+
+    btn->setBorderColor(Qt::black);
+    btn->setCursor(Qt::PointingHandCursor);
+    btn->setFixedForePos();
+    check->setCursor(Qt::PointingHandCursor);
 }
 
 void ListItemInterface::setRow(int row)
