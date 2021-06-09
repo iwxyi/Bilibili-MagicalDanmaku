@@ -1840,18 +1840,29 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前命令修改过延时
         autoMsgTimer->setInterval(AUTO_MSG_CD);
 
-    QStringList& sl = autoMsgQueues[0].first;
-    LiveDanmaku& danmaku = autoMsgQueues[0].second;
-    QString msg = sl.takeFirst();
-    if (sl.isEmpty())
-        autoMsgQueues.removeFirst();
+    QStringList* sl = &autoMsgQueues[0].first;
+    LiveDanmaku* danmaku = &autoMsgQueues[0].second;
+    QString msg = sl->takeFirst();
+
+    if (sl->isEmpty()) // 消息发送完了
+    {
+        danmaku = new LiveDanmaku(autoMsgQueues[0].second);
+        sl = new QStringList;
+        autoMsgQueues.removeFirst(); // 此时 danmaku 对象也有已经删掉了
+        QTimer::singleShot(0, [=]{
+            delete sl;
+            delete danmaku;
+        });
+    }
     if (!autoMsgQueues.size())
         autoMsgTimer->stop();
 
     CmdResponse res = NullRes;
     int resVal = 0;
-    if (!execFunc(msg, danmaku, res, resVal)) // 先判断能否执行命令，如果是发送弹幕
-    {
+    bool exec = execFunc(msg, *danmaku, res, resVal);
+
+    if (!exec) // 先判断能否执行命令，如果是发送弹幕
+    {    
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
         sendMsg(msg);
@@ -1864,7 +1875,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     {
         if (res == AbortRes) // 终止这一轮后面的弹幕
         {
-            if (!sl.isEmpty()) // 如果为空，则自动为终止
+            if (!sl->isEmpty()) // 如果为空，则自动为终止
                 autoMsgQueues.removeFirst();
             return ;
         }
@@ -6548,7 +6559,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
 {
     QRegularExpression re("^\\s*>");
     QRegularExpressionMatch match;
-    int matchResult = -1;
     if (msg.indexOf(re) == -1)
         return false;
 
