@@ -502,7 +502,7 @@ background-repeat:none;</string>
                 </spacer>
                </item>
                <item>
-                <widget class="QWidget" name="guardCountWidget" native="true">
+                <widget class="QWidget" name="guardCountCard" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>140</width>
@@ -510,7 +510,7 @@ background-repeat:none;</string>
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">#guardCountWidget
+                  <string notr="true">#guardCountCard
 {
 	background: #f7f7ff;
 	border: none;
@@ -676,7 +676,7 @@ background-repeat:none;</string>
                 </spacer>
                </item>
                <item>
-                <widget class="QWidget" name="hotCountWidget" native="true">
+                <widget class="QWidget" name="hotCountCard" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>140</width>
@@ -684,7 +684,7 @@ background-repeat:none;</string>
                   </size>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">#hotCountWidget
+                  <string notr="true">#hotCountCard
 {
 	background: #f7f7ff;
 	border: none;
@@ -1062,14 +1062,14 @@ background-repeat:none;</string>
                  <property name="styleSheet">
                   <string notr="true">#robotSendCountCard
 {
-	background: transparent;
+	background: #F7F7FF;
 	border-radius: 5px;
-	border: 1px solid lightgray;
+	border: 0px solid lightgray;
 }
 
-#robotSendCountCard:hover
+#robotSendCountCard0:hover
 {
-	background: #F7F7FF;
+	background: ;
 }</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_61">
@@ -1200,6 +1200,22 @@ background-repeat:none;</string>
 	border-radius: 5px;
 }</string>
             </property>
+            <layout class="QVBoxLayout" name="verticalLayout_63">
+             <item>
+              <widget class="QLabel" name="label_52">
+               <property name="styleSheet">
+                <string notr="true">font-size: 32px;
+color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;广&lt;/p&gt;&lt;p&gt;告&lt;/p&gt;&lt;p&gt;位&lt;/p&gt;&lt;p&gt;招&lt;/p&gt;&lt;p&gt;租&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -1294,8 +1310,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>701</width>
-             <height>681</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">

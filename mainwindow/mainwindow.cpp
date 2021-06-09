@@ -142,8 +142,8 @@ void MainWindow::initView()
     ui->roomDescriptionBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     QFontMetrics fm(ui->roomDescriptionBrowser->font());
     ui->roomDescriptionBrowser->setMaximumHeight(fm.lineSpacing() * 5);
-    ui->guardCountWidget->setMinimumSize(ui->guardCountWidget->sizeHint());
-    ui->hotCountWidget->setMinimumSize(ui->hotCountWidget->sizeHint());
+    ui->guardCountCard->setMinimumSize(ui->guardCountCard->sizeHint());
+    ui->hotCountCard->setMinimumSize(ui->hotCountCard->sizeHint());
     int upHeaderSize = ui->upNameLabel->sizeHint().height() + ui->upLevelLabel->sizeHint().height();
     ui->upHeaderLabel->setFixedSize(upHeaderSize * 2, upHeaderSize * 2);
     ui->robotHeaderLabel->setMinimumSize(ui->upHeaderLabel->size());
@@ -382,13 +382,13 @@ void MainWindow::initStyle()
                             background: white;\
                             border-radius: " + snum(fluentRadius) + "px;\
                         }");
-    ui->guardCountWidget->setStyleSheet("#guardCountWidget\
+    ui->guardCountCard->setStyleSheet("#guardCountWidget\
                         {\
                             background: #f7f7ff;\
                             border: none;\
                             border-radius: " + snum(fluentRadius) + "px;\
                         }");
-    ui->hotCountWidget->setStyleSheet("#hotCountWidget\
+    ui->hotCountCard->setStyleSheet("#hotCountWidget\
                        {\
                            background: #f7f7ff;\
                            border: none;\
@@ -3862,6 +3862,18 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::WindowText, fg);
             ui->appNameLabel->setPalette(pa);
             ui->appDescLabel->setPalette(pa);
+
+            QColor bgTrans = sbg;
+            qint64 alpha = (3 * ( bgTrans.red()) * (bgTrans.red())
+                         + 4 * (bgTrans.green()) * (bgTrans.green())
+                         + 2 * (bgTrans.blue()) * (bgTrans.blue()))
+                         / 9 / 255;
+            alpha = 32 + alpha / 4; // 32~96
+            bgTrans.setAlpha(alpha);
+            QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(fluentRadius) + " }";
+            ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
+            ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
+            ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
