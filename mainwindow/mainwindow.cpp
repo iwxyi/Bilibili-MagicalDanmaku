@@ -3864,7 +3864,7 @@ void MainWindow::getRoomCover(QString url)
             ui->appDescLabel->setPalette(pa);
 
             QColor bgTrans = sbg;
-            qint64 alpha = (3 * ( bgTrans.red()) * (bgTrans.red())
+            int alpha = (3 * ( bgTrans.red()) * (bgTrans.red())
                          + 4 * (bgTrans.green()) * (bgTrans.green())
                          + 2 * (bgTrans.blue()) * (bgTrans.blue()))
                          / 9 / 255;
@@ -6983,7 +6983,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString url = caps.at(1);
             qInfo() << "执行命令：" << caps;
-            QDesktopServices::openUrl(url);
+            openLink(url);
             return true;
         }
     }
@@ -14210,41 +14210,61 @@ void MainWindow::openLink(QString link)
 
     link = link.right(link.length() - 7);
 
-    if (link == "capture_manager")
+    if (link == "capture_manager") // 截图管理
     {
         on_actionPicture_Browser_triggered();
     }
-    else if (link == "start_pk")
+    else if (link == "start_pk") // 开始大乱斗
     {
         on_actionJoin_Battle_triggered();
     }
-    else if (link == "guard_catch")
+    else if (link == "guard_catch") // 黑听舰长捕捉
     {
         on_actionGuard_Online_triggered();
     }
-    else if (link == "catch_you")
+    else if (link == "catch_you") // 跑骚捕捉
     {
         on_actionCatch_You_Online_triggered();
     }
-    else if (link == "live_status")
+    else if (link == "live_status") // 直播间状态查询
     {
         on_actionRoom_Status_triggered();
     }
-    else if (link == "lyrics")
+    else if (link == "lyrics") // 发送歌词
     {
         on_actionCreate_Video_LRC_triggered();
     }
-    else if (link == "video_stream")
+    else if (link == "video_stream_url") // 拷贝视频流地址
     {
         on_actionGet_Play_Url_triggered();
     }
-    else if (link == "donation")
+    else if (link == "donation") // 捐赠
     {
         on_actionSponsor_triggered();
     }
-    else if (link == "copy_qq")
+    else if (link == "copy_qq") // 复制QQ群
     {
         QApplication::clipboard()->setText("1038738410");
+    }
+    else if (link == "live_danmaku")
+    {
+        on_actionShow_Live_Danmaku_triggered();
+    }
+    else if (link == "live_video")
+    {
+        on_actionShow_Live_Video_triggered();
+    }
+    else if (link == "pk_live_video")
+    {
+        on_actionShow_PK_Video_triggered();
+    }
+    else if (link == "music")
+    {
+        on_actionShow_Order_Player_Window_triggered();
+    }
+    else if (link == "send_long_text")
+    {
+        on_actionSend_Long_Text_triggered();
     }
 }
 
