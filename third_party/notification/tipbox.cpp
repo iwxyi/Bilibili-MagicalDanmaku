@@ -3,6 +3,7 @@
 TipBox::TipBox(QWidget *parent) : QWidget(parent), suitable_width(CARD_FIXED_WIDTH),
     bg_color(Qt::white), font_color(Qt::black), btn_color(Qt::blue)
 {
+    setAttribute(Qt::WA_TransparentForMouseEvents, true);
     setMinimumSize(CARD_FIXED_WIDTH, 0);
 
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
@@ -16,6 +17,7 @@ TipCard *TipBox::createTipCard(NotificationEntry* noti)
 {
     TipCard * card = new TipCard(this, noti);
     addCard(card);
+    setAttribute(Qt::WA_TransparentForMouseEvents, false);
     return card;
 }
 
@@ -150,6 +152,9 @@ void TipBox::slotCardClosed(TipCard* removed_card)
     connect(animation, SIGNAL(finished()), animation, SLOT(deleteLater()));
     connect(animation, &QPropertyAnimation::finished, [=]{ removed_card->noti->deleteLater(); delete removed_card; });
     cards.removeOne(removed_card);
+
+    if (cards.size() == 0)
+        setAttribute(Qt::WA_TransparentForMouseEvents, true);
 }
 
 void TipBox::enterEvent(QEvent *event)
