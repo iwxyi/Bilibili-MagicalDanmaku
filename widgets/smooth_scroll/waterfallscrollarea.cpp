@@ -148,7 +148,7 @@ void WaterfallScrollArea::adjustWaterfallPos()
 {
     // 计算各类数值
     QRect cr = this->contentsRect();
-    cr.setWidth(qMax(1, cr.width() - this->verticalScrollBar()->width()));
+    cr.setWidth(qMax(1, cr.width() - (this->verticalScrollBar()->isVisible() ? this->verticalScrollBar()->width() : 0)));
     colCount = this->fixedColCount; // 使用的列数
     if (colCount <= 0) // 非固定，自动调整
         colCount = (cr.width() - itemMarginH * 2 + itemSpacingH) / (colWidth + itemSpacingH);
@@ -226,10 +226,10 @@ void WaterfallScrollArea::adjustWaterfallPos()
 void WaterfallScrollArea::adjustVariantWidthPos()
 {
     QRect cr = this->contentsRect();
-    cr.setWidth(qMax(1, cr.width() - this->verticalScrollBar()->width()));
+    cr.setWidth(qMax(1, cr.width() - (this->verticalScrollBar()->isVisible() ? this->verticalScrollBar()->width() : 0)));
 
     bottomLines.clear();
-    bottomLines.append(BottomLine{itemMarginH, cr.width() - itemMarginH * 2, itemMarginV});
+    bottomLines.append(BottomLine{itemMarginH, cr.width() - itemMarginH, itemMarginV});
     foreach (auto w, widgets)
     {
         placeVariantWidthWidget(w);

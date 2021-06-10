@@ -7,45 +7,352 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>603</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>神奇弹幕</string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>120</x>
-     <y>20</y>
-     <width>151</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">font-size: 20px;</string>
-   </property>
-   <property name="text">
-    <string>购买VIP尊享版</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>60</y>
-     <width>231</width>
-     <height>131</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启功能：&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-   </property>
-  </widget>
+  <property name="styleSheet">
+   <string notr="true">#BuyVIPDialog
+{
+	background:qlineargradient(
+					spread:pad,
+					x1:0, y1:0,
+					x2:0, y2:1,
+					stop:0 #ffe5d9,
+					stop:1 #ffffff);
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1,1,0,0">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
+     <property name="leftMargin">
+      <number>24</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="styleSheet">
+          <string notr="true">font-size: 28px;
+font-weight: 700;</string>
+         </property>
+         <property name="text">
+          <string>神奇弹幕尊享版</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="styleSheet">
+          <string notr="true">color: #c0a095;</string>
+         </property>
+         <property name="text">
+          <string>最高折扣</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="styleSheet">
+          <string notr="true">font-size: 24px;
+color: #ff6464;
+font-weight: 500;</string>
+         </property>
+         <property name="text">
+          <string>80%</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="imageLabel">
+       <property name="minimumSize">
+        <size>
+         <width>64</width>
+         <height>64</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border-image:url(:/illustrations/bear);
+background-position:center;
+background-repeat:none;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>享有以下功能：</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="WaterfallScrollArea" name="scrollArea">
+     <property name="styleSheet">
+      <string notr="true">#scrollArea
+{
+	background: transparent;
+	border: none;
+}
+
+QLabel
+{
+	background: white;
+	border-radius: 10px;
+	padding: 8px;
+}
+
+QLabel:hover
+{
+	background: #fef6f3;
+}</string>
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>382</width>
+        <height>146</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">#scrollAreaWidgetContents
+{
+	background: transparent;
+	border: none;
+}</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>32</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="typeRRLabel" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#typeRRLabel
+{
+	background: #C0B6DF;
+	border-radius: 10px;
+}</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="typeRoomLabel" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#typeRoomLabel
+{
+	background: #FF8680;
+	border-radius: 10px;
+}</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QWidget" name="typeRobotLabel" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#typeRobotLabel
+{
+	background: #DFA7A4;
+	border-radius: 10px;
+}</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_4">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,0,1,0,1">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="priceLabel">
+       <property name="styleSheet">
+        <string notr="true">font-size: 24px;</string>
+       </property>
+       <property name="text">
+        <string>￥49</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="WaterFloatButton" name="payButton">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font-size: 18px;
+font-weight: 500;</string>
+       </property>
+       <property name="text">
+        <string>支付</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>WaterFloatButton</class>
+   <extends>QPushButton</extends>
+   <header>waterfloatbutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterfallScrollArea</class>
+   <extends>QScrollArea</extends>
+   <header>waterfallscrollarea.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -15,6 +15,9 @@ public:
     explicit BuyVIPDialog(QString roomId, QString upId, QString userId, QString upName, QString username, QWidget *parent = nullptr);
     ~BuyVIPDialog();
 
+protected:
+    void resizeEvent(QResizeEvent* e) override;
+
 private:
     Ui::BuyVIPDialog *ui;
 };
