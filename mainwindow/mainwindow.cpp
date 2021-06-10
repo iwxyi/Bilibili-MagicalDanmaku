@@ -371,6 +371,9 @@ void MainWindow::initView()
     }
     connect(appendListItemButton, SIGNAL(clicked()), this, SLOT(addListItemOnCurrentPage()));
 
+    ui->vipExtensionButton->setBgColor(Qt::white);
+    ui->vipExtensionButton->setRadius(fluentRadius);
+
     // 通知
     tip_box = new TipBox(this);
     connect(tip_box, &TipBox::signalCardClicked, [=](NotificationEntry* n){
@@ -2508,6 +2511,8 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+        if (!hasPermission())
+            return ;
         if ((!manual && !shallAutoMsg(sl, manual)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
         {
             if (!danmaku.isPkLink())
@@ -2672,6 +2677,8 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+        if (!hasPermission())
+            return ;
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
             qInfo() << "未开播，不做操作(event)" << sl;
@@ -3851,6 +3858,7 @@ void MainWindow::updatePermission()
             ui->droplight->setNormalColor(themeSbg);
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
+            ui->vipExtensionButton->hide();
         }
         else
         {
@@ -3858,6 +3866,7 @@ void MainWindow::updatePermission()
             ui->droplight->setNormalColor(Qt::white);
             ui->droplight->setTextColor(Qt::black);
             ui->droplight->setToolTip("点击购买尊享版");
+            ui->vipExtensionButton->show();
         }
     });
 }
@@ -12565,6 +12574,11 @@ void MainWindow::on_actionShow_Live_Video_triggered()
 {
     if (roomId.isEmpty())
         return ;
+    if (!hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        return ;
+    }
 
     LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
     connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
@@ -16283,6 +16297,11 @@ void MainWindow::on_actionBuy_VIP_triggered()
 }
 
 void MainWindow::on_droplight_clicked()
+{
+    on_actionBuy_VIP_triggered();
+}
+
+void MainWindow::on_vipExtensionButton_clicked()
 {
     on_actionBuy_VIP_triggered();
 }

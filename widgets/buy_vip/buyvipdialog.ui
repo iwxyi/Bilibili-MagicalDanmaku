@@ -207,7 +207,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>417</width>
-        <height>175</height>
+        <height>166</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -333,11 +333,14 @@ QLabel:hover
 }</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>5</number>
+        </property>
         <property name="leftMargin">
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>12</number>
+         <number>6</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -345,6 +348,26 @@ QLabel:hover
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QWidget" name="typeRRIndication" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background: white;
+margin: 20px;</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QWidget" name="typeRRBgCard" native="true">
           <property name="cursor">
@@ -462,11 +485,14 @@ margin: 20px</string>
 }</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_6">
+        <property name="spacing">
+         <number>5</number>
+        </property>
         <property name="leftMargin">
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>12</number>
+         <number>6</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -474,6 +500,26 @@ margin: 20px</string>
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QWidget" name="typeRoomIndication" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background: white;
+margin: 20px;</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QWidget" name="typeRoomBgCard" native="true">
           <property name="cursor">
@@ -590,11 +636,14 @@ margin: 20px</string>
 }</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_8">
+        <property name="spacing">
+         <number>5</number>
+        </property>
         <property name="leftMargin">
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>12</number>
+         <number>6</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -602,6 +651,26 @@ margin: 20px</string>
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QWidget" name="typeRobotIndication" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>2</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background: white;
+margin: 20px;</string>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="QWidget" name="typeRobotBgCard" native="true">
           <property name="cursor">

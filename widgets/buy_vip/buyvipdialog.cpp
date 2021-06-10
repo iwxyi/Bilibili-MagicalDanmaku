@@ -199,17 +199,35 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
                     ui->typeRoomBgCard,
                     ui->typeRobotBgCard
         };
+        QList<QWidget*> typeIndications {
+            ui->typeRRIndication,
+                    ui->typeRoomIndication,
+                    ui->typeRobotIndication
+        };
+        foreach (auto w, typeIndications)
+        {
+            w->setStyleSheet("");
+        }
+        QList<InteractiveButtonBase*> btns;
         foreach (QWidget* w, typeCards)
         {
             InteractiveButtonBase* btn = new InteractiveButtonBase(w);
+            btns.append(btn);
             btn->setRadius(10);
             btn->setFixedSize(w->size());
             btn->show();
             connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                 vipType = typeCards.indexOf(w) + 1;
                 updatePrice();
+
+                foreach (auto w, typeIndications)
+                {
+                    w->setStyleSheet("");
+                }
+                typeIndications.at(vipType - 1)->setStyleSheet("background: white; margin: 35px;");
             });
         }
+        btns.first()->simulateStatePress();
     }
 }
 
@@ -248,7 +266,7 @@ void BuyVIPDialog::on_couponButton_clicked()
 {
     QString coupon;
     bool ok = false;
-    coupon = QInputDialog::getText(this, "神奇弹幕", "请输入优惠券码", QLineEdit::Normal, this->couponCode, &ok);
+    coupon = QInputDialog::getText(this, "神奇弹幕", "请输入优惠券码，将会在最终支付时折扣", QLineEdit::Normal, this->couponCode, &ok);
     if (!ok)
         return ;
     this->couponCode = coupon;

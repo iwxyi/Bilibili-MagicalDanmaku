@@ -681,6 +681,8 @@ private slots:
 
     void on_droplight_clicked();
 
+    void on_vipExtensionButton_clicked();
+
 private:
     void initView();
     void initStyle();

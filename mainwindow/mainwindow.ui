@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -6033,6 +6033,16 @@ QCheckBox::indicator:checked:pressed {
          <number>0</number>
         </property>
         <item>
+         <widget class="InteractiveButtonBase" name="vipExtensionButton">
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="text">
+           <string>免费版用户无法使用回复、事件等功能</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="MyTabWidget" name="tabWidget">
           <property name="styleSheet">
            <string notr="true">QTabWidget
@@ -7359,6 +7369,17 @@ font-weight: 500;</string>
  </widget>
  <customwidgets>
   <customwidget>
+   <class>WaterFloatButton</class>
+   <extends>QPushButton</extends>
+   <header>waterfloatbutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterfallScrollArea</class>
+   <extends>QScrollArea</extends>
+   <header>waterfallscrollarea.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>MyTabWidget</class>
    <extends>QTabWidget</extends>
    <header>mytabwidget.h</header>
@@ -7383,17 +7404,6 @@ font-weight: 500;</string>
    <class>WaterFallButtonGroup</class>
    <extends>QWidget</extends>
    <header>waterfallbuttongroup.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>WaterFloatButton</class>
-   <extends>QPushButton</extends>
-   <header>waterfloatbutton.h</header>
-  </customwidget>
-  <customwidget>
-   <class>WaterfallScrollArea</class>
-   <extends>QScrollArea</extends>
-   <header>waterfallscrollarea.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
