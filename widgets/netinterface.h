@@ -62,6 +62,69 @@ public:
         manager->get(*request);
     }
 
+    void get(QString url, QStringList params, NetStringFunc func)
+    {
+        QString data;
+        for (int i = 0; i < params.size(); i++)
+        {
+            if (i & 1) // 用户数据
+                data += QUrl::toPercentEncoding(params.at(i));
+            else // 固定变量
+                data += (i==0?"":"&") + params.at(i) + "=";
+        }
+        get(url + "?" +data, [=](QNetworkReply* reply){
+            func(reply->readAll());
+        });
+    }
+
+    void get(QString url, QStringList params, NetJsonFunc func)
+    {
+        QString data;
+        for (int i = 0; i < params.size(); i++)
+        {
+            if (i & 1) // 用户数据
+                data += QUrl::toPercentEncoding(params.at(i));
+            else // 固定变量
+                data += (i==0?"":"&") + params.at(i) + "=";
+        }
+        get(url + "?" +data, [=](QNetworkReply* reply){
+            QJsonParseError error;
+            QByteArray ba = reply->readAll();
+            QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+            if (error.error != QJsonParseError::NoError)
+            {
+                qDebug() << error.errorString() << url << ba;
+                return ;
+            }
+            func(document.object());
+        });
+    }
+
+    void get(QString url, QStringList params, NetReplyFunc func)
+    {
+        QString data;
+        for (int i = 0; i < params.size(); i++)
+        {
+            if (i & 1) // 用户数据
+                data += QUrl::toPercentEncoding(params.at(i));
+            else // 固定变量
+                data += (i==0?"":"&") + params.at(i) + "=";
+        }
+        QNetworkAccessManager* manager = new QNetworkAccessManager;
+        QNetworkRequest* request = new QNetworkRequest(url + "?" +data);
+        setUrlCookie(url, request);
+        request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
+            func(reply);
+
+            manager->deleteLater();
+            delete request;
+            reply->deleteLater();
+        });
+        manager->get(*request);
+    }
+
     void post(QString url, QStringList params, NetJsonFunc func)
     {
         QString data;

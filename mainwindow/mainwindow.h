@@ -728,6 +728,11 @@ private:
     void getRoomInit();
     void getRoomInfo(bool reconnect);
     bool isLivingOrMayliving();
+    bool isWorking() const;
+
+    void updatePermission();
+    int hasPermission();
+
     void getRoomCover(QString url);
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
     void adjustRoomIdWidgetPos();
@@ -1038,6 +1043,12 @@ private:
     QTimer* heartTimer;
     QTimer* connectServerTimer;
     bool remoteControl = true;
+
+    bool gettingRoom = false;
+    bool gettingUser = false;
+    bool gettingUp = false;
+    QString serverPath = "http://iwxyi.com:8102/server/";
+    int permissionLevel = 0;
 
     // 每日数据
     QSettings* dailySettings = nullptr;

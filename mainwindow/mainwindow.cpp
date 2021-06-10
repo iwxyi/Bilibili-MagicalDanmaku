@@ -1250,7 +1250,6 @@ void MainWindow::readConfig()
 
 void MainWindow::initEvent()
 {
-
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -2796,10 +2795,13 @@ void MainWindow::getCookieAccount()
 {
     if (browserCookie.isEmpty())
         return ;
+    gettingUser = true;
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             showError("登录返回不为0", json.value("message").toString());
+            gettingUser = false;
+            updatePermission();
             return ;
         }
 
@@ -2811,6 +2813,8 @@ void MainWindow::getCookieAccount()
         ui->robotNameButton->setText(cookieUname);
 
         getRobotInfo();
+        gettingUser = false;
+        updatePermission();
     });
 }
 
@@ -3540,6 +3544,7 @@ void MainWindow::getRoomInit()
 
 void MainWindow::getRoomInfo(bool reconnect)
 {
+    gettingRoom = true;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
@@ -3673,6 +3678,8 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 获取主播头像
         getUpInfo(upUid);
+        gettingRoom = false;
+        updatePermission();
 
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayliving())
@@ -3776,6 +3783,48 @@ bool MainWindow::isLivingOrMayliving()
         }
     }
     return true;
+}
+
+bool MainWindow::isWorking() const
+{
+    if (localDebug)
+        return false;
+    return (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()));
+}
+
+void MainWindow::updatePermission()
+{
+    permissionLevel = 0;
+    if (gettingRoom || gettingUser)
+        return ;
+    QString userId = cookieUid;
+    get(serverPath + "pay/isVip", QStringList{"room_id", roomId, "user_id", userId}, [=](MyJson json) {
+        MyJson jdata = json.data();
+        qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        if (!jdata.value("RR").isNull())
+        {
+            MyJson info = jdata.o("RR");
+            if (info.l("deadline") > timestamp)
+                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+        }
+        if (!jdata.value("ROOM").isNull())
+        {
+            MyJson info = jdata.o("RR");
+            if (info.l("deadline") > timestamp)
+                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+        }
+        if (!jdata.value("ROBOT").isNull())
+        {
+            MyJson info = jdata.o("RR");
+            if (info.l("deadline") > timestamp)
+                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+        }
+    });
+}
+
+int MainWindow::hasPermission()
+{
+    return permissionLevel;
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -5183,7 +5232,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 工作状态
     else if (key == "%working%")
-        return (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked())) ? "1" : "0";
+        return isWorking() ? "1" : "0";
 
     // 用户备注
     else if (key == "%umark%")
@@ -11359,7 +11408,7 @@ void MainWindow::updateExistGuards(int page)
             else
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
             danmakuCounts->setValue("guard/" + snum(uid), count);
-            qInfo() << "设置舰长：" << username << uid << count;
+            // qInfo() << "设置舰长：" << username << uid << count;
         }
     };
 
@@ -11512,7 +11561,8 @@ void MainWindow::updateOnlineGoldRank()
 
             onlineGoldRank.append(danmaku);
         }
-        qInfo() << "高能榜：" << names;
+        if (names.size())
+            qInfo() << "高能榜：" << names;
     });
 }
 
@@ -14921,13 +14971,13 @@ void MainWindow::slotStartWork()
         startSaveDanmakuToFile();
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
-    QString useRoom = roomId;
+    QString usedRoom = roomId;
 #ifdef QT_NO_DEBUG
     QTimer::singleShot(300000, [=]{
 #else
     QTimer::singleShot(20000, [=]{
 #endif
-        if (roomId.isEmpty() || useRoom != roomId || !isLiving()) // 使用一段时间后才算真正用上
+        if (roomId.isEmpty() || usedRoom != roomId || !isLiving()) // 使用一段时间后才算真正用上
             return ;
         syncMagicalRooms();
     });

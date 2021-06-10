@@ -18,7 +18,7 @@ void MainWindow::openServer(int port)
     initServerData();
 
     // 开启服务器
-    qDebug() << "开启总服务器" << port;
+    qDebug() << "开启 HTTP 服务" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
         ui->serverCheck->setChecked(false);
@@ -35,7 +35,7 @@ void MainWindow::openSocketServer()
     danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
     if (danmakuSocketServer->listen(QHostAddress::Any, quint16(serverPort + DANMAKU_SERVER_PORT)))
     {
-        qDebug() << "开启弹幕服务" << serverPort + DANMAKU_SERVER_PORT;
+        qDebug() << "开启 Socket 服务" << serverPort + DANMAKU_SERVER_PORT;
         connect(danmakuSocketServer, &QWebSocketServer::newConnection, this, [=]{
             QWebSocket* clientSocket = danmakuSocketServer->nextPendingConnection();
             qDebug() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
@@ -346,10 +346,17 @@ void MainWindow::syncMagicalRooms()
     if (appVersion.startsWith("v") || appVersion.startsWith("V"))
         appVersion.replace(0, 1, "");
 
-    get("https://iwxyi.com/blmagicaldanmaku/enable_room.php?room_id="
-        + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
-        + "&up_uid=" + upUid + "&up_name=" + upName.toUtf8().toPercentEncoding()
-        + "&title=" + roomTitle.toUtf8().toPercentEncoding() + "&version=" + appVersion, [=](QJsonObject json){
+//    get(serverPath + "/?room_id="
+//        + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
+//        + "&up_uid=" + upUid + "&up_name=" + upName.toUtf8().toPercentEncoding()
+//        + "&title=" + roomTitle.toUtf8().toPercentEncoding() + "&version=" + appVersion
+//        + "&working=" + (isWorking() ? "1" : "0") + "&permission=" + snum(hasPermission()), [=](QJsonObject json){
+    get(serverPath + "client/active",
+        {"room_id", roomId, "user_id", cookieUid, "up_id", upUid,
+         "room_title", roomTitle, "username", cookieUname, "up_name", upName,
+         "version", appVersion, "platform", "windows",
+         "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission())},
+        [=](MyJson json) {
         // 检测数组
         QJsonArray roomArray = json.value("rooms").toArray();
         magicalRooms.clear();
