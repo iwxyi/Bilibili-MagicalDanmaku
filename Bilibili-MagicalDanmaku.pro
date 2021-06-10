@@ -57,6 +57,7 @@ INCLUDEPATH += \
     widgets/video_lyric_creator/ \
     widgets/guard_online/ \
     widgets/smooth_scroll/ \
+    widgets/buy_vip/ \
     widgets/ \
     third_party/ \
     widgets/editor/ \
@@ -91,6 +92,7 @@ SOURCES += \
     third_party/interactive_buttons/winsidebarbutton.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
+    widgets/buy_vip/buyvipdialog.cpp \
     widgets/csvviewer.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
@@ -167,6 +169,7 @@ HEADERS += \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
+    widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
@@ -228,6 +231,7 @@ HEADERS += \
     widgets/video_lyric_creator/videolyricscreator.h
 
 FORMS += \
+    widgets/buy_vip/buyvipdialog.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
     mainwindow/mainwindow.ui \

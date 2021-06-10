@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1337,8 +1337,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>65</width>
-             <height>16</height>
+             <width>701</width>
+             <height>681</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5623,7 +5623,7 @@ QCheckBox::indicator:checked:pressed {
 {
 	background: transparent;
 	border-radius: 5px;
-	border: 1px solid #444444;
+	border: 1px solid #88888888;
 	padding-left: 5px;
 	padding-right: 5px;
 }</string>
@@ -5750,7 +5750,7 @@ QCheckBox::indicator:checked:pressed {
 {
 	background: transparent;
 	border-radius: 5px;
-	border: 1px solid #444444;
+	border: 1px solid #88888888;
 	padding-left: 5px;
 	padding-right: 5px;
 }</string>
@@ -5944,7 +5944,7 @@ QCheckBox::indicator:checked:pressed {
 {
 	background: transparent;
 	border-radius: 5px;
-	border: 1px solid #444444;
+	border: 1px solid #88888888;
 	padding-left: 5px;
 	padding-right: 5px;
 }</string>
