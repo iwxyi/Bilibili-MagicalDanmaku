@@ -1,11 +1,15 @@
 #include <QGraphicsDropShadowEffect>
+#include <QDesktopServices>
+#include <QInputDialog>
 #include "buyvipdialog.h"
 #include "ui_buyvipdialog.h"
 #include "clickablewidget.h"
+#include "fileutil.h"
 
-BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString upName, QString username, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::BuyVIPDialog)
+BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, QWidget *parent) :
+    QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
+    roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username)
+
 {
     ui->setupUi(this);
 
@@ -17,6 +21,9 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
     ui->payButton->setPaddings(36, 36, 9, 9);
     ui->payButton->adjustMinimumSize();
     ui->imageLabel->setStyleSheet("");
+    ui->couponButton->setBgColor(Qt::white);
+    ui->couponButton->adjustMinimumSize();
+    ui->couponButton->setLeaveAfterClick(true);
 
     QStringList funcs {
         "关键词回复",
@@ -107,6 +114,15 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
 
     ui->roomIdLabel->setText("房号: " + roomId);
     ui->robotIdLabel->setText("账号: " + userId);
+
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(ui->payButton);
+        effect->setColor(QColor("#fde0d4"));
+        effect->setBlurRadius(24);
+        effect->setXOffset(2);
+        effect->setYOffset(2);
+        ui->payButton->setGraphicsEffect(effect);
+    }
 }
 
 BuyVIPDialog::~BuyVIPDialog()
@@ -116,6 +132,8 @@ BuyVIPDialog::~BuyVIPDialog()
 
 void BuyVIPDialog::updatePrice()
 {
+    // TODO: 从网络获取真实价格
+
     // 单价
     int single = 49;
     if (vipType == 1)
@@ -172,10 +190,9 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
 {
     QDialog::showEvent(e);
 
-    static bool first = true;
-    if (first)
+    if (firstShow)
     {
-        first = false;
+        firstShow = false;
 
         QList<QWidget*> typeCards{
             ui->typeRRBgCard,
@@ -194,4 +211,47 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
             });
         }
     }
+}
+
+void BuyVIPDialog::closeEvent(QCloseEvent *e)
+{
+    if (mayPayed)
+        emit refreshVIP();
+
+    QDialog::closeEvent(e);
+}
+
+void BuyVIPDialog::on_payButton_clicked()
+{
+    auto snum = [=](qint64 val){ return QString::number(val); };
+    mayPayed = true;
+
+    get("http://iwxyi.com:8102/server/pay/getWebPay",
+        { "room_id", roomId, "up_id", upId, "user_id", userId,
+         "room_title", roomTitle, "up_name", upName, "username", username,
+         "vip_type", snum(vipType), "vip_level", snum(vipLevel),
+         "month", snum(vipMonth), "coupon", couponCode },
+        [=](MyJson json){
+
+        QString html = json.s("data");
+        QString path = "pay.html";
+        writeTextFile(path, html);
+        QDesktopServices::openUrl(path);
+
+        QTimer::singleShot(10000, this, [=]{
+            deleteFile(path);
+        });
+    });
+}
+
+void BuyVIPDialog::on_couponButton_clicked()
+{
+    QString coupon;
+    bool ok = false;
+    coupon = QInputDialog::getText(this, "神奇弹幕", "请输入优惠券码", QLineEdit::Normal, this->couponCode, &ok);
+    if (!ok)
+        return ;
+    this->couponCode = coupon;
+    ui->couponButton->setText(coupon);
+    ui->couponButton->adjustMinimumSize();
 }

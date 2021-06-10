@@ -3816,23 +3816,33 @@ void MainWindow::updatePermission()
     get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+        qint64 deadline = 0;
         if (!jdata.value("RR").isNull())
         {
             MyJson info = jdata.o("RR");
             if (info.l("deadline") > timestamp)
+            {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                deadline = qMax(deadline, info.l("deadline"));
+            }
         }
         if (!jdata.value("ROOM").isNull())
         {
             MyJson info = jdata.o("RR");
             if (info.l("deadline") > timestamp)
+            {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                deadline = qMax(deadline, info.l("deadline"));
+            }
         }
         if (!jdata.value("ROBOT").isNull())
         {
             MyJson info = jdata.o("RR");
             if (info.l("deadline") > timestamp)
+            {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                deadline = qMax(deadline, info.l("deadline"));
+            }
         }
 
         if (permissionLevel)
@@ -3840,12 +3850,14 @@ void MainWindow::updatePermission()
             ui->droplight->setText("尊享版");
             ui->droplight->setNormalColor(themeSbg);
             ui->droplight->setTextColor(themeSfg);
+            ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
         }
         else
         {
             ui->droplight->setText("免费版");
             ui->droplight->setNormalColor(Qt::white);
             ui->droplight->setTextColor(Qt::black);
+            ui->droplight->setToolTip("点击购买尊享版");
         }
     });
 }
@@ -16246,7 +16258,6 @@ void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
     settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
 
-
 void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
 {
     QDesktopServices::openUrl(arg1);
@@ -16264,7 +16275,10 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 
 void MainWindow::on_actionBuy_VIP_triggered()
 {
-    BuyVIPDialog* bvd = new BuyVIPDialog(roomId, upUid, cookieUid, upName, cookieUname, this);
+    BuyVIPDialog* bvd = new BuyVIPDialog(roomId, upUid, cookieUid, roomTitle, upName, cookieUname, this);
+    connect(bvd, &BuyVIPDialog::refreshVIP, this, [=]{
+        updatePermission();
+    });
     bvd->show();
 }
 

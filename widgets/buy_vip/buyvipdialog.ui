@@ -148,11 +148,28 @@ background-repeat:none;</string>
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>将享有以下功能：</string>
+    <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,0">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>将享有以下功能：</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="WaterFloatButton" name="couponButton">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>优惠券</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="WaterfallScrollArea" name="scrollArea">
@@ -190,7 +207,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>417</width>
-        <height>198</height>
+        <height>175</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -335,7 +352,9 @@ QLabel:hover
           </property>
           <property name="toolTip">
            <string>一个直播间，绑定对应机器人账号
-切换直播间或者切换机器人账号将不可用</string>
+切换直播间或者切换机器人账号将不可用
+
+注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">
            <string notr="true">#typeRRBgCard,ClickableWidget
@@ -461,8 +480,9 @@ margin: 20px</string>
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
           <property name="toolTip">
-           <string>单个直播间，任意机器人账号
-可以连多个机器人，互相协作</string>
+           <string>直播间可以连多个机器人，互相协作
+
+注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">
            <string notr="true">#typeRoomBgCard
@@ -589,7 +609,9 @@ margin: 20px</string>
           </property>
           <property name="toolTip">
            <string>只要登录该账号，所有直播间均可用
-可管理任意多个直播间</string>
+可管理任意多个直播间
+
+注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">
            <string notr="true">#typeRobotBgCard
@@ -694,7 +716,7 @@ margin: 20px</string>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>15</height>
+       <height>20</height>
       </size>
      </property>
     </spacer>
@@ -712,6 +734,9 @@ margin: 20px</string>
      </property>
      <item>
       <widget class="QRadioButton" name="monthRadio1">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>一个月</string>
        </property>
@@ -719,6 +744,9 @@ margin: 20px</string>
      </item>
      <item>
       <widget class="QRadioButton" name="monthRadio2">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>三个月</string>
        </property>
@@ -726,6 +754,9 @@ margin: 20px</string>
      </item>
      <item>
       <widget class="QRadioButton" name="monthRadio3">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>六个月</string>
        </property>
@@ -733,6 +764,9 @@ margin: 20px</string>
      </item>
      <item>
       <widget class="QRadioButton" name="monthRadio4">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>一年</string>
        </property>
@@ -740,6 +774,9 @@ margin: 20px</string>
      </item>
      <item>
       <widget class="QRadioButton" name="monthRadio5">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
         <string>永久</string>
        </property>
@@ -758,7 +795,7 @@ margin: 20px</string>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>15</height>
+       <height>20</height>
       </size>
      </property>
     </spacer>
