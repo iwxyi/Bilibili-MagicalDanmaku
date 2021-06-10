@@ -47,7 +47,8 @@ private:
     QString couponCode;
 
     bool firstShow = true;
-    bool mayPayed = true;
+    bool mayPayed = false;
+    const QString serverPath = "http://iwxyi.com:8102/server/";
 };
 
 #endif // BUYVIPDIALOG_H

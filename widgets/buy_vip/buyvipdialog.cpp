@@ -110,7 +110,6 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
     connect(ui->monthRadio5, &QRadioButton::clicked, this, [=]{ setMonth(1200); });
 
     ui->monthRadio1->setChecked(true);
-    updatePrice();
 
     ui->roomIdLabel->setText("房号: " + roomId);
     ui->robotIdLabel->setText("账号: " + userId);
@@ -132,9 +131,39 @@ BuyVIPDialog::~BuyVIPDialog()
 
 void BuyVIPDialog::updatePrice()
 {
-    // TODO: 从网络获取真实价格
+    // 从网络获取真实价格
+    auto snum = [=](qint64 val){ return QString::number(val); };
+    get(serverPath + "pay/getPrice",
+        {"vip_type", snum(vipType), "vip_level", snum(vipLevel),
+         "month", snum(vipMonth), "coupon", couponCode},
+        [=](MyJson json) {
+        MyJson data = json.data();
 
-    // 单价
+        // 设置价格
+        double price = data.d("totalPrice");
+        ui->priceLabel->setText("￥" + QString::number(price, 'f', 2));
+
+        // 设置折扣
+        double maximumPrice = data.d("maximumPrice");
+        if (maximumPrice > 0.01)
+        {
+            double discount = price / maximumPrice;
+            if (discount < 0.99)
+            {
+                int val = int((discount + 1e-4) * 100);
+                int a = val / 10;
+                int b = val % 10;
+                if (b == 0)
+                    ui->discountLabel->setText(QString("%1折").arg(a));
+                else
+                    ui->discountLabel->setText(QString("%1.%2折").arg(a).arg(b));
+            }
+            else
+                ui->discountLabel->setText("");
+        }
+    });
+
+    /* // 单价
     int single = 49;
     if (vipType == 1)
         single = 49;
@@ -173,7 +202,7 @@ void BuyVIPDialog::updatePrice()
 
     int total = int(single * usedMonth * discount);
 
-    ui->priceLabel->setText("￥" + QString::number(total));
+    ui->priceLabel->setText("￥" + QString::number(total)); */
 }
 
 void BuyVIPDialog::resizeEvent(QResizeEvent *e)
@@ -244,7 +273,7 @@ void BuyVIPDialog::on_payButton_clicked()
     auto snum = [=](qint64 val){ return QString::number(val); };
     mayPayed = true;
 
-    get("http://iwxyi.com:8102/server/pay/getWebPay",
+    get(serverPath + "pay/getWebPay",
         { "room_id", roomId, "up_id", upId, "user_id", userId,
          "room_title", roomTitle, "up_name", upName, "username", username,
          "vip_type", snum(vipType), "vip_level", snum(vipLevel),

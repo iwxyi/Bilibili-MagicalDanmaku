@@ -82,6 +82,11 @@ public:
         return QJsonObject::value(key).toDouble();
     }
 
+    QString d2(QString key) const
+    {
+        return QString::number(d(key), 'f', 2);
+    }
+
     int i(QString key) const
     {
         return QJsonObject::value(key).toInt();
