@@ -19,6 +19,7 @@
 #include "watercirclebutton.h"
 #include "variantviewer.h"
 #include "csvviewer.h"
+#include "buyvipdialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -224,6 +225,11 @@ void MainWindow::initView()
             }
         });
     });
+
+    // 吊灯
+    ui->droplight->setPaddings(12, 12, 2, 2);
+    ui->droplight->adjustMinimumSize();
+    ui->droplight->setRadius(fluentRadius);
 
     // 礼物列表
     const int giftImgSize = ui->upHeaderLabel->width(); // 礼物小图片的高度
@@ -3798,7 +3804,7 @@ void MainWindow::updatePermission()
     if (gettingRoom || gettingUser)
         return ;
     QString userId = cookieUid;
-    get(serverPath + "pay/isVip", QStringList{"room_id", roomId, "user_id", userId}, [=](MyJson json) {
+    get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         if (!jdata.value("RR").isNull())
@@ -3818,6 +3824,19 @@ void MainWindow::updatePermission()
             MyJson info = jdata.o("RR");
             if (info.l("deadline") > timestamp)
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+        }
+
+        if (permissionLevel)
+        {
+            ui->droplight->setText("尊享版");
+            ui->droplight->setNormalColor(themeSbg);
+            ui->droplight->setTextColor(themeSfg);
+        }
+        else
+        {
+            ui->droplight->setText("免费版");
+            ui->droplight->setNormalColor(Qt::white);
+            ui->droplight->setTextColor(Qt::black);
         }
     });
 }
@@ -3902,6 +3921,11 @@ void MainWindow::getRoomCover(QString url)
             ui->showOrderPlayerButton->setTextColor(sfg);
             appendListItemButton->setBgColor(sbg);
             appendListItemButton->setIconColor(sfg);
+            if (hasPermission())
+            {
+                ui->droplight->setNormalColor(sbg);
+                ui->droplight->setTextColor(sfg);
+            }
 
             // 纯文字label的
             pa = ui->appNameLabel->palette();
@@ -3947,11 +3971,12 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     ui->roomInfoMainWidget->layout()->activate(); // 不激活一下布局的话，在启动时会有问题
 
     // 因为布局原因，实际上显示的不一定是完整图片所需的尺寸（至少宽度是够的）
+    QPixmap& p = pixmap;
     int suitH = ui->upNameLabel->y() - 6; // 最适合的高度
-    if (suitH < pixmap.height())
-        pixmap = pixmap.copy(0, (pixmap.height() - suitH) / 2, pixmap.width(), suitH);
-    roomCoverLabel->setPixmap(getTopRoundedPixmap(pixmap, fluentRadius));
-    roomCoverLabel->resize(pixmap.size());
+    if (suitH < p.height())
+        p = p.copy(0, (p.height() - suitH) / 2, p.width(), suitH);
+    roomCoverLabel->setPixmap(getTopRoundedPixmap(p, fluentRadius));
+    roomCoverLabel->resize(p.size());
     roomCoverLabel->lower();
 }
 
@@ -14260,7 +14285,11 @@ void MainWindow::openLink(QString link)
 
     link = link.right(link.length() - 7);
 
-    if (link == "capture_manager") // 截图管理
+    if (link == "buy_vip") // 购买VIP
+    {
+        on_actionBuy_VIP_triggered();
+    }
+    else if (link == "capture_manager") // 截图管理
     {
         on_actionPicture_Browser_triggered();
     }
@@ -16214,4 +16243,15 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
     {
         adjustDanmakuLongest();
     }
+}
+
+void MainWindow::on_actionBuy_VIP_triggered()
+{
+    BuyVIPDialog* bvd = new BuyVIPDialog(roomId, upUid, cookieUid, upName, cookieUname, this);
+    bvd->show();
+}
+
+void MainWindow::on_droplight_clicked()
+{
+    on_actionBuy_VIP_triggered();
 }

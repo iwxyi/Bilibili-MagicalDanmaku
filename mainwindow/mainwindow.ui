@@ -951,14 +951,38 @@ background-repeat:none;</string>
              <number>6</number>
             </property>
             <item>
-             <widget class="QWidget" name="roomIdSpacingWidget_3" native="true">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>12</height>
-               </size>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_53">
+              <item>
+               <widget class="QWidget" name="roomIdSpacingWidget_3" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>12</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="InteractiveButtonBase" name="droplight">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>免费版</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="roomIdSpacingWidget_4" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>12</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
@@ -1203,6 +1227,9 @@ background-repeat:none;</string>
             <layout class="QVBoxLayout" name="verticalLayout_63">
              <item>
               <widget class="QLabel" name="label_52">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;不知道放什么，就加个文字占位&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="styleSheet">
                 <string notr="true">font-size: 32px;
 color: gray;</string>
@@ -6936,9 +6963,10 @@ font-weight: 500;</string>
      <string>关于</string>
     </property>
     <addaction name="actionAbout"/>
-    <addaction name="actionSponsor"/>
+    <addaction name="actionBuy_VIP"/>
     <addaction name="actionOfficial_Website"/>
     <addaction name="actionAnchor_Case"/>
+    <addaction name="actionSponsor"/>
     <addaction name="actionGitHub"/>
     <addaction name="separator"/>
     <addaction name="actionCookie_Help"/>
@@ -7317,6 +7345,15 @@ font-weight: 500;</string>
    </property>
    <property name="toolTip">
     <string>用于处理敏感词</string>
+   </property>
+  </action>
+  <action name="actionBuy_VIP">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/crown</normaloff>:/icons/crown</iconset>
+   </property>
+   <property name="text">
+    <string>购买会员</string>
    </property>
   </action>
  </widget>

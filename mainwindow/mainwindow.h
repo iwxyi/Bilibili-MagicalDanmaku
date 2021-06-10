@@ -677,6 +677,10 @@ private slots:
 
     void on_adjustDanmakuLongestCheck_clicked();
 
+    void on_actionBuy_VIP_triggered();
+
+    void on_droplight_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -925,7 +929,9 @@ private:
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;
     AppendButton* appendListItemButton;
+    QLabel* statusLabel;
     TipBox* tip_box;
+    InteractiveButtonBase* droplight;
 
     // 房间信息
     QString roomId;
@@ -1023,10 +1029,6 @@ private:
     QList<Diange> diangeHistory;
     QString diangeFormatString;
     OrderPlayerWindow* musicWindow = nullptr;
-
-    // 控件
-    QTimer* sendMsgTimer;
-    QLabel* statusLabel;
 
     // 连接信息
     QString cookieUid; // 自己的UID
