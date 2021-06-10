@@ -1,6 +1,7 @@
 #include <QGraphicsDropShadowEffect>
 #include "buyvipdialog.h"
 #include "ui_buyvipdialog.h"
+#include "clickablewidget.h"
 
 BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString upName, QString username, QWidget *parent) :
     QDialog(parent),
@@ -57,6 +58,7 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
         "未来更多扩展功能",
     };
 
+    ui->scrollArea->clearWidgets();
     foreach (QString f, funcs)
     {
         QLabel* label = new QLabel(f, ui->scrollAreaWidgetContents);
@@ -70,15 +72,90 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
         label->setGraphicsEffect(effect);
     }
 
-    ui->scrollArea->setItemMargin(9, 0);
+    ui->scrollArea->setItemMargin(0, 0);
     ui->scrollArea->initFixedChildren();
     ui->scrollArea->resizeWidgetsToSizeHint();
     ui->scrollArea->setAllowDifferentWidth(true);
+
+    QList<QWidget*> typeWidgets{
+        ui->typeRRBgWidget,
+                ui->typeRoomBgWidget,
+                ui->typeRobotBgWidget
+    };
+    foreach (QWidget* w, typeWidgets)
+    {
+        QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(w);
+        effect->setColor(QColor("#e0e0e0"));
+        effect->setBlurRadius(24);
+        effect->setXOffset(4);
+        effect->setYOffset(4);
+        w->setGraphicsEffect(effect);
+    }
+
+    auto setMonth = [=](int month) {
+        this->vipMonth = month;
+        updatePrice();
+    };
+    connect(ui->monthRadio1, &QRadioButton::clicked, this, [=]{ setMonth(1); });
+    connect(ui->monthRadio2, &QRadioButton::clicked, this, [=]{ setMonth(3); });
+    connect(ui->monthRadio3, &QRadioButton::clicked, this, [=]{ setMonth(6); });
+    connect(ui->monthRadio4, &QRadioButton::clicked, this, [=]{ setMonth(12); });
+    connect(ui->monthRadio5, &QRadioButton::clicked, this, [=]{ setMonth(1200); });
+
+    ui->monthRadio1->setChecked(true);
+    updatePrice();
+
+    ui->roomIdLabel->setText("房号: " + roomId);
+    ui->robotIdLabel->setText("账号: " + userId);
 }
 
 BuyVIPDialog::~BuyVIPDialog()
 {
     delete ui;
+}
+
+void BuyVIPDialog::updatePrice()
+{
+    // 单价
+    int single = 49;
+    if (vipType == 1)
+        single = 49;
+    else if (vipType == 2)
+        single = 69;
+    else if (vipType == 3)
+        single = 99;
+
+    // 折扣
+    double discount = 1;
+    int usedMonth = vipMonth;
+    if (vipMonth >= 24) // 永久算两年
+    {
+        usedMonth = 24;
+        discount = 0.8;
+    }
+    else if (vipMonth >= 12)
+        discount = 0.9;
+    else if (vipMonth >= 6)
+        discount = 0.95;
+    else if (vipMonth >= 3)
+        discount = 0.98;
+
+    if (discount < 0.99)
+    {
+        int val = int((discount + 1e-4) * 100);
+        int a = val / 10;
+        int b = val % 10;
+        if (b == 0)
+            ui->discountLabel->setText(QString("%1折").arg(a));
+        else
+            ui->discountLabel->setText(QString("%1.%2折").arg(a).arg(b));
+    }
+    else
+        ui->discountLabel->setText("");
+
+    int total = int(single * usedMonth * discount);
+
+    ui->priceLabel->setText("￥" + QString::number(total));
 }
 
 void BuyVIPDialog::resizeEvent(QResizeEvent *e)
@@ -89,4 +166,32 @@ void BuyVIPDialog::resizeEvent(QResizeEvent *e)
     pixmap = pixmap.scaled(ui->imageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     ui->imageLabel->setPixmap(pixmap);
     ui->imageLabel->setMinimumSize(QSize(64, 64));
+}
+
+void BuyVIPDialog::showEvent(QShowEvent *e)
+{
+    QDialog::showEvent(e);
+
+    static bool first = true;
+    if (first)
+    {
+        first = false;
+
+        QList<QWidget*> typeCards{
+            ui->typeRRBgCard,
+                    ui->typeRoomBgCard,
+                    ui->typeRobotBgCard
+        };
+        foreach (QWidget* w, typeCards)
+        {
+            InteractiveButtonBase* btn = new InteractiveButtonBase(w);
+            btn->setRadius(10);
+            btn->setFixedSize(w->size());
+            btn->show();
+            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                vipType = typeCards.indexOf(w) + 1;
+                updatePrice();
+            });
+        }
+    }
 }

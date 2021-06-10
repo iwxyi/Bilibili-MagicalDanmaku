@@ -27,6 +27,7 @@ public:
     void adjustWidgetsPos();
     void addWidget(QWidget* w);
     void removeWidget(QWidget* w);
+    void clearWidgets();
 
     QList<QWidget*> getWidgets();
     void resizeWidgetsToSizeHint();

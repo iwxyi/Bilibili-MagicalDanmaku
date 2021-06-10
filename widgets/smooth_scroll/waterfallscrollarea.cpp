@@ -143,6 +143,20 @@ void WaterfallScrollArea::removeWidget(QWidget *w)
     widgets.removeOne(w);
 }
 
+void WaterfallScrollArea::clearWidgets()
+{
+    auto children = this->widget()->children();
+    QWidget* w = nullptr;
+    foreach (auto child, children)
+    {
+        if ((w = qobject_cast<QWidget*>(child)))
+        {
+            delete w;
+        }
+    }
+    this->widgets.clear();
+}
+
 /// 全部子控件宽度一致的瀑布流
 void WaterfallScrollArea::adjustWaterfallPos()
 {

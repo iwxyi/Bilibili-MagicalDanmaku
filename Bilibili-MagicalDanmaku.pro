@@ -171,6 +171,7 @@ HEADERS += \
     third_party/notification/tipcard.h \
     widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \
+    widgets/clickablewidget.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
     widgets/guard_online/guardonlinedialog.h \
