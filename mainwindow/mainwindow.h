@@ -966,6 +966,7 @@ private:
     QColor themeFg = Qt::black;
     QColor themeSbg = Qt::white;
     QColor themeSfg = Qt::blue;
+    QColor themeGradient = Qt::white;
 
     // 粉丝数量
     int currentFans = 0;

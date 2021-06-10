@@ -1555,7 +1555,16 @@ void MainWindow::changeEvent(QEvent *event)
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     QMainWindow::paintEvent(event);
+
     QPainter painter(this);
+    painter.fillRect(rect(), Qt::white);
+
+    QLinearGradient linearGrad(QPointF(width() / 2, 0), QPointF(width() / 2, height()));
+    linearGrad.setColorAt(0, themeBg);
+    linearGrad.setColorAt(1, themeGradient);
+//    linearGrad.setColorAt(0, themeGradient);
+//    linearGrad.setColorAt(1, Qt::white);
+    painter.fillRect(rect(), linearGrad);
 }
 
 void MainWindow::pullLiveDanmaku()
@@ -3906,7 +3915,7 @@ void MainWindow::getRoomCover(QString url)
             pa.setColor(QPalette::Highlight, sbg);
             pa.setColor(QPalette::HighlightedText, sfg);
             setPalette(pa);
-            setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"} QLabel QCheckBox{background: transparent; color:"+QVariant(fg).toString()+"}");
+            // setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"}");
             ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
             roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
             sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
@@ -3947,6 +3956,14 @@ void MainWindow::getRoomCover(QString url)
             ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
             ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
             ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
+
+            alpha = (3 * ( themeGradient.red()) * (themeGradient.red())
+                         + 4 * (themeGradient.green()) * (themeGradient.green())
+                         + 2 * (themeGradient.blue()) * (themeGradient.blue()))
+                         / 9 / 255;
+            alpha = 32 + alpha / 4; // 32~96
+            themeGradient = themeBg;
+            themeGradient.setAlpha(alpha);
         });
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
