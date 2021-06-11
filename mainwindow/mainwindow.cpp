@@ -1300,41 +1300,49 @@ void MainWindow::adjustPageSize(int page)
         appendListItemButton->move(ui->tabWidget->width() - appendListItemButton->width() * 1.25 - 9 - 15, // 减去滚动条宽度
                                    ui->tabWidget->height() - appendListItemButton->height() * 1.25 - 9); // 还有减去margin
 
-        // 自动调整任务列表大小
-        for (int row = 0; row < ui->taskListWidget->count(); row++)
+        // 自动调整列表大小
+        int tabIndex = ui->tabWidget->currentIndex();
+        if (tabIndex == TAB_TIMER_TASK)
         {
-            auto item = ui->taskListWidget->item(row);
-            auto widget = ui->taskListWidget->itemWidget(item);
-            if (!widget)
-                continue;
-            QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
-            auto taskWidget = static_cast<TaskWidget*>(widget);
-            taskWidget->resize(size);
-            taskWidget->autoResizeEdit();
+            for (int row = 0; row < ui->taskListWidget->count(); row++)
+            {
+                auto item = ui->taskListWidget->item(row);
+                auto widget = ui->taskListWidget->itemWidget(item);
+                if (!widget)
+                    continue;
+                QSize size(ui->taskListWidget->contentsRect().width() - ui->taskListWidget->verticalScrollBar()->width(), widget->height());
+                auto taskWidget = static_cast<TaskWidget*>(widget);
+                taskWidget->resize(size);
+                taskWidget->autoResizeEdit();
+            }
         }
-
-        for (int row = 0; row < ui->replyListWidget->count(); row++)
+        else if (tabIndex == TAB_AUTO_REPLY)
         {
-            auto item = ui->replyListWidget->item(row);
-            auto widget = ui->replyListWidget->itemWidget(item);
-            if (!widget)
-                continue;
-            QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
-            auto replyWidget = static_cast<ReplyWidget*>(widget);
-            replyWidget->resize(size);
-            replyWidget->autoResizeEdit();
+            for (int row = 0; row < ui->replyListWidget->count(); row++)
+            {
+                auto item = ui->replyListWidget->item(row);
+                auto widget = ui->replyListWidget->itemWidget(item);
+                if (!widget)
+                    continue;
+                QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
+                auto replyWidget = static_cast<ReplyWidget*>(widget);
+                replyWidget->resize(size);
+                replyWidget->autoResizeEdit();
+            }
         }
-
-        for (int row = 0; row < ui->eventListWidget->count(); row++)
+        else if (tabIndex == TAB_EVENT_ACTION)
         {
-            auto item = ui->eventListWidget->item(row);
-            auto widget = ui->eventListWidget->itemWidget(item);
-            if (!widget)
-                continue;
-            QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
-            auto eventWidget = static_cast<EventWidget*>(widget);
-            eventWidget->resize(size);
-            eventWidget->autoResizeEdit();
+            for (int row = 0; row < ui->eventListWidget->count(); row++)
+            {
+                auto item = ui->eventListWidget->item(row);
+                auto widget = ui->eventListWidget->itemWidget(item);
+                if (!widget)
+                    continue;
+                QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+                auto eventWidget = static_cast<EventWidget*>(widget);
+                eventWidget->resize(size);
+                eventWidget->autoResizeEdit();
+            }
         }
     }
     else if (page == PAGE_PREFENCE)
@@ -1343,6 +1351,8 @@ void MainWindow::adjustPageSize(int page)
     }
 }
 
+/// 显示动画
+/// 在不影响布局的基础上
 void MainWindow::switchPageAnimation(int page)
 {
     // 房间ID，可能经常触发
@@ -2325,6 +2335,9 @@ void MainWindow::on_tabWidget_tabBarClicked(int index)
         appendListItemButton->hide();
     else
         appendListItemButton->show();
+    QTimer::singleShot(0, [=]{
+        adjustPageSize(ui->stackedWidget->currentIndex());
+    });
 }
 
 void MainWindow::on_SendMsgButton_clicked()
