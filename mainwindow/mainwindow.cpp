@@ -735,7 +735,6 @@ void MainWindow::readConfig()
     tray = new QSystemTrayIcon(this);//初始化托盘对象tray
     tray->setIcon(QIcon(QPixmap(":/icons/star")));//设定托盘图标，引号内是自定义的png图片路径
     tray->setToolTip("神奇弹幕");
-    tray->show();//让托盘图标显示在系统托盘上
     QString title="APP Message";
     QString text="神奇弹幕";
 //    tray->showMessage(title,text,QSystemTrayIcon::Information,3000); //最后一个参数为提示时长，默认10000，即10s
@@ -883,6 +882,9 @@ void MainWindow::readConfig()
 
     // 启动动画
     ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", firstOpen).toBool());
+    ui->enableTrayCheck->setChecked(settings->value("mainwindow/enableTray", false).toBool());
+    if (ui->enableTrayCheck->isChecked())
+        tray->show(); // 让托盘图标显示在系统托盘上
 
     // 定时连接
     ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
@@ -1545,6 +1547,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings->setValue("mainwindow/geometry", this->saveGeometry());
 
 #if defined(ENABLE_TRAY)
+
+    if (!tray->isVisible())
+    {
+        qApp->quit();
+        return ;
+    }
+
     event->ignore();
     this->hide();
     QTimer::singleShot(5000, [=]{
@@ -16338,4 +16347,18 @@ void MainWindow::on_droplight_clicked()
 void MainWindow::on_vipExtensionButton_clicked()
 {
     on_actionBuy_VIP_triggered();
+}
+
+void MainWindow::on_enableTrayCheck_clicked()
+{
+    bool en = ui->enableTrayCheck->isChecked();
+    settings->setValue("mainwindow/enableTray", en);
+    if (en)
+    {
+        tray->show();
+    }
+    else
+    {
+        tray->hide();
+    }
 }

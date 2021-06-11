@@ -683,6 +683,8 @@ private slots:
 
     void on_vipExtensionButton_clicked();
 
+    void on_enableTrayCheck_clicked();
+
 private:
     void initView();
     void initStyle();

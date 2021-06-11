@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>781</width>
-    <height>797</height>
+    <height>1080</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>701</width>
-             <height>681</height>
+             <height>964</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3161,7 +3161,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>740</y>
               <width>161</width>
-              <height>91</height>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3230,6 +3230,16 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>启动动画</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="enableTrayCheck">
+               <property name="toolTip">
+                <string>关闭窗口后不退出程序</string>
+               </property>
+               <property name="text">
+                <string>系统托盘</string>
                </property>
               </widget>
              </item>
