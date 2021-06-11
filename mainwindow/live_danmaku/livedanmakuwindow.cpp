@@ -1026,6 +1026,7 @@ void LiveDanmakuWindow::showMenu()
     QMenu* menu = new QMenu(this);
     QAction* actionUserInfo = new QAction(QIcon(":/danmaku/home"), "用户主页", this);
     QAction* actionCopyUid = new QAction(QIcon(":/icons/code"), "复制UID", this);
+    QAction* actionCopyGiftId = new QAction(QIcon(":/icons/code"), "复制礼物ID", this);
     QAction* actionMedal = new QAction(QIcon(":/danmaku/medal"), "粉丝勋章", this);
     QAction* actionValue = new QAction(QIcon(":/icons/egg"), "礼物价值", this);
     QAction* actionHistory = new QAction(QIcon(":/danmaku/message"), "消息记录", this);
@@ -1151,6 +1152,7 @@ void LiveDanmakuWindow::showMenu()
             actionHistory->setText("送礼总额：" + snum(danmakuCounts->value("gold/"+snum(uid)).toLongLong()/1000) + "元");
             if (danmaku.is(MSG_GUARD_BUY))
                 actionMedal->setText("船员数量：" + snum(currentGuards.size()));
+            actionCopyGiftId->setText("礼物ID：" + snum(danmaku.getGiftId()));
         }
         else if (danmaku.is(MSG_WELCOME_GUARD))
         {
@@ -1221,6 +1223,7 @@ void LiveDanmakuWindow::showMenu()
     {
         operMenu->setEnabled(false);
         actionCopyUid->setEnabled(false);
+        actionCopyGiftId->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
         actionSetName->setEnabled(false);
@@ -1236,6 +1239,8 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addAction(actionUserInfo);
     menu->addAction(actionCopyUid);
+    if (danmaku.getGiftId())
+        menu->addAction(actionCopyGiftId);
     menu->addAction(actionMedal);
     if (danmaku.is(MSG_GIFT))
         menu->addAction(actionValue);
@@ -1720,6 +1725,9 @@ void LiveDanmakuWindow::showMenu()
     connect(actionCopyUid, &QAction::triggered, this, [=]{
         QApplication::clipboard()->setText(snum(uid));
     });
+    connect(actionCopyGiftId, &QAction::triggered, this, [=]{
+        QApplication::clipboard()->setText(snum(danmaku.getGiftId()));
+    });
     connect(actionMedal, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
     });
@@ -1842,6 +1850,8 @@ void LiveDanmakuWindow::showMenu()
     menu->exec(QCursor::pos());
 
     menu->deleteLater();
+    actionCopyUid->deleteLater();
+    actionCopyGiftId->deleteLater();
     actionMsgColor->deleteLater();
     actionBgColor->deleteLater();
     actionHlColor->deleteLater();
@@ -2581,7 +2591,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << "返回结果不为0：" << json.value("message").toString();
+            qDebug() << "用户信息返回结果不为0：" << json.value("message").toString();
             return ;
         }
 
