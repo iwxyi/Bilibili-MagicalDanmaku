@@ -271,6 +271,26 @@ void BuyVIPDialog::closeEvent(QCloseEvent *e)
 
 void BuyVIPDialog::on_payButton_clicked()
 {
+    // 判断直播间
+    if (vipType == VIP_TYPE_RR || vipType == VIP_TYPE_ROOM)
+    {
+        if (roomId.isEmpty())
+        {
+            QMessageBox::information(this, "购买", "感谢您的支持！\n但是，付款前是不是得先切换到直播间？");
+            return ;
+        }
+    }
+
+    // 判断机器人
+    if (vipType == VIP_TYPE_RR || vipType == VIP_TYPE_ROBOT)
+    {
+        if (roomId.isEmpty())
+        {
+            QMessageBox::information(this, "购买", "感谢您的支持！\n但是，付款前是不是得先登录账号？");
+            return ;
+        }
+    }
+
     auto snum = [=](qint64 val){ return QString::number(val); };
     mayPayed = true;
 

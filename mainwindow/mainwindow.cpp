@@ -338,6 +338,7 @@ void MainWindow::initView()
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
     extensionButton->setRadius(fluentRadius);
     extensionButton->setSquareSize();
+    extensionButton->setCursor(Qt::PointingHandCursor);
     int tabBarHeight = ui->tabWidget->tabBar()->height();
     extensionButton->setFixedSize(tabBarHeight, tabBarHeight);
     // extensionButton->move(ui->tabWidget->width() - extensionButton->height(), 0);

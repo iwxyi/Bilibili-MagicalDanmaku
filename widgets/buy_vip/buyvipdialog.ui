@@ -377,6 +377,7 @@ margin: 20px;</string>
            <string>一个直播间，绑定对应机器人账号
 切换直播间或者切换机器人账号将不可用
 
+VIP绑定当前直播间、登录账号
 注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">
@@ -528,6 +529,7 @@ margin: 20px;</string>
           <property name="toolTip">
            <string>直播间可以连多个机器人，互相协作
 
+VIP绑定当前直播间
 注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">
@@ -680,6 +682,7 @@ margin: 20px;</string>
            <string>只要登录该账号，所有直播间均可用
 可管理任意多个直播间
 
+VIP绑定当前登录的账号
 注意：不同类型效果叠加，时长不叠加</string>
           </property>
           <property name="styleSheet">

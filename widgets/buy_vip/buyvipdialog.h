@@ -8,6 +8,10 @@ namespace Ui {
 class BuyVIPDialog;
 }
 
+#define VIP_TYPE_RR 1
+#define VIP_TYPE_ROOM 2
+#define VIP_TYPE_ROBOT 3
+
 class BuyVIPDialog : public QDialog, public NetInterface
 {
     Q_OBJECT
@@ -42,7 +46,7 @@ private:
     QString username;
 
     int vipLevel = 1;
-    int vipType = 1;
+    int vipType = VIP_TYPE_RR;
     int vipMonth = 1;
     QString couponCode;
 
