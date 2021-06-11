@@ -3079,7 +3079,6 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
                 clipJson = doc.object();
                 JS(clipJson, anchor_key);
                 qInfo() << anchor_key << listKey;
-                canPaste = (anchor_key == listKey);
             }
             else if (doc.isArray())
             {
@@ -15891,7 +15890,9 @@ void MainWindow::on_actionPaste_Code_triggered()
         }
 
         item->fromJson(json);
+        item->autoResizeEdit();
 
+        // 检查重复
         if (anchor_key == CODE_AUTO_REPLY_KEY)
         {
             for (int row = 0; row < ui->replyListWidget->count() - 1; row++)
@@ -15948,6 +15949,7 @@ void MainWindow::on_actionPaste_Code_triggered()
             pasteFromJson(val.toObject());
         }
     }
+    adjustPageSize(PAGE_EXTENSION);
 }
 
 void MainWindow::on_actionGenerate_Default_Code_triggered()
