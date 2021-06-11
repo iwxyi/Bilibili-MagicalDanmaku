@@ -162,48 +162,42 @@ void BuyVIPDialog::updatePrice()
             else
                 ui->discountLabel->setText("");
         }
+
+        // 设置单价折扣
+        {
+            double discount = data.d("coupon_discount");
+            if (discount > 0 && discount < 1)
+            {
+                this->couponDiscount = discount;
+                ui->typeRRPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(unit1 * discount)))
+                                              .arg(snum(int(unit1))));
+                ui->typeRoomPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(unit2 * discount)))
+                                              .arg(snum(int(unit2))));
+                ui->typeRobotPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(unit3 * discount)))
+                                              .arg(snum(int(unit3))));
+
+                {
+                    int val = int((discount + 1e-4) * 100);
+                    int a = val / 10;
+                    int b = val % 10;
+                    if (b == 0)
+                        ui->couponButton->setToolTip(QString("%1折").arg(a));
+                    else
+                        ui->couponButton->setToolTip(QString("%1.%2折").arg(a).arg(b));
+                }
+            }
+            else
+            {
+                ui->typeRRPriceLabel->setText(snum(int(unit1)) + "元/月");
+                ui->typeRoomPriceLabel->setText(snum(int(unit2)) + "元/月");
+                ui->typeRobotPriceLabel->setText(snum(int(unit3)) + "元/月");
+                ui->couponButton->setToolTip("");
+            }
+        }
     });
-
-    /* // 单价
-    int single = 49;
-    if (vipType == 1)
-        single = 49;
-    else if (vipType == 2)
-        single = 69;
-    else if (vipType == 3)
-        single = 99;
-
-    // 折扣
-    double discount = 1;
-    int usedMonth = vipMonth;
-    if (vipMonth >= 24) // 永久算两年
-    {
-        usedMonth = 24;
-        discount = 0.8;
-    }
-    else if (vipMonth >= 12)
-        discount = 0.9;
-    else if (vipMonth >= 6)
-        discount = 0.95;
-    else if (vipMonth >= 3)
-        discount = 0.98;
-
-    if (discount < 0.99)
-    {
-        int val = int((discount + 1e-4) * 100);
-        int a = val / 10;
-        int b = val % 10;
-        if (b == 0)
-            ui->discountLabel->setText(QString("%1折").arg(a));
-        else
-            ui->discountLabel->setText(QString("%1.%2折").arg(a).arg(b));
-    }
-    else
-        ui->discountLabel->setText("");
-
-    int total = int(single * usedMonth * discount);
-
-    ui->priceLabel->setText("￥" + QString::number(total)); */
 }
 
 void BuyVIPDialog::resizeEvent(QResizeEvent *e)
@@ -276,7 +270,7 @@ void BuyVIPDialog::on_payButton_clicked()
     {
         if (roomId.isEmpty())
         {
-            QMessageBox::information(this, "购买", "感谢您的支持！\n但是，付款前是不是得先切换到直播间？");
+            QMessageBox::information(this, "购买", "感谢您的支持！\n但是，付款前需要先打开对应直播间哦~\n主界面左上角输入房号即可。");
             return ;
         }
     }
