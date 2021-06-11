@@ -486,9 +486,12 @@ void MainWindow::readConfig()
     roomId = settings->value("danmaku/roomId", "").toString();
     if (!roomId.isEmpty())
         ui->roomIdEdit->setText(roomId);
-    else
-        // TODO: 设置为默认的页面
-        setRoomCover(QPixmap(":/bg/bg"));
+    else // 设置为默认界面
+    {
+        QTimer::singleShot(0, [=]{
+            setRoomCover(QPixmap(":/bg/bg"));
+        });
+    }
 
     // 移除间隔
     removeTimer = new QTimer(this);
