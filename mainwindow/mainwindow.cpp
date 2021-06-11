@@ -2833,6 +2833,8 @@ void MainWindow::getCookieAccount()
         cookieUname = dataObj.value("uname").toString();
         qInfo() << "当前cookie用户：" << cookieUid << cookieUname;
         ui->robotNameButton->setText(cookieUname);
+        ui->robotNameButton->adjustMinimumSize();
+        ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
 
         getRobotInfo();
         gettingUser = false;
@@ -3971,7 +3973,7 @@ void MainWindow::getRoomCover(QString url)
                          + 4 * (bgTrans.green()) * (bgTrans.green())
                          + 2 * (bgTrans.blue()) * (bgTrans.blue()))
                          / 9 / 255;
-            alpha = 32 + alpha / 4; // 32~96
+            alpha = 16 + alpha / 4; // 16~80
             bgTrans.setAlpha(alpha);
             QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(fluentRadius) + " }";
             ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
@@ -3982,7 +3984,7 @@ void MainWindow::getRoomCover(QString url)
                          + 4 * (themeGradient.green()) * (themeGradient.green())
                          + 2 * (themeGradient.blue()) * (themeGradient.blue()))
                          / 9 / 255;
-            alpha = 32 + alpha / 4; // 32~96
+            alpha = 16 + alpha / 4; // 16~80
             themeGradient = themeBg;
             themeGradient.setAlpha(alpha);
         });

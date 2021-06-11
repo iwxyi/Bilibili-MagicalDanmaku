@@ -17,7 +17,7 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     setAttribute(Qt::WA_DeleteOnClose, true);
 
-    ui->payButton->setBgColor(QColor("#ffe5d9"));
+    ui->payButton->setBgColor(QColor("#fcaf94"));
     ui->payButton->setPaddings(36, 36, 9, 9);
     ui->payButton->adjustMinimumSize();
     ui->imageLabel->setStyleSheet("");
@@ -30,7 +30,6 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
         "监听直播间事件",
         "功能代码咨询",
         "弹幕过滤",
-        "代码自动备份",
         "修改点歌回复",
         "弹幕切歌",
         "点歌过滤",
@@ -113,6 +112,8 @@ BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString
 
     ui->roomIdLabel->setText("房号: " + roomId);
     ui->robotIdLabel->setText("账号: " + userId);
+    ui->roomIdLabel->setToolTip("主播：" + upName);
+    ui->robotIdLabel->setToolTip("用户：" + username);
 
     {
         QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect(ui->payButton);
