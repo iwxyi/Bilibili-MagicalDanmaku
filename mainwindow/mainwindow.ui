@@ -404,7 +404,7 @@ background-repeat:none;</string>
                     <string notr="true">color: gray;</string>
                    </property>
                    <property name="text">
-                    <string>UL0</string>
+                    <string/>
                    </property>
                   </widget>
                  </item>

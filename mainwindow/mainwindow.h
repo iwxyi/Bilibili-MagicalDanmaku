@@ -740,6 +740,8 @@ private:
     int hasPermission();
 
     void getRoomCover(QString url);
+    void setRoomCover(const QPixmap &pixmap);
+    void setRoomThemeByCover(double val);
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();

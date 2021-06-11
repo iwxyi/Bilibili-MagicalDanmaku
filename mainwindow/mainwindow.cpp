@@ -486,6 +486,9 @@ void MainWindow::readConfig()
     roomId = settings->value("danmaku/roomId", "").toString();
     if (!roomId.isEmpty())
         ui->roomIdEdit->setText(roomId);
+    else
+        // TODO: 设置为默认的页面
+        setRoomCover(QPixmap(":/bg/bg"));
 
     // 移除间隔
     removeTimer = new QTimer(this);
@@ -3585,7 +3588,8 @@ void MainWindow::getRoomInfo(bool reconnect)
     get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
-            qCritical() << s8("返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("房间返回结果不为0：") << json.value("message").toString();
+            setRoomCover(QPixmap(":/bg/bg"));
             return ;
         }
 
@@ -3897,115 +3901,125 @@ void MainWindow::getRoomCover(QString url)
 
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
-        roomCover = pixmap; // 原图
-        if (roomCover.isNull())
-            return ;
-
-        adjustCoverSizeByRoomCover(roomCover);
-
-        /* int w = ui->roomCoverLabel->width();
-        if (w > ui->tabWidget->contentsRect().width())
-            w = ui->tabWidget->contentsRect().width();
-        pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
-        ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
-        ui->roomCoverLabel->setMinimumSize(1, 1); */
-
-        // 设置程序主题
-        QColor bg, fg, sbg, sfg;
-        auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
-        ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
-        prevPa = BFSColor::fromPalette(palette());
-        currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
-        QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
-        ani->setStartValue(0);
-        ani->setEndValue(1.0);
-        ani->setDuration(500);
-        connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
-            double d = val.toDouble();
-            BFSColor bfs = prevPa + (currentPa - prevPa) * d;
-            QColor bg, fg, sbg, sfg;
-            bfs.toColors(&bg, &fg, &sbg, &sfg);
-
-            themeBg = bg;
-            themeFg = fg;
-            themeSbg = sbg;
-            themeSfg = sfg;
-
-            QPalette pa;
-            pa.setColor(QPalette::Window, bg);
-            pa.setColor(QPalette::Background, bg);
-            pa.setColor(QPalette::Button, bg);
-            pa.setColor(QPalette::Base, bg);
-
-            pa.setColor(QPalette::Foreground, fg);
-            pa.setColor(QPalette::Text, fg);
-            pa.setColor(QPalette::ButtonText, fg);
-            pa.setColor(QPalette::WindowText, fg);
-
-            // 设置背景透明
-            QString labelStyle = "color:" + QVariant(fg).toString() + ";";
-            statusLabel->setStyleSheet(labelStyle);
-            ui->roomNameLabel->setStyleSheet(labelStyle + "font-size: 18px;");
-
-            pa.setColor(QPalette::Highlight, sbg);
-            pa.setColor(QPalette::HighlightedText, sfg);
-            setPalette(pa);
-            // setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"}");
-            ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
-            roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
-            sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
-            ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
-                                               [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
-            thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
-            thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
-            ui->showLiveDanmakuWindowButton->setBgColor(sbg);
-            ui->showLiveDanmakuWindowButton->setTextColor(sfg);
-            ui->SendMsgButton->setTextColor(fg);
-            ui->showOrderPlayerButton->setNormalColor(sbg);
-            ui->showOrderPlayerButton->setTextColor(sfg);
-            appendListItemButton->setBgColor(sbg);
-            appendListItemButton->setIconColor(sfg);
-            if (hasPermission())
-            {
-                ui->droplight->setNormalColor(sbg);
-                ui->droplight->setTextColor(sfg);
-            }
-
-            // 纯文字label的
-            pa = ui->appNameLabel->palette();
-            pa.setColor(QPalette::Foreground, fg);
-            pa.setColor(QPalette::Text, fg);
-            pa.setColor(QPalette::ButtonText, fg);
-            pa.setColor(QPalette::WindowText, fg);
-            ui->appNameLabel->setPalette(pa);
-            ui->appDescLabel->setPalette(pa);
-
-            QColor bgTrans = sbg;
-            int alpha = (3 * ( bgTrans.red()) * (bgTrans.red())
-                         + 4 * (bgTrans.green()) * (bgTrans.green())
-                         + 2 * (bgTrans.blue()) * (bgTrans.blue()))
-                         / 9 / 255;
-            alpha = 16 + alpha / 4; // 16~80
-            bgTrans.setAlpha(alpha);
-            QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(fluentRadius) + " }";
-            ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
-            ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
-            ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
-
-            alpha = (3 * ( themeGradient.red()) * (themeGradient.red())
-                         + 4 * (themeGradient.green()) * (themeGradient.green())
-                         + 2 * (themeGradient.blue()) * (themeGradient.blue()))
-                         / 9 / 255;
-            alpha = 16 + alpha / 4; // 16~80
-            themeGradient = themeBg;
-            themeGradient.setAlpha(alpha);
-        });
-        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
-        ani->start();
-
-        // 设置主要界面主题
-        ui->tabWidget->setBg(roomCover);
+        setRoomCover(pixmap);
     });
+}
+
+void MainWindow::setRoomCover(const QPixmap& pixmap)
+{
+    roomCover = pixmap; // 原图
+    if (roomCover.isNull())
+        return ;
+
+    adjustCoverSizeByRoomCover(roomCover);
+
+    /* int w = ui->roomCoverLabel->width();
+    if (w > ui->tabWidget->contentsRect().width())
+        w = ui->tabWidget->contentsRect().width();
+    pixmap = pixmap.scaledToWidth(w, Qt::SmoothTransformation);
+    ui->roomCoverLabel->setPixmap(getRoundedPixmap(pixmap));
+    ui->roomCoverLabel->setMinimumSize(1, 1); */
+
+    // 设置程序主题
+    QColor bg, fg, sbg, sfg;
+    auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
+    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    prevPa = BFSColor::fromPalette(palette());
+    currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
+    QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
+    ani->setStartValue(0);
+    ani->setEndValue(1.0);
+    ani->setDuration(500);
+    connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
+        setRoomThemeByCover(val.toDouble());
+    });
+    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    ani->start();
+
+    // 设置主要界面主题
+    ui->tabWidget->setBg(roomCover);
+}
+
+void MainWindow::setRoomThemeByCover(double val)
+{
+    double d = val;
+    BFSColor bfs = prevPa + (currentPa - prevPa) * d;
+    QColor bg, fg, sbg, sfg;
+    bfs.toColors(&bg, &fg, &sbg, &sfg);
+
+    themeBg = bg;
+    themeFg = fg;
+    themeSbg = sbg;
+    themeSfg = sfg;
+
+    QPalette pa;
+    pa.setColor(QPalette::Window, bg);
+    pa.setColor(QPalette::Background, bg);
+    pa.setColor(QPalette::Button, bg);
+    pa.setColor(QPalette::Base, bg);
+
+    pa.setColor(QPalette::Foreground, fg);
+    pa.setColor(QPalette::Text, fg);
+    pa.setColor(QPalette::ButtonText, fg);
+    pa.setColor(QPalette::WindowText, fg);
+
+    // 设置背景透明
+    QString labelStyle = "color:" + QVariant(fg).toString() + ";";
+    statusLabel->setStyleSheet(labelStyle);
+    ui->roomNameLabel->setStyleSheet(labelStyle + "font-size: 18px;");
+
+    pa.setColor(QPalette::Highlight, sbg);
+    pa.setColor(QPalette::HighlightedText, sfg);
+    setPalette(pa);
+    // setStyleSheet("QMainWindow{background:"+QVariant(bg).toString()+"}");
+    ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent; color:"+QVariant(fg).toString()+"}");
+    roomIdBgWidget->setStyleSheet("#roomIdBgWidget{ background: " + QVariant(themeSbg).toString() + "; border-radius: " + snum(roomIdBgWidget->height()/2) + "px; }");
+    sideButtonList.at(ui->stackedWidget->currentIndex())->setNormalColor(sbg);
+    ui->tagsButtonGroup->setMouseColor([=]{QColor c = themeSbg; c.setAlpha(127); return c;}(),
+                                       [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
+    ui->showLiveDanmakuWindowButton->setBgColor(sbg);
+    ui->showLiveDanmakuWindowButton->setTextColor(sfg);
+    ui->SendMsgButton->setTextColor(fg);
+    ui->showOrderPlayerButton->setNormalColor(sbg);
+    ui->showOrderPlayerButton->setTextColor(sfg);
+    appendListItemButton->setBgColor(sbg);
+    appendListItemButton->setIconColor(sfg);
+    if (hasPermission())
+    {
+        ui->droplight->setNormalColor(sbg);
+        ui->droplight->setTextColor(sfg);
+    }
+
+    // 纯文字label的
+    pa = ui->appNameLabel->palette();
+    pa.setColor(QPalette::Foreground, fg);
+    pa.setColor(QPalette::Text, fg);
+    pa.setColor(QPalette::ButtonText, fg);
+    pa.setColor(QPalette::WindowText, fg);
+    ui->appNameLabel->setPalette(pa);
+    ui->appDescLabel->setPalette(pa);
+
+    QColor bgTrans = sbg;
+    int alpha = (3 * ( bgTrans.red()) * (bgTrans.red())
+                 + 4 * (bgTrans.green()) * (bgTrans.green())
+                 + 2 * (bgTrans.blue()) * (bgTrans.blue()))
+                 / 9 / 255;
+    alpha = 16 + alpha / 4; // 16~80
+    bgTrans.setAlpha(alpha);
+    QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(fluentRadius) + " }";
+    ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
+    ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
+    ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
+
+    alpha = (3 * ( themeGradient.red()) * (themeGradient.red())
+                 + 4 * (themeGradient.green()) * (themeGradient.green())
+                 + 2 * (themeGradient.blue()) * (themeGradient.blue()))
+                 / 9 / 255;
+    alpha = 16 + alpha / 4; // 16~80
+    themeGradient = themeBg;
+    themeGradient.setAlpha(alpha);
 }
 
 void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)

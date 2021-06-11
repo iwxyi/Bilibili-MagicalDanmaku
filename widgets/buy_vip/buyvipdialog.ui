@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>677</height>
+    <height>730</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -207,7 +207,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>417</width>
-        <height>166</height>
+        <height>219</height>
        </rect>
       </property>
       <property name="styleSheet">

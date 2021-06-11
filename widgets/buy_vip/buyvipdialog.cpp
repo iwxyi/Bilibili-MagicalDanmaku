@@ -302,4 +302,5 @@ void BuyVIPDialog::on_couponButton_clicked()
     this->couponCode = coupon;
     ui->couponButton->setText(coupon);
     ui->couponButton->adjustMinimumSize();
+    updatePrice();
 }
