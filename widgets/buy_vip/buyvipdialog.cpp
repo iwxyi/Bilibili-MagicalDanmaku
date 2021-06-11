@@ -166,18 +166,35 @@ void BuyVIPDialog::updatePrice()
         // 设置单价折扣
         {
             double discount = data.d("coupon_discount");
-            if (discount > 0 && discount <= 1)
+            if (discount > 0 && discount < 1)
             {
                 this->couponDiscount = discount;
-                ui->typeRRPriceLabel->setText(QString("%1 <s><font color='gray'>%2</font></s><sub>元/月</sub>")
+                ui->typeRRPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
                                               .arg(snum(int(unit1 * discount)))
                                               .arg(snum(int(unit1))));
-                ui->typeRoomPriceLabel->setText(QString("%1 <s><font color='gray'>%2</font></s><sub>元/月</sub>")
+                ui->typeRoomPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
                                               .arg(snum(int(unit2 * discount)))
                                               .arg(snum(int(unit2))));
-                ui->typeRobotPriceLabel->setText(QString("%1 <s><font color='gray'>%2</font></s><sub>元/月</sub>")
+                ui->typeRobotPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
                                               .arg(snum(int(unit3 * discount)))
                                               .arg(snum(int(unit3))));
+
+                {
+                    int val = int((discount + 1e-4) * 100);
+                    int a = val / 10;
+                    int b = val % 10;
+                    if (b == 0)
+                        ui->couponButton->setToolTip(QString("%1折").arg(a));
+                    else
+                        ui->couponButton->setToolTip(QString("%1.%2折").arg(a).arg(b));
+                }
+            }
+            else
+            {
+                ui->typeRRPriceLabel->setText(snum(int(unit1)) + "元/月");
+                ui->typeRoomPriceLabel->setText(snum(int(unit2)) + "元/月");
+                ui->typeRobotPriceLabel->setText(snum(int(unit3)) + "元/月");
+                ui->couponButton->setToolTip("");
             }
         }
     });
