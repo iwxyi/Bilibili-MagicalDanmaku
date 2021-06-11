@@ -49,10 +49,15 @@ private:
     int vipType = VIP_TYPE_RR;
     int vipMonth = 1;
     QString couponCode;
+    double couponDiscount = 1; // 优惠券折扣
 
     bool firstShow = true;
     bool mayPayed = false;
     const QString serverPath = "http://iwxyi.com:8102/server/";
+
+    double unit1 = 49;
+    double unit2 = 69;
+    double unit3 = 99;
 };
 
 #endif // BUYVIPDIALOG_H
