@@ -9991,7 +9991,8 @@ void MainWindow::handleMessage(QJsonObject json)
         // 因为高能榜上的只有名字和ID，没有粉丝牌，有需要的话还是需要手动刷新一下
         if (array.size() != onlineGoldRank.size())
         {
-            updateOnlineGoldRank();
+            // 还是不更新了吧，没有必要
+            // updateOnlineGoldRank();
         }
         else
         {
@@ -10400,6 +10401,27 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "STOP_LIVE_ROOM_LIST")
     {
         return ;
+    }
+    else if (cmd == "COMMON_NOTICE_DANMAKU")
+    {
+        /*{
+            "cmd": "COMMON_NOTICE_DANMAKU",
+            "data": {
+                "content_segments": [
+                    {
+                        "font_color": "#FB7299",
+                        "text": "本场PK大乱斗我方获胜！达成<$3$>连胜！感谢<$平平无奇怜怜小天才$>为胜利做出的贡献",
+                        "type": 1
+                    }
+                ],
+                "dmscore": 144,
+                "terminals": [ 1, 2, 3, 4, 5 ]
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        QString text = data.o("content_segments").s("text");
+        text.replace("<$", "").replace("$>", "");
+        triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
     }
     else
     {
