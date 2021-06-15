@@ -159,7 +159,7 @@ bool renameDir(QString path, QString new_path, bool override)
         else
             deleteDir(new_path);
     }
-    QDir dir(path);
+    QDir dir;
     return dir.rename(path, new_path);
 }
 
@@ -184,7 +184,7 @@ bool ensureFileExist(QString path)
     {
         if (file_info.isDir())
         {
-            QDir dir(path);
+            QDir dir;
             dir.rmdir(path); // 删除目录
 
             QFile file(path);
@@ -213,19 +213,17 @@ bool ensureDirExist(QString path)
         QFile file(path);
         file.remove(); // 删除文件
 
-        QDir dir(path); // 创建目录
+        QDir dir; // 创建目录
         return dir.mkpath(path);
     }
 
-    QDir dir(path);
-    if (dir.exists())
+    if (QDir(path).exists())
     {
         return true;
     }
     else
     {
-        // dir.mkdir(path) ;// 创建文件夹
-        return dir.mkpath(path); // 创建多级目录
+        return QDir().mkpath(path); // 创建多级目录
     }
 }
 
