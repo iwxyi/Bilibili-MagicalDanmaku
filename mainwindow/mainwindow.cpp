@@ -5721,7 +5721,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
 {
     QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
     bool isTrue = false;
-    QRegularExpression compRe("^\\s*([^<>=!~]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!~]*?)\\s*$");
+    QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
     QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
     QRegularExpressionMatch match;
     foreach (QString orExp, orExps)
@@ -5797,6 +5797,21 @@ bool MainWindow::processVariantConditions(QString exprs) const
                 CALC_DEB << "比较字符串" << s1 << op << s2;
                 if (op == "~")
                 {
+                    if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3
+                    {
+                        QString full = caps.at(0);
+                        if (full.indexOf(QRegularExpression("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$"), 0, &match) == -1)
+                        {
+                            qWarning() << "错误的~运算：" << full;
+                            isTrue = false;
+                            break;
+                        }
+                        caps = match.capturedTexts();
+                        s1 = caps.at(1);
+                        s2 = caps.at(3);
+                        CALC_DEB << "纠正运算：" << s1 << "~" << s2;
+                    }
+
                     if (!s1.contains(QRegularExpression(s2)))
                     {
                         isTrue = false;
@@ -6322,7 +6337,7 @@ void MainWindow::saveTouta()
     settings->setValue("pk/toutaCount", toutaCount);
     settings->setValue("pk/chiguaCount", chiguaCount);
     settings->setValue("pk/toutaGOld", toutaGold);
-    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
+    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
 void MainWindow::restoreToutaGifts(QString text)
@@ -13187,7 +13202,8 @@ bool MainWindow::execTouta()
         sendGift(giftId, giftNum);
         localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
         qInfo() << "大乱斗再次赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
-        pkVoting += giftUnit * giftNum; // 正在赠送中
+        if (!localDebug)
+            pkVoting += giftUnit * giftNum; // 正在赠送中
 
         toutaCount++;
         toutaGold += giftUnit * giftNum;

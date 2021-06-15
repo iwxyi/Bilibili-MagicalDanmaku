@@ -717,7 +717,7 @@ border-image: url(C:/Path/To/Image.png)
 | care             | 特别关心           | 是：1，否：0                                                 |
 | strong_notify    | 强提醒             | 是：1，否：0                                                 |
 | not_welcome      | 不自动欢迎         | 不欢迎：1，欢迎：0                                           |
-| not_reply        | 不自动回复         | 不回复：1，回复：0                                           |
+| not_reply        | 不自动回复         | 是否是机器人发的弹幕，是：1，否：0                           |
 | blocked          | 被禁言             | 禁言：1，未禁言0                                             |
 | playing_song     | 当前歌曲           | 点歌姬没有播放歌曲则为空                                     |
 | song_order_uname | 当前歌曲点歌者     | 同上                                                         |
