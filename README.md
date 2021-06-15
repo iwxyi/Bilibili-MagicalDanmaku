@@ -1858,6 +1858,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | 过滤事件                 | 说明（reject时）                |
 | ------------------------ | ------------------------------- |
 | FILTER_MUSIC_ORDER       | 阻止点歌                        |
+| FILTER_AUTO_REPLY        | 阻止所有的自动回复              |
 | FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上      |
 | FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上      |
 | FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上 |

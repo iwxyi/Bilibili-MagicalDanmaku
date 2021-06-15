@@ -2554,6 +2554,8 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
         if (!hasPermission())
             return ;
+        if (isFilterRejected("FILTER_AUTO_REPLY", danmaku))
+            return ;
         if ((!manual && !shallAutoMsg(sl, manual)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
         {
             if (!danmaku.isPkLink())
