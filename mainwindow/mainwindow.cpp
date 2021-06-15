@@ -4850,11 +4850,23 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     // 弹幕变量、环境变量（固定文字）
     re = QRegularExpression("%[\\w_]+?%");
     int matchPos = 0;
+    bool ok;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
     {
-        QString rpls = replaceDanmakuVariants(danmaku, match.captured(0));
-        msg.replace(match.captured(0), rpls);
-        matchPos = matchPos + rpls.length();
+        QString mat = match.captured(0);
+        QString rpls = replaceDanmakuVariants(danmaku, mat, &ok);
+        if (ok)
+        {
+            msg.replace(mat, rpls);
+            matchPos = matchPos + rpls.length();
+        }
+        else
+        {
+            if (mat.length() > 1 && mat.endsWith("%"))
+                matchPos += mat.length() - 1;
+            else
+                matchPos += mat.length();
+        }
     }
 
     // 根据昵称替换为uid：倒找最近的弹幕、送礼
@@ -4923,8 +4935,9 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     return msg;
 }
 
-QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QString &key) const
+QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QString &key, bool *ok) const
 {
+    *ok = true;
     // 用户昵称
     if (key == "%uname%" || key == "%username%" || key =="%nickname%")
         return danmaku.getNickname();
@@ -5401,7 +5414,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(qrand() % 100 + 1);
     }
     else
+    {
+        *ok = false;
         return "";
+    }
 }
 
 /**
@@ -7161,6 +7177,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString uid = caps.at(1);
             QString msg = caps.at(2);
+            msg.replace("%n%", "\n");
             qInfo() << "执行命令：" << caps;
             localNotify(msg, uid.toLongLong());
             return true;
@@ -7376,13 +7393,16 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString format = caps.at(3);
+            if (!dirName.isEmpty())
+                ensureDirExist(dirName);
             format.replace("%n%", "\n");
-            appendFileLine(dirName, fileName, format, lastDanmaku);
+            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
+            appendFileLine(path, fileName, format, lastDanmaku);
             return true;
         }
     }
 
-    // 写入文件行
+    // 写入文件
     if (msg.contains("writeTextFile"))
     {
         re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
@@ -7393,8 +7413,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString text = caps.at(3);
+            if (!dirName.isEmpty())
+                ensureDirExist(dirName);
             text.replace("%n%", "\n");
-            writeTextFile(dirName + "/" + fileName, text);
+            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
+            writeTextFile(path, text);
             return true;
         }
     }

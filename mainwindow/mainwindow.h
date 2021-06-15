@@ -791,7 +791,7 @@ private:
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
-    QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key) const;
+    QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
     QString replaceDanmakuExtras(const QJsonObject& json, const QString &key_seq) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;

@@ -764,7 +764,7 @@ border-image: url(C:/Path/To/Image.png)
 
 | 常量 | 描述                                                         |
 | ---- | ------------------------------------------------------------ |
-| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()` |
+| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets`、`sendToLastSocket()`、`runCommandLine()` |
 
 
 
