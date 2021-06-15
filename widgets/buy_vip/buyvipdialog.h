@@ -48,7 +48,7 @@ private:
     int vipLevel = 1;
     int vipType = VIP_TYPE_RR;
     int vipMonth = 1;
-    QString couponCode;
+    QString couponCode = "神奇弹幕";
     double couponDiscount = 1; // 优惠券折扣
 
     bool firstShow = true;
