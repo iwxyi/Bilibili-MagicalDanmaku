@@ -481,7 +481,7 @@ private slots:
 
     void on_autoBlockTimeSpin_editingFinished();
 
-    void triggerCmdEvent(QString cmd, LiveDanmaku danmaku, bool debug = true);
+    void triggerCmdEvent(QString cmd, LiveDanmaku danmaku, bool debug = false);
 
     void on_voiceLocalRadio_toggled(bool checked);
 

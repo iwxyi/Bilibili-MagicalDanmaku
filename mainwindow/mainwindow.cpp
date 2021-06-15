@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     readConfig();
     initEvent();
 
-    triggerCmdEvent("START_UP", LiveDanmaku());
+    triggerCmdEvent("START_UP", LiveDanmaku(), true);
 }
 
 void MainWindow::initView()
@@ -1087,7 +1087,7 @@ void MainWindow::readConfig()
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
             } */
         }
-        triggerCmdEvent("NEW_HOUR", LiveDanmaku());
+        triggerCmdEvent("NEW_HOUR", LiveDanmaku(), true);
 
         // 判断每天最后一小时
         // 以 23:59:30为准
@@ -1108,27 +1108,27 @@ void MainWindow::readConfig()
             if (delta < 0) // 可能已经是即将最后了
                 delta = 0;
             QTimer::singleShot(delta, [=]{
-                triggerCmdEvent("DAY_END", LiveDanmaku());
+                triggerCmdEvent("DAY_END", LiveDanmaku(), true);
 
                 // 判断每月最后一天
                 QDate d = current.date();
                 int days = d.daysInMonth();
                 if (d.day() == days) // 1~31 == 28~31
                 {
-                    triggerCmdEvent("MONTH_END", LiveDanmaku());
+                    triggerCmdEvent("MONTH_END", LiveDanmaku(), true);
 
                     // 判断每年最后一天
                     days = d.daysInYear();
                     if (d.dayOfYear() == days)
                     {
-                        triggerCmdEvent("YEAR_END", LiveDanmaku());
+                        triggerCmdEvent("YEAR_END", LiveDanmaku(), true);
                     }
                 }
 
                 // 判断每周最后一天
                 if (d.dayOfWeek() == 7)
                 {
-                    triggerCmdEvent("WEEK_END", LiveDanmaku());
+                    triggerCmdEvent("WEEK_END", LiveDanmaku(), true);
                 }
             });
         }
@@ -1160,24 +1160,24 @@ void MainWindow::readConfig()
         countPopul = 0;
 
         // 触发每天事件
-        triggerCmdEvent("NEW_DAY", LiveDanmaku());
-        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
 
         // 判断每一月初
         const QDate currDate = QDate::currentDate();
         if (currDate.day() == 1)
         {
-            triggerCmdEvent("NEW_MONTH", LiveDanmaku());
-            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+            triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
+            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
             settings->setValue("runtime/open_month", currDate.month());
 
             // 判断每一年初
             if (currDate.month() == 1)
             {
-                triggerCmdEvent("NEW_YEAR", LiveDanmaku());
-                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
-                triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku());
+                triggerCmdEvent("NEW_YEAR", LiveDanmaku(), true);
+                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
+                triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku(), true);
                 settings->setValue("runtime/open_year", currDate.year());
             }
         }
@@ -1185,8 +1185,8 @@ void MainWindow::readConfig()
         // 判断每周一
         if (currDate.dayOfWeek() == 1)
         {
-            triggerCmdEvent("NEW_WEEK", LiveDanmaku());
-            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+            triggerCmdEvent("NEW_WEEK", LiveDanmaku(), true);
+            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
             settings->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
@@ -1200,23 +1200,23 @@ void MainWindow::readConfig()
     if (prevYear != currDate.year())
     {
         prevMonth = prevDay = -1; // 避免是不同年的同一月
-        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_year", currDate.year());
     }
     if (prevMonth != currDate.month())
     {
         prevDay = -1; // 避免不同月的同一天
-        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_month", currDate.month());
     }
     if (prevDay != currDate.day())
     {
-        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
     }
     if (prevWeekNumber != currDate.weekNumber())
     {
-        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
@@ -1508,7 +1508,7 @@ MainWindow::~MainWindow()
         playerWindow->deleteLater();
     }*/
 
-    triggerCmdEvent("SHUT_DOWN", LiveDanmaku());
+    triggerCmdEvent("SHUT_DOWN", LiveDanmaku(), true);
 
     delete ui;
 
@@ -2122,6 +2122,8 @@ void MainWindow::on_testDanmakuButton_clicked()
     QString text = ui->testDanmakuEdit->text();
     if (text.isEmpty())
         text = "测试弹幕";
+    QRegularExpressionMatch match;
+
     qint64 uid = 123;
     int r = qrand() % 7 + 1;
     if (text.startsWith("$"))
@@ -2155,7 +2157,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
         qInfo() << "条件替换结果：" << words;
 
-        triggerCmdEvent("SEND_GIFT", danmaku);
+        triggerCmdEvent("SEND_GIFT", danmaku, true);
     }
     else if (text == "测试礼物连击")
     {
@@ -2260,7 +2262,7 @@ void MainWindow::on_testDanmakuButton_clicked()
             connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
 
-        triggerCmdEvent("LIVE", LiveDanmaku());
+        triggerCmdEvent("LIVE", LiveDanmaku(), true);
     }
     else if (text == "测试对面主播进入")
     {
@@ -2292,7 +2294,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         uid = 123456;
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         appendNewLiveDanmaku(danmaku);
-        triggerCmdEvent("SEND_GIFT", danmaku);
+        triggerCmdEvent("SEND_GIFT", danmaku, true);
     }
     else if (text == "测试高能榜")
     {
@@ -2306,6 +2308,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text == "测试对面舰长")
     {
         getPkOnlineGuardPage(0);
+    }
+    else if (text == "测试偷塔")
+    {
+        execTouta();
     }
     else
     {
@@ -3075,7 +3081,7 @@ void MainWindow::getRoomUserInfo()
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
-            qCritical() << s8("获取主播信息返回结果不为0：") << json.value("message").toString();
+            qCritical() << s8("获取房间本用户信息返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -3239,7 +3245,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         {
             qWarning() << "点歌未戴粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
             localNotify("点歌未戴粉丝勋章");
-            triggerCmdEvent("ORDER_SONG_NO_MEDAL", danmaku);
+            triggerCmdEvent("ORDER_SONG_NO_MEDAL", danmaku, true);
             return ;
         }
     }
@@ -3263,7 +3269,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
             MyJson json;
             json.insert("key", s);
             qInfo() << "阻止点歌，关键词：" << s;
-            triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json));
+            triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json), true);
             return ;
         }
     }
@@ -3278,7 +3284,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         {
             localNotify("已阻止频繁点歌：" + snum(count));
             danmaku.setNumber(count);
-            triggerCmdEvent("ORDER_SONG_FREQUENCY", danmaku);
+            triggerCmdEvent("ORDER_SONG_FREQUENCY", danmaku, true);
         }
         else
         {
@@ -3289,7 +3295,7 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     {
         QClipboard* clip = QApplication::clipboard();
         clip->setText(text);
-        triggerCmdEvent("ORDER_SONG_COPY", danmaku);
+        triggerCmdEvent("ORDER_SONG_COPY", danmaku, true);
 
         addNoReplyDanmakuText(danmaku.getText()); // 点歌回复
         QTimer::singleShot(10, [=]{
@@ -5936,7 +5942,7 @@ bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 
     bool reject = s.contains(QRegularExpression(">\\s*reject\\s*(\\s*)"));
     if (reject)
-        qInfo() << "过滤器已阻止操作:" << filterText;
+        qInfo() << "已过滤:" << filterText;
 
     if (reject && !s.contains("\\n")) // 拒绝，且不需要其他操作，直接返回
     {
@@ -5964,7 +5970,7 @@ qint64 MainWindow::unameToUid(QString text)
         if (nick.contains(text))
         {
             // 就是这个人
-            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku);
+            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku, true);
             return danmaku.getUid();
         }
     }
@@ -5983,14 +5989,14 @@ qint64 MainWindow::unameToUid(QString text)
         if (nick.contains(text))
         {
             // 就是这个人
-            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku);
+            triggerCmdEvent("FIND_USER_BY_UNAME", danmaku, true);
             return danmaku.getUid();
         }
         hadMatches.insert(uid);
     }
 
     localNotify("[未找到用户：" + text + "]");
-    triggerCmdEvent("NOT_FIND_USER_BY_UNAME", LiveDanmaku(text));
+    triggerCmdEvent("NOT_FIND_USER_BY_UNAME", LiveDanmaku(text), true);
     return 0;
 }
 
@@ -6006,7 +6012,7 @@ QString MainWindow::uidToName(qint64 uid)
         if (danmaku.getUid() == uid)
         {
             // 就是这个人
-            triggerCmdEvent("FIND_USER_BY_UID", danmaku);
+            triggerCmdEvent("FIND_USER_BY_UID", danmaku, true);
             return danmaku.getNickname();
         }
     }
@@ -6021,14 +6027,14 @@ QString MainWindow::uidToName(qint64 uid)
         if (danmaku.getUid() == uid)
         {
             // 就是这个人
-            triggerCmdEvent("FIND_USER_BY_UID", danmaku);
+            triggerCmdEvent("FIND_USER_BY_UID", danmaku, true);
             return danmaku.getNickname();
         }
         hadMatches.insert(uid);
     }
 
     localNotify("[未找到用户：" + snum(uid) + "]");
-    triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(snum(uid)));
+    triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(snum(uid)), true);
     return "";
 }
 
@@ -8564,7 +8570,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
-                    triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data));
+                    triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data), true);
                     localNotify(msg);
                 }
                 else if (cmd == "PK_BATTLE_START_NEW")
@@ -9891,7 +9897,7 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!guardCount)
         {
-            triggerCmdEvent("FIRST_GUARD", danmaku.with(data));
+            triggerCmdEvent("FIRST_GUARD", danmaku.with(data), true);
         }
         currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
@@ -11782,7 +11788,7 @@ void MainWindow::getPkMatchInfo()
         }
 
         QJsonObject data = json.value("data").toObject();
-        triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data));
+        triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data), true);
     });
 }
 
@@ -11842,7 +11848,7 @@ void MainWindow::getPkOnlineGuardPage(int page)
             danmaku.extraJson.insert("guard1", guard1);
             danmaku.extraJson.insert("guard2", guard2);
             danmaku.extraJson.insert("guard3", guard3);
-            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
         }
     });
 }
@@ -13055,9 +13061,9 @@ void MainWindow::pkEnd(QJsonObject json)
                 break;
             }
         LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
-        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data));
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
     }
-    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data));
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
 
     localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
@@ -13138,25 +13144,50 @@ bool MainWindow::execTouta()
         int giftId = 0, giftNum = 0;
         QString giftName;
         int giftUnit = 0, giftVote = 0; // 单价和单乱斗值
+        int needVote = matchVotes - myVotes - pkVoting; // 至少需要多少积分才能不输给对面
 
         if (!ui->toutaGiftCheck->isChecked()) // 赠送吃瓜（比对面多1分）
         {
             giftId = 20004;
             giftUnit = 100;
             giftVote = giftUnit / goldTransPk; // 单个吃瓜有多少乱斗值
-            giftNum = int((matchVotes-myVotes-pkVoting+giftVote) / giftVote); // 需要多少个礼物
+            giftNum = needVote / giftVote + 1; // 需要多少个礼物
 
             chiguaCount += giftNum;
         }
         else // 按类型赠送礼物
         {
+            int minCost = 0x3f3f3f3f;
+            foreach (auto gift, toutaGifts)
+            {
+                int unit = gift.getTotalCoin();
+                int vote = unit / goldTransPk;
+                int num = needVote / vote + 1;
+                int cost = unit * num;
+                if (cost > maxGold)
+                    continue;
+                if (cost > minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
+                {
+                    giftId = gift.getGiftId();
+                    giftName = gift.getGiftName();
+                    giftUnit = unit;
+                    giftVote = vote;
+                    giftNum = num;
+                    minCost = cost;
+                }
+            }
+        }
 
+        if (!giftId)
+        {
+            qWarning() << "没有可赠送的合适礼物：" << needVote << "积分";
+            return false;
         }
 
         sendGift(giftId, giftNum);
-        localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个吃瓜");
+        localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
         qInfo() << "大乱斗再次赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
-        pkVoting += giftUnit * giftNum;
+        pkVoting += giftUnit * giftNum; // 正在赠送中
 
         toutaCount++;
         toutaGold += giftUnit * giftNum;
@@ -14339,7 +14370,7 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
                 localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
             ld.setMedalLevel(level); // 设置为本房间的牌子
         }
-        triggerCmdEvent("MEDAL_UPGRADE", ld.with(json));
+        triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
     });
 }
 
@@ -15106,7 +15137,7 @@ void MainWindow::slotPkEnding()
     }
     execTouta();
 
-    triggerCmdEvent("PK_ENDING", LiveDanmaku());
+    triggerCmdEvent("PK_ENDING", LiveDanmaku(), true);
 }
 
 /**
@@ -15164,7 +15195,7 @@ void MainWindow::slotStartWork()
     // 获取舰长
     updateExistGuards(0);
 
-    triggerCmdEvent("START_WORK", LiveDanmaku());
+    triggerCmdEvent("START_WORK", LiveDanmaku(), true);
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -16441,7 +16472,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
 
     if (!toutaGifts.size())
     {
-        QString s = "";
+        QString s = "20004 吃瓜 100";
         settings->setValue("danmaku/toutaGifts", s);
         restoreToutaGifts(s);
     }

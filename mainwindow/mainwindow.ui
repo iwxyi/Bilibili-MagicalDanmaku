@@ -4254,7 +4254,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="toutaGiftCheck">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>以设置的礼物和数量进行偷塔</string>
                </property>
                <property name="text">
                 <string>智能偷塔</string>
