@@ -9681,8 +9681,8 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             if (danmaku.getUid() == 0)
             {
-                qWarning() << "未在已有高能榜上找到，立即更新高能榜";
-                updateOnlineGoldRank();
+                // qWarning() << "未在已有高能榜上找到，立即更新高能榜";
+                // updateOnlineGoldRank();
                 return ;
             }
 
