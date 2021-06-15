@@ -1499,9 +1499,10 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | SUPER_CHAT_MESSAGE_JPN        | 醒目留言日文翻译                                             |
 | SUPER_CHAT_MESSAGE_DELETE     | 删除醒目留言                                                 |
 | SPECIAL_GIFT                  | 节奏风暴                                                     |
-| **ROOM_BLOCK_MSG**            | 用户被禁言，%uname%昵称                                      |
+| **ROOM_BLOCK_MSG**            | 用户被禁言，`%uname%`昵称                                    |
 | **GUARD_BUY**                 | 有人上船                                                     |
 | FIRST_GUARD                   | 用户初次上船                                                 |
+| NEW_GUARD_COUNT               | 船员数量改变事件，`%uname%`新船员昵称，`%num%`获取大航海数量，附带直播间信息json数据 |
 | USER_TOAST_MSG                | 上船附带的通知                                               |
 | HOT_RANK_CHANGED              | 热门榜排名改变                                               |
 | HOT_RANK_SETTLEMENT           | 荣登热门榜topX                                               |

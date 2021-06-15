@@ -780,6 +780,7 @@ private:
     void sendExpireGift();
     void getBagList(qint64 sendExpire = 0);
     void updateExistGuards(int page);
+    void newGuardUpdate(LiveDanmaku danmaku);
     void updateOnlineGoldRank();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);

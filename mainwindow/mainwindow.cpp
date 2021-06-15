@@ -9955,6 +9955,10 @@ void MainWindow::handleMessage(QJsonObject json)
         if (ui->saveEveryGuardCheck->isChecked())
             saveEveryGuard(danmaku);
 
+        // 新船员数量事件
+        if (!currentGuards.contains(uid))
+            newGuardUpdate(danmaku);
+
         if (!guardCount)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku.with(data), true);
@@ -11678,6 +11682,21 @@ void MainWindow::updateExistGuards(int page)
             updateGuarding = false;
             ui->guardCountLabel->setText(snum(currentGuards.size()));
         }
+    });
+}
+
+/**
+ * 有新上船后调用（不一定是第一次，可能是掉船了）
+ * @param guardLevel 大航海等级
+ */
+void MainWindow::newGuardUpdate(LiveDanmaku danmaku)
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
+    get(url, [=](MyJson json) {
+        int count = json.data().o("guard_info").i("count");
+        LiveDanmaku ld = danmaku;
+        ld.setNumber(count);
+        triggerCmdEvent("NEW_GUARD_COUNT", ld.with(json.data()), true);
     });
 }
 
