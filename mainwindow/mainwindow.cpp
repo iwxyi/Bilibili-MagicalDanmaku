@@ -10194,7 +10194,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (danmakuWindow)
         {
             danmakuWindow->addBlockText(danmu);
-            QTimer::singleShot(time, danmakuWindow, [=]{
+            QTimer::singleShot(time * 1000, danmakuWindow, [=]{
                 danmakuWindow->removeBlockText(danmu);
             });
         }
