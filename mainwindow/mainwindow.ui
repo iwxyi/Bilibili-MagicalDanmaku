@@ -4265,6 +4265,11 @@ margin: 40px;</string>
               <layout class="QHBoxLayout" name="horizontalLayout_54">
                <item>
                 <widget class="QLabel" name="label_54">
+                 <property name="toolTip">
+                  <string>允许偷塔的个数，多个数字空格分隔
+例如：1 2 3 4 5 10 11 99 100
+若不填，则支持任意数量</string>
+                 </property>
                  <property name="text">
                   <string>允许数量</string>
                  </property>
@@ -4273,8 +4278,9 @@ margin: 40px;</string>
                <item>
                 <widget class="QLineEdit" name="toutaGiftCountsEdit">
                  <property name="toolTip">
-                  <string>允许偷塔的个数，多个数字空格分隔
-例如：1 2 3 4 5 10 11 99 100</string>
+                  <string>允许偷塔的礼物数量，从小到大，空格分隔
+例如：1 2 3 4 5 10 11 99 100
+若不填，则支持任意数量</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit

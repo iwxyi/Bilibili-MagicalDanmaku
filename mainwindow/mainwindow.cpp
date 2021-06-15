@@ -13183,13 +13183,40 @@ bool MainWindow::execTouta()
             int minCost = 0x3f3f3f3f;
             foreach (auto gift, toutaGifts)
             {
-                int unit = gift.getTotalCoin();
-                int vote = unit / goldTransPk;
-                int num = needVote / vote + 1;
-                int cost = unit * num;
-                qInfo() << gift.getGiftId() << gift.getGiftName() << unit << vote << num << cost << maxGold;
-                if (cost > maxGold)
+                int unit = gift.getTotalCoin(); // 单价
+                int vote = unit / goldTransPk; // 相当于多少乱斗值
+                int num = needVote / vote + 1; // 起码要这个数量
+                int cost = unit * num; // 总价
+                if (cost > maxGold) // 总价超过上限
                     continue;
+                if (debugPrint)
+                    qInfo() << gift.getGiftId() << gift.getGiftName() << unit << vote << num << cost << maxGold;
+
+                if (toutaGiftCounts.size()) // 数量白名单
+                {
+                    int index = -1;
+                    for (int i = 0; i < toutaGiftCounts.size(); i++)
+                    {
+                        int count = toutaGiftCounts.at(i);
+                        if (count >= num) // 这个数量可以赢
+                        {
+                            int cos = unit * count;
+                            if (cos > maxGold) // 总价超过上限
+                                continue;
+
+                            // 这个可以使用
+                            index = i;
+                            num = count;
+                            cost = cos;
+                            if (debugPrint)
+                                qInfo() << "可以使用的数量：" << num << cost;
+                            break;
+                        }
+                    }
+                    if (index == -1) // 没有合适的数量
+                        continue;
+                }
+
                 if (cost < minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
                 {
                     giftId = gift.getGiftId();
