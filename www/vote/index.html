@@ -1,6 +1,6 @@
 <head>
     <title>神奇弹幕投票</title>
-    <script src="../js/jquery-2.1.0.js"></script>
+    <script src="../js/jquery.js"></script>
     <script src="../js/vue.js"></script>
     <script src="../js/mdui.js"></script>
     <link rel="stylesheet" href="vote.css" />
@@ -208,8 +208,8 @@
 
                     var spans = $(".vote-item-bar-fg");
                     this.voteItems.forEach(function (item, index) {
-                        item.percentage = Math.round(item.votes * 100 / total);
-                        var w = item.votes * width / total;
+                        item.percentage = total == 0 ? 0 : Math.round(item.votes * 100 / total);
+                        var w = total == 0 ? 0 : item.votes * width / total;
                         // $(spans[index]).width(w);
                         $(spans[index]).animate({
                             width: w + "px"

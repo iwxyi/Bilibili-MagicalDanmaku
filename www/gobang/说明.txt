@@ -1,0 +1,12 @@
+扩展说明
+
+【www】文件夹覆盖神奇弹幕安装目录下的www文件夹
+【代码】挨个添加到回复中
+开启【远程->网络服务】，浏览器访问：http://localhost:5520/AiringGo/index.html
+
+弹幕输入：
+开始五子棋
+结束五子棋
+落子 x y（两个坐标数字）
+
+五子棋部分源码来自：https://github.com/airingursb/AiringGo
