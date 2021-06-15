@@ -1,0 +1,50 @@
+canvas {
+    display: block;
+    margin: 50px auto;
+    box-shadow: -2px -2px 2px #EFEFEF, 5px 5px 5px #B9B9B9;
+}
+
+header{
+    display:block;
+    margin:0 auto;
+    width:100%;
+    text-align:center;
+}
+
+header h1{
+    font-family:Arial;
+    font-size:40px;
+    font-weight:bold;
+    margin:0 auto;
+    max-width: 600px;
+}
+
+header #newgamebutton{
+    display:block;
+    margin:20px auto;
+
+    width:100px;
+    padding:10px 10px;
+    background-color:#8f7a66;
+
+    font-family:Arial;
+    color:white;
+
+    border-radius:10px;
+    text-decoration:none;
+}
+header #newgamebutton:hover{
+    background-color:#9f8b77;
+}
+
+header p{
+    font-family:Arial;
+    font-size:25px;
+    margin:10px auto;
+}
+footer{
+     display:block;
+     margin:0 auto;
+     width:100%;
+     text-align:center;
+}

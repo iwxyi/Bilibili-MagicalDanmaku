@@ -1987,7 +1987,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 ```html
 <head>
     <title>神奇弹幕蹲起</title>
-    <script src="js/jquery-2.1.0.js"></script>
+    <script src="js/jquery.js"></script>
 
     <style type="text/css">
         .card {

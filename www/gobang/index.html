@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 本源码参考：https://github.com/airingursb/AiringGo -->
+<head>
+    <meta charset="UTF-8">
+    <link href="css/style.css" rel="stylesheet">
+    <title>神奇弹幕五子棋</title>
+    <script src="../js/jquery.js"></script>
+</head>
+
+<body>
+    <header>
+        <div id="newgamebutton" onclick="startGame()">开始游戏</div>
+    </header>
+    <canvas id="chess" width="450px" height="450px"></canvas>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            var current = 0, total = 0;
+            ws.onopen = function () {
+                ws.send('{"cmd":"cmds", "data":["GOBANG"]}');
+            };
+            ws.onmessage = function (e) {
+                var json = JSON.parse(e.data);
+                console.log(json);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'START':
+                        console.log("开始游戏");
+                        startGame();
+                        break;
+                    case 'DOWN':
+                        var x = json['x'];
+                        var y = json['y'];
+                        setChess(x, y);
+                        console.log("落子：", x, y);
+                        break;
+                }
+            };
+        });
+    </script>
+</body>
+<script src="js/main.js"></script>
+<script src="js/AiringGo.js"></script>
+
+</html>

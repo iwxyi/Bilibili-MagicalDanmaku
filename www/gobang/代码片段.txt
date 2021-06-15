@@ -1,0 +1,37 @@
+依次添加到回复里
+
+------------------------------------------------
+
+
+结束五子棋
+
+[%{gaming}%, %uid% != %{gaming_uid}%, "%uid%" != ""]***请等待当前玩家结束
+>setValue(gaming, 0)\n\
+	>setValue(gaming_uid, )\n\
+	>sendToSockets(GOBANG, {"cmd": "START"})\n\
+	结束游戏，发送“开始五子棋”启动
+	
+	
+	
+------------------------------------------------
+
+
+开始五子棋
+
+[%{gaming}%, %uid% != %{gaming_uid}%]***正在游戏中...
+[!%{gaming}%]>setValue(gaming, 1)\n\
+	>setValue(gaming_uid, %uid%)\n\
+	>sendToSockets(GOBANG, {"cmd": "START"})\n\
+	开始，发送“落子 x y”下棋
+
+
+------------------------------------------------
+
+
+落子 (\d+) (\d+)
+
+[!%{gaming}%]***发送“开始五子棋”开始
+[%uid% != %{gaming_uid}%]**请排队下棋
+// 开始发送落子事件
+>sendToSockets(GOBANG, {"cmd": "DOWN", "x":%$1%, "y":%$2%})\n\
+	落子成功，请继续~
