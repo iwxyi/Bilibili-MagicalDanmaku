@@ -685,6 +685,7 @@ border-image: url(C:/Path/To/Image.png)
 | guard            | 大航海级别         | 只有弹幕消息/购买舰长/舰长进入有；普通0，舰长3，提督2，总督1 |
 | guard_name       | 大航海身份         | “舰长”/“提督”/“总督”，非船员为空                             |
 | admin_or_guard   | 是否是房管或舰长   | 只有弹幕消息有，0或1                                         |
+| online_rank      | 高能榜             | 返回高能榜排名，若不在高能榜上，则为0                        |
 | vip              | 姥爷               | 同上                                                         |
 | svip             | 年费姥爷           | 同上                                                         |
 | uidentity        | 正式会员           | 同上                                                         |

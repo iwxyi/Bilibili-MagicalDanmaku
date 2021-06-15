@@ -5136,6 +5136,20 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%admin_or_guard%")
         return (danmaku.isGuard() || danmaku.isAdmin() || (!upUid.isEmpty() && snum(danmaku.getUid()) == upUid)) ? "1" : "0";
 
+    // 高能榜
+    else if (key == "%online_rank%")
+    {
+        qint64 uid = danmaku.getUid();
+        for (int i = 0; i < onlineGoldRank.size(); i++)
+        {
+            if (onlineGoldRank.at(i).getUid() == uid)
+            {
+                return snum(i + 1);
+            }
+        }
+        return snum(0);
+    }
+
     // 是否是姥爷
     else if (key == "%vip%")
         return danmaku.isVip() ? "1" : "0";

@@ -59,6 +59,7 @@
 大航海级别=guard
 大航海名称=guard_name
 是否是房管或舰长=admin_or_guard
+高能榜=online_rank
 姥爷=vip
 年费姥爷=svip
 正式会员=uidentity
