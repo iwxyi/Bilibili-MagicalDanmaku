@@ -857,6 +857,7 @@ private:
     void pkProcess(QJsonObject json);
     void pkEnd(QJsonObject json);
     int getPkMaxGold(int votes);
+    bool execTouta();
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
     void connectPkRoom();
     void uncompressPkBytes(const QByteArray &body);
@@ -1119,6 +1120,7 @@ private:
     int pkVoting = 0;
     int toutaCount = 0;
     int chiguaCount = 0;
+    int toutaGold = 0;
     int oppositeTouta = 0; // 对面是否偷塔（用作判断）
     QStringList toutaBlankList; // 偷塔黑名单
     QStringList magicalRooms; // 同样使用神奇弹幕的房间

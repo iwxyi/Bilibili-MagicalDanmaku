@@ -793,6 +793,7 @@ void MainWindow::readConfig()
     pkJudgeEarly = settings->value("pk/judgeEarly", 2000).toInt();
     toutaCount = settings->value("pk/toutaCount", 0).toInt();
     chiguaCount = settings->value("pk/chiguaCount", 0).toInt();
+    toutaGold = settings->value("pk/toutaGold", 0).toInt();
     goldTransPk = settings->value("pk/goldTransPk", goldTransPk).toInt();
     toutaBlankList = settings->value("pk/blankList").toString().split(";");
     ui->pkAutoMaxGoldCheck->setChecked(settings->value("pk/autoMaxGold", true).toBool());
@@ -6312,7 +6313,8 @@ void MainWindow::saveTouta()
 {
     settings->setValue("pk/toutaCount", toutaCount);
     settings->setValue("pk/chiguaCount", chiguaCount);
-    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2").arg(toutaCount).arg(chiguaCount));
+    settings->setValue("pk/toutaGOld", toutaGold);
+    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
 void MainWindow::restoreToutaGifts(QString text)
@@ -12916,7 +12918,6 @@ void MainWindow::pkProcess(QJsonObject json)
     if (pkEnding)
     {
         qInfo() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
-        int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
 
         // 显示偷塔情况
         if (prevMyVotes < myVotes)
@@ -12933,39 +12934,23 @@ void MainWindow::pkProcess(QJsonObject json)
         {
             oppositeTouta++;
             localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
-
             {
-                int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
-                int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
-                QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
-                            .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(maxGold).arg(goldTransPk).arg(oppositeTouta)
-                            .arg(num);
                 // qInfo() << "pk偷塔信息：" << s;
                 if (danmuLogStream)
                 {
+                    /* int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+                    int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
+                    QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
+                                .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(getPkMaxGold(qMax(myVotes, matchVotes))).arg(goldTransPk).arg(oppositeTouta)
+                                .arg(num);
                     (*danmuLogStream) << s << "\n";
-                    (*danmuLogStream).flush(); // 立刻刷新到文件里
+                    (*danmuLogStream).flush(); // 立刻刷新到文件里 */
                 }
             }
         }
 
         // 反偷塔，防止对方也在最后几秒刷礼物
-        if (ui->pkAutoMelonCheck->isChecked()
-                && myVotes + pkVoting <= matchVotes && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
-                /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
-                && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
-        {
-            // 调用送礼
-            int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
-            int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
-            sendGift(20004, num);
-            localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(num) + " 个吃瓜");
-            pkVoting += melon * num;
-            qInfo() << "大乱斗再次赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
-            toutaCount++;
-            chiguaCount += num;
-            saveTouta();
-        }
+        execTouta();
     }
     else
     {
@@ -13113,6 +13098,48 @@ int MainWindow::getPkMaxGold(int votes)
         localNotify("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
     return int(pkMaxGold * prop);
+}
+
+bool MainWindow::execTouta()
+{
+    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
+    if (ui->pkAutoMelonCheck->isChecked()
+            && myVotes + pkVoting <= matchVotes
+            && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
+            /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
+            && !toutaBlankList.contains(pkRoomId)
+            && !magicalRooms.contains(pkRoomId))
+    {
+        // 调用送礼
+        int giftId = 0, giftNum = 0;
+        QString giftName;
+        int giftUnit = 0, giftVote = 0; // 单价和单乱斗值
+
+        if (!ui->toutaGiftCheck->isChecked()) // 赠送吃瓜（比对面多1分）
+        {
+            giftId = 20004;
+            giftUnit = 100;
+            giftVote = giftUnit / goldTransPk; // 单个吃瓜有多少乱斗值
+            giftNum = int((matchVotes-myVotes-pkVoting+giftVote) / giftVote); // 需要多少个礼物
+
+            chiguaCount += giftNum;
+        }
+        else // 按类型赠送礼物
+        {
+
+        }
+
+        sendGift(giftId, giftNum);
+        localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个吃瓜");
+        qInfo() << "大乱斗再次赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
+        pkVoting += giftUnit * giftNum;
+
+        toutaCount++;
+        toutaGold += giftUnit * giftNum;
+        saveTouta();
+        return true;
+    }
+    return false;
 }
 
 void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences)
@@ -15037,25 +15064,8 @@ void MainWindow::slotPkEnding()
 
     pkEnding = true;
     pkVoting = 0;
-    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
 
     // 几个吃瓜就能解决的……
-    if (ui->pkAutoMelonCheck->isChecked()
-            && myVotes <= matchVotes && myVotes + maxGold/goldTransPk > matchVotes
-            && !toutaBlankList.contains(pkRoomId) && !magicalRooms.contains(pkRoomId))
-    {
-        // 调用送礼
-        int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
-        int num = static_cast<int>((matchVotes-myVotes+melon)/melon);
-        sendGift(20004, num);
-        localNotify("[偷塔] " + snum(myVotes) + ":" + snum(matchVotes) + "，赠送 " + snum(num) + " 个吃瓜");
-        pkVoting += melon * num; // 增加吃瓜的votes，抵消反偷塔机制中的网络延迟
-        qInfo() << "大乱斗赠送" << num << "个吃瓜：" << myVotes << "vs" << matchVotes;
-        toutaCount++;
-        chiguaCount += num;
-        saveTouta();
-    }
-    else
     {
         QString text = QString("大乱斗尾声：%1 vs %2")
                 .arg(myVotes).arg(matchVotes);
@@ -15070,6 +15080,7 @@ void MainWindow::slotPkEnding()
 
         localNotify(text);
     }
+    execTouta();
 
     triggerCmdEvent("PK_ENDING", LiveDanmaku());
 }
