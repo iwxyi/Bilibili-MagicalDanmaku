@@ -7149,6 +7149,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString msg = caps.at(1);
+            msg.replace("%n%", "\n");
             qInfo() << "执行命令：" << caps;
             localNotify(msg);
             return true;
@@ -7250,6 +7251,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString url = caps.at(1);
             QString data = caps.at(2);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
+            data.replace("%n%", "\n");
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
                 qInfo() << QString(ba);
@@ -7275,6 +7277,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
+            data.replace("%n%", "\n");
             QString callback = caps.size() > 3 ? caps.at(3) : "";
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
@@ -7297,6 +7300,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
             QString data = caps.at(2);
+            data.replace("%n%", "\n");
 
             qInfo() << "执行命令：" << caps;
             sendTextToSockets(cmd, data.toUtf8());
@@ -7311,6 +7315,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
             QString data = caps.at(2);
+            data.replace("%n%", "\n");
 
             qInfo() << "执行命令：" << caps;
             if (danmakuSockets.size())
@@ -7327,6 +7332,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
+            cmd.replace("%n%", "\n");
             qInfo() << "执行命令：" << caps;
             QProcess p(nullptr);
             p.start(cmd);
@@ -7370,6 +7376,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString format = caps.at(3);
+            format.replace("%n%", "\n");
             appendFileLine(dirName, fileName, format, lastDanmaku);
             return true;
         }
@@ -7386,6 +7393,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString text = caps.at(3);
+            text.replace("%n%", "\n");
             writeTextFile(dirName + "/" + fileName, text);
             return true;
         }
@@ -13179,9 +13187,10 @@ bool MainWindow::execTouta()
                 int vote = unit / goldTransPk;
                 int num = needVote / vote + 1;
                 int cost = unit * num;
+                qInfo() << gift.getGiftId() << gift.getGiftName() << unit << vote << num << cost << maxGold;
                 if (cost > maxGold)
                     continue;
-                if (cost > minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
+                if (cost < minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
                 {
                     giftId = gift.getGiftId();
                     giftName = gift.getGiftName();
