@@ -685,6 +685,12 @@ private slots:
 
     void on_enableTrayCheck_clicked();
 
+    void on_toutaGiftCheck_clicked();
+
+    void on_toutaGiftCountsEdit_textEdited(const QString &arg1);
+
+    void on_toutaGiftListButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -824,6 +830,7 @@ private:
     void startCalculateDailyData();
     void saveCalculateDailyData();
     void saveTouta();
+    void restoreToutaGifts(QString text);
     void startLiveRecord();
     void startRecordUrl(QString url);
     void finishLiveRecord();
@@ -1115,6 +1122,8 @@ private:
     int oppositeTouta = 0; // 对面是否偷塔（用作判断）
     QStringList toutaBlankList; // 偷塔黑名单
     QStringList magicalRooms; // 同样使用神奇弹幕的房间
+    QList<int> toutaGiftCounts; // 偷塔允许的礼物数量
+    QList<LiveDanmaku> toutaGifts; // 用来偷塔的礼物信息
 
     // 大乱斗串门
     bool pkChuanmenEnable = false;

@@ -797,6 +797,16 @@ void MainWindow::readConfig()
     toutaBlankList = settings->value("pk/blankList").toString().split(";");
     ui->pkAutoMaxGoldCheck->setChecked(settings->value("pk/autoMaxGold", true).toBool());
 
+    // 大乱斗自动赠送礼物
+    ui->toutaGiftCheck->setChecked(settings->value("danmaku/toutaGift").toBool());
+    QString toutaGiftCountsStr = settings->value("danmaku/toutaGiftCounts").toString();
+    ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
+    toutaGiftCounts.clear();
+    foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
+        toutaGiftCounts.append(s.toInt());
+    restoreToutaGifts(settings->value("danmaku/toutaGifts", "").toString());
+
+
     // 自定义变量
     restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
     restoreReplaceVariant(settings->value("danmaku/replaceVariant", "").toString());
@@ -936,6 +946,8 @@ void MainWindow::readConfig()
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->danmakuToutaSettingsCard->hide();
         ui->scrollArea->removeWidget(ui->danmakuToutaSettingsCard);
+        ui->toutaGiftSettingsCard->hide();
+        ui->scrollArea->removeWidget(ui->toutaGiftSettingsCard);
     }
 
     // 粉丝勋章
@@ -6301,6 +6313,23 @@ void MainWindow::saveTouta()
     settings->setValue("pk/toutaCount", toutaCount);
     settings->setValue("pk/chiguaCount", chiguaCount);
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2").arg(toutaCount).arg(chiguaCount));
+}
+
+void MainWindow::restoreToutaGifts(QString text)
+{
+    toutaGifts.clear();
+    QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    foreach (QString s, sl)
+    {
+        QStringList l = s.split(" ", QString::SkipEmptyParts);
+        // 礼物ID 名字 金瓜子
+        if (l.size() < 3)
+            continue;
+        int id = l.at(0).toInt();
+        QString name = l.at(1);
+        int gold = l.at(2).toInt();
+        toutaGifts.append(LiveDanmaku("", id, name, 1, 0, QDateTime(), "gold", gold));
+    }
 }
 
 void MainWindow::startLiveRecord()
@@ -16361,4 +16390,53 @@ void MainWindow::on_enableTrayCheck_clicked()
     {
         tray->hide();
     }
+}
+
+void MainWindow::on_toutaGiftCheck_clicked()
+{
+    settings->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
+
+    // 设置默认值
+    if (!toutaGiftCounts.size())
+    {
+        QString s = "1 2 3 4 5 10 11 100 101";
+        ui->toutaGiftCountsEdit->setText(s);
+        on_toutaGiftCountsEdit_textEdited(s);
+    }
+
+    if (!toutaGifts.size())
+    {
+        QString s = "";
+        settings->setValue("danmaku/toutaGifts", s);
+        restoreToutaGifts(s);
+    }
+}
+
+void MainWindow::on_toutaGiftCountsEdit_textEdited(const QString &arg1)
+{
+    // 允许的数量，如：1 2 3 4 5 10 11 100 101
+    settings->setValue("danmaku/toutaGiftCounts", arg1);
+    QStringList sl = arg1.split(" ", QString::SkipEmptyParts);
+    toutaGiftCounts.clear();
+    foreach (QString s, sl)
+    {
+        toutaGiftCounts.append(s.toInt());
+    }
+}
+
+void MainWindow::on_toutaGiftListButton_clicked()
+{
+    // 礼物ID 礼物名字 金瓜子
+    QStringList sl;
+    foreach (auto gift, toutaGifts)
+    {
+        sl.append(QString("%1 %2 %3").arg(gift.getGiftId()).arg(gift.getGiftName()).arg(gift.getTotalCoin()));
+    }
+
+    bool ok;
+    QString totalText = TextInputDialog::getText(this, "允许赠送的礼物列表", "一行一个礼物，格式：\n礼物ID 礼物名字 金瓜子数量", sl.join("\n"), &ok);
+    if (!ok)
+        return ;
+    settings->setValue("danmaku/toutaGifts", totalText);
+    restoreToutaGifts(totalText);
 }
