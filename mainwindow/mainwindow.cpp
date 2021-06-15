@@ -2930,6 +2930,51 @@ void MainWindow::getRobotInfo()
             ui->robotHeaderLabel->setPixmap(f);
         });
     });
+
+    // 检查是否需要用户信息
+    if (!ui->adjustDanmakuLongestCheck->isChecked())
+        return ;
+
+    url = "http://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
+    get(url, [=](MyJson json) {
+        /*{
+            "code": 0,
+            "msg": "success",
+            "message": "success",
+            "data": {
+                "user": {
+                    "role": 2,
+                    "user_level": 19,
+                    "master_level": 5,
+                    "next_master_level": 6,
+                    "need_master_score": 704,
+                    "master_rank": 100010,
+                    "verify": 0
+                },
+                "feed": {
+                    "fans_count": 7084,
+                    "feed_count": 41,
+                    "is_followed": 0,
+                    "is_following": 0
+                },
+                "room": {
+                    "live_status": 0,
+                    "room_id": 11584296,
+                    "short_room_id": 0,
+                    "title": "用户20285041的直播间",
+                    "cover": "",
+                    "keyframe": "",
+                    "online": 0,
+                    "room_link": "http://live.bilibili.com/11584296?src=draw"
+                },
+                "uid": "20285041"
+            }
+        }*/
+        MyJson data = json.data();
+        this->cookieULevel = data.o("user").i("user_level");
+        if (ui->adjustDanmakuLongestCheck->isChecked())
+            adjustDanmakuLongest();
+    });
 }
 
 /**
