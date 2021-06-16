@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -2555,10 +2555,13 @@ margin: 40px;</string>
                 <number>1</number>
                </property>
                <property name="maximum">
-                <number>60</number>
+                <number>90</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
                </property>
                <property name="value">
-                <number>15</number>
+                <number>30</number>
                </property>
               </widget>
              </item>

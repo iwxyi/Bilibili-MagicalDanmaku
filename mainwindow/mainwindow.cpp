@@ -8180,8 +8180,19 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 return true;
             if (!loopKeyStr.contains("/"))
                 loopKeyStr = "heaps/" + loopKeyStr;
+            QSettings* sts = heaps;
+            if (loopKeyStr.startsWith("_counts/"))
+            {
+                loopKeyStr.remove(0, 8);
+                sts = danmakuCounts;
+            }
+            else if (loopKeyStr.startsWith("_settings/"))
+            {
+                loopKeyStr.remove(0, 10);
+                sts = settings;
+            }
 
-            auto viewer = new VariantViewer(caption, heaps, loopKeyStr, tableFileds, this);
+            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, this);
             viewer->show();
             return true;
         }
@@ -15347,7 +15358,7 @@ void MainWindow::slotStartWork()
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString usedRoom = roomId;
 #ifdef QT_NO_DEBUG
-    QTimer::singleShot(300000, [=]{
+    QTimer::singleShot((qrand() % 120 + 60) * 1000, [=]{
 #else
     QTimer::singleShot(20000, [=]{
 #endif
