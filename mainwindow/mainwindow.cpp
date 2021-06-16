@@ -5719,6 +5719,13 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         return snum(qrand() % (max-min+1) + min);
     }
+    else if (funcName == "randomArray")
+    {
+        if (!argList.size())
+            return "";
+        int r = qrand() % argList.size();
+        return argList.at(r);
+    }
     else if (funcName == "filterReject")
     {
         if (argList.size() < 1 || argList.first().trimmed().isEmpty())

@@ -14,6 +14,7 @@
 昵称简化=simpleName
 数值简化=simpleNum
 取随机数=random
+随机数组=randomArray
 过滤器拒绝=filterReject
 在过滤列表中=inFilterList
 在过滤正则中=inFilterMatch
