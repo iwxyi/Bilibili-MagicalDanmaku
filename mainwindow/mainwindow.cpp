@@ -901,10 +901,11 @@ void MainWindow::readConfig()
     ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
     ui->startLiveHourSpin->setValue(settings->value("live/startLiveHour", 0).toInt());
     ui->endLiveHourSpin->setValue(settings->value("live/endLiveHour", 0).toInt());
+    ui->timerConnectIntervalSpin->setValue(settings->value("live/timerConnectInterval", 30).toInt());
     connectServerTimer = new QTimer(this);
-    connectServerTimer->setInterval(CONNECT_SERVER_INTERVAL);
+    connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
-        connectServerTimer->setInterval(900000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
         if (isLiving() && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
         {
             connectServerTimer->stop();
@@ -3835,7 +3836,7 @@ bool MainWindow::isLivingOrMayliving()
             int minu = QDateTime::currentDateTime().time().minute();
             bool abort = false;
             qint64 currentVal = hour * 3600000 + minu * 60000;
-            qint64 nextVal = (currentVal + CONNECT_SERVER_INTERVAL) % (24 * 3600000); // 0点
+            qint64 nextVal = (currentVal + ui->timerConnectIntervalSpin->value() * 60000) % (24 * 3600000); // 0点
             if (start < end) // 白天档
             {
                 qInfo() << "白天档" << currentVal << start * 3600000 << end * 3600000;
@@ -3860,7 +3861,7 @@ bool MainWindow::isLivingOrMayliving()
             else if (start > end) // 熬夜档
             {
                 qInfo() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
-                if (currentVal + CONNECT_SERVER_INTERVAL >= start * 3600000
+                if (currentVal + ui->timerConnectIntervalSpin->value() * 60000 >= start * 3600000
                         || currentVal <= end * 3600000)
                 {
                     if (ui->doveCheck->isChecked()) // 今晚鸽了
@@ -16670,4 +16671,10 @@ void MainWindow::on_toutaGiftListButton_clicked()
         return ;
     settings->setValue("danmaku/toutaGifts", totalText);
     restoreToutaGifts(totalText);
+}
+
+void MainWindow::on_timerConnectIntervalSpin_editingFinished()
+{
+    settings->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
+    connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
 }

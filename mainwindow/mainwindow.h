@@ -691,6 +691,8 @@ private slots:
 
     void on_toutaGiftListButton_clicked();
 
+    void on_timerConnectIntervalSpin_editingFinished();
+
 private:
     void initView();
     void initStyle();

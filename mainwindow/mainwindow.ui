@@ -2525,6 +2525,43 @@ margin: 40px;</string>
                </item>
               </layout>
              </item>
+             <item>
+              <widget class="QSpinBox" name="timerConnectIntervalSpin">
+               <property name="contextMenuPolicy">
+                <enum>Qt::NoContextMenu</enum>
+               </property>
+               <property name="toolTip">
+                <string>每隔多少分钟检测一次直播状态</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+               </property>
+               <property name="frame">
+                <bool>false</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="suffix">
+                <string>分钟检测状态</string>
+               </property>
+               <property name="prefix">
+                <string>每隔</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>60</number>
+               </property>
+               <property name="value">
+                <number>15</number>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="autoOperatorSettingsCard" native="true">
