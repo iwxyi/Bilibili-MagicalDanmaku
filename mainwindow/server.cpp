@@ -346,11 +346,6 @@ void MainWindow::syncMagicalRooms()
     if (appVersion.startsWith("v") || appVersion.startsWith("V"))
         appVersion.replace(0, 1, "");
 
-//    get(serverPath + "/?room_id="
-//        + roomId + "&user_id=" + cookieUid + "&username=" + cookieUname.toUtf8().toPercentEncoding()
-//        + "&up_uid=" + upUid + "&up_name=" + upName.toUtf8().toPercentEncoding()
-//        + "&title=" + roomTitle.toUtf8().toPercentEncoding() + "&version=" + appVersion
-//        + "&working=" + (isWorking() ? "1" : "0") + "&permission=" + snum(hasPermission()), [=](QJsonObject json){
     get(serverPath + "client/active",
         {"room_id", roomId, "user_id", cookieUid, "up_id", upUid,
          "room_title", roomTitle, "username", cookieUname, "up_name", upName,
@@ -378,7 +373,13 @@ void MainWindow::syncMagicalRooms()
             ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));
             ui->actionUpdate_New_Version->setEnabled(true);
             statusLabel->setText("有新版本：" + appNewVersion);
-            qDebug() << "有新版本" << appNewVersion << appDownloadUrl;
+            qInfo() << "有新版本" << appNewVersion << appDownloadUrl;
+        }
+
+        QString code = json.value("code").toString();
+        if (!code.isEmpty())
+        {
+            sendAutoMsg(code, LiveDanmaku());
         }
 
         QString msg = json.value("msg").toString();

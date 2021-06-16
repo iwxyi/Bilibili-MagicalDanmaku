@@ -20,6 +20,7 @@
 #include "variantviewer.h"
 #include "csvviewer.h"
 #include "buyvipdialog.h"
+#include "warmwishutil.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -57,6 +58,17 @@ MainWindow::MainWindow(QWidget *parent)
     initPath();
     readConfig();
     initEvent();
+
+    // 彩蛋
+    warmWish = WarmWishUtil::getWarmWish(":/documents/warm_wish");
+    if (!warmWish.isEmpty())
+    {
+        ui->roomNameLabel->setText(warmWish);
+
+        QTimer::singleShot(500 * warmWish.length(), [=]{
+            ui->roomNameLabel->setText(roomTitle);
+        });
+    }
 
     triggerCmdEvent("START_UP", LiveDanmaku(), true);
 }
@@ -3691,7 +3703,8 @@ void MainWindow::getRoomInfo(bool reconnect)
         QStringList tags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
-        ui->roomNameLabel->setText(roomTitle);
+        if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
+            ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
 
         // 设置房间描述

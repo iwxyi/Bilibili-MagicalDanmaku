@@ -1223,5 +1223,8 @@ private:
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;
+
+    // 彩蛋
+    QString warmWish;
 };
 #endif // MAINWINDOW_H

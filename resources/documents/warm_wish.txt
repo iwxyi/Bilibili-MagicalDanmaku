@@ -1,0 +1,40 @@
+<WISH>
+	<STA>-60</STA><END>180</END>
+	<SAY>惟愿有梦为马，随处可栖。</SAY>
+</WISH>
+<WISH>
+	<STA>1380</STA><END>1440</END>
+	<SAY>早点睡啊，不然明天就成熊猫了~</SAY>
+</WISH>
+<WISH>
+	<STA>240</STA><END>420</END>
+	<SAY>抱抱这么认真的你，怎么这么优秀~</SAY>
+</WISH>
+<WISH>
+	<STA>60</STA><END>360</END>
+	<SAY>揉揉眼睛，心若在，梦就在!</SAY>
+</WISH>
+<WISH>
+	<STA>50</STA><END>70</END>
+	<SAY>现在几点？开心一点!</SAY>
+</WISH>
+<WISH>
+	<STA>-60</STA><END>180</END>
+	<SAY>月亮不睡 ，我不睡，太阳起了 ，我不起</SAY>
+</WISH>
+<WISH>
+	<STA>360</STA><END>420</END>
+	<SAY>盐于律己，甜以待人。</SAY>
+</WISH>
+<WISH>
+	<STA>-60</STA><END>180</END>
+	<SAY>放弃不难，但坚持一定很酷。</SAY>
+</WISH>
+<WISH>
+	<STA>240</STA><END>360</END>
+	<SAY>黎明将近，春宵苦短，前进吧，骚年。</SAY>
+</WISH>
+<WISH>
+	<STA>-60</STA><END>60</END>
+	<SAY>醒也无聊，醉也无聊。不如大干一场!</SAY>
+</WISH>

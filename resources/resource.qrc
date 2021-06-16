@@ -146,6 +146,7 @@
         <file alias="translation_functions">documents/translation_functions.txt</file>
         <file alias="translation_methods">documents/translation_methods.txt</file>
         <file alias="translation_variables">documents/translation_variables.txt</file>
+        <file alias="warm_wish">documents/warm_wish.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
