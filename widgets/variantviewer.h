@@ -7,11 +7,15 @@
 #include <QTableView>
 #include <QStandardItemModel>
 
+#define SETTINGS_PREFIX QString("_settings/")
+#define COUNTS_PREFIX QString("_counts/")
+#define HEAPS_PREFIX QString("_heaps/")
+
 class VariantViewer : public QDialog
 {
     Q_OBJECT
 public:
-    explicit VariantViewer(QString caption, QSettings* heaps, QString loopKeyStr, QStringList keys, QWidget *parent = nullptr);
+    explicit VariantViewer(QString caption, QSettings* vals, QString loopKeyStr, QStringList keys, QSettings* counts, QSettings* heaps, QWidget *parent = nullptr);
 
 signals:
 
@@ -21,6 +25,8 @@ public slots:
 private:
     QTableView* tableView;
     QStandardItemModel* model;
+    QSettings* vals;
+    QSettings* counts;
     QSettings* heaps;
 };
 

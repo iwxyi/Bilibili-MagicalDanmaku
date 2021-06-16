@@ -4,15 +4,15 @@
 #include "facilemenu.h"
 #include "orderplayerwindow.h"
 
-VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyStr, QStringList tableFileds, QWidget *parent)
-    : QDialog(parent), heaps(heaps)
+VariantViewer::VariantViewer(QString caption, QSettings *vals, QString loopKeyStr, QStringList tableFileds, QSettings *counts, QSettings *heaps, QWidget *parent)
+    : QDialog(parent), vals(vals), counts(counts), heaps(heaps)
 {
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     setAttribute(Qt::WA_DeleteOnClose, true);
 
     QRegularExpression loopKeyRe(loopKeyStr);
-    QStringList keys = heaps->allKeys();
+    QStringList keys = vals->allKeys();
     QRegularExpressionMatch match;
 
     QVBoxLayout* lay = new QVBoxLayout(this);
@@ -111,7 +111,22 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
             }
             else
             {
-                QString val = heaps->value(keyExp, "").toString();
+                // 获取变量
+                QSettings* sts = vals;
+                if (keyExp.startsWith(COUNTS_PREFIX))
+                {
+                    sts = counts;
+                    keyExp.remove(0, COUNTS_PREFIX.length());
+                }
+                else if (keyExp.startsWith(HEAPS_PREFIX))
+                {
+                    sts = heaps;
+                    keyExp.remove(0, HEAPS_PREFIX.length());
+                    if (!keyExp.contains("/"))
+                        keyExp.insert(0, "heaps/");
+                }
+                QString val = sts->value(keyExp, "").toString();
+
                 if (tableCol == sortCol) // 排序，肯定是数值
                 {
                     auto item = new QStandardItem();
@@ -175,7 +190,7 @@ VariantViewer::VariantViewer(QString caption, QSettings *heaps, QString loopKeyS
         if (!key.isEmpty())
         {
             qInfo() << "修改heaps值:" << key << item->data(Qt::DisplayRole);
-            heaps->setValue(key, item->data(Qt::DisplayRole));
+            vals->setValue(key, item->data(Qt::DisplayRole));
         }
     });
 
@@ -216,7 +231,7 @@ void VariantViewer::showTableMenu()
         auto item = model->item(row, col);
         QString key = item->data(Qt::UserRole).toString();
         if (!key.isEmpty())
-            heaps->remove(key);
+            vals->remove(key);
         qInfo() << "删除heaps值:" << key << item->data(Qt::DisplayRole);
         item->setData("", Qt::UserRole); // 先取消键，否则下面的留空还是会引发修改值，剩下一个空值键
         item->setData("", Qt::DisplayRole);
@@ -235,7 +250,7 @@ void VariantViewer::showTableMenu()
                 auto item = model->item(row, col);
                 QString key = item->data(Qt::UserRole).toString();
                 if (!key.isEmpty())
-                    heaps->remove(key);
+                    vals->remove(key);
             }
             deletedRows.append(row);
         }

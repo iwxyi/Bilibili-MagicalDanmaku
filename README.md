@@ -1052,9 +1052,13 @@ tips：
 
 `caption` 是最顶上的标题，支持变量。
 
-`key` 为用来遍历的带有可变值的正则表达式，例如 `integral_(\d+)`，将会遍历所有使用`setValue`存储的键满足这个表达式的数值。其中必须有带括号的捕获组形如 `(\d+)`作为变化的源头，用来影响所有`field`的变化；而在各 `field` 中可以使用 `_KEY_` 或者 `_ID_` 来替换为该值。
+`key` 为用来遍历的带有可变值的正则表达式，例如 `integral_(\d+)`，将会遍历所有使用`setValue`存储的键满足这个表达式的数值。其中必须有带括号的捕获组形如 `(\d+)`作为**变化的源头**，用来影响所有`field`的变化；而在各 `field` 中可以使用 `_KEY_` 或者 `_ID_` 来替换为该值。
 
 `field` 允许多个，每个的格式为：`标题:键`，标题是表格的标题（第一行），键是用来读取响应设置的。标题及中间的冒号可忽略。用 `_KEY_` 或 `_ID_` 来替换为表达式中变化源。单个数字类型的 `field` 末尾允许用 `:<` 从小到大、`:>` 从大到小排序，详见下方示例。
+
+在`key`和`field`中，可使用 `_counts/`、`_heaps/` 前缀来指定读取哪一个配置文件，`key`默认为`_heaps`即用户自定义的配置；`field`默认跟随`key`的配置。
+
+其中，`_counts/`文件为`安装目录/danmaku_counts/房号.ini`，自动保存每个直播间的数据，**不同直播间不共享**；`_heaps/`为`安装目录/heaps.ini`，**所有直播间共享一套数据**。
 
 
 
@@ -1062,7 +1066,7 @@ tips：
 
 显示签到的用户ID、昵称、积分，按积分从大到小排序
 
-> 在之前的默认签到代码中，未加上保存昵称，所以是空的
+> 在之前的默认签到代码中，未加上保存昵称，所以uname是空的
 
 ```
 showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_:>)
@@ -1076,6 +1080,14 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 ```
 >showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\d+), ID:"_ID_", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)
+```
+
+
+
+##### 示例：显示用户总金瓜子
+
+```
+>showValueTable(氪金列表, _counts/gold/(\d+), ID:"_ID_", 金瓜子:gold/_ID_:>, 昵称:_heaps/uname__ID_)
 ```
 
 
@@ -1356,6 +1368,8 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 发送“签到”或“打卡”进行打卡，并回复第几个以及累计几天；每人每天只能打一次卡。
 
+> 本处只做一个简单计数，建议使用下方的“高级打卡”示例
+
 添加自动回复：`^(签到|打卡)$`，动作：
 
 ```
@@ -1387,8 +1401,8 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
     {
         "anchor_key": "神奇弹幕:AutoReply",
         "enabled": true,
-        "key": "^(签到|打卡)$",
-        "reply": "/// 记录每位用户是第几个打卡以及累计天数\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
+        "key": "^(签到|打卡)\\s*([\\(（].*|\\d+)?$",
+        "reply": "/// 记录每位用户是第几个打卡以及累计天数\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+1000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
     },
     {
         "anchor_key": "神奇弹幕:AutoReply",
@@ -1400,13 +1414,13 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
         "action": "/// 重置每天打卡的人数\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡",
         "anchor_key": "神奇弹幕:EventAction",
         "enabled": true,
-        "event": "NEW_DAY"
+        "event": "NEW_DAY_FIRST"
     },
     {
         "action": "/// 重置每月打卡天数\n[%living%+1]>setValues(daka_month_\\d+, 0)",
         "anchor_key": "神奇弹幕:EventAction",
         "enabled": true,
-        "event": "NEW_MONTH"
+        "event": "NEW_MONTH_FIRST"
     },
     {
         "action": "您已打卡满21天，可找主播领小礼物~",

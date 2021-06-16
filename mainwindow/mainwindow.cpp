@@ -8181,18 +8181,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (!loopKeyStr.contains("/"))
                 loopKeyStr = "heaps/" + loopKeyStr;
             QSettings* sts = heaps;
-            if (loopKeyStr.startsWith("_counts/"))
+            if (loopKeyStr.startsWith(COUNTS_PREFIX))
             {
-                loopKeyStr.remove(0, 8);
+                loopKeyStr.remove(0, COUNTS_PREFIX.length());
                 sts = danmakuCounts;
             }
-            else if (loopKeyStr.startsWith("_settings/"))
+            else if (loopKeyStr.startsWith(SETTINGS_PREFIX))
             {
-                loopKeyStr.remove(0, 10);
+                loopKeyStr.remove(0, SETTINGS_PREFIX.length());
                 sts = settings;
             }
 
-            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, this);
+            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, danmakuCounts, heaps, this);
             viewer->show();
             return true;
         }
