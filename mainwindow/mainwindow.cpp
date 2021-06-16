@@ -7581,6 +7581,30 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 文件每一行
+    if (msg.contains("fileEachLine"))
+    {
+        re = RE("fileEachLine\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString file = caps.at(1);
+            QString code = caps.at(2);
+            code.replace("%n%", "\\n");
+            QString content = readTextFileAutoCodec(file);
+            QStringList lines = content.split("\n", QString::SkipEmptyParts);
+            for (int i = 0; i < lines.size(); i++)
+            {
+                LiveDanmaku danmaku;
+                danmaku.setNumber(i+1);
+                danmaku.setText(lines.at(i));
+                sendAutoMsg(code, LiveDanmaku());
+            }
+            return true;
+        }
+    }
+
     // 播放音频文件
     if (msg.contains("playSound"))
     {
@@ -13420,8 +13444,6 @@ bool MainWindow::execTouta()
                 int cost = unit * num; // 总价
                 if (cost > maxGold) // 总价超过上限
                     continue;
-                if (debugPrint)
-                    qInfo() << gift.getGiftId() << gift.getGiftName() << unit << vote << num << cost << maxGold;
 
                 if (toutaGiftCounts.size()) // 数量白名单
                 {
@@ -13439,8 +13461,6 @@ bool MainWindow::execTouta()
                             index = i;
                             num = count;
                             cost = cos;
-                            if (debugPrint)
-                                qInfo() << "可以使用的数量：" << num << cost;
                             break;
                         }
                     }
@@ -13468,9 +13488,9 @@ bool MainWindow::execTouta()
 
         sendGift(giftId, giftNum);
         localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
-        qInfo() << "大乱斗再次赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
+        qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
         if (!localDebug)
-            pkVoting += giftUnit * giftNum; // 正在赠送中
+            pkVoting += giftVote * giftNum; // 正在赠送中
 
         toutaCount++;
         toutaGold += giftUnit * giftNum;

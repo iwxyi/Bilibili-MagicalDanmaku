@@ -1001,7 +1001,8 @@ tips：
 | appendFileLine(dirName, fileName, format)          | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
 | insertFileAnchor(file, anchor, content)            | 插入文件锚点     | 插入文字至文件中的“anchor”前。可组建HTML的`<table>` 内容     |
 | writeTextFile(dirName, fileName, text)             | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
-| removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/file”                                      |
+| removeFile(file)                                   | 删除文件         | 删除文件“程序目录/file”                                      |
+| fileEachLine(file, code)                           | 文件每一行       | 读取txt文件的每一行，执行code命令。code中多行代码需要使用`%n%`替换`\n`；`%number%`获取行号（从1开始），`%text%`获取本行内容 |
 | aiReply(sessionId, text, maxLen)                   | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
 | ignoreWelcome(uid)                                 | 不自动欢迎       | 不自动欢迎某用户                                             |
 | setNickname(uid, name)                             | 设置专属昵称     | 设置用户专属昵称                                             |
