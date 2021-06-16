@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -6258,7 +6258,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>4</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -6621,6 +6621,11 @@ QTabBar::tab:selected
                 <height>18</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string>正则表达式简单规则：
+多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
+部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
+              </property>
               <property name="styleSheet">
                <string notr="true">QPlainTextEdit
 {
@@ -6724,6 +6729,11 @@ QTabBar::tab:selected
                 <width>0</width>
                 <height>18</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>正则表达式简单规则：
+多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
+部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QPlainTextEdit
