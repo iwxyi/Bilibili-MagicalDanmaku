@@ -7496,6 +7496,26 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 写入文件
+    if (msg.contains("writeTextFile"))
+    {
+        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString dirName = caps.at(1);
+            QString fileName = caps.at(2);
+            QString text = caps.at(3);
+            if (!dirName.isEmpty())
+                ensureDirExist(dirName);
+            text.replace("%n%", "\n");
+            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
+            writeTextFile(path, text);
+            return true;
+        }
+    }
+
     // 写入文件行
     if (msg.contains("appendFileLine"))
     {
@@ -7516,22 +7536,23 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
-    // 写入文件
-    if (msg.contains("writeTextFile"))
+    // 插入文件锚点
+    if (msg.contains("insertFileAnchor"))
     {
-        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
+        re = RE("insertFileAnchor\\s*\\(\\s*(.+?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString dirName = caps.at(1);
-            QString fileName = caps.at(2);
-            QString text = caps.at(3);
-            if (!dirName.isEmpty())
-                ensureDirExist(dirName);
-            text.replace("%n%", "\n");
-            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
-            writeTextFile(path, text);
+            QString file = caps.at(1);
+            QString anchor = caps.at(2);
+            QString content = caps.at(3);
+            QString text = readTextFile(file);
+            text.replace(anchor, content + anchor);
+            if (!codeFileCodec.isEmpty())
+                writeTextFile(file, text, codeFileCodec);
+            else
+                writeTextFile(file, text);
             return true;
         }
     }

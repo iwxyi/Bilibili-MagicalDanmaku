@@ -998,6 +998,7 @@ tips：
 | messageBox(text)                                   | 消息弹窗         | 弹窗提示                                                     |
 | sendLongText(text)                                 | 发送长文本       | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format)          | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
+| insertFileAnchor(file, anchor, content)            | 插入文件锚点     | 插入文字至文件中的“anchor”前。可组建HTML的`<table>` 内容     |
 | writeTextFile(dirName, fileName, text)             | 保存文本文件     | 写入文本至“程序目录/dirName/fileName”                        |
 | removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/file”                                      |
 | aiReply(sessionId, text, maxLen)                   | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
