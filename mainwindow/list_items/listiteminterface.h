@@ -39,6 +39,8 @@ public:
 
     int getRow() const;
 
+    bool matchId(QString s) const;
+
 signals:
     void signalResized();
 

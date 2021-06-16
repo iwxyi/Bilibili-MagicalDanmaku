@@ -1006,6 +1006,7 @@ tips：
 | joinBattle(type)                                   | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
 | triggerEvent(event)                                | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
 | triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
+| setTimerTask(id, time)                             | 开启定时任务     | id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间 |
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
@@ -1626,6 +1627,14 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 ```
 
 
+
+##### 示例：成为第x位船长
+
+事件中添加事件：`NEW_GUARD_COUNT`，动作：
+
+```
+恭喜%uname%成为第%number%位船员！
+```
 
 
 

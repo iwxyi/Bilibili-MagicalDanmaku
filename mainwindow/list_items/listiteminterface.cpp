@@ -1,3 +1,4 @@
+#include <QRegularExpression>
 #include "listiteminterface.h"
 
 ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
@@ -51,6 +52,12 @@ void ListItemInterface::setRow(int row)
 int ListItemInterface::getRow() const
 {
     return _row;
+}
+
+bool ListItemInterface::matchId(QString s) const
+{
+    QString body = this->body();
+    return body.indexOf(QRegularExpression("^\\s*//+\\s*" + s + "\\s*($|\n)")) > -1;
 }
 
 void ListItemInterface::resizeEvent(QResizeEvent *event)

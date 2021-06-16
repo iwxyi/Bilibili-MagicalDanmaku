@@ -8027,6 +8027,41 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 开关定时任务: enableTimerTask(id, time)
+    // time=1开，0关，>1修改时间
+    if (msg.contains("enableTimerTask"))
+    {
+        re = RE("enableTimerTask\\s*\\(\\s*(.+)\\s*,\\s*(-?\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString id = caps.at(1);
+            int time = caps.at(2).toInt();
+            qInfo() << "执行命令：" << caps;
+            bool find = false;
+            for (int i = 0; i < ui->taskListWidget->count(); i++)
+            {
+                auto tw = static_cast<TaskWidget*>(ui->taskListWidget->itemWidget(ui->taskListWidget->item(i)));
+                if (!tw->matchId(id))
+                    continue;
+                if (time == 0) // 切换
+                    tw->check->setChecked(!tw->check->isChecked());
+                else if (time == 1) // 开
+                    tw->check->setChecked(true);
+                else if (time == -1) // 关
+                    tw->check->setChecked(false);
+                else if (time > 1) // 修改时间
+                    tw->spin->setValue(time);
+                else if (time < -1) // 刷新
+                    tw->timer->start();
+                find = true;
+            }
+            if (!find)
+                showError("enableTimerTask", "未找到对应ID：" + id);
+            return true;
+        }
+    }
+
     // 强制AI回复
     if (msg.contains("aiReply"))
     {
@@ -10602,6 +10637,7 @@ void MainWindow::handleMessage(QJsonObject json)
         MyJson data = json.value("data").toObject();
         QString text = data.o("content_segments").s("text");
         text.replace("<$", "").replace("$>", "");
+        localNotify(text);
         triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
     }
     else

@@ -53,3 +53,4 @@ AI回复=aiReply
 点歌=orderSong
 添加违禁词=addBannedWord
 显示CSV=showCSV
+设置定时任务=setTimerTask
