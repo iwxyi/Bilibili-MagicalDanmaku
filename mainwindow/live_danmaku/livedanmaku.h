@@ -431,6 +431,11 @@ public:
         this->uid = uid;
     }
 
+    void setText(QString s)
+    {
+        this->text = s;
+    }
+
     void setNumber(int num)
     {
         this->number = num;

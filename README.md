@@ -975,6 +975,7 @@ tips：
 | getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
 | postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
 | postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送                                         |
+| downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件                     |
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有WebSocket                                          |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |

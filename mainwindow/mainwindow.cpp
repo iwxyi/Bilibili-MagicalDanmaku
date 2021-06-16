@@ -7380,6 +7380,47 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
+    if (msg.contains("downloadFile"))
+    {
+        re = RE("downloadFile\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("downloadFile\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*\\)"); // 不带参数三
+            if (msg.indexOf(re, 0, &match) == -1)
+                return false;
+        }
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString url = caps.at(1);
+            QString path = caps.at(2);
+            QString callback = caps.size() > 3 ? caps.at(3) : "";
+            get(url, [=](QNetworkReply* reply) {
+                QByteArray ba = reply->readAll();
+                if (!ba.size())
+                {
+                    showError("下载文件", "空文件：" + url);
+                    return ;
+                }
+
+                QFile file(path);
+                if (!file.open(QIODevice::WriteOnly))
+                {
+                    showError("下载文件", "保存失败：" + path);
+                    return ;
+                }
+                file.write(ba);
+                file.close();
+                if (!callback.isEmpty())
+                {
+                    LiveDanmaku ld(danmaku);
+                    ld.setText(path);
+                    triggerCmdEvent(callback, ld);
+                }
+            });
+            return true;
+        }
+    }
 
     // 发送socket
     if (msg.contains("sendToSockets"))

@@ -21,6 +21,7 @@
 连接网址=connectNet
 get数据=getData
 post数据=postData
+下载文件=downloadFile
 发送至socket=sendToSockets
 发送至最后socket=sendToLastSocket
 运行命令行=runCommandLine
