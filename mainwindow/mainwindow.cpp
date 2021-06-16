@@ -16625,7 +16625,19 @@ void MainWindow::on_toutaGiftCheck_clicked()
 
     if (!toutaGifts.size())
     {
-        QString s = "20004 吃瓜 100";
+        QString s = "20004 吃瓜 100\n\
+                20014 比心 500\n\
+                20008 冰阔落 800\n\
+                30758 这个好诶 1000\n\
+                30063 给大佬递茶 2000\n\
+                30046 打榜 2000\n\
+                30004 喵娘 5200\n\
+                3 B坷垃 9900\n\
+                30064 礼花 28000\n\
+                30873 花式夸夸 39000\n\
+                30072 疯狂打call 52000\n\
+                30087 天空之翼 100000\n\
+                30924 机车娘 200000";
         settings->setValue("danmaku/toutaGifts", s);
         restoreToutaGifts(s);
     }
