@@ -30,10 +30,10 @@ enum MessageType
 class LiveDanmaku
 {
 public:
-    LiveDanmaku() : msgType(MSG_DEF)
+    explicit LiveDanmaku() : msgType(MSG_DEF)
     {}
 
-    LiveDanmaku(qint64 uid) : msgType(MSG_MSG), uid(uid)
+    explicit LiveDanmaku(qint64 uid) : msgType(MSG_MSG), uid(uid)
     {}
 
     LiveDanmaku(qint64 uid, QString text) : msgType(MSG_MSG), uid(uid), text(text)
