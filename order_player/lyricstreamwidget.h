@@ -26,6 +26,7 @@ public:
         playingColor = qvariant_cast<QColor>(settings->value("lyric/playingColor", playingColor));
         waitingColor = qvariant_cast<QColor>(settings->value("lyric/waitingColor", waitingColor));
         pointSize = settings->value("lyric/pointSize", pointSize).toInt();
+        lineSpacingPadding = settings->value("lyric/lineSpacingPadding", lineSpacingPadding).toInt();
     }
 
     void updateFixedHeight()
@@ -33,7 +34,7 @@ public:
         QFont font = this->font();
         font.setPointSize(pointSize);
         QFontMetrics fm(font);
-        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height()) * lineSpacingRatio; // 双倍行间距
+        this->lineSpacing = fm.height() + (fm.lineSpacing() - fm.height() + lineSpacingPadding) * lineSpacingRatio; // 双倍行间距
         setFixedHeight((lyricStream.size()+verticalMargin*2) * lineSpacing);
     }
 
@@ -174,7 +175,7 @@ protected:
         painter.setFont(font);
         painter.setPen(waitingColor);
         QFontMetrics fm(font);
-        int lineSpacing = fm.height() + (fm.lineSpacing() - fm.height()) * lineSpacingRatio;
+        int lineSpacing = fm.height() + (fm.lineSpacing() - fm.height() + lineSpacingPadding) * lineSpacingRatio;
         double rowOffset = verticalMargin;
         qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
         qint64 aniDelta = currentTimestamp - switchRowTimestamp;
@@ -319,6 +320,7 @@ private slots:
                 update();
             }
         })->fgColor(waitingColor);
+
         auto fontMenu = menu->addMenu("字体大小");
         QStringList sl;
         for (int i = 8; i < 30; i++)
@@ -329,6 +331,18 @@ private slots:
             updateFixedHeight();
             update();
         });
+
+        auto paddingMenu = menu->addMenu("两行间距");
+        sl.clear();
+        for (int i = 0; i <= 10; i++)
+            sl << QString::number(i);
+        paddingMenu->addOptions(sl, int(lineSpacingPadding), [=](int index){
+            lineSpacingPadding = index;
+            settings->setValue("lyric/lineSpacingPadding", lineSpacingPadding);
+            updateFixedHeight();
+            update();
+        });
+
         auto timeMenu = menu->addMenu("时间微调");
         timeMenu->addAction("加快5秒", [=]{adjustLyricTime(0, -5000);});
         timeMenu->addAction("加快2秒", [=]{adjustLyricTime(0, -2000);});
@@ -355,8 +369,9 @@ private:
     int lineSpacing = 30;
     int verticalMargin = 5; // 上下间距5行
 
+    double lineSpacingPadding = 2;
     const int lineSpacingRatio = 8;
-    int pointSize = 12;
+    int pointSize = qMax(12, QFont().pointSize());
     QColor playingColor = QColor(155, 80, 255);
     QColor waitingColor = Qt::black;
 };
