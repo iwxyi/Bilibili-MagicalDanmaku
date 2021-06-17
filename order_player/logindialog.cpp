@@ -3,7 +3,7 @@
 #include "ui_logindialog.h"
 
 LoginDialog::LoginDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent), NetInterface(this),
     ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
@@ -120,4 +120,45 @@ void LoginDialog::on_neteaseCookieRadio_clicked()
 void LoginDialog::on_qqmusicCookieRadio_clicked()
 {
     ui->stackedWidget->setCurrentIndex(1);
+}
+
+void LoginDialog::on_testButton_clicked()
+{
+    QString cookieString = ui->cookieEdit->toPlainText();
+    if (cookieString.isEmpty())
+    {
+        QMessageBox::warning(this, "账号测试", "请输入cookie再测试");
+        return ;
+    }
+
+    if (ui->neteaseCookieRadio->isChecked())
+    {
+
+
+    }
+    else if (ui->qqmusicCookieRadio->isChecked())
+    {
+        get(QQMUSIC_SERVER + "/user/detail?id=123456", [=](MyJson json) {
+            if (json.i("result") == 301)
+            {
+                QString msg = json.s("errMsg");
+                QString info = json.s("info");
+                QMessageBox::warning(this, "测试账号", msg + "\n" + info);
+                return ;
+            }
+            QMessageBox::information(this, "测试账号", "检测成功，可以使用！");
+        }, getCookies(cookieString));
+    }
+}
+
+void LoginDialog::setUrlCookie(const QString &url, QNetworkRequest *request)
+{
+    /* if (ui->neteaseCookieRadio->isChecked() || ui->qqmusicCookieRadio->isChecked())
+    {
+        QString cookieString = ui->cookieEdit->toPlainText();
+        if (cookieString.trimmed().isEmpty())
+            return ;
+        QVariant cookies = getCookies(cookieString);
+        request->setHeader(QNetworkRequest::CookieHeader, cookies);
+    } */
 }

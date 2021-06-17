@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>382</width>
-    <height>209</height>
+    <height>239</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,7 +48,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="neteasePage">
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -180,6 +180,13 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="testButton">
+           <property name="text">
+            <string>测试</string>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="cookieHelpButton">

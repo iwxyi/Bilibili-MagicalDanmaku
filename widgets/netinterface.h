@@ -23,14 +23,14 @@ public:
     }
     virtual ~NetInterface(){}
 
-    void get(QString url, NetStringFunc func)
+    void get(QString url, NetStringFunc func, QVariant cookies = QVariant())
     {
         get(url, [=](QNetworkReply* reply){
             func(reply->readAll());
-        });
+        }, cookies);
     }
 
-    void get(QString url, NetJsonFunc func)
+    void get(QString url, NetJsonFunc func, QVariant cookies = QVariant())
     {
         get(url, [=](QNetworkReply* reply){
             QJsonParseError error;
@@ -42,16 +42,19 @@ public:
                 return ;
             }
             func(document.object());
-        });
+        }, cookies);
     }
 
-    void get(QString url, NetReplyFunc func)
+    void get(QString url, NetReplyFunc func, QVariant cookies = QVariant())
     {
         QNetworkAccessManager* manager = new QNetworkAccessManager;
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        if (cookies.isValid())
+            request->setHeader(QNetworkRequest::CookieHeader, cookies);
+
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
             func(reply);
 
@@ -62,7 +65,7 @@ public:
         manager->get(*request);
     }
 
-    void get(QString url, QStringList params, NetStringFunc func)
+    void get(QString url, QStringList params, NetStringFunc func, QVariant cookies = QVariant())
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -74,10 +77,10 @@ public:
         }
         get(url + "?" +data, [=](QNetworkReply* reply){
             func(reply->readAll());
-        });
+        }, cookies);
     }
 
-    void get(QString url, QStringList params, NetJsonFunc func)
+    void get(QString url, QStringList params, NetJsonFunc func, QVariant cookies = QVariant())
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -97,10 +100,10 @@ public:
                 return ;
             }
             func(document.object());
-        });
+        }, cookies);
     }
 
-    void get(QString url, QStringList params, NetReplyFunc func)
+    void get(QString url, QStringList params, NetReplyFunc func, QVariant cookies = QVariant())
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -115,6 +118,8 @@ public:
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        if (cookies.isValid())
+            request->setHeader(QNetworkRequest::CookieHeader, cookies);
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
             func(reply);
 
@@ -125,7 +130,7 @@ public:
         manager->get(*request);
     }
 
-    void post(QString url, QStringList params, NetJsonFunc func)
+    void post(QString url, QStringList params, NetJsonFunc func, QVariant cookies = QVariant())
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -136,10 +141,10 @@ public:
                 data += (i==0?"":"&") + params.at(i) + "=";
         }
         QByteArray ba(data.toLatin1());
-        post(url, ba, func);
+        post(url, ba, func, cookies);
     }
 
-    void post(QString url, QStringList params, NetReplyFunc func)
+    void post(QString url, QStringList params, NetReplyFunc func, QVariant cookies = QVariant())
     {
         QString data;
         for (int i = 0; i < params.size(); i++)
@@ -150,10 +155,10 @@ public:
                 data += (i==0?"":"&") + params.at(i) + "=";
         }
         QByteArray ba(data.toLatin1());
-        post(url, ba, func);
+        post(url, ba, func, cookies);
     }
 
-    void post(QString url, QByteArray ba, NetJsonFunc func)
+    void post(QString url, QByteArray ba, NetJsonFunc func, QVariant cookies = QVariant())
     {
         post(url, ba, [=](QNetworkReply* reply){
             QByteArray data = reply->readAll();
@@ -166,16 +171,18 @@ public:
             }
             QJsonObject json = document.object();
             func(json);
-        });
+        }, cookies);
     }
 
-    void post(QString url, QByteArray ba, NetReplyFunc func)
+    void post(QString url, QByteArray ba, NetReplyFunc func, QVariant cookies = QVariant())
     {
         QNetworkAccessManager* manager = new QNetworkAccessManager;
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        if (cookies.isValid())
+            request->setHeader(QNetworkRequest::CookieHeader, cookies);
 
         // 连接槽
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
@@ -188,13 +195,15 @@ public:
         manager->post(*request, ba);
     }
 
-    void postJson(QString url, QByteArray ba, NetReplyFunc func)
+    void postJson(QString url, QByteArray ba, NetReplyFunc func, QVariant cookies = QVariant())
     {
         QNetworkAccessManager* manager = new QNetworkAccessManager;
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        if (cookies.isValid())
+            request->setHeader(QNetworkRequest::CookieHeader, cookies);
 
         // 连接槽
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
@@ -211,6 +220,28 @@ public:
     {
         Q_UNUSED(url)
         Q_UNUSED(request)
+    }
+
+    virtual QVariant getCookies(QString cookieString)
+    {
+        QList<QNetworkCookie> cookies;
+
+        // 设置cookie
+        QString cookieText = cookieString;
+        QStringList sl = cookieText.split(";");
+        foreach (auto s, sl)
+        {
+            s = s.trimmed();
+            int pos = s.indexOf("=");
+            QString key = s.left(pos);
+            QString val = s.right(s.length() - pos - 1);
+            cookies.push_back(QNetworkCookie(key.toUtf8(), val.toUtf8()));
+        }
+
+        // 请求头里面加入cookies
+        QVariant var;
+        var.setValue(cookies);
+        return var;
     }
 
 protected:

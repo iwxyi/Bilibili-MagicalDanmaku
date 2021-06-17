@@ -5,6 +5,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include "songbeans.h"
+#include "netinterface.h"
 
 namespace Ui {
 class LoginDialog;
@@ -14,7 +15,7 @@ class LoginDialog;
 #define QQMUSIC_SERVER QString("http://iwxyi.com:3300")
 #define MIGU_SERVER QString("http://iwxyi.com:3400")
 
-class LoginDialog : public QDialog
+class LoginDialog : public QDialog, public NetInterface
 {
     Q_OBJECT
 public:
@@ -31,6 +32,10 @@ private slots:
     void on_neteaseCookieRadio_clicked();
 
     void on_qqmusicCookieRadio_clicked();
+
+    void on_testButton_clicked();
+
+    virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
 
 private:
     void loginNetease(QString username, QString password);
