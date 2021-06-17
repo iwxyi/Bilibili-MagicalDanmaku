@@ -14684,11 +14684,11 @@ void MainWindow::adjustDanmakuLongest()
     int longest = 20;
     // UL等级：20级30字
     if (cookieULevel >= 20)
-        longest = qMin(longest, 30);
+        longest = qMax(longest, 30);
 
     // 大航海：舰长20，提督30，总督40
     if (cookieGuardLevel == 1 || cookieGuardLevel == 2)
-        longest = qMin(longest, 40);
+        longest = qMax(longest, 40);
 
     ui->danmuLongestSpin->setValue(longest);
     on_danmuLongestSpin_editingFinished();
