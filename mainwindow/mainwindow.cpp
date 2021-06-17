@@ -16769,7 +16769,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
     // 设置默认值
     if (!toutaGiftCounts.size())
     {
-        QString s = "1 2 3 4 5 10 11 100 101";
+        QString s = "1 2 3 10 100 520 1314";
         ui->toutaGiftCountsEdit->setText(s);
         on_toutaGiftCountsEdit_textEdited(s);
     }
