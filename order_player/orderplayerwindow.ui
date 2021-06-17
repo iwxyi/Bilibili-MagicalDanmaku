@@ -611,7 +611,7 @@ QTabBar::tab:disabled
 }</string>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="searchResultPage">
         <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -654,7 +654,7 @@ QTableCornerButton::section
             <set>QAbstractItemView::EditKeyPressed</set>
            </property>
            <property name="alternatingRowColors">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::ExtendedSelection</enum>
@@ -721,8 +721,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>459</width>
-              <height>535</height>
+              <width>456</width>
+              <height>514</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -884,7 +884,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
