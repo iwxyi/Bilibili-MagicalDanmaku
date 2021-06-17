@@ -20,7 +20,7 @@ class LoginDialog : public QDialog, public NetInterface
     Q_OBJECT
 public:
     explicit LoginDialog(QWidget *parent = nullptr);
-    ~LoginDialog();
+    ~LoginDialog() override;
 
 private slots:
     void on_loginButton_clicked();
@@ -34,8 +34,6 @@ private slots:
     void on_qqmusicCookieRadio_clicked();
 
     void on_testButton_clicked();
-
-    virtual void setUrlCookie(const QString &url, QNetworkRequest *request) override;
 
 private:
     void loginNetease(QString username, QString password);
