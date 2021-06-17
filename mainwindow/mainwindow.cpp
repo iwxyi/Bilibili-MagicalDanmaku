@@ -1822,7 +1822,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             {
                 if (msg.length() <= ui->danmuLongestSpin->value())
                 {
-                    localNotify("[错误的弹幕长度：超出长度" + snum(msg.length()) + " <= 设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
+                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
                 }
                 else
                 {
@@ -6433,7 +6433,7 @@ void MainWindow::saveTouta()
 {
     settings->setValue("pk/toutaCount", toutaCount);
     settings->setValue("pk/chiguaCount", chiguaCount);
-    settings->setValue("pk/toutaGOld", toutaGold);
+    settings->setValue("pk/toutaGold", toutaGold);
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
@@ -11889,8 +11889,10 @@ void MainWindow::updateExistGuards(int page)
  * 有新上船后调用（不一定是第一次，可能是掉船了）
  * @param guardLevel 大航海等级
  */
-void MainWindow::newGuardUpdate(LiveDanmaku danmaku)
+void MainWindow::newGuardUpdate(const LiveDanmaku& danmaku)
 {
+    if (!hasEvent("NEW_GUARD_COUNT"))
+        return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     get(url, [=](MyJson json) {
         int count = json.data().o("guard_info").i("count");
