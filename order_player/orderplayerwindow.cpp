@@ -1,5 +1,6 @@
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
+#include "stringutil.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
@@ -2572,7 +2573,8 @@ void OrderPlayerWindow::getQQMusicAccount()
         qqmusicNickname = "";
         return ;
     }
-    fetch(QQMUSIC_SERVER + "/user/detail?id=1600631528", [=](MyJson json) {
+    QString uin = getStrMid(qqmusicCookies, " uin=", ";");
+    fetch(QQMUSIC_SERVER + "/user/detail?id=" + uin, [=](MyJson json) {
         // qInfo() << json;
         if (json.i("result") == 301)
         {

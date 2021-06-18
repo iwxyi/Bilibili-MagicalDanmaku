@@ -1,6 +1,7 @@
 #include <QMessageBox>
 #include "logindialog.h"
 #include "ui_logindialog.h"
+#include "stringutil.h"
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent), NetInterface(this),
@@ -146,7 +147,8 @@ void LoginDialog::on_testButton_clicked()
     }
     else if (ui->qqmusicCookieRadio->isChecked())
     {
-        get(QQMUSIC_SERVER + "/user/detail?id=123456", [=](MyJson json) {
+        QString uin = getStrMid(cookieString, " uin=", ";");
+        get(QQMUSIC_SERVER + "/user/detail?id=" + uin, [=](MyJson json) {
             qInfo() << json;
             if (json.i("result") == 301)
             {
