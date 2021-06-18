@@ -3930,6 +3930,7 @@ void MainWindow::updatePermission()
     permissionLevel = 0;
     if (gettingRoom || gettingUser)
         return ;
+    triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
     QString userId = cookieUid;
     get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
