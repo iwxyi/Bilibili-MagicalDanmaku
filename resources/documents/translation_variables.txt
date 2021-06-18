@@ -98,4 +98,5 @@
 当前歌曲点歌者=song_order_uname
 点歌队列数量=order_song_count
 随机100=random100
-特别=special
+特别关注=special
+对面也用神奇弹幕=pk_magical_room

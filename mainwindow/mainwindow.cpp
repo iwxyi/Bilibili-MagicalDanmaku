@@ -5449,6 +5449,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%umark%")
         return userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
 
+    // 对面直播间也在用神奇弹幕
+    else if (key == "%pk_magical_room%")
+        return !pkRoomId.isEmpty() && magicalRooms.contains(pkRoomId) ? "1" : "0";
+
     // 正则播放的音乐
     else if (key == "%playing_song%")
     {
