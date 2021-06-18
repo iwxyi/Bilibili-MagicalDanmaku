@@ -525,14 +525,36 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         setSearchResultTable(searchResultSongs);
 
-        // 没有搜索结果
-        if (!searchResultSongs.size())
+        // 判断历史，优先 收藏 > 空闲 > 搜索
+        Song song;
+        if (!addBy.isEmpty() && key.trimmed().length() >= 2)
+        {
+            QString kk = transToReg(key);
+            QStringList words = kk.split(QRegExp("[- ]+"), QString::SkipEmptyParts);
+            QString exp = words.join(".*");
+            QRegularExpression re(exp);
+
+            SongList mySongs = favoriteSongs + normalSongs;
+            foreach (Song s, mySongs)
+            {
+                if ((s.name + s.artistNames).contains(re))
+                {
+                    song = s;
+                    qInfo() << "优先播放收藏/空闲歌单歌曲：" << song.name << exp;
+                    break;
+                }
+            }
+        }
+
+        // 没有搜索结果，也没有能播放的歌曲，直接返回
+        if (!searchResultSongs.size() && !song.isValid())
             return ;
 
         // 从点歌的槽进来的
         if (!addBy.isEmpty())
         {
-            Song song = getSuiableSong(key);
+            if (!song.isValid()) // 历史中没找到，就从搜索结果中找
+                song = getSuiableSong(key);
             song.setAddDesc(addBy);
             prevOrderSong = song;
 
