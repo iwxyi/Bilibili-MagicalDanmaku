@@ -261,6 +261,8 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     qqmusicCookies = settings.value("music/qqmusicCookies").toString();
     qqmusicCookiesVariant = getCookies(qqmusicCookies);
     unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
+    getNeteaseAccount();
+    getQQMusicAccount();
 
     // 默认背景
     prevBlurBg = QPixmap(32, 32);
@@ -2543,6 +2545,46 @@ QVariant OrderPlayerWindow::getCookies(QString cookieString)
     return var;
 }
 
+void OrderPlayerWindow::getNeteaseAccount()
+{
+    if (neteaseCookies.isEmpty())
+    {
+        neteaseNickname = "";
+        return ;
+    }
+    fetch(NETEASE_SERVER + "/login/status", [=](MyJson json) {
+        // qInfo() << json;
+        if (json.code() != 200) // 也是301
+        {
+            neteaseNickname = "";
+            qWarning() << "网易云账号：" << json.msg();
+            return ;
+        }
+        neteaseNickname = json.o("profile").s("nickname");
+        qInfo() << "网易云账号：" << neteaseNickname << "登录成功";
+    }, NeteaseCloudMusic);
+}
+
+void OrderPlayerWindow::getQQMusicAccount()
+{
+    if (qqmusicCookies.isEmpty())
+    {
+        qqmusicNickname = "";
+        return ;
+    }
+    fetch(QQMUSIC_SERVER + "/user/detail?id=1600631528", [=](MyJson json) {
+        // qInfo() << json;
+        if (json.i("result") == 301)
+        {
+            qqmusicNickname = "";
+            qWarning() << "QQ音乐账号：" << json.s("errMsg") << json.s("info");
+            return ;
+        }
+        qqmusicNickname = json.data().o("creator").s("nick");
+        qInfo() << "QQ音乐账号：" << qqmusicNickname << "登录成功";
+    }, QQMusic);
+}
+
 /**
  * 列表项改变
  */
@@ -3137,14 +3179,18 @@ void OrderPlayerWindow::on_settingsButton_clicked()
                 neteaseCookies = cookies;
                 settings.setValue("music/neteaseCookies", cookies);
                 neteaseCookiesVariant = getCookies(neteaseCookies);
+                getNeteaseAccount();
                 break;
             case QQMusic:
                 qqmusicCookies = cookies;
                 settings.setValue("music/qqmusicCookies", cookies);
                 qqmusicCookiesVariant = getCookies(qqmusicCookies);
+                getQQMusicAccount();
                 if (unblockQQMusic)
                     settings.setValue("music/unblockQQMusic", unblockQQMusic = false);
                 break;
+            case MiguMusic:
+                return ;
             }
             clearDownloadFiles();
         });
@@ -3152,23 +3198,23 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->uncheck();
 
     accountMenu->split();
-    accountMenu->addAction("网易云音乐", [=]{
+    accountMenu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
         if (QMessageBox::question(this, "网易云音乐", "是否退出网易云音乐账号？") == QMessageBox::Yes)
         {
             neteaseCookies = "";
             neteaseCookiesVariant.clear();
             settings.setValue("music/neteaseCookies", "");
         }
-    })->check(!neteaseCookies.isEmpty())->disable(neteaseCookies.isEmpty());
+    })->text(!neteaseNickname.isEmpty(), neteaseNickname)->disable(neteaseCookies.isEmpty());
 
-    accountMenu->addAction("QQ音乐", [=]{
+    accountMenu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
         if (QMessageBox::question(this, "QQ音乐", "是否退出QQ音乐账号？") == QMessageBox::Yes)
         {
             qqmusicCookies = "";
             qqmusicCookiesVariant.clear();
             settings.setValue("music/qqmusicCookies", "");
         }
-    })->check(!qqmusicCookies.isEmpty())->disable(qqmusicCookies.isEmpty());
+    })->text(!qqmusicNickname.isEmpty(), qqmusicNickname)->disable(qqmusicCookies.isEmpty());
 
     FacileMenu* playMenu = menu->addMenu("播放");
 
