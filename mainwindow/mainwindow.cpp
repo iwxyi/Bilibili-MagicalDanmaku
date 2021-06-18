@@ -5786,6 +5786,55 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         return "0";
     }
+    else if (funcName == "abs")
+    {
+        QString val = args.trimmed();
+        if (val.startsWith("-"))
+            val.remove(0, 1);
+        return val;
+    }
+    else if (funcName == "log2")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("数值");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(log2(a)));
+    }
+    else if (funcName == "log10")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("数值");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(log10(a)));
+    }
+    else if (funcName == "pow")
+    {
+        if (argList.size() < 2)
+        {
+            return errorArg("底数, 指数");
+        }
+
+        double a = argList.at(0).toDouble();
+        double b = argList.at(1).toDouble();
+        return QString::number(int(pow(a, b)));
+    }
+    else if (funcName == "pow2")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("底数");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(a * a));
+    }
+
     return "";
 }
 

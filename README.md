@@ -784,6 +784,11 @@ border-image: url(C:/Path/To/Image.png)
 | filterReject(filter)           | 过滤器拒绝   | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例） |
 | inFilterList(filter, content)  | 在过滤列表中 | 包含在空格分隔的词库中则返回1（参考过滤器示例）     |
 | inFilterMatch(filter, content) | 在过滤正则中 | 满足正则则返回1（参考过滤器示例）                   |
+| abs(val)                       | 取绝对值     |                                                     |
+| log2(val)                      | 取对数2      |                                                     |
+| log10(val)                     | 取对数10     |                                                     |
+| pow2(val)                      | 取平方       |                                                     |
+| pow(val, a)                    | 取乘方       |                                                     |
 
 以获取时间为例：
 
