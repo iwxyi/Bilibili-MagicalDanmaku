@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>1005</height>
+             <height>983</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -6607,7 +6607,7 @@ QTabBar::tab:selected
               <item>
                <widget class="QCheckBox" name="blockNotOnlyNewbieCheck">
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不只是新人，所有触发敏感词的发言都直接禁言&lt;/p&gt;&lt;p&gt;房管只能禁言非房管；主播可以禁言房管&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不只是新人，所有触发敏感词的发言都直接禁言&lt;/p&gt;&lt;p&gt;房管只能禁言非房管；主播可以禁言房管&lt;/p&gt;&lt;p&gt;若要使用当前登录账号进行测试，可开启[调试模式]、关闭远程的[允许房管控制]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
                  <string>非新人</string>
@@ -7111,7 +7111,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

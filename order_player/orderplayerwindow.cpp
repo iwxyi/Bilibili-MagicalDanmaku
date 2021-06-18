@@ -2266,6 +2266,8 @@ void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
         ui->favoriteSongsListView->setPalette(pa);
         ui->listSongsListView->setPalette(pa);
         ui->historySongsListView->setPalette(pa);
+        ui->searchResultTable->setPalette(pa);
+        ui->searchResultTable->horizontalHeader()->setPalette(pa);
 
         ui->lyricWidget->setColors(sfg, fg);
         desktopLyric->setColors(sfg, fg);

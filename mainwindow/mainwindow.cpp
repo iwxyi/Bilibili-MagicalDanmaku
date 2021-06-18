@@ -9168,7 +9168,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (snum(uid) == upUid || snum(uid) == cookieUid) // 是自己或UP主的，不屏蔽
+        if (!debugPrint && (snum(uid) == upUid || snum(uid) == cookieUid)) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
@@ -9232,7 +9232,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
 
-            // 提示拉黑
+            // 没有被禁言，那么判断提示拉黑
             if (!blocked && ui->promptBlockNewbieCheck->isChecked())
             {
                 testTipBlock();
@@ -9240,7 +9240,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else if (ui->promptBlockNewbieCheck->isChecked() && ui->notOnlyNewbieCheck->isChecked())
         {
-            // 提示拉黑
+            // 判断提示拉黑
             testTipBlock();
         }
 
@@ -16771,7 +16771,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
     // 设置默认值
     if (!toutaGiftCounts.size())
     {
-        QString s = "1 2 3 4 5 10 11 100 101";
+        QString s = "1 2 3 10 100 520 1314";
         ui->toutaGiftCountsEdit->setText(s);
         on_toutaGiftCountsEdit_textEdited(s);
     }

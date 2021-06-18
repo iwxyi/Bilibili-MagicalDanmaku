@@ -244,10 +244,10 @@ bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg
             continue;
 
         int r = c.red, g = c.green, b = c.blue, n = c.count;
-        qint64 variantBg = 3 * (r - bg->red()) * (r - bg->red())
+        qint64 variantBg = 1 * (r - bg->red()) * (r - bg->red())
                 + 4 * (g - bg->green()) * (g - bg->green())
                 + 2 * (b - bg->blue()) * (b - bg->blue());
-        qint64 variantFg = 3 * (r - fg->red()) * (r - fg->red())
+        qint64 variantFg = 2 * (r - fg->red()) * (r - fg->red())
                 + 4 * (g - fg->green()) * (g - fg->green())
                 + 2 * (b - fg->blue()) * (b - fg->blue());
 
@@ -270,10 +270,15 @@ bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg
             continue;
 
         int r = c.red, g = c.green, b = c.blue, n = c.count;
-        qint64 variant = 3 * (r - sbg->red()) * (r - sbg->red())
+        qint64 variantSbg = 3 * (r - sbg->red()) * (r - sbg->red())
                 + 4 * (g - sbg->green()) * (g - sbg->green())
                 + 2 * (b - sbg->blue()) * (b - sbg->blue());
 
+        qint64 variantBg = 3 * (r - bg->red()) * (r - bg->red())
+                        + 4 * (g - bg->green()) * (g - bg->green())
+                        + 2 * (b - bg->blue()) * (b - bg->blue());
+
+        qint64 variant = variantSbg * 2 + variantBg;
         if (variant > maxVariance)
         {
             maxVariance = variant;
