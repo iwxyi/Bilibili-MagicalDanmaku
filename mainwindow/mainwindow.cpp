@@ -5839,6 +5839,10 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         double a = argList.at(0).toDouble();
         return QString::number(int(a * a));
     }
+    else if (funcName == "fileExists")
+    {
+        return isFileExist(args) ? "1" : "0";
+    }
 
     return "";
 }
@@ -8326,6 +8330,54 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
             simulateKeys(text);
+            return true;
+        }
+    }
+
+    // 执行脚本
+    if (msg.contains("execScript"))
+    {
+        re = RE("execScript\\s*\\(\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            QString path;
+            if (isFileExist(path = dataPath + "control/" + text + ".bat"))
+            {
+                qInfo() << "执行bat脚本：" << path;
+                QProcess p(nullptr);
+                p.start(path);
+                if (!p.waitForFinished())
+                    qWarning() << "执行bat脚本失败：" << path << p.errorString();
+            }
+            else if (isFileExist(path = dataPath + "control/" + text + ".vbs"))
+            {
+                qInfo() << "执行vbs脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else if (isFileExist(path = text + ".bat"))
+            {
+                qInfo() << "执行bat脚本：" << path;
+                QProcess p(nullptr);
+                p.start(path);
+                if (!p.waitForFinished())
+                    qWarning() << "执行bat脚本失败：" << path << p.errorString();
+            }
+            else if (isFileExist(path = text + ".vbs"))
+            {
+                qInfo() << "执行vbs脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else if (isFileExist(path = text))
+            {
+                qInfo() << "执行脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else
+            {
+                qWarning() << "脚本不存在：" << text;
+            }
             return true;
         }
     }

@@ -23,3 +23,4 @@
 取对数10=log10
 取平方=pow2
 取乘方=pow
+文件存在=fileExists

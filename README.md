@@ -785,6 +785,7 @@ border-image: url(C:/Path/To/Image.png)
 | filterReject(filter)           | 过滤器拒绝   | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例） |
 | inFilterList(filter, content)  | 在过滤列表中 | 包含在空格分隔的词库中则返回1（参考过滤器示例）     |
 | inFilterMatch(filter, content) | 在过滤正则中 | 满足正则则返回1（参考过滤器示例）                   |
+| fileExists                     | 文件存在     | 有这个文件则返回1，否则0                            |
 | abs(val)                       | 取绝对值     |                                                     |
 | log2(val)                      | 取对数2      |                                                     |
 | log10(val)                     | 取对数10     |                                                     |
@@ -1019,6 +1020,8 @@ tips：
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
+| simulateKeys                                       | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
+| execScript                                         | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本          |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
