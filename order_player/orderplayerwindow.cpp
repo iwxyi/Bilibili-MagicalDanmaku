@@ -1876,9 +1876,10 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         id = match.captured(1);
         playlistUrl = QQMUSIC_SERVER + "/songlist?id=" + id;
     }
-    else if (shareUrl.contains("y.qq.com/n/yqq/playlist/")) // QQ音乐短网址第二次重定向（网页打开的）
+    else if (shareUrl.contains("y.qq.com") && shareUrl.contains("playlist/")) // QQ音乐短网址第二次重定向（网页打开的）
     {
         // https://y.qq.com/n/yqq/playlist/7845417918.html
+        // https://y.qq.com/n/ryqq/playlist/7845417918.html
         source = QQMusic;
         QRegularExpressionMatch match;
         if (shareUrl.indexOf(QRegularExpression("playlist/(\\d+)"), 0, &match) > -1)

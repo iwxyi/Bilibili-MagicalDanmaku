@@ -21,7 +21,7 @@ void myMsgOutput(QtMsgType type, const QMessageLogContext &context, const QStrin
         mmsg=QString("%1: Debug:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
         break;
     case QtInfoMsg:
-        mmsg=QString("%1: Info:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
+        mmsg=QString("%1: Info:\t%2").arg(time).arg(msg);
         break;
     case QtWarningMsg:
         mmsg=QString("%1: Warning:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
