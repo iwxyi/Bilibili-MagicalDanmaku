@@ -771,7 +771,6 @@ private:
     void handleMessage(QJsonObject json);
     bool mergeGiftCombo(LiveDanmaku danmaku);
     bool handlePK(QJsonObject json);
-    bool handlePK2(QJsonObject json);
     void userComeEvent(LiveDanmaku& danmaku);
     void refreshBlockList();
     bool isInFans(qint64 upUid);
@@ -859,6 +858,7 @@ private:
     void pkStart(QJsonObject json);
     void pkProcess(QJsonObject json);
     void pkEnd(QJsonObject json);
+    void pkSettle(QJsonObject json);
     int getPkMaxGold(int votes);
     bool execTouta();
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);

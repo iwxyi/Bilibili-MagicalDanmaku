@@ -8840,97 +8840,9 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data), true);
                     localNotify(msg);
                 }
-                else if (cmd == "PK_BATTLE_START_NEW")
+                else if (handlePK(json))
                 {
-                    /*{
-                        "cmd": "PK_BATTLE_START_NEW",
-                        "pk_id": 200271102,
-                        "pk_status": 201,
-                        "timestamp": 1611152129,
-                        "data": {
-                            "battle_type": 1,
-                            "final_hit_votes": 0,
-                            "pk_start_time": 1611152129,
-                            "pk_frozen_time": 1611152429,
-                            "pk_end_time": 1611152439,
-                            "pk_votes_type": 0,
-                            "pk_votes_add": 0,
-                            "pk_votes_name": "\\u4e71\\u6597\\u503c"
-                        }
-                    }*/
-                }
-                else if (cmd == "PK_BATTLE_PROCESS_NEW")
-                {
-                    /*{
-                        "cmd": "PK_BATTLE_PROCESS_NEW",
-                        "pk_id": 200270835,
-                        "pk_status": 201,
-                        "timestamp": 1611151874,
-                        "data": {
-                            "battle_type": 1,
-                            "init_info": {
-                                "room_id": 2603963,
-                                "votes": 55,
-                                "best_uname": "\\u963f\\u5179\\u963f\\u5179\\u7684\\u77db"
-                            },
-                            "match_info": {
-                                "room_id": 22532956,
-                                "votes": 184,
-                                "best_uname": "\\u591c\\u7a7a\\u3001"
-                            }
-                        }
-                    }*/
-                }
-                else if (cmd == "PK_BATTLE_RANK_CHANGE")
-                {
-                    /*{
-                        "cmd": "PK_BATTLE_RANK_CHANGE",
-                        "timestamp": 1611152461,
-                        "data": {
-                            "first_rank_img_url": "https:\\/\\/i0.hdslb.com\\/bfs\\/live\\/078e242c4e2bb380554d55d0ac479410d75a0efc.png",
-                            "rank_name": "\\u767d\\u94f6\\u6597\\u58ebx1\\u661f"
-                        }
-                    }*/
-                }
-                else if (cmd == "PK_BATTLE_SETTLE_NEW")
-                {
-                    /*{
-                        "cmd": "PK_BATTLE_SETTLE_NEW",
-                        "pk_id": 200933662,
-                        "pk_status": 601,
-                        "timestamp": 1613959764,
-                        "data": {
-                            "pk_id": 200933662,
-                            "pk_status": 601,
-                            "settle_status": 1,
-                            "punish_end_time": 1613959944,
-                            "timestamp": 1613959764,
-                            "battle_type": 6,
-                            "init_info": {
-                                "room_id": 7259049,
-                                "result_type": -1,
-                                "votes": 0,
-                                "assist_info": []
-                            },
-                            "match_info": {
-                                "room_id": 21839758,
-                                "result_type": 2,
-                                "votes": 3,
-                                "assist_info": [
-                                    {
-                                        "rank": 1,
-                                        "uid": 412357310,
-                                        "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
-                                        "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
-                                    }
-                                ]
-                            },
-                            "dm_conf": {
-                                "font_color": "#FFE10B",
-                                "bg_color": "#72C5E2"
-                            }
-                        }
-                    }*/
+
                 }
                 else
                 {
@@ -10136,9 +10048,6 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (handlePK(json))
     {
     }
-    else if (handlePK2(json)) // 太多了，换到单独一个方法里面
-    {
-    }
     else if (cmd == "GUARD_BUY") // 有人上舰
     {
         // {"end_time":1611343771,"gift_id":10003,"gift_name":"舰长","guard_level":3,"num":1,"price":198000,"start_time":1611343771,"uid":67756641,"username":"31119657605_bili"}
@@ -11180,21 +11089,167 @@ bool MainWindow::handlePK(QJsonObject json)
 {
     QString cmd = json.value("cmd").toString();
 
+    if (cmd == "PK_BATTLE_PRE") // 开始前的等待状态
+    {
+        return true;
+    }
+    else if (cmd == "PK_BATTLE_PRE_NEW")
+    {
+        /*{
+            "cmd": "PK_BATTLE_PRE_NEW",
+            "data": {
+                "battle_type": 1,
+                "end_win_task": null,
+                "face": "http://i0.hdslb.com/bfs/face/4c0e444dbabe86a3c4a3c47b72e2e63bd4a96684.jpg",
+                "match_type": 1,
+                "pk_votes_name":"\xE4\xB9\xB1\xE6\x96\x97\xE5\x80\xBC",
+                "pre_timer": 10,
+                "room_id": 4857111,
+                "season_id": 31,
+                "uid": 14833326,
+                "uname":"\xE5\x8D\x83\xE9\xAD\x82\xE5\x8D\xB0"
+            },
+            "pk_id": 200271102,
+            "pk_status": 101,
+            "roomid": 22532956,
+            "timestamp": 1611152119
+        }*/
+        pkPre(json);
+        triggerCmdEvent("PK_BATTLE_PRE", LiveDanmaku(json));
+        return true;
+    }
     if (cmd == "PK_BATTLE_START") // 开始大乱斗
     {
-        pkStart(json);
+        return true;
     }
     else if (cmd == "PK_BATTLE_START_NEW")
     {
-
+        /*{
+            "cmd": "PK_BATTLE_START_NEW",
+            "pk_id": 200271102,
+            "pk_status": 201,
+            "timestamp": 1611152129,
+            "data": {
+                "battle_type": 1,
+                "final_hit_votes": 0,
+                "pk_start_time": 1611152129,
+                "pk_frozen_time": 1611152429,
+                "pk_end_time": 1611152439,
+                "pk_votes_type": 0,
+                "pk_votes_add": 0,
+                "pk_votes_name": "\\u4e71\\u6597\\u503c"
+            }
+        }*/
+        pkStart(json);
+        triggerCmdEvent("PK_BATTLE_START", LiveDanmaku(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_PROCESS") // 双方送礼信息
     {
+        return true;
+    }
+    else if (cmd == "PK_BATTLE_PROCESS_NEW")
+    {
+        /*{
+            "cmd": "PK_BATTLE_PROCESS_NEW",
+            "pk_id": 200270835,
+            "pk_status": 201,
+            "timestamp": 1611151874,
+            "data": {
+                "battle_type": 1,
+                "init_info": {
+                    "room_id": 2603963,
+                    "votes": 55,
+                    "best_uname": "\\u963f\\u5179\\u963f\\u5179\\u7684\\u77db"
+                },
+                "match_info": {
+                    "room_id": 22532956,
+                    "votes": 184,
+                    "best_uname": "\\u591c\\u7a7a\\u3001"
+                }
+            }
+        }*/
         pkProcess(json);
+        triggerCmdEvent("PK_BATTLE_PROCESS", LiveDanmaku(json));
+        return true;
+    }
+    else if (cmd == "PK_BATTLE_RANK_CHANGE")
+    {
+        /*{
+            "cmd": "PK_BATTLE_RANK_CHANGE",
+            "timestamp": 1611152461,
+            "data": {
+                "first_rank_img_url": "https:\\/\\/i0.hdslb.com\\/bfs\\/live\\/078e242c4e2bb380554d55d0ac479410d75a0efc.png",
+                "rank_name": "\\u767d\\u94f6\\u6597\\u58ebx1\\u661f"
+            }
+        }*/
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
         pkEnd(json);
+    }
+    else if (cmd == "PK_BATTLE_SETTLE") // 这个才是真正的PK结束消息！
+    {
+        /*{
+            "cmd": "PK_BATTLE_SETTLE",
+            "pk_id": 100729259,
+            "pk_status": 401,
+            "settle_status": 1,
+            "timestamp": 1605748006,
+            "data": {
+                "battle_type": 1,
+                "result_type": 2
+            },
+            "roomid": "22532956"
+        }*/
+        // result_type: 2赢，-1输
+
+        // 因为这个不只是data，比较特殊
+        // triggerCmdEvent(cmd, LiveDanmaku().with(json));
+        return true;
+    }
+    else if (cmd == "PK_BATTLE_SETTLE_NEW")
+    {
+        /*{
+            "cmd": "PK_BATTLE_SETTLE_NEW",
+            "pk_id": 200933662,
+            "pk_status": 601,
+            "timestamp": 1613959764,
+            "data": {
+                "pk_id": 200933662,
+                "pk_status": 601,
+                "settle_status": 1,
+                "punish_end_time": 1613959944,
+                "timestamp": 1613959764,
+                "battle_type": 6,
+                "init_info": {
+                    "room_id": 7259049,
+                    "result_type": -1,
+                    "votes": 0,
+                    "assist_info": []
+                },
+                "match_info": {
+                    "room_id": 21839758,
+                    "result_type": 2,
+                    "votes": 3,
+                    "assist_info": [
+                        {
+                            "rank": 1,
+                            "uid": 412357310,
+                            "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
+                            "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
+                        }
+                    ]
+                },
+                "dm_conf": {
+                    "font_color": "#FFE10B",
+                    "bg_color": "#72C5E2"
+                }
+            }
+        }*/
+        pkSettle(json);
+        triggerCmdEvent("PK_BATTLE_SETTLE", LiveDanmaku(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_USER")
     {
@@ -11311,6 +11366,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "settle_status": 1,
             "timestamp": 1605748006
         }*/
+        return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_V2")
     {
@@ -11348,67 +11404,20 @@ bool MainWindow::handlePK(QJsonObject json)
             "settle_status": 1,
             "timestamp": 1605748006
         }*/
-    }
-    else
-    {
-        return false;
-    }
-
-    triggerCmdEvent(cmd, LiveDanmaku(json));
-    return true;
-}
-
-bool MainWindow::handlePK2(QJsonObject json)
-{
-    QString cmd = json.value("cmd").toString();
-    if (cmd == "PK_BATTLE_PRE") // 开始前的等待状态
-    {
-        pkPre(json);
-
-        triggerCmdEvent(cmd, LiveDanmaku().with(json));
         return true;
     }
-    else if (cmd == "PK_BATTLE_SETTLE") // 解决了对手？
+    else if (cmd == "PK_BATTLE_PUNISH_END")
     {
-        /*{
-            "cmd": "PK_BATTLE_SETTLE",
-            "pk_id": 100729259,
-            "pk_status": 401,
-            "settle_status": 1,
-            "timestamp": 1605748006,
+        /* {
+            "cmd": "PK_BATTLE_PUNISH_END",
+            "pk_id": "203882854",
+            "pk_status": 1001,
+            "status_msg": "",
+            "timestamp": 1624466237,
             "data": {
-                "battle_type": 1,
-                "result_type": 2
-            },
-            "roomid": "22532956"
-        }*/
-        // result_type: 2赢，-1输
-
-        // 因为这个不只是data，比较特殊
-        triggerCmdEvent(cmd, LiveDanmaku().with(json));
-        return true;
-    }
-    else if (cmd == "PK_BATTLE_PRE_NEW")
-    {
-        /*{
-            "cmd": "PK_BATTLE_PRE_NEW",
-            "data": {
-                "battle_type": 1,
-                "end_win_task": null,
-                "face": "http://i0.hdslb.com/bfs/face/4c0e444dbabe86a3c4a3c47b72e2e63bd4a96684.jpg",
-                "match_type": 1,
-                "pk_votes_name":"\xE4\xB9\xB1\xE6\x96\x97\xE5\x80\xBC",
-                "pre_timer": 10,
-                "room_id": 4857111,
-                "season_id": 31,
-                "uid": 14833326,
-                "uname":"\xE5\x8D\x83\xE9\xAD\x82\xE5\x8D\xB0"
-            },
-            "pk_id": 200271102,
-            "pk_status": 101,
-            "roomid": 22532956,
-            "timestamp": 1611152119
-        }*/
+                "battle_type": 6
+            }
+        } */
     }
     else if (cmd == "PK_LOTTERY_START") // 大乱斗胜利后的抽奖，触发未知，实测在某次大乱斗送天空之翼后有
     {
@@ -11439,8 +11448,7 @@ bool MainWindow::handlePK2(QJsonObject json)
         return false;
     }
 
-    triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
-
+    triggerCmdEvent(cmd, LiveDanmaku(json));
     return true;
 }
 
@@ -13357,6 +13365,141 @@ void MainWindow::pkEnd(QJsonObject json)
                                      .arg(myVotes)
                                      .arg(matchVotes));
     qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
+    myVotes = 0;
+    matchVotes = 0;
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
+
+    // 保存对面偷塔次数
+    if (oppositeTouta && !pkUname.isEmpty())
+    {
+        int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+    }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
+    pkUname = "";
+    pkUid = "";
+    pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
+    pkVideo = false;
+    ui->actionShow_PK_Video->setEnabled(false);
+
+    if (cookieUid == upUid)
+        ui->actionJoin_Battle->setEnabled(true);
+
+    if (pkSocket)
+    {
+        try {
+            if (pkSocket->state() == QAbstractSocket::ConnectedState)
+                pkSocket->close(); // 会自动deleterLater
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qCritical() << "delete pkSocket failed";
+        }
+        pkSocket = nullptr;
+    }
+}
+
+void MainWindow::pkSettle(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_SETTLE_NEW",
+        "pk_id": 200933662,
+        "pk_status": 601,
+        "timestamp": 1613959764,
+        "data": {
+            "pk_id": 200933662,
+            "pk_status": 601,
+            "settle_status": 1,
+            "punish_end_time": 1613959944,
+            "timestamp": 1613959764,
+            "battle_type": 6,
+            "init_info": {
+                "room_id": 7259049,
+                "result_type": -1,
+                "votes": 0,
+                "assist_info": []
+            },
+            "match_info": {
+                "room_id": 21839758,
+                "result_type": 2,
+                "votes": 3,
+                "assist_info": [
+                    {
+                        "rank": 1,
+                        "uid": 412357310,
+                        "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
+                        "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
+                    }
+                ]
+            },
+            "dm_conf": {
+                "font_color": "#FFE10B",
+                "bg_color": "#72C5E2"
+            }
+        }
+    }*/
+    qDebug() << json;
+
+    QJsonObject data = json.value("data").toObject();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
+    int winnerType1 = data.value("init_info").toObject().value("result_type").toInt();
+    int winnerType2 = data.value("match_info").toObject().value("result_type").toInt();
+    qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
+    if (pkTimer)
+        pkTimer->stop();
+    if (danmakuWindow)
+    {
+        danmakuWindow->hideStatusText();
+        danmakuWindow->setToolTip("");
+        danmakuWindow->setPkStatus(0, 0, 0, "");
+    }
+    QString bestName = "";
+    int winCode = 0;
+    if (snum(thisRoomId) == roomId) // init是自己
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winCode = winnerType1;
+    }
+    else // match是自己
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winCode = winnerType2;
+    }
+
+    qint64 bestUid = 0;
+    if (myVotes > 0)
+    {
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                bestUid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
+    }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+
+    localNotify(QString("大乱斗 %1：%2 vs %3")
+                                     .arg(winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败"))
+                                     .arg(myVotes)
+                                     .arg(matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << myVotes << matchVotes;
     myVotes = 0;
     matchVotes = 0;
     QTimer::singleShot(60000, [=]{
