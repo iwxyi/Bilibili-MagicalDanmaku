@@ -1,5 +1,6 @@
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
+#include "stringutil.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
@@ -261,6 +262,8 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     qqmusicCookies = settings.value("music/qqmusicCookies").toString();
     qqmusicCookiesVariant = getCookies(qqmusicCookies);
     unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
+    getNeteaseAccount();
+    getQQMusicAccount();
 
     // 默认背景
     prevBlurBg = QPixmap(32, 32);
@@ -522,14 +525,36 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         setSearchResultTable(searchResultSongs);
 
-        // 没有搜索结果
-        if (!searchResultSongs.size())
+        // 判断历史，优先 收藏 > 空闲 > 搜索
+        Song song;
+        if (!addBy.isEmpty() && key.trimmed().length() >= 2)
+        {
+            QString kk = transToReg(key);
+            QStringList words = kk.split(QRegExp("[- ]+"), QString::SkipEmptyParts);
+            QString exp = words.join(".*");
+            QRegularExpression re(exp);
+
+            SongList mySongs = favoriteSongs + normalSongs;
+            foreach (Song s, mySongs)
+            {
+                if ((s.name + s.artistNames).contains(re))
+                {
+                    song = s;
+                    qInfo() << "优先播放收藏/空闲歌单歌曲：" << song.name << exp;
+                    break;
+                }
+            }
+        }
+
+        // 没有搜索结果，也没有能播放的歌曲，直接返回
+        if (!searchResultSongs.size() && !song.isValid())
             return ;
 
         // 从点歌的槽进来的
         if (!addBy.isEmpty())
         {
-            Song song = getSuiableSong(key);
+            if (!song.isValid()) // 历史中没找到，就从搜索结果中找
+                song = getSuiableSong(key);
             song.setAddDesc(addBy);
             prevOrderSong = song;
 
@@ -2544,6 +2569,47 @@ QVariant OrderPlayerWindow::getCookies(QString cookieString)
     return var;
 }
 
+void OrderPlayerWindow::getNeteaseAccount()
+{
+    if (neteaseCookies.isEmpty())
+    {
+        neteaseNickname = "";
+        return ;
+    }
+    fetch(NETEASE_SERVER + "/login/status", [=](MyJson json) {
+        // qInfo() << json;
+        if (json.code() != 200) // 也是301
+        {
+            neteaseNickname = "";
+            qWarning() << "网易云账号：" << json.msg();
+            return ;
+        }
+        neteaseNickname = json.o("profile").s("nickname");
+        qInfo() << "网易云账号：" << neteaseNickname << "登录成功";
+    }, NeteaseCloudMusic);
+}
+
+void OrderPlayerWindow::getQQMusicAccount()
+{
+    if (qqmusicCookies.isEmpty())
+    {
+        qqmusicNickname = "";
+        return ;
+    }
+    QString uin = getStrMid(qqmusicCookies, " uin=", ";");
+    fetch(QQMUSIC_SERVER + "/user/detail?id=" + uin, [=](MyJson json) {
+        // qInfo() << json;
+        if (json.i("result") == 301)
+        {
+            qqmusicNickname = "";
+            qWarning() << "QQ音乐账号：" << json.s("errMsg") << json.s("info");
+            return ;
+        }
+        qqmusicNickname = json.data().o("creator").s("nick");
+        qInfo() << "QQ音乐账号：" << qqmusicNickname << "登录成功";
+    }, QQMusic);
+}
+
 /**
  * 列表项改变
  */
@@ -3138,14 +3204,18 @@ void OrderPlayerWindow::on_settingsButton_clicked()
                 neteaseCookies = cookies;
                 settings.setValue("music/neteaseCookies", cookies);
                 neteaseCookiesVariant = getCookies(neteaseCookies);
+                getNeteaseAccount();
                 break;
             case QQMusic:
                 qqmusicCookies = cookies;
                 settings.setValue("music/qqmusicCookies", cookies);
                 qqmusicCookiesVariant = getCookies(qqmusicCookies);
+                getQQMusicAccount();
                 if (unblockQQMusic)
                     settings.setValue("music/unblockQQMusic", unblockQQMusic = false);
                 break;
+            case MiguMusic:
+                return ;
             }
             clearDownloadFiles();
         });
@@ -3153,23 +3223,23 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->uncheck();
 
     accountMenu->split();
-    accountMenu->addAction("网易云音乐", [=]{
+    accountMenu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
         if (QMessageBox::question(this, "网易云音乐", "是否退出网易云音乐账号？") == QMessageBox::Yes)
         {
             neteaseCookies = "";
             neteaseCookiesVariant.clear();
             settings.setValue("music/neteaseCookies", "");
         }
-    })->check(!neteaseCookies.isEmpty())->disable(neteaseCookies.isEmpty());
+    })->text(!neteaseNickname.isEmpty(), neteaseNickname)->disable(neteaseCookies.isEmpty());
 
-    accountMenu->addAction("QQ音乐", [=]{
+    accountMenu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
         if (QMessageBox::question(this, "QQ音乐", "是否退出QQ音乐账号？") == QMessageBox::Yes)
         {
             qqmusicCookies = "";
             qqmusicCookiesVariant.clear();
             settings.setValue("music/qqmusicCookies", "");
         }
-    })->check(!qqmusicCookies.isEmpty())->disable(qqmusicCookies.isEmpty());
+    })->text(!qqmusicNickname.isEmpty(), qqmusicNickname)->disable(qqmusicCookies.isEmpty());
 
     FacileMenu* playMenu = menu->addMenu("播放");
 

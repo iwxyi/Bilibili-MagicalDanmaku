@@ -55,3 +55,5 @@ AI回复=aiReply
 添加违禁词=addBannedWord
 显示CSV=showCSV
 设置定时任务=setTimerTask
+模拟按键=simulateKeys
+执行脚本=execScript

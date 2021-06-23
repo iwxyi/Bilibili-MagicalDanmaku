@@ -18,3 +18,9 @@
 过滤器拒绝=filterReject
 在过滤列表中=inFilterList
 在过滤正则中=inFilterMatch
+取绝对值=abs
+取对数2=log2
+取对数10=log10
+取平方=pow2
+取乘方=pow
+文件存在=fileExists

@@ -1822,7 +1822,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             {
                 if (msg.length() <= ui->danmuLongestSpin->value())
                 {
-                    localNotify("[错误的弹幕长度：超出长度" + snum(msg.length()) + " <= 设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
+                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
                 }
                 else
                 {
@@ -3938,6 +3938,7 @@ void MainWindow::updatePermission()
     permissionLevel = 0;
     if (gettingRoom || gettingUser)
         return ;
+    triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
     QString userId = cookieUid;
     get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
@@ -5457,6 +5458,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%umark%")
         return userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
 
+    // 对面直播间也在用神奇弹幕
+    else if (key == "%pk_magical_room%")
+        return !pkRoomId.isEmpty() && magicalRooms.contains(pkRoomId) ? "1" : "0";
+
     // 正则播放的音乐
     else if (key == "%playing_song%")
     {
@@ -5794,6 +5799,59 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         return "0";
     }
+    else if (funcName == "abs")
+    {
+        QString val = args.trimmed();
+        if (val.startsWith("-"))
+            val.remove(0, 1);
+        return val;
+    }
+    else if (funcName == "log2")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("数值");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(log2(a)));
+    }
+    else if (funcName == "log10")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("数值");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(log10(a)));
+    }
+    else if (funcName == "pow")
+    {
+        if (argList.size() < 2)
+        {
+            return errorArg("底数, 指数");
+        }
+
+        double a = argList.at(0).toDouble();
+        double b = argList.at(1).toDouble();
+        return QString::number(int(pow(a, b)));
+    }
+    else if (funcName == "pow2")
+    {
+        if (argList.size() < 1)
+        {
+            return errorArg("底数");
+        }
+
+        double a = argList.at(0).toDouble();
+        return QString::number(int(a * a));
+    }
+    else if (funcName == "fileExists")
+    {
+        return isFileExist(args) ? "1" : "0";
+    }
+
     return "";
 }
 
@@ -6441,7 +6499,7 @@ void MainWindow::saveTouta()
 {
     settings->setValue("pk/toutaCount", toutaCount);
     settings->setValue("pk/chiguaCount", chiguaCount);
-    settings->setValue("pk/toutaGOld", toutaGold);
+    settings->setValue("pk/toutaGold", toutaGold);
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
@@ -8280,6 +8338,54 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
             simulateKeys(text);
+            return true;
+        }
+    }
+
+    // 执行脚本
+    if (msg.contains("execScript"))
+    {
+        re = RE("execScript\\s*\\(\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            QString path;
+            if (isFileExist(path = dataPath + "control/" + text + ".bat"))
+            {
+                qInfo() << "执行bat脚本：" << path;
+                QProcess p(nullptr);
+                p.start(path);
+                if (!p.waitForFinished())
+                    qWarning() << "执行bat脚本失败：" << path << p.errorString();
+            }
+            else if (isFileExist(path = dataPath + "control/" + text + ".vbs"))
+            {
+                qInfo() << "执行vbs脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else if (isFileExist(path = text + ".bat"))
+            {
+                qInfo() << "执行bat脚本：" << path;
+                QProcess p(nullptr);
+                p.start(path);
+                if (!p.waitForFinished())
+                    qWarning() << "执行bat脚本失败：" << path << p.errorString();
+            }
+            else if (isFileExist(path = text + ".vbs"))
+            {
+                qInfo() << "执行vbs脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else if (isFileExist(path = text))
+            {
+                qInfo() << "执行脚本：" << path;
+                QDesktopServices::openUrl("file:///" + path);
+            }
+            else
+            {
+                qWarning() << "脚本不存在：" << text;
+            }
             return true;
         }
     }
@@ -11905,8 +12011,10 @@ void MainWindow::updateExistGuards(int page)
  * 有新上船后调用（不一定是第一次，可能是掉船了）
  * @param guardLevel 大航海等级
  */
-void MainWindow::newGuardUpdate(LiveDanmaku danmaku)
+void MainWindow::newGuardUpdate(const LiveDanmaku& danmaku)
 {
+    if (!hasEvent("NEW_GUARD_COUNT"))
+        return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     get(url, [=](MyJson json) {
         int count = json.data().o("guard_info").i("count");

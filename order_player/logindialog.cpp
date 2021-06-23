@@ -1,6 +1,7 @@
 #include <QMessageBox>
 #include "logindialog.h"
 #include "ui_logindialog.h"
+#include "stringutil.h"
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent), NetInterface(this),
@@ -140,12 +141,14 @@ void LoginDialog::on_testButton_clicked()
                 QMessageBox::warning(this, "测试账号", json.msg());
                 return ;
             }
-            QMessageBox::information(this, "测试账号", "检测成功，可以使用！");
+            QString nickname = json.o("profile").s("nickname");
+            QMessageBox::information(this, "测试账号", nickname + "\n检测成功，可以使用！");
         }, getCookies(cookieString));
     }
     else if (ui->qqmusicCookieRadio->isChecked())
     {
-        get(QQMUSIC_SERVER + "/user/detail?id=123456", [=](MyJson json) {
+        QString uin = getStrMid(cookieString, " uin=", ";");
+        get(QQMUSIC_SERVER + "/user/detail?id=" + uin, [=](MyJson json) {
             qInfo() << json;
             if (json.i("result") == 301)
             {
@@ -154,7 +157,8 @@ void LoginDialog::on_testButton_clicked()
                 QMessageBox::warning(this, "测试账号", msg + "\n" + info);
                 return ;
             }
-            QMessageBox::information(this, "测试账号", "检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）");
+            QString nickname = json.data().o("creator").s("nick");
+            QMessageBox::information(this, "测试账号", nickname + "\n检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）");
         }, getCookies(cookieString));
     }
 }

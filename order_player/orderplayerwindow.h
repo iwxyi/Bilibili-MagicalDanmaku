@@ -268,6 +268,9 @@ private:
     void fetch(QString url, QStringList params, NetJsonFunc func, MusicSource cookie = UnknowMusic);
     QVariant getCookies(QString cookieString);
 
+    void getNeteaseAccount();
+    void getQQMusicAccount();
+
 protected:
     void showEvent(QShowEvent*e) override;
     void closeEvent(QCloseEvent*) override;
@@ -314,6 +317,8 @@ private:
     MusicSource musicSource = NeteaseCloudMusic;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
+    QString neteaseNickname;
+    QString qqmusicNickname;
 
     SongList orderSongs;
     SongList favoriteSongs;
