@@ -1909,6 +1909,14 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     if (autoMsgTimer->interval() != AUTO_MSG_CD) // 之前命令修改过延时
         autoMsgTimer->setInterval(AUTO_MSG_CD);
 
+    if (!autoMsgQueues.first().first.size()) // 有一条空消息，应该是哪里添加错了的
+    {
+        qWarning() << "错误的发送消息：空消息，已跳过";
+        autoMsgQueues.removeFirst();
+        slotSendAutoMsg(false);
+        return ;
+    }
+
     QStringList* sl = &autoMsgQueues[0].first;
     LiveDanmaku* danmaku = &autoMsgQueues[0].second;
     QString msg = sl->takeFirst();
@@ -13404,7 +13412,7 @@ int MainWindow::getPkMaxGold(int votes)
     prop = qMax(1.0, prop);
     prop = qMin(prop, maxProp);
     if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
-        localNotify("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
+        qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
     return int(pkMaxGold * prop);
 }
