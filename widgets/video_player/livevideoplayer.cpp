@@ -21,13 +21,6 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
     // 设置模式
     useVideoWidget = settings->value("videoplayer/useVideoWidget", true).toBool();
 
-    /*QTimer* timer = new QTimer(this);
-    timer->setInterval(5000);
-    connect(timer, &QTimer::timeout, this, [=]{
-        pixelFormat = QImage::Format((pixelFormat + 1) % 28);
-    });
-    timer->start();*/
-
     player = new QMediaPlayer(this);
     if (useVideoWidget)
     {

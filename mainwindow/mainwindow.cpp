@@ -1100,7 +1100,8 @@ void MainWindow::readConfig()
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
             } */
         }
-        triggerCmdEvent("NEW_HOUR", LiveDanmaku(), true);
+        triggerCmdEvent("NEW_HOUR", LiveDanmaku(), false);
+        qInfo() << "NEW_HOUR:" << QDateTime::currentDateTime();
 
         // 判断每天最后一小时
         // 以 23:59:30为准
@@ -3181,6 +3182,7 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             {
                 clipJson = doc.object();
                 JS(clipJson, anchor_key);
+                canPaste = (anchor_key == listKey);
                 qInfo() << anchor_key << listKey;
             }
             else if (doc.isArray())
