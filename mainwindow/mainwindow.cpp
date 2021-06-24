@@ -15299,9 +15299,14 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         "3.6.3",
         appVersion // 最后一个一定是最新版本
     };
-    int index = versions.lastIndexOf(oldVersion);
-    if (index < 0)
-        index = 0;
+    int index = 0;
+    while (index < versions.size())
+    {
+        if (versions.at(index) < oldVersion)
+            index++;
+        else
+            break;
+    }
     for (int i = index; i < versions.size() - 1; i++)
     {
         QString ver = versions.at(i);
