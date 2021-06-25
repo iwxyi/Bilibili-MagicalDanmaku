@@ -12114,7 +12114,7 @@ void MainWindow::updateOnlineGoldRank()
             int score = item.value("score").toInt(); // 金瓜子数量
             int rank = item.value("userRank").toInt(); // 1,2,3...
 
-            names.append(name + " " + snum(guard_level));
+            names.append(name + " " + snum(score));
             LiveDanmaku danmaku(name, uid, QDateTime(), false,
                                 "", "", "");
             danmaku.setFirst(rank);
@@ -14519,6 +14519,10 @@ QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
     return tmp;
 }
 
+/**
+ * 通过直播间ID切换勋章
+ * 这个是旧的API，但是好像有些勋章拿不到？
+ */
 void MainWindow::switchMedalToRoom(qint64 targetRoomId)
 {
     qInfo() << "自动切换勋章：roomId=" << targetRoomId;
@@ -14599,10 +14603,13 @@ void MainWindow::switchMedalToRoom(qint64 targetRoomId)
     });
 }
 
-void MainWindow::switchMedalToUp(qint64 upId)
+/**
+ * 通过主播ID切换勋章
+ */
+void MainWindow::switchMedalToUp(qint64 upId, int page)
 {
     qInfo() << "自动切换勋章：upId=" << upId;
-    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + cookieUid + "&source=2&need_rank=false&master_status=0&page=1";
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + cookieUid + "&source=2&need_rank=false&master_status=0&page=" + snum(page);
     get(url, [=](MyJson json){
         if (json.value("code").toInt() != 0)
         {
@@ -14662,7 +14669,10 @@ void MainWindow::switchMedalToUp(qint64 upId)
             if (target_id == upId)
             {
                 if (status) // 已佩戴，就不用管了
+                {
+                    qInfo() << "已佩戴当前直播间的粉丝勋章";
                     return ;
+                }
 
                 // 佩带牌子
                 /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
@@ -14675,7 +14685,16 @@ void MainWindow::switchMedalToUp(qint64 upId)
                 return ;
             }
         }
-        qWarning() << "第一页未检测到粉丝勋章，无法自动切换";
+
+        // 未检测到勋章
+        if (curr_page >= total_page) // 已经是最后一页了
+        {
+            qInfo() << "未检测到勋章，无法佩戴";
+        }
+        else // 没有勋章
+        {
+            switchMedalToUp(upId, page+1);
+        }
     });
 }
 

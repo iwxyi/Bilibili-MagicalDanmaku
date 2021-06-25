@@ -880,7 +880,7 @@ private:
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
     void switchMedalToRoom(qint64 targetRoomId);
-    void switchMedalToUp(qint64 upId);
+    void switchMedalToUp(qint64 upId, int page = 1);
     void wearMedal(qint64 medalId);
     void doSign();
     void joinLOT(qint64 id, bool follow = true);
