@@ -879,7 +879,8 @@ private:
     QRect getScreenRect();
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
-    void switchMedalTo(qint64 targetRoomId);
+    void switchMedalToRoom(qint64 targetRoomId);
+    void switchMedalToUp(qint64 upId);
     void wearMedal(qint64 medalId);
     void doSign();
     void joinLOT(qint64 id, bool follow = true);

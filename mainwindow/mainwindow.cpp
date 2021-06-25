@@ -7759,7 +7759,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 modify = caps.at(2).toLongLong();
             value += modify;
             heaps->setValue(key, value);
-            qInfo() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps << key << value;
             return true;
         }
     }
@@ -8465,6 +8465,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
+
+    if (msg.contains("execTouta"))
+    {
+        re = RE("execTouta\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            if (pking)
+                execTouta();
+            else
+                qWarning() << "不在PK中，无法偷塔";
+            return true;
+        }
+    }
+
+
 
     return false;
 }
@@ -13749,7 +13764,7 @@ bool MainWindow::execTouta()
         }
 
         sendGift(giftId, giftNum);
-        localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
+        localNotify(QString("[") + (oppositeTouta ? "反" : "") + "偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
         qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
         if (!localDebug)
             pkVoting += giftVote * giftNum; // 正在赠送中
@@ -14504,8 +14519,9 @@ QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
     return tmp;
 }
 
-void MainWindow::switchMedalTo(qint64 targetRoomId)
+void MainWindow::switchMedalToRoom(qint64 targetRoomId)
 {
+    qInfo() << "自动切换勋章：roomId=" << targetRoomId;
     QString url = "https://api.live.bilibili.com/fans_medal/v1/FansMedal/get_list_in_room";
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14579,13 +14595,93 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
                 return ;
             }
         }
-        qWarning() << "未检测到粉丝勋章，无法自动切换";
+        qWarning() << "第一页未检测到粉丝勋章，无法自动切换";
+    });
+}
 
+void MainWindow::switchMedalToUp(qint64 upId)
+{
+    qInfo() << "自动切换勋章：upId=" << upId;
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + cookieUid + "&source=2&need_rank=false&master_status=0&page=1";
+    get(url, [=](MyJson json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("切换勋章返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        MyJson data = json.data();
+        JI(data, cnt); // 粉丝勋章个数
+        JI(data, max); // 1000
+        JI(data, curr_page);
+        JI(data, total_page);
+        JA(data, list);
+
+        /*  can_delete: true
+            day_limit: 250000
+            guard_level: 0
+            guard_type: 0
+            icon_code: 0
+            icon_text: ""
+            intimacy: 1380
+            is_lighted: 1
+            is_receive: 1
+            last_wear_time: 1625119143
+            level: 21
+            live_stream_status: 0
+            lpl_status: 0
+            master_available: 1
+            master_status: 0
+            medal_color: 1725515
+            medal_color_border: 1725515
+            medal_color_end: 5414290
+            medal_color_start: 1725515
+            medal_id: 373753
+            medal_level: 21
+            medal_name: "181mm"
+            next_intimacy: 2000
+            rank: "-"
+            receive_channel: 4
+            receive_time: "2021-01-10 09:33:22"
+            score: 50001380
+            source: 1
+            status: 0
+            target_face: "https://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg"
+            target_id: 20285041
+            target_name: "懒一夕智能科技官方"
+            today_feed: 0
+            today_intimacy: 0
+            uid: 20285041  */
+        foreach (QJsonValue val, list)
+        {
+            MyJson medal = val.toObject();
+            JI(medal, status); // 1佩戴，0未佩戴
+            JL(medal, target_id); // 主播
+
+            if (target_id == upId)
+            {
+                if (status) // 已佩戴，就不用管了
+                    return ;
+
+                // 佩带牌子
+                /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
+                if (!isLighted) // 牌子是灰的，可以不用管，发个弹幕就点亮了
+                    return ;
+                */
+
+                qint64 medalId = static_cast<qint64>(medal.value("medal_id").toDouble());
+                wearMedal(medalId);
+                return ;
+            }
+        }
+        qWarning() << "第一页未检测到粉丝勋章，无法自动切换";
     });
 }
 
 void MainWindow::wearMedal(qint64 medalId)
 {
+    qInfo() << "佩戴勋章：medalId=" << medalId;
     QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
     QStringList datas;
     datas << "medal_id=" + QString::number(medalId);
@@ -15723,7 +15819,8 @@ void MainWindow::slotStartWork()
     // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
     {
-        switchMedalTo(roomId.toLongLong());
+        // switchMedalToRoom(roomId.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 
     ui->actionShow_Live_Video->setEnabled(true);
@@ -15773,7 +15870,8 @@ void MainWindow::on_autoSwitchMedalCheck_clicked()
     settings->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
     if (!roomId.isEmpty() && isLiving())
     {
-        switchMedalTo(roomId.toLongLong());
+        // switchMedalToRoom(roomId.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 }
 
