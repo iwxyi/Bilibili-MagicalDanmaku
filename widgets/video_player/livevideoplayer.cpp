@@ -20,6 +20,7 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
 
     // 设置模式
     useVideoWidget = settings->value("videoplayer/useVideoWidget", true).toBool();
+    qn = settings->value("videoplayer/qn", qn).toInt();
 
     player = new QMediaPlayer(this);
     if (useVideoWidget)
@@ -179,7 +180,7 @@ void LiveVideoPlayer::refreshPlayUrl()
     if (roomId.isEmpty())
         return ;
     QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
-            + "&quality=4&qn=10000&platform=web&otype=json";
+            + "&quality=" + QString::number(qn) + "&qn=10000&platform=web&otype=json";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -327,6 +328,20 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         settings->setValue("videoplayer/opacity", opa);
         setWindowOpacity(opa / 100.0);
     }, 10);
+
+    FacileMenu* qnMenu = menu->addMenu(QIcon(":/icons/quality"), "画质");
+    qnMenu->addAction("流畅", [=]{
+        settings->setValue("videoplayer/qn", qn = 2);
+        refreshPlayUrl();
+    })->check(qn == 2);
+    qnMenu->addAction("高清", [=]{
+        settings->setValue("videoplayer/qn", qn = 3);
+        refreshPlayUrl();
+    })->check(qn == 3);
+    qnMenu->addAction("原画", [=]{
+        settings->setValue("videoplayer/qn", qn = 4);
+        refreshPlayUrl();
+    })->check(qn == 4);
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume2"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){

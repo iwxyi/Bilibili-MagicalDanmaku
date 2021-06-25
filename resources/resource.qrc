@@ -100,6 +100,7 @@
         <file alias="crown">icons/crown.png</file>
         <file alias="about">icons/about.png</file>
         <file alias="extension2">icons/extension2.png</file>
+        <file alias="quality">icons/quality.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
