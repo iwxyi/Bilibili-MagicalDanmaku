@@ -15,7 +15,7 @@ class GuardOnlineDialog : public QDialog
 
 public:
     explicit GuardOnlineDialog(QSettings* settings, QString roomId, QString upUid, QWidget *parent = nullptr);
-    ~GuardOnlineDialog();
+    ~GuardOnlineDialog() override;
 
 private slots:
     void on_refreshButton_clicked();

@@ -3,6 +3,7 @@
 #include <QMetaEnum>
 #include "livedanmakuwindow.h"
 #include "facilemenu.h"
+#include "guardonlinedialog.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -1923,6 +1924,7 @@ void LiveDanmakuWindow::showPkMenu()
     QAction* actionRead = new QAction(QIcon(":/danmaku/views"), "浏览量", this);
     QAction* actionLike = new QAction(QIcon(":/danmaku/views"), "获赞量", this);
     QAction* actionVideo = new QAction(QIcon(":/icons/video2"), "匿名进入", this);
+    QAction* actionOnline = new QAction(QIcon(":/danmaku/fans"), "在线舰长", this);
 
     menu->addAction(actionUser);
     menu->addAction(actionRank);
@@ -1935,6 +1937,7 @@ void LiveDanmakuWindow::showPkMenu()
     menu->addAction(actionRead);
     menu->addSeparator();
     menu->addAction(actionVideo);
+    menu->addAction(actionOnline);
 
     showPkLevelInAction(pkRoomId, actionUser, actionRank);
     showFollowCountInAction(pkUid, actionAttention, actionFans);
@@ -1968,6 +1971,10 @@ void LiveDanmakuWindow::showPkMenu()
     connect(actionVideo, &QAction::triggered, this, [=]{
         emit signalShowPkVideo();
     });
+    connect(actionOnline, &QAction::triggered, this, [=]{
+        GuardOnlineDialog* god = new GuardOnlineDialog(settings, snum(pkRoomId), snum(pkUid), this);
+        god->show();
+    });
 
     menu->exec(QCursor::pos());
 
@@ -1980,6 +1987,7 @@ void LiveDanmakuWindow::showPkMenu()
     actionLike->deleteLater();
     actionRead->deleteLater();
     actionVideo->deleteLater();
+    actionOnline->deleteLater();
 }
 
 void LiveDanmakuWindow::setAutoTranslate(bool trans)
