@@ -21,6 +21,11 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
     // 设置模式
     useVideoWidget = settings->value("videoplayer/useVideoWidget", true).toBool();
     qn = settings->value("videoplayer/qn", qn).toInt();
+    if (settings->value("videoplayer/winButtons").toBool())
+    {
+        setWindowFlag(Qt::WindowMinimizeButtonHint, true);
+        setWindowFlag(Qt::WindowMaximizeButtonHint, true);
+    }
 
     player = new QMediaPlayer(this);
     if (useVideoWidget)
@@ -317,11 +322,22 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     })->check((useVideoWidget&& ui->videoWidget->isFullScreen())
               || (!useVideoWidget && ui->label->isFullScreen()));
 
-    menu->addAction(QIcon(":/icons/on_top"), "窗口置顶", [=]{
+    auto winMenu = menu->addMenu(QIcon(":/icons/win_button"), "窗口设置");
+
+    winMenu->addAction(QIcon(":/icons/on_top"), "窗口置顶", [=]{
         switchOnTop();
     })->check(windowFlags() & Qt::WindowStaysOnTopHint);
 
-    FacileMenu* opacityMenu = menu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
+    bool winBtns = settings->value("videoplayer/winButtons").toBool();
+    winMenu->addAction(QIcon(":/icons/win_min"), "窗口按钮", [=]{
+        bool en = !winBtns;
+        settings->setValue("videoplayer/winButtons", en);
+        setWindowFlag(Qt::WindowMinimizeButtonHint, en);
+        setWindowFlag(Qt::WindowMaximizeButtonHint, en);
+        show();
+    })->check(winBtns);
+
+    FacileMenu* opacityMenu = winMenu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
     opacityMenu->addNumberedActions("%1", 10, 110, [=](FacileMenuItem* item, int val){
         item->check(val == int((this->windowOpacity() + 0.005) * 10) * 10);
     }, [=](int opa){
@@ -329,7 +345,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         setWindowOpacity(opa / 100.0);
     }, 10);
 
-    FacileMenu* qnMenu = menu->addMenu(QIcon(":/icons/quality"), "画质");
+    FacileMenu* qnMenu = menu->addMenu(QIcon(":/icons/quality"), "媒体画质");
     qnMenu->addAction("流畅", [=]{
         settings->setValue("videoplayer/qn", qn = 2);
         refreshPlayUrl();
