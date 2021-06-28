@@ -103,6 +103,7 @@
         <file alias="quality">icons/quality.png</file>
         <file alias="win_button">icons/win_button.png</file>
         <file alias="win_min">icons/win_min.png</file>
+        <file alias="frameless">icons/frameless.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

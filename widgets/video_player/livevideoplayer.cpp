@@ -26,6 +26,10 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
         setWindowFlag(Qt::WindowMinimizeButtonHint, true);
         setWindowFlag(Qt::WindowMaximizeButtonHint, true);
     }
+    if (settings->value("videoplayer/frameless").toBool())
+    {
+        setWindowFlags(Qt::FramelessWindowHint);
+    }
 
     player = new QMediaPlayer(this);
     if (useVideoWidget)
@@ -336,6 +340,14 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
         setWindowFlag(Qt::WindowMaximizeButtonHint, en);
         show();
     })->check(winBtns);
+
+    bool frameless = settings->value("videoplayer/frameless").toBool();
+    winMenu->addAction(QIcon(":/icons/frameless"), "无边框", [=]{
+        bool en = !frameless;
+        settings->setValue("videoplayer/frameless", en);
+        setWindowFlag(Qt::FramelessWindowHint, en);
+        show();
+    })->check(frameless);
 
     FacileMenu* opacityMenu = winMenu->addMenu(QIcon(":/icons/opacity"), "窗口透明");
     opacityMenu->addNumberedActions("%1", 10, 110, [=](FacileMenuItem* item, int val){
