@@ -1022,6 +1022,8 @@ void MainWindow::readConfig()
 
     // 自动获取小心心
     ui->acquireHeartCheck->setChecked(settings->value("danmaku/acquireHeart", false).toBool());
+    ui->heartTimeSpin->setValue(settings->value("danmaku/acquireHeartTime", 120).toInt());
+    todayHeartMinite = settings->value("danmaku/todayHeartMinite").toInt();
 
     // 自动赠送过期礼物
     ui->sendExpireGiftCheck->setChecked(settings->value("danmaku/sendExpireGift", false).toBool());
@@ -1177,6 +1179,8 @@ void MainWindow::readConfig()
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
+
+        processNewDay();
 
         // 判断每一月初
         const QDate currDate = QDate::currentDate();
@@ -3538,6 +3542,13 @@ void MainWindow::sendXliveHeartBeatE()
 {
     if (roomId.isEmpty() || cookieUid.isEmpty() || !isLiving())
         return ;
+    if (todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
+    {
+        if (xliveHeartBeatTimer)
+            xliveHeartBeatTimer->stop();
+        return ;
+    }
+
     xliveHeartBeatIndex = 0;
 
     QString url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
@@ -3664,6 +3675,11 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+        settings->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
+        ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + ")分钟");
+        if (todayHeartMinite >= ui->heartTimeSpin->value())
+            if (xliveHeartBeatTimer)
+                xliveHeartBeatTimer->stop();
     });
 }
 
@@ -4007,6 +4023,16 @@ void MainWindow::updatePermission()
 int MainWindow::hasPermission()
 {
     return permissionLevel;
+}
+
+/**
+ * 新的一天到来了
+ * 可能是启动时就是新的一天
+ * 也可能是运行时到了第二天
+ */
+void MainWindow::processNewDay()
+{
+    settings->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -17230,4 +17256,9 @@ void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 {
     settings->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
+}
+
+void MainWindow::on_heartTimeSpin_editingFinished()
+{
+    settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
 }
