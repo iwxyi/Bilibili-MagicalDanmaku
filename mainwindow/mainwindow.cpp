@@ -1024,6 +1024,7 @@ void MainWindow::readConfig()
     ui->acquireHeartCheck->setChecked(settings->value("danmaku/acquireHeart", false).toBool());
     ui->heartTimeSpin->setValue(settings->value("danmaku/acquireHeartTime", 120).toInt());
     todayHeartMinite = settings->value("danmaku/todayHeartMinite").toInt();
+    ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
 
     // 自动赠送过期礼物
     ui->sendExpireGiftCheck->setChecked(settings->value("danmaku/sendExpireGift", false).toBool());
@@ -3676,7 +3677,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
         settings->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
-        ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + ")分钟");
+        ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
         if (todayHeartMinite >= ui->heartTimeSpin->value())
             if (xliveHeartBeatTimer)
                 xliveHeartBeatTimer->stop();
@@ -3827,6 +3828,7 @@ void MainWindow::getRoomInfo(bool reconnect)
             });
         }
 
+        // 发送心跳要用到的直播信息
         areaId = snum(roomInfo.value("area_id").toInt());
         areaName = roomInfo.value("area_name").toString();
         parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
@@ -3842,6 +3844,20 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 设置标签
         ui->tagsButtonGroup->initStringList(tags);
+
+        // 获取榜单信息
+        QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
+        int rank = hotRankInfo.value("rank").toInt();
+        QString rankArea = hotRankInfo.value("area_name").toString();
+        int countdown = hotRankInfo.value("countdown").toInt();
+        if (!rankArea.isEmpty())
+        {
+            ui->roomRankLabel->setText(snum(rank));
+            if (!rankArea.endsWith("榜"))
+                rankArea += "榜";
+            ui->roomRankTextLabel->setText(rankArea);
+            ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
+        }
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
