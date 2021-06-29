@@ -3507,7 +3507,7 @@ void MainWindow::initWS()
     });
 
     xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(59500);
+    xliveHeartBeatTimer->setInterval(60000);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         if (isLiving())
             sendXliveHeartBeatX();
@@ -3556,8 +3556,7 @@ void MainWindow::sendXliveHeartBeatE()
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "id=" + QString("[%1,%2,%3,%4]")
-             .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
+    datas << "id=" + QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
     datas << "is_patch=0";
@@ -3607,8 +3606,7 @@ void MainWindow::sendXliveHeartBeatX()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
-    postData.insert("id",  QString("[%1,%2,%3,%4]")
-                    .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
+    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
     postData.insert("ts", timestamp);
     postData.insert("ets", xliveHeartBeatEts);
@@ -3652,6 +3650,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     // 连接槽
     // qDebug() << "发送直播心跳X：" << url << ba;
     post(url, ba, [=](QJsonObject json){
+        // qDebug() << "直播心跳返回：" << json;
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
@@ -3833,6 +3832,10 @@ void MainWindow::getRoomInfo(bool reconnect)
         areaName = roomInfo.value("area_name").toString();
         parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
         parentAreaName = roomInfo.value("parent_area_name").toString();
+
+        // 疑似在线人数
+        int online = roomInfo.value("online").toInt();
+        ui->popularityLabel->setText(snum(online));
 
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -4024,6 +4027,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
             ui->vipExtensionButton->hide();
+            ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
         }
         else
         {
@@ -4032,6 +4036,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(Qt::black);
             ui->droplight->setToolTip("点击购买尊享版");
             ui->vipExtensionButton->show();
+            ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
         }
     });
 }
