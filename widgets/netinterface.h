@@ -216,6 +216,11 @@ public:
         manager->post(*request, ba);
     }
 
+    void postJson(QString url, QJsonObject json, NetReplyFunc func, QVariant cookies = QVariant())
+    {
+        postJson(url, QJsonDocument(json).toJson(), func, cookies);
+    }
+
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request)
     {
         Q_UNUSED(url)

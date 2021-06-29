@@ -972,7 +972,7 @@ private:
     int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
     QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
-    QString encServer = "https://1578907340179965.cn-shanghai.fc.aliyuncs.com/2016-08-15/proxy/bili_server/heartbeat/";
+    QString encServer = "http://iwxyi.com:6001/enc";
 
     // 动画
     double paletteProg = 0;

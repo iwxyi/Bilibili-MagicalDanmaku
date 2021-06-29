@@ -2336,6 +2336,13 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         execTouta();
     }
+    else if (text == "测试心跳")
+    {
+        if (xliveHeartBeatBenchmark.isEmpty())
+            sendXliveHeartBeatE();
+        else
+            sendXliveHeartBeatX();
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -3554,8 +3561,9 @@ void MainWindow::sendXliveHeartBeatE()
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            showError("发送失败", message);
-            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+            showError("发送直播心跳失败E", message);
+            qCritical() << s8("warning: 发送直播心跳失败E：") << message << datas.join("&");
+            return ;
         }
 
         /*{
@@ -3578,6 +3586,7 @@ void MainWindow::sendXliveHeartBeatE()
 
         xliveHeartBeatTimer->start();
         xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 1000);
+        // qDebug() << "直播心跳E：" << xliveHeartBeatBenchmark;
     });
 }
 
@@ -3600,10 +3609,11 @@ void MainWindow::sendXliveHeartBeatX()
     calcText.insert("t", postData);
     calcText.insert("r", xliveHeartBeatSecretRule);
 
-    post(encServer, QJsonDocument(calcText).toJson(), [=](QNetworkReply* reply){
+    postJson(encServer, calcText, [=](QNetworkReply* reply){
         QByteArray repBa = reply->readAll();
-        // qInfo() << "加密直播心跳包数据返回：" << repBa;
-        sendXliveHeartBeatX(QString(repBa), timestamp);
+        // qDebug() << "加密直播心跳包数据返回：" << repBa;
+        // qDebug() << calcText;
+        sendXliveHeartBeatX(MyJson(repBa).s("s"), timestamp);
     });
 }
 
@@ -3613,7 +3623,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "s=" + s;
+    datas << "s=" + s; // 生成的签名
     datas << "id=" + QString("[%1,%2,%3,%4]")
              .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
@@ -3628,12 +3638,13 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     QByteArray ba(datas.join("&").toStdString().data());
 
     // 连接槽
+    // qDebug() << "发送直播心跳X：" << url << ba;
     post(url, ba, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            showError("发送直播心跳失败", message);
-            qCritical() << s8("warning: 发送直播心跳失败：") << message << datas.join("&");
+            showError("发送直播心跳失败X", message);
+            qCritical() << s8("warning: 发送直播心跳失败X：") << message << datas.join("&");
             return ;
         }
 
@@ -8952,7 +8963,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             "area_name": "娱乐",
                             "url": "https://live.bilibili.com/p/html/live-app-hotrank/result.html?is_live_half_webview=1\\u0026hybrid_half_ui=1,5,250,200,f4eefa,0,30,0,0,0;2,5,250,200,f4eefa,0,30,0,0,0;3,5,250,200,f4eefa,0,30,0,0,0;4,5,250,200,f4eefa,0,30,0,0,0;5,5,250,200,f4eefa,0,30,0,0,0;6,5,250,200,f4eefa,0,30,0,0,0;7,5,250,200,f4eefa,0,30,0,0,0;8,5,250,200,f4eefa,0,30,0,0,0\\u0026areaId=1\\u0026cache_key=4417cab3fa8b15ad1b250ee29fd91c52",
                             "cache_key": "4417cab3fa8b15ad1b250ee29fd91c52",
-                            "dm_msg": "恭喜主播 \\u003c% 丸嘻嘻 %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
+                            "dm_msg": "恭喜主播 \\u003c% xxx %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
                         }
                     }*/
                     QJsonObject data = json.value("data").toObject();
@@ -8960,6 +8971,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
+                    qInfo() << "rank:" << msg;
                     triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data), true);
                     localNotify(msg);
                 }
@@ -15850,9 +15862,18 @@ void MainWindow::slotStartWork()
         sendExpireGift();
     }
 
-    // 挂小心心
-    if (ui->acquireHeartCheck->isChecked() && isLiving())
-        sendXliveHeartBeatE();
+    // 延迟操作（好像是有bug）
+    QString ri = roomId;
+    QTimer::singleShot(5000, [=]{
+        if (ri != roomId)
+            return ;
+
+        // 挂小心心
+        if (ui->acquireHeartCheck->isChecked() && isLiving())
+        {
+            sendXliveHeartBeatE();
+        }
+    });
 
     // 设置直播状态
     QPixmap face = getLivingPixmap(upFace);
