@@ -2941,13 +2941,15 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
-        normalSongs.swapItemsAt(row, row-1);
+        // normalSongs.swapItemsAt(row, row-1); // 5.13之前不支持
+        normalSongs.insert(row - 1, normalSongs.takeAt(row));
         saveSongList("music/order", normalSongs);
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(songs.size() != 1 || row < 1);
 
     menu->addAction("下移", [=]{
-        normalSongs.swapItemsAt(row, row+1);
+        // normalSongs.swapItemsAt(row, row+1); // 5.13之前不支持
+        normalSongs.insert(row, normalSongs.takeAt(row + 1));
         saveSongList("music/order", normalSongs);
         setSongModelToView(normalSongs, ui->normalSongsListView);
     })->disable(songs.size() != 1 || row >= normalSongs.size()-1);

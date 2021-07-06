@@ -693,6 +693,8 @@ private slots:
 
     void on_timerConnectIntervalSpin_editingFinished();
 
+    void on_heartTimeSpin_editingFinished();
+
 private:
     void initView();
     void initStyle();
@@ -748,6 +750,7 @@ private:
 
     void updatePermission();
     int hasPermission();
+    void processNewDay();
 
     void getRoomCover(QString url);
     void setRoomCover(const QPixmap &pixmap);
@@ -794,7 +797,7 @@ private:
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
-    QString replaceDanmakuExtras(const QJsonObject& json, const QString &key_seq) const;
+    QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;
     bool processVariantConditions(QString exprs) const;
@@ -879,7 +882,8 @@ private:
     QRect getScreenRect();
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
-    void switchMedalTo(qint64 targetRoomId);
+    void switchMedalToRoom(qint64 targetRoomId);
+    void switchMedalToUp(qint64 upId, int page = 1);
     void wearMedal(qint64 medalId);
     void doSign();
     void joinLOT(qint64 id, bool follow = true);
@@ -971,7 +975,8 @@ private:
     int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
     QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
-    QString encServer = "https://1578907340179965.cn-shanghai.fc.aliyuncs.com/2016-08-15/proxy/bili_server/heartbeat/";
+    QString encServer = "http://iwxyi.com:6001/enc";
+    int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
 
     // 动画
     double paletteProg = 0;

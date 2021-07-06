@@ -1022,6 +1022,9 @@ void MainWindow::readConfig()
 
     // 自动获取小心心
     ui->acquireHeartCheck->setChecked(settings->value("danmaku/acquireHeart", false).toBool());
+    ui->heartTimeSpin->setValue(settings->value("danmaku/acquireHeartTime", 120).toInt());
+    todayHeartMinite = settings->value("danmaku/todayHeartMinite").toInt();
+    ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
 
     // 自动赠送过期礼物
     ui->sendExpireGiftCheck->setChecked(settings->value("danmaku/sendExpireGift", false).toBool());
@@ -1177,6 +1180,8 @@ void MainWindow::readConfig()
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
+
+        processNewDay();
 
         // 判断每一月初
         const QDate currDate = QDate::currentDate();
@@ -1744,7 +1749,10 @@ bool MainWindow::isLiving() const
 void MainWindow::localNotify(QString text)
 {
 	if (text.isEmpty())
-    	return ;
+    {
+        qWarning() << ">localNotify([空文本])";
+        return ;
+    }
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
@@ -2335,6 +2343,13 @@ void MainWindow::on_testDanmakuButton_clicked()
     else if (text == "测试偷塔")
     {
         execTouta();
+    }
+    else if (text == "测试心跳")
+    {
+        if (xliveHeartBeatBenchmark.isEmpty())
+            sendXliveHeartBeatE();
+        else
+            sendXliveHeartBeatX();
     }
     else
     {
@@ -3495,7 +3510,7 @@ void MainWindow::initWS()
     });
 
     xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(59500);
+    xliveHeartBeatTimer->setInterval(60000);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         if (isLiving())
             sendXliveHeartBeatX();
@@ -3531,14 +3546,20 @@ void MainWindow::sendXliveHeartBeatE()
 {
     if (roomId.isEmpty() || cookieUid.isEmpty() || !isLiving())
         return ;
+    if (todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
+    {
+        if (xliveHeartBeatTimer)
+            xliveHeartBeatTimer->stop();
+        return ;
+    }
+
     xliveHeartBeatIndex = 0;
 
     QString url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "id=" + QString("[%1,%2,%3,%4]")
-             .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
+    datas << "id=" + QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
     datas << "is_patch=0";
@@ -3554,8 +3575,9 @@ void MainWindow::sendXliveHeartBeatE()
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            showError("发送失败", message);
-            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+            showError("发送直播心跳失败E", message);
+            qCritical() << s8("warning: 发送直播心跳失败E：") << message << datas.join("&");
+            return ;
         }
 
         /*{
@@ -3578,6 +3600,7 @@ void MainWindow::sendXliveHeartBeatE()
 
         xliveHeartBeatTimer->start();
         xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 1000);
+        // qDebug() << "直播心跳E：" << xliveHeartBeatBenchmark;
     });
 }
 
@@ -3586,8 +3609,7 @@ void MainWindow::sendXliveHeartBeatX()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
-    postData.insert("id",  QString("[%1,%2,%3,%4]")
-                    .arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
+    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
     postData.insert("ts", timestamp);
     postData.insert("ets", xliveHeartBeatEts);
@@ -3600,10 +3622,11 @@ void MainWindow::sendXliveHeartBeatX()
     calcText.insert("t", postData);
     calcText.insert("r", xliveHeartBeatSecretRule);
 
-    post(encServer, QJsonDocument(calcText).toJson(), [=](QNetworkReply* reply){
+    postJson(encServer, calcText, [=](QNetworkReply* reply){
         QByteArray repBa = reply->readAll();
-        // qInfo() << "加密直播心跳包数据返回：" << repBa;
-        sendXliveHeartBeatX(QString(repBa), timestamp);
+        // qDebug() << "加密直播心跳包数据返回：" << repBa;
+        // qDebug() << calcText;
+        sendXliveHeartBeatX(MyJson(repBa).s("s"), timestamp);
     });
 }
 
@@ -3613,7 +3636,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "s=" + s;
+    datas << "s=" + s; // 生成的签名
     datas << "id=" + QString("[%1,%2,%3,%4]")
              .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
@@ -3628,12 +3651,14 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     QByteArray ba(datas.join("&").toStdString().data());
 
     // 连接槽
+    // qDebug() << "发送直播心跳X：" << url << ba;
     post(url, ba, [=](QJsonObject json){
+        // qDebug() << "直播心跳返回：" << json;
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            showError("发送直播心跳失败", message);
-            qCritical() << s8("warning: 发送直播心跳失败：") << message << datas.join("&");
+            showError("发送直播心跳失败X", message);
+            qCritical() << s8("warning: 发送直播心跳失败X：") << message << datas.join("&");
             return ;
         }
 
@@ -3653,6 +3678,11 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+        settings->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
+        ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
+        if (todayHeartMinite >= ui->heartTimeSpin->value())
+            if (xliveHeartBeatTimer)
+                xliveHeartBeatTimer->stop();
     });
 }
 
@@ -3800,10 +3830,15 @@ void MainWindow::getRoomInfo(bool reconnect)
             });
         }
 
+        // 发送心跳要用到的直播信息
         areaId = snum(roomInfo.value("area_id").toInt());
         areaName = roomInfo.value("area_name").toString();
         parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
         parentAreaName = roomInfo.value("parent_area_name").toString();
+
+        // 疑似在线人数
+        int online = roomInfo.value("online").toInt();
+        ui->popularityLabel->setText(snum(online));
 
         // 获取主播信息
         currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
@@ -3815,6 +3850,20 @@ void MainWindow::getRoomInfo(bool reconnect)
 
         // 设置标签
         ui->tagsButtonGroup->initStringList(tags);
+
+        // 获取榜单信息
+        QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
+        int rank = hotRankInfo.value("rank").toInt();
+        QString rankArea = hotRankInfo.value("area_name").toString();
+        int countdown = hotRankInfo.value("countdown").toInt();
+        if (!rankArea.isEmpty())
+        {
+            ui->roomRankLabel->setText(snum(rank));
+            if (!rankArea.endsWith("榜"))
+                rankArea += "榜";
+            ui->roomRankTextLabel->setText(rankArea);
+            ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
+        }
 
         // 异步获取房间封面
         getRoomCover(roomInfo.value("cover").toString());
@@ -3981,6 +4030,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
             ui->vipExtensionButton->hide();
+            ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
         }
         else
         {
@@ -3989,6 +4039,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(Qt::black);
             ui->droplight->setToolTip("点击购买尊享版");
             ui->vipExtensionButton->show();
+            ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
         }
     });
 }
@@ -3996,6 +4047,16 @@ void MainWindow::updatePermission()
 int MainWindow::hasPermission()
 {
     return permissionLevel;
+}
+
+/**
+ * 新的一天到来了
+ * 可能是启动时就是新的一天
+ * 也可能是运行时到了第二天
+ */
+void MainWindow::processNewDay()
+{
+    settings->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -4949,21 +5010,29 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, snum(unameToUid(text)));
     }
 
-    // 替换额外数据
-    re = QRegularExpression("%\\.([^%]+?)%");
-    matchPos = 0;
-    QJsonObject json = danmaku.extraJson;
-    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
-    {
-        QString rpls = replaceDanmakuExtras(json, match.captured(1));
-        msg.replace(match.captured(0), rpls);
-        matchPos += rpls.length();
-    }
-
     bool find = true;
     while (find)
     {
         find = false;
+
+        // 替换JSON数据
+        // 尽量支持 %.data.%{key}%.list% 这样的格式吧
+        re = QRegularExpression("%\\.([^%]*?[^%\\.])%");
+        matchPos = 0;
+        QJsonObject json = danmaku.extraJson;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            bool ok = false;
+            QString rpls = replaceDanmakuJson(json, match.captured(1), &ok);
+            if (!ok)
+            {
+                matchPos++;
+                continue;
+            }
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
+        }
 
         // 读取配置文件的变量
         re = QRegularExpression("%\\{([^(%(\\{|\\[|>))]*?)\\}%");
@@ -5512,23 +5581,52 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 /**
  * 额外数据（JSON）替换
  */
-QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString& key_seq) const
+QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& key_seq, bool* ok) const
 {
     QStringList keyTree = key_seq.split(".");
     if (keyTree.size() == 0)
         return "";
 
-    QJsonValue obj = json.value(keyTree.takeFirst());
+    QJsonValue obj = json;
     while (keyTree.size())
     {
         QString key = keyTree.takeFirst();
-        if (key.isEmpty())
+        bool canIgnore = false;
+        if (key.endsWith("?"))
         {
-            obj = QJsonValue();
-            break;
+            canIgnore = true;
+            key = key.left(key.length() - 1);
+        }
+
+        if (key.isEmpty()) // 居然是空字符串，是不是有问题
+        {
+            if (canIgnore)
+            {
+                obj = QJsonValue();
+                break;
+            }
+            else
+            {
+                qWarning() << "解析JSON的键是空的：" << key_seq;
+                return "";
+            }
         }
         else if (obj.isObject())
         {
+            if (!obj.toObject().contains(key)) // 不包含这个键
+            {
+                // qWarning() << "不存在的键：" << key << "    keys:" << key_seq;
+                if (canIgnore)
+                {
+                    obj = QJsonValue();
+                    break;
+                }
+                else
+                {
+                    // 可能是等待其他的变量，所以先留下
+                    return "";
+                }
+            }
             obj = obj.toObject().value(key);
         }
         else if (obj.isArray())
@@ -5536,19 +5634,32 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
             int index = key.toInt();
             QJsonArray array = obj.toArray();
             if (index >= 0 && index < array.size())
+            {
                 obj = array.at(index);
+            }
             else
             {
-                obj = QJsonValue();
-                break;
+                if (canIgnore)
+                {
+                    obj = QJsonValue();
+                    break;
+                }
+                else
+                {
+                    qWarning() << "错误的数组索引：" << index << "当前总数量：" << array.size() << "  " << key_seq;
+                    return "";
+                }
             }
         }
         else
         {
+            qWarning() << "未知的JSON类型：" << key_seq;
             obj = QJsonValue();
             break;
         }
     }
+
+    *ok = true;
 
     if (obj.isNull() || obj.isUndefined())
         return "";
@@ -6806,7 +6917,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             sendNotifyMsg(">已关闭录播");
     }
-    else if (ui->enableBlockCheck->isChecked() && msg == "撤销禁言")
+    else if (msg == "撤销禁言")
     {
         if (!blockedQueue.size())
         {
@@ -6824,7 +6935,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             sendNotifyMsg(">已解除禁言：" + danmaku.getNickname());
     }
-    else if (ui->enableBlockCheck->isChecked() && msg.startsWith("禁言 "))
+    else if (msg.startsWith("禁言 "))
     {
         QRegularExpression re("^禁言\\s*(\\S+)\\s*(\\d+)?$");
         QRegularExpressionMatch match;
@@ -6837,8 +6948,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             hour = hours.toInt();
 
     }
-    else if (ui->enableBlockCheck->isChecked() &&
-             (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 ")))
+    else if (msg.startsWith("解禁 ") || msg.startsWith("解除禁言 ") || msg.startsWith("取消禁言 "))
     {
         QRegularExpression re("^(?:解禁|解除禁言|取消禁言)\\s*(.+)\\s*$");
         QRegularExpressionMatch match;
@@ -6892,7 +7002,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             }
         }
     }
-    else if (ui->enableBlockCheck->isChecked() && msg.startsWith("永久禁言 "))
+    else if (msg.startsWith("永久禁言 "))
     {
         QRegularExpression re("^永久禁言\\s*(\\S+)\\s*$");
         QRegularExpressionMatch match;
@@ -7759,7 +7869,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 modify = caps.at(2).toLongLong();
             value += modify;
             heaps->setValue(key, value);
-            qInfo() << "执行命令：" << caps;
+            qInfo() << "执行命令：" << caps << key << value;
             return true;
         }
     }
@@ -8466,6 +8576,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("execTouta"))
+    {
+        re = RE("execTouta\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            if (pking)
+                execTouta();
+            else
+                qWarning() << "不在PK中，无法偷塔";
+            return true;
+        }
+    }
+
+
+
     return false;
 }
 
@@ -8937,7 +9062,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                             "area_name": "娱乐",
                             "url": "https://live.bilibili.com/p/html/live-app-hotrank/result.html?is_live_half_webview=1\\u0026hybrid_half_ui=1,5,250,200,f4eefa,0,30,0,0,0;2,5,250,200,f4eefa,0,30,0,0,0;3,5,250,200,f4eefa,0,30,0,0,0;4,5,250,200,f4eefa,0,30,0,0,0;5,5,250,200,f4eefa,0,30,0,0,0;6,5,250,200,f4eefa,0,30,0,0,0;7,5,250,200,f4eefa,0,30,0,0,0;8,5,250,200,f4eefa,0,30,0,0,0\\u0026areaId=1\\u0026cache_key=4417cab3fa8b15ad1b250ee29fd91c52",
                             "cache_key": "4417cab3fa8b15ad1b250ee29fd91c52",
-                            "dm_msg": "恭喜主播 \\u003c% 丸嘻嘻 %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
+                            "dm_msg": "恭喜主播 \\u003c% xxx %\\u003e 荣登限时热门榜娱乐榜top9! 即将获得热门流量推荐哦！"
                         }
                     }*/
                     QJsonObject data = json.value("data").toObject();
@@ -8945,6 +9070,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
+                    qInfo() << "rank:" << msg;
                     triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data), true);
                     localNotify(msg);
                 }
@@ -13749,7 +13875,7 @@ bool MainWindow::execTouta()
         }
 
         sendGift(giftId, giftNum);
-        localNotify("[反偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
+        localNotify(QString("[") + (oppositeTouta ? "反" : "") + "偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
         qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
         if (!localDebug)
             pkVoting += giftVote * giftNum; // 正在赠送中
@@ -14504,8 +14630,13 @@ QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
     return tmp;
 }
 
-void MainWindow::switchMedalTo(qint64 targetRoomId)
+/**
+ * 通过直播间ID切换勋章
+ * 这个是旧的API，但是好像有些勋章拿不到？
+ */
+void MainWindow::switchMedalToRoom(qint64 targetRoomId)
 {
+    qInfo() << "自动切换勋章：roomId=" << targetRoomId;
     QString url = "https://api.live.bilibili.com/fans_medal/v1/FansMedal/get_list_in_room";
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14579,13 +14710,108 @@ void MainWindow::switchMedalTo(qint64 targetRoomId)
                 return ;
             }
         }
-        qWarning() << "未检测到粉丝勋章，无法自动切换";
+        qWarning() << "第一页未检测到粉丝勋章，无法自动切换";
+    });
+}
 
+/**
+ * 通过主播ID切换勋章
+ */
+void MainWindow::switchMedalToUp(qint64 upId, int page)
+{
+    qInfo() << "自动切换勋章：upId=" << upId;
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + cookieUid + "&source=2&need_rank=false&master_status=0&page=" + snum(page);
+    get(url, [=](MyJson json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("切换勋章返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        MyJson data = json.data();
+        JI(data, cnt); // 粉丝勋章个数
+        JI(data, max); // 1000
+        JI(data, curr_page);
+        JI(data, total_page);
+        JA(data, list);
+
+        /*  can_delete: true
+            day_limit: 250000
+            guard_level: 0
+            guard_type: 0
+            icon_code: 0
+            icon_text: ""
+            intimacy: 1380
+            is_lighted: 1
+            is_receive: 1
+            last_wear_time: 1625119143
+            level: 21
+            live_stream_status: 0
+            lpl_status: 0
+            master_available: 1
+            master_status: 0
+            medal_color: 1725515
+            medal_color_border: 1725515
+            medal_color_end: 5414290
+            medal_color_start: 1725515
+            medal_id: 373753
+            medal_level: 21
+            medal_name: "181mm"
+            next_intimacy: 2000
+            rank: "-"
+            receive_channel: 4
+            receive_time: "2021-01-10 09:33:22"
+            score: 50001380
+            source: 1
+            status: 0
+            target_face: "https://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg"
+            target_id: 20285041
+            target_name: "懒一夕智能科技官方"
+            today_feed: 0
+            today_intimacy: 0
+            uid: 20285041  */
+        foreach (QJsonValue val, list)
+        {
+            MyJson medal = val.toObject();
+            JI(medal, status); // 1佩戴，0未佩戴
+            JL(medal, target_id); // 主播
+
+            if (target_id == upId)
+            {
+                if (status) // 已佩戴，就不用管了
+                {
+                    qInfo() << "已佩戴当前直播间的粉丝勋章";
+                    return ;
+                }
+
+                // 佩带牌子
+                /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
+                if (!isLighted) // 牌子是灰的，可以不用管，发个弹幕就点亮了
+                    return ;
+                */
+
+                qint64 medalId = static_cast<qint64>(medal.value("medal_id").toDouble());
+                wearMedal(medalId);
+                return ;
+            }
+        }
+
+        // 未检测到勋章
+        if (curr_page >= total_page) // 已经是最后一页了
+        {
+            qInfo() << "未检测到勋章，无法佩戴";
+        }
+        else // 没有勋章
+        {
+            switchMedalToUp(upId, page+1);
+        }
     });
 }
 
 void MainWindow::wearMedal(qint64 medalId)
 {
+    qInfo() << "佩戴勋章：medalId=" << medalId;
     QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
     QStringList datas;
     datas << "medal_id=" + QString::number(medalId);
@@ -15723,7 +15949,8 @@ void MainWindow::slotStartWork()
     // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
     {
-        switchMedalTo(roomId.toLongLong());
+        // switchMedalToRoom(roomId.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 
     ui->actionShow_Live_Video->setEnabled(true);
@@ -15734,9 +15961,18 @@ void MainWindow::slotStartWork()
         sendExpireGift();
     }
 
-    // 挂小心心
-    if (ui->acquireHeartCheck->isChecked() && isLiving())
-        sendXliveHeartBeatE();
+    // 延迟操作（好像是有bug）
+    QString ri = roomId;
+    QTimer::singleShot(5000, [=]{
+        if (ri != roomId)
+            return ;
+
+        // 挂小心心
+        if (ui->acquireHeartCheck->isChecked() && isLiving())
+        {
+            sendXliveHeartBeatE();
+        }
+    });
 
     // 设置直播状态
     QPixmap face = getLivingPixmap(upFace);
@@ -15773,7 +16009,8 @@ void MainWindow::on_autoSwitchMedalCheck_clicked()
     settings->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
     if (!roomId.isEmpty() && isLiving())
     {
-        switchMedalTo(roomId.toLongLong());
+        // switchMedalToRoom(roomId.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 }
 
@@ -17049,7 +17286,6 @@ void MainWindow::on_toutaGiftCheck_clicked()
                 30063 给大佬递茶 2000\n\
                 30046 打榜 2000\n\
                 30004 喵娘 5200\n\
-                3 B坷垃 9900\n\
                 30064 礼花 28000\n\
                 30873 花式夸夸 39000\n\
                 30072 疯狂打call 52000\n\
@@ -17093,4 +17329,9 @@ void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 {
     settings->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
+}
+
+void MainWindow::on_heartTimeSpin_editingFinished()
+{
+    settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
 }

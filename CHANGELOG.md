@@ -1,4 +1,4 @@
-### v4.0.3 点歌姬优化、远程控制、修复崩溃
+### v4.0.3 [点歌姬优化、远程控制、修复崩溃](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.3)
 
 - 新增显示各音乐平台账号
 - 新增点歌姬歌词行间距设置
@@ -11,12 +11,13 @@
 - 优化导入QQ音乐歌单格式
 - 修复发空消息崩溃的问题
 - 修复搜索结果没有变色的问题
-
 - 修复自动调整最长字数无效的问题
 
 
 
-### v4.0.2 细节优化、文件操作
+
+
+### v4.0.2 [细节优化、文件操作](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.2)
 
 - 新增阻止所有自动回复的过滤器
 - 新增默认使用六折优惠券
@@ -35,10 +36,11 @@
 - 新增插入文件指定位置 `insertFileAnchor`
 - 新增读取文件每一行 `fileEachLine`
 - 新增开关定时任务和修改时长 `enableTimerTask`
-- 新增随机数组 `randomArray`
+- 新增随机数组 `randomArray`，适用于抽奖
 - 优化界面细节
 - 为保护未使用神奇弹幕的主播利益，去掉偷塔相关
 - 修复发送弹幕 msg repeat 问题
+- 修复屏蔽天选无效的问题
 - 修复 `%text%` 包含运算符 `~` 的问题
 - 修复创建嵌套文件夹的问题
 - 修复频繁更新高能榜
@@ -47,13 +49,17 @@
 
 
 
-### v4.0.1 支付提醒
+
+
+### v4.0.1 [支付提醒](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.1)
 
 - 优化未登录账号就支付时提醒
 
 
 
-### v4.0.0 [界面重构、过滤器、打卡记录](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.0)
+
+
+### v4.0.0 [界面重构、过滤器、打卡记录](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.1)
 
 **注意**：从该版本起为付费版，专享功能：自动回复、事件动作、黑听视频
 

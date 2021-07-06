@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>983</height>
+             <height>1005</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2573,7 +2573,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>420</y>
               <width>161</width>
-              <height>126</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2649,16 +2649,6 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="acquireHeartCheck">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>挂机领小心心</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QCheckBox" name="sendExpireGiftCheck">
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有2天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2667,6 +2657,61 @@ margin: 40px;</string>
                 <string>赠送到期礼物</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_55">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QCheckBox" name="acquireHeartCheck">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>挂小心心</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="heartTimeSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>每5分钟获取一个小心心，一天最多24个
+120分钟后无需再挂机</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string>分钟</string>
+                 </property>
+                 <property name="prefix">
+                  <string/>
+                 </property>
+                 <property name="maximum">
+                  <number>1440</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>5</number>
+                 </property>
+                 <property name="value">
+                  <number>120</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -3076,7 +3121,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>560</y>
+              <y>570</y>
               <width>161</width>
               <height>151</height>
              </rect>
@@ -4121,7 +4166,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>730</y>
+              <y>740</y>
               <width>161</width>
               <height>111</height>
              </rect>
@@ -7111,7 +7156,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
