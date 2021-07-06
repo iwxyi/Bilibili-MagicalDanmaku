@@ -1749,7 +1749,10 @@ bool MainWindow::isLiving() const
 void MainWindow::localNotify(QString text)
 {
 	if (text.isEmpty())
-    	return ;
+    {
+        qWarning() << ">localNotify([空文本])";
+        return ;
+    }
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
@@ -5007,21 +5010,29 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         msg.replace(_var, snum(unameToUid(text)));
     }
 
-    // 替换额外数据
-    re = QRegularExpression("%\\.([^%]+?)%");
-    matchPos = 0;
-    QJsonObject json = danmaku.extraJson;
-    while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
-    {
-        QString rpls = replaceDanmakuExtras(json, match.captured(1));
-        msg.replace(match.captured(0), rpls);
-        matchPos += rpls.length();
-    }
-
     bool find = true;
     while (find)
     {
         find = false;
+
+        // 替换JSON数据
+        // 尽量支持 %.data.%{key}%.list% 这样的格式吧
+        re = QRegularExpression("%\\.([^%]*?[^%\\.])%");
+        matchPos = 0;
+        QJsonObject json = danmaku.extraJson;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            bool ok = false;
+            QString rpls = replaceDanmakuJson(json, match.captured(1), &ok);
+            if (!ok)
+            {
+                matchPos++;
+                continue;
+            }
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
+        }
 
         // 读取配置文件的变量
         re = QRegularExpression("%\\{([^(%(\\{|\\[|>))]*?)\\}%");
@@ -5570,7 +5581,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 /**
  * 额外数据（JSON）替换
  */
-QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString& key_seq) const
+QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& key_seq, bool* ok) const
 {
     QStringList keyTree = key_seq.split(".");
     if (keyTree.size() == 0)
@@ -5580,13 +5591,16 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
     while (keyTree.size())
     {
         QString key = keyTree.takeFirst();
-        if (key.isEmpty())
+        if (key.isEmpty()) // 居然是空字符串，是不是有问题
         {
-            obj = QJsonValue();
-            break;
+            return "";
         }
         else if (obj.isObject())
         {
+            if (!obj.toObject().contains(key)) // 不包含这个键
+            {
+                return "";
+            }
             obj = obj.toObject().value(key);
         }
         else if (obj.isArray())
@@ -5594,7 +5608,9 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
             int index = key.toInt();
             QJsonArray array = obj.toArray();
             if (index >= 0 && index < array.size())
+            {
                 obj = array.at(index);
+            }
             else
             {
                 obj = QJsonValue();
@@ -5607,6 +5623,8 @@ QString MainWindow::replaceDanmakuExtras(const QJsonObject &json, const QString&
             break;
         }
     }
+
+    *ok = true;
 
     if (obj.isNull() || obj.isUndefined())
         return "";
