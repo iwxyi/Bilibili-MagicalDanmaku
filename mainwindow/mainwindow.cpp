@@ -1809,7 +1809,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 
             if (roomId != this->roomId) // 不是这个房间的弹幕，发送失败就算了
                 return ;
-            if (errorMsg.contains("msg in 1s"))
+            if (errorMsg.contains("msg in 1s") || errorMsg.contains("频率过快"))
             {
                 localNotify("[5s后重试]");
                 sendAutoMsgInFirst(msg, LiveDanmaku(), 5000);
@@ -12099,7 +12099,7 @@ void MainWindow::updateOnlineGoldRank()
             int score = item.value("score").toInt(); // 金瓜子数量
             int rank = item.value("userRank").toInt(); // 1,2,3...
 
-            names.append(name + " " + snum(guard_level));
+            names.append(name + " " + snum(score));
             LiveDanmaku danmaku(name, uid, QDateTime(), false,
                                 "", "", "");
             danmaku.setFirst(rank);
