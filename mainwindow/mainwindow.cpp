@@ -5587,19 +5587,45 @@ QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& k
     if (keyTree.size() == 0)
         return "";
 
-    QJsonValue obj = json.value(keyTree.takeFirst());
+    QJsonValue obj = json;
     while (keyTree.size())
     {
         QString key = keyTree.takeFirst();
+        bool canIgnore = false;
+        if (key.endsWith("?"))
+        {
+            canIgnore = true;
+            key = key.left(key.length() - 1);
+        }
+
         if (key.isEmpty()) // 居然是空字符串，是不是有问题
         {
-            return "";
+            if (canIgnore)
+            {
+                obj = QJsonValue();
+                break;
+            }
+            else
+            {
+                qWarning() << "解析JSON的键是空的：" << key_seq;
+                return "";
+            }
         }
         else if (obj.isObject())
         {
             if (!obj.toObject().contains(key)) // 不包含这个键
             {
-                return "";
+                // qWarning() << "不存在的键：" << key << "    keys:" << key_seq;
+                if (canIgnore)
+                {
+                    obj = QJsonValue();
+                    break;
+                }
+                else
+                {
+                    // 可能是等待其他的变量，所以先留下
+                    return "";
+                }
             }
             obj = obj.toObject().value(key);
         }
@@ -5613,12 +5639,21 @@ QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& k
             }
             else
             {
-                obj = QJsonValue();
-                break;
+                if (canIgnore)
+                {
+                    obj = QJsonValue();
+                    break;
+                }
+                else
+                {
+                    qWarning() << "错误的数组索引：" << index << "当前总数量：" << array.size() << "  " << key_seq;
+                    return "";
+                }
             }
         }
         else
         {
+            qWarning() << "未知的JSON类型：" << key_seq;
             obj = QJsonValue();
             break;
         }
