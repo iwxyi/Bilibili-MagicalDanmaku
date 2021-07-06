@@ -1817,12 +1817,12 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 
             if (roomId != this->roomId) // 不是这个房间的弹幕，发送失败就算了
                 return ;
-            if (errorMsg.contains("msg in 1s") || errorMsg.contains("频率过快"))
+            if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
                 sendAutoMsgInFirst(msg, LiveDanmaku(), 5000);
             }
-            else if (errorMsg.contains("msg repeat"))
+            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {
                 localNotify("[3s后重试]");
                 sendAutoMsgInFirst(msg, LiveDanmaku(), 3200);
@@ -10271,6 +10271,17 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "ROOM_BLOCK_MSG") // 被禁言
     {
+        /*{
+            "cmd": "ROOM_BLOCK_MSG",
+            "data": {
+                "dmscore": 30,
+                "operator": 1,
+                "uid": 536522379,
+                "uname": "sescuerYOKO"
+            },
+            "uid": 536522379,
+            "uname": "sescuerYOKO"
+        }*/
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         LiveDanmaku danmaku(LiveDanmaku(nickname, uid));

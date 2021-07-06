@@ -316,5 +316,7 @@ void BuyVIPDialog::on_couponButton_clicked()
     this->couponCode = coupon;
     ui->couponButton->setText(coupon);
     ui->couponButton->adjustMinimumSize();
+    if (coupon.isEmpty())
+        ui->couponButton->setText("优惠券");
     updatePrice();
 }
