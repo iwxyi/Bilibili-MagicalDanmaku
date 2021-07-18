@@ -366,7 +366,8 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         if (!danmaku.is(MSG_DANMAKU)
                 && !danmaku.is(MSG_GIFT)
                 && !danmaku.is(MSG_GUARD_BUY)
-                && !danmaku.is(MSG_BLOCK))
+                && !danmaku.is(MSG_BLOCK)
+                && !danmaku.is(MSG_SUPER_CHAT))
             return ;
     }
     if (blockComingMsg && (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)))
