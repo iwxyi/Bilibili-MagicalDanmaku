@@ -896,6 +896,7 @@ void MainWindow::readConfig()
 
     ui->voicePitchSlider->setSliderPosition(settings->value("voice/pitch", 50).toInt());
     ui->voiceSpeedSlider->setSliderPosition(settings->value("voice/speed", 50).toInt());
+    ui->voiceVolumeSlider->setSliderPosition(settings->value("voice/volume", 50).toInt());
     ui->voiceCustomUrlEdit->setText(settings->value("voice/customUrl", "").toString());
 
     // 开播
