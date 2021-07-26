@@ -1203,6 +1203,7 @@ void LiveDanmakuWindow::showMenu()
     else // 包括 item == nullptr
     {
         actionUserInfo->setEnabled(false);
+        actionCopyUid->setEnabled(false);
         actionHistory->setEnabled(false);
         actionAddBlock->setEnabled(false);
         actionAddBlockTemp->setEnabled(false);

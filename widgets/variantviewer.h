@@ -15,7 +15,7 @@ class VariantViewer : public QDialog
 {
     Q_OBJECT
 public:
-    explicit VariantViewer(QString caption, QSettings* vals, QString loopKeyStr, QStringList keys, QSettings* counts, QSettings* heaps, QWidget *parent = nullptr);
+    explicit VariantViewer(QString caption, QSettings* settings, QString loopKeyStr, QStringList keys, QSettings* counts, QSettings* heaps, QWidget *parent = nullptr);
 
 signals:
 
@@ -25,7 +25,7 @@ public slots:
 private:
     QTableView* tableView;
     QStandardItemModel* model;
-    QSettings* vals;
+    QSettings* settings;
     QSettings* counts;
     QSettings* heaps;
 };

@@ -5,7 +5,7 @@
 #include "orderplayerwindow.h"
 
 VariantViewer::VariantViewer(QString caption, QSettings *vals, QString loopKeyStr, QStringList tableFileds, QSettings *counts, QSettings *heaps, QWidget *parent)
-    : QDialog(parent), vals(vals), counts(counts), heaps(heaps)
+    : QDialog(parent), settings(vals), counts(counts), heaps(heaps)
 {
     setModal(false);
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
@@ -125,6 +125,11 @@ VariantViewer::VariantViewer(QString caption, QSettings *vals, QString loopKeySt
                     if (!keyExp.contains("/"))
                         keyExp.insert(0, "heaps/");
                 }
+                /* else if (keyExp.startsWith(SETTINGS_PREFIX)) // 设置的，没必要，因为不在循环中
+                {
+                    sts = vals;
+                    keyExp.remove(0, SETTINGS_PREFIX.length());
+                } */
                 QString val = sts->value(keyExp, "").toString();
 
                 if (tableCol == sortCol) // 排序，肯定是数值
@@ -231,7 +236,7 @@ void VariantViewer::showTableMenu()
         auto item = model->item(row, col);
         QString key = item->data(Qt::UserRole).toString();
         if (!key.isEmpty())
-            vals->remove(key);
+            settings->remove(key);
         qInfo() << "删除heaps值:" << key << item->data(Qt::DisplayRole);
         item->setData("", Qt::UserRole); // 先取消键，否则下面的留空还是会引发修改值，剩下一个空值键
         item->setData("", Qt::DisplayRole);
@@ -250,7 +255,7 @@ void VariantViewer::showTableMenu()
                 auto item = model->item(row, col);
                 QString key = item->data(Qt::UserRole).toString();
                 if (!key.isEmpty())
-                    vals->remove(key);
+                    settings->remove(key);
             }
             deletedRows.append(row);
         }

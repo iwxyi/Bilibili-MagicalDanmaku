@@ -8595,7 +8595,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
-
+    if (msg.contains("setToutaMaxGold"))
+    {
+        re = RE("setToutaMaxGold\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            int val = caps.at(1).toInt();
+            settings->setValue("pk/maxGold", pkMaxGold = val);
+            return true;
+        }
+    }
 
     return false;
 }
@@ -12800,7 +12811,7 @@ void MainWindow::on_pkAutoMelonCheck_clicked()
 void MainWindow::on_pkMaxGoldButton_clicked()
 {
     bool ok = false;
-    // 最大设置的是1000元，有钱人……
+    // 默认最大设置的是1000元，有钱人……
     int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n1元=1000金瓜子=100或10乱斗值（按B站规则会变）\n注意：每次偷塔、反偷塔时都单独判断上限，而非一次大乱斗的累加", pkMaxGold, 0, 1000000, 100, &ok);
     if (!ok)
         return ;
@@ -13805,12 +13816,11 @@ int MainWindow::getPkMaxGold(int votes)
 {
     if (!ui->pkAutoMaxGoldCheck->isChecked())
         return pkMaxGold;
-    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold * 10 / 1000);
-    double prop = pow(money, 1.0/3);
-    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000);
+    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold / goldTransPk); // 用于计算的价格
+    double prop = pow(money, 1.0/3); // 自动调整的倍率，未限制
+    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
     maxProp = qMax(1.0, maxProp);
-    prop = qMax(1.0, prop);
-    prop = qMin(prop, maxProp);
+    prop = qMin(qMax(1.0, prop), maxProp); // 限制倍率是 1 ~ 10 倍之间
     if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
         qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
