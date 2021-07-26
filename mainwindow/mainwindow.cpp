@@ -1556,12 +1556,16 @@ const QSettings* MainWindow::getSettings() const
 void MainWindow::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
-    restoreGeometry(settings->value("mainwindow/geometry").toByteArray());
 
     static bool firstShow = true;
     if (firstShow)
     {
         firstShow = false;
+
+        // 恢复窗口位置
+        restoreGeometry(settings->value("mainwindow/geometry").toByteArray());
+
+        // 显示启动动画
         startSplash();
 
         // 显示 RoomIdEdit 动画
@@ -1578,6 +1582,7 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     settings->setValue("mainwindow/geometry", this->saveGeometry());
+    settings->sync();
 
 #if defined(ENABLE_TRAY)
 
