@@ -367,6 +367,13 @@ int OrderPlayerWindow::userOrderCount(QString by)
     return count;
 }
 
+const QPixmap OrderPlayerWindow::getCurrentSongCover() const
+{
+    if (!playingSong.isValid())
+        return QPixmap();
+    return coverPath(playingSong);
+}
+
 void OrderPlayerWindow::on_searchEdit_returnPressed()
 {
     QString text = ui->searchEdit->text();
@@ -669,12 +676,12 @@ void OrderPlayerWindow::addFavorite(SongList songs)
     {
         if (favoriteSongs.contains(song))
         {
-            qDebug() << "歌曲已收藏：" << song.simpleString();
+            qInfo() << "歌曲已收藏：" << song.simpleString();
             continue;
         }
         favoriteSongs.append(song);
         showTabAnimation(center, "+1");
-        qDebug() << "添加收藏：" << song.simpleString();
+        qInfo() << "添加收藏：" << song.simpleString();
     }
     saveSongList("music/favorite", favoriteSongs);
     setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
@@ -688,7 +695,7 @@ void OrderPlayerWindow::removeFavorite(SongList songs)
         if (favoriteSongs.removeOne(song))
         {
             showTabAnimation(center, "-1");
-            qDebug() << "取消收藏：" << song.simpleString();
+            qInfo() << "取消收藏：" << song.simpleString();
         }
     }
     saveSongList("music/favorite", favoriteSongs);
@@ -1257,7 +1264,7 @@ void OrderPlayerWindow::appendOrderSongs(SongList songs)
 
     if (isNotPlaying() && orderSongs.size())
     {
-        qDebug() << "当前未播放，开始播放列表";
+        qInfo() << "当前未播放，开始播放列表";
         startPlaySong(orderSongs.takeFirst());
     }
 
@@ -1292,7 +1299,7 @@ void OrderPlayerWindow::appendNextSongs(SongList songs)
     // 一般不会自动播放，除非没有在放的歌
     /*if (isNotPlaying() && !playingSong.isValid() && songs.size())
     {
-        qDebug() << "当前未播放，开始播放本首歌";
+        qInfo() << "当前未播放，开始播放本首歌";
         startPlaySong(orderSongs.takeFirst());
     }*/
 
@@ -1307,7 +1314,7 @@ void OrderPlayerWindow::appendNextSongs(SongList songs)
  */
 void OrderPlayerWindow::playLocalSong(Song song)
 {
-    qDebug() << "开始播放：" << song.simpleString() << song.id << song.mid;
+    qInfo() << "开始播放：" << song.simpleString() << song.id << song.mid;
     if (!isSongDownloaded(song))
     {
         qWarning() << "error: 未下载歌曲" << song.simpleString() << "开始下载";
@@ -1851,7 +1858,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
     MusicSource source = UnknowMusic;
     QString playlistUrl;
     QString id;
-    qDebug() << "歌单URL：" << shareUrl;
+    qInfo() << "歌单URL：" << shareUrl;
     shareUrl = shareUrl.trimmed();
     if (shareUrl.contains("music.163.com")) // 网易云音乐的分享
     {
@@ -1967,7 +1974,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             {
                 ids << QString::number(static_cast<qint64>(val.toObject().value("id").toDouble()));
             }
-            qDebug() << "歌单：" << name << "   数量：" << ids.size();
+            qInfo() << "歌单：" << name << "   数量：" << ids.size();
 
             // 通过Id获取歌曲
             fetch(NETEASE_SERVER + "/song/detail?timestamp=" + snum(QDateTime::currentSecsSinceEpoch()),
@@ -2005,7 +2012,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         {
             if (json.value("result").toInt() != 100)
             {
-                qDebug() << "咪咕歌单返回结果不为100：" << json;
+                qWarning() << "咪咕歌单返回结果不为100：" << json;
                 return ;
             }
             QJsonArray array = json.value("data").toObject().value("list").toArray();
@@ -2328,7 +2335,7 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
     char flag = *array.mid(5, 1).data(); // [1] 标志
     char* sizes = array.mid(6, 4).data(); // [4] 标签大小，包括标签帧和标签头（不包括扩展标签头的10字节）
     int size = (sizes[0]<<24)+(sizes[1]<<16)+(sizes[2]<<8)+sizes[3];
-    qDebug() << QString::fromStdString(header) << size;
+    qInfo() << QString::fromStdString(header) << size;
     Q_UNUSED(ver)
     Q_UNUSED(revision)
     Q_UNUSED(flag)

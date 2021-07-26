@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>840</width>
-    <height>1121</height>
+    <height>661</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>1005</height>
+             <height>545</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5920,7 +5920,7 @@ QCheckBox::indicator:checked:pressed {
                      <cursorShape>PointingHandCursor</cursorShape>
                     </property>
                     <property name="toolTip">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存播放的歌曲至文件，供外界读取&lt;/p&gt;&lt;p&gt;路径：安装目录/www/music/playing.txt&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将歌曲显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存播放的歌曲至文件，供外界读取&lt;/p&gt;&lt;p&gt;歌名路径：安装目录/www/music/playing.txt&lt;/p&gt;&lt;p&gt;封面路径：安装目录/www/music/cover.jpg&lt;/p&gt;&lt;p&gt;OBS/直播姬可选择“文本—从文件读取”将歌曲显示在直播界面&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QCheckBox{

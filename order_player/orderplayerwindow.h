@@ -135,6 +135,7 @@ public:
     const SongList& getOrderSongs() const;
     const QStringList getSongLyrics(int rowCount) const;
     int userOrderCount(QString by);
+    const QPixmap getCurrentSongCover() const;
 
 public slots:
     void slotSearchAndAutoAppend(QString key, QString by = "");

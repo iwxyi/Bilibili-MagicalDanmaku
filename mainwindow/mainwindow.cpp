@@ -8811,7 +8811,7 @@ void MainWindow::savePlayingSong()
     QDir dir(wwwDir.absoluteFilePath("music"));
     dir.mkpath(dir.absolutePath());
 
-    // 保存到文件
+    // 保存名字到文件
     QFile file(dir.absoluteFilePath("playing.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
@@ -8820,6 +8820,10 @@ void MainWindow::savePlayingSong()
     stream << text;
     file.flush();
     file.close();
+
+    // 保存封面
+    QPixmap cover = musicWindow->getCurrentSongCover();
+    cover.save(dir.absoluteFilePath("cover.jpg"));
 }
 
 void MainWindow::saveOrderSongs(const SongList &songs)
@@ -13077,7 +13081,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             danmaku.with(song.toJson());
             triggerCmdEvent("CURRENT_SONG_CHANGED", danmaku);
 
-            if (ui->playingSongToFileCheck)
+            if (ui->playingSongToFileCheck->isChecked())
             {
                 savePlayingSong();
             }
