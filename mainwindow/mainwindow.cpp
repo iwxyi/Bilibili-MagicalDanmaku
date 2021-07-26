@@ -6409,7 +6409,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
 
     // 一大串 中文enen
     // 注：日语正则 [\u0800-\u4e00] ，实测“一”也会算在里面……？
-    QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-\\w\\d_\u0800-\u4dff]+)$");
+    QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-_\\w\\d_\u0800-\u4dff]+)$");
     if (simp.indexOf(ceRe, 0, &match) > -1 && match.capturedTexts().at(1).length()*3 >= match.capturedTexts().at(2).length())
     {
         QString tmp = match.capturedTexts().at(1);
@@ -6432,7 +6432,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2}?)(不|有点|才是|敲|很|能有|想|从不|才不|跟你).+",
+                         "^(.{2,}?)(不|有点|才是|敲|很|能有|想|要|从不|才不|跟你).+",
                         "^(.{2,})-(.{2,})$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
