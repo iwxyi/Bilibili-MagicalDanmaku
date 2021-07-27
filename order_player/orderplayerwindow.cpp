@@ -210,6 +210,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     blurAlpha = settings.value("music/blurAlpha", blurAlpha).toInt();
     themeColor = settings.value("music/themeColor", themeColor).toBool();
     doubleClickToPlay = settings.value("music/doubleClickToPlay", false).toBool();
+    accompanyMode = settings.value("music/accompanyMode", false).toBool();
 
     // 读取数据
     ui->listTabWidget->setCurrentIndex(settings.value("orderplayerwindow/tabIndex").toInt());
@@ -397,6 +398,11 @@ void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
     if (!playingSong.isValid() && (!playAfterDownloaded.isValid() || !downloadingSong.isValid()))
         emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
+    if (accompanyMode)
+    {
+        // 在前面加上“伴奏”俩字
+        key = "伴奏 " + key;
+    }
     searchMusic(key, by, true);
 }
 
@@ -3252,6 +3258,14 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     FacileMenu* playMenu = menu->addMenu("播放");
 
+    playMenu->addAction("伴奏优先", [=]{
+        settings.setValue("music/accompanyMode", accompanyMode = !accompanyMode);
+    })->check(accompanyMode);
+
+    playMenu->addAction("双击播放", [=]{
+        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
+    })->check(doubleClickToPlay);
+
     playMenu->addAction("音乐品质", [=]{
         bool ok = false;
         int br = QInputDialog::getInt(this, "设置码率", "请输入音乐码率，越高越清晰，体积也更大\n修改后将清理所有缓存，重新下载歌曲文件", songBr, 128000, 1280000, 10000, &ok);
@@ -3261,10 +3275,6 @@ void OrderPlayerWindow::on_settingsButton_clicked()
             clearDownloadFiles();
         settings.setValue("music/br", songBr = br);
     })->check(songBr >= 320000);
-
-    playMenu->addAction("双击播放", [=]{
-        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
-    })->check(doubleClickToPlay);
 
     playMenu->split()->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);

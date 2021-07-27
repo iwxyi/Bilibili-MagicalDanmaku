@@ -313,14 +313,15 @@ signals:
 private:
     Ui::OrderPlayerWindow *ui;
     bool starting = true;
+
+    // 配置
     QSettings settings;
     QDir musicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
-    QString neteaseNickname;
-    QString qqmusicNickname;
 
+    // 列表
     SongList orderSongs;
     SongList favoriteSongs;
     SongList normalSongs;
@@ -330,17 +331,23 @@ private:
     Song playAfterDownloaded;
     Song downloadingSong;
 
+    // 播放
     QMediaPlayer* player;
     PlayCircleMode circleMode = OrderList;
     Song playingSong;
     int lyricScroll;
 
+    // 开关设置
     bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
     qint64 setPlayPositionAfterLoad = 0; // 加载后跳转到时间
+    bool accompanyMode = false; // 伴奏模式
+    bool unblockQQMusic = false; // 试听QQ音乐
 
+    // 控件
     DesktopLyricWidget* desktopLyric;
     InteractiveButtonBase* expandPlayingButton;
 
+    // 封面
     Song coveringSong;
     bool blurBg = true;
     int blurAlpha = 32;
@@ -350,24 +357,29 @@ private:
     QPixmap prevBlurBg;
     int prevBgAlpha = 0;
 
+    // 主题
     bool themeColor = false;
     BFSColor prevPa;
     BFSColor currentPa;
     double paletteAlpha;
 
+    // 点歌
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
     Song prevOrderSong;
     bool autoSwitchSource = true; // 自动切换音源
     bool insertOrderOnce = false; // 插入到前面
 
+    // 音乐账号
     int songBr = 320000; // 码率，单位bps
     QString neteaseCookies;
     QVariant neteaseCookiesVariant;
     QString qqmusicCookies;
     QVariant qqmusicCookiesVariant;
-    bool unblockQQMusic = false;
+    QString neteaseNickname;
+    QString qqmusicNickname;
 
-    QList<Song> randomSongList;
+    // 算法
+    QList<Song> randomSongList; // 洗牌算法的随机音乐
 };
 
 class NoFocusDelegate : public QStyledItemDelegate
