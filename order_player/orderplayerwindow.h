@@ -245,6 +245,7 @@ private:
     void setCurrentLyric(QString lyric);
     void inputPlayList();
     void openPlayList(QString shareUrl);
+    void openMultiImport();
     void clearDownloadFiles();
     void clearHoaryFiles();
 
@@ -271,6 +272,9 @@ private:
 
     void getNeteaseAccount();
     void getQQMusicAccount();
+
+    void importSongs(const QStringList& lines);
+    void importNextSongByName();
 
 protected:
     void showEvent(QShowEvent*e) override;
@@ -380,6 +384,10 @@ private:
 
     // 算法
     QList<Song> randomSongList; // 洗牌算法的随机音乐
+
+    // 导入
+    int importFormat = 0;
+    QStringList importingSongNames;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

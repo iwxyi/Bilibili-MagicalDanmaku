@@ -1,6 +1,7 @@
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
+#include "importsongsdialog.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
@@ -1170,8 +1171,12 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         })->disable(!currentSong.isValid())
                 ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
-        menu->addAction("打开分享的歌单", [=]{
+        menu->addAction("导入歌单链接", [=]{
             inputPlayList();
+        });
+
+        menu->addAction("批量导入歌曲", [=]{
+            openMultiImport();
         });
 
         menu->exec();
@@ -1205,8 +1210,11 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
     {
 
         FacileMenu* menu = new FacileMenu(this);
-        menu->addAction("打开分享的歌单", [=]{
+        menu->addAction("导入歌单链接", [=]{
             inputPlayList();
+        });
+        menu->addAction("批量导入歌曲", [=]{
+            openMultiImport();
         });
         menu->exec();
     }
@@ -2036,6 +2044,22 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
 
 }
 
+void OrderPlayerWindow::openMultiImport()
+{
+    if (importingSongNames.size())
+    {
+        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
+        return ;
+    }
+
+    ImportSongsDialog* isd = new ImportSongsDialog(this);
+    isd->show();
+    connect(isd, &ImportSongsDialog::importMusics, this, [=](int format, const QStringList& lines) {
+        this->importFormat = format;
+        importSongs(lines);
+    });
+}
+
 void OrderPlayerWindow::clearDownloadFiles()
 {
     QList<QFileInfo> files = musicsFileDir.entryInfoList(QDir::Files);
@@ -2623,6 +2647,48 @@ void OrderPlayerWindow::getQQMusicAccount()
     }, QQMusic);
 }
 
+void OrderPlayerWindow::importSongs(const QStringList &lines)
+{
+    foreach (auto line, lines)
+    {
+        line = line.trimmed();
+        if (line.isEmpty())
+            continue;
+
+        if (line.startsWith("file:///")) // 如果是本地文件
+        {
+            QString path = QUrl(line).toLocalFile();
+            QFileInfo info(path);
+            QString suffix = info.suffix();
+            if (!info.exists())
+            {
+                qWarning() << "不存在的文件：" << path;
+                continue;
+            }
+            if (QStringList{}.contains(suffix))
+            {
+                qWarning() << "不支持的音乐文件格式：" << path;
+                continue;
+            }
+
+            // 开始导入文件
+        }
+        else // 不是文件，就当做歌名了！
+        {
+
+        }
+    }
+}
+
+/**
+ * 判断 importingSongNames 有没有下一个
+ * 如果有，则继续导入
+ */
+void OrderPlayerWindow::importNextSongByName()
+{
+
+}
+
 /**
  * 列表项改变
  */
@@ -2833,8 +2899,12 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         removeOrder(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("打开分享的歌单", [=]{
+    menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
+    });
+
+    menu->addAction("批量导入歌曲", [=]{
+        openMultiImport();
     });
 
     menu->exec();
@@ -2886,8 +2956,12 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
         removeFavorite(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("打开分享的歌单", [=]{
+    menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
+    });
+
+    menu->addAction("批量导入歌曲", [=]{
+        openMultiImport();
     });
 
     menu->exec();
@@ -2971,8 +3045,12 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         removeNormal(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("打开分享的歌单", [=]{
+    menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
+    });
+
+    menu->addAction("批量导入歌曲", [=]{
+        openMultiImport();
     });
 
     menu->exec();

@@ -66,6 +66,7 @@ INCLUDEPATH += \
     third_party/notification/
 
 SOURCES += \
+    order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -139,6 +140,7 @@ SOURCES += \
     widgets/video_lyric_creator/videolyricscreator.cpp
 
 HEADERS += \
+    order_player/importsongsdialog.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
     third_party/facile_menu/facilemenu.h \
@@ -234,6 +236,7 @@ HEADERS += \
     widgets/video_lyric_creator/videolyricscreator.h
 
 FORMS += \
+    order_player/importsongsdialog.ui \
     widgets/buy_vip/buyvipdialog.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
