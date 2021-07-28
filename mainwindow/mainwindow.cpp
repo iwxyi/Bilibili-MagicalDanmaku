@@ -7719,11 +7719,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString dirName = caps.at(1);
             QString fileName = caps.at(2);
             QString format = caps.at(3);
-            if (!dirName.isEmpty())
-                ensureDirExist(dirName);
             format.replace("%n%", "\n");
-            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
-            appendFileLine(path, fileName, format, lastDanmaku);
+            appendFileLine(dirName, fileName, format, lastDanmaku);
             return true;
         }
     }
@@ -7752,7 +7749,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 删除文件
     if (msg.contains("removeFile"))
     {
-        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*\\)");
+        re = RE("removeFile\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -14433,7 +14430,7 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
 {
     QDir dir(dataPath + "guard_histories");
     dir.mkpath(dir.absolutePath());
-    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(roomId + ".csv"));
+    QString filePath = dir.absoluteFilePath(roomId + ".csv");
 
     QFile file(filePath);
     bool exists = file.exists();
@@ -14464,7 +14461,7 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     dir.mkpath(dir.absolutePath());
     QDate date = QDate::currentDate();
     QString fileName = QString("%1_%2-%3.csv").arg(roomId).arg(date.year()).arg(date.month());
-    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
+    QString filePath = dir.absoluteFilePath(fileName);
 
     QFile file(filePath);
     bool exists = file.exists();
@@ -14490,8 +14487,10 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
 
 void MainWindow::appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku)
 {
+#ifdef Q_OS_WIN
     if (dirName.startsWith("/"))
         dirName.replace(0, 1, "");
+#endif
     QDir dir(dataPath + dirName);
     dir.mkpath(dir.absolutePath());
     QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
@@ -14502,9 +14501,7 @@ void MainWindow::appendFileLine(QString dirName, QString fileName, QString forma
     QTextStream stream(&file);
     if (!codeFileCodec.isEmpty())
         stream.setCodec(codeFileCodec.toUtf8());
-
     stream << processDanmakuVariants(format, danmaku) << "\n";
-
     file.close();
 }
 
