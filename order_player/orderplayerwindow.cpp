@@ -1,6 +1,7 @@
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
+#include "fileutil.h"
 #include "importsongsdialog.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
@@ -12,7 +13,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::OrderPlayerWindow),
       settings(dataPath + "musics.ini", QSettings::Format::IniFormat),
-      musicsFileDir(dataPath+"musics"),
+      musicsFileDir(dataPath+"musics"), localMusicsFileDir(dataPath+"local_musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(settings, nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this))
@@ -471,6 +472,8 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
     case MiguMusic:
         url = MIGU_SERVER + "/search?keyword=" + key.toUtf8().toPercentEncoding() + "&pageSize=100";
         break;
+    case LocalMusic:
+        return ;
     }
     fetch(url, [=](QJsonObject json){
         bool insertOnce = this->insertOrderOnce;
@@ -481,6 +484,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         QJsonObject response;
         switch (source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
@@ -510,6 +514,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         QJsonArray songs;
         switch (source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
             songs = json.value("result").toObject().value("songs").toArray();
@@ -522,6 +527,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         searchResultSongs.clear();
         switch (source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
             foreach (QJsonValue val, songs)
@@ -704,6 +710,12 @@ void OrderPlayerWindow::removeFavorite(SongList songs)
             showTabAnimation(center, "-1");
             qInfo() << "取消收藏：" << song.simpleString();
         }
+        if (song.source == LocalMusic)
+        {
+            if (!orderSongs.contains(song)
+                    && !normalSongs.contains(song))
+                deleteFile(songPath(song));
+        }
     }
     saveSongList("music/favorite", favoriteSongs);
     setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
@@ -733,6 +745,12 @@ void OrderPlayerWindow::removeNormal(SongList songs)
     {
         if (normalSongs.removeOne(song))
             showTabAnimation(center, "-1");
+        if (song.source == LocalMusic)
+        {
+            if (!orderSongs.contains(song)
+                    && !favoriteSongs.contains(song))
+                deleteFile(songPath(song));
+        }
     }
     randomSongList.clear();
     saveSongList("music/normal", normalSongs);
@@ -746,6 +764,12 @@ void OrderPlayerWindow::removeOrder(SongList songs)
     {
         if (orderSongs.removeOne(song))
             showTabAnimation(center, "-1");
+        if (song.source == LocalMusic)
+        {
+            if (!normalSongs.contains(song)
+                    && !favoriteSongs.contains(song))
+                deleteFile(songPath(song));
+        }
     }
     saveSongList("music/order", orderSongs);
     setSongModelToView(orderSongs, ui->orderSongsListView);
@@ -800,6 +824,8 @@ QString OrderPlayerWindow::songPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".mp3");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".mp3");
+    case LocalMusic:
+        return localMusicsFileDir.absoluteFilePath(song.filePath);
     }
     return "";
 }
@@ -815,6 +841,12 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".lrc");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".lrc");
+    case LocalMusic:
+        QFileInfo info(song.filePath);
+        if (!info.isFile() || !info.exists())
+            return "";
+        QString baseName = info.baseName();
+        return info.dir().absoluteFilePath(baseName + ".lrc");
     }
     return "";
 }
@@ -830,6 +862,12 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".jpg");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".jpg");
+    case LocalMusic:
+        QFileInfo info(song.filePath);
+        if (!info.isFile() || !info.exists())
+            return "";
+        QString baseName = info.baseName();
+        return info.dir().absoluteFilePath(baseName + ".jpg");
     }
     return "";
 }
@@ -1177,7 +1215,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
 
         menu->addAction("批量导入歌曲", [=]{
             openMultiImport();
-        });
+        })->hide();
 
         menu->exec();
     }
@@ -1215,7 +1253,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         });
         menu->addAction("批量导入歌曲", [=]{
             openMultiImport();
-        });
+        })->hide();
         menu->exec();
     }
 }
@@ -1228,6 +1266,13 @@ void OrderPlayerWindow::startPlaySong(Song song)
     if (isSongDownloaded(song))
     {
         playLocalSong(song);
+    }
+    else if (song.source == LocalMusic)
+    {
+        qWarning() << "本地文件不存在：" << song.name << songPath(song);
+        QTimer::singleShot(0, [=]{
+            playNext();
+        });
     }
     else
     {
@@ -1445,6 +1490,7 @@ void OrderPlayerWindow::downloadSong(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
+    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/song/url?id=" + snum(song.id) + "&br=" + snum(songBr);
@@ -1490,6 +1536,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         QString fileUrl;
         switch (song.source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
         {
@@ -1673,6 +1720,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
+    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/lyric?id=" + snum(song.id);
@@ -1689,6 +1737,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         QString lrc;
         switch (song.source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
@@ -1751,6 +1800,7 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
+    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/song/detail?ids=" + snum(song.id);
@@ -1776,6 +1826,7 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         QString url;
         switch (song.source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
         {
@@ -1969,6 +2020,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
         SongList songs;
         switch (source) {
         case UnknowMusic:
+        case LocalMusic:
             return ;
         case NeteaseCloudMusic:
         {
@@ -2415,6 +2467,7 @@ void OrderPlayerWindow::setMusicIconBySource()
 {
     switch (musicSource) {
     case UnknowMusic:
+    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         ui->musicSourceButton->setIcon(QIcon(":/musics/netease"));
@@ -2442,6 +2495,7 @@ bool OrderPlayerWindow::switchSource(Song song, bool play)
     MusicSource res = UnknowMusic;
     switch (song.source) {
     case UnknowMusic:
+    case LocalMusic:
         res = NeteaseCloudMusic;
         break;
     case NeteaseCloudMusic:
@@ -2510,6 +2564,7 @@ void OrderPlayerWindow::fetch(QString url, NetReplyFunc func, MusicSource cookie
         cookie = musicSource;
     switch (cookie) {
     case UnknowMusic:
+    case LocalMusic:
         break;
     case NeteaseCloudMusic:
         if (!neteaseCookies.isEmpty() && url.startsWith(NETEASE_SERVER))
@@ -2543,6 +2598,7 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
         cookie = musicSource;
     switch (cookie) {
     case UnknowMusic:
+    case LocalMusic:
         break;
     case NeteaseCloudMusic:
         if (!neteaseCookies.isEmpty() && url.startsWith(NETEASE_SERVER))
@@ -2649,16 +2705,46 @@ void OrderPlayerWindow::getQQMusicAccount()
 
 void OrderPlayerWindow::importSongs(const QStringList &lines)
 {
+    QDir().mkpath(localMusicsFileDir.absolutePath());
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
+
+    // 从字符串中解析歌名/歌手
+    auto setName = [=](QString fileName, Song& song) -> void {
+        QRegularExpression re;
+        if (importFormat == 0) // 歌名
+        {
+            song.name = fileName;
+        }
+        else if (importFormat ==  1) // 歌手-歌名
+        {
+            QRegularExpression re("^(.+)-(.+?)$");
+            QRegularExpressionMatch match;
+            if (fileName.indexOf(re, 0, &match) == -1)
+            {
+                qWarning() << "无法导入[歌手-歌名]：" << fileName;
+                return ;
+            }
+
+            song.name = match.captured(1).trimmed();
+            song.artists.append(Artist(song.artistNames = match.captured(2).trimmed()));
+        }
+    };
+
+    int importCount = 0;
+    QList<Song> songs;
     foreach (auto line, lines)
     {
         line = line.trimmed();
         if (line.isEmpty())
             continue;
 
+        Song song;
         if (line.startsWith("file:///")) // 如果是本地文件
         {
             QString path = QUrl(line).toLocalFile();
             QFileInfo info(path);
+            QString baseName = info.baseName();
+            QString fileName = info.fileName();
             QString suffix = info.suffix();
             if (!info.exists())
             {
@@ -2672,12 +2758,28 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
             }
 
             // 开始导入文件
+            QString newPath = localMusicsFileDir.absoluteFilePath(fileName);
+            copyFile(path, newPath, true);
+            song.source = LocalMusic;
+            song.filePath = fileName;
+            song.id = timestamp * 10000 + importCount;
+            setName(baseName, song);
+            songs.append(song);
         }
         else // 不是文件，就当做歌名了！
         {
-
+            setName(line, song);
+            importingSongNames.append(song);
         }
+
+        importCount++;
     }
+
+    if (songs.size())
+        addNormal(songs);
+
+    if (importingSongNames.size())
+        importNextSongByName();
 }
 
 /**
@@ -2847,7 +2949,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         songs.append(orderSongs.at(index.row()));
     int row = ui->orderSongsListView->currentIndex().row();
     Song currentSong;
-    if (row > -1)
+    if (row > -1 && row < orderSongs.size())
         currentSong = orderSongs.at(row);
 
     FacileMenu* menu = new FacileMenu(this);
@@ -2905,7 +3007,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    });
+    })->hide();
 
     menu->exec();
 }
@@ -2918,13 +3020,13 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
         songs.append(favoriteSongs.at(index.row()));
     int row = ui->favoriteSongsListView->currentIndex().row();
     Song currentSong;
-    if (row > -1)
+    if (row > -1 && row < favoriteSongs.size())
         currentSong = favoriteSongs.at(row);
 
     FacileMenu* menu = new FacileMenu(this);
 
     menu->addAction("立即播放", [=]{
-        Song song = favoriteSongs.takeAt(row);
+        Song song = favoriteSongs.at(row);
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
@@ -2962,7 +3064,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    });
+    })->hide();
 
     menu->exec();
 }
@@ -3001,13 +3103,13 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         songs.append(normalSongs.at(index.row()));
     int row = ui->normalSongsListView->currentIndex().row();
     Song currentSong;
-    if (row > -1)
+    if (row > -1 && row < normalSongs.size())
         currentSong = normalSongs.at(row);
 
     FacileMenu* menu = new FacileMenu(this);
 
     menu->addAction("立即播放", [=]{
-        Song song = normalSongs.takeAt(row);
+        Song song = normalSongs.at(row);
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
@@ -3064,7 +3166,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         songs.append(historySongs.at(index.row()));
     int row = ui->historySongsListView->currentIndex().row();
     Song currentSong;
-    if (row > -1)
+    if (row > -1 && row < historySongs.size())
         currentSong = historySongs.at(row);
 
     FacileMenu* menu = new FacileMenu(this);
@@ -3077,7 +3179,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
     }
 
     menu->addAction("立即播放", [=]{
-        Song song = historySongs.takeAt(row);
+        Song song = historySongs.at(row);
         startPlaySong(song);
     })->disable(songs.size() != 1 || !currentSong.isValid());
 
