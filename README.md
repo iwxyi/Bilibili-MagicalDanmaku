@@ -2233,6 +2233,10 @@ JSON格式：
 
 - 用户头像：`/api/header?uid=123456`，可直接用于 `<img>` 标签
 
+  ```
+  <img src="http://__DOMAIN__:__PORT__/api/header?uid=123456" />
+  ```
+
 
 
 
@@ -2280,11 +2284,23 @@ JSON格式：
 
 
 
+### 怎么添加弹幕窗口到OBS？
+
+暂时不支持。
+
+
+
 ### 怎么提bug？
 
 加QQ群：**1038738410**，主动点 (〃＞＿＜;〃)
 
 问题/bug/建议，一定要**详细详细详细**！最好来一篇300字小作文！
+
+> 一些反例：
+>
+> - 能针对关键词，回复指定弹幕吗？（能看到这句话为什么看不到上面这么多回复示例）
+> - 为什么运行一段时间后闪退了？（不说详细操作，不可能找到原因）
+> - 欢迎进入/弹幕回复/点歌/切歌/...不管用？（先看看上面“为什么不发弹幕”再问吧）
 
 
 
@@ -2293,7 +2309,7 @@ JSON格式：
 ## 参考资料
 
 > - B站API列表：https://github.com/SocialSisterYi/bilibili-API-collect
->- 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
+> - 直播WS信息流：https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/live/message_stream.md
 > - 直播数据包解析：https://segmentfault.com/a/1190000017328813?utm_source=tag-newest
 > - 部分CMD包分析：https://github.com/czp3009/bilibili-api/tree/master/record/%E7%9B%B4%E6%92%AD%E5%BC%B9%E5%B9%95
 > - Qt解压zlib：https://blog.csdn.net/doujianyoutiao/article/details/106236207
@@ -2301,5 +2317,6 @@ JSON格式：
 > - 点歌姬网易云音源：https://github.com/Binaryify/NeteaseCloudMusicApi
 > - 点歌姬QQ音乐源：https://github.com/jsososo/QQMusicApi
 > - 点歌姬咪咕音乐源：https://github.com/jsososo/MiguMusicApi
+> - 点歌姬酷狗音乐源：https://www.cnblogs.com/daxiangxm/archive/2019/10/25/kugou_music_api.html
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
 > - 服务端模块：https://github.com/nikhilm/qhttpserver

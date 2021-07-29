@@ -109,6 +109,7 @@
         <file alias="netease">musics/netease-cloud-music.png</file>
         <file alias="qq">musics/QQ-music.png</file>
         <file alias="migu">musics/migu-music.png</file>
+        <file alias="kugou">musics/kugou-music.png</file>
     </qresource>
     <qresource prefix="/snow">
         <file alias="neve_music">snow/neve_music.png</file>
