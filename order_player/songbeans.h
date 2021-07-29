@@ -20,7 +20,8 @@ enum MusicSource
     UnknowMusic = -1,
     NeteaseCloudMusic = 0,
     QQMusic = 1,
-    MiguMusic = 2
+    MiguMusic = 2,
+    KugouMusic = 3
 };
 
 struct Artist
@@ -30,6 +31,14 @@ struct Artist
     QString name;
     QString faceUrl;
     char m_padding1[4];
+
+    Artist()
+    {}
+
+    Artist(QString name)
+    {
+        this->name = name;
+    }
 
     static Artist fromJson(QJsonObject json)
     {
@@ -107,6 +116,15 @@ struct Album
         album.mid = JVAL_STR(mid);
         album.name = JVAL_STR(name);
         album.picUrl = JVAL_STR(picUrl);
+        return album;
+    }
+
+    static Album fromKugouMusicJson(const QJsonObject& json)
+    {
+        Album album;
+        album.id = JVAL_LONG(album_id);
+        album.mid = JVAL_STR(album_audio_id);
+        album.name = JVAL_STR(album_name);
         return album;
     }
 
@@ -225,6 +243,28 @@ struct Song
         if (json.contains("addBy"))
             song.addBy = JVAL_STR(addBy);
         song.source = MiguMusic;
+        return song;
+    }
+
+    static Song fromKugouMusicJson(QJsonObject json)
+    {
+        Song song;
+
+        song.id = qMax(0, json.value("trans_param").toObject().value("cid").toInt());
+        song.mid = JVAL_STR(hash);
+        song.name = JVAL_STR(songname).replace("<em>", "").replace("</em>", "");
+        song.artistNames = JVAL_STR(singername); // 没有歌手详细信息，直接设置了
+        song.artists.append(Artist(song.artistNames));
+        song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
+        song.url = JVAL_STR(url);
+
+        song.album = Album::fromKugouMusicJson(json);
+
+        if (json.contains("addTime"))
+            song.addTime = JVAL_LONG(addTime);
+        if (json.contains("addBy"))
+            song.addBy = JVAL_STR(addBy);
+        song.source = KugouMusic;
         return song;
     }
 

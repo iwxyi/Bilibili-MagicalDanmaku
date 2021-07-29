@@ -459,17 +459,22 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         return ;
     MusicSource source = musicSource; // 需要暂存一个备份，因为可能会变回去
     QString url;
+    auto keyBa = key.toUtf8().toPercentEncoding();
     switch (source) {
     case UnknowMusic:
         return ;
     case NeteaseCloudMusic:
-        url = NETEASE_SERVER + "/search?keywords=" + key.toUtf8().toPercentEncoding() + "&limit=80";
+        url = NETEASE_SERVER + "/search?keywords=" + keyBa + "&limit=80";
         break;
     case QQMusic:
-        url = QQMUSIC_SERVER + "/search?key=" + key.toUtf8().toPercentEncoding() + "&limit=80";
+        url = QQMUSIC_SERVER + "/search?key=" + keyBa + "&limit=80";
         break;
     case MiguMusic:
-        url = MIGU_SERVER + "/search?keyword=" + key.toUtf8().toPercentEncoding() + "&pageSize=100";
+        url = MIGU_SERVER + "/search?keyword=" + keyBa + "&pageSize=100";
+        break;
+    case KugouMusic:
+        QByteArray allBa = "%E5%85%A8%E9%83%A8";
+        url = "http://msearchcdn.kugou.com/api/v3/search/song?showtype=14&highlight=em&pagesize=30&tag_aggr=1&tagtype=" + allBa + "&plat=0&sver=5&keyword=" + keyBa + "&correct=1&api_ver=1&version=9108&page=1&area_code=1&tag=1&with_res_tag=1";
         break;
     }
     fetch(url, [=](QJsonObject json){
@@ -501,7 +506,14 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qWarning() << "咪咕搜索返回结果不为0：" << json.value("result").toInt();
+                qWarning() << "咪咕搜索返回结果不为1000：" << json.value("result").toInt();
+                return ;
+            }
+            break;
+        case KugouMusic:
+            if (json.value("errCode").toInt() != 0)
+            {
+                qWarning() << "酷狗搜索返回结果不为0：" << json.value("errCode").toInt() << json.value("error").toString();
                 return ;
             }
             break;
@@ -517,6 +529,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case QQMusic:
         case MiguMusic:
             songs = json.value("data").toObject().value("list").toArray();
+            break;
+        case KugouMusic:
+            songs = json.value("data").toObject().value("info").toArray();
             break;
         }
         searchResultSongs.clear();
@@ -534,6 +549,10 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         case MiguMusic:
             foreach (QJsonValue val, songs)
                 searchResultSongs << Song::fromMiguMusicJson(val.toObject());
+            break;
+        case KugouMusic:
+            foreach (QJsonValue val, songs)
+                searchResultSongs << Song::fromKugouMusicJson(val.toObject());
             break;
         }
 
@@ -607,7 +626,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             else
                 appendNextSongs(SongList{song});
         }
-    });
+    }, source);
 }
 
 void OrderPlayerWindow::searchMusicBySource(QString key, MusicSource source, QString addBy)
@@ -2428,14 +2447,19 @@ void OrderPlayerWindow::setMusicIconBySource()
         ui->musicSourceButton->setIcon(QIcon(":/musics/migu"));
         ui->musicSourceButton->setToolTip("当前播放源：咪咕音乐\n点击切换");
         break;
+    case KugouMusic:
+        ui->musicSourceButton->setIcon(QIcon(":/musics/kugou"));
+        ui->musicSourceButton->setToolTip("当前播放源：酷狗音乐\n点击切换");
+        break;
     }
 }
 
 /**
  * 切换音源并播放
- * 网易云：=> QQ音乐 => 咪咕
- * QQ音乐：=> 网易云 => 咪咕
- * 咪咕：=> 网易云 => QQ音乐
+ * 网易云：=> QQ音乐 => 咪咕 => 酷狗
+ * QQ音乐：=> 网易云 => 咪咕 => 酷狗
+ * 咪咕：=> 网易云 => QQ音乐 => 酷狗
+ * 酷狗：=> 网易云 => QQ音乐 => 咪咕
  */
 bool OrderPlayerWindow::switchSource(Song song, bool play)
 {
@@ -2490,10 +2514,19 @@ void OrderPlayerWindow::fetch(QString url, NetJsonFunc func, MusicSource cookie)
 {
     fetch(url, [=](QNetworkReply* reply){
         QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
+        QByteArray ba = reply->readAll();
+        if (cookie == KugouMusic)
+        {
+            if (ba.startsWith("<!--KG_TAG_RES_START-->"))
+                ba = ba.right(ba.length() - QString("<!--KG_TAG_RES_START-->").length());
+            if (ba.endsWith("<!--KG_TAG_RES_END-->"))
+                ba = ba.left(ba.length() - QString("<!--KG_TAG_RES_END-->").length());
+        }
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
             qWarning() << error.errorString() << url;
+            qWarning() << ba.left(300);
             return ;
         }
         func(document.object());
@@ -2520,6 +2553,7 @@ void OrderPlayerWindow::fetch(QString url, NetReplyFunc func, MusicSource cookie
             request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
         break;
     case MiguMusic:
+    case KugouMusic:
         break;
     }
 
@@ -2553,6 +2587,7 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
             request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
         break;
     case MiguMusic:
+    case KugouMusic:
         break;
     }
 
@@ -3308,6 +3343,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
                     settings.setValue("music/unblockQQMusic", unblockQQMusic = false);
                 break;
             case MiguMusic:
+            case KugouMusic:
                 return ;
             }
             clearDownloadFiles();
@@ -3408,7 +3444,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
 void OrderPlayerWindow::on_musicSourceButton_clicked()
 {
-    const int musicCount = 3;
+    const int musicCount = 4;
     musicSource = MusicSource((int(musicSource) + 1) % musicCount);
     settings.setValue("music/source", musicSource);
 

@@ -14,6 +14,7 @@ class LoginDialog;
 #define NETEASE_SERVER QString("http://iwxyi.com:3000")
 #define QQMUSIC_SERVER QString("http://iwxyi.com:3300")
 #define MIGU_SERVER QString("http://iwxyi.com:3400")
+#define KUGOU_SERVER QString("") // 这个暂时不固定
 
 class LoginDialog : public QDialog, public NetInterface
 {
