@@ -29,6 +29,9 @@
       </property>
       <item>
        <widget class="InteractiveButtonBase" name="titleButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="styleSheet">
          <string notr="true">text-align: left;</string>
         </property>
@@ -77,7 +80,10 @@
           <number>2</number>
          </property>
          <item>
-          <widget class="QPushButton" name="musicSourceButton">
+          <widget class="InteractiveButtonBase" name="musicSourceButton">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="styleSheet">
             <string notr="true">background: transparent;</string>
            </property>
@@ -105,7 +111,10 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="searchButton">
+          <widget class="InteractiveButtonBase" name="searchButton">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="styleSheet">
             <string notr="true">background: transparent;</string>
            </property>
@@ -157,6 +166,9 @@
          </item>
          <item>
           <widget class="InteractiveButtonBase" name="settingsButton">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="text">
             <string/>
            </property>
@@ -721,8 +733,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>456</width>
-              <height>514</height>
+              <width>95</width>
+              <height>30</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -884,7 +896,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -308,6 +308,8 @@ struct Song
         song.id = qMax(0, json.value("trans_param").toObject().value("cid").toInt());
         song.mid = JVAL_STR(hash);
         QString fileName = JVAL_STR(filename); // 歌手2、歌手2 - 歌名
+        if (fileName.isEmpty())
+            fileName = JVAL_STR(name);
         int pos = fileName.indexOf("-");
         if (pos > -1)
         {
@@ -318,6 +320,8 @@ struct Song
             song.artistNames = ars.join("/");
         }
         song.duration = JVAL_INT(duration) * 1000; // 秒数，转毫秒
+        if (song.duration == 0)
+            song.duration = JVAL_INT(timelen);
         song.album = Album::fromKugouMusicJson(json);
         song.album.name = JVAL_STR(remark);
 

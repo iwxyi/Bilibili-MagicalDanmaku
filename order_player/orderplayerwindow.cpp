@@ -132,6 +132,8 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     const int btnR = 5;
     ui->titleButton->setRadius(btnR);
+    ui->musicSourceButton->setRadius(btnR);
+    ui->searchButton->setRadius(btnR);
     ui->settingsButton->setRadius(btnR);
     ui->playButton->setRadius(btnR);
     ui->nextSongButton->setRadius(btnR);
@@ -139,6 +141,13 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     ui->circleModeButton->setRadius(btnR);
     ui->desktopLyricButton->setRadius(btnR);
     expandPlayingButton->setRadius(btnR);
+    ui->musicSourceButton->setSquareSize();
+    ui->searchButton->setSquareSize();
+    ui->settingsButton->setSquareSize();
+    ui->playButton->setSquareSize();
+    ui->nextSongButton->setSquareSize();
+    ui->circleModeButton->setSquareSize();
+    ui->desktopLyricButton->setSquareSize();
 
     if (settings.value("music/hideTab", false).toBool())
         ui->listTabWidget->tabBar()->hide();
@@ -1792,7 +1801,6 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         QByteArray ba = reply->readAll();
         QJsonObject json;
         QString lrc;
-        qDebug() << "歌词返回" << QString(ba);
 
         // 酷狗音乐直接返回歌词文本，不需要解析JSON
         if (song.source != KugouMusic)
@@ -2104,12 +2112,20 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
     else if (shareUrl.contains("kugou.com"))
     {
         // 精选辑：https://www.kugou.com/yy/special/single/3339907.html
+        // 分享的：https://www.kugou.com/share/zlist.html?listid=20&type=0&uid=57714277&sign=11995f9016bb8c5a7e6b4f532d0b6954..........&xxx=xxx#hash=9F982A36638B21D884B25A11C8AAF135
         source = KugouMusic;
         QRegularExpressionMatch match;
         if (shareUrl.indexOf(QRegularExpression("special/single/(\\d+)"), 0, &match) > -1)
         {
             id = match.captured(1);
             playlistUrl = "https://m.kugou.com/plist/list/" + id + "?json=true";
+        }
+        else if (shareUrl.contains("share/zlist.html"))
+        {
+            // https://m.kugou.com/zlist/list?listid=25&type=0&uid=25230245&sign=c0c7fe2caee03445b51bf8961308174b&_t=1528116907&pagesize=30&json=&page=1&token=2b631b0f122f5dc5c0ca758374c4d190eb8bde2ea382bf7a29bacfd5bb439489
+            playlistUrl = shareUrl;
+            playlistUrl.replace("share/zlist.html", "zlist/list")
+                    .replace("www.kugou.com", "m.kugou.com");
         }
         else
         {
@@ -2208,7 +2224,10 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
                 qWarning() << "酷狗歌单返回结果不为0：" << json;
                 return ;
             }
-            QJsonArray array = json.value("list").toObject().value("list").toObject().value("info").toArray();
+            auto list = json.value("list").toObject();
+            if (list.contains("list"))
+                list = json.value("list").toObject();
+            QJsonArray array = list.value("info").toArray();
             searchResultSongs.clear();
             foreach (QJsonValue val, array)
             {
@@ -3599,7 +3618,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     playMenu->addAction("伴奏优先", [=]{
         settings.setValue("music/accompanyMode", accompanyMode = !accompanyMode);
-    })->check(accompanyMode);
+    })->check(accompanyMode)->tooltip("外部点歌，自动搜索伴奏");
 
     playMenu->addAction("双击播放", [=]{
         settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
@@ -3669,22 +3688,49 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
 void OrderPlayerWindow::on_musicSourceButton_clicked()
 {
-    const int musicCount = 4;
-    musicSource = MusicSource((int(musicSource) + 1) % musicCount);
-    settings.setValue("music/source", musicSource);
+    auto changeSource = [=](int s){
+        if (musicSource == s) // 没有改变
+            return ;
+        musicSource = MusicSource(s);
+        settings.setValue("music/source", musicSource);
 
-    setMusicIconBySource();
+        setMusicIconBySource();
 
-    QString text = ui->searchEdit->text();
-    if (!text.isEmpty())
-    {
-        searchMusic(text, currentResultOrderBy);
-        ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
-    }
-    else
-    {
-        ui->searchResultTable->clear();
-    }
+        QString text = ui->searchEdit->text();
+        if (!text.isEmpty())
+        {
+            searchMusic(text, currentResultOrderBy);
+            ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+        }
+        else
+        {
+            ui->searchResultTable->clear();
+        }
+    };
+
+    /* const int musicCount = 4;
+    changeSource((int(musicSource) + 1) % musicCount); */
+
+    auto menu = new FacileMenu(this);
+
+    menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
+        changeSource(1);
+    })->check(musicSource == 1);
+
+    menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
+        changeSource(2);
+    })->check(musicSource == 2);
+
+    menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
+        changeSource(3);
+    })->check(musicSource == 3);
+
+    menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
+        changeSource(4);
+    })->check(musicSource == 4);
+
+    menu->exec();
+
 }
 
 void OrderPlayerWindow::on_nextSongButton_clicked()
