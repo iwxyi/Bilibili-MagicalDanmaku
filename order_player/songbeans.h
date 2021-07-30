@@ -257,9 +257,7 @@ struct Song
         song.artistNames = JVAL_STR(singername); // 没有歌手详细信息，直接设置了
         song.artists.append(Artist(song.artistNames));
         song.duration = JVAL_INT(duration) * 1000; // 秒数，转毫秒
-        song.url = JVAL_STR(url);
         song.album = Album::fromKugouMusicJson(json);
-qDebug() << song.album.id << json.value("album_id").toString().toLongLong();
 
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
@@ -287,6 +285,34 @@ qDebug() << song.album.id << json.value("album_id").toString().toLongLong();
         song.duration = JVAL_INT(dt); // 毫秒
         song.mark = JVAL_INT(mark);
         song.source = NeteaseCloudMusic;
+        return song;
+    }
+
+    static Song fromKugouShareJson(QJsonObject json)
+    {
+        Song song;
+
+        song.id = qMax(0, json.value("trans_param").toObject().value("cid").toInt());
+        song.mid = JVAL_STR(hash);
+        QString fileName = JVAL_STR(filename); // 歌手2、歌手2 - 歌名
+        int pos = fileName.indexOf("-");
+        if (pos > -1)
+        {
+            song.name = fileName.right(fileName.length() - pos - 1).trimmed();
+            QStringList ars = fileName.left(pos).trimmed().split("、", QString::SkipEmptyParts);
+            foreach (auto a, ars)
+                song.artists.append(Artist(a));
+            song.artistNames = ars.join("/");
+        }
+        song.duration = JVAL_INT(duration) * 1000; // 秒数，转毫秒
+        song.album = Album::fromKugouMusicJson(json);
+        song.album.name = JVAL_STR(remark);
+
+        if (json.contains("addTime"))
+            song.addTime = JVAL_LONG(addTime);
+        if (json.contains("addBy"))
+            song.addBy = JVAL_STR(addBy);
+        song.source = KugouMusic;
         return song;
     }
 

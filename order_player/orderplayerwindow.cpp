@@ -2049,6 +2049,23 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             return ;
         }
     }
+    else if (shareUrl.contains("kugou.com"))
+    {
+        // 精选辑：https://www.kugou.com/yy/special/single/3339907.html
+        source = KugouMusic;
+        QRegularExpressionMatch match;
+        if (shareUrl.indexOf(QRegularExpression("special/single/(\\d+)"), 0, &match) > -1)
+        {
+            id = match.captured(1);
+            playlistUrl = "https://m.kugou.com/plist/list/" + id + "?json=true";
+        }
+        else
+        {
+            qWarning() << "无法解析的酷狗音乐歌单链接：" << shareUrl;
+            QMessageBox::warning(this, "打开歌单", "无法解析的酷狗音乐歌单地址");
+            return ;
+        }
+    }
     else
     {
         qWarning() << "无法解析的歌单链接：" << shareUrl;
@@ -2126,6 +2143,23 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             foreach (QJsonValue val, array)
             {
                 searchResultSongs << Song::fromMiguMusicJson(val.toObject());
+            }
+            setSearchResultTable(searchResultSongs);
+            ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
+            break;
+        }
+        case KugouMusic:
+        {
+            if (json.value("err_code").toInt() != 0)
+            {
+                qWarning() << "酷狗歌单返回结果不为0：" << json;
+                return ;
+            }
+            QJsonArray array = json.value("list").toObject().value("list").toObject().value("info").toArray();
+            searchResultSongs.clear();
+            foreach (QJsonValue val, array)
+            {
+                searchResultSongs << Song::fromKugouShareJson(val.toObject());
             }
             setSearchResultTable(searchResultSongs);
             ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
@@ -2548,16 +2582,24 @@ bool OrderPlayerWindow::switchSource(Song song, bool play)
             res = QQMusic;
         break;
     case QQMusic:
-        if (musicSource == NeteaseCloudMusic)
+        if (musicSource == NeteaseCloudMusic || musicSource == KugouMusic)
             res= MiguMusic;
+        else if (musicSource == MiguMusic)
+            res = KugouMusic;
         else
             res = NeteaseCloudMusic;
         break;
     case MiguMusic:
-        if (musicSource == NeteaseCloudMusic)
-            res = QQMusic;
-        else
+        if (musicSource == MiguMusic)
             res = NeteaseCloudMusic;
+        else
+            res = KugouMusic;
+        break;
+    case KugouMusic:
+        if (musicSource == KugouMusic)
+            res = NeteaseCloudMusic;
+        else
+            res = musicSource;
         break;
     }
 
@@ -2571,7 +2613,7 @@ bool OrderPlayerWindow::switchSource(Song song, bool play)
 
     QString searchKey = song.name + " " + song.artistNames;
     // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
-    qWarning() << "无法播放：" << song.name << "，开始换源：" << musicSource << res << searchKey;
+    qWarning() << "无法播放：" << song.name << "，开始换源：" << song.source << "->" << res << searchKey;
     searchMusicBySource(searchKey, res, song.addBy);
     return true;
 }
