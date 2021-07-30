@@ -2026,6 +2026,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
     QString id;
     qInfo() << "歌单URL：" << shareUrl;
     shareUrl = shareUrl.trimmed();
+    shareUrl.replace(QRegularExpression("#.?"), ""); // 去掉页面标签
     if (shareUrl.contains("music.163.com")) // 网易云音乐的分享
     {
         // http://music.163.com/playlist?id=425710029&userid=306646638
@@ -2126,6 +2127,7 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             playlistUrl = shareUrl;
             playlistUrl.replace("share/zlist.html", "zlist/list")
                     .replace("www.kugou.com", "m.kugou.com");
+            playlistUrl.append("&pagesize=100"); // 调整到一页最大
         }
         else
         {
@@ -2233,6 +2235,30 @@ void OrderPlayerWindow::openPlayList(QString shareUrl)
             {
                 searchResultSongs << Song::fromKugouShareJson(val.toObject());
             }
+
+            int count = list.value("count").toInt(); // 总数量
+            int pageSize = list.value("pagesize").toInt(); // 一页数量
+            int page = list.value("page").toInt(); // 当前页
+            if (count > 0 && pageSize > 0) // 继续加载后面几页
+            {
+                int pageCount = (count + pageSize - 1) / pageSize;
+                if (page < pageCount)
+                {
+                    for (int i = page + 1; i <= pageCount; i++)
+                    {
+                        qInfo() << "加载歌单页：" << i << "/" << pageCount;
+                        auto source = NetUtil::getWebData(playlistUrl + "&page=" + QString::number(i));
+                        MyJson json(source);
+                        auto list = json.o("list");
+                        if (list.contains("list"))
+                            list = list.o("list");
+                        list.each("info", [=](MyJson j) {
+                            searchResultSongs << Song::fromKugouShareJson(j);
+                        });
+                    }
+                }
+            }
+
             setSearchResultTable(searchResultSongs);
             ui->bodyStackWidget->setCurrentWidget(ui->searchResultPage);
             break;
