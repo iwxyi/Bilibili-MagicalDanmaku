@@ -83,6 +83,7 @@ struct Album
 {
     qint64 id = 0;
     QString mid;
+    qint64 audio_id = 0;
     QString name;
     int size = 0;
     int mark = 0;
@@ -123,7 +124,7 @@ struct Album
     {
         Album album;
         album.id = JVAL_LONG(album_id);
-        album.mid = JVAL_STR(album_audio_id);
+        album.audio_id = JVAL_LONG(album_audio_id);
         album.name = JVAL_STR(album_name);
         return album;
     }
@@ -137,6 +138,7 @@ struct Album
         json.insert("size", size);
         json.insert("mark", mark);
         json.insert("picUrl", picUrl);
+        json.insert("audio_id", audio_id);
         return json;
     }
 };
@@ -255,7 +257,7 @@ struct Song
         song.name = JVAL_STR(songname).replace("<em>", "").replace("</em>", "");
         song.artistNames = JVAL_STR(singername); // 没有歌手详细信息，直接设置了
         song.artists.append(Artist(song.artistNames));
-        song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
+        song.duration = JVAL_INT(duration) * 1000; // 秒数，转毫秒
         song.url = JVAL_STR(url);
 
         song.album = Album::fromKugouMusicJson(json);
@@ -341,6 +343,7 @@ struct Song
     {
         return this->source == source;
     }
+
 };
 
 struct PlayListCreator

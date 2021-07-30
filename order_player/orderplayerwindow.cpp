@@ -474,7 +474,8 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         break;
     case KugouMusic:
         QByteArray allBa = "%E5%85%A8%E9%83%A8";
-        url = "http://msearchcdn.kugou.com/api/v3/search/song?showtype=14&highlight=em&pagesize=30&tag_aggr=1&tagtype=" + allBa + "&plat=0&sver=5&keyword=" + keyBa + "&correct=1&api_ver=1&version=9108&page=1&area_code=1&tag=1&with_res_tag=1";
+        // url = "http://msearchcdn.kugou.com/api/v3/search/song?showtype=14&highlight=em&pagesize=30&tag_aggr=1&tagtype=" + allBa + "&plat=0&sver=5&keyword=" + keyBa + "&correct=1&api_ver=1&version=9108&page=1&area_code=1&tag=1&with_res_tag=1";
+        url = "http://mobilecdn.kugou.com/api/v3/search/song?keyword=" + keyBa + "&page=1&pagesize=50";
         break;
     }
     fetch(url, [=](QJsonObject json){
@@ -819,6 +820,8 @@ QString OrderPlayerWindow::songPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".mp3");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".mp3");
+    case KugouMusic:
+        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".mp3");
     }
     return "";
 }
@@ -834,6 +837,8 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".lrc");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".lrc");
+    case KugouMusic:
+        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".lrc");
     }
     return "";
 }
@@ -849,6 +854,8 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("qq_" + snum(song.id) + ".jpg");
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".jpg");
+    case KugouMusic:
+        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".jpg");
     }
     return "";
 }
@@ -1482,6 +1489,14 @@ void OrderPlayerWindow::downloadSong(Song song)
         }
         url = MIGU_SERVER + "/song?cid=" + song.mid;
         break;
+    case KugouMusic:
+        QString hash = song.mid; // hash
+        hash += "kgcloudv2"; // 加盐
+        QByteArray md5 = QCryptographicHash::hash(hash.toLatin1(), QCryptographicHash::Md5).toHex();
+        qDebug() << "加盐MD5：" << hash << md5;
+        url = "http://trackercdnbj.kugou.com/i/v2/?album_audio_id=99121191&behavior=play&cmd=25&album_id=6960309&hash=b5a2d566c9de70422f5e5e7203054219&userid=0&pid=2&version=9108&area_code=1&appid=1005&key=" + md5 + "&pidversion=3001&with_res_tag=1";
+        qDebug() << "酷狗下载地址：" << url;
+        break;
     }
 
     MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
@@ -1701,6 +1716,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         break;
     case MiguMusic:
         url = MIGU_SERVER + "/song?cid=" + song.mid;
+        break;
     }
     MUSIC_DEB << "歌词信息链接：" << url;
 
@@ -1788,6 +1804,11 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         }
         // url = MIGU_SERVER + "/song?cid=" + song.mid; // 在下载歌词的时候同步下载封面
         return ;
+    case KugouMusic:
+        // url = "http://mobilecdnbj.kugou.com/api/v3/album/info?albumid=" + QString::number(song.album.id);
+        url = "https://www.kugou.com/yy/index.php?r=play/getdata&hash=" + song.mid;
+        MUSIC_DEB << "酷狗专辑详情（用来获取封面）:" << url;
+        break;
     }
 
     MUSIC_DEB << "封面信息url:" << url;
@@ -1815,9 +1836,23 @@ void OrderPlayerWindow::downloadSongCover(Song song)
             break;
         }
         case QQMusic:
-            return ;
         case MiguMusic:
             return ;
+        case KugouMusic:
+        {
+            if (json.value("err_code").toInt() != 0)
+            {
+                qWarning() << ("酷狗封面返回结果不为0：") << json.value("error").toString();
+                return ;
+            }
+            // errcode=0, 返回结果：http://imge.kugou.com/stdmusic/{size}/20160907/20160907182908304289.jpg
+            // url = json.value("data").toObject().value("imgurl").toString();
+            // url.replace("{size}", "100");
+
+            // err_code=0, 返回结果：http://imge.kugou.com/stdmusic/20200909/20200909133708480475.jpg
+            url = json.value("data").toObject().value("img").toString();
+            break;
+        }
         }
 
         MUSIC_DEB << "封面地址：" << url;
