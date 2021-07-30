@@ -1717,11 +1717,29 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     case MiguMusic:
         url = MIGU_SERVER + "/song?cid=" + song.mid;
         break;
+    case KugouMusic:
+        url = "https://m.kugou.com/app/i/krc.php?cmd=100&hash=" + song.mid + "&timelength=1";
+        break;
     }
     MUSIC_DEB << "歌词信息链接：" << url;
 
-    fetch(url, [=](QJsonObject json){
+    fetch(url, [=](QNetworkReply *reply){
+        QByteArray ba = reply->readAll();
+        QJsonObject json;
         QString lrc;
+
+        // 酷狗音乐直接返回歌词文本，不需要解析JSON
+        if (song.source != KugouMusic)
+        {
+            QJsonParseError error;
+            QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+            if (error.error != QJsonParseError::NoError)
+            {
+                qWarning() << "解析歌词JSON出错：" << error.errorString() << url;
+                return ;
+            }
+        }
+
         switch (song.source) {
         case UnknowMusic:
             return ;
@@ -1751,6 +1769,9 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
                 MUSIC_DEB << "咪咕同步下载封面" << picUrl;
                 downloadSongCoverJpg(song, picUrl);
             }
+            break;
+        case KugouMusic:
+            lrc = ba;
             break;
         }
         if (!lrc.isEmpty())
