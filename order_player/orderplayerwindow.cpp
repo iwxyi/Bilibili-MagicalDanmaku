@@ -1491,15 +1491,11 @@ void OrderPlayerWindow::downloadSong(Song song)
         break;
     case KugouMusic:
         QString hash = song.mid; // hash
-        hash += "kgcloudv2"; // 加盐
-        QByteArray md5 = QCryptographicHash::hash(hash.toLatin1(), QCryptographicHash::Md5).toHex();
-        qDebug() << "加盐MD5：" << hash << md5;
-        url = "http://trackercdnbj.kugou.com/i/v2/?album_audio_id=99121191&behavior=play&cmd=25&album_id=6960309&hash=b5a2d566c9de70422f5e5e7203054219&userid=0&pid=2&version=9108&area_code=1&appid=1005&key=" + md5 + "&pidversion=3001&with_res_tag=1";
-        qDebug() << "酷狗下载地址：" << url;
+        url = "https://wwwapi.kugou.com/yy/index.php?r=play/getdata&hash=" + song.mid + "&album_id=" + QString::number(song.album.id);
         break;
     }
 
-    MUSIC_DEB << "获取歌曲信息：" << song.simpleString() << url;
+    MUSIC_DEB << "获取歌曲信息（用来下载）：" << song.simpleString() << url;
     fetch(url, [=](QNetworkReply* reply){
         QByteArray baData = reply->readAll();
 
@@ -1520,6 +1516,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             qWarning() << "解析歌曲信息出错" << error.errorString() << baData << url;
             return ;
         }
+
         QJsonObject json = document.object();
         QString fileUrl;
         switch (song.source) {
@@ -1619,6 +1616,21 @@ void OrderPlayerWindow::downloadSong(Song song)
                 return ;
             }
             fileUrl = json.value("data").toObject().value("url").toString();
+            if (fileUrl.isEmpty())
+            {
+                downloadSongFailed(song);
+                return ;
+            }
+            break;
+        case KugouMusic:
+            if (json.value("err_code").toInt() != 0)
+            {
+                qWarning() << "酷狗歌曲链接返回结果不为0：" << json;
+                switchSource(song);
+                return ;
+            }
+            fileUrl = json.value("data").toObject().value("play_url").toString();
+            fileUrl.replace("https://", "http://");
             if (fileUrl.isEmpty())
             {
                 downloadSongFailed(song);

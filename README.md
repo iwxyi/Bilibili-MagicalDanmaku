@@ -2318,5 +2318,6 @@ JSON格式：
 > - 点歌姬QQ音乐源：https://github.com/jsososo/QQMusicApi
 > - 点歌姬咪咕音乐源：https://github.com/jsososo/MiguMusicApi
 > - 点歌姬酷狗音乐源：https://www.cnblogs.com/daxiangxm/archive/2019/10/25/kugou_music_api.html
+> - 酷狗音乐下载地址：https://cloud.tencent.com/developer/article/1795030
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
 > - 服务端模块：https://github.com/nikhilm/qhttpserver
