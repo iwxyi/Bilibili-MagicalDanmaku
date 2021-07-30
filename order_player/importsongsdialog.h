@@ -1,13 +1,13 @@
 #ifndef IMPORTSONGSDIALOG_H
 #define IMPORTSONGSDIALOG_H
 
-#include <QWidget>
+#include <QDialog>
 
 namespace Ui {
 class ImportSongsDialog;
 }
 
-class ImportSongsDialog : public QWidget
+class ImportSongsDialog : public QDialog
 {
     Q_OBJECT
 

@@ -22,7 +22,8 @@ enum MusicSource
     NeteaseCloudMusic = 0,
     QQMusic = 1,
     MiguMusic = 2,
-    KugouMusic = 3
+    KugouMusic = 3,
+    LocalMusic = 10
 };
 
 struct Artist
@@ -158,6 +159,7 @@ struct Song
     QString addBy;
     MusicSource source = NeteaseCloudMusic;
     char m_padding2[4];
+    QString filePath;
 
     static Song fromJson(QJsonObject json)
     {
@@ -186,6 +188,8 @@ struct Song
             song.addBy = JVAL_STR(addBy);
         if (json.contains("source"))
             song.source = static_cast<MusicSource>(JVAL_INT(source));
+        if (json.contains("filePath"))
+            song.filePath = JVAL_STR(filePath);
         return song;
     }
 
@@ -335,6 +339,8 @@ struct Song
         if (!addBy.isEmpty())
             json.insert("addBy", addBy);
         json.insert("source", static_cast<int>(source));
+        if (!filePath.isEmpty())
+            json.insert("filePath", filePath);
         return json;
     }
 

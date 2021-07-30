@@ -321,6 +321,7 @@ private:
     // 配置
     QSettings settings;
     QDir musicsFileDir;
+    QDir localMusicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
@@ -390,7 +391,7 @@ private:
 
     // 导入
     int importFormat = 0;
-    QStringList importingSongNames;
+    SongList importingSongNames; // 正在导入的歌曲队列（此时只有名字和歌手）
 };
 
 class NoFocusDelegate : public QStyledItemDelegate
