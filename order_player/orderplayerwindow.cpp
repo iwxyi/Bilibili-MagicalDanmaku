@@ -3752,20 +3752,23 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
     auto menu = new FacileMenu(this);
 
     menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
-        changeSource(1);
-    })->check(musicSource == 1);
+        changeSource(NeteaseCloudMusic);
+    });
 
     menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
-        changeSource(2);
-    })->check(musicSource == 2);
+        changeSource(QQMusic);
+    });
 
     menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
-        changeSource(3);
-    })->check(musicSource == 3);
+        changeSource(MiguMusic);
+    });
 
     menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
-        changeSource(4);
-    })->check(musicSource == 4);
+        changeSource(KugouMusic);
+    });
+
+    if (musicSource >= NeteaseCloudMusic && musicSource <= KugouMusic)
+        menu->at(musicSource)->check();
 
     menu->exec();
 
