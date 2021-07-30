@@ -391,6 +391,7 @@ private:
 
     // 导入
     int importFormat = 0;
+    bool importAbsolutPath = true; // 导入绝对路径（不复制文件）
     SongList importingSongNames; // 正在导入的歌曲队列（此时只有名字和歌手）
 };
 

@@ -744,11 +744,14 @@ void OrderPlayerWindow::removeFavorite(SongList songs)
             showTabAnimation(center, "-1");
             qInfo() << "取消收藏：" << song.simpleString();
         }
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!orderSongs.contains(song)
                     && !normalSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     saveSongList("music/favorite", favoriteSongs);
@@ -779,11 +782,14 @@ void OrderPlayerWindow::removeNormal(SongList songs)
     {
         if (normalSongs.removeOne(song))
             showTabAnimation(center, "-1");
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!orderSongs.contains(song)
                     && !favoriteSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     randomSongList.clear();
@@ -798,11 +804,14 @@ void OrderPlayerWindow::removeOrder(SongList songs)
     {
         if (orderSongs.removeOne(song))
             showTabAnimation(center, "-1");
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!normalSongs.contains(song)
                     && !favoriteSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     saveSongList("music/order", orderSongs);
@@ -861,6 +870,8 @@ QString OrderPlayerWindow::songPath(const Song &song) const
     case KugouMusic:
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".mp3");
     case LocalMusic:
+        if (song.filePath.startsWith("file:///"))
+            return QUrl(song.filePath).toLocalFile();
         return localMusicsFileDir.absoluteFilePath(song.filePath);
     }
     return "";
@@ -2276,7 +2287,7 @@ void OrderPlayerWindow::openMultiImport()
         return ;
     }
 
-    ImportSongsDialog* isd = new ImportSongsDialog(this);
+    ImportSongsDialog* isd = new ImportSongsDialog(&settings, this);
     isd->show();
     connect(isd, &ImportSongsDialog::importMusics, this, [=](int format, const QStringList& lines) {
         this->importFormat = format;
@@ -2917,19 +2928,54 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
         {
             song.name = fileName;
         }
-        else if (importFormat ==  1) // 歌手-歌名
+        else
         {
-            QRegularExpression re("^(.+)-(.+?)$");
-            QRegularExpressionMatch match;
-            if (fileName.indexOf(re, 0, &match) == -1)
+            QString exp;
+            QString songName;
+            QString artNames;
+
+            QStringList exps = {
+                "^(.+)$", // 歌名
+                "^(.+)-(.+?)$", // 歌名-歌手
+                "^(.+)-(.+?)$", // 歌手-歌名
+                "^(.+) (.+?)$", // 歌名-歌手
+                "^(.+) (.+?)$", // 歌手-歌名
+                "^\\[(.+)\\]\\s*(.+?)$", // 歌名-歌手
+            };
+            QList<int> songLeft = {1, 3};
+
+            if (importFormat < 0 || importFormat >= exps.size())
             {
-                qWarning() << "无法导入[歌手-歌名]：" << fileName;
+                qWarning() << "错误的导入格式代码：" << importFormat;
                 return ;
             }
 
-            song.name = match.captured(1).trimmed();
-            song.artists.append(Artist(song.artistNames = match.captured(2).trimmed()));
+            QRegularExpressionMatch match;
+            if (fileName.indexOf(QRegularExpression(exps.at(importFormat)), 0, &match) == -1)
+            {
+                qWarning() << "无法导入：" << fileName;
+                return ;
+            }
+            if (songLeft.contains(importFormat))
+            {
+                songName = match.captured(1);
+                artNames = match.captured(2);
+            }
+            else
+            {
+                songName = match.captured(2);
+                artNames = match.captured(1);
+            }
+
+            song.name = songName;
+            QStringList names = artNames.split(QRegExp("[/、]"), QString::SkipEmptyParts);
+            foreach (auto name, names)
+            {
+                song.artists.append(Artist(name));
+            }
+            song.artistNames = names.join("/");
         }
+
     };
 
     int importCount = 0;
@@ -2960,10 +3006,18 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
             }
 
             // 开始导入文件
-            QString newPath = localMusicsFileDir.absoluteFilePath(fileName);
-            copyFile(path, newPath, true);
+            if (importAbsolutPath) // 绝对路径，即不导入文件
+            {
+                song.filePath = "file:///" + path;
+            }
+            else
+            {
+                QString newPath = localMusicsFileDir.absoluteFilePath(fileName);
+                copyFile(path, newPath, true);
+                song.filePath = fileName;
+            }
+
             song.source = LocalMusic;
-            song.filePath = fileName;
             song.id = timestamp * 10000 + importCount;
             setName(baseName, song);
             songs.append(song);
@@ -3177,14 +3231,14 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->split()->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("收藏", [=]{
         if (!favoriteSongs.contains(currentSong))
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
@@ -3245,7 +3299,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
 
     menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->split()->addAction("上移", [=]{
         favoriteSongs.swapItemsAt(row, row-1);
@@ -3334,7 +3388,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
@@ -3404,14 +3458,14 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
 
     menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("收藏", [=]{
         if (!favoriteSongs.contains(currentSong))
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("清理下载文件", [=]{
@@ -3427,7 +3481,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
             if (QFileInfo(path).exists())
                 QFile(path).remove();
         }
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("删除记录", [=]{
         QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_HISTORY).center();
