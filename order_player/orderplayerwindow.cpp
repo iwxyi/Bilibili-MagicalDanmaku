@@ -3211,6 +3211,9 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         openMultiImport();
     })->hide();
 
+    if (currentSong.isValid())
+        menu->split()->addAction(currentSong.sourceName())->disable();
+
     menu->exec();
 }
 
@@ -3267,6 +3270,9 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
     })->hide();
+
+    if (currentSong.isValid())
+        menu->split()->addAction(currentSong.sourceName())->disable();
 
     menu->exec();
 }
@@ -3357,6 +3363,9 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         openMultiImport();
     });
 
+    if (currentSong.isValid())
+        menu->split()->addAction(currentSong.sourceName())->disable();
+
     menu->exec();
 }
 
@@ -3430,6 +3439,9 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
         saveSongList("music/history", historySongs);
         setSongModelToView(historySongs, ui->historySongsListView);
     })->disable(!songs.size());
+
+    if (currentSong.isValid())
+        menu->split()->addAction(currentSong.sourceName())->disable();
 
     menu->exec();
 }
