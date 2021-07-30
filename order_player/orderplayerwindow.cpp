@@ -2,6 +2,7 @@
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
 #include "importsongsdialog.h"
+#include "netutil.h"
 
 OrderPlayerWindow::OrderPlayerWindow(QWidget *parent)
     : OrderPlayerWindow(QApplication::applicationDirPath() + "/", parent)
@@ -264,6 +265,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     qqmusicCookies = settings.value("music/qqmusicCookies").toString();
     qqmusicCookiesVariant = getCookies(qqmusicCookies);
     unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
+    auto getRandom = [=]{ return "qwertyuiopasdfghjklzxcvbnm1234567890"[qrand() % 36]; };
+    kugouCookies = "kg_mid=";
+    for (int i = 0; i < 10; i++)
+        kugouCookies += getRandom();
+    kugouCookiesVariant = getCookies(kugouCookies);
     getNeteaseAccount();
     getQQMusicAccount();
 
@@ -1831,7 +1837,7 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     case MiguMusic:
         if (!song.album.picUrl.isEmpty())
         {
-            MUSIC_DEB << "咪咕专辑封面地址：" << song.album.picUrl;
+            MUSIC_DEB << "咪咕专辑封面信息url：" << song.album.picUrl;
             downloadSongCoverJpg(song, song.album.picUrl);
             return ;
         }
@@ -1840,7 +1846,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     case KugouMusic:
         // url = "http://mobilecdnbj.kugou.com/api/v3/album/info?albumid=" + QString::number(song.album.id);
         url = "https://www.kugou.com/yy/index.php?r=play/getdata&hash=" + song.mid;
-        MUSIC_DEB << "酷狗专辑详情（用来获取封面）:" << url;
         break;
     }
 
@@ -2622,6 +2627,8 @@ void OrderPlayerWindow::fetch(QString url, NetReplyFunc func, MusicSource cookie
         break;
     case MiguMusic:
     case KugouMusic:
+        if (!kugouCookies.isEmpty() && url.contains("kugou"))
+            request->setHeader(QNetworkRequest::CookieHeader, kugouCookiesVariant);
         break;
     }
 

@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QList>
 #include <QDateTime>
+#include <QDebug>
 
 #define JSON_VAL_LONG(json, x) static_cast<qint64>(json.value(#x).toDouble())
 #define JVAL_LONG(x) static_cast<qint64>(json.value(#x).toDouble())
@@ -30,7 +31,6 @@ struct Artist
     QString mid;
     QString name;
     QString faceUrl;
-    char m_padding1[4];
 
     Artist()
     {}
@@ -123,7 +123,7 @@ struct Album
     static Album fromKugouMusicJson(const QJsonObject& json)
     {
         Album album;
-        album.id = JVAL_LONG(album_id);
+        album.id = JVAL_STR(album_id).toLongLong();
         album.audio_id = JVAL_LONG(album_audio_id);
         album.name = JVAL_STR(album_name);
         return album;
@@ -151,14 +151,13 @@ struct Song
     int duration = 0;
     int mark = 0;
     QList<Artist> artists;
-    char m_padding1[4];
     Album album;
     QString artistNames;
     QString url;
-    char m_padding2[4];
     qint64 addTime;
     QString addBy;
     MusicSource source = NeteaseCloudMusic;
+    char m_padding2[4];
 
     static Song fromJson(QJsonObject json)
     {
@@ -259,8 +258,8 @@ struct Song
         song.artists.append(Artist(song.artistNames));
         song.duration = JVAL_INT(duration) * 1000; // 秒数，转毫秒
         song.url = JVAL_STR(url);
-
         song.album = Album::fromKugouMusicJson(json);
+qDebug() << song.album.id << json.value("album_id").toString().toLongLong();
 
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
