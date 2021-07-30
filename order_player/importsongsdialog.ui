@@ -66,7 +66,7 @@
     <widget class="QPlainTextEdit" name="plainTextEdit">
      <property name="placeholderText">
       <string>支持导入：歌曲名字（自动搜索）、拖入本地音乐文件
-一行一首歌名或文件名
+一行一首歌名或文件完整路径
 搜索的歌曲使用当前音源添加</string>
      </property>
     </widget>
