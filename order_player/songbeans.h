@@ -376,6 +376,8 @@ struct Song
 
     QString simpleString() const
     {
+        if (artistNames.isEmpty())
+            return name;
         return name + " - " + artistNames;
     }
 

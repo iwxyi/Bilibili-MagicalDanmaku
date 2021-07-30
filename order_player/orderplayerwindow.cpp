@@ -412,6 +412,12 @@ void OrderPlayerWindow::on_searchButton_clicked()
  */
 void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 {
+    if (importingSongNames.size())
+    {
+        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "正在逐个自动搜索导入中，请等待完成。\n当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
+        return ;
+    }
+
     if (!playingSong.isValid() && (!playAfterDownloaded.isValid() || !downloadingSong.isValid()))
         emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
@@ -501,6 +507,15 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         currentResultOrderBy = addBy;
         prevOrderSong = Song();
 
+        // 不管当前歌曲成不成功，继续导入下一首
+        bool isImporting = importingSongNames.size() > 0;
+        if (isImporting)
+        {
+            QTimer::singleShot(200, [=]{
+                importNextSongByName();
+            });
+        }
+
         QJsonObject response;
         switch (source) {
         case UnknowMusic:
@@ -579,9 +594,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         setSearchResultTable(searchResultSongs);
 
-        // 判断历史，优先 收藏 > 空闲 > 搜索
+        // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
         Song song;
-        if (!addBy.isEmpty() && key.trimmed().length() >= 2)
+        if (!isImporting && !addBy.isEmpty() && key.trimmed().length() >= 1)
         {
             QString kk = transToReg(key);
             QStringList words = kk.split(QRegExp("[- ]+"), QString::SkipEmptyParts);
@@ -605,10 +620,35 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             return ;
 
         // 从点歌的槽进来的
-        if (!addBy.isEmpty())
+        if (isImporting)
+        {
+            if (!importingList)
+            {
+                qWarning() << "无法添加到空列表";
+                return ;
+            }
+
+            // 添加到 *importingList
+            Song song = getSuiableSongOnResults(key);
+            if (!song.isValid())
+            {
+                qWarning() << "未找到歌曲：" << key;
+                return ;
+            }
+            qInfo() << "添加自动搜索的歌曲：" << song.simpleString();
+            if (importingList == &orderSongs)
+                appendOrderSongs({song});
+            else if (importingList == &normalSongs)
+                addNormal({song});
+            else if (importingList == &favoriteSongs)
+                addFavorite({song});
+            else
+                qWarning() << "无法添加到未知列表";
+        }
+        else if (!addBy.isEmpty())
         {
             if (!song.isValid()) // 历史中没找到，就从搜索结果中找
-                song = getSuiableSong(key);
+                song = getSuiableSongOnResults(key);
             song.setAddDesc(addBy);
             prevOrderSong = song;
 
@@ -641,7 +681,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
         else if (insertOnce) // 强制播放啊
         {
-            Song song = getSuiableSong(key);
+            Song song = getSuiableSongOnResults(key);
             if (isNotPlaying()) // 很可能是换源过来的
                 startPlaySong(song);
             else
@@ -965,7 +1005,7 @@ bool OrderPlayerWindow::isNotPlaying() const
  * 其次：歌名 歌手
  * 默认：搜索结果第一首歌
  */
-Song OrderPlayerWindow::getSuiableSong(QString key) const
+Song OrderPlayerWindow::getSuiableSongOnResults(QString key) const
 {
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
@@ -2289,7 +2329,7 @@ void OrderPlayerWindow::openMultiImport()
 {
     if (importingSongNames.size())
     {
-        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
+        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "正在逐个自动搜索导入中，请等待完成。\n当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
         return ;
     }
 
@@ -3073,7 +3113,10 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
  */
 void OrderPlayerWindow::importNextSongByName()
 {
+    if (!importingSongNames.size())
+        return ;
 
+    searchMusic(importingSongNames.takeFirst().simpleString());
 }
 
 /**
