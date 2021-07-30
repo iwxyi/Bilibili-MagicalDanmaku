@@ -892,10 +892,13 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".lrc");
     case LocalMusic:
         QFileInfo info(songPath(song));
-        if (!info.isFile() || !info.exists())
+        if (!info.isFile())
             return "";
         QString baseName = info.baseName();
-        return info.dir().absoluteFilePath(baseName + ".lrc");
+        if (useMyDirOfLyricsAndCover)
+            return musicsFileDir.absoluteFilePath("local_" + baseName + ".lrc");
+        else
+            return info.dir().absoluteFilePath(baseName + ".lrc");
     }
     return "";
 }
@@ -915,10 +918,13 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".jpg");
     case LocalMusic:
         QFileInfo info(songPath(song));
-        if (!info.isFile() || !info.exists())
+        if (!info.isFile())
             return "";
         QString baseName = info.baseName();
-        return info.dir().absoluteFilePath(baseName + ".jpg");
+        if (useMyDirOfLyricsAndCover)
+            return musicsFileDir.absoluteFilePath("local_" + baseName + ".jpg");
+        else
+            return info.dir().absoluteFilePath(baseName + ".jpg");
     }
     return "";
 }
@@ -3031,8 +3037,31 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
         importCount++;
     }
 
+    auto chi = ui->listTabWidget->currentWidget()->children();
+    if (chi.contains(ui->orderSongsListView))
+        importingList = &orderSongs;
+    else if (chi.contains(ui->normalSongsListView))
+        importingList = &normalSongs;
+    else if (chi.contains(ui->favoriteSongsListView))
+        importingList = &favoriteSongs;
+    else
+        importingList = nullptr;
+
+    if (!importingList)
+    {
+        qWarning() << "无法确定要添加到哪个列表";
+        return ;
+    }
+
     if (songs.size())
-        addNormal(songs);
+    {
+        if (importingList == &orderSongs)
+            appendOrderSongs(songs);
+        else if (importingList == &normalSongs)
+            addNormal(songs);
+        else if (importingList == &favoriteSongs)
+            addFavorite(songs);
+    }
 
     if (importingSongNames.size())
         importNextSongByName();
@@ -3263,7 +3292,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    })->hide();
+    });
 
     if (currentSong.isValid())
         menu->split()->addAction(currentSong.sourceName())->disable();
@@ -3323,7 +3352,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    })->hide();
+    });
 
     if (currentSong.isValid())
         menu->split()->addAction(currentSong.sourceName())->disable();

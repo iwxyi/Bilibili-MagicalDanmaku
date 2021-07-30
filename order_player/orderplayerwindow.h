@@ -391,8 +391,10 @@ private:
 
     // 导入
     int importFormat = 0;
+    SongList* importingList = nullptr;
     bool importAbsolutPath = true; // 导入绝对路径（不复制文件）
     SongList importingSongNames; // 正在导入的歌曲队列（此时只有名字和歌手）
+    bool useMyDirOfLyricsAndCover = true; // 封面和歌词存在自己的 local_musics 下
 };
 
 class NoFocusDelegate : public QStyledItemDelegate
