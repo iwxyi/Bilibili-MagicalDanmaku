@@ -850,7 +850,7 @@ QString OrderPlayerWindow::songPath(const Song &song) const
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".mp3");
     case KugouMusic:
-        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".mp3");
+        return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".mp3");
     case LocalMusic:
         return localMusicsFileDir.absoluteFilePath(song.filePath);
     }
@@ -869,7 +869,7 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".lrc");
     case KugouMusic:
-        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".lrc");
+        return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".lrc");
     case LocalMusic:
         QFileInfo info(songPath(song));
         if (!info.isFile() || !info.exists())
@@ -892,7 +892,7 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
     case MiguMusic:
         return musicsFileDir.absoluteFilePath("migu_" + snum(song.id) + ".jpg");
     case KugouMusic:
-        return musicsFileDir.absoluteFilePath("kugou_" + snum(song.id) + ".jpg");
+        return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".jpg");
     case LocalMusic:
         QFileInfo info(songPath(song));
         if (!info.isFile() || !info.exists())
@@ -1546,7 +1546,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         break;
     }
 
-    MUSIC_DEB << "获取歌曲信息（用来下载）：" << song.simpleString() << url;
+    MUSIC_DEB << "获取歌曲下载链接信息：" << song.simpleString() << url;
     fetch(url, [=](QNetworkReply* reply){
         QByteArray baData = reply->readAll();
 
@@ -1739,7 +1739,7 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
         QByteArray mp3Ba = reply->readAll();
         if (mp3Ba.isEmpty())
         {
-            qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid;
+            qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid << song.source;
             downloadingSong = Song();
             downloadNext();
             return ;
@@ -1792,6 +1792,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         QByteArray ba = reply->readAll();
         QJsonObject json;
         QString lrc;
+        qDebug() << "歌词返回" << QString(ba);
 
         // 酷狗音乐直接返回歌词文本，不需要解析JSON
         if (song.source != KugouMusic)
@@ -1803,6 +1804,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
                 qWarning() << "解析歌词JSON出错：" << error.errorString() << url;
                 return ;
             }
+            json = document.object();
         }
 
         switch (song.source) {
@@ -1812,7 +1814,7 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
-                qWarning() << "网易云歌词返回结果不为200：" << json.value("message").toString();
+                qWarning() << "网易云歌词返回结果不为200：" << json;
                 return ;
             }
             lrc = json.value("lrc").toObject().value("lyric").toString();
@@ -2722,6 +2724,7 @@ void OrderPlayerWindow::fetch(QString url, NetReplyFunc func, MusicSource cookie
             request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
         break;
     case MiguMusic:
+        break;
     case KugouMusic:
         if (!kugouCookies.isEmpty() && url.contains("kugou"))
             request->setHeader(QNetworkRequest::CookieHeader, kugouCookiesVariant);

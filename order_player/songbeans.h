@@ -72,10 +72,13 @@ struct Artist
     QJsonObject toJson() const
     {
         QJsonObject json;
-        json.insert("id", id);
-        json.insert("mid", mid);
+        if (id)
+            json.insert("id", id);
+        if (!mid.isEmpty())
+            json.insert("mid", mid);
         json.insert("name", name);
-        json.insert("faceUrl", faceUrl);
+        if (!faceUrl.isEmpty())
+            json.insert("faceUrl", faceUrl);
         return json;
     }
 };
@@ -133,13 +136,19 @@ struct Album
     QJsonObject toJson() const
     {
         QJsonObject json;
-        json.insert("id", id);
-        json.insert("mid", mid);
+        if (id)
+            json.insert("id", id);
+        if (!mid.isEmpty())
+            json.insert("mid", mid);
         json.insert("name", name);
-        json.insert("size", size);
-        json.insert("mark", mark);
-        json.insert("picUrl", picUrl);
-        json.insert("audio_id", audio_id);
+        if (size)
+            json.insert("size", size);
+        if (mark)
+            json.insert("mark", mark);
+        if (!picUrl.isEmpty())
+            json.insert("picUrl", picUrl);
+        if (audio_id)
+            json.insert("audio_id", audio_id);
         return json;
     }
 };
@@ -326,9 +335,11 @@ struct Song
         json.insert("id", id);
         json.insert("mid", mid);
         json.insert("name", name);
+        if (!url.isEmpty())
         json.insert("url", url);
         json.insert("duration", duration);
-        json.insert("mark", mark);
+        if (mark)
+            json.insert("mark", mark);
         QJsonArray array;
         foreach (Artist artist, artists)
             array.append(artist.toJson());
@@ -346,17 +357,17 @@ struct Song
 
     bool isValid() const
     {
-        return id;
+        return id || !mid.isEmpty();
     }
 
     bool operator==(const Song& song) const
     {
-        return this->id == song.id;
+        return this->id == song.id && this->mid == song.mid;
     }
 
     bool operator!=(const Song& song) const
     {
-        return this->id != song.id;
+        return this->id != song.id || this->mid != song.mid;
     }
 
     QString simpleString() const
