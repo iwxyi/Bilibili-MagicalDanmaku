@@ -632,7 +632,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             {
                 downloadSongCover(song);
             }
-            else // 加载歌词
+            if (playingSong.simpleString() == localLyricKey) // 加载歌词
             {
                 downloadSongLyric(song);
             }
@@ -1854,7 +1854,6 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
-    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/lyric?id=" + snum(song.id);
@@ -1868,6 +1867,16 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     case KugouMusic:
         url = "https://m.kugou.com/app/i/krc.php?cmd=100&hash=" + song.mid + "&timelength=1";
         break;
+    case LocalMusic:
+        QString s = song.simpleString();
+        localLyricKey = s;
+        if (localCoverKey != s)
+        {
+            qInfo() << "自动加载网络封面：" << s;
+            ui->searchEdit->setText(s);
+            searchMusic(s);
+        }
+        return ;
     }
     MUSIC_DEB << "歌词信息链接：" << url;
 
@@ -1926,7 +1935,10 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         }
         if (!lrc.isEmpty())
         {
-            QFile file(lyricPath(song));
+            bool isLocalLoadCloud = playingSong.isValid() && playingSong.source == LocalMusic
+                    && playingSong.simpleString() == localLyricKey;
+
+            QFile file(lyricPath(isLocalLoadCloud ? playingSong : song));
             file.open(QIODevice::WriteOnly);
             QTextStream stream(&file);
             stream.setCodec("UTF-8");
@@ -1935,9 +1947,11 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             file.close();
 
             MUSIC_DEB << "下载歌词完成：" << song.simpleString();
-            if (playAfterDownloaded == song || playingSong == song)
+            if (isLocalLoadCloud || playAfterDownloaded == song || playingSong == song)
             {
                 setCurrentLyric(lrc);
+                if (isLocalLoadCloud)
+                    localLyricKey = "";
             }
 
             emit signalLyricDownloadFinished(song);
@@ -1980,7 +1994,14 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         url = "https://www.kugou.com/yy/index.php?r=play/getdata&hash=" + song.mid;
         break;
     case LocalMusic:
-        searchMusic(localCoverKey = song.simpleString());
+        QString s = song.simpleString();
+        localCoverKey = s;
+        if (localLyricKey != s)
+        {
+            qInfo() << "自动加载网络歌词：" << s;
+            ui->searchEdit->setText(s);
+            searchMusic(s);
+        }
         return ;
     }
 
@@ -2067,6 +2088,8 @@ void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
                     coveringSong = song;
                     setCurrentCover(pixmap);
                 }
+                if (isLocalLoadCloud)
+                    localCoverKey = "";
             }
         }
         else
@@ -3074,6 +3097,7 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
             }
 
             // 开始导入文件
+            qInfo() << "导入本地音乐文件：" << path;
             if (importAbsolutPath) // 绝对路径，即不导入文件
             {
                 song.filePath = "file:///" + path;
@@ -3087,7 +3111,7 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
 
             song.source = LocalMusic;
             song.id = timestamp * 10000 + importCount;
-            if (setName(baseName, song))
+            if (!setName(baseName, song))
                 continue ;
             songs.append(song);
         }
