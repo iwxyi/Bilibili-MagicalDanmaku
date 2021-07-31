@@ -436,7 +436,7 @@ void MainWindow::initPath()
     }
 #else
     dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
-    QDir().mkPath(dataPath);
+    QDir().mkpath(dataPath);
 #endif
 }
 

@@ -31,6 +31,9 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     header->setStyleSheet("QHeaderView { background-color: transparent; }");
     ui->searchResultTable->verticalHeader()->setStyleSheet("QHeaderView { background-color: transparent; }");
+#ifdef Q_OS_LINUX
+    header->hide();
+#endif
 
     new NoFocusDelegate(ui->searchResultTable, 4);
     new NoFocusDelegate(ui->orderSongsListView);
