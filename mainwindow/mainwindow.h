@@ -54,7 +54,7 @@ QT_END_NAMESPACE
 
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
-#define CALC_DEB if (0) qDebug() // 输出数据包信息
+#define CALC_DEB if (0) qDebug() // 输出计算相关的信息
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
@@ -1074,6 +1074,7 @@ private:
     bool gettingUp = false;
     QString serverPath = "http://iwxyi.com:8102/server/";
     int permissionLevel = 0;
+    QTimer* permissionTimer = nullptr;
 
     // 每日数据
     QSettings* dailySettings = nullptr;

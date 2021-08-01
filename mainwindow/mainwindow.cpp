@@ -1240,6 +1240,12 @@ void MainWindow::readConfig()
         settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
+    // permission
+    permissionTimer = new QTimer(this);
+    connect(permissionTimer, &QTimer::timeout, this, [=]{
+        updatePermission();
+    });
+
     // 数据清理
     ui->autoClearComeIntervalSpin->setValue(settings->value("danmaku/clearDidntComeInterval", 7).toInt());
 
@@ -2916,6 +2922,8 @@ void MainWindow::getCookieAccount()
         {
             showError("登录返回不为0", json.value("message").toString());
             gettingUser = false;
+            if (!gettingRoom)
+                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
             updatePermission();
             return ;
         }
@@ -2931,6 +2939,8 @@ void MainWindow::getCookieAccount()
 
         getRobotInfo();
         gettingUser = false;
+        if (!gettingRoom)
+            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
     });
 }
@@ -3877,6 +3887,8 @@ void MainWindow::getRoomInfo(bool reconnect)
         // 获取主播头像
         getUpInfo(upUid);
         gettingRoom = false;
+        if (!gettingUser)
+            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
 
         // 判断房间，未开播则暂停连接，等待开播
@@ -3995,7 +4007,6 @@ void MainWindow::updatePermission()
     permissionLevel = 0;
     if (gettingRoom || gettingUser)
         return ;
-    triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
     QString userId = cookieUid;
     get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
@@ -4028,6 +4039,15 @@ void MainWindow::updatePermission()
                 deadline = qMax(deadline, info.l("deadline"));
             }
         }
+        if (!jdata.value("GIFT").isNull())
+        {
+            MyJson info = jdata.o("GIFT");
+            if (info.l("deadline") > timestamp)
+            {
+                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                deadline = qMax(deadline, info.l("deadline"));
+            }
+        }
 
         if (permissionLevel)
         {
@@ -4037,6 +4057,9 @@ void MainWindow::updatePermission()
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
             ui->vipExtensionButton->hide();
             ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
+
+            permissionTimer->setInterval(qMin(int(deadline - timestamp), 24 * 3600) * 1000);
+            permissionTimer->start();
         }
         else
         {
@@ -4046,6 +4069,7 @@ void MainWindow::updatePermission()
             ui->droplight->setToolTip("点击购买尊享版");
             ui->vipExtensionButton->show();
             ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
+            permissionTimer->stop();
         }
     });
 }
@@ -9272,6 +9296,15 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonArray medal = info[3].toArray();
         int uguard = info[7].toInt(); // 用户本房间舰队身份：0非，1总督，2提督，3舰长
         int medal_level = 0;
+        if (array.size() >= 15) // info[0][14]: voice object
+        {
+            MyJson voice = array.at(14).toObject();
+            JS(voice, voice_url);
+            JS(voice, text);
+            JI(voice, file_duration);
+
+            msg = text;
+        }
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))

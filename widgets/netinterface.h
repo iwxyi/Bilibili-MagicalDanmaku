@@ -96,7 +96,7 @@ public:
             QJsonDocument document = QJsonDocument::fromJson(ba, &error);
             if (error.error != QJsonParseError::NoError)
             {
-                qDebug() << error.errorString() << url << ba;
+                qWarning() << error.errorString() << url << ba.left(500);
                 return ;
             }
             func(document.object());
