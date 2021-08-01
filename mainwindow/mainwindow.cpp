@@ -1178,7 +1178,7 @@ void MainWindow::readConfig()
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
-        if (danmuLogFile && !isLiving())
+        if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
         userComeTimes.clear();
         sumPopul = 0;
