@@ -14,7 +14,7 @@
    <string>雪以音乐</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="../resources/resource.qrc">
     <normaloff>:/snow/snow3</normaloff>:/snow/snow3</iconset>
   </property>
   <property name="styleSheet">
@@ -39,7 +39,7 @@
          <string>雪以音乐</string>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/snow/snow3</normaloff>:/snow/snow3</iconset>
         </property>
         <property name="flat">
@@ -91,7 +91,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/musics/netease</normaloff>:/musics/netease</iconset>
            </property>
            <property name="flat">
@@ -122,7 +122,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
            </property>
            <property name="flat">
@@ -173,7 +173,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/settings</normaloff>:/icons/settings</iconset>
            </property>
            <property name="flat">
@@ -277,7 +277,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/order</normaloff>:/icons/order</iconset>
            </attribute>
            <attribute name="title">
@@ -333,7 +333,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/random</normaloff>:/icons/random</iconset>
            </attribute>
            <attribute name="title">
@@ -389,7 +389,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/favorite</normaloff>:/icons/favorite</iconset>
            </attribute>
            <attribute name="title">
@@ -452,7 +452,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/playlist</normaloff>:/icons/playlist</iconset>
            </attribute>
            <attribute name="title">
@@ -511,7 +511,7 @@ QTabBar::tab:disabled
 }</string>
            </property>
            <attribute name="icon">
-            <iconset>
+            <iconset resource="../resources/resource.qrc">
              <normaloff>:/icons/history</normaloff>:/icons/history</iconset>
            </attribute>
            <attribute name="title">
@@ -733,8 +733,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>98</width>
-              <height>28</height>
+              <width>95</width>
+              <height>30</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -759,7 +759,7 @@ QTableCornerButton::section
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/icons/play</normaloff>:/icons/play</iconset>
         </property>
         <property name="flat">
@@ -773,7 +773,7 @@ QTableCornerButton::section
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/icons/next_song</normaloff>:/icons/next_song</iconset>
         </property>
         <property name="flat">
@@ -815,7 +815,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/icons/volume</normaloff>:/icons/volume</iconset>
         </property>
         <property name="flat">
@@ -858,7 +858,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/icons/order_list</normaloff>:/icons/order_list</iconset>
         </property>
         <property name="autoDefault">
@@ -878,7 +878,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
          <string/>
         </property>
         <property name="icon">
-         <iconset>
+         <iconset resource="../resources/resource.qrc">
           <normaloff>:/icons/lyric_hide</normaloff>:/icons/lyric_hide</iconset>
         </property>
         <property name="flat">
@@ -896,7 +896,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>26</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
@@ -929,6 +929,8 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
    <header>itemselectionlistview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resources/resource.qrc"/>
+ </resources>
  <connections/>
 </ui>
