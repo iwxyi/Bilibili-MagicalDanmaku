@@ -1160,13 +1160,20 @@ void MainWindow::readConfig()
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
-    qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
-    dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
-    QDate currDate = QDate::currentDate();
+    qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
+    dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
-        dayTimer->setInterval(24*3600*1000);
+
+        {
+            // 当前时间必定是 0:0:1，误差0.2秒内
+            QDate tomorrowDate = QDate::currentDate();
+            tomorrowDate = tomorrowDate.addDays(1);
+            QDateTime tomorrow(tomorrowDate, zeroTime);
+            qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
+            dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
+        }
 
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
@@ -1178,14 +1185,15 @@ void MainWindow::readConfig()
         countPopul = 0;
 
         // 触发每天事件
+        const QDate currDate = QDate::currentDate();
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
+        updatePermission();
 
         processNewDay();
 
         // 判断每一月初
-        const QDate currDate = QDate::currentDate();
         if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
@@ -1213,6 +1221,7 @@ void MainWindow::readConfig()
     dayTimer->start();
 
     // 判断第一次打开
+    QDate currDate = QDate::currentDate();
     int prevYear = settings->value("runtime/open_year", -1).toInt();
     int prevMonth = settings->value("runtime/open_month", -1).toInt();
     int prevDay = settings->value("runtime/open_day", -1).toInt();
@@ -9299,11 +9308,11 @@ void MainWindow::handleMessage(QJsonObject json)
         if (array.size() >= 15) // info[0][14]: voice object
         {
             MyJson voice = array.at(14).toObject();
-            JS(voice, voice_url);
-            JS(voice, text);
-            JI(voice, file_duration);
+            JS(voice, voice_url); // 下载直链
+            JS(voice, text); // 语音文字
+            JI(voice, file_duration); // 秒数
 
-            msg = text;
+            // 唔，好吧，啥都不用做
         }
 
         bool opposite = pking &&

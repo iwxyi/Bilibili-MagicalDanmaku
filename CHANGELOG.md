@@ -1,3 +1,16 @@
+### v4.0.5 [酷狗点歌、本地音乐、伴奏模式](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.5)
+
+- 新增“伴奏优先”模式，点歌优先搜索伴奏
+- 新增点歌姬酷狗音源，支持自动换源
+- 新增批量导入本地歌曲，自动搜索在线封面和歌词
+- 新增支持显示语音弹幕
+- 优化音源切换交互方式
+- 修复 NEW_DAY 和 NEW_MONTH 的问题
+
+
+
+
+
 ### v4.0.4 [获取小心心、切换勋章、PK舰长播报](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.4)
 
 - 新增大乱斗播报对面在线舰长数
