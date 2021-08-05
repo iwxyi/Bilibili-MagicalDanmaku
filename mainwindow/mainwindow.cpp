@@ -10893,7 +10893,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         return ;
     }
-    else if (cmd == "COMMON_NOTICE_DANMAKU")
+    else if (cmd == "COMMON_NOTICE_DANMAKU") // 结束语
     {
         /*{
             "cmd": "COMMON_NOTICE_DANMAKU",
@@ -10910,10 +10910,25 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
         MyJson data = json.value("data").toObject();
-        QString text = data.o("content_segments").s("text");
-        text.replace("<$", "").replace("$>", "");
-        localNotify(text);
-        triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
+        QJsonArray array = data.a("content_segments");
+        if (array.size() > 0)
+        {
+            QString text = array.first().toObject().value("text").toString();
+            if (text.isEmpty())
+            {
+                qInfo() << "不含文本的 COMMON_NOTICE_DANMAKU：" << json;
+            }
+            else
+            {
+                text.replace("<$", "").replace("$>", "");
+                localNotify(text);
+                triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
+            }
+        }
+        else
+        {
+            qWarning() << "未处理的 COMMON_NOTICE_DANMAKU：" << json;
+        }
     }
     else
     {
@@ -11488,6 +11503,22 @@ bool MainWindow::handlePK(QJsonObject json)
                 "rank_name": "\\u767d\\u94f6\\u6597\\u58ebx1\\u661f"
             }
         }*/
+    }
+    else if (cmd == "PK_BATTLE_FINAL_PROCESS") // 绝杀时刻？
+    {
+        /*{
+            "cmd": "PK_BATTLE_FINAL_PROCESS",
+            "data": {
+                "battle_type": 2,
+                "pk_frozen_time": 1628089118
+            },
+            "pk_id": 205052526,
+            "pk_status": 301,
+            "timestamp": 1628088939
+        }*/
+
+        triggerCmdEvent("PK_BATTLE_FINAL_PROCESS", LiveDanmaku(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
