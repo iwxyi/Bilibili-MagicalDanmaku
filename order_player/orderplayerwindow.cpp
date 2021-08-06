@@ -31,6 +31,9 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     header->setStyleSheet("QHeaderView { background-color: transparent; }");
     ui->searchResultTable->verticalHeader()->setStyleSheet("QHeaderView { background-color: transparent; }");
+#ifdef Q_OS_LINUX
+    header->hide();
+#endif
 
     new NoFocusDelegate(ui->searchResultTable, 4);
     new NoFocusDelegate(ui->orderSongsListView);
@@ -412,6 +415,12 @@ void OrderPlayerWindow::on_searchButton_clicked()
  */
 void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
 {
+    if (importingSongNames.size())
+    {
+        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "正在逐个自动搜索导入中，请等待完成。\n当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
+        return ;
+    }
+
     if (!playingSong.isValid() && (!playAfterDownloaded.isValid() || !downloadingSong.isValid()))
         emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
@@ -501,6 +510,15 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         currentResultOrderBy = addBy;
         prevOrderSong = Song();
 
+        // 不管当前歌曲成不成功，继续导入下一首
+        bool isImporting = importingSongNames.size() > 0;
+        if (isImporting)
+        {
+            QTimer::singleShot(200, [=]{
+                importNextSongByName();
+            });
+        }
+
         QJsonObject response;
         switch (source) {
         case UnknowMusic:
@@ -579,9 +597,9 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         setSearchResultTable(searchResultSongs);
 
-        // 判断历史，优先 收藏 > 空闲 > 搜索
+        // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
         Song song;
-        if (!addBy.isEmpty() && key.trimmed().length() >= 2)
+        if (!isImporting && !addBy.isEmpty() && key.trimmed().length() >= 1)
         {
             QString kk = transToReg(key);
             QStringList words = kk.split(QRegExp("[- ]+"), QString::SkipEmptyParts);
@@ -604,11 +622,53 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         if (!searchResultSongs.size() && !song.isValid())
             return ;
 
-        // 从点歌的槽进来的
-        if (!addBy.isEmpty())
+        if (playingSong.isValid() && playingSong.source == LocalMusic
+                && (playingSong.simpleString() == localCoverKey || playingSong.simpleString() == localLyricKey))
+        {
+            Song song = getSuiableSongOnResults(key);
+            if (!song.isValid())
+            {
+                qWarning() << "未找到与本地歌曲匹配的云端音乐：" << key;
+                return ;
+            }
+            if (playingSong.simpleString() == localCoverKey) // 加载封面
+            {
+                downloadSongCover(song);
+            }
+            if (playingSong.simpleString() == localLyricKey) // 加载歌词
+            {
+                downloadSongLyric(song);
+            }
+        }
+        else if (isImporting) // 根据名字导入
+        {
+            if (!importingList)
+            {
+                qWarning() << "无法添加到空列表";
+                return ;
+            }
+
+            // 添加到 *importingList
+            Song song = getSuiableSongOnResults(key);
+            if (!song.isValid())
+            {
+                qWarning() << "未找到歌曲：" << key;
+                return ;
+            }
+            qInfo() << "添加自动搜索的歌曲：" << song.simpleString();
+            if (importingList == &orderSongs)
+                appendOrderSongs({song});
+            else if (importingList == &normalSongs)
+                addNormal({song});
+            else if (importingList == &favoriteSongs)
+                addFavorite({song});
+            else
+                qWarning() << "无法添加到未知列表";
+        }
+        else if (!addBy.isEmpty()) // 从点歌的槽进来的
         {
             if (!song.isValid()) // 历史中没找到，就从搜索结果中找
-                song = getSuiableSong(key);
+                song = getSuiableSongOnResults(key);
             song.setAddDesc(addBy);
             prevOrderSong = song;
 
@@ -641,7 +701,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
         else if (insertOnce) // 强制播放啊
         {
-            Song song = getSuiableSong(key);
+            Song song = getSuiableSongOnResults(key);
             if (isNotPlaying()) // 很可能是换源过来的
                 startPlaySong(song);
             else
@@ -744,11 +804,14 @@ void OrderPlayerWindow::removeFavorite(SongList songs)
             showTabAnimation(center, "-1");
             qInfo() << "取消收藏：" << song.simpleString();
         }
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!orderSongs.contains(song)
                     && !normalSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     saveSongList("music/favorite", favoriteSongs);
@@ -779,11 +842,14 @@ void OrderPlayerWindow::removeNormal(SongList songs)
     {
         if (normalSongs.removeOne(song))
             showTabAnimation(center, "-1");
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!orderSongs.contains(song)
                     && !favoriteSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     randomSongList.clear();
@@ -798,11 +864,14 @@ void OrderPlayerWindow::removeOrder(SongList songs)
     {
         if (orderSongs.removeOne(song))
             showTabAnimation(center, "-1");
-        if (song.source == LocalMusic)
+        if (song.source == LocalMusic && !song.filePath.startsWith("file:///"))
         {
             if (!normalSongs.contains(song)
                     && !favoriteSongs.contains(song))
+            {
                 deleteFile(songPath(song));
+                historySongs.removeOne(song);
+            }
         }
     }
     saveSongList("music/order", orderSongs);
@@ -861,6 +930,8 @@ QString OrderPlayerWindow::songPath(const Song &song) const
     case KugouMusic:
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".mp3");
     case LocalMusic:
+        if (song.filePath.startsWith("file:///"))
+            return QUrl(song.filePath).toLocalFile();
         return localMusicsFileDir.absoluteFilePath(song.filePath);
     }
     return "";
@@ -881,10 +952,13 @@ QString OrderPlayerWindow::lyricPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".lrc");
     case LocalMusic:
         QFileInfo info(songPath(song));
-        if (!info.isFile() || !info.exists())
+        if (!info.isFile())
             return "";
         QString baseName = info.baseName();
-        return info.dir().absoluteFilePath(baseName + ".lrc");
+        if (useMyDirOfLyricsAndCover)
+            return musicsFileDir.absoluteFilePath("local_" + baseName + ".lrc");
+        else
+            return info.dir().absoluteFilePath(baseName + ".lrc");
     }
     return "";
 }
@@ -904,10 +978,13 @@ QString OrderPlayerWindow::coverPath(const Song &song) const
         return musicsFileDir.absoluteFilePath("kugou_" + song.mid + ".jpg");
     case LocalMusic:
         QFileInfo info(songPath(song));
-        if (!info.isFile() || !info.exists())
+        if (!info.isFile())
             return "";
         QString baseName = info.baseName();
-        return info.dir().absoluteFilePath(baseName + ".jpg");
+        if (useMyDirOfLyricsAndCover)
+            return musicsFileDir.absoluteFilePath("local_" + baseName + ".jpg");
+        else
+            return info.dir().absoluteFilePath(baseName + ".jpg");
     }
     return "";
 }
@@ -948,7 +1025,7 @@ bool OrderPlayerWindow::isNotPlaying() const
  * 其次：歌名 歌手
  * 默认：搜索结果第一首歌
  */
-Song OrderPlayerWindow::getSuiableSong(QString key) const
+Song OrderPlayerWindow::getSuiableSongOnResults(QString key) const
 {
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
@@ -1780,7 +1857,6 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
-    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/lyric?id=" + snum(song.id);
@@ -1794,6 +1870,16 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
     case KugouMusic:
         url = "https://m.kugou.com/app/i/krc.php?cmd=100&hash=" + song.mid + "&timelength=1";
         break;
+    case LocalMusic:
+        QString s = song.simpleString();
+        localLyricKey = s;
+        if (localCoverKey != s)
+        {
+            qInfo() << "自动加载网络封面：" << s;
+            ui->searchEdit->setText(s);
+            searchMusic(s);
+        }
+        return ;
     }
     MUSIC_DEB << "歌词信息链接：" << url;
 
@@ -1852,7 +1938,10 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         }
         if (!lrc.isEmpty())
         {
-            QFile file(lyricPath(song));
+            bool isLocalLoadCloud = playingSong.isValid() && playingSong.source == LocalMusic
+                    && playingSong.simpleString() == localLyricKey;
+
+            QFile file(lyricPath(isLocalLoadCloud ? playingSong : song));
             file.open(QIODevice::WriteOnly);
             QTextStream stream(&file);
             stream.setCodec("UTF-8");
@@ -1861,9 +1950,11 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
             file.close();
 
             MUSIC_DEB << "下载歌词完成：" << song.simpleString();
-            if (playAfterDownloaded == song || playingSong == song)
+            if (isLocalLoadCloud || playAfterDownloaded == song || playingSong == song)
             {
                 setCurrentLyric(lrc);
+                if (isLocalLoadCloud)
+                    localLyricKey = "";
             }
 
             emit signalLyricDownloadFinished(song);
@@ -1883,7 +1974,6 @@ void OrderPlayerWindow::downloadSongCover(Song song)
     QString url;
     switch (song.source) {
     case UnknowMusic:
-    case LocalMusic:
         return ;
     case NeteaseCloudMusic:
         url = NETEASE_SERVER + "/song/detail?ids=" + snum(song.id);
@@ -1906,6 +1996,16 @@ void OrderPlayerWindow::downloadSongCover(Song song)
         // url = "http://mobilecdnbj.kugou.com/api/v3/album/info?albumid=" + QString::number(song.album.id);
         url = "https://www.kugou.com/yy/index.php?r=play/getdata&hash=" + song.mid;
         break;
+    case LocalMusic:
+        QString s = song.simpleString();
+        localCoverKey = s;
+        if (localLyricKey != s)
+        {
+            qInfo() << "自动加载网络歌词：" << s;
+            ui->searchEdit->setText(s);
+            searchMusic(s);
+        }
+        return ;
     }
 
     MUSIC_DEB << "封面信息url:" << url;
@@ -1967,7 +2067,10 @@ void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
         pixmap.loadFromData(baData1);
         if (!pixmap.isNull())
         {
-            QFile file(coverPath(song));
+            bool isLocalLoadCloud = playingSong.isValid() && playingSong.source == LocalMusic
+                    && playingSong.simpleString() == localCoverKey;
+
+            QFile file(coverPath(isLocalLoadCloud ? playingSong : song));
             file.open(QIODevice::WriteOnly);
             file.write(baData1);
             file.flush();
@@ -1978,8 +2081,8 @@ void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
                       << (coveringSong == song);
             emit signalCoverDownloadFinished(song);
 
-            // 正是当前要播放的歌曲
-            if (playAfterDownloaded == song || playingSong == song)
+            if (isLocalLoadCloud ||
+                    playAfterDownloaded == song || playingSong == song) // 正是当前要播放的歌曲
             {
                 if (coveringSong != song)
                 {
@@ -1988,6 +2091,8 @@ void OrderPlayerWindow::downloadSongCoverJpg(Song song, QString url)
                     coveringSong = song;
                     setCurrentCover(pixmap);
                 }
+                if (isLocalLoadCloud)
+                    localCoverKey = "";
             }
         }
         else
@@ -2272,11 +2377,11 @@ void OrderPlayerWindow::openMultiImport()
 {
     if (importingSongNames.size())
     {
-        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
+        QMessageBox::information(this, "批量导入歌名/本地音乐文件", "正在逐个自动搜索导入中，请等待完成。\n当前剩余导入数量：" + snum(importingSongNames.size()) + "\n请等待导入结束");
         return ;
     }
 
-    ImportSongsDialog* isd = new ImportSongsDialog(this);
+    ImportSongsDialog* isd = new ImportSongsDialog(&settings, this);
     isd->show();
     connect(isd, &ImportSongsDialog::importMusics, this, [=](int format, const QStringList& lines) {
         this->importFormat = format;
@@ -2911,25 +3016,60 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 从字符串中解析歌名/歌手
-    auto setName = [=](QString fileName, Song& song) -> void {
+    auto setName = [=](QString fileName, Song& song) -> bool {
         QRegularExpression re;
         if (importFormat == 0) // 歌名
         {
             song.name = fileName;
         }
-        else if (importFormat ==  1) // 歌手-歌名
+        else
         {
-            QRegularExpression re("^(.+)-(.+?)$");
-            QRegularExpressionMatch match;
-            if (fileName.indexOf(re, 0, &match) == -1)
+            QString exp;
+            QString songName;
+            QString artNames;
+
+            QStringList exps = {
+                "^(.+)$", // 歌名
+                "^(.+)-(.+?)$", // 歌名-歌手
+                "^(.+)-(.+?)$", // 歌手-歌名
+                "^(.+) (.+?)$", // 歌名 歌手
+                "^(.+) (.+?)$", // 歌手 歌名
+                "^\\[(.+)\\]\\s*(.+?)$", // 歌名-歌手
+            };
+            QList<int> songLeft = {1, 3};
+
+            if (importFormat < 0 || importFormat >= exps.size())
             {
-                qWarning() << "无法导入[歌手-歌名]：" << fileName;
-                return ;
+                qWarning() << "错误的导入格式代码：" << importFormat;
+                return false;
             }
 
-            song.name = match.captured(1).trimmed();
-            song.artists.append(Artist(song.artistNames = match.captured(2).trimmed()));
+            QRegularExpressionMatch match;
+            if (fileName.indexOf(QRegularExpression(exps.at(importFormat)), 0, &match) == -1)
+            {
+                qWarning() << "无法导入：" << fileName << exps.at(importFormat);
+                return false;
+            }
+            if (songLeft.contains(importFormat))
+            {
+                songName = match.captured(1);
+                artNames = match.captured(2);
+            }
+            else
+            {
+                songName = match.captured(2);
+                artNames = match.captured(1);
+            }
+
+            song.name = songName;
+            QStringList names = artNames.split(QRegExp("[/、]"), QString::SkipEmptyParts);
+            foreach (auto name, names)
+            {
+                song.artists.append(Artist(name));
+            }
+            song.artistNames = names.join("/");
         }
+        return true;
     };
 
     int importCount = 0;
@@ -2960,25 +3100,59 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
             }
 
             // 开始导入文件
-            QString newPath = localMusicsFileDir.absoluteFilePath(fileName);
-            copyFile(path, newPath, true);
+            qInfo() << "导入本地音乐文件：" << path;
+            if (importAbsolutPath) // 绝对路径，即不导入文件
+            {
+                song.filePath = "file:///" + path;
+            }
+            else
+            {
+                QString newPath = localMusicsFileDir.absoluteFilePath(fileName);
+                copyFile(path, newPath, true);
+                song.filePath = fileName;
+            }
+
             song.source = LocalMusic;
-            song.filePath = fileName;
             song.id = timestamp * 10000 + importCount;
-            setName(baseName, song);
+            if (!setName(baseName, song))
+                continue ;
             songs.append(song);
         }
         else // 不是文件，就当做歌名了！
         {
-            setName(line, song);
+            if (!setName(line, song))
+                continue ;
             importingSongNames.append(song);
         }
 
         importCount++;
     }
 
+    auto chi = ui->listTabWidget->currentWidget()->children();
+    if (chi.contains(ui->orderSongsListView))
+        importingList = &orderSongs;
+    else if (chi.contains(ui->normalSongsListView))
+        importingList = &normalSongs;
+    else if (chi.contains(ui->favoriteSongsListView))
+        importingList = &favoriteSongs;
+    else
+        importingList = nullptr;
+
+    if (!importingList)
+    {
+        qWarning() << "无法确定要添加到哪个列表";
+        return ;
+    }
+
     if (songs.size())
-        addNormal(songs);
+    {
+        if (importingList == &orderSongs)
+            appendOrderSongs(songs);
+        else if (importingList == &normalSongs)
+            addNormal(songs);
+        else if (importingList == &favoriteSongs)
+            addFavorite(songs);
+    }
 
     if (importingSongNames.size())
         importNextSongByName();
@@ -2990,7 +3164,10 @@ void OrderPlayerWindow::importSongs(const QStringList &lines)
  */
 void OrderPlayerWindow::importNextSongByName()
 {
+    if (!importingSongNames.size())
+        return ;
 
+    searchMusic(importingSongNames.takeFirst().simpleString());
 }
 
 /**
@@ -3177,14 +3354,14 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->split()->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("收藏", [=]{
         if (!favoriteSongs.contains(currentSong))
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
@@ -3209,7 +3386,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    })->hide();
+    });
 
     if (currentSong.isValid())
         menu->split()->addAction(currentSong.sourceName())->disable();
@@ -3245,7 +3422,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
 
     menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->split()->addAction("上移", [=]{
         favoriteSongs.swapItemsAt(row, row-1);
@@ -3269,7 +3446,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    })->hide();
+    });
 
     if (currentSong.isValid())
         menu->split()->addAction(currentSong.sourceName())->disable();
@@ -3334,7 +3511,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("上移", [=]{
@@ -3404,14 +3581,14 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
 
     menu->addAction("添加空闲播放", [=]{
         addNormal(songs);
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("收藏", [=]{
         if (!favoriteSongs.contains(currentSong))
             addFavorite(songs);
         else
             removeFavorite(songs);
-    })->disable(!currentSong.isValid())
+    })->disable(!songs.size())
             ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
     menu->split()->addAction("清理下载文件", [=]{
@@ -3427,7 +3604,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
             if (QFileInfo(path).exists())
                 QFile(path).remove();
         }
-    })->disable(!currentSong.isValid());
+    })->disable(!songs.size());
 
     menu->addAction("删除记录", [=]{
         QPoint center = ui->listTabWidget->tabBar()->tabRect(LISTTAB_HISTORY).center();

@@ -22,8 +22,8 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 - 外语自动翻译、AI闲聊回复、生僻字读音等自动化功能
 - 粉丝变化、热门榜、大乱斗、船员变化、新人发言等种种数据
 - 大乱斗查看双方串门的粉丝、同步视频PK对面消息、跑骚抓人
-- 上船私信、感谢分享、最佳助攻、弹幕打卡回复等
-- 点歌姬音源包含网易云/QQ/咪咕音乐，支持会员歌曲
+- 上船私信、感谢分享、最佳助攻、打卡回复、语音播报等
+- 点歌姬自动切换网易云/QQ/咪咕/酷狗，支持会员与本地导入
 - 全自动点歌、弹幕切歌、自动暂停其它音乐、排队时长提示
 - 完全无人值守，远程控制，开播QQ群播报、自动录播
 - 播放各音乐平台会员歌曲，没有版权的歌曲自动更换播放源
@@ -130,6 +130,7 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 - 查看桌面歌词
 - 收藏夹与历史
 - 一键导入歌单
+- 导入本地音乐
 
 
 ### 录播姬
@@ -2319,6 +2320,5 @@ JSON格式：
 > - 点歌姬咪咕音乐源：https://github.com/jsososo/MiguMusicApi
 > - 点歌姬酷狗音乐源：https://www.cnblogs.com/daxiangxm/archive/2019/10/25/kugou_music_api.html
 > - 酷狗音乐下载地址：https://cloud.tencent.com/developer/article/1795030
-> - 酷狗身份认证：https://hrealm.github.io/posts/716d.html
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
 > - 服务端模块：https://github.com/nikhilm/qhttpserver

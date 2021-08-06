@@ -42,7 +42,7 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define MUSIC_DEB if (1) qDebug()
+#define MUSIC_DEB if (0) qDebug()
 
 enum MusicQuality
 {
@@ -226,7 +226,7 @@ private:
     QString msecondToString(qint64 msecond);
     void activeSong(Song song);
     bool isNotPlaying() const;
-    Song getSuiableSong(QString key) const;
+    Song getSuiableSongOnResults(QString key) const;
 
     void startPlaySong(Song song);
     void playNext();
@@ -389,9 +389,14 @@ private:
     // 算法
     QList<Song> randomSongList; // 洗牌算法的随机音乐
 
-    // 导入
+    // 导入与本地
     int importFormat = 0;
+    SongList* importingList = nullptr;
+    bool importAbsolutPath = true; // 导入绝对路径（不复制文件）
     SongList importingSongNames; // 正在导入的歌曲队列（此时只有名字和歌手）
+    bool useMyDirOfLyricsAndCover = true; // 封面和歌词存在自己的 local_musics 下
+    QString localLyricKey, localCoverKey; // 播放本地文件时搜索的歌词与封面（也是文件名）
+    Song lastLocalLyricCoverSong;
 };
 
 class NoFocusDelegate : public QStyledItemDelegate

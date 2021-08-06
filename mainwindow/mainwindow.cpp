@@ -436,7 +436,7 @@ void MainWindow::initPath()
     }
 #else
     dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
-    QDir().mkPath(dataPath);
+    QDir().mkpath(dataPath);
 #endif
 }
 
@@ -1160,32 +1160,40 @@ void MainWindow::readConfig()
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
-    qint64 zeroSecond = tomorrow.toMSecsSinceEpoch();
-    dayTimer->setInterval(zeroSecond - QDateTime::currentMSecsSinceEpoch());
-    QDate currDate = QDate::currentDate();
+    qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
+    dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
-        dayTimer->setInterval(24*3600*1000);
+
+        {
+            // 当前时间必定是 0:0:1，误差0.2秒内
+            QDate tomorrowDate = QDate::currentDate();
+            tomorrowDate = tomorrowDate.addDays(1);
+            QDateTime tomorrow(tomorrowDate, zeroTime);
+            qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
+            dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
+        }
 
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
             startCalculateDailyData();
-        if (danmuLogFile && !isLiving())
+        if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
         userComeTimes.clear();
         sumPopul = 0;
         countPopul = 0;
 
         // 触发每天事件
+        const QDate currDate = QDate::currentDate();
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_day", currDate.day());
+        updatePermission();
 
         processNewDay();
 
         // 判断每一月初
-        const QDate currDate = QDate::currentDate();
         if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
@@ -1213,6 +1221,7 @@ void MainWindow::readConfig()
     dayTimer->start();
 
     // 判断第一次打开
+    QDate currDate = QDate::currentDate();
     int prevYear = settings->value("runtime/open_year", -1).toInt();
     int prevMonth = settings->value("runtime/open_month", -1).toInt();
     int prevDay = settings->value("runtime/open_day", -1).toInt();
@@ -1239,6 +1248,12 @@ void MainWindow::readConfig()
         triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
         settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
+
+    // permission
+    permissionTimer = new QTimer(this);
+    connect(permissionTimer, &QTimer::timeout, this, [=]{
+        updatePermission();
+    });
 
     // 数据清理
     ui->autoClearComeIntervalSpin->setValue(settings->value("danmaku/clearDidntComeInterval", 7).toInt());
@@ -2916,6 +2931,8 @@ void MainWindow::getCookieAccount()
         {
             showError("登录返回不为0", json.value("message").toString());
             gettingUser = false;
+            if (!gettingRoom)
+                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
             updatePermission();
             return ;
         }
@@ -2931,6 +2948,8 @@ void MainWindow::getCookieAccount()
 
         getRobotInfo();
         gettingUser = false;
+        if (!gettingRoom)
+            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
     });
 }
@@ -3877,6 +3896,8 @@ void MainWindow::getRoomInfo(bool reconnect)
         // 获取主播头像
         getUpInfo(upUid);
         gettingRoom = false;
+        if (!gettingUser)
+            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
 
         // 判断房间，未开播则暂停连接，等待开播
@@ -3995,7 +4016,6 @@ void MainWindow::updatePermission()
     permissionLevel = 0;
     if (gettingRoom || gettingUser)
         return ;
-    triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
     QString userId = cookieUid;
     get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
@@ -4028,6 +4048,15 @@ void MainWindow::updatePermission()
                 deadline = qMax(deadline, info.l("deadline"));
             }
         }
+        if (!jdata.value("GIFT").isNull())
+        {
+            MyJson info = jdata.o("GIFT");
+            if (info.l("deadline") > timestamp)
+            {
+                permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
+                deadline = qMax(deadline, info.l("deadline"));
+            }
+        }
 
         if (permissionLevel)
         {
@@ -4037,6 +4066,9 @@ void MainWindow::updatePermission()
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
             ui->vipExtensionButton->hide();
             ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
+
+            permissionTimer->setInterval(qMin(int(deadline - timestamp), 24 * 3600) * 1000);
+            permissionTimer->start();
         }
         else
         {
@@ -4046,6 +4078,7 @@ void MainWindow::updatePermission()
             ui->droplight->setToolTip("点击购买尊享版");
             ui->vipExtensionButton->show();
             ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
+            permissionTimer->stop();
         }
     });
 }
@@ -9272,6 +9305,15 @@ void MainWindow::handleMessage(QJsonObject json)
         QJsonArray medal = info[3].toArray();
         int uguard = info[7].toInt(); // 用户本房间舰队身份：0非，1总督，2提督，3舰长
         int medal_level = 0;
+        if (array.size() >= 15) // info[0][14]: voice object
+        {
+            MyJson voice = array.at(14).toObject();
+            JS(voice, voice_url); // 下载直链
+            JS(voice, text); // 语音文字
+            JI(voice, file_duration); // 秒数
+
+            // 唔，好吧，啥都不用做
+        }
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
@@ -10851,7 +10893,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         return ;
     }
-    else if (cmd == "COMMON_NOTICE_DANMAKU")
+    else if (cmd == "COMMON_NOTICE_DANMAKU") // 结束语
     {
         /*{
             "cmd": "COMMON_NOTICE_DANMAKU",
@@ -10868,10 +10910,25 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
         MyJson data = json.value("data").toObject();
-        QString text = data.o("content_segments").s("text");
-        text.replace("<$", "").replace("$>", "");
-        localNotify(text);
-        triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
+        QJsonArray array = data.a("content_segments");
+        if (array.size() > 0)
+        {
+            QString text = array.first().toObject().value("text").toString();
+            if (text.isEmpty())
+            {
+                qInfo() << "不含文本的 COMMON_NOTICE_DANMAKU：" << json;
+            }
+            else
+            {
+                text.replace("<$", "").replace("$>", "");
+                localNotify(text);
+                triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
+            }
+        }
+        else
+        {
+            qWarning() << "未处理的 COMMON_NOTICE_DANMAKU：" << json;
+        }
     }
     else
     {
@@ -11446,6 +11503,22 @@ bool MainWindow::handlePK(QJsonObject json)
                 "rank_name": "\\u767d\\u94f6\\u6597\\u58ebx1\\u661f"
             }
         }*/
+    }
+    else if (cmd == "PK_BATTLE_FINAL_PROCESS") // 绝杀时刻？
+    {
+        /*{
+            "cmd": "PK_BATTLE_FINAL_PROCESS",
+            "data": {
+                "battle_type": 2,
+                "pk_frozen_time": 1628089118
+            },
+            "pk_id": 205052526,
+            "pk_status": 301,
+            "timestamp": 1628088939
+        }*/
+
+        triggerCmdEvent("PK_BATTLE_FINAL_PROCESS", LiveDanmaku(json));
+        return true;
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
