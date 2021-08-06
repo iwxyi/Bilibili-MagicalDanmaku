@@ -1562,7 +1562,7 @@ margin: 40px;</string>
                 <enum>Qt::NoContextMenu</enum>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一条弹幕最长可以发送多少字&lt;/p&gt;&lt;p&gt;当前规则：直播间中，舰长20字，提督30字，总督40字&lt;/p&gt;&lt;p&gt;另外会受到观众等级等其他氪金操作的影响。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一条弹幕最长可以发送多少字&lt;/p&gt;&lt;p&gt;当前规则：直播间中，UL到20级为30字，提督/总督为40字&lt;/p&gt;&lt;p&gt;另外可能会受到观众等级等其他氪金操作的影响。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="layoutDirection">
                 <enum>Qt::LeftToRight</enum>
