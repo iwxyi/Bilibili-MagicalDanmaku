@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>840</width>
-    <height>692</height>
+    <height>942</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>554</height>
+             <height>826</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1562,7 +1562,7 @@ margin: 40px;</string>
                 <enum>Qt::NoContextMenu</enum>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一条弹幕最长可以发送多少字&lt;/p&gt;&lt;p&gt;当前规则：直播间中，舰长20字，提督30字，总督40字&lt;/p&gt;&lt;p&gt;另外会受到观众等级等其他氪金操作的影响。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一条弹幕最长可以发送多少字&lt;/p&gt;&lt;p&gt;当前规则：直播间中，UL到20级为30字，提督/总督为40字&lt;/p&gt;&lt;p&gt;另外可能会受到观众等级等其他氪金操作的影响。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="layoutDirection">
                 <enum>Qt::LeftToRight</enum>
@@ -3311,7 +3311,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="startupAnimationCheck">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;所有本该发送的弹幕都只显示在“实时弹幕”中，不真正发送&lt;/p&gt;&lt;p&gt;适用于调试不熟悉功能&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;启动程序时显示一个流流流流畅流畅畅畅畅的动画&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>启动动画</string>

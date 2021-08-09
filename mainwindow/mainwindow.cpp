@@ -15296,7 +15296,7 @@ void MainWindow::adjustDanmakuLongest()
     if (cookieULevel >= 20)
         longest = qMax(longest, 30);
 
-    // 大航海：舰长20，提督30，总督40
+    // 大航海：舰长20，提督/总督40
     if (cookieGuardLevel == 1 || cookieGuardLevel == 2)
         longest = qMax(longest, 40);
 
