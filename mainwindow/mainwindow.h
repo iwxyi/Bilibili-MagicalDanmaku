@@ -806,6 +806,7 @@ private:
     bool isConditionTrue(T a, T b, QString op) const;
     bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);
     bool processFilter(QString filterText, const LiveDanmaku& danmaku);
+    void translateUnicode(QString& s) const;
 
     qint64 unameToUid(QString text);
     QString uidToName(qint64 uid);

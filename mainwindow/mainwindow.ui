@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>840</width>
-    <height>661</height>
+    <height>692</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>545</height>
+             <height>554</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -6709,7 +6709,7 @@ QTabBar::tab:selected
              </layout>
             </item>
             <item>
-             <widget class="QPlainTextEdit" name="autoBlockNewbieNotifyWordsEdit">
+             <widget class="ConditionEditor" name="autoBlockNewbieNotifyWordsEdit">
               <property name="minimumSize">
                <size>
                 <width>0</width>
@@ -7156,7 +7156,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

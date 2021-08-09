@@ -1845,8 +1845,8 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             }
             else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {
-                localNotify("[3s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku(), 3200);
+                localNotify("[4s后重试]");
+                sendAutoMsgInFirst(msg, LiveDanmaku(), 4200);
             }
             else if (errorMsg.contains("超出限制长度"))
             {
@@ -6135,7 +6135,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
                     }
 
                     // 预定义的一个集合
-                    s2.replace("\\中文", "\u4e00-\u9fa5");
+                    translateUnicode(s2);
 
                     QRegularExpression re(s2);
                     if (!re.isValid())
@@ -6298,6 +6298,13 @@ bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
     }
 
     return !reject;
+}
+
+/// 替换 unicode
+/// 即 \u4000 这种
+void MainWindow::translateUnicode(QString &s) const
+{
+    s.replace("\\中文", "\u4e00-\u9fa5");
 }
 
 qint64 MainWindow::unameToUid(QString text)
@@ -9413,6 +9420,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 QString reStr = ui->autoBlockNewbieKeysEdit->toPlainText();
                 if (reStr.endsWith("|"))
                     reStr = reStr.left(reStr.length()-1);
+                translateUnicode(reStr);
                 QRegularExpression re(reStr);
                 if (!re.isValid())
                     showError("错误的禁言关键词表达式");
