@@ -6015,7 +6015,14 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
  */
 QString MainWindow::processMsgHeaderConditions(QString msg) const
 {
-    QRegularExpression re("^\\s*\\[(.*?)\\]\\s*");
+    QString condRe;
+    if (msg.contains(QRegularExpression("^\\s*\\[\\[.*\\]\\]"))) // [[%text% ~ "[\\u4e00-\\u9fa5]+[\\w]{3}[\\u4e00-\\u9fa5]+"]]
+        condRe = "^\\s*\\[\\[(.*?)\\]\\]\\s*";
+    else
+        condRe = "^\\s*\\[(.*?)\\]\\s*";
+    QRegularExpression re(condRe);
+    if (!re.isValid())
+        showError("无效的条件表达式", condRe);
     QRegularExpressionMatch match;
     if (msg.indexOf(re, 0, &match) == -1) // 没有检测到表达式
         return msg;
@@ -6112,7 +6119,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
                 CALC_DEB << "比较字符串" << s1 << op << s2;
                 if (op == "~")
                 {
-                    if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3
+                    if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
                     {
                         QString full = caps.at(0);
                         if (full.indexOf(QRegularExpression("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$"), 0, &match) == -1)
@@ -6127,6 +6134,12 @@ bool MainWindow::processVariantConditions(QString exprs) const
                         CALC_DEB << "纠正运算：" << s1 << "~" << s2;
                     }
 
+                    // 预定义的一个集合
+                    s2.replace("\\中文", "\u4e00-\u9fa5");
+
+                    QRegularExpression re(s2);
+                    if (!re.isValid())
+                        showError("错误的~表达式", s2);
                     if (!s1.contains(QRegularExpression(s2)))
                     {
                         isTrue = false;
@@ -9387,7 +9400,7 @@ void MainWindow::handleMessage(QJsonObject json)
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
         }
-        else if (admin && ui->allowAdminControlCheck->isChecked())
+        else if (admin && ui->allowAdminControlCheck->isChecked()) // 房管特权
         {
             // 开放给房管的特权
             processRemoteCmd(msg);
@@ -9401,16 +9414,17 @@ void MainWindow::handleMessage(QJsonObject json)
                 if (reStr.endsWith("|"))
                     reStr = reStr.left(reStr.length()-1);
                 QRegularExpression re(reStr);
+                if (!re.isValid())
+                    showError("错误的禁言关键词表达式");
                 QRegularExpressionMatch match;
                 if (msg.indexOf(re, 0, &match) > -1 // 自动拉黑
                         && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
                         && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
-                        && medal_level <= 2 // 勋章不到3级
-                        )
+                        && medal_level <= 2) // 勋章不到3级
                 {
                     if (match.capturedTexts().size() > 1)
                     {
-                        QString blockKey = match.captured(1); // 第一个括号的
+                        QString blockKey = match.captured(0); // 第一个括号的
                         localNotify("检测到新人说【" + blockKey + "】，自动禁言");
                     }
                     qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
@@ -15749,14 +15763,14 @@ void MainWindow::readDefaultCode(QString path)
     }
 }
 
-void MainWindow::showError(QString title, QString s)
+void MainWindow::showError(QString title, QString s) const
 {
     statusLabel->setText(title + ": " + s);
     qWarning() << title << ":" << s;
     tip_box->createTipCard(new NotificationEntry("", title, s));
 }
 
-void MainWindow::showError(QString s)
+void MainWindow::showError(QString s) const
 {
     statusLabel->setText(s);
     qWarning() << s;

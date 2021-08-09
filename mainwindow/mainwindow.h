@@ -926,8 +926,8 @@ private:
 
     void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");
-    void showError(QString title, QString s);
-    void showError(QString s);
+    void showError(QString title, QString s) const;
+    void showError(QString s) const;
 
 private:
     Ui::MainWindow *ui;
