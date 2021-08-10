@@ -363,6 +363,7 @@ public:
             else
                 return QString("%3    [关注] %1 %2")
                         .arg(nickname)
+                        .arg(special)
                         .arg(timeline.toString("hh:mm:ss"));
         }
         else if (msgType == MSG_BLOCK)
