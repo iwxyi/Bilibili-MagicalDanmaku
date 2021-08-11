@@ -83,7 +83,7 @@ void CatchYouWidget::on_refreshButton_clicked()
     {
         if (users.size()) // 已经找过了，刷新一遍
         {
-            qInfo() << "开始遍历关注：" << users.size();
+            // qInfo() << "开始遍历关注：" << users.size();
             detectUserLiveStatus(currentTaskTs = QDateTime::currentMSecsSinceEpoch(), 0);
         }
         else
@@ -128,7 +128,7 @@ void CatchYouWidget::getUserFollows(qint64 taskTs, QString userId, int page)
         else // 结束了
         {
             qInfo() << "关注总数：" << total << "可见总数：" << users.size();
-            ui->progressBar->setRange(0, users.size() - 1);
+            ui->progressBar->setRange(0, users.size());
             ui->progressBar->setValue(0);
             detectUserLiveStatus(taskTs, 0);
         }
@@ -144,7 +144,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
     // 刷新结束
     if (index >= users.size())
     {
-        qInfo() << "捕获结束";
+        // qInfo() << "捕获结束";
         if (refreshTimer->interval() > 0)
             refreshTimer->start();
         return ;
@@ -154,7 +154,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
     if (user.liveStatus < 0) // 没有直播间或没有开播
     {
         // 直接下一个
-        ui->progressBar->setValue(index);
+        ui->progressBar->setValue(index + 1);
         detectUserLiveStatus(taskTs, index + 1);
         return ;
     }
@@ -189,7 +189,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
         }
 
         // 检测下一个
-        ui->progressBar->setValue(index);
+        ui->progressBar->setValue(index + 1);
         QTimer::singleShot(ui->cdSpin->value(), [=]{
             detectUserLiveStatus(taskTs, index + 1);
         });

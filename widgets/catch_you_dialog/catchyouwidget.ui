@@ -57,6 +57,9 @@
        <property name="prefix">
         <string>联网冷却</string>
        </property>
+       <property name="minimum">
+        <number>50</number>
+       </property>
        <property name="maximum">
         <number>60000</number>
        </property>
@@ -64,7 +67,7 @@
         <number>250</number>
        </property>
        <property name="value">
-        <number>150</number>
+        <number>100</number>
        </property>
       </widget>
      </item>
