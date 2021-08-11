@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>652</width>
-    <height>280</height>
+    <width>467</width>
+    <height>331</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;第一次刷新时，会获取用户所有关注，并一一检测开播状态&lt;/p&gt;&lt;p&gt;后续刷新，只更新直播中的主播的直播间&lt;/p&gt;&lt;p&gt;若要更新所有关注的状态，点击“用户”重新确认&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
         <string>刷新</string>
        </property>
@@ -44,6 +47,23 @@
       </spacer>
      </item>
      <item>
+      <widget class="QCheckBox" name="refreshLiveStatusCheck">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;刷新时包括有直播间但未开播的用户，更新直播间状态&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>刷新直播状态</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
       <widget class="QSpinBox" name="cdSpin">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适当提高冷却值，避免被B站屏蔽&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -52,7 +72,10 @@
         <string>毫秒</string>
        </property>
        <property name="prefix">
-        <string>冷却</string>
+        <string>联网冷却</string>
+       </property>
+       <property name="minimum">
+        <number>50</number>
        </property>
        <property name="maximum">
         <number>60000</number>
@@ -61,9 +84,44 @@
         <number>250</number>
        </property>
        <property name="value">
-        <number>150</number>
+        <number>100</number>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="refreshSpin">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔一段时间刷新列表&lt;/p&gt;&lt;p&gt;设置为0时关闭定时刷新&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="suffix">
+        <string>秒</string>
+       </property>
+       <property name="prefix">
+        <string>定时刷新</string>
+       </property>
+       <property name="maximum">
+        <number>7200</number>
+       </property>
+       <property name="singleStep">
+        <number>60</number>
+       </property>
+       <property name="value">
+        <number>300</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
@@ -115,7 +173,7 @@
    <item>
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
-      <number>24</number>
+      <number>0</number>
      </property>
      <property name="format">
       <string>%v/%m</string>

@@ -37,6 +37,7 @@ public:
     {
         QString userId;
         QString userName;
+        int roomStatus = 0; // -1未开，0位置，1开
         int liveStatus = 0; // -1未播，0未知，1直播
 
         UserInfo(QString id, QString name) : userId(id), userName(name)
@@ -51,6 +52,10 @@ private slots:
     void on_tableWidget_customContextMenuRequested(const QPoint &);
 
     void on_cdSpin_valueChanged(int arg1);
+
+    void on_refreshSpin_valueChanged(int arg1);
+
+    void on_refreshLiveStatusCheck_clicked();
 
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);
@@ -79,6 +84,7 @@ private:
     QList<RoomInfo> inRooms;
 
     qint64 currentTaskTs = 0; // 任务Id，允许中止
+    QTimer* refreshTimer;
 };
 
 #endif // CATCHYOUWIDGET_H
