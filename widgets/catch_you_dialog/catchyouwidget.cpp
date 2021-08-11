@@ -23,12 +23,18 @@
 CatchYouWidget::CatchYouWidget(QSettings *settings, QString dataPath, QWidget *parent) :
     QWidget(parent),
     settings(settings), dataPath(dataPath),
-    ui(new Ui::CatchYouWidget)
+    ui(new Ui::CatchYouWidget),
+    refreshTimer(new QTimer(this))
 {
     ui->setupUi(this);
     userId = settings->value("paosao/userId").toString();
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->cdSpin->setValue(settings->value("catch/cd", 150).toInt());
+    ui->refreshSpin->setValue(settings->value("catch/refresh", 300).toInt());
+    refreshTimer->setInterval(ui->refreshSpin->value() * 1000);
+    if (refreshTimer->interval() > 0)
+        refreshTimer->start();
+    connect(refreshTimer, SIGNAL(timeout()), this, SLOT(on_refreshButton_clicked()));
 }
 
 CatchYouWidget::~CatchYouWidget()
@@ -71,11 +77,13 @@ void CatchYouWidget::on_refreshButton_clicked()
 {
     inRooms.clear();
     ui->tableWidget->setRowCount(0);
+    refreshTimer->stop();
 
     if (!userId.isEmpty())
     {
         if (users.size()) // 已经找过了，刷新一遍
         {
+            qInfo() << "开始遍历关注：" << users.size();
             detectUserLiveStatus(currentTaskTs = QDateTime::currentMSecsSinceEpoch(), 0);
         }
         else
@@ -119,7 +127,7 @@ void CatchYouWidget::getUserFollows(qint64 taskTs, QString userId, int page)
         }
         else // 结束了
         {
-            qDebug() << "关注总数：" << total << "可见总数：" << users.size();
+            qInfo() << "关注总数：" << total << "可见总数：" << users.size();
             ui->progressBar->setRange(0, users.size() - 1);
             ui->progressBar->setValue(0);
             detectUserLiveStatus(taskTs, 0);
@@ -129,8 +137,18 @@ void CatchYouWidget::getUserFollows(qint64 taskTs, QString userId, int page)
 
 void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
 {
-    if (currentTaskTs != taskTs || index >= users.size())
+    // 任务中断
+    if (currentTaskTs != taskTs)
         return ;
+
+    // 刷新结束
+    if (index >= users.size())
+    {
+        qInfo() << "捕获结束";
+        if (refreshTimer->interval() > 0)
+            refreshTimer->start();
+        return ;
+    }
 
     UserInfo user = users.at(index);
     if (user.liveStatus < 0) // 没有直播间或没有开播
@@ -155,7 +173,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
         QJsonObject data = json.value("data").toObject();
         int roomStatus = data.value("roomStatus").toInt(); // 1
         int roundStatus = data.value("roundStatus").toInt(); // 1
-        int liveStatus = data.value("liveStatus").toInt(); // 1
+        int liveStatus = data.value("liveStatus").toInt(); // 1 或 2
         if (roomStatus && liveStatus) // 直播中，需要检测
         {
             QString roomId = QString::number(qint64(data.value("roomid").toDouble()));
@@ -401,4 +419,14 @@ void CatchYouWidget::on_tableWidget_customContextMenuRequested(const QPoint &)
 void CatchYouWidget::on_cdSpin_valueChanged(int arg1)
 {
     settings->setValue("catch/cd", arg1);
+}
+
+void CatchYouWidget::on_refreshSpin_valueChanged(int arg1)
+{
+    settings->setValue("catch/refresh", arg1);
+    refreshTimer->setInterval(arg1 * 1000);
+    if (arg1 > 0)
+        refreshTimer->start();
+    else
+        refreshTimer->stop();
 }

@@ -52,6 +52,8 @@ private slots:
 
     void on_cdSpin_valueChanged(int arg1);
 
+    void on_refreshSpin_valueChanged(int arg1);
+
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);
     void detectUserLiveStatus(qint64 taskTs, int index);
@@ -79,6 +81,7 @@ private:
     QList<RoomInfo> inRooms;
 
     qint64 currentTaskTs = 0; // 任务Id，允许中止
+    QTimer* refreshTimer;
 };
 
 #endif // CATCHYOUWIDGET_H

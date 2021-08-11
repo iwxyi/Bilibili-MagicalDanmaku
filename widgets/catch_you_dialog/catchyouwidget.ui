@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>652</width>
-    <height>280</height>
+    <width>467</width>
+    <height>331</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;第一次刷新时，会获取用户所有关注，并一一检测开播状态&lt;/p&gt;&lt;p&gt;后续刷新，只更新直播中的主播的直播间&lt;/p&gt;&lt;p&gt;若要更新所有关注的状态，点击“用户”重新确认&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
         <string>刷新</string>
        </property>
@@ -52,7 +55,7 @@
         <string>毫秒</string>
        </property>
        <property name="prefix">
-        <string>冷却</string>
+        <string>联网冷却</string>
        </property>
        <property name="maximum">
         <number>60000</number>
@@ -62,6 +65,28 @@
        </property>
        <property name="value">
         <number>150</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="refreshSpin">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每隔一段时间刷新列表&lt;/p&gt;&lt;p&gt;设置为0时关闭定时刷新&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="suffix">
+        <string>秒</string>
+       </property>
+       <property name="prefix">
+        <string>定时刷新</string>
+       </property>
+       <property name="maximum">
+        <number>7200</number>
+       </property>
+       <property name="singleStep">
+        <number>60</number>
+       </property>
+       <property name="value">
+        <number>300</number>
        </property>
       </widget>
      </item>
@@ -115,7 +140,7 @@
    <item>
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
-      <number>24</number>
+      <number>0</number>
      </property>
      <property name="format">
       <string>%v/%m</string>
