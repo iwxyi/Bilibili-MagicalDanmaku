@@ -37,6 +37,7 @@ public:
     {
         QString userId;
         QString userName;
+        int roomStatus = 0; // -1未开，0位置，1开
         int liveStatus = 0; // -1未播，0未知，1直播
 
         UserInfo(QString id, QString name) : userId(id), userName(name)
@@ -53,6 +54,8 @@ private slots:
     void on_cdSpin_valueChanged(int arg1);
 
     void on_refreshSpin_valueChanged(int arg1);
+
+    void on_refreshLiveStatusCheck_clicked();
 
 private:
     void getUserFollows(qint64 taskTs, QString userId, int page = 1);

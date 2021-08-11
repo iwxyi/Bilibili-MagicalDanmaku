@@ -31,6 +31,7 @@ CatchYouWidget::CatchYouWidget(QSettings *settings, QString dataPath, QWidget *p
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->cdSpin->setValue(settings->value("catch/cd", 150).toInt());
     ui->refreshSpin->setValue(settings->value("catch/refresh", 300).toInt());
+    ui->refreshLiveStatusCheck->setChecked(settings->value("catch/refreshLiveStatus").toBool());
     refreshTimer->setInterval(ui->refreshSpin->value() * 1000);
     if (refreshTimer->interval() > 0)
         refreshTimer->start();
@@ -151,7 +152,7 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
     }
 
     UserInfo user = users.at(index);
-    if (user.liveStatus < 0) // 没有直播间或没有开播
+    if (user.roomStatus < 0 || (user.liveStatus < 0 && !ui->refreshLiveStatusCheck->isChecked())) // 没有直播间或没有开播
     {
         // 直接下一个
         ui->progressBar->setValue(index + 1);
@@ -171,21 +172,21 @@ void CatchYouWidget::detectUserLiveStatus(qint64 taskTs, int index)
         }
 
         QJsonObject data = json.value("data").toObject();
-        int roomStatus = data.value("roomStatus").toInt(); // 1
-        int roundStatus = data.value("roundStatus").toInt(); // 1
-        int liveStatus = data.value("liveStatus").toInt(); // 1 或 2
+        int roomStatus = data.value("roomStatus").toInt(); // 1 是否有直播间？
+        int roundStatus = data.value("roundStatus").toInt(); // 1 轮播中
+        int liveStatus = data.value("liveStatus").toInt(); // 1 直播中
+
+        UserInfo u = user;
+        u.roomStatus = (roomStatus && !data.value("title").toString().isEmpty() && !data.value("cover").toString().isEmpty()) ? roomStatus : -1;
+        u.liveStatus = liveStatus ? liveStatus : -1;
+        users[index] = u;
+
         if (roomStatus && liveStatus) // 直播中，需要检测
         {
             QString roomId = QString::number(qint64(data.value("roomid").toDouble()));
 
             // 先检测弹幕
             detectRoomDanmaku(taskTs, user.userId, roomId);
-        }
-        else
-        {
-            UserInfo u = user;
-            u.liveStatus = -1;
-            users[index] = u;
         }
 
         // 检测下一个
@@ -429,4 +430,9 @@ void CatchYouWidget::on_refreshSpin_valueChanged(int arg1)
         refreshTimer->start();
     else
         refreshTimer->stop();
+}
+
+void CatchYouWidget::on_refreshLiveStatusCheck_clicked()
+{
+    settings->setValue("catch/refreshLiveStatus", ui->refreshLiveStatusCheck->isChecked());
 }
