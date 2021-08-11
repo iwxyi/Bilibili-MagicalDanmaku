@@ -269,6 +269,7 @@ private slots:
     void sendGiftMsg(QString msg, const LiveDanmaku& danmaku);
     void sendAttentionMsg(QString msg, const LiveDanmaku& danmaku);
     void sendNotifyMsg(QString msg, bool manual = false);
+    void sendNotifyMsg(QString msg, const LiveDanmaku &danmaku, bool manual = false);
     void slotComboSend();
 
     void slotSocketError(QAbstractSocket::SocketError error);

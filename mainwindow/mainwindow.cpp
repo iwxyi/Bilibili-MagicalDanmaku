@@ -2066,6 +2066,12 @@ void MainWindow::sendNotifyMsg(QString msg, bool manual)
               true, false, manual);
 }
 
+void MainWindow::sendNotifyMsg(QString msg, const LiveDanmaku &danmaku, bool manual)
+{
+    sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
+              true, false, manual);
+}
+
 /**
  * 连击定时器到达
  */
@@ -9456,7 +9462,7 @@ void MainWindow::handleMessage(QJsonObject json)
                                 QString s = words.at(r);
                                 if (!s.trimmed().isEmpty())
                                 {
-                                    sendNotifyMsg(s);
+                                    sendNotifyMsg(s, danmaku);
                                 }
                             }
                             else if (debugPrint)
