@@ -604,10 +604,11 @@ void MainWindow::pullRoomShieldKeyword()
     if (!ui->syncShieldKeywordCheck->isChecked()) // 没开启
         return ;
 
-    // 获取直播间的
+    // 获取直播间的屏蔽词
+    // 先获取这个是为了判断权限，不是房管的话直接ban掉
     MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + roomId, userCookies));
     if (roomSK.code() != 0)
-        return showError("云同步屏蔽词失败", roomSK.msg());
+        return showError("获取房间屏蔽词失败", roomSK.msg());
     QStringList roomList;
     foreach (auto k, roomSK.data().a("keyword_list"))
         roomList.append(k.toObject().value("keyword").toString());
@@ -636,12 +637,12 @@ void MainWindow::pullRoomShieldKeyword()
     foreach (auto k, cloudSK.a("removed"))
     {
         QString s = k.toString();
-        if (roomList.contains(s))
+        if (!roomList.contains(s))
             continue;
 
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
         { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
-        qInfo() << "添加直播间屏蔽词：" << s << json.msg();
+        qInfo() << "移除直播间屏蔽词：" << s << json.msg();
     }
 }
 

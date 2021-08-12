@@ -1916,7 +1916,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="syncShieldKeywordCheck">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在实时弹幕的菜单中添加拉黑&lt;/p&gt;&lt;p&gt;只有房管/主播才有黑名单权限&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动同步云端的屏蔽词列表，添加到当前直播间&lt;/p&gt;&lt;p&gt;只有主播/房管才有权限操作&lt;/p&gt;&lt;p&gt;可强烈过滤片哥、广告、不雅词汇&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>云同步屏蔽词</string>
