@@ -570,6 +570,7 @@ void MainWindow::readConfig()
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
+    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", true).toBool());
 
     // 新人提示
     ui->newbieTipCheck->setChecked(settings->value("block/newbieTip", true).toBool());
@@ -13026,6 +13027,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             else
                 ui->closeTransMouseButton->hide();
         });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());

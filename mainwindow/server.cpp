@@ -599,15 +599,19 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
 
 void MainWindow::pullRoomShieldKeyword()
 {
-    if (roomId.isEmpty() || cookieUid.isEmpty())
+    if (roomId.isEmpty() || cookieUid.isEmpty()) // 没登录
         return ;
-    if (!ui->syncShieldKeywordCheck->isChecked())
+    if (!ui->syncShieldKeywordCheck->isChecked()) // 没开启
         return ;
 
-    // 获取自己的
-    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + roomId));
+    // 获取直播间的
+    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + roomId, userCookies));
     if (roomSK.code() != 0)
         return showError("云同步屏蔽词失败", roomSK.msg());
+    QStringList roomList;
+    foreach (auto k, roomSK.data().a("keyword_list"))
+        roomList.append(k.toObject().value("keyword").toString());
+    qInfo() << "当前直播间屏蔽词：" << roomList.count() << "个";
 
     // 获取云端的（根据上次同步时间）
     qint64 time = settings->value("sync/shieldKeywordTimestamp", 0).toLongLong();
@@ -616,36 +620,43 @@ void MainWindow::pullRoomShieldKeyword()
         return showError("获取云端屏蔽词失败", cloudSK.msg());
     settings->setValue("sync/shieldKeywordTimestamp", QDateTime::currentSecsSinceEpoch());
 
-    // 互相获取列表
-    QJsonArray roomArray = roomSK.data().a("keyword_list"); // "keyword"
-    QJsonArray addedArray = cloudSK.a("keywords"); // StringList
-    QJsonArray removedArray = cloudSK.a("removed"); // StringList
-
-    QStringList roomList;
-    foreach (auto k, roomArray)
-        roomList.append(k.toObject().value("keyword").toString());
-
     // 添加新的
-    foreach (auto k, addedArray)
+    foreach (auto k, cloudSK.a("keywords"))
     {
         QString s = k.toString();
         if (roomList.contains(s))
             continue;
 
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
-        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}).toLatin1());
+        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
         qInfo() << "添加直播间屏蔽词：" << s << json.msg();
     }
 
     // 删除旧的
-    foreach (auto k, removedArray)
+    foreach (auto k, cloudSK.a("removed"))
     {
         QString s = k.toString();
         if (roomList.contains(s))
             continue;
 
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
-        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}).toLatin1());
+        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
         qInfo() << "添加直播间屏蔽词：" << s << json.msg();
     }
+}
+
+void MainWindow::addCloudShieldKeyword(QString keyword)
+{
+    // 添加到直播间
+    MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
+    { "room_id", roomId, "keyword", keyword, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
+    if (json.code() != 0)
+        qWarning() << json.msg();
+
+    // 添加到云端
+    json = MyJson(NetUtil::postWebData(serverPath + "keyword/addShieldKeyword",
+                {"keyword", keyword, "userId", cookieUid, "username", cookieUname, "roomId", roomId}, userCookies).toLatin1());
+    qInfo() << "添加云端屏蔽词：" << keyword;
+    if (json.code() != 0)
+        qWarning() << json;
 }
