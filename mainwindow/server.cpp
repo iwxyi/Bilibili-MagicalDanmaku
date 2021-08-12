@@ -620,29 +620,36 @@ void MainWindow::pullRoomShieldKeyword()
     if (cloudSK.code() != 0)
         return showError("获取云端屏蔽词失败", cloudSK.msg());
     settings->setValue("sync/shieldKeywordTimestamp", QDateTime::currentSecsSinceEpoch());
+    MyJson cloudData = cloudSK.data();
+    QJsonArray addedArray = cloudData.a("keywords"), removedArray = cloudData.a("removed");
+    qInfo() << "云端添加：" << addedArray.size() << "  云端删除：" << removedArray.size() << "   " << time;
 
     // 添加新的
-    foreach (auto k, cloudSK.a("keywords"))
+    foreach (auto k, addedArray)
     {
         QString s = k.toString();
         if (roomList.contains(s))
             continue;
 
+        qInfo() << "添加直播间屏蔽词：" << s;
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
         { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
-        qInfo() << "添加直播间屏蔽词：" << s << json.msg();
+        if (json.code() != 0)
+            qWarning() << "添加直播间屏蔽词失败：" << json.msg();
     }
 
     // 删除旧的
-    foreach (auto k, cloudSK.a("removed"))
+    foreach (auto k, removedArray)
     {
         QString s = k.toString();
         if (!roomList.contains(s))
             continue;
 
+        qInfo() << "移除直播间屏蔽词：" << s;
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
         { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
-        qInfo() << "移除直播间屏蔽词：" << s << json.msg();
+        if (json.code() != 0)
+            qWarning() << "移除直播间屏蔽词失败：" << json.msg();
     }
 }
 
@@ -652,12 +659,12 @@ void MainWindow::addCloudShieldKeyword(QString keyword)
     MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
     { "room_id", roomId, "keyword", keyword, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
     if (json.code() != 0)
-        qWarning() << json.msg();
+        qWarning() << "添加直播间屏蔽词失败：" << json.msg();
 
     // 添加到云端
+    qInfo() << "添加云端屏蔽词：" << keyword;
     json = MyJson(NetUtil::postWebData(serverPath + "keyword/addShieldKeyword",
                 {"keyword", keyword, "userId", cookieUid, "username", cookieUname, "roomId", roomId}, userCookies).toLatin1());
-    qInfo() << "添加云端屏蔽词：" << keyword;
     if (json.code() != 0)
-        qWarning() << json;
+        qWarning() << "添加云端屏蔽词失败：" << json;
 }

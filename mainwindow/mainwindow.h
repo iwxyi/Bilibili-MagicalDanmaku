@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+#define LOCAL_MODE true
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
@@ -1078,7 +1079,7 @@ private:
     bool gettingRoom = false;
     bool gettingUser = false;
     bool gettingUp = false;
-    QString serverPath = "http://iwxyi.com:8102/server/";
+    QString serverPath = LOCAL_MODE ? "http://localhost:8102/server/" : "http://iwxyi.com:8102/server/";
     int permissionLevel = 0;
     QTimer* permissionTimer = nullptr;
 
