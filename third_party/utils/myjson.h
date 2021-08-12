@@ -146,6 +146,21 @@ public:
             return s("message");
         return "";
     }
+
+    QString err() const
+    {
+        if (contains("err"))
+            return s("err");
+        if (contains("error"))
+            return s("error");
+        if (contains("errorMsg"))
+            return s("errorMsg");
+        if (contains("errMsg"))
+            return s("errMsg");
+        if (contains("errorMessage"))
+            return s("errorMessage");
+        return "";
+    }
 };
 
 #endif // MYJSON_H

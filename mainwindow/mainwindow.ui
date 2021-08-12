@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1838,7 +1838,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>150</y>
               <width>151</width>
-              <height>111</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1863,7 +1863,7 @@ margin: 40px;</string>
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>允许禁言</string>
+                <string> 房间禁言</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -1910,6 +1910,16 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>启用禁言</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="syncShieldKeywordCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动同步云端的屏蔽词列表，添加到当前直播间&lt;/p&gt;&lt;p&gt;只有主播/房管才有权限操作&lt;/p&gt;&lt;p&gt;可强烈过滤片哥、广告、不雅词汇&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>云同步屏蔽词</string>
                </property>
               </widget>
              </item>
@@ -2023,7 +2033,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>280</y>
+              <y>340</y>
               <width>151</width>
               <height>161</height>
              </rect>
@@ -2238,7 +2248,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>460</y>
+              <y>520</y>
               <width>161</width>
               <height>141</height>
              </rect>
@@ -2922,7 +2932,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>620</y>
+              <y>680</y>
               <width>161</width>
               <height>101</height>
              </rect>
@@ -3244,7 +3254,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>740</y>
+              <y>800</y>
               <width>161</width>
               <height>111</height>
              </rect>
@@ -7156,7 +7166,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

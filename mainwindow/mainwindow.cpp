@@ -570,6 +570,7 @@ void MainWindow::readConfig()
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
+    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", true).toBool());
 
     // 新人提示
     ui->newbieTipCheck->setChecked(settings->value("block/newbieTip", true).toBool());
@@ -1830,7 +1831,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         statusLabel->setText("");
         if (!errorMsg.isEmpty())
         {
-            showError("发送弹幕", errorMsg);
+            showError("发送弹幕失败", errorMsg);
             localNotify(errorMsg + " -> " + msg);
 
             if (!ui->retryFailedDanmuCheck->isChecked())
@@ -6051,6 +6052,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
     bool isTrue = false;
     QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
     QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
+    // QRegularExpression overlayIntRe("\\d{11,}");
     QRegularExpressionMatch match;
     foreach (QString orExp, orExps)
     {
@@ -6099,7 +6101,8 @@ bool MainWindow::processVariantConditions(QString exprs) const
             QString op = caps.at(2);
             QString s2 = caps.at(3);
             CALC_DEB << "比较：" << s1 << op << s2;
-            if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+            if (s1.contains(intRe) && s2.contains(intRe)) // 都是整数
+                    // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
             {
                 qint64 i1 = calcIntExpression(s1);
                 qint64 i2 = calcIntExpression(s2);
@@ -6185,7 +6188,15 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     QList<qint64> vals;
     foreach (QString val, valss)
     {
-        vals << val.toLongLong();
+        bool ok;
+        qint64 ll = val.toLongLong(&ok);
+        if (!ok)
+        {
+            showError("转换整数值失败", val);
+            if (val.length() > 18) // 19位数字，超出了ll的范围
+                ll = val.right(18).toLongLong();
+        }
+        vals << ll;
     }
 
     // 获取所有运算符
@@ -13022,6 +13033,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             else
                 ui->closeTransMouseButton->hide();
         });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
@@ -16131,6 +16143,9 @@ void MainWindow::slotStartWork()
     updateExistGuards(0);
 
     triggerCmdEvent("START_WORK", LiveDanmaku(), true);
+
+    // 云同步
+    pullRoomShieldKeyword();
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -17463,4 +17478,12 @@ void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 void MainWindow::on_heartTimeSpin_editingFinished()
 {
     settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
+}
+
+void MainWindow::on_syncShieldKeywordCheck_clicked()
+{
+    bool enabled = ui->syncShieldKeywordCheck->isChecked();
+    settings->setValue("block/syncShieldKeyword", enabled);
+    if (enabled)
+        pullRoomShieldKeyword();
 }

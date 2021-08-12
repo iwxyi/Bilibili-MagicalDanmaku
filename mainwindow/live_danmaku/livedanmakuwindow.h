@@ -87,6 +87,7 @@ signals:
     void signalAIReplyed(QString msg, qint64 uid);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
+    void signalAddCloudShieldKeyword(QString text);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);

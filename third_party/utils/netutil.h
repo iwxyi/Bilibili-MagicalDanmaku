@@ -22,14 +22,17 @@ class NetUtil : public QObject
 {
     Q_OBJECT
 public:
-    static QByteArray getWebData(QString uri)
+    static QByteArray getWebData(QString uri, QVariant cookies = QVariant())
     {
         QUrl url(uri);
         QNetworkAccessManager manager;
         QEventLoop loop;
         QNetworkReply *reply;
+        QNetworkRequest request(url);
+        if (!cookies.isNull())
+            request.setHeader(QNetworkRequest::CookieHeader, cookies);
 
-        reply = manager.get(QNetworkRequest(url));
+        reply = manager.get(request);
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
@@ -39,14 +42,18 @@ public:
         return code_content;
     }
 
-    static QString postWebData(QString uri, QString data)
+    static QString postWebData(QString uri, QString data, QVariant cookies = QVariant())
     {
         QUrl url(uri);
         QNetworkAccessManager manager;
         QEventLoop loop;
         QNetworkReply *reply;
+        QNetworkRequest request(url);
+        if (!cookies.isNull())
+            request.setHeader(QNetworkRequest::CookieHeader, cookies);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 
-        reply = manager.post(QNetworkRequest(url), data.toLatin1());
+        reply = manager.post(request, data.toLatin1());
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
@@ -55,13 +62,30 @@ public:
         return code_content;
     }
 
-    static QString downloadWebFile(QString uri, QString path)
+    static QString postWebData(QString uri, QStringList params, QVariant cookies = QVariant())
+    {
+        QString data;
+        for (int i = 0; i < params.size(); i++)
+        {
+            if (i & 1) // 用户数据
+                data += QUrl::toPercentEncoding(params.at(i));
+            else // 固定变量
+                data += (i==0?"":"&") + params.at(i) + "=";
+        }
+
+        return postWebData(uri, data, cookies);
+    }
+
+    static QString downloadWebFile(QString uri, QString path, QVariant cookies = QVariant())
     {
         QNetworkAccessManager manager;
         QEventLoop loop;
         QNetworkReply *reply;
+        QNetworkRequest request(uri);
+        if (!cookies.isNull())
+            request.setHeader(QNetworkRequest::CookieHeader, cookies);
 
-        reply = manager.get(QNetworkRequest(QUrl(uri)));
+        reply = manager.get(request);
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 

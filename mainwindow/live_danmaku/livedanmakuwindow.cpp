@@ -1046,6 +1046,8 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionDelBlock = new QAction(QIcon(":/danmaku/block2"), "取消禁言", this);
     QAction* actionEternalBlock = new QAction(QIcon(":/danmaku/block"), "永久禁言", this);
     QAction* actionCancelEternalBlock = new QAction(QIcon(":/danmaku/block"), "取消永久禁言", this);
+    QAction* actionAddCloudShield = new QAction(QIcon(":/icons/cloud_block"), "添加云端屏蔽", this);
+
     QAction* actionNotWelcome = new QAction(QIcon(":/danmaku/welcome"), "不自动欢迎", this);
     QAction* actionNotReply = new QAction(QIcon(":/danmaku/reply"), "不AI回复", this);
 
@@ -1221,6 +1223,8 @@ void LiveDanmakuWindow::showMenu()
         actionFollow->setEnabled(false);
         actionView->setEnabled(false);
     }
+    if (!danmaku.is(MSG_DANMAKU))
+        actionAddCloudShield->setEnabled(false);
 
     if (!item)
     {
@@ -1238,6 +1242,7 @@ void LiveDanmakuWindow::showMenu()
         actionFreeCopy->setEnabled(false);
         actionDelete->setEnabled(false);
         actionIgnoreColor->setEnabled(false);
+        actionAddCloudShield->setEnabled(false);
     }
 
     menu->addAction(actionUserInfo);
@@ -1266,6 +1271,7 @@ void LiveDanmakuWindow::showMenu()
         {
             menu->addAction(actionDelBlock);
         }
+        menu->addAction(actionAddCloudShield);
     }
 
     menu->addSeparator();
@@ -1849,6 +1855,21 @@ void LiveDanmakuWindow::showMenu()
         selectBgPicture();
         update();
     });
+    connect(actionAddCloudShield, &QAction::triggered, this, [=]{
+        QString text = danmaku.getText();
+        bool ok;
+        text = QInputDialog::getText(this, "添加云端屏蔽词", "将该弹幕中的敏感词添加到直播间屏蔽词\n所有支持云端屏蔽词的直播间都将同步该词", QLineEdit::Normal, text, &ok);
+        if (!ok)
+            return ;
+
+        if (text.length() > 15)
+        {
+            QMessageBox::information(this, "添加云端屏蔽词", "屏蔽词长度不能超过15字，请重试");
+            return ;
+        }
+
+        emit signalAddCloudShieldKeyword(text);
+    });
 
     menu->exec(QCursor::pos());
 
@@ -1884,6 +1905,7 @@ void LiveDanmakuWindow::showMenu()
     actionPictureRatio->deleteLater();
     actionPictureBlur->deleteLater();
     actionCancelPicture->deleteLater();
+    actionAddCloudShield->deleteLater();
 }
 
 void LiveDanmakuWindow::showEditMenu()
