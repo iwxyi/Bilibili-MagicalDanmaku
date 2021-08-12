@@ -16135,6 +16135,9 @@ void MainWindow::slotStartWork()
     updateExistGuards(0);
 
     triggerCmdEvent("START_WORK", LiveDanmaku(), true);
+
+    // 云同步
+    pullRoomShieldKeyword();
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
