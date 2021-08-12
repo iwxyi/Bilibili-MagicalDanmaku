@@ -1830,7 +1830,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         statusLabel->setText("");
         if (!errorMsg.isEmpty())
         {
-            showError("发送弹幕", errorMsg);
+            showError("发送弹幕失败", errorMsg);
             localNotify(errorMsg + " -> " + msg);
 
             if (!ui->retryFailedDanmuCheck->isChecked())
@@ -17457,4 +17457,12 @@ void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 void MainWindow::on_heartTimeSpin_editingFinished()
 {
     settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
+}
+
+void MainWindow::on_syncShieldKeywordCheck_clicked()
+{
+    bool enabled = ui->syncShieldKeywordCheck->isChecked();
+    settings->setValue("block/syncShieldKeyword", enabled);
+    if (enabled)
+        pullRoomShieldKeyword();
 }

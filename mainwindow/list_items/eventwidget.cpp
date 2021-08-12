@@ -29,7 +29,7 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     });
 
     connect(eventEdit, &QLineEdit::textChanged, this, [=]{
-        cmdKey = eventEdit->text();
+        cmdKey = eventEdit->text().trimmed();
     });
 
     connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{

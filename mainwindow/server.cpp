@@ -350,7 +350,8 @@ void MainWindow::syncMagicalRooms()
         {"room_id", roomId, "user_id", cookieUid, "up_id", upUid,
          "room_title", roomTitle, "username", cookieUname, "up_name", upName,
          "version", appVersion, "platform", "windows",
-         "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission())},
+         "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
+         "randkey", csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
         // 检测数组
         QJsonArray roomArray = json.value("rooms").toArray();
@@ -397,6 +398,18 @@ void MainWindow::syncMagicalRooms()
         if (json.value("force_update").toBool())
             QApplication::quit();
     });
+}
+
+void MainWindow::pullRoomShieldKeyword()
+{
+    // 获取自己的
+
+    // 获取云端的（根据上次同步时间）
+
+    // 添加新的
+
+    // 删除旧的
+
 }
 
 #if defined(ENABLE_HTTP_SERVER)

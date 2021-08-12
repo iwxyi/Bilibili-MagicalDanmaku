@@ -695,6 +695,8 @@ private slots:
 
     void on_heartTimeSpin_editingFinished();
 
+    void on_syncShieldKeywordCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -920,6 +922,7 @@ private:
     QString webCache(QString name) const;
 
     void syncMagicalRooms();
+    void pullRoomShieldKeyword();
 
     QString GetFileVertion(QString fullName);
     void upgradeVersionToLastest(QString oldVersion);
