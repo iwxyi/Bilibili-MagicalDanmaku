@@ -6045,6 +6045,7 @@ bool MainWindow::processVariantConditions(QString exprs) const
     bool isTrue = false;
     QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
     QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
+    // QRegularExpression overlayIntRe("\\d{11,}");
     QRegularExpressionMatch match;
     foreach (QString orExp, orExps)
     {
@@ -6093,7 +6094,8 @@ bool MainWindow::processVariantConditions(QString exprs) const
             QString op = caps.at(2);
             QString s2 = caps.at(3);
             CALC_DEB << "比较：" << s1 << op << s2;
-            if (s1.indexOf(intRe) > -1 && s2.indexOf(intRe) > -1) // 都是整数
+            if (s1.contains(intRe) && s2.contains(intRe)) // 都是整数
+                    // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
             {
                 qint64 i1 = calcIntExpression(s1);
                 qint64 i2 = calcIntExpression(s2);
@@ -6179,7 +6181,15 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     QList<qint64> vals;
     foreach (QString val, valss)
     {
-        vals << val.toLongLong();
+        bool ok;
+        qint64 ll = val.toLongLong(&ok);
+        if (!ok)
+        {
+            showError("转换整数值失败", val);
+            if (val.length() > 18) // 19位数字，超出了ll的范围
+                ll = val.right(18).toLongLong();
+        }
+        vals << ll;
     }
 
     // 获取所有运算符
