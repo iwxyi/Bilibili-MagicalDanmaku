@@ -615,14 +615,18 @@ void MainWindow::pullRoomShieldKeyword()
     qInfo() << "当前直播间屏蔽词：" << roomList.count() << "个";
 
     // 获取云端的（根据上次同步时间）
-    qint64 time = settings->value("sync/shieldKeywordTimestamp", 0).toLongLong();
+    qint64 time = settings->value("sync/shieldKeywordTimestamp_" + roomId, 0).toLongLong();
     MyJson cloudSK(NetUtil::getWebData(serverPath + "keyword/getNewerShieldKeyword?time=" + snum(time)));
     if (cloudSK.code() != 0)
         return showError("获取云端屏蔽词失败", cloudSK.msg());
-    settings->setValue("sync/shieldKeywordTimestamp", QDateTime::currentSecsSinceEpoch());
     MyJson cloudData = cloudSK.data();
     QJsonArray addedArray = cloudData.a("keywords"), removedArray = cloudData.a("removed");
     qInfo() << "云端添加：" << addedArray.size() << "  云端删除：" << removedArray.size() << "   " << time;
+    if (!addedArray.size() && !removedArray.size())
+        return ;
+    // 没有可修改的，后面全部跳过
+    // 也不更新时间了，因为有可能是网络断开，或者服务端挂掉
+    settings->setValue("sync/shieldKeywordTimestamp_" + roomId, QDateTime::currentSecsSinceEpoch());
 
     // 添加新的
     foreach (auto k, addedArray)
