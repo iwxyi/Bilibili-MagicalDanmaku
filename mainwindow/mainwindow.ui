@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>760</width>
-             <height>826</height>
+             <height>804</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1916,7 +1916,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="syncShieldKeywordCheck">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动同步云端的屏蔽词列表，添加到当前直播间&lt;/p&gt;&lt;p&gt;只有主播/房管才有权限操作&lt;/p&gt;&lt;p&gt;可强烈过滤片哥、广告、不雅词汇&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动同步云端的屏蔽词列表，添加到当前直播间&lt;/p&gt;&lt;p&gt;只有主播/房管才有权限操作&lt;/p&gt;&lt;p&gt;可强烈过滤片哥、广告、不雅词汇&lt;/p&gt;&lt;p&gt;开播、重启开关会立刻同步&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>云同步屏蔽词</string>
@@ -7166,7 +7166,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

@@ -621,7 +621,7 @@ void MainWindow::pullRoomShieldKeyword()
         return showError("获取云端屏蔽词失败", cloudSK.msg());
     MyJson cloudData = cloudSK.data();
     QJsonArray addedArray = cloudData.a("keywords"), removedArray = cloudData.a("removed");
-    qInfo() << "云端添加：" << addedArray.size() << "  云端删除：" << removedArray.size() << "   " << time;
+    qInfo() << "云端添加：" << addedArray.size() << "  云端删除：" << removedArray.size() << "   时间戳" << time;
     if (!addedArray.size() && !removedArray.size())
         return ;
     // 没有可修改的，后面全部跳过
@@ -633,9 +633,13 @@ void MainWindow::pullRoomShieldKeyword()
     {
         QString s = k.toString();
         if (roomList.contains(s))
+        {
+            qInfo() << "跳过已存在：" << s;
             continue;
+        }
 
         qInfo() << "添加直播间屏蔽词：" << s;
+        localNotify("添加屏蔽词：" + s);
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
         { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
         if (json.code() != 0)
@@ -647,9 +651,13 @@ void MainWindow::pullRoomShieldKeyword()
     {
         QString s = k.toString();
         if (!roomList.contains(s))
+        {
+            qInfo() << "跳过不存在：" << s;
             continue;
+        }
 
         qInfo() << "移除直播间屏蔽词：" << s;
+        localNotify("移除屏蔽词：" + s);
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
         { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
         if (json.code() != 0)

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define LOCAL_MODE true
+#define LOCAL_MODE 0
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
