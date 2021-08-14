@@ -9454,12 +9454,15 @@ void MainWindow::handleMessage(QJsonObject json)
                                 && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
                                 && medal_level <= 2))) // 勋章不到3级
                 {
-                    if (match.capturedTexts().size() > 1)
+                    if (match.capturedTexts().size() >= 1)
                     {
                         QString blockKey = match.capturedTexts().size() >= 2 ? match.captured(1) : match.captured(0); // 第一个括号的
-                        localNotify("检测到用户弹幕【" + blockKey + "】，自动禁言");
+                        localNotify("自动禁言【" + blockKey + "】");
                     }
                     qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
+
+                    if (isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku))
+                        return ;
 
                     // 拉黑
                     addBlockUser(uid, ui->autoBlockTimeSpin->value());

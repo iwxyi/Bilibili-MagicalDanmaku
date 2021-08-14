@@ -1924,6 +1924,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上      |
 | FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上 |
 | FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上      |
+| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言              |
 
 若有多个相同过滤器，只要任意其中一个包括 `>reject()` 命令，则本操作不允许。
 
