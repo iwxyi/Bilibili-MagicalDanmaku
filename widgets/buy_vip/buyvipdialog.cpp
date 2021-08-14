@@ -138,6 +138,16 @@ void BuyVIPDialog::updatePrice()
         {"vip_type", snum(vipType), "vip_level", snum(vipLevel),
          "month", snum(vipMonth), "coupon", couponCode},
         [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            QMessageBox::warning(this, "获取价格", json.msg() + "\n优惠券：" + couponCode);
+            couponCode = "";
+            ui->couponButton->setText("无优惠券");
+            ui->couponButton->adjustMinimumSize();
+            updatePrice();
+            return ;
+        }
+
         MyJson data = json.data();
 
         // 设置价格
