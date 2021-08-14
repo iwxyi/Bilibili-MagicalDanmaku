@@ -2418,6 +2418,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     {
         startConnectRoom();
     }
+    pullLiveDanmaku();
 }
 
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
