@@ -3607,13 +3607,13 @@ void MainWindow::sendXliveHeartBeatE()
         if (json.value("code").toInt() != 0)
         {
             QString message = json.value("message").toString();
-            showError("发送直播心跳失败E", message);
+            showError("获取小心心失败E", message);
             qCritical() << s8("warning: 发送直播心跳失败E：") << message << datas.join("&");
-            if (message.contains("sign check failed")) // 没有勋章无法获取
+            /* if (message.contains("sign check failed")) // 没有勋章无法获取？
             {
                 ui->acquireHeartCheck->setChecked(false);
                 showError("获取小心心", "已临时关闭，可能没有粉丝勋章？");
-            }
+            } */
             return ;
         }
 
@@ -9448,14 +9448,15 @@ void MainWindow::handleMessage(QJsonObject json)
                     showError("错误的禁言关键词表达式");
                 QRegularExpressionMatch match;
                 if (msg.indexOf(re, 0, &match) > -1 // 自动拉黑
-                        && danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
-                        && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
-                        && medal_level <= 2) // 勋章不到3级
+                        && (ui->blockNotOnlyNewbieCheck->isChecked()
+                            || (danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
+                                && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                                && medal_level <= 2))) // 勋章不到3级
                 {
                     if (match.capturedTexts().size() > 1)
                     {
-                        QString blockKey = match.captured(0); // 第一个括号的
-                        localNotify("检测到新人说【" + blockKey + "】，自动禁言");
+                        QString blockKey = match.capturedTexts().size() >= 2 ? match.captured(1) : match.captured(0); // 第一个括号的
+                        localNotify("检测到用户弹幕【" + blockKey + "】，自动禁言");
                     }
                     qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
