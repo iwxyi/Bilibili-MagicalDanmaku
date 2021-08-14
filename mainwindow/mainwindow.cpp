@@ -3609,6 +3609,11 @@ void MainWindow::sendXliveHeartBeatE()
             QString message = json.value("message").toString();
             showError("发送直播心跳失败E", message);
             qCritical() << s8("warning: 发送直播心跳失败E：") << message << datas.join("&");
+            if (message.contains("sign check failed")) // 没有勋章无法获取
+            {
+                ui->acquireHeartCheck->setChecked(false);
+                showError("获取小心心", "已临时关闭，可能没有粉丝勋章？");
+            }
             return ;
         }
 
