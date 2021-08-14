@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>906</width>
-    <height>867</height>
+    <height>1203</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1344,7 +1344,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>826</width>
-             <height>729</height>
+             <height>1065</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1931,7 +1931,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>160</y>
               <width>161</width>
-              <height>141</height>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2385,8 +2385,8 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>310</y>
-              <width>161</width>
+              <y>340</y>
+              <width>181</width>
               <height>131</height>
              </rect>
             </property>
@@ -2581,7 +2581,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>460</y>
+              <y>490</y>
               <width>161</width>
               <height>151</height>
              </rect>
@@ -3134,7 +3134,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>630</y>
+              <y>660</y>
               <width>161</width>
               <height>171</height>
              </rect>
@@ -3348,7 +3348,7 @@ margin: 40px;</string>
              <rect>
               <x>550</x>
               <y>10</y>
-              <width>161</width>
+              <width>201</width>
               <height>231</height>
              </rect>
             </property>
@@ -4179,9 +4179,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>810</y>
+              <y>840</y>
               <width>161</width>
-              <height>121</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">

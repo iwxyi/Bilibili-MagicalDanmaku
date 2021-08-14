@@ -1,4 +1,4 @@
-### v4.0.6 [云端屏蔽词、关键词禁言](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.6)
+### v4.1.0 [云端屏蔽词、关键词禁言](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.0.6)
 
 - 新增云端屏蔽词：全站联合，自动增删
 - 新增显示自动禁言表达式报错
@@ -7,6 +7,7 @@
 - 新增正则内置中文表达式
 - 新增跑骚抓人定时刷新
 - 新增关键词禁言后通知的信息变量
+- 优化4K缩放下部分控件尺寸
 - 优化每天弹幕记录文件分割
 - 优化条件判断中整数溢出的问题
 - 优化事件去掉名字首尾空格

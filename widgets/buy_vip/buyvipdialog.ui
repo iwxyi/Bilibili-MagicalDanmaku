@@ -42,7 +42,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
-        <number>3</number>
+        <number>12</number>
        </property>
        <item>
         <spacer name="verticalSpacer_3">
@@ -52,7 +52,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>30</height>
           </size>
          </property>
         </spacer>
@@ -76,7 +76,7 @@ font-weight: 700;</string>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>20</height>
+           <height>10</height>
           </size>
          </property>
         </spacer>
@@ -87,7 +87,7 @@ font-weight: 700;</string>
           <string notr="true">color: #c0a095;</string>
          </property>
          <property name="text">
-          <string>最高折扣</string>
+          <string>连续包月叠加折扣</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -95,19 +95,39 @@ font-weight: 700;</string>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_3">
-         <property name="styleSheet">
-          <string notr="true">font-size: 24px;
+        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="styleSheet">
+            <string notr="true">color: #c0a095;</string>
+           </property>
+           <property name="text">
+            <string>最高</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">font-size: 24px;
 color: #ff6464;
 font-weight: 500;</string>
-         </property>
-         <property name="text">
-          <string>80%</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-         </property>
-        </widget>
+           </property>
+           <property name="text">
+            <string>80%</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <spacer name="verticalSpacer_2">
@@ -117,7 +137,7 @@ font-weight: 500;</string>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>20</height>
+           <height>10</height>
           </size>
          </property>
         </spacer>
@@ -207,7 +227,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>455</width>
-        <height>219</height>
+        <height>172</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -951,6 +971,9 @@ margin: 20px</string>
      </item>
      <item>
       <widget class="QLabel" name="discountLabel">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;总折扣 = 优惠券 * 连续包月优惠&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="styleSheet">
         <string notr="true">font-size: 16px;
 color: gray;</string>

@@ -278,7 +278,7 @@ void BuyVIPDialog::on_payButton_clicked()
     // 判断机器人
     if (vipType == VIP_TYPE_RR || vipType == VIP_TYPE_ROBOT)
     {
-        if (roomId.isEmpty())
+        if (userId.isEmpty())
         {
             QMessageBox::information(this, "购买", "感谢您的支持！\n但是，付款前是不是得先登录账号？");
             return ;
