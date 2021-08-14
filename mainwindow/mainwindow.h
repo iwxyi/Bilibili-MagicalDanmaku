@@ -1093,7 +1093,7 @@ private:
     int dailyNewFans = 0; // 关注数量
     int dailyTotalFans = 0; // 粉丝总数量（需要开启感谢关注）
     int dailyGiftSilver = 0; // 银瓜子总价值
-    int dailyGiftGold = 0; // 金瓜子总价值
+    int dailyGiftGold = 0; // 金瓜子总价值（不包括船员）
     int dailyGuard = 0; // 上船/续船人次
     int dailyMaxPopul = 0; // 最高人气
     int dailyAvePopul = 0; // 平均人气

@@ -16813,7 +16813,7 @@ void MainWindow::on_exportDailyButton_clicked()
     QString dirPath = dataPath + "live_daily";
     QDir dir(dirPath);
     auto files = dir.entryList(QStringList{roomId + "_*.ini"}, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
-    stream << QString("日期,进入人次,进入人数,弹幕数量,新人弹幕,新增关注,关注总数,总金瓜子,总银瓜子,上船人数,船员总数\n").toUtf8();
+    stream << QString("日期,进入人次,进入人数,弹幕数量,新人弹幕,新增关注,关注总数,总金瓜子,总银瓜子,上船人数,船员总数,平均人气,最高人气\n").toUtf8();
     for (int i = 0; i < files.size(); i++)
     {
         QStringList sl;
