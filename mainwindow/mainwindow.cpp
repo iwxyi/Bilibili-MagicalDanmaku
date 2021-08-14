@@ -9461,34 +9461,34 @@ void MainWindow::handleMessage(QJsonObject json)
                     }
                     qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
-                    if (isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku))
-                        return ;
-
-                    // 拉黑
-                    addBlockUser(uid, ui->autoBlockTimeSpin->value());
-                    blocked = true;
-
-                    // 通知
-                    if (ui->autoBlockNewbieNotifyCheck->isChecked())
+                    if (!isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku)) // 阻止自动禁言过滤器
                     {
-                        static int prevNotifyInCount = -20; // 上次发送通知时的弹幕数量
-                        if (allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
-                        {
-                            prevNotifyInCount = allDanmakus.size();
+                        // 拉黑
+                        addBlockUser(uid, ui->autoBlockTimeSpin->value());
+                        blocked = true;
 
-                            QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
-                            if (words.size())
+                        // 通知
+                        if (ui->autoBlockNewbieNotifyCheck->isChecked())
+                        {
+                            static int prevNotifyInCount = -20; // 上次发送通知时的弹幕数量
+                            if (allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
                             {
-                                int r = qrand() % words.size();
-                                QString s = words.at(r);
-                                if (!s.trimmed().isEmpty())
+                                prevNotifyInCount = allDanmakus.size();
+
+                                QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
+                                if (words.size())
                                 {
-                                    sendNotifyMsg(s, danmaku);
+                                    int r = qrand() % words.size();
+                                    QString s = words.at(r);
+                                    if (!s.trimmed().isEmpty())
+                                    {
+                                        sendNotifyMsg(s, danmaku);
+                                    }
                                 }
-                            }
-                            else if (debugPrint)
-                            {
-                                localNotify("[没有可发送的禁言通知弹幕]");
+                                else if (debugPrint)
+                                {
+                                    localNotify("[没有可发送的禁言通知弹幕]");
+                                }
                             }
                         }
                     }
@@ -12641,7 +12641,6 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
         if (json.value("code").toInt() != 0)
         {
             showError("禁言失败", json.value("message").toString());
-            qWarning() << "禁言失败：" << json.value("message").toString();
             return ;
         }
         QJsonObject d = json.value("data").toObject();
