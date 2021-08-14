@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>840</width>
-    <height>942</height>
+    <width>906</width>
+    <height>867</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1343,8 +1343,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>804</height>
+             <width>826</width>
+             <height>729</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1627,7 +1627,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>10</y>
               <width>151</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1837,8 +1837,8 @@ margin: 40px;</string>
              <rect>
               <x>10</x>
               <y>150</y>
-              <width>151</width>
-              <height>141</height>
+              <width>161</width>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1929,9 +1929,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>140</y>
-              <width>151</width>
-              <height>131</height>
+              <y>160</y>
+              <width>161</width>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2033,9 +2033,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>340</y>
+              <y>330</y>
               <width>151</width>
-              <height>161</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2169,8 +2169,8 @@ margin: 40px;</string>
              <rect>
               <x>190</x>
               <y>320</y>
-              <width>151</width>
-              <height>111</height>
+              <width>161</width>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2250,7 +2250,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>520</y>
               <width>161</width>
-              <height>141</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2385,9 +2385,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>290</y>
+              <y>310</y>
               <width>161</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2581,9 +2581,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>420</y>
+              <y>460</y>
               <width>161</width>
-              <height>131</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2729,7 +2729,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>450</y>
+              <y>480</y>
               <width>151</width>
               <height>131</height>
              </rect>
@@ -2822,9 +2822,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>600</y>
+              <y>630</y>
               <width>161</width>
-              <height>91</height>
+              <height>101</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2878,6 +2878,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="recordCheck">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：&lt;/p&gt;&lt;p&gt;安装目录/records/&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
                 <string>原画录播</string>
                </property>
@@ -2934,7 +2937,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>680</y>
               <width>161</width>
-              <height>101</height>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3041,9 +3044,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>710</y>
+              <y>740</y>
               <width>161</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3131,9 +3134,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>570</y>
+              <y>630</y>
               <width>161</width>
-              <height>151</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3256,7 +3259,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>800</y>
               <width>161</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3346,7 +3349,7 @@ margin: 40px;</string>
               <x>550</x>
               <y>10</y>
               <width>161</width>
-              <height>201</height>
+              <height>231</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3632,8 +3635,8 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>550</x>
-              <y>240</y>
-              <width>161</width>
+              <y>270</y>
+              <width>201</width>
               <height>111</height>
              </rect>
             </property>
@@ -3760,7 +3763,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>550</x>
-              <y>650</y>
+              <y>680</y>
               <width>191</width>
               <height>151</height>
              </rect>
@@ -3895,7 +3898,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>550</x>
-              <y>540</y>
+              <y>570</y>
               <width>161</width>
               <height>91</height>
              </rect>
@@ -3982,7 +3985,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>550</x>
-              <y>370</y>
+              <y>400</y>
               <width>161</width>
               <height>151</height>
              </rect>
@@ -4176,9 +4179,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>740</y>
+              <y>810</y>
               <width>161</width>
-              <height>111</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4291,10 +4294,10 @@ margin: 40px;</string>
            <widget class="QWidget" name="toutaGiftSettingsCard" native="true">
             <property name="geometry">
              <rect>
-              <x>10</x>
-              <y>870</y>
+              <x>550</x>
+              <y>850</y>
               <width>161</width>
-              <height>121</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -7165,7 +7168,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>840</width>
+     <width>906</width>
      <height>26</height>
     </rect>
    </property>

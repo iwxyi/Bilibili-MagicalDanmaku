@@ -570,7 +570,7 @@ void MainWindow::readConfig()
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
-    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", true).toBool());
+    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", false).toBool());
 
     // 新人提示
     ui->newbieTipCheck->setChecked(settings->value("block/newbieTip", true).toBool());
