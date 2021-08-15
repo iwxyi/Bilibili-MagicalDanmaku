@@ -1219,7 +1219,7 @@ private:
     QList<QString> gameTextLists[CHANNEL_COUNT];
 
     // 服务端
-#ifndef Q_OS_MAC
+#ifdef ENABLE_HTTP_SERVER
     QHttpServer *server = nullptr;
 #endif
     QString serverDomain;

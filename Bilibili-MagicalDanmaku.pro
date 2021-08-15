@@ -22,16 +22,16 @@ CONFIG += resources_big
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32{
-DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
+    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
 }
 unix:!macx{
-    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
+#    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
 }
 
 contains(DEFINES, ENABLE_SHORTCUT) {
     include($$PWD/third_party/qxtglobalshortcut5/qxt.pri)
 }else{
-    message("shortcuts not support")
+#    message("shortcuts not support")
 }
 
 contains(DEFINES, ENABLE_TEXTTOSPEECH) {
@@ -269,9 +269,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     CHANGELOG.md \
-    resources/resource.rc \
-    Examples.md \
-    README.md \
     android/AndroidManifest.xml \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.jar \
@@ -279,6 +276,16 @@ DISTFILES += \
     android/gradlew \
     android/gradlew.bat \
     android/res/values/libs.xml \
+    resources/resource.rc \
+    Examples.md \
+    README.md \
+#    android/AndroidManifest.xml \
+#    android/build.gradle \
+#    android/gradle/wrapper/gradle-wrapper.jar \
+#    android/gradle/wrapper/gradle-wrapper.properties \
+#    android/gradlew \
+#    android/gradlew.bat \
+#    android/res/values/libs.xml \
     resources/icons/appicon.ico \
     pictures/神奇弹幕-用法.pdf \
     resource.rc \
@@ -296,9 +303,17 @@ contains(ANDROID_TARGET_ARCH,) {
 
 # android: include(third_party/android_openssl/openssl.pri)
 
-unix|win32: LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
+contains(DEFINES, ENABLE_HTTP_SERVER) {
+    LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
+
+    INCLUDEPATH += $$PWD/third_party/libs \
+        qhttpserver/
+}
 win32: LIBS += -lversion
 
-INCLUDEPATH += $$PWD/third_party/libs \
-    qhttpserver/
 DEPENDPATH += $$PWD/third_party/libs
+
+contains(ANDROID_TARGET_ARCH,x86) {
+    ANDROID_PACKAGE_SOURCE_DIR = \
+        $$PWD/android
+}
