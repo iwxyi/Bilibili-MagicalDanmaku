@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     initView();
     initStyle();
 
@@ -58,6 +59,19 @@ MainWindow::MainWindow(QWidget *parent)
     initPath();
     readConfig();
     initEvent();
+
+#ifdef Q_OS_ANDROID
+    ui->sideBarWidget->hide();
+    ui->verticalLayout->addWidget(ui->robotInfoWidget);
+    ui->droplight->hide();
+    ui->guardInfoWidget->hide();
+    ui->roomPage->layout()->setMargin(0);
+    ui->danmakuPage->layout()->setMargin(0);
+    ui->thankPage->layout()->setMargin(0);
+    ui->musicPage->layout()->setMargin(0);
+    ui->extensionPage->layout()->setMargin(0);
+    ui->preferencePage->layout()->setMargin(0);
+#endif
 
     // 彩蛋
     warmWish = WarmWishUtil::getWarmWish(":/documents/warm_wish");
@@ -592,8 +606,11 @@ void MainWindow::readConfig()
     ui->autoBlockTimeSpin->setValue(settings->value("block/autoTime", 1).toInt());
 
     // 实时弹幕
+#ifndef Q_OS_ANDROID
+    // 安装因为界面的问题，不主动显示弹幕姬
     if (settings->value("danmaku/liveWindow", false).toBool())
          on_actionShow_Live_Danmaku_triggered();
+#endif
 
     // 点歌姬
     if (settings->value("danmaku/playerWindow", false).toBool())

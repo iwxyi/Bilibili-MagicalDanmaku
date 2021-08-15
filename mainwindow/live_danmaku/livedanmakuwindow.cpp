@@ -14,6 +14,9 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
 {
     this->setWindowTitle("实时弹幕");
     this->setMinimumSize(45,45);                        //设置最小尺寸
+#ifdef Q_OS_ANDROID
+    this->setAttribute(Qt::WA_TranslucentBackground, false);
+#else
     if (settings->value("livedanmakuwindow/jiWindow", false).toBool())
     {
         this->setWindowFlags(Qt::FramelessWindowHint);
@@ -24,9 +27,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
         this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     }
-    bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
-    if (onTop)
-        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     if (settings->value("livedanmakuwindow/transMouse", false).toBool())
     {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
@@ -36,6 +36,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
             emit signalTransMouse(true);
         });
     }
+#endif
+    bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
+    if (onTop)
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
 
     QFontMetrics fm(this->font());
     fontHeight = fm.height();
@@ -188,7 +192,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
 {
+#ifndef Q_OS_ANDROID
+    // 如果是安卓，就显示全屏吧！
     restoreGeometry(settings->value("livedanmakuwindow/geometry").toByteArray());
+#endif
     enableAnimation = true;
 }
 
@@ -298,7 +305,11 @@ void LiveDanmakuWindow::paintEvent(QPaintEvent *)
 
     // 绘制背景
     QPainterPath path;
+#ifndef Q_OS_ANDROID
+    path.addRect(rect());
+#else
     path.addRoundedRect(rect(), 5, 5);
+#endif
     painter.setClipPath(path);
 
     painter.fillRect(rect(), bgColor);
