@@ -954,6 +954,10 @@ void MainWindow::readConfig()
         justStart = false;
     });
 
+    // 等待通道
+    for (int i = 0; i < CHANNEL_COUNT; i++)
+        msgWaits[i] = WAIT_CHANNEL_MAX;
+
     // 读取拼音1
     QtConcurrent::run([=]{
         QFile pinyinFile(":/documents/pinyin");
@@ -2067,7 +2071,7 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
             option = option.trimmed();
 
             // 冷却通道
-            re.setPattern("^cd(\\d+)\\s*:\\s*(\\d+)$");
+            re.setPattern("^cd(\\d{1,2})\\s*:\\s*(\\d+)$");
             if (option.indexOf(re, 0, &match) > -1)
             {
                 QString chann = caps.at(1);
@@ -2077,7 +2081,7 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
             }
 
             // 等待通道
-            re.setPattern("^wait(\\d+)\\s*:\\s*(\\d+)$");
+            re.setPattern("^wait(\\d{1,2})\\s*:\\s*(\\d+)$");
             if (option.indexOf(re, 0, &match) > -1)
             {
                 QString chann = caps.at(1);
@@ -2105,10 +2109,16 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
             localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + "," + snum(cd) + "ms]");
         return ;
     }
-    msgCds[channel] = timestamp;
+    msgCds[channel] = timestamp; // 重新冷却
 
     // 等待通道
-
+    if (msgWaits[waitChannel] < waitCount)
+    {
+        if (debugPrint)
+            localNotify("[未完成等待：" + snum(msgWaits[msgWaits[waitChannel]]) + "," + snum(waitCount) + "条]");
+        return ;
+    }
+    msgWaits[waitChannel] = 0; // 重新等待
 
     // 强制房管权限
     if (forceAdmin)
@@ -9441,6 +9451,7 @@ void MainWindow::handleMessage(QJsonObject json)
             // 唔，好吧，啥都不用做
         }
 
+        // 判断对面直播间
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
@@ -9458,6 +9469,13 @@ void MainWindow::handleMessage(QJsonObject json)
         dailyDanmaku++;
         if (dailySettings)
             dailySettings->setValue("danmaku", dailyDanmaku);
+
+        // 等待通道
+        if (uid != cookieUid.toLongLong())
+        {
+            for (int i = 0; i < CHANNEL_COUNT; i++)
+                msgWaits[i]++;
+        }
 
         // 添加到列表
         QString cs = QString::number(textColor, 16);
@@ -14743,6 +14761,8 @@ void MainWindow::releaseLiveData(bool prepare)
         autoMsgQueues.clear();
         for (int i = 0; i < CHANNEL_COUNT; i++)
             msgCds[i] = 0;
+        for (int i = 0; i < CHANNEL_COUNT; i++)
+            msgWaits[i] = WAIT_CHANNEL_MAX;
         roomDanmakus.clear();
         pkGifts.clear();
 

@@ -64,6 +64,7 @@ QT_END_NAMESPACE
 
 #define CHANNEL_COUNT 100
 #define MAGICAL_SPLIT_CHAR "-bdm-split-bdm-"
+#define WAIT_CHANNEL_MAX 99
 
 #define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
 #define WELCOME_CD_CN 1    // 送礼冷却通道
@@ -1160,6 +1161,7 @@ private:
 
     // 欢迎
     qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道
+    qint64 msgWaits[CHANNEL_COUNT] = {}; // 等待通道
 
     // 自动禁言
     QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
