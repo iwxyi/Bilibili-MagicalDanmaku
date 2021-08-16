@@ -493,6 +493,11 @@ public:
         this->first = first;
     }
 
+    void setAdmin(bool admin)
+    {
+        this->admin = admin;
+    }
+
     void setArgs(QStringList args)
     {
         this->args = args;

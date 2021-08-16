@@ -2027,8 +2027,11 @@ void MainWindow::slotSendAutoMsg(bool timeout)
 
 /**
  * 发送前确保没有需要调整的变量了
+ * 而且已经不需要在意条件了
+ * 一般解析后的弹幕列表都随机执行一行，以cd=0来发送cd弹幕
+ * 带有cd channel，但实际上不一定有cd
  */
-void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual)
+void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual)
 {
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
@@ -2044,9 +2047,57 @@ void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku, int cd, int 
         return ;
     }
 
-    analyzeMsgAndCd(msg, cd, channel);
+    bool forceAdmin = false;
+    int waitCount = 0;
+    int waitChannel = 0;
 
-    // 避免太频繁发消息
+    // 弹幕选项
+    QRegularExpression re("^\\s*\\([\\w\\d:, ]+)\\)");
+    QRegularExpressionMatch match;
+    if (msg.indexOf(re, 0, &match) >= 0)
+    {
+        QStringList caps = match.capturedTexts();
+        QString full = caps.at(0);
+        QString optionStr = caps.at(1);
+        QStringList options = optionStr.split(",", QString::SkipEmptyParts);
+
+        // 遍历每一个选项
+        foreach (auto option, options)
+        {
+            option = option.trimmed();
+
+            // 冷却通道
+            re.setPattern("^cd(\\d+)\\s*:\\s*(\\d+)$");
+            if (option.indexOf(re, 0, &match) > -1)
+            {
+                QString chann = caps.at(1);
+                QString val = caps.at(2);
+                channel = chann.toInt();
+                cd = val.toInt() * 1000;
+            }
+
+            // 等待通道
+            re.setPattern("^wait(\\d+)\\s*:\\s*(\\d+)$");
+            if (option.indexOf(re, 0, &match) > -1)
+            {
+                QString chann = caps.at(1);
+                QString val = caps.at(2);
+                waitChannel = chann.toInt();
+                waitCount = val.toInt();
+            }
+
+            // 强制房管权限
+            re.setPattern("^admin(\\s*[=:]\\s*(true|1))$");
+            if (option.contains(re))
+                forceAdmin = true;
+        }
+
+        // 去掉选项，发送剩余弹幕
+        msg = msg.right(msg.length() - full.length());
+    }
+
+    // 冷却通道：避免太频繁发消息
+    /* analyzeMsgAndCd(msg, cd, channel); */
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     if (timestamp - msgCds[channel] < cd)
     {
@@ -2056,10 +2107,15 @@ void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku, int cd, int 
     }
     msgCds[channel] = timestamp;
 
+    // 等待通道
+
+
+    // 强制房管权限
+    if (forceAdmin)
+        danmaku.setAdmin(true);
+
     if (enableText)
     {
-//        if (debugPrint)
-//            localNotify("[发送弹幕：" + msg + "]");
         sendAutoMsg(msg, danmaku);
     }
     if (enableVoice)
@@ -4947,15 +5003,22 @@ QString MainWindow::processTimeVariants(QString msg) const
     return msg;
 }
 
-QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku user)
+/**
+ * 获取可以发送的代码的列表
+ * @param plainText 为替换变量的纯文本
+ * @param danmaku   弹幕变量
+ * @return          一行一条执行序列，带发送选项
+ */
+QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmaku danmaku)
 {
-    plainText = processDanmakuVariants(plainText, user);
+    // 替换变量，整理为一行一条执行序列
+    plainText = processDanmakuVariants(plainText, danmaku);
     CALC_DEB << "处理变量之后：" << plainText;
     lastConditionDanmu = plainText;
 
+    // 寻找条件为true的
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
     QStringList result;
-    // 替换变量，寻找条件
     for (int i = 0; i < lines.size(); i++)
     {
         QString line = lines.at(i);
@@ -4971,8 +5034,11 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         for (int i = 0; i < result.size() && result.size() > 1; i++)
         {
             QString s = result.at(i);
-            s = s.replace(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
-            if (!s.contains(">") && !s.contains("\\n") && s.length() > danmuLongest && !s.contains("%"))
+            if (s.contains(">") || s.contains("\\n")) // 包含多行或者命令的，不需要或者懒得判断长度
+                continue;
+            s = s.replace(QRegExp("^\\s+\\(\\s*[\\w\\d: ,]*\\s*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
+            // s = s.replace(QRegExp("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
+            if (s.length() > danmuLongest && !s.contains("%"))
             {
                 if (debugPrint)
                     localNotify("[去掉过长候选：" + s + "]");

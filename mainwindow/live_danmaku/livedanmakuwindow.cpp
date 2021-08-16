@@ -27,6 +27,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
         this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     }
+
+    bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
+    if (onTop)
+        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
     if (settings->value("livedanmakuwindow/transMouse", false).toBool())
     {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
@@ -37,9 +41,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
         });
     }
 #endif
-    bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
-    if (onTop)
-        this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
 
     QFontMetrics fm(this->font());
     fontHeight = fm.height();

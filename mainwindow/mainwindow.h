@@ -266,7 +266,7 @@ private slots:
     void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
     void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
     void slotSendAutoMsg(bool timeout);
-    void sendCdMsg(QString msg, const LiveDanmaku& danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual);
+    void sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual);
     void sendGiftMsg(QString msg, const LiveDanmaku& danmaku);
     void sendAttentionMsg(QString msg, const LiveDanmaku& danmaku);
     void sendNotifyMsg(QString msg, bool manual = false);
@@ -798,7 +798,7 @@ private:
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
-    QStringList getEditConditionStringList(QString plainText, LiveDanmaku user);
+    QStringList getEditConditionStringList(QString plainText, LiveDanmaku danmaku);
     QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
     QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
     QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
