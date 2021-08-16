@@ -266,6 +266,9 @@
             </item>
             <item>
              <widget class="ClickableLabel" name="roomNameLabel">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>修改直播间标题（仅限主播）</string>
               </property>
@@ -309,6 +312,12 @@
                  <height>64</height>
                 </size>
                </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
                <property name="styleSheet">
                 <string notr="true"/>
                </property>
@@ -335,6 +344,12 @@
                    <width>64</width>
                    <height>64</height>
                   </size>
+                 </property>
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::CustomContextMenu</enum>
                  </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;前往直播间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -378,6 +393,9 @@ background-repeat:none;</string>
                  </item>
                  <item>
                   <widget class="ClickableLabel" name="upNameLabel">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;查看主播主页&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -1343,8 +1361,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>826</width>
-             <height>559</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -7169,7 +7187,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>692</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

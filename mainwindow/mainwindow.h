@@ -701,6 +701,10 @@ private slots:
 
     void on_syncShieldKeywordCheck_clicked();
 
+    void on_roomCoverSpacingLabel_customContextMenuRequested(const QPoint &);
+
+    void on_upHeaderLabel_customContextMenuRequested(const QPoint &);
+
 private:
     void initView();
     void initStyle();
@@ -968,8 +972,8 @@ private:
     int liveStatus = 0; // 是否正在直播
     QString upName;
     QString roomTitle;
-    QPixmap roomCover;
-    QPixmap upFace;
+    QPixmap roomCover; // 直播间封面原图
+    QPixmap upFace; // 主播头像原图
     QString areaId; // 例：21（整型，为了方便用字符串）
     QString areaName; // 例：视频唱见
     QString parentAreaId; // 例：1（整型，为了方便用字符串）

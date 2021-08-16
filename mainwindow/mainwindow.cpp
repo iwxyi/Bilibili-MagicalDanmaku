@@ -17657,3 +17657,47 @@ void MainWindow::on_syncShieldKeywordCheck_clicked()
     if (enabled)
         pullRoomShieldKeyword();
 }
+
+void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoint &)
+{
+    newFacileMenu;
+    menu->addAction(QIcon(":/icons/save"), "保存直播间封面", [=]{
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        if (!oldPath.isEmpty())
+        {
+            QFileInfo info(oldPath);
+            if (info.isFile()) // 去掉文件名（因为可能是其他文件）
+                oldPath = info.absolutePath();
+        }
+        QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
+        if (path.isEmpty())
+            return ;
+        settings->setValue("danmaku/exportPath", path);
+
+        roomCover.save(path);
+    })->disable(roomCover.isNull());
+
+    menu->exec();
+}
+
+void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
+{
+    newFacileMenu;
+    menu->addAction(QIcon(":/icons/save"), "保存主播头像", [=]{
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        if (!oldPath.isEmpty())
+        {
+            QFileInfo info(oldPath);
+            if (info.isFile()) // 去掉文件名（因为可能是其他文件）
+                oldPath = info.absolutePath();
+        }
+        QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
+        if (path.isEmpty())
+            return ;
+        settings->setValue("danmaku/exportPath", path);
+
+        upFace.save(path);
+    })->disable(upFace.isNull());
+
+    menu->exec();
+}

@@ -105,6 +105,7 @@
         <file alias="win_min">icons/win_min.png</file>
         <file alias="frameless">icons/frameless.png</file>
         <file alias="cloud_block">icons/cloud_block.png</file>
+        <file alias="save">icons/save.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
