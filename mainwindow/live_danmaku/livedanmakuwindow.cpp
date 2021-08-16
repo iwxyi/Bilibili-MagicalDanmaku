@@ -173,11 +173,12 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     ignoreDanmakuColors = settings->value("livedanmakuwindow/ignoreColor").toString().split(";");
 
     // 模式
-    simpleMode = settings->value("livedanmakuwindow/simpleMode", false).toBool();
-    chatMode = settings->value("livedanmakuwindow/chatMode", false).toBool();
-    allowH5 = settings->value("livedanmakuwindow/allowH5", false).toBool();
-    blockComingMsg = settings->value("livedanmakuwindow/blockComingMsg", false).toBool();
-    blockSpecialGift = settings->value("livedanmakuwindow/blockSpecialGift", false).toBool();
+    simpleMode = settings->value("livedanmakuwindow/simpleMode", simpleMode).toBool();
+    chatMode = settings->value("livedanmakuwindow/chatMode", chatMode).toBool();
+    allowH5 = settings->value("livedanmakuwindow/allowH5", allowH5).toBool();
+    blockComingMsg = settings->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
+    blockSpecialGift = settings->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
+    blockCommonNotice = settings->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
 
     readReplyKey();
 
@@ -237,10 +238,10 @@ bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, 
            return false;
         return true;
     }
+    return false;         //此处返回false，留给其他事件处理器处理
 #else
     return QWidget::nativeEvent(eventType, message, result);
 #endif
-    return false;         //此处返回false，留给其他事件处理器处理
 }
 
 void LiveDanmakuWindow::mousePressEvent(QMouseEvent *e)

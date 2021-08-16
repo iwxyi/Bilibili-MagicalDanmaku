@@ -11101,7 +11101,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         return ;
     }
-    else if (cmd == "COMMON_NOTICE_DANMAKU") // 结束语
+    else if (cmd == "COMMON_NOTICE_DANMAKU") // 大乱斗一堆提示
     {
         /*{
             "cmd": "COMMON_NOTICE_DANMAKU",
@@ -11128,9 +11128,12 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else
             {
+                LiveDanmaku danmaku = LiveDanmaku(text).with(json);
+                if (isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
+                    return ;
                 text.replace("<$", "").replace("$>", "");
                 localNotify(text);
-                triggerCmdEvent(cmd, LiveDanmaku(text).with(json));
+                triggerCmdEvent(cmd, danmaku);
             }
         }
         else
