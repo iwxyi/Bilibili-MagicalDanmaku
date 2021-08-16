@@ -5223,6 +5223,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
 QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QString &key, bool *ok) const
 {
     *ok = true;
+    QRegularExpressionMatch match;
     // 用户昵称
     if (key == "%uname%" || key == "%username%" || key =="%nickname%")
         return danmaku.getNickname();
@@ -5716,6 +5717,19 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return snum(qrand() % 100 + 1);
     }
+    else if (key.indexOf(QRegularExpression("^%cd(\\d{1,2})%$"), 0, &match) > -1)
+    {
+        int ch = match.captured(1).toInt();
+        qint64 time = msgCds[ch];
+        qint64 curr = QDateTime::currentSecsSinceEpoch();
+        qint64 delta = curr - time;
+        return snum(delta);
+    }
+    else if (key.indexOf(QRegularExpression("^%wait(\\d{1,2})%$"), 0, &match) > -1)
+    {
+        int ch = match.captured(1).toInt();
+        return snum(msgWaits[ch]);
+    }
     else
     {
         *ok = false;
@@ -6108,6 +6122,23 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     else if (funcName == "fileExists")
     {
         return isFileExist(args) ? "1" : "0";
+    }
+    else if (funcName == "cd")
+    {
+        int ch = 0;
+        if (argList.size() > 0)
+            ch = argList.at(0).toInt();
+        qint64 time = msgCds[ch];
+        qint64 curr = QDateTime::currentSecsSinceEpoch();
+        qint64 delta = curr - time;
+        return snum(delta);
+    }
+    else if (funcName == "wait")
+    {
+        int ch = 0;
+        if (argList.size() > 0)
+            ch = argList.at(0).toInt();
+        return snum(msgWaits[ch]);
     }
 
     return "";

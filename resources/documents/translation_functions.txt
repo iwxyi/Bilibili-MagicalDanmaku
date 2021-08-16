@@ -24,3 +24,5 @@
 取平方=pow2
 取乘方=pow
 文件存在=fileExists
+冷却通道=msgCd
+等待通道=msgWait

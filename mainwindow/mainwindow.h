@@ -1161,7 +1161,7 @@ private:
 
     // 欢迎
     qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道
-    qint64 msgWaits[CHANNEL_COUNT] = {}; // 等待通道
+    int msgWaits[CHANNEL_COUNT] = {}; // 等待通道
 
     // 自动禁言
     QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
