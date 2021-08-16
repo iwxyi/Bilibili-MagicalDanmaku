@@ -268,6 +268,7 @@ private slots:
     void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
     void slotSendAutoMsg(bool timeout);
     void sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual);
+    void sendCdMsg(QString msgs, const LiveDanmaku& danmaku);
     void sendGiftMsg(QString msg, const LiveDanmaku& danmaku);
     void sendAttentionMsg(QString msg, const LiveDanmaku& danmaku);
     void sendNotifyMsg(QString msg, bool manual = false);
@@ -1160,7 +1161,7 @@ private:
     int pkOnlineGuard1, pkOnlineGuard2, pkOnlineGuard3;
 
     // 欢迎
-    qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道
+    qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道（精确到毫秒）
     int msgWaits[CHANNEL_COUNT] = {}; // 等待通道
 
     // 自动禁言

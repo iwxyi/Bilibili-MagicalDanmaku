@@ -1971,6 +1971,18 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 
 
+##### 示例：保存弹幕/送礼记录
+
+保存弹幕记录到 “mydir/danmu.txt”：
+事件：`DANMU_MSG`
+动作：`>appendFileLine(mydir, danmu.txt, %uname%: %text%)`
+
+保存送礼记录到“mydir/gift.txt”：
+事件：`SEND_GIFT`
+动作：`>appendFileLine(mydir, gift.txt, %gift_name% %number% %uname%)`
+
+
+
 #### 大乱斗事件
 
 | 事件命令 | 说明 |
@@ -2190,7 +2202,9 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上      |
 | FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言              |
 
-若有多个相同过滤器，只要任意其中一个包括 `>reject()` 命令，则本操作不允许。
+若有多个相同过滤器，只要**任意其中一个**包括 `>reject()` 命令，则本操作不允许。
+
+另外，过滤器不支持发送选项（冷却通道、等待通道）；若有需要，放到条件判断中。
 
 注意：默认的过滤器可能会在一定程度上造成卡顿，可在弹幕设置中关闭。
 

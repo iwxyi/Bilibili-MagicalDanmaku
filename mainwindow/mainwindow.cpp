@@ -2034,6 +2034,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
  * 而且已经不需要在意条件了
  * 一般解析后的弹幕列表都随机执行一行，以cd=0来发送cd弹幕
  * 带有cd channel，但实际上不一定有cd
+ * @param msg 单行要发送的弹幕序列
  */
 void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual)
 {
@@ -2056,9 +2057,9 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
     int waitChannel = 0;
 
     // 弹幕选项
-    QRegularExpression re("^\\s*\\([\\w\\d:, ]+)\\)");
+    QRegularExpression re("^\\s*\\(([\\w\\d:, ]+)\\)");
     QRegularExpressionMatch match;
-    if (msg.indexOf(re, 0, &match) >= 0)
+    if (msg.indexOf(re, 0, &match) > -1)
     {
         QStringList caps = match.capturedTexts();
         QString full = caps.at(0);
@@ -2074,26 +2075,33 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
             re.setPattern("^cd(\\d{1,2})\\s*:\\s*(\\d+)$");
             if (option.indexOf(re, 0, &match) > -1)
             {
+                caps = match.capturedTexts();
                 QString chann = caps.at(1);
                 QString val = caps.at(2);
                 channel = chann.toInt();
-                cd = val.toInt() * 1000;
+                cd = val.toInt() * 1000; // 秒转毫秒
+                continue;
             }
 
             // 等待通道
             re.setPattern("^wait(\\d{1,2})\\s*:\\s*(\\d+)$");
             if (option.indexOf(re, 0, &match) > -1)
             {
+                caps = match.capturedTexts();
                 QString chann = caps.at(1);
                 QString val = caps.at(2);
                 waitChannel = chann.toInt();
                 waitCount = val.toInt();
+                continue;
             }
 
             // 强制房管权限
             re.setPattern("^admin(\\s*[=:]\\s*(true|1))$");
             if (option.contains(re))
+            {
                 forceAdmin = true;
+                continue;
+            }
         }
 
         // 去掉选项，发送剩余弹幕
@@ -2102,20 +2110,20 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
 
     // 冷却通道：避免太频繁发消息
     /* analyzeMsgAndCd(msg, cd, channel); */
-    qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    if (timestamp - msgCds[channel] < cd)
+    qint64 timestamp = QDateTime::currentMSecsSinceEpoch(); // 值是毫秒，用户配置为秒
+    if (cd > 0 && timestamp - msgCds[channel] < cd)
     {
         if (debugPrint)
-            localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + "," + snum(cd) + "ms]");
+            localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + " 不足 " + snum(cd) + "毫秒]");
         return ;
     }
     msgCds[channel] = timestamp; // 重新冷却
 
     // 等待通道
-    if (msgWaits[waitChannel] < waitCount)
+    if (waitCount > 0 && msgWaits[waitChannel] < waitCount)
     {
         if (debugPrint)
-            localNotify("[未完成等待：" + snum(msgWaits[msgWaits[waitChannel]]) + "," + snum(waitCount) + "条]");
+            localNotify("[未完成等待：" + snum(msgWaits[waitChannel]) + " 不足 " + snum(waitCount) + "条]");
         return ;
     }
     msgWaits[waitChannel] = 0; // 重新等待
@@ -2130,6 +2138,11 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
     }
     if (enableVoice)
         speekVariantText(msg);
+}
+
+void MainWindow::sendCdMsg(QString msg, const LiveDanmaku &danmaku)
+{
+    sendCdMsg(msg, danmaku, 0, NOTIFY_CD_CN, true, false, false);
 }
 
 void MainWindow::sendGiftMsg(QString msg, const LiveDanmaku &danmaku)
@@ -2597,6 +2610,8 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
+        if (debugPrint)
+            localNotify("[定时任务:" + snum(ui->taskListWidget->row(item)) + "]");
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行定时任务
         {
             qInfo() << "未开播，不做回复(timer)" << sl;
@@ -2611,8 +2626,12 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                sendAutoMsg(s, LiveDanmaku());
+                sendCdMsg(s, LiveDanmaku(), 0, TASK_CD_CN, true, false, manual);
             }
+        }
+        else if (debugPrint)
+        {
+            localNotify("[没有可发送的定时弹幕]");
         }
     });
 
@@ -2729,13 +2748,17 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
             {
                 if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                 {
-                    if (s.contains(QRegExp("\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"))) // 带冷却通道，不能放前面
+                    if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
                         autoMsgTimer->start(); // 先启动，避免立即发送
                     else
                         s = "\\n" + s; // 延迟一次发送的时间
                 }
                 sendCdMsg(s, danmaku, 0, REPLY_CD_CN, true, false, manual);
             }
+        }
+        else if (debugPrint)
+        {
+            localNotify("[没有可发送的回复弹幕]");
         }
     });
 
@@ -2897,6 +2920,10 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
             {
                 sendCdMsg(s, danmaku, 0, EVENT_CD_CN, true, false, manual);
             }
+        }
+        else if (debugPrint)
+        {
+            localNotify("[没有可发送的事件弹幕]");
         }
     });
 
@@ -5721,7 +5748,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         int ch = match.captured(1).toInt();
         qint64 time = msgCds[ch];
-        qint64 curr = QDateTime::currentSecsSinceEpoch();
+        qint64 curr = QDateTime::currentMSecsSinceEpoch();
         qint64 delta = curr - time;
         return snum(delta);
     }
@@ -6129,7 +6156,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         if (argList.size() > 0)
             ch = argList.at(0).toInt();
         qint64 time = msgCds[ch];
-        qint64 curr = QDateTime::currentSecsSinceEpoch();
+        qint64 curr = QDateTime::currentMSecsSinceEpoch();
         qint64 delta = curr - time;
         return snum(delta);
     }
