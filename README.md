@@ -618,6 +618,12 @@ QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 | 送礼物小动画         | /gift/index.html      |
 | 电影结束效果答谢     | /gift/end_thanks.html |
 
+例如点歌列表，默认的链接是：
+
+```
+http://localhost:5520/music/index.html
+```
+
 更多功能可自行定制，接口与开发文档见底部“[Web开发接口](#web_dev)”。
 
 
@@ -719,6 +725,16 @@ border-image: url(C:/Path/To/Image.png)
 每次启动的时候会将程序配置（settings.ini）和使用数值（heaps.ini）各加上当前时间备份至“backup/”文件夹，若不小心被其他版本覆盖，可将备份的这两个文件去掉文件名中的时间，放到程序根目录下。
 
 
+
+#### 调试日志
+
+如果经常遇见问题，请按以下方法开启日志：
+
+在程序根目录的 `settings.ini` 文件中， `[runtime]` 分组下（没有在自己新建），添加 `debugToFile=true`。
+
+重启神奇弹幕，根目录下会出现 `debug.txt`，这就是调试日志。
+
+**盘查问题时需要将这个文件交给开发者。**
 
 
 

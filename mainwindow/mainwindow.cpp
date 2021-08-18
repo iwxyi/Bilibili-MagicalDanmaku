@@ -400,6 +400,10 @@ void MainWindow::initView()
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
 
+    // 禁言
+    ui->eternalBlockListButton->setBgColor(Qt::white);
+    ui->eternalBlockListButton->setRadius(fluentRadius);
+
     // 通知
     tip_box = new TipBox(this);
     connect(tip_box, &TipBox::signalCardClicked, [=](NotificationEntry* n){
