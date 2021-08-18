@@ -14,6 +14,11 @@ public:
         setCursor(Qt::PointingHandCursor);
     }
 
+    void click()
+    {
+        emit clicked();
+    }
+
 protected:
     void mousePressEvent(QMouseEvent *ev) override
     {

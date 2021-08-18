@@ -15562,6 +15562,70 @@ void MainWindow::adjustDanmakuLongest()
     on_danmuLongestSpin_editingFinished();
 }
 
+void MainWindow::myLiveSelectArea()
+{
+    get("https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2", [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("获取分区列表", json.msg());
+        newFacileMenu;
+
+        json.data().each("data", [=](MyJson json){
+            QString parentId = snum(json.i("id")); // 这是int类型的
+            QString parentName = json.s("name");
+            auto parentMenu = menu->addMenu(parentName);
+            json.each("list", [=](MyJson json) {
+                QString id = json.s("id"); // 这个是字符串的
+                QString name = json.s("name");
+                parentMenu->addAction(name, [=]{
+                    areaId = id;
+                    areaName = name;
+                    parentAreaId = parentId;
+                    parentAreaName = parentName;
+                    settings->setValue("myLive/areaId", areaId);
+                    settings->setValue("myLive/parentAreaId", parentAreaId);
+                    qInfo() << "选择分区：" << parentName << parentId << areaName << areaId;
+                });
+            });
+        });
+
+        menu->exec();
+    });
+}
+
+void MainWindow::myLiveStartLive()
+{
+    int lastAreaId = settings->value("myLive/areaId", 0).toInt();
+    if (!lastAreaId)
+    {
+        // QMessageBox::warning(this, "一键开播", "请先选择分区\n一次选择后自动记忆");
+        showError("一键开播", "请先选择分区");
+        return ;
+    }
+    qInfo() << "一键开播";
+    post("https://api.live.bilibili.com/room/v1/Room/startLive",
+    {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("一键开播失败", json.msg());
+        MyJson rtmp = json.data().o("rtmp");
+        myLiveRtmp = rtmp.s("rtmp");
+        myLiveCode = rtmp.s("code");
+    });
+}
+
+void MainWindow::myLiveStopLive()
+{
+    qInfo() << "一键下播";
+    post("https://api.live.bilibili.com/room/v1/Room/stopLive",
+    {"room_id", roomId, "platform", "pc",
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("一键下播失败", json.msg());
+    });
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -17738,6 +17802,36 @@ void MainWindow::on_syncShieldKeywordCheck_clicked()
 void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
+
+    // 主播专属操作
+    if (cookieUid == upUid)
+    {
+        menu->addAction(QIcon(":/icons/title"), "修改直播间标题", [=]{
+            ui->roomNameLabel->click();
+        });
+        menu->addAction(QIcon(":/icons/default_cover"), "更换直播间封面", [=]{
+
+        })->disable();
+        menu->addAction(QIcon(":/icons/area"), "选择分区", [=]{
+            myLiveSelectArea();
+        });
+        menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
+            if (!isLiving())
+            {
+                // 一键开播
+                myLiveStartLive();
+            }
+            else
+            {
+                // 一键下播
+                myLiveStopLive();
+            }
+        })->text(isLiving(), "一键下播");
+
+        menu->split();
+    }
+
+    // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存直播间封面", [=]{
         QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
@@ -17760,14 +17854,6 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
 void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
-
-    // 主播专属操作
-    if (cookieUid == upUid)
-    {
-
-    }
-
-    // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存主播头像", [=]{
         QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())

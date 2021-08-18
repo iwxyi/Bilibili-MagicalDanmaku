@@ -107,6 +107,8 @@
         <file alias="cloud_block">icons/cloud_block.png</file>
         <file alias="save">icons/save.png</file>
         <file alias="qrcode_small">icons/qrcode_small.png</file>
+        <file alias="area">icons/area.png</file>
+        <file alias="title">icons/title.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

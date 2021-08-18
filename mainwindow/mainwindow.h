@@ -910,6 +910,9 @@ private:
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
     void adjustDanmakuLongest();
+    void myLiveSelectArea();
+    void myLiveStartLive();
+    void myLiveStopLive();
 
     void startSplash();
     void saveGameNumbers(int channel);
@@ -986,6 +989,8 @@ private:
     QString parentAreaName; // 例：娱乐
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
+    QString myLiveRtmp; // rtmp地址
+    QString myLiveCode; // 直播码
 
     qint64 liveTimestamp = 0;
     QTimer* xliveHeartBeatTimer = nullptr;
