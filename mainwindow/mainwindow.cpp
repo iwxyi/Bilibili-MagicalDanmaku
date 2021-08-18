@@ -232,24 +232,7 @@ void MainWindow::initView()
         if (upUid.isEmpty() || upUid != cookieUid)
             return ;
 
-        QString title = ui->roomNameLabel->text();
-        bool ok = false;
-        title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
-        if (!ok)
-            return ;
-
-        post("https://api.live.bilibili.com/room/v1/Room/update",
-             QStringList{
-                 "room_id", roomId,
-                 "title", title,
-                 "csrf_token", csrf_token,
-                 "csrf", csrf_token
-             }, [=](MyJson json) {
-            if (json.code() != 0)
-            {
-                showError(json.msg());
-            }
-        });
+       myLiveSetTitle();
     });
 
     // 吊灯
@@ -3954,16 +3937,17 @@ void MainWindow::getRoomInfo(bool reconnect)
             danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-        QString roomDesc = roomInfo.value("description").toString();
+        roomDescription = roomInfo.value("description").toString();
         QStringList tags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
             ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
+        roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
         // 设置房间描述
-        ui->roomDescriptionBrowser->setText(roomDesc);
+        ui->roomDescriptionBrowser->setText(roomDescription);
         {
             QString text = ui->roomDescriptionBrowser->toPlainText();
             QTextCursor cursor = ui->roomDescriptionBrowser->textCursor();
@@ -15601,7 +15585,6 @@ void MainWindow::myLiveStartLive()
         showError("一键开播", "请先选择分区");
         return ;
     }
-    qInfo() << "一键开播";
     post("https://api.live.bilibili.com/room/v1/Room/startLive",
     {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
          "csrf_token", csrf_token, "csrf", csrf_token},
@@ -15609,20 +15592,85 @@ void MainWindow::myLiveStartLive()
         if (json.code() != 0)
             return showError("一键开播失败", json.msg());
         MyJson rtmp = json.data().o("rtmp");
-        myLiveRtmp = rtmp.s("rtmp");
+        myLiveRtmp = rtmp.s("addr");
         myLiveCode = rtmp.s("code");
     });
 }
 
 void MainWindow::myLiveStopLive()
 {
-    qInfo() << "一键下播";
     post("https://api.live.bilibili.com/room/v1/Room/stopLive",
     {"room_id", roomId, "platform", "pc",
          "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
         if (json.code() != 0)
             return showError("一键下播失败", json.msg());
+    });
+}
+
+void MainWindow::myLiveSetTitle()
+{
+    QString title = roomTitle;
+    bool ok = false;
+    title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", roomId,
+             "title", title,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomTitle = title;
+        ui->roomNameLabel->setText(title);
+    });
+}
+
+void MainWindow::myLiveSetNews()
+{
+    QString content = roomNews;
+    bool ok = false;
+    content = TextInputDialog::getText(this, "修改主播公告", "修改主播公告，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room_ex/v1/RoomNews/update",
+         QStringList{
+             "room_id", roomId,
+             "uid", cookieUid,
+             "content", content,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomNews = content;
+    });
+}
+
+void MainWindow::myLiveSetDescription()
+{
+    QString content = roomDescription;
+    bool ok = false;
+    content = TextInputDialog::getText(this, "修改个人简介", "修改主播的个人简介，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", roomId,
+             "description", content,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomDescription = content;
+        ui->roomDescriptionBrowser->setPlainText(roomDescription);
     });
 }
 
@@ -17807,12 +17855,18 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
     if (cookieUid == upUid)
     {
         menu->addAction(QIcon(":/icons/title"), "修改直播间标题", [=]{
-            ui->roomNameLabel->click();
+            myLiveSetTitle();
         });
         menu->addAction(QIcon(":/icons/default_cover"), "更换直播间封面", [=]{
 
         })->disable();
-        menu->addAction(QIcon(":/icons/area"), "选择分区", [=]{
+        menu->addAction(QIcon(":/icons/news"), "修改主播公告", [=]{
+            myLiveSetNews();
+        });
+        menu->addAction(QIcon(":/icons/person_description"), "修改个人简介", [=]{
+            myLiveSetDescription();
+        });
+        menu->split()->addAction(QIcon(":/icons/area"), "选择分区", [=]{
             myLiveSelectArea();
         });
         menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
@@ -17827,6 +17881,14 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
                 myLiveStopLive();
             }
         })->text(isLiving(), "一键下播");
+
+        menu->addAction(QIcon(":/icons/rtmp"), "复制rtmp", [=]{
+            QApplication::clipboard()->setText(myLiveRtmp);
+        })->disable(myLiveRtmp.isEmpty());
+
+        menu->addAction(QIcon(":/icons/token"), "复制直播码", [=]{
+            QApplication::clipboard()->setText(myLiveCode);
+        })->disable(myLiveCode.isEmpty());
 
         menu->split();
     }

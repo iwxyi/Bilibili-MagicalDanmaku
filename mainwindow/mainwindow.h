@@ -913,6 +913,9 @@ private:
     void myLiveSelectArea();
     void myLiveStartLive();
     void myLiveStopLive();
+    void myLiveSetTitle();
+    void myLiveSetNews();
+    void myLiveSetDescription();
 
     void startSplash();
     void saveGameNumbers(int channel);
@@ -952,6 +955,7 @@ private:
     void showError(QString s) const;
 
 private:
+    // 应用信息
     Ui::MainWindow *ui;
     QSettings* settings;
     QSettings* heaps;
@@ -987,11 +991,18 @@ private:
     QString areaName; // 例：视频唱见
     QString parentAreaId; // 例：1（整型，为了方便用字符串）
     QString parentAreaName; // 例：娱乐
-    bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
-    QTimer* hourTimer = nullptr;
+    QString roomNews; // 主播公告
+    QString roomDescription; // 主播个人简介
+
+    // 我的直播
     QString myLiveRtmp; // rtmp地址
     QString myLiveCode; // 直播码
 
+    // 启动与定时
+    bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
+    QTimer* hourTimer = nullptr;
+
+    // 直播心跳
     qint64 liveTimestamp = 0;
     QTimer* xliveHeartBeatTimer = nullptr;
     int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
