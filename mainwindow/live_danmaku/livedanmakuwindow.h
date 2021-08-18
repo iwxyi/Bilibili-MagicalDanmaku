@@ -194,6 +194,7 @@ private:
     bool allowH5 = false;
     bool blockComingMsg = false;  // 屏蔽进入
     bool blockSpecialGift = false; // 屏蔽节奏风暴
+    bool blockCommonNotice = true; // 屏蔽常见通知（尤其是大乱斗那些）
     QStringList blockedTexts;
 
     QString headDir; // 头像保存的路径/ (带/)

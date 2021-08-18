@@ -2159,13 +2159,19 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 添加事件：`winCountReport`，动作：
 
 ```
-[%{winCount}%>=1]目前连胜场数：%{winCount}%
+[%{winCount}%>=3]目前连胜场数：%{winCount}%
 ```
 
 如果要手动调整连胜数量（例如5），可以添加以下动作，手动点击“发送”，事件可以留空：
 
 ```
 >setValue(winCount,5)
+```
+
+每天清零，事件：`NEW_DAY_FIRST`，动作：
+
+```
+>setValue(pk_win, 0)
 ```
 
 
@@ -2210,15 +2216,16 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 若有多行，同其他代码一样，随机获取一行；其他弹幕或命令正常发送。
 
-| 过滤事件                 | 说明（reject时）                |
-| ------------------------ | ------------------------------- |
-| FILTER_MUSIC_ORDER       | 阻止点歌                        |
-| FILTER_AUTO_REPLY        | 阻止所有的自动回复              |
-| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上      |
-| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上      |
-| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上 |
-| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上      |
-| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言              |
+| 过滤事件                 | 说明（reject时）                          |
+| ------------------------ | ----------------------------------------- |
+| FILTER_MUSIC_ORDER       | 阻止点歌                                  |
+| FILTER_AUTO_REPLY        | 阻止所有的自动回复                        |
+| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上                |
+| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上                |
+| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上           |
+| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上                |
+| FILTER_DANMKU_NOTICE     | 阻止普通通知(Common Notice)显示在弹幕姬上 |
+| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                        |
 
 若有多个相同过滤器，只要**任意其中一个**包括 `>reject()` 命令，则本操作不允许。
 
