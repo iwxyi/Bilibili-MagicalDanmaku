@@ -6,6 +6,8 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
 {
     setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     setWindowTitle(title);
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint);
+
 
     QVBoxLayout* main_vlayout = new QVBoxLayout;
     msg_lab = new QLabel(msg, this);
@@ -26,7 +28,6 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
     hlayout->addWidget(label1);
     hlayout->addWidget(label2);
     main_vlayout->addLayout(hlayout);
-
 
     esc_btn = new HoverButton(esc, this);
     nor_btn = new HoverButton(nor, this);
@@ -106,6 +107,16 @@ void EscapeDialog::leaveEvent(QEvent *event)
 {
     recoverEscBtnPos();
     return QDialog::leaveEvent(event);
+}
+
+void EscapeDialog::closeEvent(QCloseEvent *e)
+{
+    if (!yes_pressed)
+    {
+        e->ignore();
+        return ;
+    }
+    return QDialog::closeEvent(e);
 }
 
 void EscapeDialog::resetBtnPos()
