@@ -705,6 +705,10 @@ private slots:
 
     void on_upHeaderLabel_customContextMenuRequested(const QPoint &);
 
+    void on_musicConfigButton_clicked();
+
+    void on_musicConfigStack_currentChanged(int arg1);
+
 private:
     void initView();
     void initStyle();

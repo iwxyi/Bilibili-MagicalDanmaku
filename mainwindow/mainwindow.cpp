@@ -359,6 +359,11 @@ void MainWindow::initView()
     musicTitleDecorateWidget->stackUnder(ui->musicBigTitleLabel);
     ui->musicBlackListButton->setRadius(fluentRadius);
     ui->musicBlackListButton->adjustMinimumSize();
+    ui->musicBlackListButton->setFixedForePos();
+    ui->musicConfigButton->setSquareSize();
+    ui->musicConfigButton->setFixedForePos();
+    ui->musicConfigButton->setRadius(fluentRadius);
+    ui->addMusicToLiveButton->adjustMinimumSize();
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
@@ -511,6 +516,11 @@ void MainWindow::readConfig()
     int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
     if (thankStackIndex >= 0 && thankStackIndex < ui->thankStackedWidget->count())
         ui->thankStackedWidget->setCurrentIndex(thankStackIndex);
+
+    // 音乐标签
+    int musicStackIndex = settings->value("mainwindow/musicStackIndex", 0).toInt();
+    if (musicStackIndex >= 0 && musicStackIndex < ui->musicConfigStack->count())
+        ui->musicConfigStack->setCurrentIndex(musicStackIndex);
 
     // 房间号
     roomId = settings->value("danmaku/roomId", "").toString();
@@ -1451,6 +1461,8 @@ void MainWindow::switchPageAnimation(int page)
     }
 
     auto startGeometryAni = [=](QWidget* widget, QVariant start, QVariant end, int duration = 400, QEasingCurve curve = QEasingCurve::OutCubic){
+        if (widget->isHidden())
+            widget->show();
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "geometry");
         ani->setStartValue(start);
         ani->setEndValue(end);
@@ -1515,20 +1527,57 @@ void MainWindow::switchPageAnimation(int page)
     }
     else if (page == PAGE_MUSIC)
     {
+//        ui->musicContainerWidget->layout()->setEnabled(false);
+//        QTimer::singleShot(900, [=]{
+//            ui->musicContainerWidget->layout()->setEnabled(true);
+//        });
+
+        // 标题装饰文字背景动画
         QRect g(musicTitleDecorateWidget->geometry());
         startGeometryAni(musicTitleDecorateWidget,
                          QRect(g.left(), -g.height(), g.width(), g.height()), g);
 
+        // 下划线展开动画
         g = QRect(ui->musicSplitWidget1->geometry());
         startGeometryAniDelay(500, ui->musicSplitWidget1,
                          QRect(g.center().x(), g.top(), 1, 1), g);
+
+        // 没开启的话总开关动画高亮
+        if (!ui->DiangeAutoCopyCheck->isChecked())
+        {
+            g = ui->DiangeAutoCopyCheck->geometry();
+            startGeometryAniDelay(200, ui->DiangeAutoCopyCheck,
+                             QRect(g.left() - g.width(), g.top(), g.width(), g.height()), g,
+                                  600, QEasingCurve::OutBounce);
+        }
+
+        // 三个小功能开关的设置项
+//        ui->label_14->hide();
+//        ui->label_43->hide();
+//        ui->label_44->hide();
+//        ui->label_14->setMinimumSize(0, 0);
+//        ui->label_43->setMinimumSize(0, 0);
+//        ui->label_44->setMinimumSize(0, 0);
+//        g = ui->label_41->geometry();
+//        startGeometryAni(ui->label_41,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+//        g = ui->label_43->geometry();
+//        startGeometryAniDelay(300, ui->label_43,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+//        g = ui->label_44->geometry();
+//        startGeometryAniDelay(600, ui->label_44,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+
     }
     else if (page == PAGE_EXTENSION)
     {
         QRect g(appendListItemButton->geometry());
-        startGeometryAni(appendListItemButton,
-                         QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
-                         400, QEasingCurve::OutBack);
+        if (!appendListItemButton->isHidden())
+        {
+            startGeometryAni(appendListItemButton,
+                             QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
+                             400, QEasingCurve::OutBack);
+        }
     }
     else if (page == PAGE_PREFENCE)
     {
@@ -17704,4 +17753,22 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
     })->disable(upFace.isNull());
 
     menu->exec();
+}
+
+void MainWindow::on_musicConfigButton_clicked()
+{
+    int page = ui->musicConfigStack->currentIndex();
+    if (page == 0) // 设置页面
+    {
+        ui->musicConfigStack->setCurrentIndex(1);
+    }
+    else if (page == 1) // 列表页面
+    {
+        ui->musicConfigStack->setCurrentIndex(0);
+    }
+}
+
+void MainWindow::on_musicConfigStack_currentChanged(int arg1)
+{
+    settings->setValue("mainwindow/musicStackIndex", arg1);
 }
