@@ -709,6 +709,8 @@ private slots:
 
     void on_musicConfigStack_currentChanged(int arg1);
 
+    void on_addMusicToLiveButton_clicked();
+
 private:
     void initView();
     void initStyle();

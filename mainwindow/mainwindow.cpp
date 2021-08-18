@@ -364,9 +364,13 @@ void MainWindow::initView()
     ui->musicConfigButton->setSquareSize();
     ui->musicConfigButton->setFixedForePos();
     ui->musicConfigButton->setRadius(fluentRadius);
+    ui->musicConfigButtonSpacingWidget->setFixedWidth(ui->musicConfigButton->width());
+    ui->addMusicToLiveButton->setRadius(fluentRadius);
+    ui->addMusicToLiveButton->setPaddings(8);
     ui->addMusicToLiveButton->adjustMinimumSize();
     ui->addMusicToLiveButton->setBorderWidth(1);
     ui->addMusicToLiveButton->setBorderColor(Qt::lightGray);
+    ui->addMusicToLiveButton->setFixedForePos();
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
@@ -4367,7 +4371,7 @@ void MainWindow::setRoomThemeByCover(double val)
     ui->SendMsgButton->setTextColor(fg);
     ui->showOrderPlayerButton->setNormalColor(sbg);
     ui->showOrderPlayerButton->setTextColor(sfg);
-    // ui->addMusicToLiveButton->setBorderColor(sbg);
+    // ui->addMusicToLiveButton->setBorderColor(sbg); // 感觉太花哨了
     appendListItemButton->setBgColor(sbg);
     appendListItemButton->setIconColor(sfg);
     if (hasPermission())
@@ -17775,4 +17779,10 @@ void MainWindow::on_musicConfigButton_clicked()
 void MainWindow::on_musicConfigStack_currentChanged(int arg1)
 {
     settings->setValue("mainwindow/musicStackIndex", arg1);
+}
+
+void MainWindow::on_addMusicToLiveButton_clicked()
+{
+    ui->extensionPageButton->simulateStatePress();
+    ui->tabWidget->setCurrentWidget(ui->tabRemote);
 }
