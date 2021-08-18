@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>919</width>
-    <height>1163</height>
+    <width>842</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -313,7 +313,7 @@
                 </size>
                </property>
                <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
+                <cursorShape>ArrowCursor</cursorShape>
                </property>
                <property name="contextMenuPolicy">
                 <enum>Qt::CustomContextMenu</enum>
@@ -1361,8 +1361,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>839</width>
-             <height>1047</height>
+             <width>762</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -7163,7 +7163,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel2">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a target=&quot;_blank&quot; href=&quot;https://qm.qq.com/cgi-bin/qm/qr?k=aEmgi6tVdIvdxzxJ27Fwc6Feootcr7XO&amp;jump_from=webapi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者恰顿饭&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本程序由&lt;a href=&quot;https://github.com/iwxyi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;心乂&lt;/span&gt;&lt;/a&gt;随手开发，仅供个人学习、研究之用。&lt;/p&gt;&lt;p&gt;内部研讨群: &lt;a target=&quot;_blank&quot; href=&quot;https://qm.qq.com/cgi-bin/qm/qr?k=aEmgi6tVdIvdxzxJ27Fwc6Feootcr7XO&amp;jump_from=webapi&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;1038738410&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&amp;nbsp;&lt;a href=&quot;this://qq_qrcode&quot;&gt;&lt;img src=&quot;:/icons/qrcode_small&quot; style=&quot;width:16px;height:16px;&quot; /&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;若觉得好用，&lt;a href=&quot;this://donation&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;请开发者恰顿饭&lt;/span&gt;&lt;/a&gt;吧&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -7387,7 +7387,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>919</width>
+     <width>842</width>
      <height>21</height>
     </rect>
    </property>

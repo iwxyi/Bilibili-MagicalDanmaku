@@ -15711,6 +15711,13 @@ void MainWindow::openLink(QString link)
     {
         on_actionSend_Long_Text_triggered();
     }
+    else if (link == "qq_qrcode")
+    {
+        // 直接把下面的图片设置成这个二维码的
+        ui->label_39->setStyleSheet("border-image:url(:/documents/qq_qrcode);\
+                                    background-position:center;\
+                                    background-repeat:none;");
+    }
 }
 
 /// 显示礼物在界面上
@@ -17753,6 +17760,14 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
 void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
+
+    // 主播专属操作
+    if (cookieUid == upUid)
+    {
+
+    }
+
+    // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存主播头像", [=]{
         QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())

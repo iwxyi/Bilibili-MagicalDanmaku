@@ -1751,7 +1751,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qWarning() << "咪咕歌曲链接返回结果不为100：" << json;
+                qWarning() << "咪咕歌曲链接返回结果不为100：" << json << url;
                 switchSource(song);
                 return ;
             }
