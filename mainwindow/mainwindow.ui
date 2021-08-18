@@ -392,23 +392,49 @@ background-repeat:none;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="ClickableLabel" name="upNameLabel">
-                   <property name="cursor">
-                    <cursorShape>PointingHandCursor</cursorShape>
+                  <layout class="QHBoxLayout" name="horizontalLayout_59">
+                   <property name="topMargin">
+                    <number>0</number>
                    </property>
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;查看主播主页&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">font-size: 18px;</string>
-                   </property>
-                   <property name="text">
-                    <string>UP昵称</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
+                   <item>
+                    <widget class="ClickableLabel" name="upNameLabel">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;查看主播主页&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">font-size: 18px;</string>
+                     </property>
+                     <property name="text">
+                      <string>UP昵称</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="ClickableLabel" name="roomAreaLabel">
+                     <property name="cursor">
+                      <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="toolTip">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;主播：查看与切换分类&lt;/p&gt;&lt;p&gt;观众：查看当前分类列表&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color:gray;</string>
+                     </property>
+                     <property name="text">
+                      <string>分类</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
                   <widget class="QLabel" name="upLevelLabel">
@@ -1361,8 +1387,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>762</width>
-             <height>504</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">

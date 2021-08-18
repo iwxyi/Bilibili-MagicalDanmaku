@@ -228,6 +228,20 @@ void MainWindow::initView()
             QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + upUid));
     });
 
+    connect(ui->roomAreaLabel, &ClickableLabel::clicked, this, [=]{
+        if (cookieUid == upUid)
+        {
+            myLiveSelectArea(true);
+        }
+        else
+        {
+            if (!areaId.isEmpty())
+            {
+                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/p/eden/area-tags?areaId=" + areaId + "&parentAreaId=" + parentAreaId));
+            }
+        }
+    });
+
     connect(ui->roomNameLabel, &ClickableLabel::clicked, this, [=]{
         if (upUid.isEmpty() || upUid != cookieUid)
             return ;
@@ -4033,6 +4047,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         areaName = roomInfo.value("area_name").toString();
         parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
         parentAreaName = roomInfo.value("parent_area_name").toString();
+        ui->roomAreaLabel->setText(areaName);
 
         // 疑似在线人数
         int online = roomInfo.value("online").toInt();
@@ -15546,7 +15561,7 @@ void MainWindow::adjustDanmakuLongest()
     on_danmuLongestSpin_editingFinished();
 }
 
-void MainWindow::myLiveSelectArea()
+void MainWindow::myLiveSelectArea(bool update)
 {
     get("https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2", [=](MyJson json) {
         if (json.code() != 0)
@@ -15568,6 +15583,10 @@ void MainWindow::myLiveSelectArea()
                     settings->setValue("myLive/areaId", areaId);
                     settings->setValue("myLive/parentAreaId", parentAreaId);
                     qInfo() << "选择分区：" << parentName << parentId << areaName << areaId;
+                    if (update)
+                    {
+                        myLiveUpdateArea(areaId);
+                    }
                 });
             });
         });
@@ -15576,13 +15595,24 @@ void MainWindow::myLiveSelectArea()
     });
 }
 
+void MainWindow::myLiveUpdateArea(QString area)
+{
+    qInfo() << "更新AreaId:" << area;
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+    {"room_id", roomId, "area_id", area,
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("修改分区失败", json.msg());
+    });
+}
+
 void MainWindow::myLiveStartLive()
 {
     int lastAreaId = settings->value("myLive/areaId", 0).toInt();
     if (!lastAreaId)
     {
-        // QMessageBox::warning(this, "一键开播", "请先选择分区\n一次选择后自动记忆");
-        showError("一键开播", "请先选择分区");
+        showError("一键开播", "必须选择分类才能开播");
         return ;
     }
     post("https://api.live.bilibili.com/room/v1/Room/startLive",
@@ -17867,7 +17897,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
             myLiveSetDescription();
         });
         menu->split()->addAction(QIcon(":/icons/area"), "选择分区", [=]{
-            myLiveSelectArea();
+            myLiveSelectArea(false);
         });
         menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
             if (!isLiving())

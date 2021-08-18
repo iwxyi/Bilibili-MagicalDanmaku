@@ -910,7 +910,8 @@ private:
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
     void adjustDanmakuLongest();
-    void myLiveSelectArea();
+    void myLiveSelectArea(bool update);
+    void myLiveUpdateArea(QString area);
     void myLiveStartLive();
     void myLiveStopLive();
     void myLiveSetTitle();
