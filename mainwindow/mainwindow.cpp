@@ -1618,6 +1618,12 @@ MainWindow::~MainWindow()
         danmakuWindow = nullptr;
     }
 
+    if (musicWindow)
+    {
+        delete musicWindow;
+        musicWindow = nullptr;
+    }
+
     /*if (playerWindow)
     {
         settings->setValue("danmaku/playerWindow", !playerWindow->isHidden());

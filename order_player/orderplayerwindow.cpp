@@ -354,11 +354,12 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     if (settings.value("music/desktopLyric", false).toBool())
         desktopLyric->show();
 
-    clearHoaryFiles();
+    // clearHoaryFiles();
 }
 
 OrderPlayerWindow::~OrderPlayerWindow()
 {
+    clearHoaryFiles();
     delete ui;
     desktopLyric->deleteLater();
 }
@@ -2416,11 +2417,12 @@ void OrderPlayerWindow::clearDownloadFiles()
 
 void OrderPlayerWindow::clearHoaryFiles()
 {
-    qint64 current = QDateTime::currentSecsSinceEpoch();
+    qInfo() << "清理下载文件：" << musicsFileDir.absolutePath();
+//    qint64 current = QDateTime::currentSecsSinceEpoch();
     QList<QFileInfo> files = musicsFileDir.entryInfoList(QDir::Files);
     foreach (QFileInfo info, files)
     {
-        if (info.lastModified().toSecsSinceEpoch() + 604800 < current) // 七天前的
+//        if (info.lastModified().toSecsSinceEpoch() + 604800 < current) // 七天前的
         {
             QFile f;
             f.remove(info.absoluteFilePath());
