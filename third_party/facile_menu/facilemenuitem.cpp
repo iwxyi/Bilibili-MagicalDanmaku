@@ -532,16 +532,18 @@ void FacileMenuItem::paintEvent(QPaintEvent *event)
 {
     InteractiveButtonBase::paintEvent(event);
 
-    int right = width() - icon_text_size - 8;
+    int right = width()- 8;
 
     QPainter painter(this);
     if (isSubMenu())
     {
+        right -= icon_text_size;
         // 画右边箭头的图标
         QRect rect(right, fore_paddings.top, icon_text_size, icon_text_size);
         painter.drawPixmap(rect, QPixmap(":/icons/sub_menu_arrow"));
     }
 
+    right -= icon_text_padding;
     if (!shortcut_tip.isEmpty())
     {
         // 画右边的文字

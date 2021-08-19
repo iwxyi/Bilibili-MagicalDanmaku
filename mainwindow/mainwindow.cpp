@@ -15567,7 +15567,7 @@ void MainWindow::myLiveSelectArea(bool update)
     get("https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2", [=](MyJson json) {
         if (json.code() != 0)
             return showError("获取分区列表", json.msg());
-        newFacileMenu;
+        newFacileMenu->setSubMenuShowOnCursor(false);
 
         json.data().each("data", [=](MyJson json){
             QString parentId = snum(json.i("id")); // 这是int类型的
