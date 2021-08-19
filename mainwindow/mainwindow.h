@@ -917,6 +917,7 @@ private:
     void myLiveSetTitle();
     void myLiveSetNews();
     void myLiveSetDescription();
+    void myLiveSetCover();
 
     void startSplash();
     void saveGameNumbers(int channel);

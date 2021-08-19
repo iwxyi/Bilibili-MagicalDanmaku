@@ -329,3 +329,15 @@ bool isHtmlString(const QString &str)
 {
     return str.startsWith("<!DOCTYPE HTML");
 }
+
+QString getRandomKey(int len)
+{
+    const QString ss = "abcdefghijklmnopqrstuvwxyz0123456789";
+    QString result;
+    while (len--)
+    {
+        int r = qrand() % ss.length();
+        result.append(ss.at(r));
+    }
+    return result;
+}

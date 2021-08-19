@@ -21,6 +21,7 @@
 #include "csvviewer.h"
 #include "buyvipdialog.h"
 #include "warmwishutil.h"
+#include "httpuploader.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -15619,6 +15620,7 @@ void MainWindow::myLiveStartLive()
     {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
          "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
+        qInfo() << "开播：" << json;
         if (json.code() != 0)
             return showError("一键开播失败", json.msg());
         MyJson rtmp = json.data().o("rtmp");
@@ -15633,6 +15635,7 @@ void MainWindow::myLiveStopLive()
     {"room_id", roomId, "platform", "pc",
          "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
+        qInfo() << "下播：" << json;
         if (json.code() != 0)
             return showError("一键下播失败", json.msg());
     });
@@ -15653,6 +15656,7 @@ void MainWindow::myLiveSetTitle()
              "csrf_token", csrf_token,
              "csrf", csrf_token
          }, [=](MyJson json) {
+        qInfo() << "设置直播间标题：" << json;
         if (json.code() != 0)
             return showError(json.msg());
         roomTitle = title;
@@ -15676,6 +15680,7 @@ void MainWindow::myLiveSetNews()
              "csrf_token", csrf_token,
              "csrf", csrf_token
          }, [=](MyJson json) {
+        qInfo() << "设置主播公告：" << json;
         if (json.code() != 0)
             return showError(json.msg());
         roomNews = content;
@@ -15697,10 +15702,86 @@ void MainWindow::myLiveSetDescription()
              "csrf_token", csrf_token,
              "csrf", csrf_token
          }, [=](MyJson json) {
+        qInfo() << "设置个人简介：" << json;
         if (json.code() != 0)
             return showError(json.msg());
         roomDescription = content;
         ui->roomDescriptionBrowser->setPlainText(roomDescription);
+    });
+}
+
+void MainWindow::myLiveSetCover()
+{
+    // 选择封面
+    QString oldPath = settings->value("recent/coverPath", "").toString();
+    QString path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
+    if (path.isEmpty())
+        return ;
+    settings->setValue("recent/coverPath", path);
+
+    // 裁剪图片：大致是 470 / 293 = 1.6 = 8 : 5
+    QPixmap pixmap(path);
+    // if (!ClipDialog::clip(pixmap, AspectRatio, 8, 5))
+    //     return ;
+
+    // 压缩图片
+    const int width = 470;
+    const QString clipPath = dataPath + "temp_cover.jpeg";
+    pixmap = pixmap.scaledToWidth(width);
+    pixmap.save(clipPath);
+
+    // 开始上传
+    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + csrf_token);
+    uploader->setCookies(userCookies);
+    uploader->addTextField("bucket", "live");
+    uploader->addTextField("dir", "new_room_cover");
+    uploader->addFileField("file", "blob", clipPath, "image/jpeg");
+    uploader->post();
+    connect(uploader, &HttpUploader::finished, this, [=](QNetworkReply* reply) {
+        MyJson json(reply->readAll());
+        qInfo() << "上传封面：" << json;
+        if (json.code() != 0)
+            return showError("上传封面失败", json.msg());
+
+        auto data = json.data();
+        QString location = data.s("location");
+        QString etag = data.s("etag");
+
+        if (roomCover.isNull())
+        {
+            // 仅第一次上传封面，调用 add
+            post("https://api.live.bilibili.com/room/v1/Cover/add",
+            {"room_id", roomId,
+             "url", location,
+             "type", "cover",
+             "csrf_token", csrf_token,
+             "csrf", csrf_token,
+             "visit_id", getRandomKey(12)
+                 }, [=](MyJson json) {
+                qInfo() << "添加封面：" << json;
+                if (json.code() != 0)
+                    return showError("添加封面失败", json.msg());
+            });
+        }
+        else
+        {
+            // 后面就要调用替换的API了
+            const QString picId = ""; // 这个图片ID不知道从哪里获取的呀
+            post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
+            {"room_id", roomId,
+             "url", location,
+             "pic_id", picId,
+             "type", "cover",
+             "csrf_token", csrf_token,
+             "csrf", csrf_token,
+             "visit_id", getRandomKey(12)
+                 }, [=](MyJson json) {
+                qInfo() << "设置封面：" << json;
+                if (json.code() != 0)
+                    return showError("设置封面失败", json.msg());
+            });
+        }
+
     });
 }
 
@@ -17888,8 +17969,8 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
             myLiveSetTitle();
         });
         menu->addAction(QIcon(":/icons/default_cover"), "更换直播间封面", [=]{
-
-        })->disable();
+            myLiveSetCover();
+        });
         menu->addAction(QIcon(":/icons/news"), "修改主播公告", [=]{
             myLiveSetNews();
         });

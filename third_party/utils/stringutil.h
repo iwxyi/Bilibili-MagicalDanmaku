@@ -48,4 +48,6 @@ int CNToArab(QString text);
 
 bool isHtmlString(const QString& str);
 
+QString getRandomKey(int len);
+
 #endif // STRINGUTIL_H

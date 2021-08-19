@@ -98,6 +98,7 @@ SOURCES += \
     third_party/interactive_buttons/winsidebarbutton.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
+    third_party/utils/httpuploader.cpp \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
     widgets/csvviewer.cpp \
@@ -177,6 +178,7 @@ HEADERS += \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
+    third_party/utils/httpuploader.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \
