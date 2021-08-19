@@ -15568,6 +15568,10 @@ void MainWindow::myLiveSelectArea(bool update)
         if (json.code() != 0)
             return showError("获取分区列表", json.msg());
         newFacileMenu->setSubMenuShowOnCursor(false);
+        if (update)
+            menu->addTitle("修改分区");
+        else
+            menu->addTitle("选择分区");
 
         json.data().each("data", [=](MyJson json){
             QString parentId = snum(json.i("id")); // 这是int类型的
@@ -15727,7 +15731,7 @@ void MainWindow::myLiveSetCover()
     // 压缩图片
     const int width = 470;
     const QString clipPath = dataPath + "temp_cover.jpeg";
-    pixmap = pixmap.scaledToWidth(width);
+    pixmap = pixmap.scaledToWidth(width, Qt::SmoothTransformation);
     pixmap.save(clipPath);
 
     // 开始上传

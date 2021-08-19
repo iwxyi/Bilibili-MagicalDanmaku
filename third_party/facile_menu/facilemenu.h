@@ -42,6 +42,7 @@ public:
     FacileMenu* endRow();
     QVBoxLayout* createNextColumn();
     QBoxLayout* currentLayout() const;
+    FacileMenu* addTitle(QString text);
 
     FacileMenu* addMenu(QIcon icon, QString text, FuncType clicked = nullptr);
     FacileMenu* addMenu(QString text, FuncType clicked = nullptr);
@@ -69,7 +70,7 @@ public:
     int indexOf(FacileMenuItem* item);
     FacileMenuItem* at(int index);
 
-    void exec(QPoint pos = QPoint(-1, -1), bool autoAdjust = true);
+    void exec(QPoint pos = QPoint(-1, -1));
     void exec(QRect expt, bool vertical = false, QPoint pos = QPoint(-1, -1));
     void execute();
     void toHide(int focusIndex = -1);

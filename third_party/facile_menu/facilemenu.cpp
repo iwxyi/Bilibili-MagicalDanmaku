@@ -1,3 +1,4 @@
+#include <QLabel>
 #include "facilemenu.h"
 
 QColor FacileMenu::normal_bg = QColor(255, 255, 255);
@@ -230,6 +231,15 @@ QBoxLayout *FacileMenu::currentLayout() const
         return row_hlayouts.last();
     else
         return main_vlayout;
+}
+
+FacileMenu *FacileMenu::addTitle(QString text)
+{
+    QLabel* label = new QLabel(text, this);
+    label->setStyleSheet("margin: 4px; color: gray;");
+    addWidget(label);
+    split();
+    return this;
 }
 
 /**
@@ -564,7 +574,7 @@ FacileMenuItem *FacileMenu::addVSeparator()
  * 在鼠标或指定点展开
  * 自动避开屏幕边缘
  */
-void FacileMenu::exec(QPoint pos, bool autoAdjust)
+void FacileMenu::exec(QPoint pos)
 {
     if (pos == QPoint(-1,-1))
         pos = QCursor::pos();
@@ -580,23 +590,19 @@ void FacileMenu::exec(QPoint pos, bool autoAdjust)
 
     int x = pos.x() + 1;
     int y = pos.y() + 1;
+    int w = width() + 1;
+    int h = height() + 1;
+    QRect avai = window_rect; // 屏幕大小
 
-    if (autoAdjust)
-    {
-        int w = width() + 1;
-        int h = height() + 1;
-        QRect avai = window_rect; // 屏幕大小
-
-        // 如果超过范围，则调整位置
-        if (x + w > avai.right())
-            x = avai.right() - w;
-        if (y + h > avai.bottom())
-            y = avai.bottom() - h;
-        if (x >= w && pos.x() + w > avai.right())
-            x = originPos.x() - w;
-        if (y >= h && pos.y() + h > avai.bottom())
-            y = originPos.y() - h;
-    }
+    // 如果超过范围，则调整位置
+    if (x + w > avai.right())
+        x = avai.right() - w;
+    if (y + h > avai.bottom())
+        y = avai.bottom() - h;
+    if (x >= w && pos.x() + w > avai.right())
+        x = originPos.x() - w;
+    if (y >= h && pos.y() + h > avai.bottom())
+        y = originPos.y() - h;
 
     // 移动窗口
     move(QPoint(x, y));
@@ -627,7 +633,7 @@ void FacileMenu::exec(QRect expt, bool vertical, QPoint pos)
     QRect avai = window_rect;
     QRect rect = geometry();
     rect.moveTo(pos);
-    if (!vertical) // 优先横向对齐（顶部）
+    if (!vertical) // 优先横向对齐（顶上）
     {
         if (rect.left() <= expt.right() && rect.right() > expt.right())
             rect.moveLeft(expt.right());
@@ -635,19 +641,29 @@ void FacileMenu::exec(QRect expt, bool vertical, QPoint pos)
 
         // 避开屏幕位置
         if (expt.left() > rect.width() && rect.right() >= avai.right())
-            rect.moveLeft(expt.right() - rect.width());
-        if (expt.top() > rect.height() && rect.bottom() >= avai.bottom())
-            rect.moveTop(expt.bottom() - rect.height());
+            rect.moveLeft(expt.left() - rect.width());
+        if (rect.bottom() >= avai.bottom())
+        {
+            if (expt.top() > rect.height())
+                rect.moveTop(expt.bottom() - rect.height());
+            else
+                rect.moveTop(avai.bottom() - rect.height());
+        }
     }
-    else // 优先纵向对齐（左边）
+    else // 优先纵向对齐（左下）
     {
         if (rect.top() <= expt.bottom() && rect.bottom() > expt.bottom())
             rect.moveTop(expt.bottom());
         rect.moveLeft(expt.left());
 
         // 避开屏幕位置
-        if (expt.left() > rect.width() && rect.right() >= avai.right())
-            rect.moveLeft(expt.right() - rect.width());
+        if (rect.right() >= avai.right())
+        {
+            if (expt.left() > rect.width())
+                rect.moveLeft(expt.right() - rect.width());
+            else
+                rect.moveLeft(avai.right() - rect.width());
+        }
         if (expt.top() > rect.height() && rect.bottom() >= avai.bottom())
             rect.moveTop(expt.top() - rect.height());
     }
@@ -1104,7 +1120,6 @@ void FacileMenu::showSubMenu(FacileMenuItem *item)
     QRect avai = window_rect;
     if (using_keyboard) // 键盘模式，不是跟随鼠标位置来的
     {
-
         // 键盘模式，相对于点击项的右边
         QPoint tl = mapToGlobal(item->pos());
         if (tl.x() + item->width() + current_sub_menu->width() < avai.width())
@@ -1116,21 +1131,14 @@ void FacileMenu::showSubMenu(FacileMenuItem *item)
         else
             pos.setY(tl.y() - current_sub_menu->height());
     }
-    else if (!sub_menu_show_on_cursor)
+    if (sub_menu_show_on_cursor)
+        current_sub_menu->exec(pos);
+    else
     {
-        // 出现在当前菜单的右边（优先）
-        QPoint itemPos = item->mapToGlobal(QPoint(0, 0));
-        pos = itemPos + QPoint(item->width(), 0);
-        if (pos.x() + current_sub_menu->width() > avai.width())
-            pos.setX(itemPos.x() - current_sub_menu->width());
-        if (pos.y() + current_sub_menu->height() > avai.height())
-            pos.setY(itemPos.y() + item->height() - current_sub_menu->height());
-        if (pos.x() < 0)
-            pos.setX(0);
-        if (pos.y() < 0)
-            pos.setY(0);
+        auto geom = item->mapToGlobal(QPoint(0, 0));
+        auto rect = QRect(geom, item->size());
+        current_sub_menu->exec(rect, false, rect.topRight());
     }
-    current_sub_menu->exec(pos, sub_menu_show_on_cursor);
     current_sub_menu->setKeyBoardUsed(using_keyboard);
 }
 
