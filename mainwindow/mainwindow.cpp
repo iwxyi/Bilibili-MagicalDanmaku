@@ -14910,6 +14910,14 @@ void MainWindow::releaseLiveData(bool prepare)
         cookieGuardLevel = 0;
         if (ui->adjustDanmakuLongestCheck->isChecked())
             adjustDanmakuLongest();
+
+        for (int i = 0; i < ui->giftListWidget->count(); i++)
+        {
+            auto item = ui->giftListWidget->item(i);
+            auto widget = ui->giftListWidget->itemWidget(item);
+            widget->deleteLater();
+        }
+        ui->giftListWidget->clear();
     }
     else // 下播，依旧保持连接
     {
