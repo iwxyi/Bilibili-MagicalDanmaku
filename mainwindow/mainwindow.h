@@ -918,6 +918,7 @@ private:
     void myLiveSetNews();
     void myLiveSetDescription();
     void myLiveSetCover();
+    void myLiveSetTags();
 
     void startSplash();
     void saveGameNumbers(int channel);
@@ -995,6 +996,7 @@ private:
     QString parentAreaName; // 例：娱乐
     QString roomNews; // 主播公告
     QString roomDescription; // 主播个人简介
+    QStringList roomTags; // 主播个人标签
 
     // 我的直播
     QString myLiveRtmp; // rtmp地址

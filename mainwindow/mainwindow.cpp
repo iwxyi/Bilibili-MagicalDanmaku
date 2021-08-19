@@ -3953,7 +3953,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         roomDescription = roomInfo.value("description").toString();
-        QStringList tags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+        roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
@@ -4063,7 +4063,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         // getFansAndUpdate();
 
         // 设置标签
-        ui->tagsButtonGroup->initStringList(tags);
+        ui->tagsButtonGroup->initStringList(roomTags);
 
         // 获取榜单信息
         QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
@@ -15747,9 +15747,8 @@ void MainWindow::myLiveSetCover()
         QString location = data.s("location");
         QString etag = data.s("etag");
 
-        if (roomCover.isNull())
+        if (roomCover.isNull()) // 仅第一次上传封面，调用 add
         {
-            // 仅第一次上传封面，调用 add
             post("https://api.live.bilibili.com/room/v1/Cover/add",
             {"room_id", roomId,
              "url", location,
@@ -15763,26 +15762,40 @@ void MainWindow::myLiveSetCover()
                     return showError("添加封面失败", json.msg());
             });
         }
-        else
+        else // 后面就要调用替换的API了，需要参数 pic_id
         {
-            // 后面就要调用替换的API了
-            const QString picId = ""; // 这个图片ID不知道从哪里获取的呀
-            post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
-            {"room_id", roomId,
-             "url", location,
-             "pic_id", picId,
-             "type", "cover",
-             "csrf_token", csrf_token,
-             "csrf", csrf_token,
-             "visit_id", getRandomKey(12)
-                 }, [=](MyJson json) {
-                qInfo() << "设置封面：" << json;
+            // 获取 pic_id
+            get("https://api.live.bilibili.com/room/v1/Cover/new_get_list?room_id=" +roomId, [=](MyJson json) {
+                qInfo() << "获取封面ID：" << json;
                 if (json.code() != 0)
-                    return showError("设置封面失败", json.msg());
+                    return showError("设置封面失败", "无法获取封面ID");
+                auto array = json.a("data");
+                if (!array.size())
+                    return showError("设置封面失败", "获取不到封面数据");
+                const qint64 picId = (long long)(array.first().toObject().value("id").toDouble());
+
+                post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
+                {"room_id", roomId,
+                 "url", location,
+                 "pic_id", snum(picId),
+                 "type", "cover",
+                 "csrf_token", csrf_token,
+                 "csrf", csrf_token,
+                 "visit_id", getRandomKey(12)
+                     }, [=](MyJson json) {
+                    qInfo() << "设置封面：" << json;
+                    if (json.code() != 0)
+                        return showError("设置封面失败", json.msg());
+                });
             });
         }
 
     });
+}
+
+void MainWindow::myLiveSetTags()
+{
+
 }
 
 void MainWindow::startSplash()
