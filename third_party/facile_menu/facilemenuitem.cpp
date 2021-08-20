@@ -350,6 +350,15 @@ FacileMenuItem *FacileMenuItem::linger()
     return this;
 }
 
+FacileMenuItem *FacileMenuItem::lingerText(QString textAfterClick)
+{
+    this->linger();
+    connect(this, &FacileMenuItem::clicked, this, [=]{
+        setText(textAfterClick);
+    });
+    return this;
+}
+
 /**
  * 绑定某一布尔类型的变量（只能全局变量）
  * 点击即切换值
@@ -372,6 +381,27 @@ FacileMenuItem *FacileMenuItem::longPress(FuncType func)
 {
     connect(this, &InteractiveButtonBase::signalMousePressLater, this, [=](QMouseEvent*){
         func();
+    });
+    return this;
+}
+
+/**
+ * 点击菜单后的新文本
+ * 一般用于点击后不隐藏 或者 重新显示的菜单
+ * 不然没必要设置，点击后就没了
+ */
+FacileMenuItem *FacileMenuItem::textAfterClick(QString newText)
+{
+    connect(this, &FacileMenuItem::clicked, this, [=]{
+        setText(newText);
+    });
+    return this;
+}
+
+FacileMenuItem *FacileMenuItem::textAfterClick(FuncStringStringType func)
+{
+    connect(this, &FacileMenuItem::clicked, this, [=]{
+        setText(func(this->InteractiveButtonBase::text));
     });
     return this;
 }

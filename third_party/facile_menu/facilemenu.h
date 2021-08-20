@@ -42,7 +42,7 @@ public:
     FacileMenu* endRow();
     QVBoxLayout* createNextColumn();
     QBoxLayout* currentLayout() const;
-    FacileMenu* addTitle(QString text);
+    FacileMenu* addTitle(QString text, int split = 0);
 
     FacileMenu* addMenu(QIcon icon, QString text, FuncType clicked = nullptr);
     FacileMenu* addMenu(QString text, FuncType clicked = nullptr);

@@ -233,12 +233,19 @@ QBoxLayout *FacileMenu::currentLayout() const
         return main_vlayout;
 }
 
-FacileMenu *FacileMenu::addTitle(QString text)
+FacileMenu *FacileMenu::addTitle(QString text, int split)
 {
+    if (split < 0)
+    {
+        this->split();
+        if (layout()->count())
+            this->addSpacing(4); // 因为是与上一个菜单项分隔，不能太紧凑，要加点空白
+    }
     QLabel* label = new QLabel(text, this);
     label->setStyleSheet("margin: 4px; color: gray;");
     addWidget(label);
-    split();
+    if (split > 0)
+        this->split();
     return this;
 }
 

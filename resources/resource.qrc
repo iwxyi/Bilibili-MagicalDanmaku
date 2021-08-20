@@ -114,6 +114,8 @@
         <file alias="token">icons/token.png</file>
         <file alias="rtmp">icons/rtmp.png</file>
         <file alias="tags">icons/tags.png</file>
+        <file alias="copy">icons/copy.png</file>
+        <file alias="modify">icons/modify.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

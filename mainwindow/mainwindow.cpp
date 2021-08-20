@@ -15577,9 +15577,9 @@ void MainWindow::myLiveSelectArea(bool update)
             return showError("获取分区列表", json.msg());
         newFacileMenu->setSubMenuShowOnCursor(false);
         if (update)
-            menu->addTitle("修改分区");
+            menu->addTitle("修改分区", 1);
         else
-            menu->addTitle("选择分区");
+            menu->addTitle("选择分区", 1);
 
         json.data().each("data", [=](MyJson json){
             QString parentId = snum(json.i("id")); // 这是int类型的
@@ -18037,10 +18037,11 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
     // 主播专属操作
     if (cookieUid == upUid)
     {
-        menu->addAction(QIcon(":/icons/title"), "修改直播间标题", [=]{
+        menu->addTitle("直播设置", 0);
+        menu->addAction(QIcon(":/icons/title"), "修改直播标题", [=]{
             myLiveSetTitle();
         });
-        menu->addAction(QIcon(":/icons/default_cover"), "更换直播间封面", [=]{
+        menu->addAction(QIcon(":/icons/default_cover"), "更换直播封面", [=]{
             myLiveSetCover();
         });
         menu->addAction(QIcon(":/icons/news"), "修改主播公告", [=]{
@@ -18052,7 +18053,9 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
         menu->addAction(QIcon(":/icons/tags"), "修改个人标签", [=]{
             myLiveSetTags();
         });
-        menu->split()->addAction(QIcon(":/icons/area"), "选择分区", [=]{
+
+        menu->addTitle("快速开播", -1);
+        menu->addAction(QIcon(":/icons/area"), "选择分区", [=]{
             myLiveSelectArea(false);
         });
         menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
@@ -18070,11 +18073,11 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
 
         menu->addAction(QIcon(":/icons/rtmp"), "复制rtmp", [=]{
             QApplication::clipboard()->setText(myLiveRtmp);
-        })->disable(myLiveRtmp.isEmpty());
+        })->disable(myLiveRtmp.isEmpty())->lingerText("已复制");
 
         menu->addAction(QIcon(":/icons/token"), "复制直播码", [=]{
             QApplication::clipboard()->setText(myLiveCode);
-        })->disable(myLiveCode.isEmpty());
+        })->disable(myLiveCode.isEmpty())->lingerText("已复制");
 
         menu->split();
     }
@@ -18143,4 +18146,92 @@ void MainWindow::on_addMusicToLiveButton_clicked()
 {
     ui->extensionPageButton->simulateStatePress();
     ui->tabWidget->setCurrentWidget(ui->tabRemote);
+}
+
+void MainWindow::on_roomNameLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/title"), "修改直播标题", [=]{
+        myLiveSetTitle();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_upNameLabel_customContextMenuRequested(const QPoint &)
+{
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/copy"), "复制昵称", [=]{
+        QApplication::clipboard()->setText(upName);
+    });
+
+    if (cookieUid == upUid)
+    {
+        menu->addAction(QIcon(":/icons/modify"), "修改昵称", [=]{
+
+        })->disable();
+    }
+
+    menu->exec();
+}
+
+void MainWindow::on_roomAreaLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/area"), "修改分区", [=]{
+        myLiveSelectArea(true);
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_tagsButtonGroup_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/tags"), "修改个人标签", [=]{
+        myLiveSetTags();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_roomDescriptionBrowser_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/person_description"), "修改个人简介", [=]{
+        myLiveSetDescription();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/person_description"), "修改个人签名", [=]{
+
+    })->disable();
+
+    menu->exec();
 }

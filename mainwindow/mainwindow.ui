@@ -269,6 +269,9 @@
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
               <property name="toolTip">
                <string>修改直播间标题（仅限主播）</string>
               </property>
@@ -401,6 +404,9 @@ background-repeat:none;</string>
                      <property name="cursor">
                       <cursorShape>PointingHandCursor</cursorShape>
                      </property>
+                     <property name="contextMenuPolicy">
+                      <enum>Qt::CustomContextMenu</enum>
+                     </property>
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;查看主播主页&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
@@ -419,6 +425,9 @@ background-repeat:none;</string>
                     <widget class="ClickableLabel" name="roomAreaLabel">
                      <property name="cursor">
                       <cursorShape>PointingHandCursor</cursorShape>
+                     </property>
+                     <property name="contextMenuPolicy">
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="toolTip">
                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;主播：查看与切换分类&lt;/p&gt;&lt;p&gt;观众：查看当前分类列表&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -443,6 +452,9 @@ background-repeat:none;</string>
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::CustomContextMenu</enum>
                    </property>
                    <property name="styleSheet">
                     <string notr="true">color: gray;</string>
@@ -490,6 +502,9 @@ background-repeat:none;</string>
                  <height>1</height>
                 </size>
                </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
+               </property>
                <property name="styleSheet">
                 <string notr="true"/>
                </property>
@@ -508,6 +523,9 @@ background-repeat:none;</string>
                  <width>0</width>
                  <height>1</height>
                 </size>
+               </property>
+               <property name="contextMenuPolicy">
+                <enum>Qt::CustomContextMenu</enum>
                </property>
                <property name="styleSheet">
                 <string notr="true">#roomDescriptionBrowser

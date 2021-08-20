@@ -711,6 +711,18 @@ private slots:
 
     void on_addMusicToLiveButton_clicked();
 
+    void on_roomNameLabel_customContextMenuRequested(const QPoint &);
+
+    void on_upNameLabel_customContextMenuRequested(const QPoint &);
+
+    void on_roomAreaLabel_customContextMenuRequested(const QPoint &);
+
+    void on_tagsButtonGroup_customContextMenuRequested(const QPoint &);
+
+    void on_roomDescriptionBrowser_customContextMenuRequested(const QPoint &);
+
+    void on_upLevelLabel_customContextMenuRequested(const QPoint &);
+
 private:
     void initView();
     void initStyle();
