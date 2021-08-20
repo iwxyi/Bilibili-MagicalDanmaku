@@ -410,6 +410,53 @@ void MainWindow::initView()
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
 
+    // 远程
+    // 加载url列表，允许一键复制
+    // ui->urlsListWidget->hide();
+    QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
+    foreach (auto line, urlLines)
+    {
+        QStringList sl = line.split("|");
+        if (sl.size() < 2)
+            continue;
+
+        QString name = sl.at(0).trimmed();
+        QString urlR = sl.at(1).trimmed();
+
+        auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
+        auto layout = new QHBoxLayout(widget);
+        auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
+        layout->addStretch(1);
+        layout->addWidget(btn);
+        layout->setMargin(0);
+        widget->setLayout(layout);
+        widget->setPaddings(8);
+        widget->setAlign(Qt::AlignLeft);
+        widget->setRadius(fluentRadius);
+        widget->setFixedForePos();
+        widget->setCursor(Qt::PointingHandCursor);
+        widget->setToolTip("在浏览器中打开");
+        btn->setSquareSize();
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setFixedForePos();
+        btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+        btn->hide();
+        connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+        connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+        connect(widget, &InteractiveButtonBase::clicked, this, [=]{
+            if (!ui->serverCheck->isChecked())
+                return showError("网络服务未开启", "无法打开：" + name);
+            QDesktopServices::openUrl(getDomainPort() + urlR);
+        });
+        connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+            QApplication::clipboard()->setText(getDomainPort() + urlR);
+        });
+        ui->serverUrlsCard->layout()->addWidget(widget);
+
+        // auto item = new QListWidgetItem(ui->urlsListWidget);
+        // ui->urlsListWidget->setItemWidget(item, widget);
+    }
+
     // 禁言
     ui->eternalBlockListButton->setBgColor(Qt::white);
     ui->eternalBlockListButton->setRadius(fluentRadius);
@@ -3078,7 +3125,7 @@ void MainWindow::autoSetCookie(QString s)
     qInfo() << "设置弹幕格式：" << browserData;
 }
 
-QVariant MainWindow::getCookies()
+QVariant MainWindow::getCookies() const
 {
     QList<QNetworkCookie> cookies;
 
@@ -3134,6 +3181,17 @@ void MainWindow::getCookieAccount()
             triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
     });
+}
+
+QString MainWindow::getDomainPort() const
+{
+    QString domain = ui->domainEdit->text().trimmed();
+    if (domain.isEmpty())
+        domain = "http://localhost";
+    if (!domain.contains("://"))
+        domain = "http://" + domain;
+    QString url = domain + ":" + snum(ui->serverPortSpin->value());
+    return url;
 }
 
 void MainWindow::getRobotInfo()

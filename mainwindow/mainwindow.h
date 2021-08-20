@@ -762,8 +762,9 @@ private:
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
 
     void autoSetCookie(QString s);
-    QVariant getCookies();
+    QVariant getCookies() const;
     void getCookieAccount();
+    QString getDomainPort() const;
     void getRobotInfo();
     void getRoomUserInfo();
     void initWS();
