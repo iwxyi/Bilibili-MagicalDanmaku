@@ -113,6 +113,7 @@
         <file alias="person_description">icons/person_descrption.png</file>
         <file alias="token">icons/token.png</file>
         <file alias="rtmp">icons/rtmp.png</file>
+        <file alias="tags">icons/tags.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

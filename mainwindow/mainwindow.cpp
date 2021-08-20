@@ -15807,7 +15807,54 @@ void MainWindow::myLiveSetCover()
 
 void MainWindow::myLiveSetTags()
 {
+    QString content = roomTags.join(" ");
+    bool ok = false;
+    content = QInputDialog::getText(this, "修改我的个人标签", "多个标签之间使用空格分隔\n短时间修改太多标签可能会被临时屏蔽", QLineEdit::Normal, content, &ok);
+    if (!ok)
+        return ;
 
+    QStringList oldTags = roomTags;
+    QStringList newTags = content.split(" ", QString::SkipEmptyParts);
+
+    auto toPost = [=](QString action, QString tag){
+        QString rst = NetUtil::postWebData("https://api.live.bilibili.com/room/v1/Room/update",
+                             QStringList{
+                                 "room_id", roomId,
+                                 action, tag,
+                                 "csrf_token", csrf_token,
+                                 "csrf", csrf_token
+                             }, userCookies);
+        MyJson json(rst.toUtf8());
+        qInfo() << "修改个人标签：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        if (action == "add_tag")
+            roomTags.append(tag);
+        else
+            roomTags.removeOne(tag);
+    };
+
+    // 对比新旧
+    foreach (auto tag, newTags)
+    {
+        if (oldTags.contains(tag)) // 没变的部分
+        {
+            oldTags.removeOne(tag);
+            continue;
+        }
+
+        // 新增的
+        qInfo() << "添加个人标签：" << tag;
+        toPost("add_tag", tag);
+    }
+    foreach (auto tag, oldTags)
+    {
+        qInfo() << "删除个人标签：" << tag;
+        toPost("del_tag", tag);
+    }
+
+    // 刷新界面
+    ui->tagsButtonGroup->initStringList(roomTags);
 }
 
 void MainWindow::startSplash()
@@ -18001,6 +18048,9 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
         });
         menu->addAction(QIcon(":/icons/person_description"), "修改个人简介", [=]{
             myLiveSetDescription();
+        });
+        menu->addAction(QIcon(":/icons/tags"), "修改个人标签", [=]{
+            myLiveSetTags();
         });
         menu->split()->addAction(QIcon(":/icons/area"), "选择分区", [=]{
             myLiveSelectArea(false);
