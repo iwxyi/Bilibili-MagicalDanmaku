@@ -187,7 +187,8 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         }
         else if (status == QMediaPlayer::InvalidMedia)
         {
-            qWarning() << "无效媒体：" << playingSong.simpleString();
+            qWarning() << "无效媒体：" << playingSong.simpleString() << songPath(playingSong);
+            // 此时应该换源
             playNext();
         }
     });
@@ -353,11 +354,12 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     if (settings.value("music/desktopLyric", false).toBool())
         desktopLyric->show();
 
-    clearHoaryFiles();
+    // clearHoaryFiles();
 }
 
 OrderPlayerWindow::~OrderPlayerWindow()
 {
+    clearHoaryFiles();
     delete ui;
     desktopLyric->deleteLater();
 }
@@ -1749,7 +1751,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qWarning() << "咪咕歌曲链接返回结果不为100：" << json;
+                qWarning() << "咪咕歌曲链接返回结果不为100：" << json << url;
                 switchSource(song);
                 return ;
             }
@@ -1831,6 +1833,13 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
             return ;
         }
 
+        if (mp3Ba.size() < 10 * 1024) // 小于10KB，肯定有问题
+        {
+            qWarning() << "歌曲数据流有误：" << song.simpleString() << "    大小:" << mp3Ba.size() << "B";
+            downloadSongFailed(song);
+            return ;
+        }
+
         // 保存到文件
         QFile file(songPath(song));
         file.open(QIODevice::WriteOnly);
@@ -1865,7 +1874,8 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         url = QQMUSIC_SERVER + "/lyric?songmid=" + song.mid;
         break;
     case MiguMusic:
-        url = MIGU_SERVER + "/song?cid=" + song.mid;
+        // url = MIGU_SERVER + "/song?cid=" + song.mid; // 接口已经不能用了？
+        url = MIGU_SERVER + "/lyric?cid=" + song.mid;
         break;
     case KugouMusic:
         url = "https://m.kugou.com/app/i/krc.php?cmd=100&hash=" + song.mid + "&timelength=1";
@@ -1919,17 +1929,23 @@ void OrderPlayerWindow::downloadSongLyric(Song song)
         case MiguMusic:
             if (json.value("result").toInt() != 100)
             {
-                qWarning() << "咪咕歌词返回结果不为100：" << json.value("result").toInt();
+                qWarning() << "咪咕歌词返回结果不为100：" << json << url;
                 return ;
             }
-            lrc = json.value("data").toObject().value("lyric").toString();
-
-            // 如果没有自带封面，则在歌词这里同步下载
-            if (song.album.picUrl.isEmpty())
             {
-                QString picUrl = json.value("data").toObject().value("picUrl").toString();
-                MUSIC_DEB << "咪咕同步下载封面" << picUrl;
-                downloadSongCoverJpg(song, picUrl);
+                // 因为可能会更换了API，data.toString 或者 data.lyric.toString
+                QJsonValue data = json.value("data");
+                if (data.isObject() && data.toObject().contains("lyric"))
+                    data = data.toObject().value("lyric");
+                lrc = data.toString();
+
+                // 如果没有自带封面，则在歌词这里同步下载
+                if (song.album.picUrl.isEmpty())
+                {
+                    QString picUrl = json.value("data").toObject().value("picUrl").toString();
+                    MUSIC_DEB << "咪咕同步下载封面" << picUrl;
+                    downloadSongCoverJpg(song, picUrl);
+                }
             }
             break;
         case KugouMusic:
@@ -2401,11 +2417,12 @@ void OrderPlayerWindow::clearDownloadFiles()
 
 void OrderPlayerWindow::clearHoaryFiles()
 {
-    qint64 current = QDateTime::currentSecsSinceEpoch();
+    qInfo() << "清理下载文件：" << musicsFileDir.absolutePath();
+//    qint64 current = QDateTime::currentSecsSinceEpoch();
     QList<QFileInfo> files = musicsFileDir.entryInfoList(QDir::Files);
     foreach (QFileInfo info, files)
     {
-        if (info.lastModified().toSecsSinceEpoch() + 604800 < current) // 七天前的
+//        if (info.lastModified().toSecsSinceEpoch() + 604800 < current) // 七天前的
         {
             QFile f;
             f.remove(info.absoluteFilePath());

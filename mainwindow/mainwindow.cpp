@@ -21,6 +21,7 @@
 #include "csvviewer.h"
 #include "buyvipdialog.h"
 #include "warmwishutil.h"
+#include "httpuploader.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -228,28 +229,25 @@ void MainWindow::initView()
             QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + upUid));
     });
 
+    connect(ui->roomAreaLabel, &ClickableLabel::clicked, this, [=]{
+        if (cookieUid == upUid)
+        {
+            myLiveSelectArea(true);
+        }
+        else
+        {
+            if (!areaId.isEmpty())
+            {
+                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/p/eden/area-tags?areaId=" + areaId + "&parentAreaId=" + parentAreaId));
+            }
+        }
+    });
+
     connect(ui->roomNameLabel, &ClickableLabel::clicked, this, [=]{
         if (upUid.isEmpty() || upUid != cookieUid)
             return ;
 
-        QString title = ui->roomNameLabel->text();
-        bool ok = false;
-        title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
-        if (!ok)
-            return ;
-
-        post("https://api.live.bilibili.com/room/v1/Room/update",
-             QStringList{
-                 "room_id", roomId,
-                 "title", title,
-                 "csrf_token", csrf_token,
-                 "csrf", csrf_token
-             }, [=](MyJson json) {
-            if (json.code() != 0)
-            {
-                showError(json.msg());
-            }
-        });
+       myLiveSetTitle();
     });
 
     // 吊灯
@@ -364,8 +362,20 @@ void MainWindow::initView()
     });
     musicTitleDecorateWidget->lower();
     musicTitleDecorateWidget->stackUnder(ui->musicBigTitleLabel);
+    ui->musicBlackListButton->setTextColor(Qt::gray);
     ui->musicBlackListButton->setRadius(fluentRadius);
     ui->musicBlackListButton->adjustMinimumSize();
+    ui->musicBlackListButton->setFixedForePos();
+    ui->musicConfigButton->setSquareSize();
+    ui->musicConfigButton->setFixedForePos();
+    ui->musicConfigButton->setRadius(fluentRadius);
+    ui->musicConfigButtonSpacingWidget->setFixedWidth(ui->musicConfigButton->width());
+    ui->addMusicToLiveButton->setRadius(fluentRadius);
+    ui->addMusicToLiveButton->setPaddings(8);
+    ui->addMusicToLiveButton->adjustMinimumSize();
+    ui->addMusicToLiveButton->setBorderWidth(1);
+    ui->addMusicToLiveButton->setBorderColor(Qt::lightGray);
+    ui->addMusicToLiveButton->setFixedForePos();
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
@@ -406,6 +416,57 @@ void MainWindow::initView()
 
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
+
+    // 远程
+    // 加载url列表，允许一键复制
+    // ui->urlsListWidget->hide();
+    QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
+    foreach (auto line, urlLines)
+    {
+        QStringList sl = line.split("|");
+        if (sl.size() < 2)
+            continue;
+
+        QString name = sl.at(0).trimmed();
+        QString urlR = sl.at(1).trimmed();
+
+        auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
+        auto layout = new QHBoxLayout(widget);
+        auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
+        layout->addStretch(1);
+        layout->addWidget(btn);
+        layout->setMargin(0);
+        widget->setLayout(layout);
+        widget->setPaddings(8);
+        widget->setAlign(Qt::AlignLeft);
+        widget->setRadius(fluentRadius);
+        widget->setFixedForePos();
+        widget->setCursor(Qt::PointingHandCursor);
+        widget->setToolTip("在浏览器中打开");
+        btn->setSquareSize();
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setFixedForePos();
+        btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+        btn->hide();
+        connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+        connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+        connect(widget, &InteractiveButtonBase::clicked, this, [=]{
+            if (!ui->serverCheck->isChecked())
+                return showError("网络服务未开启", "无法打开：" + name);
+            QDesktopServices::openUrl(getDomainPort() + urlR);
+        });
+        connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+            QApplication::clipboard()->setText(getDomainPort() + urlR);
+        });
+        ui->serverUrlsCard->layout()->addWidget(widget);
+
+        // auto item = new QListWidgetItem(ui->urlsListWidget);
+        // ui->urlsListWidget->setItemWidget(item, widget);
+    }
+
+    // 禁言
+    ui->eternalBlockListButton->setBgColor(Qt::white);
+    ui->eternalBlockListButton->setRadius(fluentRadius);
 
     // 通知
     tip_box = new TipBox(this);
@@ -514,6 +575,11 @@ void MainWindow::readConfig()
     int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
     if (thankStackIndex >= 0 && thankStackIndex < ui->thankStackedWidget->count())
         ui->thankStackedWidget->setCurrentIndex(thankStackIndex);
+
+    // 音乐标签
+    int musicStackIndex = settings->value("mainwindow/musicStackIndex", 0).toInt();
+    if (musicStackIndex >= 0 && musicStackIndex < ui->musicConfigStack->count())
+        ui->musicConfigStack->setCurrentIndex(musicStackIndex);
 
     // 房间号
     roomId = settings->value("danmaku/roomId", "").toString();
@@ -1454,6 +1520,8 @@ void MainWindow::switchPageAnimation(int page)
     }
 
     auto startGeometryAni = [=](QWidget* widget, QVariant start, QVariant end, int duration = 400, QEasingCurve curve = QEasingCurve::OutCubic){
+        if (widget->isHidden())
+            widget->show();
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "geometry");
         ani->setStartValue(start);
         ani->setEndValue(end);
@@ -1518,20 +1586,57 @@ void MainWindow::switchPageAnimation(int page)
     }
     else if (page == PAGE_MUSIC)
     {
+//        ui->musicContainerWidget->layout()->setEnabled(false);
+//        QTimer::singleShot(900, [=]{
+//            ui->musicContainerWidget->layout()->setEnabled(true);
+//        });
+
+        // 标题装饰文字背景动画
         QRect g(musicTitleDecorateWidget->geometry());
         startGeometryAni(musicTitleDecorateWidget,
                          QRect(g.left(), -g.height(), g.width(), g.height()), g);
 
+        // 下划线展开动画
         g = QRect(ui->musicSplitWidget1->geometry());
         startGeometryAniDelay(500, ui->musicSplitWidget1,
                          QRect(g.center().x(), g.top(), 1, 1), g);
+
+        // 没开启的话总开关动画高亮
+        if (!ui->DiangeAutoCopyCheck->isChecked())
+        {
+            g = ui->DiangeAutoCopyCheck->geometry();
+            startGeometryAniDelay(200, ui->DiangeAutoCopyCheck,
+                             QRect(g.left() - g.width(), g.top(), g.width(), g.height()), g,
+                                  600, QEasingCurve::OutBounce);
+        }
+
+        // 三个小功能开关的设置项
+//        ui->label_14->hide();
+//        ui->label_43->hide();
+//        ui->label_44->hide();
+//        ui->label_14->setMinimumSize(0, 0);
+//        ui->label_43->setMinimumSize(0, 0);
+//        ui->label_44->setMinimumSize(0, 0);
+//        g = ui->label_41->geometry();
+//        startGeometryAni(ui->label_41,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+//        g = ui->label_43->geometry();
+//        startGeometryAniDelay(300, ui->label_43,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+//        g = ui->label_44->geometry();
+//        startGeometryAniDelay(600, ui->label_44,
+//                         QRect(g.center(), QPoint(1, 1)), g);
+
     }
     else if (page == PAGE_EXTENSION)
     {
         QRect g(appendListItemButton->geometry());
-        startGeometryAni(appendListItemButton,
-                         QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
-                         400, QEasingCurve::OutBack);
+        if (!appendListItemButton->isHidden())
+        {
+            startGeometryAni(appendListItemButton,
+                             QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
+                             400, QEasingCurve::OutBack);
+        }
     }
     else if (page == PAGE_PREFENCE)
     {
@@ -1563,6 +1668,12 @@ MainWindow::~MainWindow()
         danmakuWindow->close();
         danmakuWindow->deleteLater();
         danmakuWindow = nullptr;
+    }
+
+    if (musicWindow)
+    {
+        delete musicWindow;
+        musicWindow = nullptr;
     }
 
     /*if (playerWindow)
@@ -3021,7 +3132,7 @@ void MainWindow::autoSetCookie(QString s)
     qInfo() << "设置弹幕格式：" << browserData;
 }
 
-QVariant MainWindow::getCookies()
+QVariant MainWindow::getCookies() const
 {
     QList<QNetworkCookie> cookies;
 
@@ -3077,6 +3188,17 @@ void MainWindow::getCookieAccount()
             triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
     });
+}
+
+QString MainWindow::getDomainPort() const
+{
+    QString domain = ui->domainEdit->text().trimmed();
+    if (domain.isEmpty())
+        domain = "http://localhost";
+    if (!domain.contains("://"))
+        domain = "http://" + domain;
+    QString url = domain + ":" + snum(ui->serverPortSpin->value());
+    return url;
 }
 
 void MainWindow::getRobotInfo()
@@ -3895,16 +4017,17 @@ void MainWindow::getRoomInfo(bool reconnect)
             danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         roomTitle = roomInfo.value("title").toString();
         upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-        QString roomDesc = roomInfo.value("description").toString();
-        QStringList tags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+        roomDescription = roomInfo.value("description").toString();
+        roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
         setWindowTitle(roomTitle + " - " + upName);
         tray->setToolTip(roomTitle + " - " + upName);
         if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
             ui->roomNameLabel->setText(roomTitle);
         ui->upNameLabel->setText(upName);
+        roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
         // 设置房间描述
-        ui->roomDescriptionBrowser->setText(roomDesc);
+        ui->roomDescriptionBrowser->setText(roomDescription);
         {
             QString text = ui->roomDescriptionBrowser->toPlainText();
             QTextCursor cursor = ui->roomDescriptionBrowser->textCursor();
@@ -3990,6 +4113,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         areaName = roomInfo.value("area_name").toString();
         parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
         parentAreaName = roomInfo.value("parent_area_name").toString();
+        ui->roomAreaLabel->setText(areaName);
 
         // 疑似在线人数
         int online = roomInfo.value("online").toInt();
@@ -4004,7 +4128,7 @@ void MainWindow::getRoomInfo(bool reconnect)
         // getFansAndUpdate();
 
         // 设置标签
-        ui->tagsButtonGroup->initStringList(tags);
+        ui->tagsButtonGroup->initStringList(roomTags);
 
         // 获取榜单信息
         QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
@@ -4318,6 +4442,7 @@ void MainWindow::setRoomThemeByCover(double val)
     ui->SendMsgButton->setTextColor(fg);
     ui->showOrderPlayerButton->setNormalColor(sbg);
     ui->showOrderPlayerButton->setTextColor(sfg);
+    // ui->addMusicToLiveButton->setBorderColor(sbg); // 感觉太花哨了
     appendListItemButton->setBgColor(sbg);
     appendListItemButton->setIconColor(sfg);
     if (hasPermission())
@@ -14850,6 +14975,14 @@ void MainWindow::releaseLiveData(bool prepare)
         cookieGuardLevel = 0;
         if (ui->adjustDanmakuLongestCheck->isChecked())
             adjustDanmakuLongest();
+
+        for (int i = 0; i < ui->giftListWidget->count(); i++)
+        {
+            auto item = ui->giftListWidget->item(i);
+            auto widget = ui->giftListWidget->itemWidget(item);
+            widget->deleteLater();
+        }
+        ui->giftListWidget->clear();
     }
     else // 下播，依旧保持连接
     {
@@ -15502,6 +15635,293 @@ void MainWindow::adjustDanmakuLongest()
     on_danmuLongestSpin_editingFinished();
 }
 
+void MainWindow::myLiveSelectArea(bool update)
+{
+    get("https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2", [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("获取分区列表", json.msg());
+        newFacileMenu->setSubMenuShowOnCursor(false);
+        if (update)
+            menu->addTitle("修改分区", 1);
+        else
+            menu->addTitle("选择分区", 1);
+
+        json.data().each("data", [=](MyJson json){
+            QString parentId = snum(json.i("id")); // 这是int类型的
+            QString parentName = json.s("name");
+            auto parentMenu = menu->addMenu(parentName);
+            json.each("list", [=](MyJson json) {
+                QString id = json.s("id"); // 这个是字符串的
+                QString name = json.s("name");
+                parentMenu->addAction(name, [=]{
+                    areaId = id;
+                    areaName = name;
+                    parentAreaId = parentId;
+                    parentAreaName = parentName;
+                    settings->setValue("myLive/areaId", areaId);
+                    settings->setValue("myLive/parentAreaId", parentAreaId);
+                    qInfo() << "选择分区：" << parentName << parentId << areaName << areaId;
+                    if (update)
+                    {
+                        myLiveUpdateArea(areaId);
+                    }
+                });
+            });
+        });
+
+        menu->exec();
+    });
+}
+
+void MainWindow::myLiveUpdateArea(QString area)
+{
+    qInfo() << "更新AreaId:" << area;
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+    {"room_id", roomId, "area_id", area,
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("修改分区失败", json.msg());
+    });
+}
+
+void MainWindow::myLiveStartLive()
+{
+    int lastAreaId = settings->value("myLive/areaId", 0).toInt();
+    if (!lastAreaId)
+    {
+        showError("一键开播", "必须选择分类才能开播");
+        return ;
+    }
+    post("https://api.live.bilibili.com/room/v1/Room/startLive",
+    {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        qInfo() << "开播：" << json;
+        if (json.code() != 0)
+            return showError("一键开播失败", json.msg());
+        MyJson rtmp = json.data().o("rtmp");
+        myLiveRtmp = rtmp.s("addr");
+        myLiveCode = rtmp.s("code");
+    });
+}
+
+void MainWindow::myLiveStopLive()
+{
+    post("https://api.live.bilibili.com/room/v1/Room/stopLive",
+    {"room_id", roomId, "platform", "pc",
+         "csrf_token", csrf_token, "csrf", csrf_token},
+         [=](MyJson json) {
+        qInfo() << "下播：" << json;
+        if (json.code() != 0)
+            return showError("一键下播失败", json.msg());
+    });
+}
+
+void MainWindow::myLiveSetTitle()
+{
+    QString title = roomTitle;
+    bool ok = false;
+    title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", roomId,
+             "title", title,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置直播间标题：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomTitle = title;
+        ui->roomNameLabel->setText(title);
+    });
+}
+
+void MainWindow::myLiveSetNews()
+{
+    QString content = roomNews;
+    bool ok = false;
+    content = TextInputDialog::getText(this, "修改主播公告", "修改主播公告，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room_ex/v1/RoomNews/update",
+         QStringList{
+             "room_id", roomId,
+             "uid", cookieUid,
+             "content", content,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置主播公告：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomNews = content;
+    });
+}
+
+void MainWindow::myLiveSetDescription()
+{
+    QString content = roomDescription;
+    bool ok = false;
+    content = TextInputDialog::getText(this, "修改个人简介", "修改主播的个人简介，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", roomId,
+             "description", content,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置个人简介：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        roomDescription = content;
+        ui->roomDescriptionBrowser->setPlainText(roomDescription);
+    });
+}
+
+void MainWindow::myLiveSetCover()
+{
+    // 选择封面
+    QString oldPath = settings->value("recent/coverPath", "").toString();
+    QString path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
+    if (path.isEmpty())
+        return ;
+    settings->setValue("recent/coverPath", path);
+
+    // 裁剪图片：大致是 470 / 293 = 1.6 = 8 : 5
+    QPixmap pixmap(path);
+    // if (!ClipDialog::clip(pixmap, AspectRatio, 8, 5))
+    //     return ;
+
+    // 压缩图片
+    const int width = 470;
+    const QString clipPath = dataPath + "temp_cover.jpeg";
+    pixmap = pixmap.scaledToWidth(width, Qt::SmoothTransformation);
+    pixmap.save(clipPath);
+
+    // 开始上传
+    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + csrf_token);
+    uploader->setCookies(userCookies);
+    uploader->addTextField("bucket", "live");
+    uploader->addTextField("dir", "new_room_cover");
+    uploader->addFileField("file", "blob", clipPath, "image/jpeg");
+    uploader->post();
+    connect(uploader, &HttpUploader::finished, this, [=](QNetworkReply* reply) {
+        MyJson json(reply->readAll());
+        qInfo() << "上传封面：" << json;
+        if (json.code() != 0)
+            return showError("上传封面失败", json.msg());
+
+        auto data = json.data();
+        QString location = data.s("location");
+        QString etag = data.s("etag");
+
+        if (roomCover.isNull()) // 仅第一次上传封面，调用 add
+        {
+            post("https://api.live.bilibili.com/room/v1/Cover/add",
+            {"room_id", roomId,
+             "url", location,
+             "type", "cover",
+             "csrf_token", csrf_token,
+             "csrf", csrf_token,
+             "visit_id", getRandomKey(12)
+                 }, [=](MyJson json) {
+                qInfo() << "添加封面：" << json;
+                if (json.code() != 0)
+                    return showError("添加封面失败", json.msg());
+            });
+        }
+        else // 后面就要调用替换的API了，需要参数 pic_id
+        {
+            // 获取 pic_id
+            get("https://api.live.bilibili.com/room/v1/Cover/new_get_list?room_id=" +roomId, [=](MyJson json) {
+                qInfo() << "获取封面ID：" << json;
+                if (json.code() != 0)
+                    return showError("设置封面失败", "无法获取封面ID");
+                auto array = json.a("data");
+                if (!array.size())
+                    return showError("设置封面失败", "获取不到封面数据");
+                const qint64 picId = (long long)(array.first().toObject().value("id").toDouble());
+
+                post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
+                {"room_id", roomId,
+                 "url", location,
+                 "pic_id", snum(picId),
+                 "type", "cover",
+                 "csrf_token", csrf_token,
+                 "csrf", csrf_token,
+                 "visit_id", getRandomKey(12)
+                     }, [=](MyJson json) {
+                    qInfo() << "设置封面：" << json;
+                    if (json.code() != 0)
+                        return showError("设置封面失败", json.msg());
+                });
+            });
+        }
+
+    });
+}
+
+void MainWindow::myLiveSetTags()
+{
+    QString content = roomTags.join(" ");
+    bool ok = false;
+    content = QInputDialog::getText(this, "修改我的个人标签", "多个标签之间使用空格分隔\n短时间修改太多标签可能会被临时屏蔽", QLineEdit::Normal, content, &ok);
+    if (!ok)
+        return ;
+
+    QStringList oldTags = roomTags;
+    QStringList newTags = content.split(" ", QString::SkipEmptyParts);
+
+    auto toPost = [=](QString action, QString tag){
+        QString rst = NetUtil::postWebData("https://api.live.bilibili.com/room/v1/Room/update",
+                             QStringList{
+                                 "room_id", roomId,
+                                 action, tag,
+                                 "csrf_token", csrf_token,
+                                 "csrf", csrf_token
+                             }, userCookies);
+        MyJson json(rst.toUtf8());
+        qInfo() << "修改个人标签：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        if (action == "add_tag")
+            roomTags.append(tag);
+        else
+            roomTags.removeOne(tag);
+    };
+
+    // 对比新旧
+    foreach (auto tag, newTags)
+    {
+        if (oldTags.contains(tag)) // 没变的部分
+        {
+            oldTags.removeOne(tag);
+            continue;
+        }
+
+        // 新增的
+        qInfo() << "添加个人标签：" << tag;
+        toPost("add_tag", tag);
+    }
+    foreach (auto tag, oldTags)
+    {
+        qInfo() << "删除个人标签：" << tag;
+        toPost("del_tag", tag);
+    }
+
+    // 刷新界面
+    ui->tagsButtonGroup->initStringList(roomTags);
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -15650,6 +16070,13 @@ void MainWindow::openLink(QString link)
     else if (link == "send_long_text")
     {
         on_actionSend_Long_Text_triggered();
+    }
+    else if (link == "qq_qrcode")
+    {
+        // 直接把下面的图片设置成这个二维码的
+        ui->label_39->setStyleSheet("border-image:url(:/documents/qq_qrcode);\
+                                    background-position:center;\
+                                    background-repeat:none;");
     }
 }
 
@@ -17671,6 +18098,56 @@ void MainWindow::on_syncShieldKeywordCheck_clicked()
 void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
+
+    // 主播专属操作
+    if (cookieUid == upUid)
+    {
+        menu->addTitle("直播设置", 0);
+        menu->addAction(QIcon(":/icons/title"), "修改直播标题", [=]{
+            myLiveSetTitle();
+        });
+        menu->addAction(QIcon(":/icons/default_cover"), "更换直播封面", [=]{
+            myLiveSetCover();
+        });
+        menu->addAction(QIcon(":/icons/news"), "修改主播公告", [=]{
+            myLiveSetNews();
+        });
+        menu->addAction(QIcon(":/icons/person_description"), "修改个人简介", [=]{
+            myLiveSetDescription();
+        });
+        menu->addAction(QIcon(":/icons/tags"), "修改个人标签", [=]{
+            myLiveSetTags();
+        });
+
+        menu->addTitle("快速开播", -1);
+        menu->addAction(QIcon(":/icons/area"), "选择分区", [=]{
+            myLiveSelectArea(false);
+        });
+        menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
+            if (!isLiving())
+            {
+                // 一键开播
+                myLiveStartLive();
+            }
+            else
+            {
+                // 一键下播
+                myLiveStopLive();
+            }
+        })->text(isLiving(), "一键下播");
+
+        menu->addAction(QIcon(":/icons/rtmp"), "复制rtmp", [=]{
+            QApplication::clipboard()->setText(myLiveRtmp);
+        })->disable(myLiveRtmp.isEmpty())->lingerText("已复制");
+
+        menu->addAction(QIcon(":/icons/token"), "复制直播码", [=]{
+            QApplication::clipboard()->setText(myLiveCode);
+        })->disable(myLiveCode.isEmpty())->lingerText("已复制");
+
+        menu->split();
+    }
+
+    // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存直播间封面", [=]{
         QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
@@ -17728,4 +18205,116 @@ void MainWindow::on_saveMonthGuardButton_clicked()
 {
     QDir dir(dataPath + "guard_month");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_musicConfigButton_clicked()
+{
+    int page = ui->musicConfigStack->currentIndex();
+    if (page == 0) // 设置页面
+    {
+        ui->musicConfigStack->setCurrentIndex(1);
+    }
+    else if (page == 1) // 列表页面
+    {
+        ui->musicConfigStack->setCurrentIndex(0);
+    }
+}
+
+void MainWindow::on_musicConfigStack_currentChanged(int arg1)
+{
+    settings->setValue("mainwindow/musicStackIndex", arg1);
+}
+
+void MainWindow::on_addMusicToLiveButton_clicked()
+{
+    ui->extensionPageButton->simulateStatePress();
+    ui->tabWidget->setCurrentWidget(ui->tabRemote);
+}
+
+void MainWindow::on_roomNameLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/title"), "修改直播标题", [=]{
+        myLiveSetTitle();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_upNameLabel_customContextMenuRequested(const QPoint &)
+{
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/copy"), "复制昵称", [=]{
+        QApplication::clipboard()->setText(upName);
+    });
+
+    if (cookieUid == upUid)
+    {
+        menu->addAction(QIcon(":/icons/modify"), "修改昵称", [=]{
+
+        })->disable();
+    }
+
+    menu->exec();
+}
+
+void MainWindow::on_roomAreaLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/area"), "修改分区", [=]{
+        myLiveSelectArea(true);
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_tagsButtonGroup_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/tags"), "修改个人标签", [=]{
+        myLiveSetTags();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_roomDescriptionBrowser_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/person_description"), "修改个人简介", [=]{
+        myLiveSetDescription();
+    });
+
+    menu->exec();
+}
+
+void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
+{
+    if (cookieUid != upUid)
+        return ;
+
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/person_description"), "修改个人签名", [=]{
+
+    })->disable();
+
+    menu->exec();
 }

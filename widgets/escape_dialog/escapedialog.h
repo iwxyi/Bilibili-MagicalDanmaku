@@ -23,6 +23,7 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void leaveEvent(QEvent* event) override;
+    void closeEvent(QCloseEvent *e) override;
 
 private:
     void resetBtnPos();
@@ -48,6 +49,7 @@ private:
     int escape_count; // 跑动的次数（包括交换）
     int last_escape_index; // 上次交换位置的次数（免得经常性的交换）
     bool has_overlapped; // 是否和另一个按钮进行重叠
+    bool yes_pressed = false;
 };
 
 #endif // ESCAPEDIALOG_H

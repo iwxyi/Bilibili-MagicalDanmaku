@@ -8,6 +8,7 @@ class FacileMenuItem;
 
 typedef std::function<void()> const FuncType;
 typedef std::function<void(int)> const FuncIntType;
+typedef std::function<QString(QString)> const FuncStringStringType;
 typedef std::function<void(FacileMenuItem*)> const FuncItemType;
 typedef std::function<void(FacileMenuItem*, int)> const FuncItemIntType;
 
@@ -60,8 +61,11 @@ public:
     FacileMenuItem* icon(bool exp, QIcon icon);
     FacileMenuItem* borderR(int radius = 3, QColor co = Qt::transparent);
     FacileMenuItem* linger();
+    FacileMenuItem* lingerText(QString textAfterClick);
     FacileMenuItem* bind(bool &val);
     FacileMenuItem* longPress(FuncType func);
+    FacileMenuItem* textAfterClick(QString newText);
+    FacileMenuItem* textAfterClick(FuncStringStringType func);
 
     FacileMenuItem* ifer(bool exp);
     FacileMenuItem* elifer(bool exp);

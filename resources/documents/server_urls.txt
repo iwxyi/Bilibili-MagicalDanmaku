@@ -1,0 +1,4 @@
+弹幕点歌列表          | /music/index.html
+当前歌曲名字          | /music/playing.html
+当前歌曲歌词          | /music/lyrics.html
+送礼物小动画          | /gift/index.html

@@ -711,6 +711,24 @@ private slots:
 
     void on_saveMonthGuardButton_clicked();
 
+    void on_musicConfigButton_clicked();
+
+    void on_musicConfigStack_currentChanged(int arg1);
+
+    void on_addMusicToLiveButton_clicked();
+
+    void on_roomNameLabel_customContextMenuRequested(const QPoint &);
+
+    void on_upNameLabel_customContextMenuRequested(const QPoint &);
+
+    void on_roomAreaLabel_customContextMenuRequested(const QPoint &);
+
+    void on_tagsButtonGroup_customContextMenuRequested(const QPoint &);
+
+    void on_roomDescriptionBrowser_customContextMenuRequested(const QPoint &);
+
+    void on_upLevelLabel_customContextMenuRequested(const QPoint &);
+
 private:
     void initView();
     void initStyle();
@@ -750,8 +768,9 @@ private:
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
 
     void autoSetCookie(QString s);
-    QVariant getCookies();
+    QVariant getCookies() const;
     void getCookieAccount();
+    QString getDomainPort() const;
     void getRobotInfo();
     void getRoomUserInfo();
     void initWS();
@@ -910,6 +929,15 @@ private:
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
     void adjustDanmakuLongest();
+    void myLiveSelectArea(bool update);
+    void myLiveUpdateArea(QString area);
+    void myLiveStartLive();
+    void myLiveStopLive();
+    void myLiveSetTitle();
+    void myLiveSetNews();
+    void myLiveSetDescription();
+    void myLiveSetCover();
+    void myLiveSetTags();
 
     void startSplash();
     void saveGameNumbers(int channel);
@@ -949,6 +977,7 @@ private:
     void showError(QString s) const;
 
 private:
+    // 应用信息
     Ui::MainWindow *ui;
     QSettings* settings;
     QSettings* heaps;
@@ -984,9 +1013,19 @@ private:
     QString areaName; // 例：视频唱见
     QString parentAreaId; // 例：1（整型，为了方便用字符串）
     QString parentAreaName; // 例：娱乐
+    QString roomNews; // 主播公告
+    QString roomDescription; // 主播个人简介
+    QStringList roomTags; // 主播个人标签
+
+    // 我的直播
+    QString myLiveRtmp; // rtmp地址
+    QString myLiveCode; // 直播码
+
+    // 启动与定时
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
 
+    // 直播心跳
     qint64 liveTimestamp = 0;
     QTimer* xliveHeartBeatTimer = nullptr;
     int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）

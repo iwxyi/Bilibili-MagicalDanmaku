@@ -312,7 +312,7 @@ void ConditionHighlighter::highlightBlock(const QString &text)
         // 标签 <h1>
         QSSRule{QRegularExpression("(<[^\\],]+?>|\\\\n)"), getTCF(QColor(216, 167, 9))},
         // 冷却通道 (cd5:10,wait5:10,admin)
-        QSSRule{QRegularExpression("\\([\\w:, ]+\\)"), getTCF(QColor(0, 128, 0))},
+        QSSRule{QRegularExpression("\\([\\w:, ]*(cd\\d+:|wait\\d+:|admin)[\\w:, ]*\\)"), getTCF(QColor(0, 128, 0))},
         // 注释
         QSSRule{QRegularExpression("(?<!:)//.*?(?=\\n|$|\\\\n)"), getTCF(QColor(119, 136, 153))},
         // 开头注释，标记为标题

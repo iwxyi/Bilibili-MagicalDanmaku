@@ -23,8 +23,6 @@ namespace Ui {
 class LiveVideoPlayer;
 }
 
-#define newFacileMenu FacileMenu *menu = new FacileMenu(this)
-
 #define CAPTURE_PARAM_FILE "params.ini"
 
 class LiveVideoPlayer : public QDialog

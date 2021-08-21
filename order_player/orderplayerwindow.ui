@@ -733,8 +733,8 @@ QTableCornerButton::section
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>95</width>
-              <height>30</height>
+              <width>98</width>
+              <height>28</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -755,6 +755,9 @@ QTableCornerButton::section
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
        <widget class="InteractiveButtonBase" name="playButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -769,6 +772,9 @@ QTableCornerButton::section
       </item>
       <item>
        <widget class="InteractiveButtonBase" name="nextSongButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -811,6 +817,9 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
       </item>
       <item>
        <widget class="InteractiveButtonBase" name="volumeButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -854,6 +863,9 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
       </item>
       <item>
        <widget class="InteractiveButtonBase" name="circleModeButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -874,6 +886,9 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
       </item>
       <item>
        <widget class="InteractiveButtonBase" name="desktopLyricButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -896,7 +911,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
