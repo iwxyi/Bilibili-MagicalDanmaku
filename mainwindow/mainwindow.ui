@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>692</width>
-    <height>697</height>
+    <width>843</width>
+    <height>1144</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1361,8 +1361,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>65</width>
-             <height>16</height>
+             <width>763</width>
+             <height>1006</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1506,6 +1506,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="saveDanmakuToFileCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
                </property>
@@ -1619,6 +1622,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="adjustDanmakuLongestCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>根据UL等级和大航海等级，自动调整弹幕字数上限</string>
                </property>
@@ -1629,6 +1635,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="retryFailedDanmuCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;尝试重新发送失败的弹幕&lt;/p&gt;&lt;p&gt;包括：超出限制长度（自动分割）、1s内过快发送、3s内重复消息&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1640,6 +1649,9 @@ margin: 40px;</string>
             </layout>
            </widget>
            <widget class="QWidget" name="danmakuAISettingsCard" native="true">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="geometry">
              <rect>
               <x>370</x>
@@ -1699,6 +1711,12 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="AIReplyCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;调用图灵机器人来进行AI回复&lt;/p&gt;&lt;p&gt;可作为对弹幕评论的参考内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1709,6 +1727,12 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="AIReplyMsgCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要显示实时弹幕&lt;/p&gt;&lt;p&gt;开启后，发送AI回复的弹幕&lt;/p&gt;&lt;p&gt;否则只是本地显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1728,8 +1752,21 @@ margin: 40px;</string>
                   <string notr="true">QPushButton
 {
 	background: transparent;
-	border: none;
-}</string>
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>ID</string>
@@ -1745,8 +1782,21 @@ margin: 40px;</string>
                   <string notr="true">QPushButton
 {
 	background: transparent;
-	border: none;
-}</string>
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>Key</string>
@@ -1820,6 +1870,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="languageAutoTranslateCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动翻译常用外语弹幕&lt;/p&gt;&lt;p&gt;目前支持：英语、日语、俄语、韩语&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1830,6 +1883,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="newbieTipCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;第一次发弹幕时，昵称前显示[初]&lt;/p&gt;&lt;p&gt;若是0级小号，前三次显示红色的[新]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1840,6 +1896,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="judgeRobotCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启后，判定为机器人的用户将不再触发欢迎、感谢关注&lt;/p&gt;&lt;p&gt;根据关注、粉丝、投稿、作品点赞等数据智能分析，有一定几率存在误判情况，但不影响整体效果&lt;/p&gt;&lt;p&gt;进来的人很多时，不建议开启，容易出现“请求被拦截”&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1923,6 +1982,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="enableBlockCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在实时弹幕的菜单中添加拉黑&lt;/p&gt;&lt;p&gt;只有房管/主播才有黑名单权限&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1933,6 +1995,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="syncShieldKeywordCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动同步云端的屏蔽词列表，添加到当前直播间&lt;/p&gt;&lt;p&gt;只有主播/房管才有权限操作&lt;/p&gt;&lt;p&gt;可强烈过滤片哥、广告、不雅词汇&lt;/p&gt;&lt;p&gt;开播、重启开关会立刻同步&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2016,6 +2081,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="pkChuanmenCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗对面过来串门自动欢迎（需开启自动欢迎）；&lt;/p&gt;&lt;p&gt;自己观众去对面串门打小报告（放心，只有自己看得到）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2030,6 +2098,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="pkMsgSyncCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;在打视频大乱斗的时候，同步显示对面直播间的弹幕消息，格式如下：&lt;/p&gt;&lt;p&gt;[同步] 灰色弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2052,7 +2123,7 @@ margin: 40px;</string>
              <rect>
               <x>10</x>
               <y>330</y>
-              <width>151</width>
+              <width>171</width>
               <height>171</height>
              </rect>
             </property>
@@ -2107,6 +2178,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="pkAutoMelonCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>大乱斗最后几秒如果有必要的话，自动赠送吃瓜
 注意自己的余额！！！（0.1元/吃瓜）</string>
@@ -2119,12 +2193,32 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <widget class="InteractiveButtonBase" name="pkMaxGoldButton">
+                <widget class="QPushButton" name="pkMaxGoldButton">
                  <property name="enabled">
                   <bool>true</bool>
                  </property>
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>上限</string>
@@ -2136,6 +2230,9 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QCheckBox" name="pkAutoMaxGoldCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;根据双方礼物数值，自动调整偷塔的上限，最高为设定的10倍&lt;/p&gt;&lt;p&gt;积分超过10000时（1000元），为10倍。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -2149,9 +2246,29 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <item>
-                <widget class="InteractiveButtonBase" name="pkMelonValButton">
+                <widget class="QPushButton" name="pkMelonValButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>乱斗值</string>
@@ -2159,9 +2276,29 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="InteractiveButtonBase" name="pkJudgeEarlyButton">
+                <widget class="QPushButton" name="pkJudgeEarlyButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>偷塔时间</string>
@@ -2171,9 +2308,29 @@ margin: 40px;</string>
               </layout>
              </item>
              <item>
-              <widget class="InteractiveButtonBase" name="pkBlankButton">
+              <widget class="QPushButton" name="pkBlankButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                </property>
                <property name="text">
                 <string>黑名单房间</string>
@@ -2255,6 +2412,29 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QPushButton" name="closeTransMouseButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 4px 2px 4px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
                <property name="text">
                 <string>关闭鼠标穿透</string>
                </property>
@@ -2322,6 +2502,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="startLiveSendCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>启用</string>
                </property>
@@ -2389,6 +2572,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="autoSwitchMedalCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开播后自动切换粉丝勋章为当前主播的&lt;/p&gt;&lt;p&gt;勋章已变灰时不切换&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2461,6 +2647,9 @@ margin: 40px;</string>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
                 <widget class="QCheckBox" name="timerConnectServerCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于长期挂在服务器上，在开播前连接B站服务器，下播后暂停&lt;/p&gt;&lt;p&gt;注：长期连接直播间很容易被冻结&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -2471,6 +2660,9 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QCheckBox" name="doveCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;适用于挂在服务器上临时开启&lt;/p&gt;&lt;p&gt;主播放鸽子了，今天不开播&lt;/p&gt;&lt;p&gt;等到开播时间不连接服务器&lt;/p&gt;&lt;p&gt;下一次下播时间或重启后自动关闭&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -2655,6 +2847,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="autoLOTCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;自动参加天选时刻抽奖/节奏风暴弹幕&lt;/p&gt;&lt;p&gt;只发送弹幕和关注，需要送礼的不参加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2665,6 +2860,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="autoDoSignCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每天定时签到，按打开自动签到/启动程序的时间来算&lt;/p&gt;&lt;p&gt;第二天生效，适用于长期挂在服务器上&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2678,6 +2876,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="sendExpireGiftCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;每次开播的时候判断是否有2天内过期的礼物&lt;/p&gt;&lt;p&gt;例如辣条、小心心&lt;/p&gt;&lt;p&gt;若有，则赠予当前主播&lt;/p&gt;&lt;p&gt;未设置房号或Cookie则无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2693,6 +2894,9 @@ margin: 40px;</string>
                </property>
                <item>
                 <widget class="QCheckBox" name="acquireHeartCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;连接直播间后保持观看状态，以获得小心心&lt;/p&gt;&lt;p&gt;可配合自动赠送过期礼物&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -2803,6 +3007,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;仅在主播直播时，自动发送弹幕&lt;/p&gt;&lt;p&gt;包括：自动欢迎、答谢送礼、答谢关注、定时任务、关键词自动回复、自动禁言的通知&lt;/p&gt;&lt;p&gt;手动发送弹幕不受影响&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2816,6 +3023,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="listenMedalUpgradeCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;监听赠送礼物后的勋章升级状况&lt;/p&gt;&lt;p&gt;产生 MEDAL_UPGRADE 事件&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2826,6 +3036,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="enableFilterCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启过滤器功能&lt;/p&gt;&lt;p&gt;可能会造成用户进场等情况的卡顿&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -2896,6 +3109,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="recordCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：&lt;/p&gt;&lt;p&gt;安装目录/records/&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -3009,6 +3225,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="calculateDailyDataCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
                </property>
@@ -3020,9 +3239,29 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
-                <widget class="InteractiveButtonBase" name="pushButton">
+                <widget class="QPushButton" name="pushButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>今日</string>
@@ -3039,12 +3278,32 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="InteractiveButtonBase" name="exportDailyButton">
+                <widget class="QPushButton" name="exportDailyButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>导出</string>
@@ -3063,8 +3322,8 @@ margin: 40px;</string>
              <rect>
               <x>190</x>
               <y>740</y>
-              <width>161</width>
-              <height>131</height>
+              <width>181</width>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3117,34 +3376,109 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveEveryGiftCheck">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <layout class="QHBoxLayout" name="horizontalLayout_56">
+               <property name="topMargin">
+                <number>0</number>
                </property>
-               <property name="text">
-                <string>记录礼物历史</string>
-               </property>
-              </widget>
+               <item>
+                <widget class="QCheckBox" name="saveEveryGiftCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/gift_histories&lt;/p&gt;&lt;p&gt;（不支持礼物合并）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>记录礼物历史</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="saveEveryGiftButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveEveryGuardCheck">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>记录每次上船</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_58">
+               <item>
+                <widget class="QCheckBox" name="saveEveryGuardCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存每次上船的数据，用于统计&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_histories&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>记录每次上船</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="saveEveryGuardButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveMonthGuardCheck">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>记录每月船员</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_59">
+               <item>
+                <widget class="QCheckBox" name="saveMonthGuardCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;以CSV表格的形式记录每月船员&lt;/p&gt;&lt;p&gt;每次开播都会重新更新&lt;/p&gt;&lt;p&gt;保存在：程序目录/guard_month&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>记录每月船员</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="saveMonthGuardButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -3208,6 +3542,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="saveRecvCmdsCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -3220,6 +3557,29 @@ margin: 40px;</string>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
                 <widget class="InteractiveButtonBase" name="pushRecvCmdsButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
                  <property name="text">
                   <string>输入CMDS</string>
                  </property>
@@ -3230,6 +3590,29 @@ margin: 40px;</string>
                  <property name="enabled">
                   <bool>true</bool>
                  </property>
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
                  <property name="text">
                   <string>下一条</string>
                  </property>
@@ -3239,6 +3622,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="timerPushCmdCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>定时下一条</string>
                </property>
@@ -3331,6 +3717,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="startOnRebootCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开机时自动启动神奇弹幕&lt;/p&gt;&lt;p&gt;针对部分系统，可能无效&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -3341,6 +3730,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="startupAnimationCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;启动程序时显示一个流流流流畅流畅畅畅畅的动画&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -3351,6 +3743,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="enableTrayCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>关闭窗口后不退出程序</string>
                </property>
@@ -3421,6 +3816,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="enableScreenDanmakuCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>全屏滚动弹幕</string>
                </property>
@@ -3428,6 +3826,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="enableScreenMsgCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>全屏滚动信息</string>
                </property>
@@ -3439,7 +3840,30 @@ margin: 40px;</string>
                 <number>0</number>
                </property>
                <item>
-                <widget class="InteractiveButtonBase" name="screenDanmakuFontButton">
+                <widget class="QPushButton" name="screenDanmakuFontButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
                  <property name="text">
                   <string>字体</string>
                  </property>
@@ -3449,7 +3873,30 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="InteractiveButtonBase" name="screenDanmakuColorButton">
+                <widget class="QPushButton" name="screenDanmakuColorButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
                  <property name="text">
                   <string>颜色</string>
                  </property>
@@ -3714,6 +4161,9 @@ margin: 40px;</string>
                </property>
                <item>
                 <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>朗读弹幕</string>
                  </property>
@@ -3733,9 +4183,29 @@ margin: 40px;</string>
                 </spacer>
                </item>
                <item>
-                <widget class="InteractiveButtonBase" name="voicePreviewButton">
+                <widget class="QPushButton" name="voicePreviewButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
-                  <string notr="true"/>
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                  </property>
                  <property name="text">
                   <string>预听</string>
@@ -3751,6 +4221,9 @@ margin: 40px;</string>
               <layout class="QHBoxLayout" name="horizontalLayout_35">
                <item>
                 <widget class="QRadioButton" name="voiceLocalRadio">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>本地</string>
                  </property>
@@ -3758,6 +4231,9 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QRadioButton" name="voiceXfyRadio">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>讯飞</string>
                  </property>
@@ -3767,6 +4243,9 @@ margin: 40px;</string>
                 <widget class="QRadioButton" name="voiceCustomRadio">
                  <property name="enabled">
                   <bool>true</bool>
+                 </property>
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="text">
                   <string>自定义</string>
@@ -4078,6 +4557,9 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QPushButton" name="voiceNameSelectButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true"/>
                  </property>
@@ -4369,6 +4851,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="toutaGiftCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="toolTip">
                 <string>以设置的礼物和数量进行偷塔</string>
                </property>
@@ -4415,9 +4900,29 @@ margin: 40px;</string>
               </layout>
              </item>
              <item>
-              <widget class="InteractiveButtonBase" name="toutaGiftListButton">
+              <widget class="QPushButton" name="toutaGiftListButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="styleSheet">
-                <string notr="true"/>
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
                </property>
                <property name="text">
                 <string>礼物列表</string>
@@ -4471,6 +4976,9 @@ margin: 40px;</string>
           </item>
           <item>
            <widget class="InteractiveButtonBase" name="sendMsgMoreButton">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -7186,8 +7694,8 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>692</width>
-     <height>21</height>
+     <width>843</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

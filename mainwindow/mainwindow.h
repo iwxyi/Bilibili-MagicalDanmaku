@@ -705,6 +705,12 @@ private slots:
 
     void on_upHeaderLabel_customContextMenuRequested(const QPoint &);
 
+    void on_saveEveryGiftButton_clicked();
+
+    void on_saveEveryGuardButton_clicked();
+
+    void on_saveMonthGuardButton_clicked();
+
 private:
     void initView();
     void initStyle();

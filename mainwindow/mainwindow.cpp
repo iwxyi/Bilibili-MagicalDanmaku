@@ -298,6 +298,13 @@ void MainWindow::initView()
     ui->sendMsgMoreButton->setSquareSize();
     ui->sendMsgMoreButton->setRadius(fluentRadius);
 
+    ui->saveEveryGiftButton->setSquareSize();
+    ui->saveEveryGiftButton->setRadius(fluentRadius);
+    ui->saveEveryGuardButton->setSquareSize();
+    ui->saveEveryGuardButton->setRadius(fluentRadius);
+    ui->saveMonthGuardButton->setSquareSize();
+    ui->saveMonthGuardButton->setRadius(fluentRadius);
+
     // 答谢页面
     thankTabButtons = {
         ui->thankWelcomeTabButton,
@@ -17703,4 +17710,22 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
     })->disable(upFace.isNull());
 
     menu->exec();
+}
+
+void MainWindow::on_saveEveryGiftButton_clicked()
+{
+    QDir dir(dataPath + "gift_histories");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_saveEveryGuardButton_clicked()
+{
+    QDir dir(dataPath + "guard_histories");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_saveMonthGuardButton_clicked()
+{
+    QDir dir(dataPath + "guard_month");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
