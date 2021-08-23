@@ -4314,7 +4314,7 @@ void MainWindow::updatePermission()
 
         if (permissionLevel)
         {
-            ui->droplight->setText("尊享版");
+            ui->droplight->setText("捐赠版");
             ui->droplight->setNormalColor(themeSbg);
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
@@ -4329,7 +4329,7 @@ void MainWindow::updatePermission()
             ui->droplight->setText("免费版");
             ui->droplight->setNormalColor(Qt::white);
             ui->droplight->setTextColor(Qt::black);
-            ui->droplight->setToolTip("点击购买尊享版");
+            ui->droplight->setToolTip("点击解锁新功能");
             ui->vipExtensionButton->show();
             ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
             permissionTimer->stop();

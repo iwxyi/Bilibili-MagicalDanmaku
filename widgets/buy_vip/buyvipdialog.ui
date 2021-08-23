@@ -64,7 +64,7 @@
 font-weight: 700;</string>
          </property>
          <property name="text">
-          <string>神奇弹幕尊享版</string>
+          <string>神奇弹幕捐赠版</string>
          </property>
         </widget>
        </item>
@@ -95,7 +95,10 @@ font-weight: 700;</string>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,1">
+        <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0,1">
+         <property name="spacing">
+          <number>4</number>
+         </property>
          <property name="topMargin">
           <number>0</number>
          </property>
@@ -114,6 +117,9 @@ font-weight: 700;</string>
          </item>
          <item>
           <widget class="QLabel" name="label_3">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;一次性购买时间越久，折扣越高&lt;/p&gt;&lt;p&gt;可与优惠券折扣叠加&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="styleSheet">
             <string notr="true">font-size: 24px;
 color: #ff6464;
@@ -126,6 +132,19 @@ font-weight: 500;</string>
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
            </property>
           </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </item>
@@ -175,7 +194,7 @@ background-repeat:none;</string>
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>将享有以下功能：</string>
+        <string>将开启以下功能：</string>
        </property>
       </widget>
      </item>
@@ -227,7 +246,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>455</width>
-        <height>172</height>
+        <height>202</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -1006,7 +1025,7 @@ color: gray;</string>
 font-weight: 500;</string>
        </property>
        <property name="text">
-        <string>支付</string>
+        <string>捐赠</string>
        </property>
       </widget>
      </item>
