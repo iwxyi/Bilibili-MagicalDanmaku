@@ -112,6 +112,7 @@ private:
     LyricStream lyricStream;
     int currentRow = -1; // 当前播放或即将播放的歌词row（不一定有下一行）
     int pointSize = 20;
+    QString fontFamily;
 
     bool jiWindow = false;
 };

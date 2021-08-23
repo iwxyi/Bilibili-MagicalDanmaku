@@ -1,3 +1,4 @@
+#include <QFontDatabase>
 #include "desktoplyricwidget.h"
 
 DesktopLyricWidget::DesktopLyricWidget(QSettings& settings, QWidget *parent) : QWidget(parent),
@@ -5,7 +6,7 @@ DesktopLyricWidget::DesktopLyricWidget(QSettings& settings, QWidget *parent) : Q
 {
     this->setWindowTitle("桌面歌词");
     this->setMinimumSize(45, 25);                        //设置最小尺寸
-    this->setMaximumSize(800, 100);
+    this->setMaximumSize(10000, 10000);
     if ((jiWindow = settings.value("music/desktopLyricTrans", false).toBool()))
     {
         this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);      //设置为无边框置顶窗口
@@ -30,6 +31,7 @@ DesktopLyricWidget::DesktopLyricWidget(QSettings& settings, QWidget *parent) : Q
     waitingColor = qvariant_cast<QColor>(settings.value("music/waitingColor", waitingColor));
     bgColor = qvariant_cast<QColor>(settings.value("music/bgColor", bgColor));
     pointSize = settings.value("music/desktopLyricPointSize", pointSize).toInt();
+    fontFamily = settings.value("music/desktopLyricFontFamily", fontFamily).toString();
 }
 
 /**
@@ -225,6 +227,8 @@ void DesktopLyricWidget::paintEvent(QPaintEvent *)
     QFont font;
     font.setPointSize(pointSize);
     font.setBold(true);
+    if (!fontFamily.isEmpty())
+        font.setFamily(fontFamily);
     painter.setFont(font);
 
     // 文字区域
@@ -325,6 +329,14 @@ void DesktopLyricWidget::showMenu()
     fontMenu->addOptions(sl, pointSize-12, [=](int index){
         pointSize = index + 12;
         settings.setValue("music/desktopLyricPointSize", pointSize);
+        update();
+    });
+    QFontDatabase fdb;
+    QStringList families = fdb.families();
+    auto familyMenu = menu->addMenu("选择字体");
+    familyMenu->addOptions(families, families.indexOf(fontFamily), [=](int index) {
+        this->fontFamily = families.at(index);
+        settings.setValue("music/desktopLyricFontFamily", this->fontFamily);
         update();
     });
     menu->split()->addAction("透明模式", [=]{
