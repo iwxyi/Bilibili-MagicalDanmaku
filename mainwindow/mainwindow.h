@@ -933,10 +933,10 @@ private:
     void myLiveUpdateArea(QString area);
     void myLiveStartLive();
     void myLiveStopLive();
-    void myLiveSetTitle();
+    void myLiveSetTitle(QString newTItle = "");
     void myLiveSetNews();
     void myLiveSetDescription();
-    void myLiveSetCover();
+    void myLiveSetCover(QString path = "");
     void myLiveSetTags();
 
     void startSplash();

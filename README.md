@@ -1328,6 +1328,8 @@ tips：
 | simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |
 | copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |
+| setRoomTitle                                       | 设置直播标题     | 主播设置直播间的大标题                                       |
+| setRoomCover(path)                                 | 设置直播封面     | 主播设置直播间的封面图片，path为图片路径（不会裁剪，只是压缩上传） |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

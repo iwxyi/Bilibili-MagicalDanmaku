@@ -22,6 +22,7 @@
 #include "buyvipdialog.h"
 #include "warmwishutil.h"
 #include "httpuploader.h"
+#include "third_party/qss_editor/qsseditdialog.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -434,7 +435,6 @@ void MainWindow::initView()
 
     // 远程
     // 加载url列表，允许一键复制
-    // ui->urlsListWidget->hide();
     QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
     foreach (auto line, urlLines)
     {
@@ -444,12 +444,12 @@ void MainWindow::initView()
 
         QString name = sl.at(0).trimmed();
         QString urlR = sl.at(1).trimmed();
+        QString cssR = sl.size() < 3 ? "" : sl.at(2).trimmed();
 
         auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
         auto layout = new QHBoxLayout(widget);
-        auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
         layout->addStretch(1);
-        layout->addWidget(btn);
+        layout->setSpacing(0);
         layout->setMargin(0);
         widget->setLayout(layout);
         widget->setPaddings(8);
@@ -457,26 +457,54 @@ void MainWindow::initView()
         widget->setRadius(fluentRadius);
         widget->setFixedForePos();
         widget->setCursor(Qt::PointingHandCursor);
-        widget->setToolTip("在浏览器中打开");
-        btn->setSquareSize();
-        btn->setCursor(Qt::PointingHandCursor);
-        btn->setFixedForePos();
-        btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-        btn->hide();
-        connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-        connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+        // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
         connect(widget, &InteractiveButtonBase::clicked, this, [=]{
             if (!ui->serverCheck->isChecked())
                 return showError("网络服务未开启", "无法打开：" + name);
             QDesktopServices::openUrl(getDomainPort() + urlR);
         });
-        connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-            QApplication::clipboard()->setText(getDomainPort() + urlR);
-        });
         ui->serverUrlsCard->layout()->addWidget(widget);
 
-        // auto item = new QListWidgetItem(ui->urlsListWidget);
-        // ui->urlsListWidget->setItemWidget(item, widget);
+        if (!urlR.isEmpty())
+        {
+            auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
+            layout->addWidget(btn);
+            btn->setSquareSize();
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setFixedForePos();
+            btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+            btn->hide();
+            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                QApplication::clipboard()->setText(getDomainPort() + urlR);
+            });
+        }
+
+        if (!cssR.isEmpty())
+        {
+            if (cssR.startsWith("/"))
+                cssR = cssR.right(cssR.length() - 1);
+            auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
+            layout->addWidget(btn);
+            btn->setSquareSize();
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setFixedForePos();
+            btn->setToolTip("修改或者导入CSS样式");
+            btn->hide();
+            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                QString path = wwwDir.absoluteFilePath(cssR);
+                qInfo() << "编辑页面：" << path;
+                QString content = readTextFileIfExist(path);
+                bool ok;
+                content = QssEditDialog::getText(this, "设置样式：" + name, "修改后需要刷新页面生效", content, &ok);
+                if (!ok)
+                    return ;
+                writeTextFile(path, content);
+            });
+        }
     }
 
     // 禁言
@@ -1706,7 +1734,7 @@ MainWindow::~MainWindow()
     // 删除缓存
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
-
+qDebug()<< "333333333333333";
     // 清理过期备份
     auto files = QDir(dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
     qint64 overdue = QDateTime::currentSecsSinceEpoch() - 3600 * 24 * qMax(ui->autoClearComeIntervalSpin->value(), 7); // 至少备份7天
@@ -1714,9 +1742,11 @@ MainWindow::~MainWindow()
     {
         if (info.lastModified().toSecsSinceEpoch() < overdue)
         {
+            qInfo() << "删除备份：" << info.absoluteFilePath();
             deleteFile(info.absoluteFilePath());
         }
     }
+qDebug() << "4444444444444444";
 }
 
 const QSettings* MainWindow::getSettings() const
@@ -6315,7 +6345,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             ch = argList.at(0).toInt();
         return snum(msgWaits[ch]);
     }
-    else if (funcName == "clipboardText")
+    else if (funcName == "pasteText")
     {
         return QApplication::clipboard()->text();
     }
@@ -8984,14 +9014,38 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
-    if (msg.contains("setClipboardText"))
+    if (msg.contains("copyText"))
     {
-        re = RE("setClipboardText\\s*\\((.+?)\\)");
+        re = RE("copyText\\s*\\((.+?)\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             QApplication::clipboard()->setText(caps.at(1));
+            return true;
+        }
+    }
+
+    if (msg.contains("setRoomTitle"))
+    {
+        re = RE("setRoomTitle\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            myLiveSetTitle(caps.at(1));
+            return true;
+        }
+    }
+
+    if (msg.contains("setRoomCover"))
+    {
+        re = RE("setRoomCover\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            myLiveSetCover(caps.at(1));
             return true;
         }
     }
@@ -15760,26 +15814,31 @@ void MainWindow::myLiveStopLive()
     });
 }
 
-void MainWindow::myLiveSetTitle()
+void MainWindow::myLiveSetTitle(QString newTitle)
 {
-    QString title = roomTitle;
-    bool ok = false;
-    title = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
-    if (!ok)
-        return ;
+    if (upUid != cookieUid)
+        return showError("只有主播才能操作");
+    if (newTitle.isEmpty())
+    {
+        QString title = roomTitle;
+        bool ok = false;
+        newTitle = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
+        if (!ok)
+            return ;
+    }
 
     post("https://api.live.bilibili.com/room/v1/Room/update",
          QStringList{
              "room_id", roomId,
-             "title", title,
+             "title", newTitle,
              "csrf_token", csrf_token,
              "csrf", csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置直播间标题：" << json;
         if (json.code() != 0)
             return showError(json.msg());
-        roomTitle = title;
-        ui->roomNameLabel->setText(title);
+        roomTitle = newTitle;
+        ui->roomNameLabel->setText(newTitle);
     });
 }
 
@@ -15829,14 +15888,24 @@ void MainWindow::myLiveSetDescription()
     });
 }
 
-void MainWindow::myLiveSetCover()
+void MainWindow::myLiveSetCover(QString path)
 {
-    // 选择封面
-    QString oldPath = settings->value("recent/coverPath", "").toString();
-    QString path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
+    if (upUid != cookieUid)
+        return showError("只有主播才能操作");
     if (path.isEmpty())
-        return ;
-    settings->setValue("recent/coverPath", path);
+    {
+        // 选择封面
+        QString oldPath = settings->value("recent/coverPath", "").toString();
+        path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
+        if (path.isEmpty())
+            return ;
+        settings->setValue("recent/coverPath", path);
+    }
+    else
+    {
+        if (!isFileExist(path))
+            return showError("封面文件不存在", path);
+    }
 
     // 裁剪图片：大致是 470 / 293 = 1.6 = 8 : 5
     QPixmap pixmap(path);

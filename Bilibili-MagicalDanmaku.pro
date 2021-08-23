@@ -98,6 +98,8 @@ SOURCES += \
     third_party/interactive_buttons/winsidebarbutton.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
+    third_party/qss_editor/qsseditdialog.cpp \
+    third_party/qss_editor/qsshighlighteditor.cpp \
     third_party/utils/httpuploader.cpp \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
@@ -178,6 +180,8 @@ HEADERS += \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
+    third_party/qss_editor/qsseditdialog.h \
+    third_party/qss_editor/qsshighlighteditor.h \
     third_party/utils/httpuploader.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \
@@ -244,6 +248,7 @@ HEADERS += \
 
 FORMS += \
     order_player/importsongsdialog.ui \
+    third_party/qss_editor/qsseditdialog.ui \
     widgets/buy_vip/buyvipdialog.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
