@@ -499,7 +499,7 @@ void MainWindow::initView()
                 qInfo() << "编辑页面：" << path;
                 QString content = readTextFileIfExist(path);
                 bool ok;
-                content = QssEditDialog::getText(this, "设置样式：" + name, "修改后需要刷新页面生效", content, &ok);
+                content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS语法\n修改后需要刷新页面生效", content, &ok);
                 if (!ok)
                     return ;
                 writeTextFile(path, content);
@@ -1734,7 +1734,7 @@ MainWindow::~MainWindow()
     // 删除缓存
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
-qDebug()<< "333333333333333";
+
     // 清理过期备份
     auto files = QDir(dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
     qint64 overdue = QDateTime::currentSecsSinceEpoch() - 3600 * 24 * qMax(ui->autoClearComeIntervalSpin->value(), 7); // 至少备份7天
@@ -1746,7 +1746,6 @@ qDebug()<< "333333333333333";
             deleteFile(info.absoluteFilePath());
         }
     }
-qDebug() << "4444444444444444";
 }
 
 const QSettings* MainWindow::getSettings() const

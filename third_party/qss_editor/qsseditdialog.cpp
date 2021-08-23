@@ -6,6 +6,8 @@ QssEditDialog::QssEditDialog(QWidget *parent) :
     ui(new Ui::QssEditDialog)
 {
     ui->setupUi(this);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+
     if (parent)
         this->setGeometry(this->parentWidget()->geometry());
 }
