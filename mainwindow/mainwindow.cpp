@@ -433,80 +433,6 @@ void MainWindow::initView()
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
 
-    // 远程
-    // 加载url列表，允许一键复制
-    QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
-    foreach (auto line, urlLines)
-    {
-        QStringList sl = line.split("|");
-        if (sl.size() < 2)
-            continue;
-
-        QString name = sl.at(0).trimmed();
-        QString urlR = sl.at(1).trimmed();
-        QString cssR = sl.size() < 3 ? "" : sl.at(2).trimmed();
-
-        auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
-        auto layout = new QHBoxLayout(widget);
-        layout->addStretch(1);
-        layout->setSpacing(0);
-        layout->setMargin(0);
-        widget->setLayout(layout);
-        widget->setPaddings(8);
-        widget->setAlign(Qt::AlignLeft);
-        widget->setRadius(fluentRadius);
-        widget->setFixedForePos();
-        widget->setCursor(Qt::PointingHandCursor);
-        // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
-        connect(widget, &InteractiveButtonBase::clicked, this, [=]{
-            if (!ui->serverCheck->isChecked())
-                return showError("网络服务未开启", "无法打开：" + name);
-            QDesktopServices::openUrl(getDomainPort() + urlR);
-        });
-        ui->serverUrlsCard->layout()->addWidget(widget);
-
-        if (!urlR.isEmpty())
-        {
-            auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
-            layout->addWidget(btn);
-            btn->setSquareSize();
-            btn->setCursor(Qt::PointingHandCursor);
-            btn->setFixedForePos();
-            btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-            btn->hide();
-            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                QApplication::clipboard()->setText(getDomainPort() + urlR);
-            });
-        }
-
-        if (!cssR.isEmpty())
-        {
-            if (cssR.startsWith("/"))
-                cssR = cssR.right(cssR.length() - 1);
-            auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
-            layout->addWidget(btn);
-            btn->setSquareSize();
-            btn->setCursor(Qt::PointingHandCursor);
-            btn->setFixedForePos();
-            btn->setToolTip("修改或者导入CSS样式");
-            btn->hide();
-            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                QString path = wwwDir.absoluteFilePath(cssR);
-                qInfo() << "编辑页面：" << path;
-                QString content = readTextFileIfExist(path);
-                bool ok;
-                content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS语法\n修改后需要刷新页面生效", content, &ok);
-                if (!ok)
-                    return ;
-                writeTextFile(path, content);
-            });
-        }
-    }
-
     // 禁言
     ui->eternalBlockListButton->setBgColor(Qt::white);
     ui->eternalBlockListButton->setRadius(fluentRadius);
@@ -1434,6 +1360,9 @@ void MainWindow::readConfig()
     {
         openServer();
     }
+
+    // 加载网页
+    loadWebExtensinList();
 
     // 设置默认配置
     if (firstOpen)
@@ -16064,6 +15993,121 @@ void MainWindow::startSplash()
 #endif
 }
 
+void MainWindow::loadWebExtensinList()
+{
+    // 加载url列表，允许一键复制
+    QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
+    foreach (auto line, urlLines)
+    {
+        QStringList sl = line.split("|");
+        if (sl.size() < 2)
+            continue;
+
+        QString name = sl.at(0).trimmed();
+        QString urlR = sl.at(1).trimmed();
+        QString cssR = sl.size() < 3 ? "" : sl.at(2).trimmed();
+        if (!isFileExist(wwwDir.absoluteFilePath(urlR.startsWith("/") ? urlR.right(urlR.length() - 1) : urlR)))
+            continue;
+
+        auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
+        auto layout = new QHBoxLayout(widget);
+        layout->addStretch(1);
+        layout->setSpacing(0);
+        layout->setMargin(0);
+        widget->setLayout(layout);
+        widget->setPaddings(8);
+        widget->setAlign(Qt::AlignLeft);
+        widget->setRadius(fluentRadius);
+        widget->setFixedForePos();
+        widget->setCursor(Qt::PointingHandCursor);
+        // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
+        connect(widget, &InteractiveButtonBase::clicked, this, [=]{
+            if (!ui->serverCheck->isChecked())
+            {
+                shakeWidget(ui->serverCheck);
+                return showError("未开启网络服务", "不可使用" + name);
+            }
+            QDesktopServices::openUrl(getDomainPort() + urlR);
+        });
+        ui->serverUrlsCard->layout()->addWidget(widget);
+
+        if (!urlR.isEmpty())
+        {
+            auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
+            layout->addWidget(btn);
+            btn->setSquareSize();
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setFixedForePos();
+            btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+            btn->hide();
+            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                QApplication::clipboard()->setText(getDomainPort() + urlR);
+            });
+        }
+
+        if (!cssR.isEmpty())
+        {
+            if (cssR.startsWith("/"))
+                cssR = cssR.right(cssR.length() - 1);
+            auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
+            layout->addWidget(btn);
+            btn->setSquareSize();
+            btn->setCursor(Qt::PointingHandCursor);
+            btn->setFixedForePos();
+            btn->setToolTip("修改或者导入CSS样式");
+            btn->hide();
+            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                QString path = wwwDir.absoluteFilePath(cssR);
+                qInfo() << "编辑页面：" << path;
+                QString content = readTextFileIfExist(path);
+                bool ok;
+                content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS样式，修改后刷新页面生效", content, &ok);
+                if (!ok)
+                    return ;
+                writeTextFile(path, content);
+            });
+        }
+    }
+}
+
+void MainWindow::shakeWidget(QWidget *widget)
+{
+    static QList<QWidget*> shakingWidgets;
+
+    if (shakingWidgets.contains(widget))
+        return ;
+
+    int nX = widget->x();
+    int nY = widget->y();
+    QPropertyAnimation *ani = new QPropertyAnimation(widget, "geometry");
+    ani->setEasingCurve(QEasingCurve::InOutSine);
+    ani->setDuration(500);
+    ani->setStartValue(QRect(QPoint(nX,nY), widget->size()));
+
+    int range = 5; // 抖动距离
+    int nShakeCount = 20; //抖动次数
+    double nStep = 1.0 / nShakeCount;
+    for(int i = 1; i < nShakeCount; i++){
+        range = i & 1 ? -range : range;
+        ani->setKeyValueAt(nStep * i, QRect(QPoint(nX + range, nY), widget->size()));
+    }
+
+    ani->setEndValue(QRect(QPoint(nX,nY), widget->size()));
+    ani->start(QAbstractAnimation::DeleteWhenStopped);
+
+    shakingWidgets.append(widget);
+    connect(ani, &QPropertyAnimation::stateChanged, this, [=](QAbstractAnimation::State state){
+        if (state == QPropertyAnimation::State::Stopped)
+        {
+            shakingWidgets.removeOne(widget);
+        }
+    });
+}
+
 void MainWindow::saveGameNumbers(int channel)
 {
     auto list = gameNumberLists[channel];
@@ -18339,6 +18383,7 @@ void MainWindow::on_addMusicToLiveButton_clicked()
 {
     ui->extensionPageButton->simulateStatePress();
     ui->tabWidget->setCurrentWidget(ui->tabRemote);
+    shakeWidget(ui->existExtensionsLabel);
 }
 
 void MainWindow::on_roomNameLabel_customContextMenuRequested(const QPoint &)

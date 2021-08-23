@@ -32,8 +32,8 @@ void QSSHighlighter::highlightBlock(const QString &text)
     };
     static QList<QSSRule> qss_rules = {
         // ID；
-        QSSRule{QRegularExpression("^\\s*[#\\.]\\w+"), getTCF(QColor(222, 49, 99))},
-        QSSRule{QRegularExpression("^\\s*[\\w#\\.>:, ]+\\{"), getTCF(QColor(222, 49, 99))},
+        // QSSRule{QRegularExpression("^\\s*[#\\.]\\w+"), getTCF(QColor(222, 49, 99))},
+        QSSRule{QRegularExpression("^\\s*[\\w#\\.>:\\-, ]+\\{"), getTCF(QColor(222, 49, 99))},
         // QSSRule{QRegularExpression("^\\s*[\\w#\\.>, ]+\\s*[:\\w+]?\\s*\\{"), getTCF(QColor(222, 49, 99))},
         // 键
         QSSRule{QRegularExpression("[-\\w]+(?=\\s*:[^:])"), getTCF(QColor(151, 49, 197))},
@@ -45,8 +45,7 @@ void QSSHighlighter::highlightBlock(const QString &text)
         QSSRule{QRegularExpression("(?<=\\d)[a-zA-Z]{1,2}\\b"), getTCF(QColor(62, 106, 198))},
         // 字符串
         QSSRule{QRegularExpression("('.*?'|\".*?\")"), getTCF(QColor(80, 200, 120))},
-        // 颜色
-        // 动态修改
+        // 颜色（动态修改）
     };
 
     foreach (auto rule, qss_rules)

@@ -1,6 +1,4 @@
-ul,
-h4,
-p {
+ul, h4, p {
     margin : 0;
     padding: 0;
 }
@@ -8,8 +6,7 @@ p {
 
 /* 标题 */
 
-.title-edit,
-.sub-title-edit {
+.title-edit, .sub-title-edit {
     margin: 10px;
     border: none;
 }
@@ -33,8 +30,7 @@ p {
     margin : -4px 0px 0px 0px;
 }
 
-.vote-item-id,
-.vote-item-num {
+.vote-item-id, .vote-item-num {
     float      : left;
     font-size  : 14px;
     font-weight: normal;

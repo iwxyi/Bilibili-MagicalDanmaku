@@ -1,38 +1,12 @@
 <head>
     <title>神奇弹幕点歌姬</title>
     <script src="../js/jquery.js"></script>
-
-    <style type="text/css">
-        ul {
-            list-style-type: none;
-        }
-
-        #currentLine {
-            color: #1e6fff;
-            font-weight: bold;
-            font-size: 24px;
-            text-shadow: -1px -1px 0 #fff,
-                1px -1px 0 #fff,
-                -1px 1px 0 #fff,
-                1px 1px 0 #fff,
-                0px 2px 2px rgba(0, 0, 0, 0.2);
-        }
-        #nextLine {
-            color: #77a9ff;
-            font-weight: bold;
-            font-size: 24px;
-            text-shadow: -1px -1px 0 #fff,
-                1px -1px 0 #fff,
-                -1px 1px 0 #fff,
-                1px 1px 0 #fff,
-                0px 2px 2px rgba(0, 0, 0, 0.2);
-        }
-    </style>
+    <link rel="stylesheet" href="../css/lyrics.css" media="screen" type="text/css" />
 </head>
 
 <body>
     <ul id="lyrics">
-        <li>
+        <li id="currentLine">
             歌词列表
         </li>
     </ul>

@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1405,8 +1405,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>675</width>
-             <height>504</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -7338,7 +7338,7 @@ QTabBar::tab:selected
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="label_6">
+                <widget class="QLabel" name="existExtensionsLabel">
                  <property name="text">
                   <string>已安装的扩展：</string>
                  </property>

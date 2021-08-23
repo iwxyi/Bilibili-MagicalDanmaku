@@ -940,6 +940,9 @@ private:
     void myLiveSetTags();
 
     void startSplash();
+    void loadWebExtensinList();
+    void shakeWidget(QWidget* widget);
+
     void saveGameNumbers(int channel);
     void restoreGameNumbers();
     void saveGameTexts(int channel);
