@@ -989,6 +989,7 @@ border-image: url(C:/Path/To/Image.png)
 | log10(val)                     | 取对数10     |                                                     |
 | pow2(val)                      | 取平方       |                                                     |
 | pow(val, a)                    | 取乘方       |                                                     |
+| pasteText()                    | 粘贴文字     | 获取剪贴板的文本                                    |
 
 以获取时间为例：
 
@@ -1326,6 +1327,7 @@ tips：
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
 | simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |
+| copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

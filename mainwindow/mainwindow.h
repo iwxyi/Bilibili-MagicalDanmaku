@@ -995,6 +995,7 @@ private:
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;
     QList<WaterFloatButton*> thankTabButtons;
+    InteractiveButtonBase* customVarsButton;
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;
     AppendButton* appendListItemButton;

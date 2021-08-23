@@ -318,6 +318,21 @@ void MainWindow::initView()
     ui->thankTopTabGroup->setFixedHeight(ui->thankTopTabGroup->sizeHint().height());
     ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
+    customVarsButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->thankPage);
+    customVarsButton->setRadius(fluentRadius);
+    customVarsButton->setSquareSize();
+    customVarsButton->setCursor(Qt::PointingHandCursor);
+    int tabBarHeight = ui->thankTopTabGroup->height();
+    customVarsButton->setFixedSize(tabBarHeight, tabBarHeight);
+    customVarsButton->show();
+    connect(customVarsButton, &InteractiveButtonBase::clicked, this, [=]{
+        newFacileMenu;
+        menu->addAction(ui->actionCustom_Variant);
+        menu->addAction(ui->actionReplace_Variant);
+        menu->exec();
+    });
+
+
     // 点歌页面
     ui->showOrderPlayerButton->setFixedForeSize(true, 12);
     ui->showOrderPlayerButton->setAutoTextColor(false);
@@ -382,7 +397,7 @@ void MainWindow::initView()
     extensionButton->setRadius(fluentRadius);
     extensionButton->setSquareSize();
     extensionButton->setCursor(Qt::PointingHandCursor);
-    int tabBarHeight = ui->tabWidget->tabBar()->height();
+    tabBarHeight = ui->tabWidget->tabBar()->height();
     extensionButton->setFixedSize(tabBarHeight, tabBarHeight);
     extensionButton->show();
     connect(extensionButton, &InteractiveButtonBase::clicked, this, [=]{
@@ -1435,7 +1450,8 @@ void MainWindow::adjustPageSize(int page)
     }
     else if (page == PAGE_THANK)
     {
-
+        customVarsButton->move(ui->thankStackedWidget->geometry().right() - customVarsButton->width(),
+                               ui->thankTopTabGroup->y());
     }
     else if (page == PAGE_MUSIC)
     {
@@ -6299,6 +6315,10 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             ch = argList.at(0).toInt();
         return snum(msgWaits[ch]);
     }
+    else if (funcName == "clipboardText")
+    {
+        return QApplication::clipboard()->text();
+    }
 
     return "";
 }
@@ -8964,6 +8984,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("setClipboardText"))
+    {
+        re = RE("setClipboardText\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QApplication::clipboard()->setText(caps.at(1));
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -9034,6 +9066,7 @@ void MainWindow::restoreCustomVariant(QString text)
 {
     customVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
+    bool settedUpname = true;
     foreach (QString s, sl)
     {
         QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
@@ -9043,10 +9076,19 @@ void MainWindow::restoreCustomVariant(QString text)
             QString key = match.captured(1);
             QString val = match.captured(2);
             customVariant.append(QPair<QString, QString>(key, val));
+            if ((key == "%upname%") && val.trimmed().isEmpty())
+            {
+                settedUpname = false;
+            }
+            else
+            {
+                settedUpname = true;
+            }
         }
         else
             qCritical() << "自定义变量读取失败：" << s;
     }
+    customVarsButton->setBgColor(settedUpname ? Qt::transparent : Qt::white);
 }
 
 QString MainWindow::saveCustomVariant()

@@ -34,7 +34,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
      <property name="leftMargin">
-      <number>12</number>
+      <number>20</number>
      </property>
      <property name="topMargin">
       <number>0</number>
@@ -42,7 +42,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
-        <number>12</number>
+        <number>2</number>
        </property>
        <item>
         <spacer name="verticalSpacer_3">
@@ -52,7 +52,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>30</height>
+           <height>40</height>
           </size>
          </property>
         </spacer>
@@ -76,7 +76,7 @@ font-weight: 700;</string>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>10</height>
+           <height>15</height>
           </size>
          </property>
         </spacer>
@@ -156,7 +156,7 @@ font-weight: 500;</string>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>10</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -246,7 +246,7 @@ QLabel:hover
         <x>0</x>
         <y>0</y>
         <width>455</width>
-        <height>202</height>
+        <height>227</height>
        </rect>
       </property>
       <property name="styleSheet">

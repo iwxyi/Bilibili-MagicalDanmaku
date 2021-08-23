@@ -26,3 +26,4 @@
 文件存在=fileExists
 冷却通道=msgCd
 等待通道=msgWait
+粘贴文字=pasteText

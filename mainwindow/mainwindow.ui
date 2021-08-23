@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>843</width>
-    <height>1144</height>
+    <width>755</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1405,8 +1405,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>763</width>
-             <height>1006</height>
+             <width>675</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -8010,8 +8010,8 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>843</width>
-     <height>26</height>
+     <width>755</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
