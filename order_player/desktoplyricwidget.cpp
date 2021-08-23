@@ -1,4 +1,5 @@
 #include <QFontDatabase>
+#include <QComboBox>
 #include "desktoplyricwidget.h"
 
 DesktopLyricWidget::DesktopLyricWidget(QSettings& settings, QWidget *parent) : QWidget(parent),
@@ -333,12 +334,22 @@ void DesktopLyricWidget::showMenu()
     });
     QFontDatabase fdb;
     QStringList families = fdb.families();
-    auto familyMenu = menu->addMenu("选择字体");
+    /* auto familyMenu = menu->addMenu("选择字体");
     familyMenu->addOptions(families, families.indexOf(fontFamily), [=](int index) {
         this->fontFamily = families.at(index);
         settings.setValue("music/desktopLyricFontFamily", this->fontFamily);
         update();
+    }); */
+    auto combo = new QComboBox(menu);
+    combo->addItems(families);
+    combo->setCurrentIndex(families.indexOf(fontFamily.isEmpty() ? font().family() : fontFamily));
+    connect(combo, &QComboBox::currentTextChanged, this, [=](const QString& string) {
+        this->fontFamily = string;
+        settings.setValue("music/desktopLyricFontFamily", this->fontFamily);
+        update();
     });
+    combo->setStyleSheet("QComboBox{ background: transparent; }");
+    menu->addWidget(combo);
     menu->split()->addAction("透明模式", [=]{
         bool trans = settings.value("music/desktopLyricTrans", false).toBool();
         settings.setValue("music/desktopLyricTrans", !trans);
