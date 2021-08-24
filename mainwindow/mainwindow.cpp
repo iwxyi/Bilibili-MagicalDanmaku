@@ -1313,6 +1313,15 @@ void MainWindow::readConfig()
         settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
+    // sync
+    syncTimer = new QTimer(this);
+    syncTimer->setSingleShot(true);
+    connect(syncTimer, &QTimer::timeout, this, [=]{
+        if (roomId.isEmpty() || !isLiving()) // 使用一段时间后才算真正用上
+            return ;
+        syncMagicalRooms();
+    });
+
     // permission
     permissionTimer = new QTimer(this);
     connect(permissionTimer, &QTimer::timeout, this, [=]{
@@ -16887,15 +16896,7 @@ void MainWindow::slotStartWork()
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString usedRoom = roomId;
-#ifdef QT_NO_DEBUG
-    QTimer::singleShot((qrand() % 120 + 60) * 1000, [=]{
-#else
-    QTimer::singleShot(20000, [=]{
-#endif
-        if (roomId.isEmpty() || usedRoom != roomId || !isLiving()) // 使用一段时间后才算真正用上
-            return ;
-        syncMagicalRooms();
-    });
+    syncTimer->start((qrand() % 120 + 60) * 1000);
 
     // 本次直播数据
     liveAllGifts.clear();

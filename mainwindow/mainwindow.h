@@ -1028,6 +1028,7 @@ private:
     // 启动与定时
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* hourTimer = nullptr;
+    QTimer* syncTimer = nullptr;
 
     // 直播心跳
     qint64 liveTimestamp = 0;
