@@ -941,6 +941,8 @@ private:
     void myLiveSetCover(QString path = "");
     void myLiveSetTags();
     void showPkMenu();
+    void showPkAssists();
+    void showPkHistories();
 
     void startSplash();
     void loadWebExtensinList();

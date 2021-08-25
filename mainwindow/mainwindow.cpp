@@ -16108,8 +16108,8 @@ void MainWindow::showPkMenu()
     })->disable();
 
     menu->split()->addAction("赛季匹配记录", [=]{
-
-    })->disable();
+        showPkHistories();
+    })->suffix(!hasPermission(), " [VIP]");
 
     menu->addAction("最后匹配的直播间", [=]{
         if (!lastMatchRoomId)
@@ -16120,6 +16120,109 @@ void MainWindow::showPkMenu()
 
 
     menu->exec();
+}
+
+void MainWindow::showPkAssists()
+{
+
+}
+
+void MainWindow::showPkHistories()
+{
+    if (!hasPermission())
+        return on_actionBuy_VIP_triggered();
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
+                  "ruid=" + upUid + "&room_id=" + roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    qInfo() << "获取PK历史信息：" << url;
+    get(url, [=](MyJson json) {
+        if (json.code())
+            return showError("获取PK历史失败", json.msg());
+        QString title = "大乱斗历史";
+        auto view = new QTableView(this);
+        auto model = new QStandardItemModel(view);
+        int rowCount = 0;
+        QStringList columns {
+            "时间", "主播", "房间ID", "结果", "积分", "票数"/*自己:对面*/
+        };
+        model->setColumnCount(columns.size());
+        model->setHorizontalHeaderLabels(columns);
+
+        auto pkInfo = json.data().o("pk_info");
+
+        auto dates = pkInfo.keys();
+        std::sort(dates.begin(), dates.end(), [=](const QString& s1, const QString& s2) {
+            return s1 > s2;
+        });
+        foreach (auto date, dates)
+        {
+            pkInfo.o(date).each("list", [&](MyJson info) {
+                int result = info.i("result_type"); // 2胜利，1平局，-1失败
+                QString resultText = result < 0 ? "失败" : result > 1 ? "胜利" : "平局";
+                auto matchInfo = info.o("match_info");
+
+                int row = rowCount++;
+                int col = 0;
+                model->setRowCount(rowCount);
+                model->setItem(row, col++, new QStandardItem(date + " " + info.s("pk_end_time")));
+                model->setItem(row, col++, new QStandardItem(matchInfo.s("name")));
+                model->setItem(row, col++, new QStandardItem(snum(matchInfo.l("room_id"))));
+                auto resultItem = new QStandardItem(resultText);
+                model->setItem(row, col++, resultItem);
+                model->setItem(row, col++, new QStandardItem(snum(info.l("pk_score"))));
+                auto votesItem = new QStandardItem(snum(info.l("current_pk_votes")) + " : " + snum(matchInfo.l("pk_votes")));
+                model->setItem(row, col++, votesItem);
+                votesItem->setTextAlignment(Qt::AlignCenter);
+                if (result > 1)
+                    resultItem->setForeground(Qt::green);
+                else if (result < 0)
+                    resultItem->setForeground(Qt::red);
+            });
+        }
+
+        // 创建控件
+        view->setModel(model);
+        view->setAttribute(Qt::WA_ShowModal, true);
+        view->setAttribute(Qt::WA_DeleteOnClose, true);
+        view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+
+        // 自适应宽度
+        view->resizeColumnsToContents();
+        for(int i = 0; i < model->columnCount(); i++)
+            view->setColumnWidth(i, view->columnWidth(i) + 10); // 加一点，不然会显得很挤
+
+        // 显示位置
+        QRect rect = this->geometry();
+        // int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+        rect.setTop(rect.top());
+        view->setWindowTitle(title);
+        view->setGeometry(rect);
+        view->show();
+
+        // 菜单
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(view, &QWidget::customContextMenuRequested, view, [=]{
+            auto index = view->currentIndex();
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString uname = model->item(row, 1)->data(Qt::DisplayRole).toString();
+            QString roomId = model->item(row, 2)->data(Qt::DisplayRole).toString();
+
+            newFacileMenu;
+            menu->addAction("复制昵称", [=]{
+                QApplication::clipboard()->setText(uname);
+            });
+            menu->addAction("复制房间号", [=]{
+                QApplication::clipboard()->setText(roomId);
+            });
+            menu->split()->addAction("前往直播间", [=]{
+                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomId));
+            });
+            menu->exec();
+        });
+    });
 }
 
 void MainWindow::startSplash()
