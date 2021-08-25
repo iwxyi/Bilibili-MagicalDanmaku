@@ -826,6 +826,7 @@ private:
     void getPkMatchInfo();
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
+    void upgradeWinningStreak();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -1048,6 +1049,10 @@ private:
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
     QString encServer = "http://iwxyi.com:6001/enc";
     int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
+
+    // 活动信息
+    int currentSeasonId = 0; // 大乱斗赛季，获取连胜需要赛季
+    QString pkRuleUrl; // 大乱斗赛季信息
 
     // 动画
     double paletteProg = 0;

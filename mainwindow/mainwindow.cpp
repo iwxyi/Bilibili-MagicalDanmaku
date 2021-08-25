@@ -251,6 +251,12 @@ void MainWindow::initView()
        myLiveSetTitle();
     });
 
+    connect(ui->battleRankIconLabel, &ClickableLabel::clicked, this, [=]{
+        if (pkRuleUrl.isEmpty())
+            return ;
+        QDesktopServices::openUrl(QUrl(pkRuleUrl));
+    });
+
     // 吊灯
     ui->droplight->setPaddings(12, 12, 2, 2);
     ui->droplight->adjustMinimumSize();
@@ -4119,9 +4125,10 @@ void MainWindow::getRoomInfo(bool reconnect)
             get(battleRankUrl, [=](QNetworkReply* reply1){
                 QPixmap pixmap;
                 pixmap.loadFromData(reply1->readAll());
-                pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2);
+                pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
                 ui->battleRankIconLabel->setPixmap(pixmap);
             });
+            upgradeWinningStreak();
         }
         else
         {
@@ -12898,6 +12905,47 @@ void MainWindow::setRoomDescription(QString roomDescription)
         ui->roomDescriptionBrowser->hide();
     else
         ui->roomDescriptionBrowser->show();
+}
+
+void MainWindow::upgradeWinningStreak()
+{
+    get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch()), [=](MyJson json) {
+        JO(json, data);
+        JO(data, anchor_pk_info);
+        JS(anchor_pk_info, pk_rank_name); // 段位名字：钻石传说
+        JI(anchor_pk_info, pk_rank_star); // 段位级别：2
+        JS(anchor_pk_info, first_rank_img_url); // 图片
+        // if (!battleRankName.contains(pk_rank_name)) // 段位有变化
+
+        JO(data, season_info);
+        JI(season_info, current_season_id); // 赛季ID：38
+        JS(season_info, current_season_name); // 赛季名称：PK大乱斗S12赛季
+        this->currentSeasonId = current_season_id;
+        ui->battleRankIconLabel->setToolTip(current_season_name + " (" + snum(current_season_id) + ")");
+
+        JO(data, score_info);
+        JI(score_info, total_win_num); // 总赢：309
+        JI(score_info, max_win_num); // 最高连胜：16
+        JI(score_info, total_num); // 总次数（>总赢）：454
+        JI(score_info, total_tie_count); // 平局：3
+        JI(score_info, total_lose_count); // 总失败数：142
+        JI(score_info, win_count); // 当前连胜？：5
+        JI(score_info, win_rate); // 胜率：69
+        ui->winningStreakLabel->setText("连胜" + snum(win_count) + "场");
+        QStringList nums {
+            "累计场数：" + snum(total_num),
+                    "胜利场数：" + snum(total_win_num),
+                    "失败场数：" + snum(total_lose_count),
+                    "最高连胜：" + snum(max_win_num),
+                    "当前胜率：" + snum(win_rate) + "%"
+        };
+        ui->winningStreakLabel->setToolTip(nums.join("\n"));
+
+        JA(data, assist_list); // 助攻列表
+
+        JO(data, pk_url_info);
+        this->pkRuleUrl = pk_url_info.s("pk_rule_url");
+    });
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
