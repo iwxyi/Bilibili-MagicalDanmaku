@@ -825,6 +825,7 @@ private:
     void appendLiveGuard(const LiveDanmaku& danmaku);
     void getPkMatchInfo();
     void getPkOnlineGuardPage(int page);
+    void setRoomDescription(QString roomDescription);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -1020,6 +1021,13 @@ private:
     QString roomNews; // 主播公告
     QString roomDescription; // 主播个人简介
     QStringList roomTags; // 主播个人标签
+    int anchorLiveLevel = 0; // 主播等级
+    qint64 anchorLiveScore = 0; // 主播积分（金瓜子）
+    qint64 anchorUpgradeScore = 0; // 升级剩余积分
+    QString areaRank; // 分区排行（字符串，比如 >100）
+    QString liveRank; // 总排行（字符串），也是主播排行
+    QString battleRankName; // 大乱斗段位
+    int winningStreak = 0; // 连胜
 
     // 我的直播
     QString myLiveRtmp; // rtmp地址

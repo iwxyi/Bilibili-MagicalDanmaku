@@ -4010,42 +4010,9 @@ void MainWindow::getRoomInfo(bool reconnect)
         roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
         // 设置房间描述
-        ui->roomDescriptionBrowser->setText(roomDescription);
-        {
-            QString text = ui->roomDescriptionBrowser->toPlainText();
-            QTextCursor cursor = ui->roomDescriptionBrowser->textCursor();
+        setRoomDescription(roomDescription);
 
-            // 删除前面空白
-            int count = 0;
-            int len = text.length();
-            while (count < len && QString("\n\r ").contains(QString(text.mid(count, 1))))
-                count++;
-            if (count)
-            {
-                cursor.setPosition(0);
-                cursor.setPosition(count, QTextCursor::KeepAnchor);
-                cursor.removeSelectedText();
-            }
-
-            // 删除后面空白
-            text = ui->roomDescriptionBrowser->toPlainText();
-            count = 0;
-            len = text.length();
-            while (count < len && QString("\n\r ").contains(QString(text.mid(len - count - 1, 1))))
-                count++;
-            if (count)
-            {
-                cursor.setPosition(len);
-                cursor.setPosition(len - count, QTextCursor::KeepAnchor);
-                cursor.removeSelectedText();
-            }
-
-            if (ui->roomDescriptionBrowser->toPlainText().isEmpty())
-                ui->roomDescriptionBrowser->hide();
-            else
-                ui->roomDescriptionBrowser->show();
-        }
-
+        // 设置直播状态
         if (liveStatus == 0)
         {
             ui->liveStatusButton->setText("未开播");
@@ -4070,6 +4037,7 @@ void MainWindow::getRoomInfo(bool reconnect)
                  << "  upName=" << upName
                  << "  uid=" << upUid;
 
+        // 设置PK状态
         if (pkStatus)
         {
             QJsonObject battleInfo = dataObj.value("battle_info").toObject();
@@ -4110,10 +4078,17 @@ void MainWindow::getRoomInfo(bool reconnect)
         ui->fansClubCountLabel->setText(snum(currentFansClub));
         // getFansAndUpdate();
 
+        // 获取主播等级
+        QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
+        anchorLiveLevel = liveInfo.value("level").toInt();
+        anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
+        anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
+        // TODO: 显示主播等级和积分
+
         // 设置标签
         ui->tagsButtonGroup->initStringList(roomTags);
 
-        // 获取榜单信息
+        // 获取热门榜信息
         QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
         int rank = hotRankInfo.value("rank").toInt();
         QString rankArea = hotRankInfo.value("area_name").toString();
@@ -4125,6 +4100,32 @@ void MainWindow::getRoomInfo(bool reconnect)
                 rankArea += "榜";
             ui->roomRankTextLabel->setText(rankArea);
             ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
+        }
+
+        // 获取直播排行榜
+        QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
+        areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
+        liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
+        // TODO: 显示直播排行榜
+
+        // 获取大乱斗段位
+        QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
+        battleRankName = battleRankEntryInfo.value("rank_name").toString();
+        QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
+        ui->battleRankNameLabel->setText(battleRankName);
+        if (!battleRankName.isEmpty())
+        {
+            ui->battleInfoWidget->show();
+            get(battleRankUrl, [=](QNetworkReply* reply1){
+                QPixmap pixmap;
+                pixmap.loadFromData(reply1->readAll());
+                pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2);
+                ui->battleRankIconLabel->setPixmap(pixmap);
+            });
+        }
+        else
+        {
+            ui->battleInfoWidget->hide();
         }
 
         // 异步获取房间封面
@@ -12860,6 +12861,43 @@ void MainWindow::getPkOnlineGuardPage(int page)
             triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
         }
     });
+}
+
+void MainWindow::setRoomDescription(QString roomDescription)
+{
+    ui->roomDescriptionBrowser->setText(roomDescription);
+    QString text = ui->roomDescriptionBrowser->toPlainText();
+    QTextCursor cursor = ui->roomDescriptionBrowser->textCursor();
+
+    // 删除前面空白
+    int count = 0;
+    int len = text.length();
+    while (count < len && QString("\n\r ").contains(QString(text.mid(count, 1))))
+        count++;
+    if (count)
+    {
+        cursor.setPosition(0);
+        cursor.setPosition(count, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+    }
+
+    // 删除后面空白
+    text = ui->roomDescriptionBrowser->toPlainText();
+    count = 0;
+    len = text.length();
+    while (count < len && QString("\n\r ").contains(QString(text.mid(len - count - 1, 1))))
+        count++;
+    if (count)
+    {
+        cursor.setPosition(len);
+        cursor.setPosition(len - count, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+    }
+
+    if (ui->roomDescriptionBrowser->toPlainText().isEmpty())
+        ui->roomDescriptionBrowser->hide();
+    else
+        ui->roomDescriptionBrowser->show();
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
