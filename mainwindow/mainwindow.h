@@ -1029,6 +1029,7 @@ private:
     QString liveRank; // 总排行（字符串），也是主播排行
     QString battleRankName; // 大乱斗段位
     int winningStreak = 0; // 连胜
+    qint64 lastMatchRoomId = 0;
 
     // 我的直播
     QString myLiveRtmp; // rtmp地址

@@ -257,6 +257,16 @@ void MainWindow::initView()
         QDesktopServices::openUrl(QUrl(pkRuleUrl));
     });
 
+    connect(ui->battleRankNameLabel, &ClickableLabel::clicked, this, [=]{
+
+    });
+
+    connect(ui->winningStreakLabel, &ClickableLabel::clicked, this, [=]{
+        if (!lastMatchRoomId)
+            return ;
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(lastMatchRoomId)));
+    });
+
     // 吊灯
     ui->droplight->setPaddings(12, 12, 2, 2);
     ui->droplight->adjustMinimumSize();
@@ -12086,6 +12096,8 @@ bool MainWindow::handlePK(QJsonObject json)
             "settle_status": 1,
             "timestamp": 1605748006
         }*/
+        // PK结束更新大乱斗信息
+        upgradeWinningStreak();
         return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_V2")
@@ -12921,7 +12933,7 @@ void MainWindow::upgradeWinningStreak()
         JI(season_info, current_season_id); // 赛季ID：38
         JS(season_info, current_season_name); // 赛季名称：PK大乱斗S12赛季
         this->currentSeasonId = current_season_id;
-        ui->battleRankIconLabel->setToolTip(current_season_name + " (" + snum(current_season_id) + ")");
+        ui->battleRankIconLabel->setToolTip(current_season_name + " (id:" + snum(current_season_id) + ")");
 
         JO(data, score_info);
         JI(score_info, total_win_num); // 总赢：309
@@ -12933,11 +12945,12 @@ void MainWindow::upgradeWinningStreak()
         JI(score_info, win_rate); // 胜率：69
         ui->winningStreakLabel->setText("连胜" + snum(win_count) + "场");
         QStringList nums {
-            "累计场数：" + snum(total_num),
-                    "胜利场数：" + snum(total_win_num),
-                    "失败场数：" + snum(total_lose_count),
+            "总场次　：" + snum(total_num),
+                    "胜　　场：" + snum(total_win_num),
+                    "败　　场：" + snum(total_lose_count),
                     "最高连胜：" + snum(max_win_num),
-                    "当前胜率：" + snum(win_rate) + "%"
+                    "胜　　率：" + snum(win_rate) + "%",
+                    "\n点击前往最后匹配的直播间"
         };
         ui->winningStreakLabel->setToolTip(nums.join("\n"));
 
@@ -12945,6 +12958,22 @@ void MainWindow::upgradeWinningStreak()
 
         JO(data, pk_url_info);
         this->pkRuleUrl = pk_url_info.s("pk_rule_url");
+
+        JO(data, rank_info);
+        JI(rank_info, rank); // 排名
+        JL(rank_info, score); // 积分
+        JL(anchor_pk_info, next_rank_need_score); // 下一级需要积分
+        QStringList scores {
+            "排名：" + snum(rank),
+                    "积分：" + snum(score),
+                    "升级需要积分：" + snum(next_rank_need_score)
+        };
+        ui->battleRankNameLabel->setToolTip(scores.join("\n"));
+
+        JO(data, last_pk_info);
+        JO(last_pk_info, match_info);
+        JL(match_info, room_id); // 最后匹配的主播
+        lastMatchRoomId = room_id;
     });
 }
 

@@ -1349,7 +1349,10 @@ background-repeat:none;</string>
                 <number>5</number>
                </property>
                <item>
-                <widget class="QLabel" name="battleRankNameLabel">
+                <widget class="ClickableLabel" name="battleRankNameLabel">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="text">
                   <string>大乱斗段位</string>
                  </property>
@@ -1359,7 +1362,10 @@ background-repeat:none;</string>
                 </widget>
                </item>
                <item>
-                <widget class="QLabel" name="winningStreakLabel">
+                <widget class="ClickableLabel" name="winningStreakLabel">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
                  <property name="styleSheet">
                   <string notr="true">color: gray;</string>
                  </property>
