@@ -826,7 +826,7 @@ private:
     void getPkMatchInfo();
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
-    void upgradeWinningStreak();
+    void upgradeWinningStreak(bool emitWinningStreak);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

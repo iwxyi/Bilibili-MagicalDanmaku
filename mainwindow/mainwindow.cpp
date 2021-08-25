@@ -4134,7 +4134,7 @@ void MainWindow::getRoomInfo(bool reconnect)
                 pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
                 ui->battleRankIconLabel->setPixmap(pixmap);
             });
-            upgradeWinningStreak();
+            upgradeWinningStreak(false);
         }
         else
         {
@@ -12093,7 +12093,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605748006
         }*/
         // PK结束更新大乱斗信息
-        upgradeWinningStreak();
+        upgradeWinningStreak(true);
         return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_V2")
@@ -12915,7 +12915,7 @@ void MainWindow::setRoomDescription(QString roomDescription)
         ui->roomDescriptionBrowser->show();
 }
 
-void MainWindow::upgradeWinningStreak()
+void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
 {
     get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch()), [=](MyJson json) {
         JO(json, data);
@@ -12973,6 +12973,15 @@ void MainWindow::upgradeWinningStreak()
         JO(last_pk_info, match_info);
         JL(match_info, room_id); // 最后匹配的主播
         lastMatchRoomId = room_id;
+
+        if (emitWinningStreak && this->winningStreak > 0 && this->winningStreak == win_count - 1)
+        {
+            LiveDanmaku danmaku;
+            danmaku.setNumber(win_count);
+            danmaku.with(match_info);
+            triggerCmdEvent("PK_WINNING_STREAK", danmaku);
+        }
+        this->winningStreak = win_count;
     });
 }
 
