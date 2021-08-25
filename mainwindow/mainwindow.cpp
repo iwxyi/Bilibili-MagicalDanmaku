@@ -252,19 +252,15 @@ void MainWindow::initView()
     });
 
     connect(ui->battleRankIconLabel, &ClickableLabel::clicked, this, [=]{
-        if (pkRuleUrl.isEmpty())
-            return ;
-        QDesktopServices::openUrl(QUrl(pkRuleUrl));
+        showPkMenu();
     });
 
     connect(ui->battleRankNameLabel, &ClickableLabel::clicked, this, [=]{
-
+        showPkMenu();
     });
 
     connect(ui->winningStreakLabel, &ClickableLabel::clicked, this, [=]{
-        if (!lastMatchRoomId)
-            return ;
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(lastMatchRoomId)));
+        showPkMenu();
     });
 
     // 吊灯
@@ -12927,6 +12923,10 @@ void MainWindow::upgradeWinningStreak()
         JS(anchor_pk_info, pk_rank_name); // 段位名字：钻石传说
         JI(anchor_pk_info, pk_rank_star); // 段位级别：2
         JS(anchor_pk_info, first_rank_img_url); // 图片
+        if (pk_rank_name.isEmpty())
+            return ;
+        if (ui->battleInfoWidget->isHidden())
+            ui->battleInfoWidget->show();
         // if (!battleRankName.contains(pk_rank_name)) // 段位有变化
 
         JO(data, season_info);
@@ -12949,8 +12949,7 @@ void MainWindow::upgradeWinningStreak()
                     "胜　　场：" + snum(total_win_num),
                     "败　　场：" + snum(total_lose_count),
                     "最高连胜：" + snum(max_win_num),
-                    "胜　　率：" + snum(win_rate) + "%",
-                    "\n点击前往最后匹配的直播间"
+                    "胜　　率：" + snum(win_rate) + "%"
         };
         ui->winningStreakLabel->setToolTip(nums.join("\n"));
 
@@ -16083,6 +16082,35 @@ void MainWindow::myLiveSetTags()
 
     // 刷新界面
     ui->tagsButtonGroup->initStringList(roomTags);
+}
+
+void MainWindow::showPkMenu()
+{
+    newFacileMenu;
+
+    menu->addAction("大乱斗规则", [=]{
+        if (pkRuleUrl.isEmpty())
+            return ;
+        QDesktopServices::openUrl(QUrl(pkRuleUrl));
+    });
+
+    menu->addAction("最佳助攻列表", [=]{
+
+    })->disable();
+
+    menu->split()->addAction("赛季匹配记录", [=]{
+
+    })->disable();
+
+    menu->addAction("最后匹配的直播间", [=]{
+        if (!lastMatchRoomId)
+            return ;
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(lastMatchRoomId)));
+    });
+
+
+
+    menu->exec();
 }
 
 void MainWindow::startSplash()

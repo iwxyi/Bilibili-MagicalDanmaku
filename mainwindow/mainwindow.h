@@ -940,6 +940,7 @@ private:
     void myLiveSetDescription();
     void myLiveSetCover(QString path = "");
     void myLiveSetTags();
+    void showPkMenu();
 
     void startSplash();
     void loadWebExtensinList();
