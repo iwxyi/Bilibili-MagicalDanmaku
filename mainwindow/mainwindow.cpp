@@ -12917,7 +12917,9 @@ void MainWindow::setRoomDescription(QString roomDescription)
 
 void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
 {
-    get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch()), [=](MyJson json) {
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    // qInfo() << "winning streak:" << url;
+    get(url, [=](MyJson json) {
         JO(json, data);
         JO(data, anchor_pk_info);
         JS(anchor_pk_info, pk_rank_name); // 段位名字：钻石传说
@@ -16104,12 +16106,12 @@ void MainWindow::showPkMenu()
     });
 
     menu->addAction("最佳助攻列表", [=]{
-
-    })->disable();
+        showPkAssists();
+    }); // ->suffix(!hasPermission(), " [VIP]");
 
     menu->split()->addAction("赛季匹配记录", [=]{
         showPkHistories();
-    })->suffix(!hasPermission(), " [VIP]");
+    }); // ->suffix(!hasPermission(), " [VIP]");
 
     menu->addAction("最后匹配的直播间", [=]{
         if (!lastMatchRoomId)
@@ -16117,14 +16119,89 @@ void MainWindow::showPkMenu()
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(lastMatchRoomId)));
     });
 
-
-
     menu->exec();
 }
 
 void MainWindow::showPkAssists()
 {
+    if (!hasPermission())
+        return on_actionBuy_VIP_triggered();
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    // qInfo() << "pk assists:" << url;
+    get(url, [=](MyJson json) {
+        JO(json, data);
+        JA(data, assist_list); // 助攻列表
 
+        QString title = "助攻列表";
+        auto view = new QTableView(this);
+        auto model = new QStandardItemModel(view);
+        QStringList columns {
+            "名字", "UID", "积分"
+        };
+        model->setColumnCount(columns.size());
+        model->setHorizontalHeaderLabels(columns);
+        model->setRowCount(assist_list.size());
+
+
+        for (int row = 0; row < assist_list.count(); row++)
+        {
+            MyJson assist = assist_list.at(row).toObject();
+            JI(assist, rank);
+            JL(assist, uid);
+            JS(assist, name);
+            JS(assist, face);
+            JL(assist, pk_score);
+
+            int col = 0;
+            model->setItem(row, col++, new QStandardItem(name));
+            model->setItem(row, col++, new QStandardItem(snum(pk_score)));
+            model->setItem(row, col++, new QStandardItem(snum(uid)));
+        }
+
+        // 创建控件
+        view->setModel(model);
+        view->setAttribute(Qt::WA_ShowModal, true);
+        view->setAttribute(Qt::WA_DeleteOnClose, true);
+        view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+
+        // 自适应宽度
+        view->resizeColumnsToContents();
+        for(int i = 0; i < model->columnCount(); i++)
+            view->setColumnWidth(i, view->columnWidth(i) + 10); // 加一点，不然会显得很挤
+
+        // 显示位置
+        QRect rect = this->geometry();
+        // int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+        rect.setTop(rect.top());
+        view->setWindowTitle(title);
+        view->setGeometry(rect);
+        view->show();
+
+        // 菜单
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(view, &QWidget::customContextMenuRequested, view, [=]{
+            auto index = view->currentIndex();
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString uname = model->item(row, 0)->data(Qt::DisplayRole).toString();
+            QString uid = model->item(row, 1)->data(Qt::DisplayRole).toString();
+
+            newFacileMenu;
+            menu->addAction("复制昵称", [=]{
+                QApplication::clipboard()->setText(uname);
+            });
+            menu->addAction("复制UID", [=]{
+                QApplication::clipboard()->setText(uid);
+            });
+            menu->split()->addAction("查看首页", [=]{
+                QDesktopServices::openUrl(QUrl("https://http://space.bilibili.com/" + uid));
+            });
+            menu->exec();
+        });
+    });
 }
 
 void MainWindow::showPkHistories()
@@ -16133,7 +16210,7 @@ void MainWindow::showPkHistories()
         return on_actionBuy_VIP_triggered();
     QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
                   "ruid=" + upUid + "&room_id=" + roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
-    qInfo() << "获取PK历史信息：" << url;
+    // qInfo() << "pk histories" << url;
     get(url, [=](MyJson json) {
         if (json.code())
             return showError("获取PK历史失败", json.msg());
@@ -16148,7 +16225,6 @@ void MainWindow::showPkHistories()
         model->setHorizontalHeaderLabels(columns);
 
         auto pkInfo = json.data().o("pk_info");
-
         auto dates = pkInfo.keys();
         std::sort(dates.begin(), dates.end(), [=](const QString& s1, const QString& s2) {
             return s1 > s2;
