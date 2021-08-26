@@ -16136,7 +16136,7 @@ void MainWindow::showPkAssists()
         auto view = new QTableView(this);
         auto model = new QStandardItemModel(view);
         QStringList columns {
-            "名字", "UID", "积分"
+            "名字", "积分", "UID"
         };
         model->setColumnCount(columns.size());
         model->setHorizontalHeaderLabels(columns);
@@ -16187,7 +16187,7 @@ void MainWindow::showPkAssists()
                 return ;
             int row = index.row();
             QString uname = model->item(row, 0)->data(Qt::DisplayRole).toString();
-            QString uid = model->item(row, 1)->data(Qt::DisplayRole).toString();
+            QString uid = model->item(row, 2)->data(Qt::DisplayRole).toString();
 
             newFacileMenu;
             menu->addAction("复制昵称", [=]{
@@ -16197,7 +16197,7 @@ void MainWindow::showPkAssists()
                 QApplication::clipboard()->setText(uid);
             });
             menu->split()->addAction("查看首页", [=]{
-                QDesktopServices::openUrl(QUrl("https://http://space.bilibili.com/" + uid));
+                QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + uid));
             });
             menu->exec();
         });
@@ -16219,7 +16219,7 @@ void MainWindow::showPkHistories()
         auto model = new QStandardItemModel(view);
         int rowCount = 0;
         QStringList columns {
-            "时间", "主播", "房间ID", "结果", "积分", "票数"/*自己:对面*/
+            "时间", "主播", "结果", "积分", "票数"/*自己:对面*/, "房间ID"
         };
         model->setColumnCount(columns.size());
         model->setHorizontalHeaderLabels(columns);
@@ -16241,10 +16241,11 @@ void MainWindow::showPkHistories()
                 model->setRowCount(rowCount);
                 model->setItem(row, col++, new QStandardItem(date + " " + info.s("pk_end_time")));
                 model->setItem(row, col++, new QStandardItem(matchInfo.s("name")));
-                model->setItem(row, col++, new QStandardItem(snum(matchInfo.l("room_id"))));
                 auto resultItem = new QStandardItem(resultText);
                 model->setItem(row, col++, resultItem);
-                model->setItem(row, col++, new QStandardItem(snum(info.l("pk_score"))));
+                auto scoreItem = new QStandardItem(snum(info.l("pk_score")));
+                model->setItem(row, col++, scoreItem);
+                scoreItem->setTextAlignment(Qt::AlignCenter);
                 auto votesItem = new QStandardItem(snum(info.l("current_pk_votes")) + " : " + snum(matchInfo.l("pk_votes")));
                 model->setItem(row, col++, votesItem);
                 votesItem->setTextAlignment(Qt::AlignCenter);
@@ -16252,6 +16253,7 @@ void MainWindow::showPkHistories()
                     resultItem->setForeground(Qt::green);
                 else if (result < 0)
                     resultItem->setForeground(Qt::red);
+                model->setItem(row, col++, new QStandardItem(snum(matchInfo.l("room_id"))));
             });
         }
 
@@ -16284,7 +16286,7 @@ void MainWindow::showPkHistories()
                 return ;
             int row = index.row();
             QString uname = model->item(row, 1)->data(Qt::DisplayRole).toString();
-            QString roomId = model->item(row, 2)->data(Qt::DisplayRole).toString();
+            QString roomId = model->item(row, 5)->data(Qt::DisplayRole).toString();
 
             newFacileMenu;
             menu->addAction("复制昵称", [=]{
