@@ -49,7 +49,7 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, int giftId, QString gift, int num, qint64 uid, QDateTime time, QString coinType, int totalCoin)
+    LiveDanmaku(QString nickname, int giftId, QString gift, int num, qint64 uid, QDateTime time, QString coinType, qint64 totalCoin)
         : msgType(MSG_GIFT), nickname(nickname), giftId(giftId), giftName(gift), number(num), uid(uid), timeline(time),
           coin_type(coinType), total_coin(totalCoin)
     {
@@ -74,7 +74,7 @@ public:
 
     }
 
-    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, int price, int first)
+    LiveDanmaku(QString nickname, qint64 uid, QString gift, int num, int guard, int gift_id, qint64 price, int first)
         : msgType(MSG_GUARD_BUY), nickname(nickname), uid(uid), giftName(gift), number(num), timeline(QDateTime::currentDateTime()),
           giftId(gift_id), guard(guard), coin_type("gold"), total_coin(price), first(first)
     {
@@ -110,7 +110,7 @@ public:
 
     }
 
-    LiveDanmaku(QString uname, qint64 uid, int win, int votes)
+    LiveDanmaku(QString uname, qint64 uid, int win, qint64 votes)
         : msgType(MSG_PK_BEST), nickname(uname), uid(uid), level(win), total_coin(votes)
     {
     }
@@ -155,7 +155,7 @@ public:
         danmaku.giftName = object.value("gift_name").toString();
         danmaku.number = object.value("number").toInt();
         danmaku.coin_type = object.value("coin_type").toString();
-        danmaku.total_coin = object.value("total_coin").toInt();
+        danmaku.total_coin = qint64(object.value("total_coin").toDouble());
         danmaku.spread_desc = object.value("spread_desc").toString();
         danmaku.spread_info = object.value("spread_info").toString();
         danmaku.fans = object.value("fans").toInt();
@@ -461,14 +461,14 @@ public:
         this->pk_link = link;
     }
 
-    void addGift(int count, int total, QDateTime time)
+    void addGift(int count, qint64 total, QDateTime time)
     {
         this->number += count;
         this->total_coin += total;
         this->timeline = time;
     }
 
-    void setTotalCoin(int coin)
+    void setTotalCoin(qint64 coin)
     {
         this->total_coin = coin;
     }
@@ -631,7 +631,7 @@ public:
         return coin_type != "silver";
     }
 
-    int getTotalCoin() const
+    qint64 getTotalCoin() const
     {
         return total_coin;
     }
@@ -796,7 +796,7 @@ private:
     QString giftName;
     int number = 0;
     QString coin_type;
-    int total_coin = 0;
+    qint64 total_coin = 0;
 
     QString spread_desc;
     QString spread_info;

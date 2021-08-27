@@ -12,6 +12,8 @@
 #include <QFile>
 #include <initializer_list>
 #include <QRegularExpression>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 typedef std::function<void(QString)> const NetResultFuncType;
 
@@ -62,6 +64,27 @@ public:
         return code_content;
     }
 
+    static QByteArray postWebData(QString uri, QJsonObject json, QVariant cookies = QVariant())
+    {
+        QUrl url(uri);
+        QNetworkAccessManager manager;
+        QEventLoop loop;
+        QNetworkReply *reply;
+        QNetworkRequest request(url);
+        if (!cookies.isNull())
+            request.setHeader(QNetworkRequest::CookieHeader, cookies);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
+
+
+        reply = manager.post(request, QJsonDocument(json).toJson());
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        loop.exec(); //开启子事件循环
+
+        QByteArray code_content(reply->readAll().data());
+        reply->deleteLater();
+        return code_content;
+    }
+
     static QString postWebData(QString uri, QStringList params, QVariant cookies = QVariant())
     {
         QString data;
@@ -107,6 +130,21 @@ public:
 
         reply->deleteLater();
         return path;
+    }
+
+    static QByteArray getWebFile(QString uri)
+    {
+        QNetworkAccessManager manager;
+        QEventLoop loop;
+        QNetworkReply *reply;
+
+        reply = manager.get(QNetworkRequest(QUrl(uri)));
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        loop.exec(); //开启子事件循环
+
+        QByteArray ba = reply->readAll();
+        reply->deleteLater();
+        return ba;
     }
 
     // =======================================================================

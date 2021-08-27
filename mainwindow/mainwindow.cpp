@@ -1777,7 +1777,13 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
     QLinearGradient linearGrad(QPointF(width() / 2, 0), QPointF(width() / 2, height()));
     linearGrad.setColorAt(0, themeBg);
-    linearGrad.setColorAt(1, themeGradient);
+    double pos = 1.0;
+    if (dailyMaxPopul > 100 && dailyAvePopul > 100)
+    {
+        pos = dailyAvePopul / double(dailyMaxPopul);
+        pos = qMin(qMax(pos, 0.3), 1.0);
+    }
+    linearGrad.setColorAt(pos, themeGradient);
 //    linearGrad.setColorAt(0, themeGradient);
 //    linearGrad.setColorAt(1, Qt::white);
     painter.fillRect(rect(), linearGrad);
@@ -4131,7 +4137,8 @@ void MainWindow::getRoomInfo(bool reconnect)
             get(battleRankUrl, [=](QNetworkReply* reply1){
                 QPixmap pixmap;
                 pixmap.loadFromData(reply1->readAll());
-                pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+                if (!pixmap.isNull())
+                    pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
                 ui->battleRankIconLabel->setPixmap(pixmap);
             });
             upgradeWinningStreak(false);
@@ -10525,7 +10532,7 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku;
         if (results.size() < 2 || results.at(1).isEmpty()) // 不是船员
         {
-            qInfo() << ">>>>>>高能榜进入：" << copy_writing;
+            qInfo() << "高能榜进入：" << copy_writing;
             QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
@@ -12805,14 +12812,23 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
 void MainWindow::getPkMatchInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + pkRoomId;
-    get(url, [=](QJsonObject json) {
+    get(url, [=](MyJson json) {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("获取PK匹配返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
-        QJsonObject data = json.value("data").toObject();
+        MyJson data = json.data();
+        LiveDanmaku danmaku;
+        danmaku.with(data);
+
+        // 计算高能榜综合
+        qint64 sum = 0;
+        data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
+            sum += usr.l("score");
+        });
+        danmaku.setTotalCoin(sum);
         triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data), true);
     });
 }
@@ -13943,7 +13959,7 @@ void MainWindow::pkPre(QJsonObject json)
     pkGifts.clear();
 
     // 处理PK对面直播间事件
-    if (hasEvent("PK_MATCH_INFO"))
+    if (hasEvent("PK_MATCH_INFO") || hasEvent("PK_MATCH_GOLD_RANK"))
     {
         getPkMatchInfo();
     }
