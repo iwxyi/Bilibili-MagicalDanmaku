@@ -2031,7 +2031,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
-| PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分 |
+| PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分(=金瓜子数/100) |
 | PK_MATCH_ONLINE_GUARD | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
 | PK_WINNING_STREAK | 大乱斗连胜事件，%number%获取次数，至少为2 |
 

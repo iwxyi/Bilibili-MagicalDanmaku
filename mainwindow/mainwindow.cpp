@@ -12829,7 +12829,9 @@ void MainWindow::getPkMatchInfo()
             sum += usr.l("score");
         });
         danmaku.setTotalCoin(sum);
-        triggerCmdEvent("PK_MATCH_INFO", LiveDanmaku(data), true);
+        // qDebug() << "对面高能榜积分总和：" << sum;
+        // qDebug() << data.o("online_gold_rank_info_v2");
+        triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
     });
 }
 
@@ -13959,7 +13961,7 @@ void MainWindow::pkPre(QJsonObject json)
     pkGifts.clear();
 
     // 处理PK对面直播间事件
-    if (hasEvent("PK_MATCH_INFO") || hasEvent("PK_MATCH_GOLD_RANK"))
+    if (hasEvent("PK_MATCH_INFO"))
     {
         getPkMatchInfo();
     }
