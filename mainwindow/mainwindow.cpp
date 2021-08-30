@@ -16378,6 +16378,8 @@ void MainWindow::loadWebExtensinList()
             QString urlR = inf.s("url");
             QString sts = inf.s("settings");
             QString cssR = inf.s("css");
+            QString dirR = inf.s("dir");
+            QString fileR = inf.s("file");
             QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
@@ -16394,22 +16396,22 @@ void MainWindow::loadWebExtensinList()
             widget->setAlign(Qt::AlignLeft);
             widget->setRadius(fluentRadius);
             widget->setFixedForePos();
-            widget->setCursor(Qt::PointingHandCursor);
             if (!desc.isEmpty())
                 widget->setToolTip(desc);
-            // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
-            connect(widget, &InteractiveButtonBase::clicked, this, [=]{
-                if (!ui->serverCheck->isChecked())
-                {
-                    shakeWidget(ui->serverCheck);
-                    return showError("未开启网络服务", "不可使用" + name);
-                }
-                QDesktopServices::openUrl(getDomainPort() + urlR);
-            });
+            widget->setCursor(Qt::PointingHandCursor);
 
             // URL
             if (!urlR.isEmpty())
             {
+                connect(widget, &InteractiveButtonBase::clicked, this, [=]{
+                    if (!ui->serverCheck->isChecked())
+                    {
+                        shakeWidget(ui->serverCheck);
+                        return showError("未开启网络服务", "不可使用" + name);
+                    }
+                    QDesktopServices::openUrl(getDomainPort() + urlR);
+                });
+
                 auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
                 layout->addWidget(btn);
                 btn->setSquareSize();
@@ -16467,7 +16469,7 @@ void MainWindow::loadWebExtensinList()
                 });
             }
 
-            // 编辑代码
+            // 导入代码
             if (inf.contains("code") && code.isArray())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/code"), widget);
@@ -16483,6 +16485,46 @@ void MainWindow::loadWebExtensinList()
                     qInfo() << "导入网页小程序代码";
                     QApplication::clipboard()->setText(QJsonDocument(code.toArray()).toJson());
                     on_actionPaste_Code_triggered();
+                });
+            }
+
+            // 打开目录
+            if (!dirR.isEmpty())
+            {
+                if (dirR.startsWith("/"))
+                    dirR = dirR.right(dirR.length() - 1);
+                auto btn = new WaterCircleButton(QIcon(":/icons/dir"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("打开扩展指定目录，修改相关资源");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    QString path = wwwDir.absoluteFilePath(dirR);
+                    QDesktopServices::openUrl(QUrl(path));
+                });
+            }
+
+            // 打开文件
+            if (!fileR.isEmpty())
+            {
+                if (fileR.startsWith("/"))
+                    fileR = fileR.right(fileR.length() - 1);
+                auto btn = new WaterCircleButton(QIcon(":/icons/file"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("打开扩展指定文件，如抽奖结果");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    QString path = wwwDir.absoluteFilePath(fileR);
+                    QDesktopServices::openUrl(QUrl(path));
                 });
             }
 

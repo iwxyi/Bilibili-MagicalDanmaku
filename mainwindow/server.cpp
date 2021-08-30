@@ -95,7 +95,11 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         qCritical() << error.errorString() << message;
         return ;
     }
+
     QJsonObject json = document.object();
+    // 触发收到消息事件
+    triggerCmdEvent("SOCKET_MSG_RECEIVED", LiveDanmaku().with(json));
+
     QString cmd = json.value("cmd").toString().toUpper();
     if (cmd == "CMDS") // 最开始的筛选cmd
     {
@@ -142,19 +146,18 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
     }
-    else if (!ui->allowWebControlCheck->isChecked())
-    {
-        qWarning() << "无效的CMD，或者未开启网页控制：" << cmd;
-        return ;
-    }
     else if (cmd == "FORWARD") // 转发给其他socket
     {
+        if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
+            return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QJsonObject data = json.value("data").toObject();
         QString cmd2 = data.value("cmd").toString();
         sendTextToSockets(cmd2, QJsonDocument(data).toJson());
     }
     else if (cmd == "SET_VALUE") // 修改本地配置
     {
+        if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
+            return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QJsonObject data = json.value("data").toObject();
         QString key = data.value("key").toString();
         QJsonValue val = data.value("value");
@@ -169,12 +172,16 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     }
     else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {
+        if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
+            return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QString text = json.value("data").toString();
         qDebug() << "发送远程弹幕：" << text;
         sendAutoMsg(text, LiveDanmaku());
     }
     else if (cmd == "SEND_VARIANT_MSG") // 发送带有变量的弹幕
     {
+        if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
+            return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QString text = json.value("data").toString();
         text = processDanmakuVariants(text, LiveDanmaku());
         qDebug() << "发送远程弹幕或命令：" << text;
