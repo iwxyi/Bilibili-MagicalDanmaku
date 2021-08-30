@@ -729,6 +729,8 @@ private slots:
 
     void on_upLevelLabel_customContextMenuRequested(const QPoint &);
 
+    void on_refreshExtensionListButton_clicked();
+
 private:
     void initView();
     void initStyle();

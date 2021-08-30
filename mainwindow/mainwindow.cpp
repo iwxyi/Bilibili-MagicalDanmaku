@@ -445,6 +445,9 @@ void MainWindow::initView()
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
 
+    // 网页
+    ui->refreshExtensionListButton->setSquareSize();
+
     // 禁言
     ui->eternalBlockListButton->setBgColor(Qt::white);
     ui->eternalBlockListButton->setRadius(fluentRadius);
@@ -16352,6 +16355,15 @@ void MainWindow::startSplash()
 
 void MainWindow::loadWebExtensinList()
 {
+    // 清空旧的列表
+    for (int i = 0; i < ui->extensionListWidget->count(); i++)
+    {
+        auto item = ui->extensionListWidget->item(i);
+        auto widget = ui->extensionListWidget->itemWidget(item);
+        widget->deleteLater();
+    }
+    ui->extensionListWidget->clear();
+
     // 加载url列表，允许一键复制
     QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
     foreach (auto info, dirs)
@@ -16364,6 +16376,7 @@ void MainWindow::loadWebExtensinList()
         json.each("list", [=](MyJson inf){
             QString name = inf.s("name");
             QString urlR = inf.s("url");
+            QString sts = inf.s("settings");
             QString cssR = inf.s("css");
             QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
@@ -16393,7 +16406,6 @@ void MainWindow::loadWebExtensinList()
                 }
                 QDesktopServices::openUrl(getDomainPort() + urlR);
             });
-            ui->serverUrlsCard->layout()->addWidget(widget);
 
             // URL
             if (!urlR.isEmpty())
@@ -16409,6 +16421,23 @@ void MainWindow::loadWebExtensinList()
                 connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QApplication::clipboard()->setText(getDomainPort() + urlR);
+                });
+            }
+
+            // 配置
+            if (!sts.isEmpty())
+            {
+                auto btn = new WaterCircleButton(QIcon(":/icons/generate"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("打开扩展的基础配置\n更深层次的设置需要修改源代码");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    QApplication::clipboard()->setText(getDomainPort() + sts);
                 });
             }
 
@@ -16456,6 +16485,11 @@ void MainWindow::loadWebExtensinList()
                     on_actionPaste_Code_triggered();
                 });
             }
+
+            auto item = new QListWidgetItem(ui->extensionListWidget);
+            ui->extensionListWidget->setItemWidget(item, widget);
+            widget->adjustSize();
+            item->setSizeHint(widget->size());
         });
     }
 }
@@ -18850,4 +18884,10 @@ void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
     })->disable();
 
     menu->exec();
+}
+
+void MainWindow::on_refreshExtensionListButton_clicked()
+{
+    loadWebExtensinList();
+    qInfo() << "网页扩展数量：" << ui->extensionListWidget->count();
 }

@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1538,7 +1538,7 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>675</width>
+             <width>621</width>
              <height>504</height>
             </rect>
            </property>
@@ -7266,7 +7266,7 @@ QTabBar::tab:selected
            <attribute name="title">
             <string>远程</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_8">
+           <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,1,0">
             <property name="spacing">
              <number>12</number>
             </property>
@@ -7471,9 +7471,56 @@ QTabBar::tab:selected
                 <number>0</number>
                </property>
                <item>
-                <widget class="QLabel" name="existExtensionsLabel">
-                 <property name="text">
-                  <string>已安装的扩展：</string>
+                <layout class="QHBoxLayout" name="horizontalLayout_66" stretch="1,0">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="existExtensionsLabel">
+                   <property name="text">
+                    <string>已安装的扩展：</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="WaterCircleButton" name="refreshExtensionListButton">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;刷新网页程序列表&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resource.qrc">
+                     <normaloff>:/icons/refresh</normaloff>:/icons/refresh</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="SmoothListWidget" name="extensionListWidget">
+                 <property name="minimumSize">
+                  <size>
+                   <width>16</width>
+                   <height>16</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">#extensionListWidget
+{
+	background: transparent;
+	border: none;
+}</string>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::NoSelection</enum>
                  </property>
                 </widget>
                </item>
@@ -8646,6 +8693,11 @@ font-weight: 500;</string>
    <class>WaterZoomButton</class>
    <extends>QPushButton</extends>
    <header>waterzoombutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>WaterCircleButton</class>
+   <extends>QPushButton</extends>
+   <header>watercirclebutton.h</header>
   </customwidget>
  </customwidgets>
  <resources>

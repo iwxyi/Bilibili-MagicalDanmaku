@@ -116,6 +116,7 @@
         <file alias="tags">icons/tags.png</file>
         <file alias="copy">icons/copy.png</file>
         <file alias="modify">icons/modify.png</file>
+        <file alias="refresh">icons/refresh.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
