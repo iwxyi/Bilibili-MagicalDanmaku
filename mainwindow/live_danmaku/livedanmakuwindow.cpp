@@ -1984,7 +1984,7 @@ void LiveDanmakuWindow::showPkMenu()
     connect(actionUser, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(pkUid)));
     });
-    connect(actionUser, &QAction::triggered, this, [=]{
+    connect(actionRank, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/"+snum(pkRoomId)));
     });
     connect(actionGuard, &QAction::triggered, this, [=]{
