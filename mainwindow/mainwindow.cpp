@@ -16365,6 +16365,7 @@ void MainWindow::loadWebExtensinList()
             QString name = inf.s("name");
             QString urlR = inf.s("url");
             QString cssR = inf.s("css");
+            QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
             if (!isFileExist(wwwDir.absoluteFilePath(urlR.startsWith("/") ? urlR.right(urlR.length() - 1) : urlR)))
@@ -16381,6 +16382,8 @@ void MainWindow::loadWebExtensinList()
             widget->setRadius(fluentRadius);
             widget->setFixedForePos();
             widget->setCursor(Qt::PointingHandCursor);
+            if (!desc.isEmpty())
+                widget->setToolTip(desc);
             // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
             connect(widget, &InteractiveButtonBase::clicked, this, [=]{
                 if (!ui->serverCheck->isChecked())
