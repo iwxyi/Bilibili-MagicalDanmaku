@@ -1,0 +1,11 @@
+{
+	"list": [
+		{
+			"name": "转盘抽奖",
+			"url": "/lucky_draw/index.html",
+			"css": "/lucky_draw/index.css",
+            "desc": "九宫格转盘抽奖",
+            "dir": "/lucky_draw/img"
+		}
+	]
+}
