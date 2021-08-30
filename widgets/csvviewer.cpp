@@ -101,6 +101,7 @@ void CSVViewer::save()
         sl.append(l.join(","));
     }
     QString ss = sl.join("\n");
+    ss += "\n";
     writeTextFile(filePath, ss, fileCodec);
 }
 
