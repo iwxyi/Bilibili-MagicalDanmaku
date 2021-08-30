@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QStringList>
 #include "functional"
 
 #define jsona(x, y) y = x.a(#y)
@@ -112,7 +113,7 @@ public:
         return QJsonDocument(*this).toJson();
     }
 
-    void each(QString key, std::function<void(QJsonValue)> const valFunc)
+    void eachVal(QString key, std::function<void(QJsonValue)> const valFunc) const
     {
         foreach (QJsonValue value, a(key))
         {
@@ -120,7 +121,7 @@ public:
         }
     }
 
-    void each(QString key, std::function<void(QJsonObject)> const valFunc)
+    void each(QString key, std::function<void(QJsonObject)> const valFunc) const
     {
         foreach (QJsonValue value, a(key))
         {
@@ -160,6 +161,28 @@ public:
         if (contains("errorMessage"))
             return s("errorMessage");
         return "";
+    }
+
+    // ["aaa", "bbb", "ccc"]
+    QStringList ss(QString key) const
+    {
+        QStringList sl;
+        if (!contains(key))
+            return sl;
+        eachVal(key, [&](QJsonValue val){
+            sl.append(val.toString());
+        });
+        return sl;
+    }
+
+    void insertStringList(const QString& key, const QStringList& vals)
+    {
+        QJsonArray ar;
+        foreach (auto s, vals)
+        {
+            ar.append(s);
+        }
+        insert(key, ar);
     }
 };
 

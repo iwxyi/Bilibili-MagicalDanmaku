@@ -3,7 +3,27 @@
 		{
 			"name": "单人五子棋",
 			"url": "/gobang/index.html",
-			"desc": "一个在线五子棋小游戏"
+			"desc": "一个在线五子棋小游戏",
+			"code": [
+				{
+					"anchor_key": "神奇弹幕:AutoReply",
+					"enabled": true,
+					"key": "结束五子棋",
+					"reply": "[%{gaming}%, %uid% != %{gaming_uid}%, \"%uid%\" != \"\"]***请等待当前玩家结束\n>setValue(gaming, 0)\\n\\\n\t>setValue(gaming_uid, )\\n\\\n\t>sendToSockets(GOBANG, {\"cmd\": \"START\"})\\n\\\n\t结束游戏，发送“开始五子棋”启动"
+				},
+				{
+					"anchor_key": "神奇弹幕:AutoReply",
+					"enabled": true,
+					"key": "开始五子棋",
+					"reply": "[%{gaming}%, %uid% != %{gaming_uid}%]***正在游戏中...\n[!%{gaming}%]>setValue(gaming, 1)\\n\\\n\t>setValue(gaming_uid, %uid%)\\n\\\n\t>sendToSockets(GOBANG, {\"cmd\": \"START\"})\\n\\\n\t开始，发送“落子 x y”下棋"
+				},
+				{
+					"anchor_key": "神奇弹幕:AutoReply",
+					"enabled": true,
+					"key": "落子 (\\d+) (\\d+)",
+					"reply": "[!%{gaming}%]***发送“开始五子棋”开始\n[%uid% != %{gaming_uid}%]**请排队下棋\n// 开始发送落子事件\n>sendToSockets(GOBANG, {\"cmd\": \"DOWN\", \"x\":%$1%, \"y\":%$2%})\\n\\\n\t落子成功，请继续~"
+				}
+			]
 		}
 	]
 }
