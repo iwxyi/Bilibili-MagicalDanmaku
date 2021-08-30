@@ -14036,9 +14036,6 @@ void MainWindow::pkStart(QJsonObject json)
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
     qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << battle_type;
 
-    // 1605757123 1605757123 1605757433 时间测试
-    // qDebug() << QDateTime::currentSecsSinceEpoch() << startTime << endTime;
-
     // 保存PK信息
     int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
     danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);

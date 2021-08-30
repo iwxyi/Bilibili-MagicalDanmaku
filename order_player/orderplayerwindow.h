@@ -367,6 +367,8 @@ private:
     BFSColor prevPa;
     BFSColor currentPa;
     double paletteAlpha;
+    bool usePureColor = false;
+    QColor pureColor = Qt::white;
 
     // 点歌
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换

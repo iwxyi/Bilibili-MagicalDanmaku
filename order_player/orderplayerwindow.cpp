@@ -1,3 +1,4 @@
+#include <QColorDialog>
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
@@ -290,6 +291,8 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     // 默认背景
     prevBlurBg = QPixmap(32, 32);
     prevBlurBg.fill(QColor(240, 248, 255)); // 窗口背景颜色
+    usePureColor = settings.value("music/usePureColor", false).toBool();
+    pureColor = QColor(settings.value("music/pureColor", "#fffafa").toString());
 
     // 还原上次播放的歌曲
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
@@ -1161,9 +1164,13 @@ void OrderPlayerWindow::paintEvent(QPaintEvent *e)
 {
     QMainWindow::paintEvent(e);
 
-    if (blurBg)
+    QPainter painter(this);
+    if (usePureColor)
     {
-        QPainter painter(this);
+        painter.fillRect(rect(), pureColor);
+    }
+    else if (blurBg)
+    {
         if (!currentBlurBg.isNull())
         {
             painter.setOpacity(double(currentBgAlpha) / 255);
@@ -3914,6 +3921,20 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         else
             ui->listTabWidget->tabBar()->hide();
     })->check(h);
+
+    stMenu->addAction("纯色背景", [=]{
+        settings.setValue("music/usePureColor", usePureColor = !usePureColor);
+        if (usePureColor) // 选择纯色
+        {
+            menu->close();
+            QColor c = QColorDialog::getColor(pureColor, this, "选择背景颜色");
+            if (c.isValid())
+            {
+                settings.setValue("music/pureColor", QVariant(pureColor = c).toString());
+            }
+        }
+        update();
+    })->check(usePureColor);
 
     menu->exec();
 }
