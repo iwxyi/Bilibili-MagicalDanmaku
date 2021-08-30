@@ -1,0 +1,21 @@
+#movie {
+    width : 100%;
+    height: 100%;
+}
+
+.line {
+    text-align : center;
+    color      : #CAA5ED;
+    font-weight: bold;
+    font-size  : 24px;
+    text-shadow: -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0px 2px 2px rgba(0, 0, 0, 0.2);
+    width: 80%;
+}
+
+.headLine {
+    font-size: 30px;
+}

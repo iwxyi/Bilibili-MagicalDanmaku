@@ -1,0 +1,16 @@
+{
+	"list": [
+		{
+			"name": "送礼物小动画",
+			"url": "/gift/index.html",
+			"css": "/gift/gift.css",
+			"desc": "送礼物后显示3~5秒钟的相应小动画"
+		},
+		{
+			"name": "结束感谢列表",
+			"url": "/gift/end_thanks.html",
+			"css": "/gift/end_thanks.css",
+			"desc": "直播结束时可播放的所有感谢列表"
+		}
+	]
+}

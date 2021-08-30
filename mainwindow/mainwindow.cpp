@@ -16353,81 +16353,85 @@ void MainWindow::startSplash()
 void MainWindow::loadWebExtensinList()
 {
     // 加载url列表，允许一键复制
-    QStringList urlLines = readTextFile(":/documents/server_urls").split("\n");
-    foreach (auto line, urlLines)
+    QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (auto info, dirs)
     {
-        QStringList sl = line.split("|");
-        if (sl.size() < 2)
+        QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
+        if (!isFileExist(infoPath))
             continue;
+        QString str = readTextFileAutoCodec(infoPath);
+        MyJson json(str.toUtf8());
+        json.each("list", [=](MyJson inf){
+            QString name = inf.s("name");
+            QString urlR = inf.s("url");
+            QString cssR = inf.s("css");
+            QString codes = inf.s("code");
+            if (!isFileExist(wwwDir.absoluteFilePath(urlR.startsWith("/") ? urlR.right(urlR.length() - 1) : urlR)))
+                return;
 
-        QString name = sl.at(0).trimmed();
-        QString urlR = sl.at(1).trimmed();
-        QString cssR = sl.size() < 3 ? "" : sl.at(2).trimmed();
-        if (!isFileExist(wwwDir.absoluteFilePath(urlR.startsWith("/") ? urlR.right(urlR.length() - 1) : urlR)))
-            continue;
+            auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
+            auto layout = new QHBoxLayout(widget);
+            layout->addStretch(1);
+            layout->setSpacing(0);
+            layout->setMargin(0);
+            widget->setLayout(layout);
+            widget->setPaddings(8);
+            widget->setAlign(Qt::AlignLeft);
+            widget->setRadius(fluentRadius);
+            widget->setFixedForePos();
+            widget->setCursor(Qt::PointingHandCursor);
+            // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
+            connect(widget, &InteractiveButtonBase::clicked, this, [=]{
+                if (!ui->serverCheck->isChecked())
+                {
+                    shakeWidget(ui->serverCheck);
+                    return showError("未开启网络服务", "不可使用" + name);
+                }
+                QDesktopServices::openUrl(getDomainPort() + urlR);
+            });
+            ui->serverUrlsCard->layout()->addWidget(widget);
 
-        auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
-        auto layout = new QHBoxLayout(widget);
-        layout->addStretch(1);
-        layout->setSpacing(0);
-        layout->setMargin(0);
-        widget->setLayout(layout);
-        widget->setPaddings(8);
-        widget->setAlign(Qt::AlignLeft);
-        widget->setRadius(fluentRadius);
-        widget->setFixedForePos();
-        widget->setCursor(Qt::PointingHandCursor);
-        // widget->setToolTip("在浏览器中打开"); // 一直显示有点啰嗦
-        connect(widget, &InteractiveButtonBase::clicked, this, [=]{
-            if (!ui->serverCheck->isChecked())
+            if (!urlR.isEmpty())
             {
-                shakeWidget(ui->serverCheck);
-                return showError("未开启网络服务", "不可使用" + name);
+                auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    QApplication::clipboard()->setText(getDomainPort() + urlR);
+                });
             }
-            QDesktopServices::openUrl(getDomainPort() + urlR);
+
+            if (!cssR.isEmpty())
+            {
+                if (cssR.startsWith("/"))
+                    cssR = cssR.right(cssR.length() - 1);
+                auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("修改或者导入CSS样式");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    QString path = wwwDir.absoluteFilePath(cssR);
+                    qInfo() << "编辑页面：" << path;
+                    QString content = readTextFileIfExist(path);
+                    bool ok;
+                    content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS样式，修改后刷新页面生效", content, &ok);
+                    if (!ok)
+                        return ;
+                    writeTextFile(path, content);
+                });
+            }
         });
-        ui->serverUrlsCard->layout()->addWidget(widget);
-
-        if (!urlR.isEmpty())
-        {
-            auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
-            layout->addWidget(btn);
-            btn->setSquareSize();
-            btn->setCursor(Qt::PointingHandCursor);
-            btn->setFixedForePos();
-            btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-            btn->hide();
-            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                QApplication::clipboard()->setText(getDomainPort() + urlR);
-            });
-        }
-
-        if (!cssR.isEmpty())
-        {
-            if (cssR.startsWith("/"))
-                cssR = cssR.right(cssR.length() - 1);
-            auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
-            layout->addWidget(btn);
-            btn->setSquareSize();
-            btn->setCursor(Qt::PointingHandCursor);
-            btn->setFixedForePos();
-            btn->setToolTip("修改或者导入CSS样式");
-            btn->hide();
-            connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-            connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-            connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                QString path = wwwDir.absoluteFilePath(cssR);
-                qInfo() << "编辑页面：" << path;
-                QString content = readTextFileIfExist(path);
-                bool ok;
-                content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS样式，修改后刷新页面生效", content, &ok);
-                if (!ok)
-                    return ;
-                writeTextFile(path, content);
-            });
-        }
     }
 }
 
