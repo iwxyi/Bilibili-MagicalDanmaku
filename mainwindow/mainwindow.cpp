@@ -5829,7 +5829,19 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 程序路径
     else if (key == "%app_path%")
-        return dataPath;
+        return QDir(dataPath).absolutePath();
+
+    else if (key == "%www_path%")
+        return wwwDir.absolutePath();
+
+    else if (key == "%server_domain%")
+        return serverDomain.contains("://") ? serverDomain : "http://" + serverDomain;
+
+    else if (key == "%server_port%")
+        return snum(serverPort);
+
+    else if (key == "%server_url%")
+        return serverDomain + ":" + snum(serverPort);
 
     // cookie
     else if (key == "%csrf%")

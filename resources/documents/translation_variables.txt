@@ -79,6 +79,10 @@
 在游戏数值中=in_game_numbers
 在游戏文本中=in_game_texts
 程序目录=app_path
+网站目录=www_path
+网站域名=server_domain
+网站端口=server_port
+网站网址=server_url
 直播中=living
 直播间ID=room_id
 直播间标题=room_name
