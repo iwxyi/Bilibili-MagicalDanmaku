@@ -211,6 +211,10 @@ void RoomStatusDialog::refreshRoomStatus(QString roomId)
         ui->roomsTable->setItem(index, 2, new QTableWidgetItem(roomTitle));
         ui->roomsTable->setItem(index, 3, new QTableWidgetItem(liveStr));
         ui->roomsTable->setItem(index, 4, new QTableWidgetItem(pkStr));
+
+        ui->roomsTable->resizeColumnsToContents();
+        for (int i = 0; i < ui->roomsTable->horizontalHeader()->count(); i++)
+            ui->roomsTable->setColumnWidth(i, ui->roomsTable->columnWidth(i) + 10);
     });
     manager->get(*request);
 }

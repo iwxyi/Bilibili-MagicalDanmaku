@@ -80,6 +80,8 @@ void CSVViewer::read()
     endModify();
 
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    /* for (int i = 0; i < tableView->horizontalHeader()->count(); i++)
+        tableView->setColumnWidth(i, tableView->columnWidth(i) + 10); */
     QTimer::singleShot(0, [=]{
         tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     });

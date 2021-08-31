@@ -113,7 +113,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         // 点歌相关
         if (musicWindow)
         {
-            // 点歌列表
+            // 点歌列表D
             if (sl.contains("SONG_LIST"))
             {
                 sendSongListToSockets = true;
