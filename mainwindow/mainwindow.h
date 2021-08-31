@@ -917,7 +917,7 @@ private:
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
-    bool shallSpeakText() const;
+    bool shallSpeakText();
     void addBannedWord(QString word, QString anchor);
 
     void saveMonthGuard();
@@ -1324,5 +1324,8 @@ private:
 
     // 彩蛋
     QString warmWish;
+
+    // flag
+    bool _loadingOldDanmakus = false;
 };
 #endif // MAINWINDOW_H

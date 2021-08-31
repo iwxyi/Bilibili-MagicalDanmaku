@@ -1089,9 +1089,11 @@ void MainWindow::readConfig()
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
-        if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
+        if (!_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
                 && shallSpeakText())
+        {
             speakText(danmaku.getText());
+        }
     });
 
     // 自动签到
@@ -1807,6 +1809,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     painter.fillRect(rect(), linearGrad);
 }
 
+/// 恢复之前的弹幕
 void MainWindow::pullLiveDanmaku()
 {
     if (roomId.isEmpty())
@@ -1822,6 +1825,8 @@ void MainWindow::pullLiveDanmaku()
             qCritical() << result;
             return ;
         }
+
+        _loadingOldDanmakus = true;
         QJsonObject json = document.object();
         QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
         QDateTime time = QDateTime::currentDateTime();
@@ -1836,6 +1841,7 @@ void MainWindow::pullLiveDanmaku()
             danmaku.setNoReply();
             appendNewLiveDanmaku(danmaku);
         }
+        _loadingOldDanmakus = false;
     });
 }
 
@@ -6830,7 +6836,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2,}?)(不|有点|才是|敲|很|能有|想|要|从不|才不|跟你).+",
+                         "^(.{2,}?)(不|有点|才是|敲|很|能有|想|要|从不|才不|跟你|和你).+",
                         "^(.{2,})-(.{2,})$",
                         "^(.{2,}?)[最很超特别是没不想好可以能要]*有.+$"};
     for (int i = 0; i < extraExp.size(); i++)
@@ -14978,9 +14984,12 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
     return shallAutoMsg();
 }
 
-bool MainWindow::shallSpeakText() const
+bool MainWindow::shallSpeakText()
 {
-    return !ui->dontSpeakOnPlayingSongCheck->isChecked() || !musicWindow || !musicWindow->isPlaying();
+    bool rst = !ui->dontSpeakOnPlayingSongCheck->isChecked() || !musicWindow || !musicWindow->isPlaying();
+    if (!rst && debugPrint)
+        localNotify("[放歌中，跳过语音]");
+    return rst;
 }
 
 void MainWindow::addBannedWord(QString word, QString anchor)
