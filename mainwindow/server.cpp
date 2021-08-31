@@ -417,7 +417,7 @@ void MainWindow::syncMagicalRooms()
             qInfo() << "有新版本" << appNewVersion << appDownloadUrl;
 
             QString packageUrl = json.s("package_url");
-            if (!packageUrl.isEmpty())
+            if (!packageUrl.isEmpty() && ui->autoUpdateCheck->isChecked())
             {
                 // 自动更新，直接下载！
                 downloadNewPackage(lastestVersion, packageUrl);

@@ -134,8 +134,9 @@ public:
     const Song& getPlayingSong() const;
     const SongList& getOrderSongs() const;
     const QStringList getSongLyrics(int rowCount) const;
-    int userOrderCount(QString by);
+    int userOrderCount(QString by) const;
     const QPixmap getCurrentSongCover() const;
+    bool isPlaying() const;
 
 public slots:
     void slotSearchAndAutoAppend(QString key, QString by = "");

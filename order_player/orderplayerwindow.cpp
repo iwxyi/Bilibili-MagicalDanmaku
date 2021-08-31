@@ -382,7 +382,7 @@ const QStringList OrderPlayerWindow::getSongLyrics(int rowCount) const
     return ui->lyricWidget->getLyrics(rowCount);
 }
 
-int OrderPlayerWindow::userOrderCount(QString by)
+int OrderPlayerWindow::userOrderCount(QString by) const
 {
     int count = 0;
     foreach (Song song, orderSongs)
@@ -398,6 +398,11 @@ const QPixmap OrderPlayerWindow::getCurrentSongCover() const
     if (!playingSong.isValid())
         return QPixmap();
     return coverPath(playingSong);
+}
+
+bool OrderPlayerWindow::isPlaying() const
+{
+    return player->state() == QMediaPlayer::State::PlayingState;
 }
 
 void OrderPlayerWindow::on_searchEdit_returnPressed()

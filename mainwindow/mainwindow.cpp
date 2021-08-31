@@ -945,6 +945,7 @@ void MainWindow::readConfig()
 
     // 文字转语音
     ui->autoSpeekDanmakuCheck->setChecked(settings->value("danmaku/autoSpeek", false).toBool());
+    ui->dontSpeakOnPlayingSongCheck->setChecked(settings->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
@@ -1088,7 +1089,8 @@ void MainWindow::readConfig()
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
-        if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU)
+        if (ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
+                && shallSpeakText())
             speakText(danmaku.getText());
     });
 
@@ -1123,6 +1125,9 @@ void MainWindow::readConfig()
     // 开机自启
     if (settings->value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
+    // 自动更新
+    if (settings->value("runtime/autoUpdate", true).toBool())
+        ui->autoUpdateCheck->setChecked(true);
 
     // 每分钟定时
     minuteTimer = new QTimer(this);
@@ -11619,6 +11624,9 @@ void MainWindow::initTTS()
 
 void MainWindow::speekVariantText(QString text)
 {
+    if (shallSpeakText())
+        return ;
+
     // 开始播放
     speakText(text);
 }
@@ -14967,6 +14975,11 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
         return true;
     }
     return shallAutoMsg();
+}
+
+bool MainWindow::shallSpeakText() const
+{
+    return !ui->dontSpeakOnPlayingSongCheck->isChecked() || !musicWindow || !musicWindow->isPlaying();
 }
 
 void MainWindow::addBannedWord(QString word, QString anchor)
@@ -18972,4 +18985,14 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
     })->disable(!hasPermission());
 
     menu->exec();
+}
+
+void MainWindow::on_autoUpdateCheck_clicked()
+{
+    settings->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
+}
+
+void MainWindow::on_dontSpeakOnPlayingSongCheck_clicked()
+{
+    settings->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
 }

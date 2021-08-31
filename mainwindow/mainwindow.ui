@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>701</width>
+    <width>867</width>
     <height>620</height>
    </rect>
   </property>
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1541,7 +1541,7 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>621</width>
+             <width>787</width>
              <height>504</height>
             </rect>
            </property>
@@ -3843,7 +3843,7 @@ QPushButton:pressed
               <x>10</x>
               <y>800</y>
               <width>161</width>
-              <height>131</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3931,6 +3931,19 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>系统托盘</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="autoUpdateCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>关闭窗口后不退出程序</string>
+               </property>
+               <property name="text">
+                <string>自动更新</string>
                </property>
               </widget>
              </item>
@@ -4396,6 +4409,21 @@ QPushButton:pressed
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="dontSpeakOnPlayingSongCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>点歌姬在播放歌曲时不朗读弹幕
+仅限于欢迎、关注、答谢礼物等场景
+不包括回复/事件等手动调用&gt;speakText()的情况</string>
+               </property>
+               <property name="text">
+                <string>放歌时不朗读</string>
+               </property>
+              </widget>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_35">
@@ -8193,7 +8221,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>701</width>
+     <width>867</width>
      <height>21</height>
     </rect>
    </property>

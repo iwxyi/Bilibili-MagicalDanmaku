@@ -733,6 +733,10 @@ private slots:
 
     void on_droplight_customContextMenuRequested(const QPoint &);
 
+    void on_autoUpdateCheck_clicked();
+
+    void on_dontSpeakOnPlayingSongCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -913,6 +917,7 @@ private:
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
+    bool shallSpeakText() const;
     void addBannedWord(QString word, QString anchor);
 
     void saveMonthGuard();
