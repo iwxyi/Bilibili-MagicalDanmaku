@@ -729,6 +729,11 @@ void MainWindow::addCloudShieldKeyword(QString keyword)
 
 void MainWindow::downloadNewPackage(QString version, QString packageUrl)
 {
+    static bool downloaded = false;
+    if (!downloaded)
+        downloaded = true;
+    else
+        return ;
     qInfo() << "下载：" << version << packageUrl;
 #ifdef Q_OS_WIN
     QProcess process(this);
