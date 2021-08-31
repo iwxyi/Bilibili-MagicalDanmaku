@@ -984,6 +984,7 @@ void MainWindow::readConfig()
     ui->enableTrayCheck->setChecked(settings->value("mainwindow/enableTray", false).toBool());
     if (ui->enableTrayCheck->isChecked())
         tray->show(); // 让托盘图标显示在系统托盘上
+    permissionText = settings->value("mainwindow/permissionText", permissionText).toString();
 
     // 定时连接
     ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
@@ -4321,7 +4322,8 @@ void MainWindow::updatePermission()
 
         if (permissionLevel)
         {
-            ui->droplight->setText("捐赠版");
+            ui->droplight->setText(permissionText);
+            ui->droplight->adjustMinimumSize();
             ui->droplight->setNormalColor(themeSbg);
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
@@ -18932,4 +18934,21 @@ void MainWindow::on_refreshExtensionListButton_clicked()
 {
     loadWebExtensinList();
     qInfo() << "网页扩展数量：" << ui->extensionListWidget->count();
+}
+
+void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
+{
+    newFacileMenu;
+
+    menu->addAction(QIcon(":/icons/heart2"), "自定义文字", [=]{
+        bool ok;
+        QString s = QInputDialog::getText(this, "自定义文字", "高度自定义捐赠版的显示文字", QLineEdit::Normal, permissionText, &ok);
+        if (!ok)
+            return ;
+        settings->setValue("mainwindow/permissionText", permissionText = s);
+        ui->droplight->setText(permissionText);
+        ui->droplight->adjustMinimumSize();
+    })->disable(!hasPermission());
+
+    menu->exec();
 }

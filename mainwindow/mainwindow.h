@@ -731,6 +731,8 @@ private slots:
 
     void on_refreshExtensionListButton_clicked();
 
+    void on_droplight_customContextMenuRequested(const QPoint &);
+
 private:
     void initView();
     void initStyle();
@@ -1157,6 +1159,7 @@ private:
     QString serverPath = LOCAL_MODE ? "http://localhost:8102/server/" : "http://iwxyi.com:8102/server/";
     int permissionLevel = 0;
     QTimer* permissionTimer = nullptr;
+    QString permissionText = "捐赠版";
 
     // 每日数据
     QSettings* dailySettings = nullptr;
