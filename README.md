@@ -2332,10 +2332,12 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 #### 服务端事件
 
-| 事件命令       | 说明                                                         |
-| -------------- | ------------------------------------------------------------ |
-| NEW_WEBSOCKET  | 新连接进入                                                   |
-| WEBSOCKET_CMDS | socket设置对应类型，%text%获取，英文逗号分隔，例如：“SONG_LIST,DANMAKU” |
+| 事件命令           | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| NEW_WEBSOCKET      | 新连接进入                                                   |
+| WEBSOCKET_CMDS     | socket设置对应类型，%text%获取，英文逗号分隔，例如：“SONG_LIST,DANMAKU” |
+| SOCKET_MSG_RECEIVE | Socket接收到消息的事件（去除一些内置cmd）                    |
+| SOCKET:[cmd]       | Socket接收到对应cmd消息的事件（所有cmd）                     |
 
 
 
@@ -2508,70 +2510,35 @@ ws.onmessage = function(e) {
 
 ### 主程序接收消息
 
+#### 通用消息接收事件
+
 在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送 socket 数据，除了一些内置CMD类型外，都会触发 `SOCKET_MSG_RECEIVE` 事件，通过解析 json 的方式（如 `%.cmd%`），可获取其中的信息，进行一系列的操作。
 
+内置cmd，即[持久化配置](#持久化配置)、[反向控制主程序](#反向控制主程序)中的cmd，不会触发 `SOCKET_MSG_RECEIVE` 事件。简单来说，就是**只响应用户自定义的socket消息**。
+
+`SOCKET_MSG_RECEIVE` 事件的动作示例：
+
+```
+[%.cmd% == ONE_CMD]执行ONE_CMD动作
+[%.cmd% == ANOTHER_CMD]执行ANOTHER_CMD动作
+```
 
 
-### 反向控制主程序
 
-在上述“主程序接收消息”的基础上，指定CMD类型，可反向控制主程序。需要在设置中开启`远程-解锁安全限制`方有效（默认关闭）。
+#### 独立cmd接收事件
 
-JSON格式：
+如果 json 中带有 cmd，则会额外触发 `SOCKET:cmd` 事件，例如：
 
 ```json
 {
-    "cmd": cmd类型,
-    "data": 数据
+	"cmd": "CLICKED",
+	"data": {
+		"name": "小明"
+	}
 }
 ```
 
-服务端可接收 `cmd类型` 如下（不分大小写）：
-
-- `cmds`：指定ws需要接收的类型，不在其中的不会发送，可提高性能
-
-- `forward`：将`data`中的数据发送给其他socket，`data`中要同样再包含一层`cmd`和`data`。整体JSON示例如下：
-
-  ```json
-  {
-      "cmd": "forward",
-      "data": {
-          "cmd": "[转发的命令]",
-          "data": "[转发数据]"
-      }
-  }
-  ```
-
-- `set_value`：修改主程序的配置，不是用 `%{key}%` 读取的需要重启生效。`data`部分如下：
-
-  ```json
-  {
-      "cmd": "set_value",
-      "data": {
-          "key": "[key]",
-          "value": "[value]" // 可以是字符串，也可以是整数
-      }   
-  }
-  ```
-
-- `send_msg`：使主程序发送弹幕，`data`为弹幕字符串，允许使用`\\n`来分隔多条弹幕；不会解析变量，而是直接发送出去
-
-  ```json
-  {
-      "cmd": "send_msg",
-      "data": "要发送的弹幕1\\n弹幕2\\n弹幕3"
-  }
-  ```
-
-- `send_variant_msg`：使主程序发送带变量的弹幕或命令，例如 `%{key}%`；需要用户信息的例如 `%uid%` 均不可使用。
-
-  ```json
-  {
-      "cmd": "send_variant_msg",
-      "data": "数量：%{count}%"
-  }
-  ```
-
-上述 cmd，都会跳过 `SOCKET_MSG_RECEIVE` 事件。
+会触发 `SOCKET:CLICKED` 事件，可在事件中响应收到的 json，如 `%.data.name%`。
 
 
 
@@ -2618,6 +2585,69 @@ JSON格式：
           "key4": false,
           "key5": null
       }
+  }
+  ```
+
+
+
+### 反向控制主程序
+
+在上述“主程序接收消息”的基础上，指定CMD类型，可反向控制主程序。需要在设置中开启`远程-解锁安全限制`方有效（默认关闭）。
+
+JSON格式：
+
+```json
+{
+    "cmd": cmd类型,
+    "data": 数据
+}
+```
+
+服务端可接收 `cmd类型` 如下（不分大小写）：
+
+> 下述 cmd，都会跳过 `SOCKET_MSG_RECEIVE` 事件。
+
+- `cmds`：指定ws需要接收的类型，不在其中的不会发送，可提高性能
+
+- `forward`：将`data`中的数据发送给其他socket，`data`中要同样再包含一层`cmd`和`data`。整体JSON示例如下：
+
+  ```json
+  {
+      "cmd": "forward",
+      "data": {
+          "cmd": "[转发的命令]",
+          "data": "[转发数据]"
+      }
+  }
+  ```
+
+- `set_value`：修改主程序的配置，不是用 `%{key}%` 读取的需要重启生效。`data`部分如下：
+
+  ```json
+  {
+      "cmd": "set_value",
+      "data": {
+          "key": "[key]",
+          "value": "[value]" // 可以是字符串，也可以是整数
+      }   
+  }
+  ```
+
+- `send_msg`：使主程序发送弹幕，`data`为弹幕字符串，允许使用`\\n`来分隔多条弹幕；不会解析变量，而是直接发送出去
+
+  ```json
+  {
+      "cmd": "send_msg",
+      "data": "要发送的弹幕1\\n弹幕2\\n弹幕3"
+  }
+  ```
+
+- `send_variant_msg`：使主程序发送带变量的弹幕或命令，例如 `%{key}%`；需要用户信息的例如 `%uid%` 均不可使用。
+
+  ```json
+  {
+      "cmd": "send_variant_msg",
+      "data": "数量：%{count}%"
   }
   ```
 

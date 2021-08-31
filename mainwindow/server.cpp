@@ -98,6 +98,10 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
 
     QJsonObject json = document.object();
     QString cmd = json.value("cmd").toString().toUpper();
+    if (!cmd.isEmpty())
+    {
+        triggerCmdEvent("SOCKET:" + cmd, LiveDanmaku().with(json));
+    }
     if (cmd == "CMDS") // 最开始的筛选cmd
     {
         QStringList sl;
