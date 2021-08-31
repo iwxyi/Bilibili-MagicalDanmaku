@@ -6831,7 +6831,8 @@ QString MainWindow::nicknameSimplify(QString nickname) const
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
                          "^(.{2,}?)(不|有点|才是|敲|很|能有|想|要|从不|才不|跟你).+",
-                        "^(.{2,})-(.{2,})$"};
+                        "^(.{2,})-(.{2,})$",
+                        "^(.{2,}?)[最很超特别是没不想好可以能要]*有.+$"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));

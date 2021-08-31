@@ -4417,8 +4417,8 @@ QPushButton:pressed
                </property>
                <property name="toolTip">
                 <string>点歌姬在播放歌曲时不朗读弹幕
-仅限于欢迎、关注、答谢礼物等场景
-不包括回复/事件等手动调用&gt;speakText()的情况</string>
+仅限于弹幕、欢迎、关注、答谢礼物等自动朗读的场景
+不包括回复/事件等手动调用“&gt;speakText()”的情况</string>
                </property>
                <property name="text">
                 <string>放歌时不朗读</string>
