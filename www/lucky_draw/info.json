@@ -5,7 +5,29 @@
 			"url": "/lucky_draw/index.html",
 			"css": "/lucky_draw/index.css",
             "desc": "九宫格转盘抽奖",
-            "dir": "/lucky_draw/img"
+            "dir": "/lucky_draw/img",
+            "config": "/lucky_draw/config.html",
+			"code": [
+				{
+					"action": "/// 经过特定条件的发送抽奖消息\n>sendToSockets(LUCKY_DRAW, {\"cmd\": \"START\", \"uid\": %uid%, \"uname\": \"%uname%\", \"weight\": 0})\n// 手动发送测试数据\n[%uid% == 0]***>sendToSockets(LUCKY_DRAW, {\"cmd\": \"START\", \"uid\": 123456, \"uname\": \"测试用户\"})",
+					"anchor_key": "神奇弹幕:EventAction",
+					"enabled": false,
+					"event": ""
+				},
+				{
+					"action": "/// 得到抽奖结果，输出并保存\n[%.cmd% == LUCKY_DRAW_RESULT]>localNotify(恭喜%.uname%抽到了%.giftName%！)\\n\\\n\t>appendFileLine(result, 抽奖结果.csv, %>time(MM-dd hh:mm)%,%.uid%,%.uname%,%.giftIndex%,%.giftName%)",
+					"anchor_key": "神奇弹幕:EventAction",
+					"enabled": true,
+					"event": "SOCKET_MSG_RECEIVED"
+				},
+				{
+					"action": "/// 查看所有抽奖结果记录\n>showCSV(result/抽奖结果.csv)",
+					"anchor_key": "神奇弹幕:EventAction",
+					"enabled": false,
+					"event": ""
+				}
+			]
+
 		}
 	]
 }

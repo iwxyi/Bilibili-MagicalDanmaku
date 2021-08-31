@@ -16376,7 +16376,7 @@ void MainWindow::loadWebExtensinList()
         json.each("list", [=](MyJson inf){
             QString name = inf.s("name");
             QString urlR = inf.s("url");
-            QString sts = inf.s("settings");
+            QString sts = inf.s("config");
             QString cssR = inf.s("css");
             QString dirR = inf.s("dir");
             QString fileR = inf.s("file");
@@ -16439,7 +16439,7 @@ void MainWindow::loadWebExtensinList()
                 connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
                 connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                    QApplication::clipboard()->setText(getDomainPort() + sts);
+                    QDesktopServices::openUrl(getDomainPort() + sts);
                 });
             }
 

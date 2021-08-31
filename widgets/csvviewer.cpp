@@ -27,7 +27,7 @@ CSVViewer::CSVViewer(QString filePath, QWidget *parent) : QDialog(parent)
     read();
 
     // 自动调整宽高
-    int titleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+    /* int titleBarHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
     int needHeight = tableView->height();
     if (model->rowCount())
     {
@@ -47,7 +47,8 @@ CSVViewer::CSVViewer(QString filePath, QWidget *parent) : QDialog(parent)
     needWidth = qMin(shouldWidth, parent->width());
 
     this->resize(needWidth, needHeight);
-    this->move(parent->geometry().center() - QPoint(needWidth / 2, needHeight / 2 + titleBarHeight));
+    this->move(parent->geometry().center() - QPoint(needWidth / 2, needHeight / 2 + titleBarHeight));*/
+    this->setGeometry(this->parentWidget()->geometry());
     tableView->show();
 
     // 菜单事件

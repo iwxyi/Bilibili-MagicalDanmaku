@@ -18,7 +18,7 @@ void MainWindow::openServer(int port)
     initServerData();
 
     // 开启服务器
-    qDebug() << "开启 HTTP 服务" << port;
+    qInfo() << "开启 HTTP 服务" << port;
     if (!server->listen(static_cast<quint16>(port)))
     {
         ui->serverCheck->setChecked(false);
@@ -35,20 +35,20 @@ void MainWindow::openSocketServer()
     danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
     if (danmakuSocketServer->listen(QHostAddress::Any, quint16(serverPort + DANMAKU_SERVER_PORT)))
     {
-        qDebug() << "开启 Socket 服务" << serverPort + DANMAKU_SERVER_PORT;
+        qInfo() << "开启 Socket 服务" << serverPort + DANMAKU_SERVER_PORT;
         connect(danmakuSocketServer, &QWebSocketServer::newConnection, this, [=]{
             QWebSocket* clientSocket = danmakuSocketServer->nextPendingConnection();
-            qDebug() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
+            qInfo() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
             danmakuSockets.append(clientSocket);
 
             connect(clientSocket, &QWebSocket::connected, this, [=]{
                 // 一直都是连接状态，不会触发
             });
             connect(clientSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-                qDebug() << "danmaku binary message received:" << message;
+                qInfo() << "danmaku binary message received:" << message;
             });
             connect(clientSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-                qDebug() << "danmaku message received:" << message;
+                qInfo() << "danmaku message received:" << message;
                 processSocketTextMsg(clientSocket, message);
             });
             connect(clientSocket, &QWebSocket::disconnected, this, [=]{
@@ -74,7 +74,7 @@ void MainWindow::openSocketServer()
                     setFalseIfNone(sendCurrentSongToSockets, "CURRENT_SONG");
                 }
                 clientSocket->deleteLater();
-                qDebug() << "danmaku socket 关闭" << danmakuSockets.size();
+                qInfo() << "danmaku socket 关闭" << danmakuSockets.size();
             });
 
             triggerCmdEvent("NEW_WEBSOCKET", LiveDanmaku());
@@ -97,9 +97,6 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     }
 
     QJsonObject json = document.object();
-    // 触发收到消息事件
-    triggerCmdEvent("SOCKET_MSG_RECEIVED", LiveDanmaku().with(json));
-
     QString cmd = json.value("cmd").toString().toUpper();
     if (cmd == "CMDS") // 最开始的筛选cmd
     {
@@ -146,6 +143,31 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
 
         triggerCmdEvent("WEBSOCKET_CMDS", LiveDanmaku(sl.join(",")));
     }
+    else if (cmd == "SET_CONFIG")
+    {
+        // "data": { "key1":123, "key2": "string" }
+        QJsonObject data = json.value("data").toObject();
+        foreach (auto key, data.keys())
+        {
+            auto v = data.value(key).toVariant();
+            settings->setValue("webapps/" + key, v);
+            qInfo() << "保存配置：" << key << v;
+        }
+    }
+    else if (cmd == "GET_CONFIG")
+    {
+        // "data": ["key1", "key2", ...]
+        QJsonArray arr = json.value("data").toArray();
+        QJsonObject rst;
+        foreach (QJsonValue val, arr)
+        {
+            QString key = val.toString();
+            auto v = QJsonValue::fromVariant(settings->value("webapps/" + key));
+            rst.insert(key, v);
+        }
+        qInfo() << "返回配置：" << rst;
+        sendJsonToSockets("GET_CONFIG", rst, clientSocket);
+    }
     else if (cmd == "FORWARD") // 转发给其他socket
     {
         if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
@@ -175,7 +197,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
             return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QString text = json.value("data").toString();
-        qDebug() << "发送远程弹幕：" << text;
+        qInfo() << "发送远程弹幕：" << text;
         sendAutoMsg(text, LiveDanmaku());
     }
     else if (cmd == "SEND_VARIANT_MSG") // 发送带有变量的弹幕
@@ -184,8 +206,13 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QString text = json.value("data").toString();
         text = processDanmakuVariants(text, LiveDanmaku());
-        qDebug() << "发送远程弹幕或命令：" << text;
+        qInfo() << "发送远程弹幕或命令：" << text;
         sendAutoMsg(text, LiveDanmaku());
+    }
+    else
+    {
+        // 触发收到消息事件
+        triggerCmdEvent("SOCKET_MSG_RECEIVED", LiveDanmaku().with(json));
     }
 }
 
@@ -221,7 +248,7 @@ void MainWindow::initServerData()
 void MainWindow::closeServer()
 {
 #if defined(ENABLE_HTTP_SERVER)
-    qDebug() << "关闭服务端";
+    qInfo() << "关闭服务端";
     // server->close(); // 这个不是关闭端口的……
     server->deleteLater();
     server = nullptr;
@@ -272,8 +299,10 @@ void MainWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *soc
     if (!socket && !danmakuSockets.size())
         return ;
 
+    // 这个data是包含了一个cmd和data
     if (socket)
     {
+        SOCKET_DEB << "单独发送：" << data;
         socket->sendTextMessage(data);
     }
     else
@@ -461,7 +490,6 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     auto errorStr = [=](QString str, QHttpResponse::StatusCode code = QHttpResponse::STATUS_BAD_REQUEST) -> void {
         return errorResp(str.toStdString().data(), code);
     };
-
 
     auto toIndex = [&]() -> void {
         return serverHandleUrl(urlPath + "/index.html", params, req, resp);

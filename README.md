@@ -2508,7 +2508,7 @@ ws.onmessage = function(e) {
 
 ### 主程序接收消息
 
-在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送 socket 数据，都会触发 `SOCKET_MSG_RECEIVE` 事件，通过解析 json 的方式（如 `%.cmd%`），可获取其中的信息，进行一系列的操作。
+在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送 socket 数据，除了一些内置CMD类型外，都会触发 `SOCKET_MSG_RECEIVE` 事件，通过解析 json 的方式（如 `%.cmd%`），可获取其中的信息，进行一系列的操作。
 
 
 
@@ -2568,6 +2568,56 @@ JSON格式：
   {
       "cmd": "send_variant_msg",
       "data": "数量：%{count}%"
+  }
+  ```
+
+上述 cmd，都会跳过 `SOCKET_MSG_RECEIVE` 事件。
+
+
+
+### 持久化配置
+
+简单使用可选择 localStorage，但不容易跨设备传输与自动备份。
+
+用户在网页程序中自定义配置，永久保存。使用相应的 cmd 实现功能，无需“解锁安全限制”。
+
+- `SET_CONFIG`：在网页中发送该cmd的json，将会保存配置
+
+  ```json
+  {
+      "cmd": "SET_CONFIG",
+      "data": {
+          "key1": 123,
+          "key2": "某个值",
+          "key3": 10.08,
+          "key4": false
+      }
+  }
+  ```
+
+  该命令无返回。
+
+- `GET_CONFIG`：返回同样的cmd，但是data中会包含配置
+
+  ```json
+  {
+      "cmd": "GET_CONFIG",
+      "data": ["key1", "key2", "key3", "key4", "key5"]
+  }
+  ```
+
+  以上面的配置为例，可能会返回 JSON：
+
+  ```json
+  {
+      "cmd": "GET_CONFIG",
+      "data": {
+          "key1": 123,
+          "key2": "某个值",
+          "key3": 10.08,
+          "key4": false,
+          "key5": null
+      }
   }
   ```
 

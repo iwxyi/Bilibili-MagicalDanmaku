@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置</title>
+    <script src="../js/jquery.js"></script>
+    <script src="../js/mdui.js"></script>
+    <link rel="stylesheet" href="../css/mdui.css" />
+</head>
+
+<body style="margin: 20px;">
+    <h1>设置抽奖奖品的名字与权重</h1>
+    一行一个“名字 权重”，空格隔开<br />
+    权重必须整数，最多设置8项<br />
+    奖品图片可在img文件夹中替换
+    <div class="mdui-textfield">
+        <label class="mdui-textfield-label">奖品名字 权重</label>
+        <textarea id="config-text" class="mdui-textfield-input" focused="true"></textarea>
+    </div>
+
+    <button id="save" class="mdui-btn mdui-btn-raised mdui-ripple">保存</button>
+
+    <script type="text/javascript">
+        var ws;
+        $(document).ready(function () {
+            ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function () {
+                ws.send('{"cmd": "GET_CONFIG", "data": ["lucky_draw"]}');
+            };
+            ws.onmessage = function (e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'GET_CONFIG': // 开始抽奖
+                        var s = json['data']['lucky_draw'];
+                        console.log('恢复配置：', s);
+                        $('#config-text').val(s);
+                        $('#config-text').focus();
+                        break;
+                }
+            };
+        });
+
+        $('#save').click(function () {
+            var s = $('#config-text').val();
+            console.log('保存配置：', s);
+            ws.send('{"cmd": "SET_CONFIG", "data": {"lucky_draw": "' + s + '"}}');
+        });
+    </script>
+</body>
+
+</html>
