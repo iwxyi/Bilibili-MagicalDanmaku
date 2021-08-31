@@ -11624,7 +11624,7 @@ void MainWindow::initTTS()
 
 void MainWindow::speekVariantText(QString text)
 {
-    if (shallSpeakText())
+    if (!shallSpeakText())
         return ;
 
     // 开始播放
