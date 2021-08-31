@@ -1,4 +1,4 @@
-### v4.3.0 网页扩展、大乱斗信息
+### v4.3.0 [网页扩展、大乱斗信息](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.0)
 
 - 新增已安装的网页扩展的列表
 - 新增快速打开扩展网页和添加到浏览器
@@ -10,7 +10,7 @@
 - 新增接收网页socket事件 `SOCKET_MSG_RECEIVE`
 - 新增socket的cmd单独事件 `SOCKET:[cmd]`
 - 新增支持网页扩展持久化配置
-- 新增扩展自带jQuery/vue.js/Boostrap/vue
+- 新增扩展自带jQuery/vue.js/Boostrap/MDUI
 - 新增`www_path`等多个扩展相关的变量
 - 新增显示大乱斗段位
 - 新增显示大乱斗连胜场数
