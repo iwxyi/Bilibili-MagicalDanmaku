@@ -415,6 +415,13 @@ void MainWindow::syncMagicalRooms()
             ui->actionUpdate_New_Version->setEnabled(true);
             statusLabel->setText("有新版本：" + appNewVersion);
             qInfo() << "有新版本" << appNewVersion << appDownloadUrl;
+
+            QString packageUrl = json.s("package_url");
+            if (!packageUrl.isEmpty())
+            {
+                // 自动更新，直接下载！
+                downloadNewPackage(lastestVersion, packageUrl);
+            }
         }
 
         QString code = json.value("code").toString();
@@ -718,4 +725,23 @@ void MainWindow::addCloudShieldKeyword(QString keyword)
                 {"keyword", keyword, "userId", cookieUid, "username", cookieUname, "roomId", roomId}, userCookies).toLatin1());
     if (json.code() != 0)
         qWarning() << "添加云端屏蔽词失败：" << json;
+}
+
+void MainWindow::downloadNewPackage(QString version, QString packageUrl)
+{
+    qInfo() << "下载：" << version << packageUrl;
+#ifdef Q_OS_WIN
+    QProcess process(this);
+    QStringList list;
+    list << packageUrl << "update.zip";
+    if (process.startDetached("UpUpTool.exe", list))
+    {
+        qInfo() << "调用更新程序下载成功";
+        return ;
+    }
+    qCritical() << "无法调用更新程序，请手动下载";
+    QDesktopServices::openUrl(QUrl(packageUrl));
+#else
+    QDesktopServices::openUrl(QUrl(packageUrl));
+#endif
 }

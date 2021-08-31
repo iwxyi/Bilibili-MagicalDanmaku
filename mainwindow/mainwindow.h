@@ -978,6 +978,7 @@ private:
     void syncMagicalRooms();
     void pullRoomShieldKeyword();
     void addCloudShieldKeyword(QString keyword);
+    void downloadNewPackage(QString version, QString packageUrl);
 
     QString GetFileVertion(QString fullName);
     void upgradeVersionToLastest(QString oldVersion);

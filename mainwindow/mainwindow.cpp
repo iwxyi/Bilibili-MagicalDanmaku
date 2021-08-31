@@ -1685,6 +1685,15 @@ MainWindow::~MainWindow()
 
     delete ui;
 
+    // 自动更新
+    if (isFileExist(QApplication::applicationDirPath() + "/download/update.zip"))
+    {
+        // 更新历史版本
+        qInfo() << "检测到已下载的安装包，进行更新";
+        QProcess process;
+        process.startDetached("UpUpTool.exe");
+    }
+
     // 删除缓存
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
