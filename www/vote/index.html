@@ -30,7 +30,7 @@
         <form v-on:submit.prevent="addNewItem">
             <div class="mdui-textfield">
                 <input class="mdui-textfield-input" style="display: inline;" type="text" v-model="newItemText"
-                    id="new-item" placeholder="投票项名称" />
+                    id="new-item" placeholder="新的投票项名称" />
             </div>
         </form>
 
@@ -194,7 +194,11 @@
                 },
                 // 进行投票或者取消投票操作
                 changeVote: function (index, count) {
-                    this.voteItems[index].votes += count;
+                    if (this.voteItems[index].votes + count >= 0) {
+                        this.voteItems[index].votes += count;
+                    } else {
+                        this.voteItems[index].votes = 0;
+                    }
                     this.recalculatePercent();
                 },
                 // 重新计算所有的比例

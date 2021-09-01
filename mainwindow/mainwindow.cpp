@@ -16421,15 +16421,28 @@ void MainWindow::loadWebExtensinList()
         MyJson json(str.toUtf8());
         json.each("list", [=](MyJson inf){
             QString name = inf.s("name");
-            QString urlR = inf.s("url");
-            QString sts = inf.s("config");
+            QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
+            QString stsR = inf.s("config");
             QString cssR = inf.s("css");
             QString dirR = inf.s("dir");
             QString fileR = inf.s("file");
             QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
-            if (!isFileExist(wwwDir.absoluteFilePath(urlR.startsWith("/") ? urlR.right(urlR.length() - 1) : urlR)))
+
+            QString dirName = info.fileName();
+            if (!urlR.isEmpty() && !urlR.startsWith("/"))
+                urlR = "/" + dirName + "/" + urlR;
+            if (!cssR.isEmpty() && !cssR.startsWith("/"))
+                cssR = "/" + dirName + "/" + cssR;
+            if (!dirR.isEmpty() && !dirR.startsWith("/"))
+                dirR = "/" + dirName + "/" + dirR;
+            if (!fileR.isEmpty() && !fileR.startsWith("/"))
+                fileR = "/" + dirName + "/" + fileR;
+            if (!stsR.isEmpty() && !stsR.startsWith("/"))
+                stsR = "/" + dirName + "/" + stsR;
+
+            if (name.isEmpty() && urlR.isEmpty())
                 return;
 
             auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
@@ -16473,7 +16486,7 @@ void MainWindow::loadWebExtensinList()
             }
 
             // 配置
-            if (!sts.isEmpty())
+            if (!stsR.isEmpty())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/generate"), widget);
                 layout->addWidget(btn);
@@ -16485,7 +16498,7 @@ void MainWindow::loadWebExtensinList()
                 connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
                 connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                    QDesktopServices::openUrl(getDomainPort() + sts);
+                    QDesktopServices::openUrl(getDomainPort() + stsR);
                 });
             }
 

@@ -2,20 +2,20 @@
 	"list": [
 		{
 			"name": "弹幕点歌列表",
-			"url": "/music/index.html",
-			"css": "/music/list.css",
+			"url": "index.html",
+			"css": "list.css",
 			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除"
 		},
 		{
 			"name": "当前歌曲名字",
-			"url": "/music/playing.html",
-			"css": "/music/playing.css",
+			"url": "playing.html",
+			"css": "playing.css",
 			"desc": "点歌姬正在播放的歌曲的名字"
 		},
 		{
 			"name": "当前歌曲歌词",
-			"url": "/music/lyric.html",
-			"css": "/music/lyrics.css",
+			"url": "lyric.html",
+			"css": "lyrics.css",
 			"desc": "点歌姬正在播放的歌曲的歌词"
 		}
 	]

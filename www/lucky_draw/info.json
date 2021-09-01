@@ -2,11 +2,11 @@
 	"list": [
 		{
 			"name": "转盘抽奖",
-			"url": "/lucky_draw/index.html",
-			"css": "/lucky_draw/index.css",
+			"url": "index.html",
+			"css": "index.css",
             "desc": "九宫格转盘抽奖",
-            "dir": "/lucky_draw/img",
-            "config": "/lucky_draw/config.html",
+            "dir": "img",
+            "config": "config.html",
 			"code": [
 				{
 					"action": "/// 经过特定条件的发送抽奖消息\n>sendToSockets(LUCKY_DRAW, {\"cmd\": \"START\", \"uid\": %uid%, \"uname\": \"%uname%\", \"weight\": 0})\n// 手动发送测试数据\n[%uid% == 0]***>sendToSockets(LUCKY_DRAW, {\"cmd\": \"START\", \"uid\": 123456, \"uname\": \"测试用户\"})",
