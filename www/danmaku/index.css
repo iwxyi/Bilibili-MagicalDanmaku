@@ -1,0 +1,71 @@
+.msg_line {
+    display        : -webkit-flex;
+    display        : flex;
+    flex-flow      : row nowrap;
+    justify-content: flex-start;
+    align-items    : flex-start;
+
+    margin-bottom: 10px;
+
+    animation: fadeIn ease-out 0.5s;
+}
+
+.msg_line_avatar {
+    flex : 0 0 auto;
+    order: 0;
+
+    margin-right: 20px;
+}
+
+.msg_line_bubble {
+    flex : 0 1 auto;
+    order: 0;
+
+    background-color: #F0F8FF;
+    border-radius   : 7px;
+}
+
+.msg_line_avatar_img {
+    width        : 36px;
+    height       : 36px;
+    border-radius: 50%;
+}
+
+.msg_line_bubble_arrow {
+    height      : 0;
+    width       : 0;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent #F0F8FF transparent transparent;
+    position    : relative;
+    left        : -16px;
+    top         : 8px;
+}
+
+.msg_line_bubble_content {
+    padding       : 5px;
+    padding-bottom: 7px;
+    margin-top    : -16px;
+    position      : inherit;
+}
+
+
+@keyframes fadeIn {
+    0% {
+        margin-top: 50px;
+    }
+
+    100% {
+        margin-top: 0px;
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        margin-top: 0px;
+    }
+
+    100% {
+        margin-top: -50px;
+    }
+}

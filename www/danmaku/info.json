@@ -1,0 +1,10 @@
+{
+	"list": [
+		{
+			"name": "弹幕:气泡",
+			"url": "index.html",
+			"css": "index.css",
+			"desc": "弹幕信息"
+		}
+	]
+}
