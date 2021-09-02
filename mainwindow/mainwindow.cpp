@@ -16503,6 +16503,25 @@ void MainWindow::loadWebExtensinList()
                 });
             }
 
+            // 导入代码
+            if (inf.contains("code") && code.isArray())
+            {
+                auto btn = new WaterCircleButton(QIcon(":/icons/code"), widget);
+                layout->addWidget(btn);
+                btn->setSquareSize();
+                btn->setCursor(Qt::PointingHandCursor);
+                btn->setFixedForePos();
+                btn->setToolTip("一键导入要用到的代码\n如果已经存在，可能会重新导入");
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                    qInfo() << "导入网页小程序代码";
+                    QApplication::clipboard()->setText(QJsonDocument(code.toArray()).toJson());
+                    on_actionPaste_Code_triggered();
+                });
+            }
+
             // 编辑CSS
             if (!cssR.isEmpty())
             {
@@ -16526,25 +16545,6 @@ void MainWindow::loadWebExtensinList()
                     if (!ok)
                         return ;
                     writeTextFile(path, content);
-                });
-            }
-
-            // 导入代码
-            if (inf.contains("code") && code.isArray())
-            {
-                auto btn = new WaterCircleButton(QIcon(":/icons/code"), widget);
-                layout->addWidget(btn);
-                btn->setSquareSize();
-                btn->setCursor(Qt::PointingHandCursor);
-                btn->setFixedForePos();
-                btn->setToolTip("一键导入CSS样式\n如果已经存在，可能会重新导入");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                    qInfo() << "导入网页小程序代码";
-                    QApplication::clipboard()->setText(QJsonDocument(code.toArray()).toJson());
-                    on_actionPaste_Code_triggered();
                 });
             }
 

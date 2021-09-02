@@ -106,6 +106,10 @@ void QSSHighlighter::highlightBlock(const QString &text)
                     && c.green() == escapeColor.green()
                     && c.blue() == escapeColor.blue())
                 c = Qt::black;
+            if (c.alpha() <= 16)
+            {
+                c.setAlpha(255);
+            }
             QTextCharFormat f0 = this->format(match.capturedEnd());
 
             QTextCharFormat f;

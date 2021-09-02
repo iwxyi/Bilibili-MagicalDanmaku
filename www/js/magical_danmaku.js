@@ -24,10 +24,11 @@ $(document).ready(function () {
         var json = JSON.parse(e.data);
         try {
             var cmd = json['cmd'];
+            var data = json['data'];
             if (cmd == 'GET_CONFIG') {
-                readConfig(json['data']); // !读取配置
+                readConfig(data); // !读取配置
             } else {
-                parseCmd(cmd, json); // !解析弹幕
+                parseCmd(cmd, data); // !解析弹幕
             }
         } catch (err) {
             // console.log(err);
@@ -36,6 +37,6 @@ $(document).ready(function () {
 });
 
 function saveConfig(key, value) {
-    console.log(key, value);
+    console.log('setConfig', key, value);
     appWs.send('{"cmd": "SET_CONFIG", "group" : "' + configGroup + '", "data": {"' + key + '": ' + value + '}}');
 }

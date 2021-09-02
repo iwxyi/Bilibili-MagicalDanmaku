@@ -31,6 +31,10 @@ void MainWindow::openServer(int port)
 
 void MainWindow::openSocketServer()
 {
+    auto updateConnectCount = [=]{
+
+    };
+
     // 弹幕socket
     danmakuSocketServer = new QWebSocketServer("Danmaku", QWebSocketServer::NonSecureMode, this);
     if (danmakuSocketServer->listen(QHostAddress::Any, quint16(serverPort + DANMAKU_SERVER_PORT)))
@@ -40,6 +44,7 @@ void MainWindow::openSocketServer()
             QWebSocket* clientSocket = danmakuSocketServer->nextPendingConnection();
             qInfo() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
             danmakuSockets.append(clientSocket);
+            updateConnectCount();
 
             connect(clientSocket, &QWebSocket::connected, this, [=]{
                 // 一直都是连接状态，不会触发
@@ -74,6 +79,7 @@ void MainWindow::openSocketServer()
                     setFalseIfNone(sendCurrentSongToSockets, "CURRENT_SONG");
                 }
                 clientSocket->deleteLater();
+                updateConnectCount();
                 qInfo() << "danmaku socket 关闭" << danmakuSockets.size();
             });
 

@@ -1,6 +1,8 @@
 // 一些参数
 var msgCount = 3; // 最大同时显示3条弹幕
 var showTime = 10; // 弹幕最大持续时间：30秒
+var showUname = false; // 显示用户昵称
+var showBubble = true; // 显示气泡的背景
 
 usedMsgType = ["DANMU_MSG"];
 configGroup = 'danmu';
@@ -18,25 +20,30 @@ var removeTimer = setInterval(function () {
     }
 }, 1000);
 
-function socketInited() {
-    // 初始化一些弹幕
-    var timestamp = new Date().getTime() / 1000;
-    addMsgHtml(629184597, '神奇弹幕准备就绪！', timestamp);
-}
-
 function readConfig(data) {
+    if (typeof (data['showUname']) != undefined) {
+        showUname = data['showUname'];
+    }
+    if (typeof (data['showBubble']) != undefined) {
+        showBubble = data['showBubble'];
+    }
     if (typeof (data['msgCount']) != undefined) {
         msgCount = data['msgCount'];
     }
     if (typeof (data['showTime']) != undefined) {
         showTime = data['showTime'];
     }
+
+    // 初始化一些测试弹幕
+    var timestamp = new Date().getTime() / 1000;
+    addMsgHtml(629184597, '神奇弹幕', '准备就绪！', timestamp);
+    addMsgHtml(629184597, '神奇弹幕', '消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息', timestamp);
 }
 
-function parseCmd(cmd, json) {
+function parseCmd(cmd, data) {
     switch (cmd) {
         case 'DANMU_MSG':
-            parseDanmaku(json['data']);
+            parseDanmaku(data);
             break;
     }
 }
@@ -57,31 +64,51 @@ function parseDanmaku(data) {
     var uid = data['uid'];
     var guard_level = data['guard_level'];
     var medal_level = data['medal_level'];
+    var time = new Date().getTime();
 
     // 添加弹幕气泡
-    addMsgHtml(uid, text);
+    addMsgHtml(uid, nickname, text, time);
 }
 
 /**
  * 添加弹幕HTML
  */
-function addMsgHtml(uid, text, timestamp) {
+function addMsgHtml(uid, uname, text, timestamp) {
     danmakuTimes.push(timestamp);
-    var bubbleHtml = '<li>\
-            <div class="msg_line">\
-                <div class="msg_line_avatar">\
-                    <img src="http://__DOMAIN__:__PORT__/api/header?uid=' + uid + '"\
-                        class="header msg_line_avatar_img">\
-                </div>\
-                <div class="msg_line_bubble">\
-                    <div class="msg_line_bubble_arrow"></div>\
-                    <div class="msg_line_bubble_content">\
-                        <span>' + text + '</span>\
-                    </div>\
-                </div>\
-            </div>\
+
+    var avatarClass = 'msg_line_avatar';
+    var avatarImgClass = 'msg_line_avatar_img';
+    var bubbleHtml = '<div class="msg_line_bubble">\
+                            <div class="msg_line_bubble_arrow"></div>\
+                            <div class="msg_line_bubble_content">\
+                                <span class="msg_line_text">' + text + '</span>\
+                            </div>\
+                       </div>';
+    if (!showBubble) {
+        bubbleHtml = '<div class="msg_line_pure_text">\
+                    <span class="msg_line_text">' + text + '</span>\
+                </div>';
+        avatarClass = 'msg_line_avatar_small';
+        avatarImgClass = 'msg_line_avatar_img_small';
+    }
+    var unameHtml = '';
+    if (showUname) {
+        unameHtml = '<div class="msg_line_uname">\
+            ' + uname + '\
+                </div>';
+    }
+
+    var msgHtml = '<li>\
+        <div class="msg_line">\
+            <div class="'+ avatarClass + '">\
+                <img src="http://__DOMAIN__:__PORT__/api/header?uid=' + uid + '"\
+                    class="header ' + avatarImgClass + '">\
+            </div>'
+        + unameHtml
+        + bubbleHtml +
+        '</div>\
         </li>';
-    $("#list").append(bubbleHtml);
+    $("#list").append(msgHtml);
     /* $("ul li:last").click(function(){
         // 仅供测试，会导致时序混乱
         removeMsgHtml($(this));

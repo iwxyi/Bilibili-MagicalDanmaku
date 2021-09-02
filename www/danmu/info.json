@@ -1,7 +1,7 @@
 {
 	"list": [
 		{
-			"name": "弹幕:气泡",
+			"name": "实时弹幕",
             "url": "index.html",
             "config": "config.html",
 			"css": "index.css",
