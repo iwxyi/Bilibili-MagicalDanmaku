@@ -37,7 +37,6 @@ function readConfig(data) {
     // 初始化一些测试弹幕
     var timestamp = new Date().getTime() / 1000;
     addMsgHtml(629184597, '神奇弹幕', '准备就绪！', timestamp);
-    addMsgHtml(629184597, '神奇弹幕', '消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息消息', timestamp);
 }
 
 function parseCmd(cmd, data) {

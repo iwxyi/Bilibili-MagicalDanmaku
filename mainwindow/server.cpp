@@ -32,7 +32,7 @@ void MainWindow::openServer(int port)
 void MainWindow::openSocketServer()
 {
     auto updateConnectCount = [=]{
-
+        ui->existExtensionsLabel->setToolTip("当前已连接的页面数：" + snum(danmakuSockets.size()));
     };
 
     // 弹幕socket
