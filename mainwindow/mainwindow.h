@@ -999,6 +999,7 @@ private:
     Ui::MainWindow *ui;
     QSettings* settings;
     QSettings* heaps;
+    QSettings* extSettings;
     QString dataPath;
     QString appVersion; // 不带v
     QString appNewVersion;

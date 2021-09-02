@@ -108,7 +108,7 @@ const start = () => {
         console.log('没有可用于抽奖的用户，使用测试用户');
         currentUser = new UserInfo(123455, '测试用户');
     } else {
-        currentUser = userQueue.pop();
+        currentUser = userQueue.shift();
     }
 
     resultRand = getRandomResult();

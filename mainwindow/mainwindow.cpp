@@ -528,6 +528,7 @@ void MainWindow::readConfig()
 
     settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
     heaps = new QSettings(dataPath + "heaps.ini", QSettings::Format::IniFormat);
+    extSettings = new QSettings(dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(dataPath + "www");
 

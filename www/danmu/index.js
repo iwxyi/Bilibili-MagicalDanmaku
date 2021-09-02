@@ -1,6 +1,9 @@
 // 一些参数
-var DanmakuMaxCount = 3; // 最大同时显示3条弹幕
-var DanmakuShowTime = 10; // 弹幕最大持续时间：30秒
+var msgCount = 3; // 最大同时显示3条弹幕
+var showTime = 10; // 弹幕最大持续时间：30秒
+
+usedMsgType = ["DANMU_MSG"];
+configGroup = 'danmu';
 
 // 全局变量
 var removing = false;
@@ -10,33 +13,36 @@ var removeTimer = setInterval(function () {
         return;
     }
     var timestamp = new Date().getTime() / 1000;
-    if (timestamp - danmakuTimes[0] >= DanmakuShowTime) {
+    if (timestamp - danmakuTimes[0] >= showTime) {
         removeMsgHtml($("ul li:first"));
     }
 }, 1000);
 
-$(document).ready(function () {
-    var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
-    ws.onopen = function () {
-        ws.send('{"cmd": "cmds", "data": ["DANMU_MSG"]}');
+function socketInited() {
+    // 初始化一些弹幕
+    var timestamp = new Date().getTime() / 1000;
+    addMsgHtml(629184597, '神奇弹幕准备就绪！', timestamp);
+}
 
-        var timestamp = new Date().getTime() / 1000;
-        addMsgHtml(629184597, '神奇弹幕准备就绪！', timestamp);
-    };
-    ws.onmessage = function (e) {
-        // console.log(e.data);
-        var json = JSON.parse(e.data);
-        var cmd = json['cmd'];
-        switch (cmd) {
-            case 'DANMU_MSG':
-                parseDanmaku(json['data']);
-                break;
-        }
-    };
-});
+function readConfig(data) {
+    if (typeof (data['msgCount']) != undefined) {
+        msgCount = data['msgCount'];
+    }
+    if (typeof (data['showTime']) != undefined) {
+        showTime = data['showTime'];
+    }
+}
+
+function parseCmd(cmd, json) {
+    switch (cmd) {
+        case 'DANMU_MSG':
+            parseDanmaku(json['data']);
+            break;
+    }
+}
 
 function parseDanmaku(data) {
-    const maxCount = DanmakuMaxCount;
+    const maxCount = msgCount;
     var len = $("#list li").length;
     // console.log("数量：", len);
     if (len >= maxCount) { // 超过了数量

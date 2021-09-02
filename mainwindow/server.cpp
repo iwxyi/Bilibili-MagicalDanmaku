@@ -151,24 +151,46 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
     {
         // "data": { "key1":123, "key2": "string" }
         QJsonObject data = json.value("data").toObject();
+        QString group = json.value("group").toString();
+        if (!group.isEmpty())
+            extSettings->beginGroup(group);
         foreach (auto key, data.keys())
         {
             auto v = data.value(key).toVariant();
-            settings->setValue("webapps/" + key, v);
+            extSettings->setValue(key, v);
             qInfo() << "保存配置：" << key << v;
         }
+        if (!group.isEmpty())
+            extSettings->endGroup();
     }
     else if (cmd == "GET_CONFIG")
     {
         // "data": ["key1", "key2", ...]
         QJsonArray arr = json.value("data").toArray();
         QJsonObject rst;
-        foreach (QJsonValue val, arr)
+        QString group = json.value("group").toString();
+        if (!group.isEmpty())
+            extSettings->beginGroup(group);
+        if (arr.size()) // 返回指定配置
         {
-            QString key = val.toString();
-            auto v = QJsonValue::fromVariant(settings->value("webapps/" + key));
-            rst.insert(key, v);
+            foreach (QJsonValue val, arr)
+            {
+                QString key = val.toString();
+                auto v = QJsonValue::fromVariant(extSettings->value(key));
+                rst.insert(key, v);
+            }
         }
+        else // 返回所有配置
+        {
+            auto keys = extSettings->allKeys();
+            foreach (auto key, keys)
+            {
+                auto v = QJsonValue::fromVariant(extSettings->value(key));
+                rst.insert(key, v);
+            }
+        }
+        if (!group.isEmpty())
+            extSettings->endGroup();
         qInfo() << "返回配置：" << rst;
         sendJsonToSockets("GET_CONFIG", rst, clientSocket);
     }

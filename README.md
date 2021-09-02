@@ -2550,13 +2550,14 @@ ws.onmessage = function(e) {
 
 简单使用可选择 localStorage，但不容易跨设备传输与自动备份。
 
-用户在网页程序中自定义配置，永久保存。使用相应的 cmd 实现功能，无需“解锁安全限制”。
+用户在网页程序中自定义配置，永久保存在安装路径下的 `ext_settings.ini` 中。使用相应的 cmd 实现功能，无需“解锁安全限制”。
 
 - `SET_CONFIG`：在网页中发送该cmd的json，将会保存配置
 
   ```json
   {
       "cmd": "SET_CONFIG",
+      "group": "test",
       "data": {
           "key1": 123,
           "key2": "某个值",
@@ -2573,12 +2574,15 @@ ws.onmessage = function(e) {
   ```json
   {
       "cmd": "GET_CONFIG",
+      "group": "test",
       "data": ["key1", "key2", "key3", "key4", "key5"]
   }
-  ```
-
-  以上面的配置为例，可能会返回 JSON：
-
+```
+  
+可以不加入 `data` 或留空 `"data": []`，会返回该 `prefix` 下的所有配置。
+  
+  以上面的`SET_CONFIG`为例，可能会返回 JSON：
+  
   ```json
   {
       "cmd": "GET_CONFIG",
@@ -2591,6 +2595,8 @@ ws.onmessage = function(e) {
       }
   }
   ```
+
+
 
 
 
