@@ -8863,6 +8863,62 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 模拟鼠标点击
+    if (msg.contains("simulateClick"))
+    {
+        re = RE("simulateClick\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            simulateClick();
+            return true;
+        }
+
+        // 点击绝对位置
+        re = RE("simulateClick\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            unsigned long x = caps.at(1).toLong();
+            unsigned long y = caps.at(2).toLong();
+            qInfo() << "执行命令：" << caps;
+            moveMouseTo(x, y);
+            simulateClick();
+            return true;
+        }
+    }
+
+    // 移动鼠标（相对现在位置）
+    if (msg.contains("moveMouse"))
+    {
+        re = RE("moveMouse\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            unsigned long dx = caps.at(1).toLong();
+            unsigned long dy = caps.at(2).toLong();
+            qInfo() << "执行命令：" << caps;
+            moveMouse(dx, dy);
+            return true;
+        }
+    }
+
+    // 移动鼠标到绝对位置
+    if (msg.contains("moveMouseTo"))
+    {
+        re = RE("moveMouseTo\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            unsigned long dx = caps.at(1).toLong();
+            unsigned long dy = caps.at(2).toLong();
+            qInfo() << "执行命令：" << caps;
+            moveMouseTo(dx, dy);
+            return true;
+        }
+    }
+
     // 执行脚本
     if (msg.contains("execScript"))
     {
@@ -9092,6 +9148,41 @@ void MainWindow::simulateKeys(QString seq)
 
     for (int i = 0; i < keySeq.size(); i++)
         keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+#endif
+}
+
+/// 模拟鼠标点击（当前位置）
+/// 参考资料：https://blog.csdn.net/qq_34106574/article/details/89639503
+void MainWindow::simulateClick()
+{
+    // mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo)
+#ifdef Q_OS_WIN
+    mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+#else
+    qWarning() << "不支持模拟鼠标点击";
+#endif
+}
+
+/// 移动鼠标位置
+void MainWindow::moveMouse(unsigned long dx, unsigned long dy)
+{
+#ifdef Q_OS_WIN
+    mouse_event(MOUSEEVENTF_MOVE, dx, dy, 0, 0);
+#else
+    qWarning() << "不支持模拟鼠标点击";
+#endif
+}
+
+/// 移动鼠标位置
+void MainWindow::moveMouseTo(unsigned long tx, unsigned long ty)
+{
+#ifdef Q_OS_WIN
+    QPoint pos = QCursor::pos();
+    qInfo() << "鼠标移动距离：" << QPoint(tx, ty) << pos << QPoint(tx - pos.x(), ty - pos.y());
+    mouse_event(MOUSEEVENTF_MOVE, tx - pos.x(), ty - pos.y(), 0, 0); // 这个计算出来的位置不对啊！
+    // SetCursorPos(tx, ty); // 这个必须要在本程序窗口的区域内才有效
+#else
+    qWarning() << "不支持模拟鼠标点击";
 #endif
 }
 

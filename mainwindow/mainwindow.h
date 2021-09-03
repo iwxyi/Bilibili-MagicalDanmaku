@@ -889,6 +889,9 @@ private:
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
     void simulateKeys(QString seq);
+    void simulateClick();
+    void moveMouse(unsigned long x, unsigned long dy);
+    void moveMouseTo(unsigned long tx, unsigned long ty);
     QStringList splitLongDanmu(QString text) const;
     void sendLongText(QString text);
 

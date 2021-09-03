@@ -1330,6 +1330,10 @@ tips：
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
 | simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
+| simulateClick()                                    | 模拟单击         | 模拟鼠标点击                                                 |
+| simulateClick(x, y)                                | 模拟单击         | 移动到指定x,y点（同下，位置不准确！），再模拟单击            |
+| moveMouseTo(x, y)                                  | 移动鼠标至       | 移动鼠标到指定x,y点（不知道为啥，这个位置不准确！）          |
+| moveMouse(dx, dy)                                  | 移动鼠标         | 移动鼠标，相对于现在的位置差                                 |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |
 | copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |
 | setRoomTitle                                       | 设置直播标题     | 主播设置直播间的大标题                                       |
@@ -2577,6 +2581,7 @@ ws.onmessage = function(e) {
       "group": "test",
       "data": ["key1", "key2", "key3", "key4", "key5"]
   }
+  ```
 ```
   
 可以不加入 `data` 或留空 `"data": []`，会返回该 `prefix` 下的所有配置。
@@ -2594,7 +2599,7 @@ ws.onmessage = function(e) {
           "key5": null
       }
   }
-  ```
+```
 
 
 

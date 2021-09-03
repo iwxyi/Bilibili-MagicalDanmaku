@@ -1,3 +1,13 @@
+### v4.3.1 [实时弹幕](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.1)
+
+- 新增支持添加实时弹幕到直播姬/OBS
+- 新增扩展的开发 API
+- 优化网页程序的交互细节
+
+
+
+
+
 ### v4.3.0 [网页扩展、大乱斗信息](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.0)
 
 - 新增已安装的网页扩展的列表
