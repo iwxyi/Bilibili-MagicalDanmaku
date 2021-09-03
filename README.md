@@ -1331,8 +1331,8 @@ tips：
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
 | simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
 | simulateClick()                                    | 模拟单击         | 模拟鼠标点击                                                 |
-| simulateClick(x, y)                                | 模拟单击         | 移动到指定x,y点（同下，位置不准确！），再模拟单击            |
-| moveMouseTo(x, y)                                  | 移动鼠标至       | 移动鼠标到指定x,y点（不知道为啥，这个位置不准确！）          |
+| simulateClick(x, y)                                | 模拟单击         | 移动到指定x,y点，再模拟单击                                  |
+| moveMouseTo(x, y)                                  | 移动鼠标至       | 移动鼠标到指定x,y点                                          |
 | moveMouse(dx, dy)                                  | 移动鼠标         | 移动鼠标，相对于现在的位置差                                 |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |
 | copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |

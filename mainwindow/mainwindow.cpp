@@ -9177,10 +9177,10 @@ void MainWindow::moveMouse(unsigned long dx, unsigned long dy)
 void MainWindow::moveMouseTo(unsigned long tx, unsigned long ty)
 {
 #ifdef Q_OS_WIN
-    QPoint pos = QCursor::pos();
-    qInfo() << "鼠标移动距离：" << QPoint(tx, ty) << pos << QPoint(tx - pos.x(), ty - pos.y());
-    mouse_event(MOUSEEVENTF_MOVE, tx - pos.x(), ty - pos.y(), 0, 0); // 这个计算出来的位置不对啊！
-    // SetCursorPos(tx, ty); // 这个必须要在本程序窗口的区域内才有效
+    // QPoint pos = QCursor::pos();
+    // qInfo() << "鼠标移动距离：" << QPoint(tx, ty) << pos << QPoint(tx - pos.x(), ty - pos.y());
+    // mouse_event(MOUSEEVENTF_MOVE, tx - pos.x(), ty - pos.y(), 0, 0); // 这个计算出来的位置不对啊！
+    SetCursorPos(tx, ty); // 这个必须要在本程序窗口的区域内才有效
 #else
     qWarning() << "不支持模拟鼠标点击";
 #endif
