@@ -764,9 +764,9 @@ void MainWindow::downloadNewPackage(QString version, QString packageUrl)
         return ;
     qInfo() << "下载：" << version << packageUrl;
 #ifdef Q_OS_WIN
+    QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
     QProcess process(this);
-    QStringList list;
-    list << packageUrl << "update.zip";
+    QStringList list{ "-d", packageUrl, pkgPath};
     if (process.startDetached("UpUpTool.exe", list))
     {
         qInfo() << "调用更新程序下载成功";

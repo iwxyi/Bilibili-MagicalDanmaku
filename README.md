@@ -2195,6 +2195,8 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 >setValue(pk_win, 0)
 ```
 
+> V4.2.0 支持连胜事件 `PK_WINNING_STREAK` 了，`%number%` 直接获取到连胜数量
+
 
 
 ##### 示例：对面在线舰长播报

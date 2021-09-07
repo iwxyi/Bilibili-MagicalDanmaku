@@ -1693,15 +1693,6 @@ MainWindow::~MainWindow()
 
     delete ui;
 
-    // 自动更新
-    if (isFileExist(QApplication::applicationDirPath() + "/download/update.zip"))
-    {
-        // 更新历史版本
-        qInfo() << "检测到已下载的安装包，进行更新";
-        QProcess process;
-        process.startDetached("UpUpTool.exe");
-    }
-
     // 删除缓存
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
@@ -1716,6 +1707,17 @@ MainWindow::~MainWindow()
             qInfo() << "删除备份：" << info.absoluteFilePath();
             deleteFile(info.absoluteFilePath());
         }
+    }
+
+    // 自动更新
+    if (isFileExist(QApplication::applicationDirPath() + "/update.zip"))
+    {
+        // 更新历史版本
+        qInfo() << "检测到已下载的安装包，进行更新";
+        QString appPath = QApplication::applicationDirPath();
+        QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
+        QProcess process;
+        process.startDetached("UpUpTool.exe", { "-u", pkgPath, appPath, "-d", "-5"} );
     }
 }
 
@@ -2618,6 +2620,10 @@ void MainWindow::on_testDanmakuButton_clicked()
             sendXliveHeartBeatE();
         else
             sendXliveHeartBeatX();
+    }
+    else if (text == "测试对面信息")
+    {
+        getPkMatchInfo();
     }
     else
     {
@@ -12959,9 +12965,10 @@ void MainWindow::getPkMatchInfo()
         // 计算高能榜综合
         qint64 sum = 0;
         data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
-            sum += usr.l("score");
+            sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
         });
-        danmaku.setTotalCoin(sum);
+        danmaku.setTotalCoin(sum); // 高能榜总积分
+        danmaku.setNumber(data.o("online_gold_rank_info_v2").a("list").size()); // 高能榜总人数
         // qDebug() << "对面高能榜积分总和：" << sum;
         // qDebug() << data.o("online_gold_rank_info_v2");
         triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
@@ -14059,6 +14066,7 @@ void MainWindow::pkPre(QJsonObject json)
         "roomid": 22532956
     }*/
 
+    // 大乱斗信息
     QJsonObject data = json.value("data").toObject();
     QString uname = data.value("uname").toString();
     QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
@@ -14067,7 +14075,16 @@ void MainWindow::pkPre(QJsonObject json)
     pkRoomId = room_id;
     pkUid = uid;
 
-    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble());
+    // 大乱斗类型
+    int battle_type = data.value("battle_type").toInt();
+    if (battle_type == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (battle_type == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
+
+    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble())  << "    类型：" << battle_type;
     if (danmakuWindow)
     {
         if (uname.isEmpty())
@@ -14139,8 +14156,8 @@ void MainWindow::pkStart(QJsonObject json)
     if (pkVideo)
     {
         pkToLive = currentTime;
-        qInfo() << "开始视频大乱斗";
     }
+    // qInfo() << "大乱斗类型：" << battle_type;
 
     // 结束后
     QTimer::singleShot(deltaEnd, [=]{
