@@ -4662,10 +4662,12 @@ void MainWindow::getUpFace(QString faceUrl)
         upFace.fill(Qt::transparent);
         QPainter painter(&upFace);
         painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+        painter.save();
         QPainterPath path;
         path.addEllipse(0, 0, side, side);
         painter.setClipPath(path);
         painter.drawPixmap(0, 0, side, side, pixmap);
+        painter.restore();
 
         // 设置到窗口图标
         QPixmap face = isLiving() ? getLivingPixmap(upFace) : upFace;
@@ -4675,6 +4677,9 @@ void MainWindow::getUpFace(QString faceUrl)
         // 设置到UP头像
         face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         ui->upHeaderLabel->setPixmap(face);
+
+        // 恢复原先尺寸的头像
+        painter.drawPixmap(0, 0, pixmap);
     });
 }
 
@@ -12969,8 +12974,8 @@ void MainWindow::getPkMatchInfo()
         });
         danmaku.setTotalCoin(sum); // 高能榜总积分
         danmaku.setNumber(data.o("online_gold_rank_info_v2").a("list").size()); // 高能榜总人数
-        // qDebug() << "对面高能榜积分总和：" << sum;
-        // qDebug() << data.o("online_gold_rank_info_v2");
+        qInfo() << "对面高能榜积分总和：" << sum;
+        // qDebug() << data.o("online_gold_rank_info_v2").a("list");
         triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
     });
 }
