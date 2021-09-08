@@ -698,7 +698,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         }
 
         // 醒目留言
-        if (msgType == MSG_SUPER_CHAT)
+        if (msgType == MSG_SUPER_CHAT && !simpleMode)
         {
             int coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
@@ -717,7 +717,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (danmaku.getNumber() > 1)
             text += "×" + snum(danmaku.getNumber());
         text += "</center>";
-        if (danmaku.isGoldCoin())
+        if (danmaku.isGoldCoin() && !simpleMode)
         {
             int coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";

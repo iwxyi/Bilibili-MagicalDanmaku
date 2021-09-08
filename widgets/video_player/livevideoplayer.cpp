@@ -91,11 +91,9 @@ LiveVideoPlayer::LiveVideoPlayer(QSettings *settings, QString dataPath, QWidget 
             if (enablePrevCapture)
                 stopCapture(false);
         }
-        // qDebug() << "videoPlayer.stateChanged:" << state << QDateTime::currentDateTime();
     });
     connect(player, &QMediaPlayer::positionChanged, this, [=](qint64 position){
         // 直播的话，一般都是 position=0, duration=0
-        // qDebug() << "position changed:" << position << player->duration();
     });
 
     // 设置控件大小
@@ -163,12 +161,12 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
         QTimer::singleShot(2000, [=]{
             if (player->state() != QMediaPlayer::PlayingState)
             {
-                qDebug() << "尝试重连2...";
+                qInfo() << "尝试重连2...";
                 refreshPlayUrl();
                 QTimer::singleShot(3000, [=]{
                     if (player->state() != QMediaPlayer::PlayingState)
                     {
-                        qDebug() << "尝试重连3...";
+                        qInfo() << "尝试重连3...";
                         refreshPlayUrl();
                     }
                 });
@@ -204,13 +202,13 @@ void LiveVideoPlayer::refreshPlayUrl()
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qWarning() << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << ("返回结果不为0：") << json.value("message").toString();
+            qWarning() << ("返回结果不为0：") << json.value("message").toString();
             return ;
         }
 
@@ -222,7 +220,7 @@ void LiveVideoPlayer::refreshPlayUrl()
             return ;
         }
         QString url = array.first().toObject().value("url").toString(); // 第一个链接
-        qDebug() << "playUrl:" << url;
+        qInfo() << "playUrl:" << url;
         setPlayUrl(url);
     });
     manager->get(*request);
@@ -648,7 +646,6 @@ void LiveVideoPlayer::slotSaveCurrentCapture()
     this->render(pixmap, QPoint(0, 0), videoRect);
     if (!pixmap->isNull())
         capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pixmap));
-    // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
 
     while (capturePixmaps->size())
     {
@@ -668,7 +665,6 @@ void LiveVideoPlayer::slotSaveFrameCapture(const QPixmap &pixmap)
     QPixmap p = pixmap.copy(pixmap.rect());
     QPixmap* pp = new QPixmap(p);
     capturePixmaps->append(QPair<qint64, QPixmap*>(timestamp, pp));
-    // qDebug() << "预先截图" << videoRect << timestamp << capturePixmaps->size();
 
     while (capturePixmaps->size())
     {
@@ -774,11 +770,11 @@ void LiveVideoPlayer::saveCapture(int second)
                 cap.second->save(fileName + ".jpg", "jpg");
                 delete cap.second;
             }
-            qDebug() << "已保存" << (maxSize-start) << "张预先截图";
+            qInfo() << "已保存" << (maxSize-start) << "张预先截图";
             delete list;
         });
     } catch (...) {
-        qDebug() << "创建保存线程失败，请增加间隔（降低帧率）";
+        qWarning() << "创建保存线程失败，请增加间隔（降低帧率）";
     }
 }
 
