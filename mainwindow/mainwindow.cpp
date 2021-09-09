@@ -8802,7 +8802,11 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             QString name = caps.at(2);
             qInfo() << "执行命令：" << caps;
-            if (name.isEmpty()) // 移除
+            if (uid == 0)
+            {
+                showError("setNickname失败", "未找到UID:" + caps.at(1));
+            }
+            else if (name.isEmpty()) // 移除
             {
                 if (localNicknames.contains(uid))
                     localNicknames.remove(uid);
