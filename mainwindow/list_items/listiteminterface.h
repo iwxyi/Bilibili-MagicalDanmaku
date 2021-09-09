@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QCheckBox>
+#include <QTimer>
 #include "myjson.h"
 #include "interactivebuttonbase.h"
 #include "custompaintwidget.h"
@@ -41,6 +42,8 @@ public:
 
     bool matchId(QString s) const;
 
+    virtual void triggered();
+
 signals:
     void signalResized();
 
@@ -54,6 +57,7 @@ protected:
 public:
     QCheckBox* check;
     InteractiveButtonBase* btn;
+    static QColor triggerColor;
 
 protected:
     CustomPaintWidget* _bgLabel;
@@ -63,6 +67,9 @@ protected:
 private:
     int _row;
     int _cardMargin = 9;
+    bool _triggering = false;
+    QTimer* _triggerTimer = nullptr;
+
 };
 
 #endif // LISTITEMINTERFACE_H

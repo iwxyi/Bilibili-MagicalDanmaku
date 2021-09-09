@@ -25,6 +25,7 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
 
     auto sendMsgs = [=](bool manual){
         emit signalSendMsgs(edit->toPlainText(), manual);
+        triggered();
     };
 
     connect(check, &QCheckBox::stateChanged, this, [=](int){
@@ -38,6 +39,7 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     connect(spin, SIGNAL(valueChanged(int)), this, SLOT(slotSpinChanged(int)));
 
     connect(timer, &QTimer::timeout, this, [=]{
+        qInfo() << "触发定时任务：" << spin->value() << "秒";
         sendMsgs(false);
     });
 
@@ -101,4 +103,5 @@ void TaskWidget::autoResizeEdit()
 void TaskWidget::triggerAction(LiveDanmaku)
 {
     emit signalSendMsgs(edit->toPlainText(), false);
+    triggered();
 }

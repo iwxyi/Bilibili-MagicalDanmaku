@@ -93,9 +93,10 @@ void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
         return ;
 
     // 开始发送
-    qDebug() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
+    qInfo() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
     danmaku.setArgs(match.capturedTexts());
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
+    triggered();
 }
 
 void ReplyWidget::autoResizeEdit()
@@ -114,6 +115,7 @@ void ReplyWidget::autoResizeEdit()
 void ReplyWidget::triggerAction(LiveDanmaku danmaku)
 {
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
+    triggered();
 }
 
 /**
@@ -134,7 +136,7 @@ void ReplyWidget::triggerIfMatch(QString msg, LiveDanmaku danmaku)
         return ;
 
     // 开始发送
-    qDebug() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
+    qInfo() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
     danmaku.setArgs(match.capturedTexts());
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
 }

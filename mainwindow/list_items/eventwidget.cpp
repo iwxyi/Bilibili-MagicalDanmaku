@@ -75,13 +75,15 @@ void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     if (!check->isChecked() || cmdKey != cmd)
         return ;
-    qDebug() << "响应事件：" << cmd;
+    qInfo() << "响应事件：" << cmd;
     emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
+    triggered();
 }
 
 void EventWidget::triggerAction(LiveDanmaku danmaku)
 {
     emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
+    triggered();
 }
 
 void EventWidget::autoResizeEdit()

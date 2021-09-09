@@ -4448,6 +4448,7 @@ void MainWindow::setRoomThemeByCover(double val)
     themeFg = fg;
     themeSbg = sbg;
     themeSfg = sfg;
+    ListItemInterface::triggerColor = sbg;
 
     QPalette pa;
     pa.setColor(QPalette::Window, bg);

@@ -1,6 +1,8 @@
 #include <QRegularExpression>
 #include "listiteminterface.h"
 
+QColor ListItemInterface::triggerColor = QColor(245, 245, 245);
+
 ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
 {
     _bgLabel = new CustomPaintWidget(this);
@@ -41,6 +43,18 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
         } */
         painter->setRenderHint(QPainter::Antialiasing);
         painter->fillPath(path, Qt::white);
+        if (_triggering)
+        {
+            painter->setPen(QPen(triggerColor, 2));
+            painter->drawPath(path);
+        }
+    });
+
+    _triggerTimer = new QTimer(this);
+    _triggerTimer->setInterval(500);
+    connect(_triggerTimer, &QTimer::timeout, this, [=]{
+        _triggering = false;
+        update();
     });
 }
 
@@ -58,6 +72,13 @@ bool ListItemInterface::matchId(QString s) const
 {
     QString body = this->body();
     return body.indexOf(QRegularExpression("^\\s*//+\\s*" + s + "\\s*($|\n)")) > -1;
+}
+
+void ListItemInterface::triggered()
+{
+    _triggering = true;
+    update();
+    _triggerTimer->start();
 }
 
 void ListItemInterface::resizeEvent(QResizeEvent *event)
