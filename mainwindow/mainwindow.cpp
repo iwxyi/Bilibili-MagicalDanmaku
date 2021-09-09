@@ -535,6 +535,17 @@ void MainWindow::readConfig()
     robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(dataPath + "www");
 
+    // extSettings->setValue("testStr", "true");
+    // extSettings->setValue("testBool", true);
+    // extSettings->sync();
+    // delete extSettings;
+    // extSettings = new QSettings(dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
+    /* auto vStr = extSettings->value("testStr");
+    auto vBool = extSettings->value("testBool");
+    qDebug("Str Type is %s", vStr.typeName());
+    qDebug("Bool Type is %s", vBool.typeName());
+    qDebug() << vStr << vBool; */
+
     appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (appVersion.startsWith("v") || appVersion.startsWith("V"))
             appVersion.replace(0, 1, "");

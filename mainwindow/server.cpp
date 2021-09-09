@@ -42,7 +42,7 @@ void MainWindow::openSocketServer()
         qInfo() << "开启 Socket 服务" << serverPort + DANMAKU_SERVER_PORT;
         connect(danmakuSocketServer, &QWebSocketServer::newConnection, this, [=]{
             QWebSocket* clientSocket = danmakuSocketServer->nextPendingConnection();
-            qInfo() << "danmaku socket 接入" << clientSocket->peerName() << clientSocket->peerAddress() << clientSocket->peerPort();
+            qInfo() << "danmaku socket 接入" << danmakuSockets.size() << clientSocket->peerAddress() << clientSocket->peerPort() << clientSocket->peerName();
             danmakuSockets.append(clientSocket);
             updateConnectCount();
 
@@ -163,8 +163,9 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         foreach (auto key, data.keys())
         {
             auto v = data.value(key).toVariant();
-            extSettings->setValue(key, v);
-            qInfo() << "保存配置：" << key << v;
+            // extSettings->setValue(key, v); // 存的是QVariant->string/int/bool...
+            extSettings->setValue(key, data.value(key)); // QJsonValue
+            qInfo() << "保存配置：" << key << v << extSettings->value(key).toJsonValue();
         }
         if (!group.isEmpty())
             extSettings->endGroup();
@@ -182,7 +183,8 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             foreach (QJsonValue val, arr)
             {
                 QString key = val.toString();
-                auto v = QJsonValue::fromVariant(extSettings->value(key));
+                // auto v = QJsonValue::fromVariant(extSettings->value(key));
+                auto v = extSettings->value(key).toJsonValue(); // QJsonValue
                 rst.insert(key, v);
             }
         }
@@ -191,8 +193,10 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
             auto keys = extSettings->allKeys();
             foreach (auto key, keys)
             {
-                auto v = QJsonValue::fromVariant(extSettings->value(key));
+                // auto v = QJsonValue::fromVariant(extSettings->value(key)); // QVariant->string
+                auto v = extSettings->value(key).toJsonValue(); // QJsonValue
                 rst.insert(key, v);
+                // qDebug() << "读取配置：" << key << extSettings->value(key).toJsonValue() << extSettings->value(key) << extSettings->value(key).typeName();
             }
         }
         if (!group.isEmpty())
