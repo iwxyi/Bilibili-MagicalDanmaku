@@ -116,14 +116,14 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     }
 
     // 字母数字键
-    else if ((key >= Qt::Key_A &&key <= Qt::Key_Z) || key == Qt::Key_Minus) // 变量
+    else if ((key >= Qt::Key_A &&key <= Qt::Key_Z) || key == Qt::Key_Minus) // 变量或函数
     {
         // 获取当前单词
         QRegularExpressionMatch match;
-        if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_4e00-\u9fa5]+)$"), 0, &match) == -1)
+        if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_\u4e00-\u9fa5]+?)$"), 0, &match) == -1)
             return ;
         QString word = match.captured(1);
-        // qInfo() << "当前单词：" << word << left;
+        // qInfo() << "当前单词：" << word << match;
 
         // 开始提示
         showCompleter(word);
@@ -220,10 +220,10 @@ void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
     // 获取当前单词
     QString left = toPlainText().left(textCursor().position());
     QRegularExpressionMatch match;
-    if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_4e00-\u9fa5]+)$"), 0, &match) == -1)
+    if (left.indexOf(QRegularExpression("((%>|%|>)[\\w_\u4e00-\u9fa5]+)$"), 0, &match) == -1)
         return ;
     QString word = match.captured(1);
-    // qInfo() << "当前单词：" << word;
+    // qInfo() << "当前判断的单词：" << word;
 
     // 开始提示
     showCompleter(word);
