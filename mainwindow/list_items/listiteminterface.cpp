@@ -45,13 +45,13 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
         painter->fillPath(path, Qt::white);
         if (_triggering)
         {
-            painter->setPen(QPen(triggerColor, 2));
+            painter->setPen(QPen(triggerColor, 4));
             painter->drawPath(path);
         }
     });
 
     _triggerTimer = new QTimer(this);
-    _triggerTimer->setInterval(500);
+    _triggerTimer->setInterval(200);
     connect(_triggerTimer, &QTimer::timeout, this, [=]{
         _triggering = false;
         update();

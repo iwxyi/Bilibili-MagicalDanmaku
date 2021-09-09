@@ -22,6 +22,7 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 
     auto sendMsgs = [=](bool manual){
         emit signalEventMsgs(actionEdit->toPlainText(), LiveDanmaku(), manual);
+        triggered();
     };
 
     connect(btn, &QPushButton::clicked, this, [=]{

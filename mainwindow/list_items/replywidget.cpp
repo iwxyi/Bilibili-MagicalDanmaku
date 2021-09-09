@@ -28,6 +28,7 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
 
     auto sendMsgs = [=](bool manual){
         emit signalReplyMsgs(replyEdit->toPlainText(), LiveDanmaku(), manual);
+        triggered();
     };
 
     connect(btn, &QPushButton::clicked, this, [=]{
