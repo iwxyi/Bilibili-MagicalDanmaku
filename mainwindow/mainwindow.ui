@@ -1541,8 +1541,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>787</width>
-             <height>504</height>
+             <width>100</width>
+             <height>30</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -8594,7 +8594,10 @@ font-weight: 500;</string>
      <normaloff>:/icons/condicate</normaloff>:/icons/condicate</iconset>
    </property>
    <property name="text">
-    <string>最后一次候选</string>
+    <string>检查变量</string>
+   </property>
+   <property name="toolTip">
+    <string>查看最近的变量值，排查问题</string>
    </property>
   </action>
   <action name="actionLocal_Mode">

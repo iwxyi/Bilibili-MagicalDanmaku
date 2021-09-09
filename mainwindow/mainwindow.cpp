@@ -342,6 +342,9 @@ void MainWindow::initView()
         newFacileMenu;
         menu->addAction(ui->actionCustom_Variant);
         menu->addAction(ui->actionReplace_Variant);
+        menu->split()->addAction(ui->actionLocal_Mode);
+        menu->addAction(ui->actionDebug_Mode);
+        menu->addAction(ui->actionLast_Candidate);
         menu->exec();
     });
 
@@ -5224,7 +5227,9 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
     // 替换变量，整理为一行一条执行序列
     plainText = processDanmakuVariants(plainText, danmaku);
     CALC_DEB << "处理变量之后：" << plainText;
-    lastConditionDanmu = plainText;
+    lastConditionDanmu.append(plainText);
+    if (lastConditionDanmu.size() > debugLastCount)
+        lastConditionDanmu.removeFirst();
 
     // 寻找条件为true的
     QStringList lines = plainText.split("\n", QString::SkipEmptyParts);
@@ -5277,7 +5282,9 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
         }
     }
     CALC_DEB << "condition result:" << result;
-    lastCandidateDanmaku = result.join("\n");
+    lastCandidateDanmaku.append(result.join("\n"));
+    if (lastCandidateDanmaku.size() > debugLastCount)
+        lastCandidateDanmaku.removeFirst();
 
     return result;
 }
@@ -6447,7 +6454,8 @@ bool MainWindow::processVariantConditions(QString exprs) const
             QString op = caps.at(2);
             QString s2 = caps.at(3);
             CALC_DEB << "比较：" << s1 << op << s2;
-            if (s1.contains(intRe) && s2.contains(intRe)) // 都是整数
+            if (s1.contains(intRe) && s2.contains(intRe) // 都是整数
+                    && QStringList{">", "<", "=", ">=", "<=", "==", "!="}.contains(op)) // 是这个运算符
                     // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
             {
                 qint64 i1 = calcIntExpression(s1);
@@ -6538,7 +6546,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
         qint64 ll = val.toLongLong(&ok);
         if (!ok)
         {
-            showError("转换整数值失败", val);
+            showError("转换整数值失败", exp);
             if (val.length() > 18) // 19位数字，超出了ll的范围
                 ll = val.right(18).toLongLong();
         }
@@ -18563,7 +18571,27 @@ void MainWindow::on_pkChuanmenCheck_stateChanged(int arg1)
 
 void MainWindow::on_actionLast_Candidate_triggered()
 {
-    QMessageBox::information(this, "最后一次调试的候选弹幕", "-------- 填充变量 --------\n\n" + lastConditionDanmu + "\n\n-------- 随机发送 --------\n\n" + lastCandidateDanmaku);
+    // QMessageBox::information(this, "最后一次调试的候选弹幕", "-------- 填充变量 --------\n\n" + lastConditionDanmu + "\n\n-------- 随机发送 --------\n\n" + lastCandidateDanmaku);
+    QDialog* dialog = new QDialog(this);
+    QTabWidget* tabWidget = new QTabWidget(dialog);
+
+    int count = lastConditionDanmu.size();
+    for (int i = count - 1; i >= 0; i--)
+    {
+        QPlainTextEdit* edit = new QPlainTextEdit(tabWidget);
+        edit->setPlainText("-------- 填充变量 --------\n\n"
+                           + lastConditionDanmu.at(i)
+                           + "\n\n-------- 随机发送 --------\n\n"
+                           + lastCandidateDanmaku.at(i));
+        tabWidget->addTab(edit, i == count - 1 ? "最新" : i == 0 ? "最旧" : snum(i+1));
+    }
+
+    QVBoxLayout* layout = new QVBoxLayout(dialog);
+    layout->addWidget(tabWidget);
+    dialog->setAttribute(Qt::WA_DeleteOnClose, true);
+    dialog->setWindowTitle("变量历史");
+    dialog->setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    dialog->exec();
 }
 
 void MainWindow::on_actionLocal_Mode_triggered()

@@ -98,6 +98,8 @@ FacileMenuItem *FacileMenu::addAction(QAction *action, bool deleteWithMenu)
         auto ac = addAction(action->icon(), action->text(), [=]{ action->trigger(); });
         if (action->isChecked())
             ac->check();
+        if (!action->toolTip().isEmpty())
+            ac->tooltip(action->toolTip());
         return ac;
     }
 }

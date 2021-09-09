@@ -1120,8 +1120,9 @@ private:
     QFile* pushCmdsFile = nullptr;
     QTimer* pushCmdsTimer = nullptr;
 
-    QString lastConditionDanmu;
-    QString lastCandidateDanmaku;
+    const int debugLastCount = 20;
+    QStringList lastConditionDanmu;
+    QStringList lastCandidateDanmaku;
 
     // 过滤器
     bool enableFilter = true;
