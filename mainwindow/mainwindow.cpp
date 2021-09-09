@@ -16309,11 +16309,11 @@ void MainWindow::showPkMenu()
 
     menu->addAction("最佳助攻列表", [=]{
         showPkAssists();
-    }); // ->suffix(!hasPermission(), " [VIP]");
+    });
 
     menu->split()->addAction("赛季匹配记录", [=]{
         showPkHistories();
-    }); // ->suffix(!hasPermission(), " [VIP]");
+    });
 
     menu->addAction("最后匹配的直播间", [=]{
         if (!lastMatchRoomId)
@@ -16326,8 +16326,6 @@ void MainWindow::showPkMenu()
 
 void MainWindow::showPkAssists()
 {
-    if (!hasPermission())
-        return on_actionBuy_VIP_triggered();
     QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "pk assists:" << url;
     get(url, [=](MyJson json) {
@@ -16408,8 +16406,6 @@ void MainWindow::showPkAssists()
 
 void MainWindow::showPkHistories()
 {
-    if (!hasPermission())
-        return on_actionBuy_VIP_triggered();
     QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
                   "ruid=" + upUid + "&room_id=" + roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "pk histories" << url;
