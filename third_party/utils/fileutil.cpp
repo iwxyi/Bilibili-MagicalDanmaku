@@ -358,6 +358,10 @@ bool copyDir(const QString &source, const QString &destination, bool override)
             if (override)
             {
                 QFile::setPermissions(dstFilePath, QFile::WriteOwner);
+                if (QFileInfo(dstFilePath).exists())
+                {
+                    QFile(dstFilePath).remove();
+                }
             }
             QFile::copy(srcFilePath, dstFilePath);
         }

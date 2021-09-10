@@ -739,7 +739,7 @@ border-image: url(C:/Path/To/Image.png)
 
 在程序根目录的 `settings.ini` 文件中， `[runtime]` 分组下（没有在自己新建），添加 `debugToFile=true`。
 
-重启神奇弹幕，根目录下会出现 `debug.txt`，这就是调试日志。
+重启神奇弹幕，根目录下会出现 `debug.log`，这就是调试日志。
 
 **盘查问题时需要将这个文件交给开发者。**
 

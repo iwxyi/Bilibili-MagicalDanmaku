@@ -781,11 +781,15 @@ void MainWindow::downloadNewPackage(QString version, QString packageUrl)
         return ;
     qInfo() << "下载：" << version << packageUrl;
 #ifdef Q_OS_WIN
-    renameFile(UPDATE_TOOL_NAME, UPDATE_TOOL_NAME_);
     QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
+    if (isFileExist(pkgPath))
+    {
+        qInfo() << "待更新安装包已存在，等待安装";
+        return ;
+    }
     QProcess process(this);
     QStringList list{ "-d", packageUrl, pkgPath};
-    if (process.startDetached(UPDATE_TOOL_NAME_, list))
+    if (process.startDetached(UPDATE_TOOL_NAME, list))
     {
         qInfo() << "调用更新程序下载成功";
         return ;

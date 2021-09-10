@@ -33,7 +33,7 @@ void myMsgOutput(QtMsgType type, const QMessageLogContext &context, const QStrin
         mmsg=QString("%1: Fatal:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
         abort();
     }
-    QFile file("debug.txt");
+    QFile file("debug.log");
     file.open(QIODevice::ReadWrite | QIODevice::Append);
     QTextStream stream(&file);
     stream << mmsg << "\r\n";

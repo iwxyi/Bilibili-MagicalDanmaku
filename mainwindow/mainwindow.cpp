@@ -488,8 +488,6 @@ void MainWindow::initStyle()
 
 void MainWindow::initPath()
 {
-    if (isFileExist(UPDATE_TOOL_NAME_) && isFileExist(UPDATE_TOOL_NAME))
-        deleteFile(UPDATE_TOOL_NAME_);
     dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -1733,9 +1731,7 @@ MainWindow::~MainWindow()
         qInfo() << "检测到已下载的安装包，进行更新";
         QString appPath = QApplication::applicationDirPath();
         QProcess process;
-        if (!isFileExist(UPDATE_TOOL_NAME_) && isFileExist(UPDATE_TOOL_NAME))
-            renameFile(UPDATE_TOOL_NAME, UPDATE_TOOL_NAME_);
-        process.startDetached(UPDATE_TOOL_NAME_, { "-u", pkgPath, appPath, "-d", "-4"} );
+        process.startDetached(UPDATE_TOOL_NAME, { "-u", pkgPath, appPath, "-d", "-4"} );
     }
 }
 

@@ -95,7 +95,6 @@ QT_END_NAMESPACE
 #define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
-#define UPDATE_TOOL_NAME_ "UpUpTool_.exe"
 
 class MainWindow;
 
