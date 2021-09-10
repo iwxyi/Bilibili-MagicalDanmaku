@@ -94,6 +94,9 @@ QT_END_NAMESPACE
 #define FILTER_DANMAKU_COME "FILTER_DANMAKU_COME"
 #define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
 
+#define UPDATE_TOOL_NAME "UpUpTool.exe"
+#define UPDATE_TOOL_NAME_ "UpUpTool_.exe"
+
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
@@ -809,7 +812,7 @@ private:
     QPixmap getLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
-    void getPkInfoById(QString roomId, QString pkId);
+    void setPkInfoById(QString roomId, QString pkId);
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
     void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
@@ -996,6 +999,8 @@ private:
     void readDefaultCode(QString path = "");
     void showError(QString title, QString s) const;
     void showError(QString s) const;
+    void showNotify(QString title, QString s) const;
+    void showNotify(QString s) const;
 
 private:
     // 应用信息

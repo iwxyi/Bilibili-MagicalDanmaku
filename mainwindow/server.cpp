@@ -426,6 +426,7 @@ void MainWindow::syncMagicalRooms()
          "randkey", csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
         // 检测数组
+        json = json.data();
         QJsonArray roomArray = json.value("rooms").toArray();
         magicalRooms.clear();
         foreach (QJsonValue val, roomArray)
@@ -434,25 +435,37 @@ void MainWindow::syncMagicalRooms()
         }
 
         // 检测新版
-        QString lastestVersion = json.value("lastest_version").toString();
-        if (lastestVersion.startsWith("v") || lastestVersion.startsWith("V"))
-            lastestVersion.replace(0, 1, "");
+        QString latestVersion = json.value("latest_version").toString();
+        if (latestVersion.startsWith("v") || latestVersion.startsWith("V"))
+            latestVersion.replace(0, 1, "");
 
-        if (lastestVersion > appVersion)
+        if (latestVersion > appVersion)
         {
-            this->appNewVersion = lastestVersion;
+            this->appNewVersion = latestVersion;
             this->appDownloadUrl = json.value("download_url").toString();
             ui->actionUpdate_New_Version->setText("有新版本：" + appNewVersion);
             ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));
             ui->actionUpdate_New_Version->setEnabled(true);
             statusLabel->setText("有新版本：" + appNewVersion);
-            qInfo() << "有新版本" << appNewVersion << appDownloadUrl;
+            qInfo() << "有新版本：" << appVersion << "->" << appNewVersion << appDownloadUrl;
 
             QString packageUrl = json.s("package_url");
-            if (!packageUrl.isEmpty() && ui->autoUpdateCheck->isChecked())
+            if (!packageUrl.isEmpty())
             {
-                // 自动更新，直接下载！
-                downloadNewPackage(lastestVersion, packageUrl);
+                if (ui->autoUpdateCheck->isChecked())
+                {
+                    // 自动更新，直接下载！
+                    downloadNewPackage(latestVersion, packageUrl);
+                }
+                else
+                {
+                    auto noti = new NotificationEntry("", "版本更新", appVersion + " -> " + latestVersion);
+                    connect(noti, &NotificationEntry::signalCardClicked, this, [=]{
+                        QDesktopServices::openUrl(appDownloadUrl);
+                    });
+                    tip_box->createTipCard(noti);
+                    localNotify("【有新版本】" + appVersion + " -> " + latestVersion);
+                }
             }
         }
 
@@ -768,10 +781,11 @@ void MainWindow::downloadNewPackage(QString version, QString packageUrl)
         return ;
     qInfo() << "下载：" << version << packageUrl;
 #ifdef Q_OS_WIN
+    renameFile(UPDATE_TOOL_NAME, UPDATE_TOOL_NAME_);
     QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
     QProcess process(this);
     QStringList list{ "-d", packageUrl, pkgPath};
-    if (process.startDetached("UpUpTool.exe", list))
+    if (process.startDetached(UPDATE_TOOL_NAME_, list))
     {
         qInfo() << "调用更新程序下载成功";
         return ;

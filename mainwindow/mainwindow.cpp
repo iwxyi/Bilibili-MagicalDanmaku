@@ -488,6 +488,8 @@ void MainWindow::initStyle()
 
 void MainWindow::initPath()
 {
+    if (isFileExist(UPDATE_TOOL_NAME_) && isFileExist(UPDATE_TOOL_NAME))
+        deleteFile(UPDATE_TOOL_NAME_);
     dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -1724,14 +1726,16 @@ MainWindow::~MainWindow()
     }
 
     // 自动更新
-    if (isFileExist(QApplication::applicationDirPath() + "/update.zip"))
+    QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
+    if (isFileExist(pkgPath) && QFileInfo(pkgPath).size() > 100 * 1024) // 起码大于100K，可能没更新完
     {
         // 更新历史版本
         qInfo() << "检测到已下载的安装包，进行更新";
         QString appPath = QApplication::applicationDirPath();
-        QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
         QProcess process;
-        process.startDetached("UpUpTool.exe", { "-u", pkgPath, appPath, "-d", "-5"} );
+        if (!isFileExist(UPDATE_TOOL_NAME_) && isFileExist(UPDATE_TOOL_NAME))
+            renameFile(UPDATE_TOOL_NAME, UPDATE_TOOL_NAME_);
+        process.startDetached(UPDATE_TOOL_NAME_, { "-u", pkgPath, appPath, "-d", "-4"} );
     }
 }
 
@@ -3223,7 +3227,7 @@ void MainWindow::getCookieAccount()
         QJsonObject dataObj = json.value("data").toObject();
         cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         cookieUname = dataObj.value("uname").toString();
-        qInfo() << "当前cookie用户：" << cookieUid << cookieUname;
+        qInfo() << "当前账号：" << cookieUid << cookieUname;
         ui->robotNameButton->setText(cookieUname);
         ui->robotNameButton->adjustMinimumSize();
         ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
@@ -4110,7 +4114,7 @@ void MainWindow::getRoomInfo(bool reconnect)
                 // 这个 pk_status 不是 battle_type
                 pking = true;
                 // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
-                getPkInfoById(roomId, pkId);
+                setPkInfoById(roomId, pkId);
                 qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
             }
         }
@@ -4865,7 +4869,7 @@ void MainWindow::getFansAndUpdate()
     });
 }
 
-void MainWindow::getPkInfoById(QString roomId, QString pkId)
+void MainWindow::setPkInfoById(QString roomId, QString pkId)
 {
     /*{
         "code": 0,
@@ -17219,6 +17223,20 @@ void MainWindow::showError(QString s) const
     tip_box->createTipCard(new NotificationEntry("", "", s));
 }
 
+void MainWindow::showNotify(QString title, QString s) const
+{
+    statusLabel->setText(title + ": " + s);
+    qInfo() << title << ":" << s;
+    tip_box->createTipCard(new NotificationEntry("", title, s));
+}
+
+void MainWindow::showNotify(QString s) const
+{
+    statusLabel->setText(s);
+    qInfo() << s;
+    tip_box->createTipCard(new NotificationEntry("", "", s));
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -17542,7 +17560,7 @@ void MainWindow::slotStartWork()
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString usedRoom = roomId;
-    syncTimer->start((qrand() % 120 + 60) * 1000);
+    syncTimer->start((qrand() % 3 + 5) * 1000);
 
     // 本次直播数据
     liveAllGifts.clear();

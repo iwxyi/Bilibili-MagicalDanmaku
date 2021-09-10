@@ -1820,7 +1820,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 添加点歌成功事件：`ORDER_SONG_SUCCEED`，动作：
 
-```
+```C++
 ["%playing_song%" != "", "%song_order_uname%" = ""]>cutOrderSong()
 ```
 
@@ -2759,7 +2759,7 @@ JSON格式：
 
 ### 实时视频不能播放？
 
-需要安装 `LAV解码器`，可直接去网上搜索下载，安装后可能需要重启。
+需要安装 `LAV解码器`，可直接去网上搜索下载，可能需要重启电脑生效。
 
 
 
