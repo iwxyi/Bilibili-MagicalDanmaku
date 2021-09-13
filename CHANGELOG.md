@@ -1,4 +1,4 @@
-### v4.3.1 [实时弹幕](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.1)
+### v4.3.1 [弹幕扩展、自动更新](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.1)
 
 - 新增支持添加实时弹幕到直播姬/OBS
 - 新增高能榜人数提示

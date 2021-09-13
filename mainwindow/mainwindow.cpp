@@ -4670,32 +4670,32 @@ void MainWindow::getUpFace(QString faceUrl)
 
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
-
-        // 设置成圆角
-        int side = qMin(pixmap.width(), pixmap.height());
-        upFace = QPixmap(side, side);
-        upFace.fill(Qt::transparent);
-        QPainter painter(&upFace);
-        painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-        painter.save();
-        QPainterPath path;
-        path.addEllipse(0, 0, side, side);
-        painter.setClipPath(path);
-        painter.drawPixmap(0, 0, side, side, pixmap);
-        painter.restore();
+        upFace = pixmap; // 原图
+        pixmap = getCirclePixmap(pixmap); // 圆图
 
         // 设置到窗口图标
-        QPixmap face = isLiving() ? getLivingPixmap(upFace) : upFace;
+        QPixmap face = isLiving() ? getLivingPixmap(pixmap) : pixmap;
         setWindowIcon(face);
         tray->setIcon(face);
 
         // 设置到UP头像
         face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         ui->upHeaderLabel->setPixmap(face);
-
-        // 恢复原先尺寸的头像
-        painter.drawPixmap(0, 0, pixmap);
     });
+}
+
+QPixmap MainWindow::getCirclePixmap(QPixmap pixmap) const
+{
+    int side = qMin(pixmap.width(), pixmap.height());
+    QPixmap rp = QPixmap(side, side);
+    rp.fill(Qt::transparent);
+    QPainter painter(&rp);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+    QPainterPath path;
+    path.addEllipse(0, 0, side, side);
+    painter.setClipPath(path);
+    painter.drawPixmap(0, 0, side, side, pixmap);
+    return rp;
 }
 
 /**
@@ -17546,7 +17546,7 @@ void MainWindow::slotStartWork()
     });
 
     // 设置直播状态
-    QPixmap face = getLivingPixmap(upFace);
+    QPixmap face = getLivingPixmap(getCirclePixmap(upFace));
     setWindowIcon(face);
     tray->setIcon(face);
 

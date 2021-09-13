@@ -808,6 +808,7 @@ private:
     QPixmap getTopRoundedPixmap(QPixmap pixmap, int radius) const;
     void getUpInfo(QString uid);
     void getUpFace(QString faceUrl);
+    QPixmap getCirclePixmap(QPixmap pixmap) const;
     QPixmap getLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
