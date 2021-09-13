@@ -1292,7 +1292,6 @@ private:
     QStringList orderSongBlackList;
 
     // 托盘
-    QMenu *trayMenu;//托盘菜单
     QSystemTrayIcon *tray;//托盘图标添加成员
 
     // 文字转语音

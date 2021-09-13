@@ -852,16 +852,6 @@ void MainWindow::readConfig()
     QAction *quitAction = new QAction(QIcon(":/icons/cry"), "退出", this);
     connect(quitAction, SIGNAL(triggered()), this, SLOT(prepareQuit()));
 
-    trayMenu = new QMenu(this);
-    trayMenu->setObjectName("trayMenu");
-    trayMenu->addAction(windowAction);
-    trayMenu->addAction(liveDanmakuAction);
-    trayMenu->addAction(orderPlayerAction);
-    trayMenu->addAction(videoAction);
-    trayMenu->addSeparator();
-    trayMenu->addAction(quitAction);
-    tray->setContextMenu(trayMenu);
-
     connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(showWidget(QSystemTrayIcon::ActivationReason)));
 
     // 大乱斗
@@ -14901,6 +14891,29 @@ void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
         break;
     case QSystemTrayIcon::MiddleClick:
         on_actionShow_Live_Danmaku_triggered();
+        break;
+    case QSystemTrayIcon::Context:
+    {
+        newFacileMenu;
+        menu->addAction(QIcon(":/icons/star"), "主界面", [=]{
+            this->show();
+            this->activateWindow();
+        });
+        menu->split()->addAction(QIcon(":/icons/danmu"), "弹幕姬", [=]{
+            on_actionShow_Live_Danmaku_triggered();
+        });
+        menu->addAction(QIcon(":/icons/order_song"), "点歌姬", [=]{
+            on_actionShow_Order_Player_Window_triggered();
+        });
+        menu->addAction(QIcon(":/icons/live"), "视频流", [=]{
+            on_actionShow_Live_Video_triggered();
+        });
+        menu->split()->addAction(QIcon(":/icons/cry"), "退出", [=]{
+            menu->close();
+            prepareQuit();
+        });
+        menu->exec();
+    }
         break;
     default:
         break;
