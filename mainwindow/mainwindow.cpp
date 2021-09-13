@@ -4973,11 +4973,16 @@ void MainWindow::setPkInfoById(QString roomId, QString pkId)
 
             // 监听尾声
             qint64 deltaEnd = pkEndTime - currentTime;
-            pkEndingTimer->start(qMax(0, int(deltaEnd*1000 - pkJudgeEarly)));
-            QTimer::singleShot(qMax(0, int(deltaEnd)), [=]{
-                pkEnding = false;
-                pkVoting = 0;
-            });
+            if (deltaEnd*1000 > pkJudgeEarly)
+            {
+                pkEndingTimer->start(deltaEnd*1000 - pkJudgeEarly);
+
+                // 怕刚好结束的一瞬间，没有收到大乱斗的消息
+                QTimer::singleShot(qMax(0, int(deltaEnd)), [=]{
+                    pkEnding = false;
+                    pkVoting = 0;
+                });
+            }
         }
     });
 }
