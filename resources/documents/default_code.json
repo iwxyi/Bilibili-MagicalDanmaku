@@ -10,8 +10,8 @@
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
-            "key": "^请?叫我\\s*(.*)$",
-            "reply": "/// 设置自己专属昵称：叫我小明\n>setNickname(%uid%, %$1%)\\n>设置您的专属昵称为：%$1%"
+            "key": "^请?叫我\\s+(.*)$",
+            "reply": "/// 设置自己专属昵称：叫我 小明\n>setNickname(%uid%, %$1%)\\n>设置您的专属昵称为：%$1%"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
