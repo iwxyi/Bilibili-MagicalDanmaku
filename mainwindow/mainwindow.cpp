@@ -852,7 +852,7 @@ void MainWindow::readConfig()
     QAction *quitAction = new QAction(QIcon(":/icons/cry"), "退出", this);
     connect(quitAction, SIGNAL(triggered()), this, SLOT(prepareQuit()));
 
-    connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(showWidget(QSystemTrayIcon::ActivationReason)));
+    connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(trayAction(QSystemTrayIcon::ActivationReason)));
 
     // 大乱斗
     pkTimer = new QTimer(this);
@@ -14879,7 +14879,7 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
     SOCKET_DEB << "PkSocket消息处理结束";
 }
 
-void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
+void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
 {
     switch(reason)
     {
@@ -14911,7 +14911,21 @@ void MainWindow::showWidget(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/live"), "视频流", [=]{
             on_actionShow_Live_Video_triggered();
         });
-        menu->split()->addAction(QIcon(":/icons/cry"), "退出", [=]{
+        if (localDebug || debugPrint)
+        {
+            menu->split();
+            menu->addAction(ui->actionLocal_Mode)->hide(!localDebug);
+            menu->addAction(ui->actionDebug_Mode)->hide(!debugPrint);
+        }
+
+        menu->split();
+//        if (!hasPermission())
+        {
+            menu->addAction(QIcon(":/icons/crown"), "免费版", [=]{
+                on_actionBuy_VIP_triggered();
+            });
+        }
+        menu->addAction(QIcon(":/icons/cry"), "退出", [=]{
             menu->close();
             prepareQuit();
         });

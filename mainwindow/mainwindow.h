@@ -418,7 +418,7 @@ private slots:
 
     void on_judgeRobotCheck_clicked();
 
-    void showWidget(QSystemTrayIcon::ActivationReason reason);
+    void trayAction(QSystemTrayIcon::ActivationReason reason);
 
     void on_actionAdd_Room_To_List_triggered();
 
