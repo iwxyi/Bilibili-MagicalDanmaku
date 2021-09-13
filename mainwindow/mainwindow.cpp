@@ -4688,6 +4688,8 @@ void MainWindow::downloadUpFace(QString faceUrl)
 
 QPixmap MainWindow::toCirclePixmap(QPixmap pixmap) const
 {
+    if (pixmap.isNull())
+        return pixmap;
     int side = qMin(pixmap.width(), pixmap.height());
     QPixmap rp = QPixmap(side, side);
     rp.fill(Qt::transparent);
@@ -6257,6 +6259,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         int index = args.indexOf(",");
         if (index == -1) // 不应该没找到的
             return "";
+
         QString filterName = args.left(index);
         QString content = args.right(args.length() - index - 1).trimmed();
 
@@ -6388,6 +6391,8 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
 QString MainWindow::processMsgHeaderConditions(QString msg) const
 {
     QString condRe;
+    if (msg.contains(QRegularExpression("^\\s*\\[\\[\\[.*\\]\\]\\]")))
+        condRe = "^\\s*\\[\\[\\[(.*?)\\]\\]\\]\\s*";
     if (msg.contains(QRegularExpression("^\\s*\\[\\[.*\\]\\]"))) // [[%text% ~ "[\\u4e00-\\u9fa5]+[\\w]{3}[\\u4e00-\\u9fa5]+"]]
         condRe = "^\\s*\\[\\[(.*?)\\]\\]\\s*";
     else
@@ -6651,6 +6656,9 @@ bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku
     return reject;
 }
 
+/**
+ * 判断是否通过（没有reject）
+ */
 bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 {
     if (filterText.isEmpty())
@@ -6658,7 +6666,6 @@ bool MainWindow::processFilter(QString filterText, const LiveDanmaku &danmaku)
 
     // 获取符合的所有结果
     QStringList msgs = getEditConditionStringList(filterText, danmaku);
-
     if (!msgs.size())
         return true;
 
@@ -11480,6 +11487,7 @@ void MainWindow::handleMessage(QJsonObject json)
             else
             {
                 LiveDanmaku danmaku = LiveDanmaku(text).with(json);
+                qInfo() << "NOTICE:" << text;
                 if (isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
                     return ;
                 text.replace("<$", "").replace("$>", "");
@@ -13689,6 +13697,13 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->setWindowTitle(this->windowTitle());
         danmakuWindow->hide();
 
+        // PK中
+        if (pkBattleType)
+        {
+            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+        }
+
+        // 添加弹幕
         QTimer::singleShot(0, [=]{
             danmakuWindow->removeAll();
             if (roomDanmakus.size())
@@ -15434,6 +15449,8 @@ QRect MainWindow::getScreenRect()
 
 QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
 {
+    if (pixmap.isNull())
+        return pixmap;
     QPixmap tmp(pixmap.size());
     tmp.fill(Qt::transparent);
     QPainter painter(&tmp);
