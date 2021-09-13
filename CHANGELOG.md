@@ -1,3 +1,10 @@
+### v4.3.2 [](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.2)
+
+- 调整大乱斗结束的定时逻辑
+- 修复托盘图标变方形的问题
+
+
+
 ### v4.3.1 [弹幕扩展、自动更新](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.1)
 
 - 新增支持添加实时弹幕到直播姬/OBS

@@ -276,6 +276,7 @@ private slots:
     void sendNotifyMsg(QString msg, bool manual = false);
     void sendNotifyMsg(QString msg, const LiveDanmaku &danmaku, bool manual = false);
     void slotComboSend();
+    void slotPkEndingTimeout();
 
     void slotSocketError(QAbstractSocket::SocketError error);
 
@@ -807,9 +808,9 @@ private:
     QPixmap getRoundedPixmap(QPixmap pixmap) const;
     QPixmap getTopRoundedPixmap(QPixmap pixmap, int radius) const;
     void getUpInfo(QString uid);
-    void getUpFace(QString faceUrl);
-    QPixmap getCirclePixmap(QPixmap pixmap) const;
-    QPixmap getLivingPixmap(QPixmap pixmap) const;
+    void downloadUpFace(QString faceUrl);
+    QPixmap toCirclePixmap(QPixmap pixmap) const;
+    QPixmap toLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
     void setPkInfoById(QString roomId, QString pkId);
@@ -1213,6 +1214,7 @@ private:
 
     // 大乱斗
     bool pking = false;
+    int pkBattleType = 0;
     qint64 pkId = 0;
     qint64 pkToLive = 0; // PK导致的下播（视频必定触发）
     int myVotes = 0;
@@ -1224,6 +1226,7 @@ private:
     QList<LiveDanmaku> pkGifts;
 
     // 大乱斗偷塔
+    QTimer* pkEndingTimer = nullptr;
     int goldTransPk = 100; // 金瓜子转乱斗值的比例，除以10还是100
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
