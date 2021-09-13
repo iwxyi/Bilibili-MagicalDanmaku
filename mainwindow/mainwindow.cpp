@@ -1579,7 +1579,7 @@ void MainWindow::switchPageAnimation(int page)
             connect(ani, &QPropertyAnimation::finished, this, [=]{
                 ani->deleteLater();
                 label->deleteLater();
-                ui->upHeaderLabel->setPixmap(pixmap);
+                ui->upHeaderLabel->setPixmap(toCirclePixmap(pixmap));
             });
             ani->start();
 
@@ -4682,7 +4682,7 @@ void MainWindow::downloadUpFace(QString faceUrl)
 
         // 设置到UP头像
         face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        ui->upHeaderLabel->setPixmap(face);
+        ui->upHeaderLabel->setPixmap(toCirclePixmap(face));
     });
 }
 

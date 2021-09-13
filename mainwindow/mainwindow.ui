@@ -1312,7 +1312,7 @@ background-repeat:none;</string>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>1</width>
+                 <width>5</width>
                  <height>20</height>
                 </size>
                </property>
@@ -1407,7 +1407,7 @@ background-repeat:none;</string>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>1</width>
+                 <width>5</width>
                  <height>20</height>
                 </size>
                </property>
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>787</width>
-             <height>504</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
