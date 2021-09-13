@@ -5320,6 +5320,8 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     re = QRegularExpression("\\s*\\\\\\s*\\n\\s*");
     msg.replace(re, "");
 
+    CALC_DEB << "有效代码：" << msg;
+
     // 自动回复传入的变量
     re = QRegularExpression("%\\$(\\d+)%");
     while (msg.indexOf(re, 0, &match) > -1)
@@ -5426,6 +5428,24 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
 
         // 函数替换
         re = QRegularExpression("%>(\\w+)\\s*\\(([^(%(\\{|\\[|>))]*?)\\)%");
+        matchPos = 0;
+        while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
+        {
+            QString rpls = replaceDynamicVariants(match.captured(1), match.captured(2), danmaku);
+            msg.replace(match.captured(0), rpls);
+            matchPos += rpls.length();
+            find = true;
+        }
+    }
+
+    // 无奈的替换
+    // 一些代码特殊字符的也给替换掉
+    find = true;
+    while (find)
+    {
+        // 函数替换
+        // 允许里面的参数出现%
+        re = QRegularExpression("%>(\\w+)\\s*\\((.*?)\\)%");
         matchPos = 0;
         while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
         {
@@ -6262,7 +6282,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
 
         QString filterName = args.left(index);
         QString content = args.right(args.length() - index - 1).trimmed();
-
+        qInfo() << ">inFilterList:" << filterName << content;
         for (int row = 0; row < ui->eventListWidget->count(); row++)
         {
             auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
@@ -6288,7 +6308,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             return "";
         QString filterName = args.left(index);
         QString content = args.right(args.length() - index - 1).trimmed();
-
+        qInfo() << ">inFilterMatch:" << filterName << content;
         for (int row = 0; row < ui->eventListWidget->count(); row++)
         {
             auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
@@ -6393,7 +6413,7 @@ QString MainWindow::processMsgHeaderConditions(QString msg) const
     QString condRe;
     if (msg.contains(QRegularExpression("^\\s*\\[\\[\\[.*\\]\\]\\]")))
         condRe = "^\\s*\\[\\[\\[(.*?)\\]\\]\\]\\s*";
-    if (msg.contains(QRegularExpression("^\\s*\\[\\[.*\\]\\]"))) // [[%text% ~ "[\\u4e00-\\u9fa5]+[\\w]{3}[\\u4e00-\\u9fa5]+"]]
+    else if (msg.contains(QRegularExpression("^\\s*\\[\\[.*\\]\\]"))) // [[%text% ~ "[\\u4e00-\\u9fa5]+[\\w]{3}[\\u4e00-\\u9fa5]+"]]
         condRe = "^\\s*\\[\\[(.*?)\\]\\]\\s*";
     else
         condRe = "^\\s*\\[(.*?)\\]\\s*";
@@ -6401,9 +6421,10 @@ QString MainWindow::processMsgHeaderConditions(QString msg) const
     if (!re.isValid())
         showError("无效的条件表达式", condRe);
     QRegularExpressionMatch match;
-    if (msg.indexOf(re, 0, &match) == -1) // 没有检测到表达式
+    if (msg.indexOf(re, 0, &match) == -1) // 没有检测到条件表达式，直接返回
         return msg;
 
+    CALC_DEB << "条件表达式：" << match.capturedTexts();
     QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
     QString exprs = match.capturedTexts().at(1);
 
@@ -10705,7 +10726,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (results.size() < 2 || results.at(1).isEmpty()) // 不是船员
         {
             qInfo() << "高能榜进入：" << copy_writing;
-            QStringList results = QRegularExpression("^欢迎\\s*<%(.+)%>").match(copy_writing).capturedTexts();
+            QStringList results = QRegularExpression("^欢迎(尊享用户)?\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
                 qWarning() << "识别舰长进入失败：" << copy_writing;
@@ -14482,7 +14503,6 @@ void MainWindow::pkSettle(QJsonObject json)
             }
         }
     }*/
-    qDebug() << json;
 
     QJsonObject data = json.value("data").toObject();
     if (pkVideo)

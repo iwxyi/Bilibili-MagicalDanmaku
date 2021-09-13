@@ -1,5 +1,6 @@
 ### v4.3.2 [](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.2)
 
+- 新增三个方括号的条件格式
 - 调整大乱斗结束的定时逻辑
 - 修复托盘图标变方形的问题
 
