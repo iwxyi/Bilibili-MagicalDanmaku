@@ -1,19 +1,23 @@
-### v4.3.2 [](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.2)
+### v4.3.2 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.2)
 
 - 新增三个方括号的条件格式
+- 新增别名：setLocalName
 - 优化托盘菜单为自定义样式
 - 调整大乱斗结束的定时逻辑
+- 修复参数中的特殊字符问题
 - 修复托盘图标变方形的问题
+
+
 
 
 
 ### v4.3.1 [弹幕扩展、自动更新](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.1)
 
 - 新增支持添加实时弹幕到直播姬/OBS
-- 新增高能榜人数提示
 - 新增代码触发时的动画
+- 新增高能榜人数提示
 - 新增setNickname失败的提示
-- 新增自动更新
+- 新增理论上能用的自动更新
 - 优化部分扩展的交互细节
 - 优化网页扩展的开发API
 - 优化简约模式不显示礼物价格

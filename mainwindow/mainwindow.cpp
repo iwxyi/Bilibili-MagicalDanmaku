@@ -5433,6 +5433,8 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     find = true;
     while (find)
     {
+        find = false;
+
         // 函数替换
         // 允许里面的参数出现%
         re = QRegularExpression("%>(\\w+)\\s*\\((.*?)\\)%");
@@ -6108,7 +6110,8 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     }
     else if (funcName == "unameToUid")
     {
-        return snum(unameToUid(args));
+        qint64 uid = unameToUid(args);
+        return snum(uid);
     }
     else if (funcName == "inGameUsers")
     {
@@ -8822,9 +8825,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 设置专属昵称
-    if (msg.contains("setNickname"))
+    if (msg.contains("setNickname") || msg.contains("setLocalName"))
     {
-        re = RE("setNickname\\s*\\(\\s*(\\d+)\\s*,\\s*(.*)\\s*\\)");
+        re = RE("set(?:Nickname|LocalName)\\s*\\(\\s*(\\d+)\\s*,\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8833,7 +8836,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (uid == 0)
             {
-                showError("setNickname失败", "未找到UID:" + caps.at(1));
+                showError("setLocalName失败", "未找到UID:" + caps.at(1));
             }
             else if (name.isEmpty()) // 移除
             {
