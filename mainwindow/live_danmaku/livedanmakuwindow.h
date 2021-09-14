@@ -64,6 +64,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     Q_ENUM(MessageType)
 public:
     LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *parent = nullptr);
+    ~LiveDanmakuWindow();
 
 protected:
     void showEvent(QShowEvent *event) override;

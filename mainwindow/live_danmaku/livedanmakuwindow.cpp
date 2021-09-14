@@ -192,6 +192,11 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     connect(statusLabel, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showPkMenu()));
 }
 
+LiveDanmakuWindow::~LiveDanmakuWindow()
+{
+    settings->setValue("livedanmakuwindow/geometry", this->saveGeometry());
+}
+
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
 {
 #ifndef Q_OS_ANDROID
@@ -199,12 +204,14 @@ void LiveDanmakuWindow::showEvent(QShowEvent *event)
     restoreGeometry(settings->value("livedanmakuwindow/geometry").toByteArray());
 #endif
     enableAnimation = true;
+    QWidget::showEvent(event);
 }
 
 void LiveDanmakuWindow::hideEvent(QHideEvent *event)
 {
     settings->setValue("livedanmakuwindow/geometry", this->saveGeometry());
     enableAnimation = false;
+    QWidget::hideEvent(event);
 }
 
 bool LiveDanmakuWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
