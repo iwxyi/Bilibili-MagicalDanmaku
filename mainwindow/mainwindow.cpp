@@ -14919,7 +14919,7 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         }
 
         menu->split();
-//        if (!hasPermission())
+        if (!hasPermission())
         {
             menu->addAction(QIcon(":/icons/crown"), "免费版", [=]{
                 on_actionBuy_VIP_triggered();
@@ -15454,7 +15454,7 @@ void MainWindow::releaseLiveData(bool prepare)
     finishLiveRecord();
     saveCalculateDailyData();
 
-    QPixmap face = roomId.isEmpty() ? QPixmap() : upFace;
+    QPixmap face = roomId.isEmpty() ? QPixmap() : toCirclePixmap(upFace);
     setWindowIcon(face);
     tray->setIcon(face);
 
