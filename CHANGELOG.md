@@ -1,3 +1,12 @@
+### v4.3.3 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.3)
+
+- 新增自定义样式文件，更新不覆盖样式
+- 修复点歌歌词路径问题
+
+
+
+
+
 ### v4.3.2 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.2)
 
 - 新增三个方括号的条件格式
@@ -8,6 +17,7 @@
 - 修复参数中的特殊字符问题
 - 修复托盘图标变方形的问题
 - 修复弹幕姬窗口位置的问题
+
 
 
 

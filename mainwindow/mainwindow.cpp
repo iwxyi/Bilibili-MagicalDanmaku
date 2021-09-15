@@ -1698,6 +1698,7 @@ MainWindow::~MainWindow()
     triggerCmdEvent("SHUT_DOWN", LiveDanmaku(), true);
 
     delete ui;
+    tray->deleteLater();
 
     // 删除缓存
     if (isFileExist(webCache("")))
@@ -16633,6 +16634,7 @@ void MainWindow::loadWebExtensinList()
             QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
             QString stsR = inf.s("config");
             QString cssR = inf.s("css");
+            QString cssC = inf.s("css_custom");
             QString dirR = inf.s("dir");
             QString fileR = inf.s("file");
             QString desc = inf.s("desc");
@@ -16644,6 +16646,10 @@ void MainWindow::loadWebExtensinList()
                 urlR = "/" + dirName + "/" + urlR;
             if (!cssR.isEmpty() && !cssR.startsWith("/"))
                 cssR = "/" + dirName + "/" + cssR;
+            if (!cssC.isEmpty() && !cssC.startsWith("/"))
+                cssC = "/" + dirName + "/" + cssC;
+            else if (cssC.isEmpty())
+                cssC = cssR;
             if (!dirR.isEmpty() && !dirR.startsWith("/"))
                 dirR = "/" + dirName + "/" + dirR;
             if (!fileR.isEmpty() && !fileR.startsWith("/"))
@@ -16735,6 +16741,8 @@ void MainWindow::loadWebExtensinList()
             {
                 if (cssR.startsWith("/"))
                     cssR = cssR.right(cssR.length() - 1);
+                if (cssC.startsWith("/"))
+                    cssC = cssC.right(cssC.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
                 layout->addWidget(btn);
                 btn->setSquareSize();
@@ -16746,13 +16754,18 @@ void MainWindow::loadWebExtensinList()
                 connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(cssR);
+                    QString pathC = wwwDir.absoluteFilePath(cssC);
                     qInfo() << "编辑页面：" << path;
-                    QString content = readTextFileIfExist(path);
+                    QString content;
+                    if (isFileExist(pathC))
+                        content = readTextFile(pathC);
+                    else
+                        content = readTextFileIfExist(path);
                     bool ok;
                     content = QssEditDialog::getText(this, "设置样式：" + name, "支持CSS样式，修改后刷新页面生效", content, &ok);
                     if (!ok)
                         return ;
-                    writeTextFile(path, content);
+                    writeTextFile(pathC, content);
                 });
             }
 

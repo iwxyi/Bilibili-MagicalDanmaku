@@ -20,7 +20,7 @@ $(document).ready(function () {
         }
     };
     appWs.onmessage = function (e) {
-        // console.log(e.data);
+        console.log(e.data);
         var json = JSON.parse(e.data);
         try {
             var cmd = json['cmd'];

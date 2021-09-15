@@ -4,6 +4,7 @@
 			"name": "转盘抽奖",
 			"url": "index.html",
 			"css": "index.css",
+			"css_custom": "index_custom.css",
             "desc": "九宫格转盘抽奖",
             "dir": "img",
             "config": "config.html",

@@ -5,6 +5,7 @@
             "url": "index.html",
             "config": "config.html",
 			"css": "index.css",
+			"css_custom": "index_custom.css",
 			"desc": "弹幕信息"
 		}
 	]

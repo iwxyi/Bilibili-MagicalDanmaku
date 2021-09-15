@@ -4,6 +4,7 @@
 			"name": "多人投票",
 			"url": "/vote/index.html",
 			"css": "/vote/vote.css",
+			"css_custom": "/vote/vote_custom.css",
 			"desc": "在线多人投票小程序"
 		}
 	]
