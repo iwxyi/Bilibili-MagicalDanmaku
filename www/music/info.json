@@ -14,7 +14,7 @@
 		},
 		{
 			"name": "当前歌曲歌词",
-			"url": "lyric.html",
+			"url": "lyrics.html",
 			"css": "lyrics.css",
 			"desc": "点歌姬正在播放的歌曲的歌词"
 		}

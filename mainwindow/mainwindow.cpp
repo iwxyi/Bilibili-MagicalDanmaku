@@ -6287,7 +6287,10 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             foreach (QString s, sl)
             {
                 if (content.contains(s))
+                {
+                    qInfo() << "keys:" << sl;
                     return "1";
+                }
             }
         }
         return "0";
@@ -6313,7 +6316,10 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             foreach (QString s, sl)
             {
                 if (content.indexOf(QRegularExpression(s)) > -1)
+                {
+                    qInfo() << "regs:" << sl;
                     return "1";
+                }
             }
         }
         return "0";
