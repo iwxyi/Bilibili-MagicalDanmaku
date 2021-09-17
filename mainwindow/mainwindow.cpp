@@ -86,7 +86,9 @@ MainWindow::MainWindow(QWidget *parent)
         });
     }
 
-    triggerCmdEvent("START_UP", LiveDanmaku(), true);
+    QTimer::singleShot(0, [=]{
+        triggerCmdEvent("START_UP", LiveDanmaku(), true);
+    });
 }
 
 void MainWindow::initView()
@@ -4382,7 +4384,7 @@ void MainWindow::updatePermission()
 
 int MainWindow::hasPermission()
 {
-    return permissionLevel;
+    return justStart || permissionLevel;
 }
 
 /**
@@ -8127,6 +8129,22 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             p.waitForStarted();
             p.waitForFinished();
             qInfo() << QString::fromLocal8Bit(p.readAllStandardError());
+            return true;
+        }
+    }
+
+    // 命令行
+    if (msg.contains("startProgram"))
+    {
+        re = RE("startProgram\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString cmd = caps.at(1);
+            cmd.replace("%n%", "\n");
+            qInfo() << "执行命令：" << caps;
+            QProcess p(nullptr);
+            p.startDetached(cmd);
             return true;
         }
     }

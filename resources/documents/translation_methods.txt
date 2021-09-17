@@ -25,6 +25,7 @@ post数据=postData
 发送至socket=sendToSockets
 发送至最后socket=sendToLastSocket
 运行命令行=runCommandLine
+运行程序=startProgram
 设置值=setValue
 添加值=addValue
 批量设置值=setValues

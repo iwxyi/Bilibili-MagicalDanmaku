@@ -1179,6 +1179,7 @@ tips：
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有WebSocket                                          |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket                                    |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |
+| startProgram                                       | 运行程序         | 打开外部程序（例如守护进程）                                 |
 | setSetting                                         | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
 | removeSetting                                      | 移除某项配置     | 同上                                                         |
 | setValue(key, val)                                 | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
@@ -1529,7 +1530,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 | 事件命令                  | 说明                                              |
 | ------------------------- | ------------------------------------------------- |
-| START_UP                  | 程序启动                                          |
+| START_UP                  | 程序启动完成                                      |
 | START_WORK                | 开播后启动程序，或者程序启动后再开播              |
 | LOGIN_FINISHED            | 连接直播间并登录账号后                            |
 | SHUT_DOWN                 | 程序关闭的一瞬间                                  |
