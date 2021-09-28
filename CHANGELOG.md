@@ -1,6 +1,10 @@
 ### v4.3.3 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.3)
 
 - 新增自定义样式文件，更新不覆盖样式
+- 新增查看云端屏蔽词
+- 新增打开外部程序命令`startProgram`
+- 新增点歌播放结束事件`SONG_PLAY_FINISHED`
+- 新增README中的语法说明
 - 修复点歌歌词路径问题
 
 
