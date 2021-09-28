@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>867</width>
-    <height>620</height>
+    <height>1199</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>65</width>
-             <height>16</height>
+             <width>787</width>
+             <height>1083</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2098,7 +2098,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>150</y>
               <width>161</width>
-              <height>161</height>
+              <height>181</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2186,6 +2186,45 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>云同步屏蔽词</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="shieldKeywordListButton">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>查看目前云端的屏蔽词</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>云屏蔽词列表</string>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -2305,7 +2344,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>330</y>
+              <y>350</y>
               <width>171</width>
               <height>171</height>
              </rect>
@@ -2629,7 +2668,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>520</y>
+              <y>540</y>
               <width>161</width>
               <height>151</height>
              </rect>
@@ -3352,7 +3391,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>680</y>
+              <y>700</y>
               <width>161</width>
               <height>111</height>
              </rect>
@@ -3844,7 +3883,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>800</y>
+              <y>820</y>
               <width>161</width>
               <height>141</height>
              </rect>

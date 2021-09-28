@@ -19293,3 +19293,8 @@ void MainWindow::on_dontSpeakOnPlayingSongCheck_clicked()
 {
     settings->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
 }
+
+void MainWindow::on_shieldKeywordListButton_clicked()
+{
+    QDesktopServices::openUrl(QUrl(SERVER_DOMAIN + "/web/keyword/list"));
+}

@@ -740,6 +740,8 @@ private slots:
 
     void on_dontSpeakOnPlayingSongCheck_clicked();
 
+    void on_shieldKeywordListButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -1173,7 +1175,8 @@ private:
     bool gettingRoom = false;
     bool gettingUser = false;
     bool gettingUp = false;
-    QString serverPath = LOCAL_MODE ? "http://localhost:8102/server/" : "http://iwxyi.com:8102/server/";
+    QString SERVER_DOMAIN = LOCAL_MODE ? "http://localhost:8102" : "http://iwxyi.com:8102";
+    QString serverPath = SERVER_DOMAIN + "/server/";
     int permissionLevel = 0;
     QTimer* permissionTimer = nullptr;
     QString permissionText = "捐赠版";
