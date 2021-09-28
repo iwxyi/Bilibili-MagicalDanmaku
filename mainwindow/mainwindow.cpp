@@ -13914,6 +13914,13 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
                 savePlayingSong();
             }
         });
+
+        connect(musicWindow, &OrderPlayerWindow::signalSongPlayFinished, this, [=](Song song){
+            LiveDanmaku danmaku(song.id, song.addBy, song.name);
+            danmaku.setPrevTimestamp(song.addTime);
+            danmaku.with(song.toJson());
+            triggerCmdEvent("SONG_PLAY_FINISHED", danmaku);
+        });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongImproved, this, [=](Song song, int prev, int curr){
             localNotify("提升歌曲：" + song.name + " : " + snum(prev+1) + "->" + snum(curr+1));
             LiveDanmaku danmaku(song.id, song.addBy, song.name);

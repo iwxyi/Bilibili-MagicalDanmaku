@@ -1679,7 +1679,8 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | ORDER_SONG_COPY             | 点歌已复制歌名                                               |
 | ORDER_SONG_IMPROVED         | 播放顺序提前，`%number%`获取当前顺序，从1开始，1为下一首     |
 | ORDER_SONG_CUTTED           | 被手动切歌，即调用`>cutOrderSong`                            |
-| CURRENT_SONG_CHANGED        | 歌曲开始播放(包括手动播放的)或结束。                         |
+| SONG_PLAY_FINISHED          | 歌曲播放结束事件，`%.addBy%` 不为空表示是点歌                |
+| CURRENT_SONG_CHANGED        | 歌曲开始播放(包括手动播放的)或播放列表结束。                 |
 | ORDER_SONG_BLOCKED          | 点歌由于关键词被阻止，`%{.key}%`获取关键词                   |
 
 可用歌名 `[%text%=""]` 判断歌曲是否有效， `["%uname%"=""]` 判断是在点歌姬中手动搜索添加的歌曲还是弹幕点歌的歌曲。
