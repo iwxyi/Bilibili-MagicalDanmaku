@@ -14811,16 +14811,15 @@ void MainWindow::connectPkRoom()
         // 正在直播的时候突然断开了，比如掉线
         if (isLiving() && pkSocket)
         {
-            if (pking && pkChuanmenEnable)
+            if (pking && pkChuanmenEnable) // 需要继续连接
             {
                 qWarning() << "pkSocket断开连接";
 
                 // 判断是否要重新连接
                 connectPkSocket();
             }
-            else
+            else // 结束的情况，断开并清空
             {
-                // 清空
                 pkSocket->deleteLater();
                 pkSocket = nullptr;
             }
@@ -14832,6 +14831,7 @@ void MainWindow::connectPkRoom()
         slotPkBinaryMessageReceived(message);
     });
 
+    // ========== 开始连接 ==========
     connectPkSocket();
 }
 
@@ -14840,7 +14840,6 @@ void MainWindow::connectPkSocket()
     if (pkRoomId.isEmpty())
         return ;
 
-    // ========== 开始连接 ==========
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
     url += "?id="+pkRoomId+"&type=0";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
@@ -14875,7 +14874,7 @@ void MainWindow::connectPkSocket()
         SOCKET_DEB << "pk.socket.host:" << host;
 
         // ========== 连接Socket ==========
-        qInfo() << "连接PK房间";
+        qInfo() << "连接 PK Socket：" << pkRoomId;
         if (!pkSocket)
             pkSocket = new QWebSocket();
         QSslConfiguration config = pkSocket->sslConfiguration();
