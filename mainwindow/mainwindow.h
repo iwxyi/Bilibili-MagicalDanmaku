@@ -921,6 +921,7 @@ private:
     bool execTouta();
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
     void connectPkRoom();
+    void connectPkSocket();
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
     bool shallAutoMsg() const;

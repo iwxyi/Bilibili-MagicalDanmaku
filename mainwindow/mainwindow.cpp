@@ -14811,9 +14811,19 @@ void MainWindow::connectPkRoom()
         // 正在直播的时候突然断开了，比如掉线
         if (isLiving() && pkSocket)
         {
-            qWarning() << "pkSocket断开连接";
-            pkSocket->deleteLater();
-            pkSocket = nullptr;
+            if (pking && pkChuanmenEnable)
+            {
+                qWarning() << "pkSocket断开连接";
+
+                // 判断是否要重新连接
+                connectPkSocket();
+            }
+            else
+            {
+                // 清空
+                pkSocket->deleteLater();
+                pkSocket = nullptr;
+            }
             return ;
         }
     });
@@ -14821,6 +14831,14 @@ void MainWindow::connectPkRoom()
     connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
         slotPkBinaryMessageReceived(message);
     });
+
+    connectPkSocket();
+}
+
+void MainWindow::connectPkSocket()
+{
+    if (pkRoomId.isEmpty())
+        return ;
 
     // ========== 开始连接 ==========
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
