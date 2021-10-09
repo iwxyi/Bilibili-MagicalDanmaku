@@ -2384,13 +2384,13 @@ ws.onopen = function() {
 sendToSockets(SOME_CMD, \
 	{\
 		"action": "SOME_ACTION",\
-	    "data": {"key1": "value1", "key2": 222}\
+		"data": {"key1": "value1", "key2": 222}\
 	})
 ```
 
-第一个参数的 `SOME_CMD` 用于过滤 socket，即在 onopen 发送过来的 cmd 类型才会接收，不会把接收弹幕消息发到只接收礼物消息的 socket 对象上。
+第一个参数的 `SOME_CMD` 用于**过滤 socket**，即在 onopen 发送过来的 cmd 类型才会接收，不会把接收弹幕消息发到只接收礼物消息的 socket 对象上，也**不会真正发送出去**。
 
-第二个参数是一个 JSON 字符串，即网页端接收到的 data。
+第二个参数是一个 JSON 字符串，即网页端接收到的 data，具体格式要和网页一致。
 
 
 

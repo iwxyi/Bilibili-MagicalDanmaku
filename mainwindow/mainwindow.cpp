@@ -5753,6 +5753,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%today_fans%")
         return snum(dailyNewFans);
 
+    // 大航海人数
+    else if (key == "%guard_count%")
+        return snum(guardInfos.size());
+
     // 当前粉丝数量
     else if (key == "%fans_count%")
         return snum(currentFans);
