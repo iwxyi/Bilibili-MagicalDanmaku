@@ -3725,12 +3725,13 @@ void MainWindow::initWS()
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
-        if (liveStatus)
+        if (isLiving())
         {
-            qWarning() << "正在直播的时候突然断开，10秒后重连...";
+            qWarning() << "正在直播的时候突然断开，5秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+            localNotify("[连接断开，重连...]");
             liveStatus = false;
-            // 尝试10秒钟后重连
-            connectServerTimer->setInterval(10000);
+            // 尝试5秒钟后重连
+            connectServerTimer->setInterval(5000);
         }
 
         SOCKET_DEB << "disconnected";
@@ -14774,6 +14775,7 @@ void MainWindow::connectPkRoom()
 {
     if (pkRoomId.isEmpty())
         return ;
+    qInfo() << "连接PK房间:" << pkRoomId;
 
     // 根据弹幕消息
     myAudience.clear();
@@ -14797,7 +14799,6 @@ void MainWindow::connectPkRoom()
     // 连接socket
     if (pkSocket)
         pkSocket->deleteLater();
-
     pkSocket = new QWebSocket();
 
     connect(pkSocket, &QWebSocket::connected, this, [=]{
@@ -14810,6 +14811,7 @@ void MainWindow::connectPkRoom()
         // 正在直播的时候突然断开了，比如掉线
         if (isLiving() && pkSocket)
         {
+            qWarning() << "pkSocket断开连接";
             pkSocket->deleteLater();
             pkSocket = nullptr;
             return ;
@@ -14855,6 +14857,9 @@ void MainWindow::connectPkRoom()
         SOCKET_DEB << "pk.socket.host:" << host;
 
         // ========== 连接Socket ==========
+        qInfo() << "连接PK房间";
+        if (!pkSocket)
+            pkSocket = new QWebSocket();
         QSslConfiguration config = pkSocket->sslConfiguration();
         config.setPeerVerifyMode(QSslSocket::VerifyNone);
         config.setProtocol(QSsl::TlsV1SslV3);
