@@ -1,0 +1,33 @@
+{
+    "name": "等待礼物",
+    "min_version": "4.3.0",
+    "list": [
+        {
+            "name": "等待礼物",
+            "url": "index.html",
+            "css": "style.css",
+            "css_custom": "style_custom.css",
+            "desc": "自定义动态内容的文字",
+            "code": [
+                {
+                    "action": ">sendToSockets(WAIT_GIFT, \\\n\t{\\\n\t\t\"cmd\": \"WAIT_GIFT\",\\\n\t\t\"data\": \"等待第%[%{my_gift}%+1]%/100个吃瓜\"\\ // 这段就是要显示的文字\n\t})",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "SOCKET:WAIT_GIFT"
+                },
+                {
+                    "action": "// 送礼事件，刷新文字\n[%origin_gift_name% == 吃瓜]>setValue(my_gift, %[%{my_gift}%+%gift_num%]%)\\n\\\n>triggerEvent(SOCKET:WAIT_GIFT)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "SEND_GIFT"
+                },
+                {
+                    "action": ">setValue(my_gift, 0)\\n\\\n>triggerEvent(SOCKET:WAIT_GIFT)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": false,
+                    "event": "初始化已收到的礼物数量为0，需要手动点“发送”按钮"
+                }
+            ]
+        }
+    ]
+}

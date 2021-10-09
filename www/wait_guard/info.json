@@ -1,0 +1,27 @@
+{
+    "name": "等待舰长",
+    "min_version": "4.3.4",
+    "list": [
+        {
+            "name": "等待舰长",
+            "url": "index.html",
+            "css": "style.css",
+            "css_custom": "style_custom.css",
+            "desc": "自定义动态内容的文字",
+            "code": [
+                {
+                    "action": ">sendToSockets(WAIT_GUARD, \\\n\t{\\\n\t\t\"cmd\": \"WAIT_GUARD\",\\\n\t\t\"data\": \"等待第%[%guard_count%+1]%位舰长\"\\ // 这段就是要显示的文字\n\t})",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "SOCKET:WAIT_GUARD"
+                },
+                {
+                    "action": "// 对应的事件，刷新文字\n>triggerEvent(SOCKET:WAIT_GUARD)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "NEW_GUARD_COUNT"
+                }
+            ]
+        }
+    ]
+}

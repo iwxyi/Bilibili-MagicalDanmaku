@@ -1,0 +1,33 @@
+<head>
+    <title>神奇弹幕自定义文字</title>
+    <link rel="stylesheet" href="style.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="style_custom.css" media="screen" type="text/css" />
+    <script src="../js/jquery.js"></script>
+</head>
+
+<body>
+    <font id="my-text"></font>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd":"cmds", "data":["WAIT_GIFT"]}');
+                // 第一次初始化
+                ws.send('{"cmd":"WAIT_GIFT"}');
+            };
+            ws.onmessage = function(e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'WAIT_GIFT':
+                        var myText = json['data'];
+                        $("#my-text").html(myText);
+                        break;
+                }
+               
+            };
+        });
+    </script>
+</body>
