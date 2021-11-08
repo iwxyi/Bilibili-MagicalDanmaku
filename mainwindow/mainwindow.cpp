@@ -6589,9 +6589,11 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     {
         bool ok;
         qint64 ll = val.toLongLong(&ok);
-        if (!ok)
+        if (!ok && !val.isEmpty())
         {
-            showError("转换整数值失败", exp);
+            // [-1] 作为 [0-1] 会转换两次，第一次失败，忽略
+            showError("转换整数值失败", val + "->" + snum(ll));
+            qWarning() << "exp:" << val << ll << ok;
             if (val.length() > 18) // 19位数字，超出了ll的范围
                 ll = val.right(18).toLongLong();
         }
@@ -16680,6 +16682,12 @@ void MainWindow::loadWebExtensinList()
             continue;
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
+        QString name = json.s("name");
+        QString minVersion = json.s("min_version");
+        if (!minVersion.isEmpty() && appVersion < minVersion)
+        {
+            showError("扩展【" + name + "】要求版本：v" + minVersion);
+        }
         json.each("list", [=](MyJson inf){
             QString name = inf.s("name");
             QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
