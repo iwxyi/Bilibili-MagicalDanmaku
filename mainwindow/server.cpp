@@ -204,6 +204,20 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         qInfo() << "返回配置：" << rst;
         sendJsonToSockets("GET_CONFIG", rst, clientSocket);
     }
+    else if (cmd == "GET_INFO")
+    {
+        // "data": { "room_id": "%room_id%", "title": "%room_title%" }
+        QJsonObject obj = json.value("data").toObject();
+        auto keys = obj.keys();
+        QJsonObject lis;
+        foreach (auto key, keys)
+        {
+            QString val = obj.value(key).toString();
+            val = processDanmakuVariants(val, LiveDanmaku());
+            lis.insert(key, val);
+        }
+        sendJsonToSockets("GET_INFO", lis, clientSocket);
+    }
     else if (cmd == "FORWARD") // 转发给其他socket
     {
         if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制

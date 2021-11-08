@@ -2493,24 +2493,77 @@ ws.onmessage = function(e) {
       "data": ["key1", "key2", "key3", "key4", "key5"]
   }
   ```
-```
-  
+
 可以不加入 `data` 或留空 `"data": []`，会返回该 `prefix` 下的所有配置。
-  
-  以上面的`SET_CONFIG`为例，可能会返回 JSON：
-  
+
+然后添加 `function readConfig(data)`，其中的形参 `data` 就是返回的 JSON 的 data，可直接读取里面的数值。
+
+以上面的`SET_CONFIG`为例，可能会返回 JSON：
+
   ```json
-  {
-      "cmd": "GET_CONFIG",
-      "data": {
-          "key1": 123,
-          "key2": "某个值",
-          "key3": 10.08,
-          "key4": false,
-          "key5": null
-      }
-  }
+{
+    "cmd": "GET_CONFIG",
+    "data": {
+        "key1": 123,
+        "key2": "某个值",
+        "key3": 10.08,
+        "key4": false,
+        "key5": null
+    }
+}
+  ```
+
+
+
+### 读取主程序信息
+
+通过ws向主程序发送 `GET_INFO` 格式的cmd，则会通过内置解释器将一些**变量**输出为响应的真实数值（都是**字符串**格式），并按发送的格式返回：
+
+```json
+{
+	"cmd": "GET_INFO",
+	"data": {
+		"key1": "key1表达式",
+		"key2": "key2表达式"
+}
 ```
+
+添加 `function readInfo(data)`，其中形参 `data` 就是返回的 JSON 中的 data。
+
+以获取房间ID、标题为例：
+
+```js
+function socketInited() {
+    var json = {
+        cmd: "GET_INFO",
+        data: {
+            room_id: "%room_id%",
+            title: "%room_name%",
+            pk: "%pking%"
+        }
+    }
+    appWs.send(JSON.stringify(json));
+}
+
+function readInfo(data) {
+    roomId = data['room_id'];
+}
+```
+
+可能返回的数据：
+
+```json
+{
+    "cmd": "GET_INFO",
+    "data": {
+        "room_id": "123456",
+        "title": "标题",
+        "pk": "0"
+    }
+}
+```
+
+
 
 
 
