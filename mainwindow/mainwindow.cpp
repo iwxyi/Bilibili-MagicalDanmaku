@@ -2634,6 +2634,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         getPkMatchInfo();
     }
+    else if (text == "测试断线")
+    {
+        socket->close();
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -5817,7 +5821,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%pk_uname%")
         return pkUname;
     else if (key == "%pk_count%")
-        return snum(pking && !pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
+        return snum(!pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
     else if (key == "%pk_touta_prob%")
     {
         int prob = 0;
@@ -6587,13 +6591,12 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     QList<qint64> vals;
     foreach (QString val, valss)
     {
-        bool ok;
+        bool ok = true;
         qint64 ll = val.toLongLong(&ok);
-        if (!ok && !val.isEmpty())
+        if (!ok && !ll)
         {
-            // [-1] 作为 [0-1] 会转换两次，第一次失败，忽略
-            showError("转换整数值失败", val + "->" + snum(ll));
-            qWarning() << "exp:" << val << ll << ok;
+            showError("转换整数值失败", exp);
+            qDebug() << "exp:" << exp << exp.startsWith("\"") << ll;
             if (val.length() > 18) // 19位数字，超出了ll的范围
                 ll = val.right(18).toLongLong();
         }
