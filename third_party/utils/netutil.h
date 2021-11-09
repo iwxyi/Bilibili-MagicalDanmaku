@@ -38,7 +38,7 @@ public:
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
-        QByteArray code_content(reply->readAll().data());
+        QByteArray code_content(reply->readAll());
 
         reply->deleteLater();
         return code_content;
@@ -59,7 +59,7 @@ public:
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
-        QString code_content(reply->readAll().data());
+        QString code_content(reply->readAll());
         reply->deleteLater();
         return code_content;
     }
@@ -80,7 +80,7 @@ public:
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
         loop.exec(); //开启子事件循环
 
-        QByteArray code_content(reply->readAll().data());
+        QByteArray code_content(reply->readAll());
         reply->deleteLater();
         return code_content;
     }
@@ -297,7 +297,7 @@ public:
 
         QNetworkReply *reply = manager->get(request);
         QObject::connect(reply, &QNetworkReply::finished, [=]{
-            QString str = QString(reply->readAll().data());
+            QString str = reply->readAll();
             emit finished(str);
             reply->deleteLater();
             manager->deleteLater();
@@ -317,7 +317,7 @@ qDebug() << "网址 post ：" << uri << data;
         QNetworkReply *reply = manager->post(request, body);
 
         QObject::connect(reply, &QNetworkReply::finished, [=]{
-            QString str = QString(reply->readAll().data());
+            QString str = reply->readAll();
 #ifdef NET_DEBUG
             qDebug() << "返回结果：" << str; // 注意：要是传回来的内容太长（超过3万6左右），qDebug不会输出。这是可以输出size()来查看
 #endif
