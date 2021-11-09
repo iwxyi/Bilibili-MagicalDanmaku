@@ -703,6 +703,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         QString url = params.value("url", "");
         QHttpRequest::HttpMethod method = req->method();
         auto headers = req->headers();
+        qInfo() << "代理URL：" << url;
 
         if (url.isEmpty())
             return QByteArray("参数 URL 不能为空");
@@ -737,19 +738,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             loop.exec(); //开启子事件循环
         }
 
-        if (reply)
+        if (reply->hasRawHeader("content-type"))
         {
-            if (reply->hasRawHeader("content-type"))
-                *contentType = reply->rawHeader("content-type");
-            if (reply->hasRawHeader("content-length"))
-                *contentType = reply->rawHeader("content-length");
-            ba = reply->readAll().data();
-            reply->deleteLater();
+            *contentType = reply->rawHeader("content-type");
         }
-        else
-        {
-            qWarning() << "网络代理 reply 为空";
-        }
+        ba = reply->readAll();
+        reply->deleteLater();
     }
 
     return ba;
