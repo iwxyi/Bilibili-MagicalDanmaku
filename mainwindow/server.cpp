@@ -585,7 +585,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     // ========== 各类接口 ==========
     if (urlPath.startsWith("api/"))
     {
-        doc = getApiContent(urlPath.right(urlPath.length() - 4), params, &contentType);
+        doc = getApiContent(urlPath.right(urlPath.length() - 4), params, &contentType, req, resp);
     }
     // ========== 固定类型 ==========
     else if (urlPath == "danmaku") // 弹幕姬
@@ -653,7 +653,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     }
 
     // 开始返回
-    if (contentType.startsWith("text/"))
+    if (contentType.startsWith("text/") && !contentType.contains("charset"))
         contentType += ";charset=utf-8";
     resp->setHeader("Content-Type", contentType);
     resp->setHeader("Content-Length", snum(doc.size()));
@@ -674,10 +674,10 @@ void MainWindow::processServerVariant(QByteArray &doc)
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
 /// 示例地址：http://__DOMAIN__:__PORT__/api/header?uid=123456
-QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType)
+QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params, QString* contentType, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray ba;
-    if (url == "header")
+    if (url == "header") // 获取头像 /api/header?uid=1234565
     {
         *contentType = "image/jpeg";
         if (!params.contains("uid"))
@@ -697,6 +697,59 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         f.open(QIODevice::ReadOnly);
         ba = f.readAll();
         f.close();
+    }
+    else if (url == "netProxy") // 网络代理，解决跨域问题 /api/webProxy?url=https://www.baidu.com  (urlEncode)
+    {
+        QString url = params.value("url", "");
+        QHttpRequest::HttpMethod method = req->method();
+        auto headers = req->headers();
+
+        if (url.isEmpty())
+            return QByteArray("参数 URL 不能为空");
+
+        QNetworkAccessManager manager;
+        QNetworkRequest request(url);
+        setUrlCookie(url, &request);
+
+        if (headers.contains("content-type"))
+            request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(req->header("content-type")));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+
+        QNetworkReply *reply = nullptr;
+        QEventLoop loop;
+
+        if (method == QHttpRequest::HttpMethod::HTTP_GET) // get
+        {
+            reply = manager.get(request);
+            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+            loop.exec(); //开启子事件循环
+        }
+        else // post delete put 等
+        {
+            QByteArray data = req->body(); // 这里body好像是空的？
+            if (method == QHttpRequest::HttpMethod::HTTP_POST)
+                reply = manager.post(request, data);
+            else if (method == QHttpRequest::HttpMethod::HTTP_PUT)
+                reply = manager.put(request, data);
+            else
+                reply = manager.post(request, data);
+            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+            loop.exec(); //开启子事件循环
+        }
+
+        if (reply)
+        {
+            if (reply->hasRawHeader("content-type"))
+                *contentType = reply->rawHeader("content-type");
+            if (reply->hasRawHeader("content-length"))
+                *contentType = reply->rawHeader("content-length");
+            ba = reply->readAll().data();
+            reply->deleteLater();
+        }
+        else
+        {
+            qWarning() << "网络代理 reply 为空";
+        }
     }
 
     return ba;

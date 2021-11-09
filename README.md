@@ -2538,15 +2538,15 @@ function socketInited() {
         cmd: "GET_INFO",
         data: {
             room_id: "%room_id%",
-            title: "%room_name%",
-            pk: "%pking%"
+            title  : "%room_name%",
+            pk     : "%pking%"
         }
     }
     appWs.send(JSON.stringify(json));
 }
 
 function readInfo(data) {
-    roomId = data['room_id'];
+    roomId = data['room_id']; // 获取到的房间ID
 }
 ```
 
@@ -2641,6 +2641,21 @@ JSON格式：
   ```html
   <img src="http://__DOMAIN__:__PORT__/api/header?uid=123456" />
   ```
+
+- 网络代理：`/api/netProxy?url=网址`，可解决本地请求无法跨域问题；其中 `网址` 若带有参数，则需进行URL编码。请求时使用 GET、POST 等不同方法、设置不同 content-type，都会响应转移到代理中，并自动设置当前登录账号的 Cookies。
+
+  ```js
+  $.ajax({
+      url: "http://__DOMAIN__:__PORT__/api/netProxy?url=http://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc",
+      async: false,
+      dataType: "JSON",
+      success: function (data) {
+          giftList = data["data"]["list"];
+      }
+  });
+  ```
+
+  
 
 
 

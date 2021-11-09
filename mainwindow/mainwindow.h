@@ -984,7 +984,7 @@ private:
     void sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku);
     void sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket* socket = nullptr);
     void processServerVariant(QByteArray& doc);
-    QByteArray getApiContent(QString url, QHash<QString, QString> params, QString *contentType);
+    QByteArray getApiContent(QString url, QHash<QString, QString> params, QString *contentType, QHttpRequest *req, QHttpResponse *resp);
     void sendTextToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
     void sendLyricList(QWebSocket* socket = nullptr);
