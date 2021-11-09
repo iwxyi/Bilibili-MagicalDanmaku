@@ -1,5 +1,5 @@
-var usedMsgType = []; // !需要使用的弹幕
-var configGroup = ''; // !不留空表示需要读取配置
+var usedMsgType = []; // !需要使用的cmd类型
+var configGroup = ''; // !留空表示不需要读取配置
 
 var appWs;
 $(document).ready(function () {
@@ -8,9 +8,10 @@ $(document).ready(function () {
         var json = { cmd: "cmds", data: usedMsgType };
         appWs.send(JSON.stringify(json));
 
-        // 读取配置
+        // 自动读取配置
         if (configGroup != '') {
-            appWs.send('{"cmd": "GET_CONFIG", "group": "' + configGroup + '"}');
+            var json = { cmd: "GET_CONFIG", group: configGroup };
+            appWs.send(JSON.stringify(json));
         }
 
         try {
@@ -27,8 +28,10 @@ $(document).ready(function () {
             var data = json['data'];
             if (cmd == 'GET_CONFIG') {
                 readConfig(data); // !读取配置
+            } else if (cmd == 'GET_INFO') {
+                readInfo(data); // !读取信息
             } else {
-                parseCmd(cmd, data); // !解析弹幕
+                parseCmd(cmd, data); // !解析自己的命令
             }
         } catch (err) {
             // console.log(err);

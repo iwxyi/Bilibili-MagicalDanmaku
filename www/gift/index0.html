@@ -1,0 +1,54 @@
+<head>
+    <title>神奇弹幕</title>
+    <script src="../js/jquery.js"></script>
+    <link rel="stylesheet" href="gift.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="gift_custom.css" media="screen" type="text/css" />
+</head>
+
+<body>
+    <div>
+        <img id="gif" src="" />
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd": "cmds", "data": ["SEND_GIFT", "GUARD_BUY"]}');
+            };
+            ws.onmessage = function(e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'SEND_GIFT':
+                        var giftName = json['data']['gift_name'];
+                        var giftId = json['data']['gift_id'];
+                        var duration = (giftName == '小心心' ? 3000 : 5000);
+                        setImage(giftId, '.gif', duration);
+                        break;
+                    case 'GUARD_BUY':
+                        var level = json['data']['guard_level'];
+                        var name = 'jz';
+                        if (level == 2)
+                            name = 'td';
+                        else if (level == 1)
+                            name = 'zd';
+                        setImage(name, '.png', 6000 * level);
+                        break;
+                }
+            };
+        });
+
+        var timer = null;
+
+        function setImage(id, suffix, duration) {
+            if (timer != null)
+                clearTimeout(timer);
+            // 素材来源：智播学院 http://college.zbmate.com/#/gifts/b_gift_icon
+            $('#gif').attr('src', 'http://openapi.zbmate.com/gift_icons/b/' + id + suffix);
+            timer = setTimeout(function() {
+                $('#gif').attr('src', '');
+            }, duration);
+        }
+    </script>
+</body>

@@ -6,7 +6,15 @@
             "config": "config.html",
 			"css": "index.css",
 			"css_custom": "index_custom.css",
-			"desc": "弹幕信息"
-		}
+			"desc": "从顶部出现的弹幕，可添加到直播姬/OBS"
+		},
+        {
+            "name": "底部弹幕",
+            "url": "index_bottom.html",
+            "config": "config.html",
+            "css": "index.css",
+            "css_custom": "index_custom.css",
+            "desc": "从底部出现的弹幕，可添加到直播姬/OBS，自适应窗口高度"
+        }
 	]
 }

@@ -1,0 +1,11 @@
+{
+	"list": [
+		{
+			"name": "时间插件",
+			"url": "index.html",
+			"css": "index.css",
+			"css_custom": "index_custom.css",
+            "desc": "直播间透明时间插件"
+		}
+	]
+}

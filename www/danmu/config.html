@@ -21,6 +21,26 @@
             显示昵称
         </label>
     </div>
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='showMedal' />
+            <i class="mdui-checkbox-icon"></i>
+            显示粉丝勋章
+        </label>
+    </div>
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='onlyMyMedal' />
+            <i class="mdui-checkbox-icon"></i>
+            仅显示当前房间的粉丝勋章
+        </label>
+    </div><div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='showGuard' />
+            <i class="mdui-checkbox-icon"></i>
+            显示舰长标识
+        </label>
+    </div>
 
     <div>
         <label class="mdui-checkbox">
@@ -57,15 +77,24 @@
                 $('#showUname').attr("checked", true);
             if (data['showBubble'] == true)
                 $('#showBubble').attr("checked", true);
-            if (typeof (data['msgCount']) != undefined)
+            if (data['showMedal'] == true)
+                $('#showMedal').attr("checked", true);
+            if (data['onlyMyMedal'] == true)
+                $('#onlyMyMedal').attr("checked", true);
+            if (data['showGuard'] == true)
+                $('#showGuard').attr("checked", true);
+            if (data['msgCount'] != undefined)
                 $('#msgCount').val(data['msgCount']);
-            if (typeof (data['showTime']) != undefined)
+            if (data['showTime'] != undefined)
                 $('#showTime').val(data['showTime']);
             mdui.updateSliders();
         }
 
         addCheckEvent('showUname');
         addCheckEvent('showBubble');
+        addCheckEvent('showMedal');
+        addCheckEvent('onlyMyMedal');
+        addCheckEvent('showGuard');
         addSpinEvent('msgCount');
         addSpinEvent('showTime');
 
