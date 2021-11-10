@@ -1,3 +1,21 @@
+### v4.4.0 [扩展](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.4)
+
+- 新增透明时钟扩展
+- 新增动态等待xx个礼物扩展
+- 新增动态等待第x个舰长扩展
+- 新增自适应屏幕宽高的弹幕扩展
+- 新增扩展获取主程序信息接口
+- 新增网络代理接口
+- 添加舰长数量%guard_count%
+- 完善礼物动画扩展
+- 修复讯飞语音无法播放的问题
+- 修复PK获取匹配次数为零的问题
+- 修复PK时断连导致崩溃的问题
+
+
+
+
+
 ### v4.3.3 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.3.3)
 
 - 新增自定义样式文件，更新不覆盖样式

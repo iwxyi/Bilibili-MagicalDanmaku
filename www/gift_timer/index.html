@@ -1,0 +1,196 @@
+<head>
+    <title>神奇弹幕自定义文字</title>
+    <link rel="stylesheet" href="style.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="style_custom.css" media="screen" type="text/css" />
+    <script src="../js/jquery.js"></script>
+    <script src="../js/magical_danmaku.js"></script>
+</head>
+
+<body style="margin: 0px">
+    <div id="time-block0" class="round-block round-block-big">
+        <span id="last-time" class="time-font">00:00</span>
+    </div>
+    <div>
+        <!-- 添加方块 -->
+        <div id="time-block1" class="round-block round-block-small" style="display: inline-block;">
+            <div style="display: inline;">
+                <!-- 礼物 -->
+                <img id="gift-icon1" class="gift-icon"
+                    src='https://s1.hdslb.com/bfs/live/23475a7a6170e0d94ba52720e23060dc7604b735.png' />
+
+                <!-- 数字 -->
+                <div style="display: inline-block; text-align: left;">
+                    <!-- 礼物 -->
+                    <div id="gift-num1" class="gift-num">×1</div>
+                    <!-- 修改值 -->
+                    <div id="time-num1" class="time-modify time-add">+1s</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 减少方块 -->
+        <div id="time-block2" class="round-block round-block-small" style="display: inline-block;">
+            <div style="display: inline;">
+                <!-- 礼物 -->
+                <img id="gift-icon2" class="gift-icon"
+                    src='https://s1.hdslb.com/bfs/live/b304a1ae04d10c25db87cfd8ec2a83bce1749322.png' />
+
+                <!-- 数字 -->
+                <div style="display: inline-block; text-align: left;">
+                    <!-- 礼物 -->
+                    <div id="gift-num2" class="gift-num">×1</div>
+                    <!-- 修改值 -->
+                    <div id="time-num2" class="time-modify time-cut">-1s</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        // ws连接
+        usedMsgType = ['SEND_GIFT']; // !需要使用的cmd类型
+        configGroup = 'gift-timer'; // !留空表示不需要读取配置
+
+        // 配置变量
+        var giftName1 = '牛哇牛哇', giftName2 = '心动卡';
+        var giftIcon1 = 'https://s1.hdslb.com/bfs/live/23475a7a6170e0d94ba52720e23060dc7604b735.png', giftIcon2 = 'https://s1.hdslb.com/bfs/live/b304a1ae04d10c25db87cfd8ec2a83bce1749322.png';
+        var giftNum1 = 60, giftNum2 = 1; // 礼物数量
+        var timeNum1 = 60, timeNum2 = -1; // 时间数值
+        var enableTimer = true; // 是否启用时钟
+
+        // 运行变量
+        var currentSecond = 0; // 当前秒
+        var timer = null; // 定时器
+
+        function readConfig(data) {
+            if (data['currentSecond'] != undefined) {
+                currentSecond = data['currentSecond'];
+                console.log('初始时长：' + currentSecond);
+            }
+            if (data['enableTimer'] != undefined) {
+                enableTimer = data['enableTimer'];
+            }
+            if (data['giftName1'] != undefined) {
+                giftName1 = data['giftName1'];
+            }
+            if (data['giftIcon1'] != undefined) {
+                giftIcon1 = data['giftIcon1'];
+            }
+            if (data['giftNum1'] != undefined) {
+                giftNum1 = parseInt(data['giftNum1']);
+            }
+            if (data['timeNum1'] != undefined) {
+                timeNum1 = parseInt(data['timeNum1']);
+            }
+            if (data['giftName2'] != undefined) {
+                giftName2 = data['giftName2'];
+            }
+            if (data['giftIcon2'] != undefined) {
+                giftIcon2 = data['giftIcon2'];
+            }
+            if (data['giftNum2'] != undefined) {
+                giftNum2 = parseInt(data['giftNum2']);
+            }
+            if (data['timeNum2'] != undefined) {
+                timeNum2 = parseInt(data['timeNum2']);
+            }
+
+            initView();
+        }
+
+        function parseCmd(cmd, data) {
+            switch (cmd) {
+                case 'SEND_GIFT':
+                    var name = data['gift_name'];
+                    var number = data['number'];
+                    if (giftName1.split('|').indexOf(name) != -1 && number >= giftNum1) {
+                        changeTimeManual(timeNum1);
+                    } else if (giftName2.split('|').indexOf(name) != -1 && number >= giftNum2) {
+                        changeTimeManual(timeNum2);
+                    }
+                    break;
+            }
+        }
+
+        // 所有属性设置到界面
+        function initView() {
+            $("#gift-icon1").attr("src", giftIcon1);
+            $("#gift-icon2").attr("src", giftIcon2);
+            $("#gift-num1").text('×' + giftNum1);
+            $("#gift-num2").text('×' + giftNum2);
+            $("#time-num1").text((timeNum1 > 0 ? '+' : '') + timeNum1 + 's');
+            $("#time-num2").text((timeNum2 > 0 ? '+' : '') + timeNum2 + 's');
+
+            $("#time-block0").click(function () {
+                if (timer === null) {
+                    startTimer();
+                    enableTimer = true;
+                } else {
+                    console.log('stop timer');
+                    clearInterval(timer);
+                    timer = null;
+                    enableTimer = false;
+                }
+                saveConfig('enableTimer', enableTimer);
+            });
+            $("#time-block1").click(function () {
+                changeTimeManual(timeNum1);
+            });
+            $("#time-block2").click(function () {
+                changeTimeManual(timeNum2);
+            });
+
+            if (enableTimer && timer === null) {
+                startTimer();
+            }
+
+            // 刷新初始数值
+            changeTime(0);
+        }
+
+        function startTimer() {
+            console.log("startTimer");
+            timer = setInterval(function () {
+                changeTime(-1);
+                if (currentSecond % 5 == 0) {
+                    // 几秒钟保存一下
+                    saveConfig('currentSecond', currentSecond);
+                }
+            }, 1000);
+        }
+
+        function changeTimeManual(delta) {
+            changeTime(delta);
+            console.log('changeTime: ' + delta + ', second: ' + currentSecond);
+            saveConfig('currentSecond', currentSecond);
+        }
+
+        // 修改时间
+        function changeTime(delta) {
+            currentSecond = currentSecond + delta;
+            if (currentSecond < 0) {
+                currentSecond = 0;
+            }
+
+            // 显示到DOM中
+            var time = currentSecond // 总秒
+            var s = time % 60; // 秒
+            time = Math.floor(time / 60); // 总分
+            var m = time % 60; // 分
+            time = Math.floor(time / 60); // 总小时
+            var h = time % 24; // 小时
+            time = Math.floor(time / 24); // 总天
+            var d = time;
+
+            var result = '';
+            if (d > 0)
+                result += d + ":";
+            if (h > 0)
+                result += (h > 9 ? h : '0' + h) + ":";
+            result += (m > 9 ? m : '0' + m) + ":";
+            result += (s > 9 ? s : '0' + s);
+            $('#last-time').text(result);
+        }
+    </script>
+</body>

@@ -40,6 +40,6 @@ $(document).ready(function () {
 });
 
 function saveConfig(key, value) {
-    console.log('setConfig', key, value);
+    console.log('setConfig: ' + key + '=' + value);
     appWs.send('{"cmd": "SET_CONFIG", "group" : "' + configGroup + '", "data": {"' + key + '": ' + value + '}}');
 }

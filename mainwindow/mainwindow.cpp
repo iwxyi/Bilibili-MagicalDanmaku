@@ -16787,7 +16787,7 @@ void MainWindow::loadWebExtensinList()
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
-                btn->setToolTip("一键导入要用到的代码\n如果已经存在，可能会重新导入");
+                btn->setToolTip("一键导入要用到的代码\n如果已经存在，可能会重复导入");
                 btn->hide();
                 connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
                 connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));

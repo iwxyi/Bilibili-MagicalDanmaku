@@ -1,0 +1,11 @@
+{
+	"list": [
+		{
+			"name": "Live2D看板娘",
+            "url": "index.html",
+			"css": "waifu.css",
+			"css_custom": "index_custom.css",
+			"desc": "Live2D做的看板娘，可以显示弹幕"
+		}
+	]
+}

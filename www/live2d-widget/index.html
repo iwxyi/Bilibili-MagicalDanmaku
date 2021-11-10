@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+	<meta charset="UTF-8">
+	<meta name="referrer" content="no-referrer" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<script src="jquery-3.6.0.min.js"></script>
+	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <script src="../js/magical_danmaku.js"></script>
+	<script src="index.js"></script>
+	<title>live2d-widget</title>
+</head>
+<script>
+//弹幕解析
+usedMsgType = ["DANMU_MSG", "SEND_GIFT", "GUARD_BUY"];
+
+function parseCmd(cmd, data) {
+    switch (cmd) {
+        case 'DANMU_MSG':
+            sayMsg(data);
+            break;
+		case 'SEND_GIFT':
+            parseGIFT(data);
+            break;
+		case 'GUARD_BUY':
+            parseGUARD(data);
+            break;
+    }
+}
+//礼物解析
+function parseGIFT(data) {
+	var giftName = data['gift_name'];
+	var giftNum = data['number'];
+	var nickname = data['nickname'];
+    var text = '感谢<span style="color:#30BFC3;">『' + nickname + '』</span>赠送的：' + giftNum + "个" + giftName+"，爱你呦~~";
+	showMessage(text, 4000, 9);
+}
+
+//礼物解析
+function parseGUARD(data) {
+	var nickname = data['nickname'];
+	var level = json['guard_level'];
+	var text = '';
+	var name = '舰长';
+	if (level == 2)
+	{
+		name = '提督';
+		text = '哇塞！感谢<span style="color:#BC5CFD;">『' + nickname + '』</span>购买的：<span style="color:#0099CC;">' + name + "</span>，老板大气~~";
+	}
+	else if (level == 1)
+	{
+		name = '总督';
+		text = '哇塞！感谢<span style="color:#C33033;">『' + nickname + '』</span>购买的：<span style="color:#0099CC;">' + name + "</span>，老板多财多福~~";
+	}
+	else
+	{
+		text = '哇！感谢<span style="color:#6BA7D7;">『' + nickname + '』</span>购买的：<span style="color:#0099CC;">' + name + "</span>，以后我就是你的人了~~";
+	}
+	showMessage(text, 4000, 9);
+}
+
+/**
+ * 看板娘说话
+ */
+function sayMsg(data) {	
+    // 获取数据
+    var nickname = data['nickname'];
+    var text = nickname+' 说：'+data['text'];
+	showMessage(text, 4000, 9);
+}
+</script>
+<body>
+</body>
+</html>

@@ -34,7 +34,8 @@
             <i class="mdui-checkbox-icon"></i>
             仅显示当前房间的粉丝勋章
         </label>
-    </div><div>
+    </div>
+    <div>
         <label class="mdui-checkbox">
             <input type="checkbox" id='showGuard' />
             <i class="mdui-checkbox-icon"></i>
@@ -73,41 +74,30 @@
         configGroup = 'danmu';
 
         function readConfig(data) {
-            if (data['showUname'] == true)
-                $('#showUname').attr("checked", true);
-            if (data['showBubble'] == true)
-                $('#showBubble').attr("checked", true);
-            if (data['showMedal'] == true)
-                $('#showMedal').attr("checked", true);
-            if (data['onlyMyMedal'] == true)
-                $('#onlyMyMedal').attr("checked", true);
-            if (data['showGuard'] == true)
-                $('#showGuard').attr("checked", true);
-            if (data['msgCount'] != undefined)
-                $('#msgCount').val(data['msgCount']);
-            if (data['showTime'] != undefined)
-                $('#showTime').val(data['showTime']);
+            var addCheck = function (id) {
+                if (data[id] == true)
+                    $('#' + id).attr("checked", true);
+                $('#' + id).click(function () {
+                    saveConfig(id, $(this).is(':checked'));
+                });
+            };
+
+            var addSpin = function (id) {
+                if (data[id] != undefined)
+                    $('#' + id).val(data[id]);
+                $('#' + id).change(function () {
+                    saveConfig(id, $(this).val());
+                });
+            };
+
+            addCheck('showUname');
+            addCheck('showBubble');
+            addCheck('showMedal');
+            addCheck('onlyMyMedal');
+            addCheck('showGuard');
+            addSpin('msgCount');
+            addSpin('showTime');
             mdui.updateSliders();
-        }
-
-        addCheckEvent('showUname');
-        addCheckEvent('showBubble');
-        addCheckEvent('showMedal');
-        addCheckEvent('onlyMyMedal');
-        addCheckEvent('showGuard');
-        addSpinEvent('msgCount');
-        addSpinEvent('showTime');
-
-        function addCheckEvent(id) {
-            $('#' + id).click(function () {
-                saveConfig(id, $(this).is(':checked'));
-            });
-        }
-
-        function addSpinEvent(id) {
-            $('#' + id).change(function () {
-                saveConfig(id, $(this).val());
-            });
         }
 
     </script>

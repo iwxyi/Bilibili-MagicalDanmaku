@@ -1,0 +1,51 @@
+.time-font {
+    color      : #ffa4db;
+    font-weight: bold;
+    font-size  : 40px;
+    text-shadow: -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0px 2px 2px rgba(0, 0, 0, 0.2);
+}
+
+.round-block {
+    background-color: #fff8;
+    border-radius   : 3px;
+    padding         : 10px;
+    margin          : 5px;
+    text-align      : center;
+    height          : 50px;
+    cursor          : pointer;
+}
+
+.round-block-big {
+    width: 275px;
+}
+
+.round-block-small {
+    width: 120px;
+}
+
+.gift-icon {
+    height: 48px;
+    width : 48px;
+}
+
+.gift-num {
+    font-size: 16px;
+    color    : white;
+}
+
+.time-modify {
+    font-weight: bold;
+    font-size  : 24px;
+}
+
+.time-add {
+    color: #f5d06b;
+}
+
+.time-cut {
+    color: #f56b6b;
+}
