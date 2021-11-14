@@ -10,22 +10,25 @@ public:
     const int limit_max_pixmap_cache = 5;
     char toChar(int g)
     {
-        if (g <= 30) {
+        int one = 30; // 通用
+        // one = 24; // 人像（偏白）
+        int val = g / one;
+        if (val == 1) {
             return '#';
         }
-        else if (g > 30 && g <= 60) {
+        else if (val == 2) {
             return '&';
         }
-        else if (g > 60 && g <= 120) {
+        else if (val == 3 || val == 4) {
             return '$';
         }
-        else if (g > 120 && g <= 150) {
+        else if (val == 5) {
             return '*';
         }
-        else if (g > 150 && g <= 180) {
+        else if (val == 6) {
             return 'o';
         }
-        else if (g > 180 && g <= 210) {
+        else if (val == 7) {
             return '!';
         }
         else {
