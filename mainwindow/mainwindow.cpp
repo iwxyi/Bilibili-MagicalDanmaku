@@ -6908,7 +6908,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
                          "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2,}?)(不|有点|才是|敲|很|能有|想|要|从不|才不|跟你|和你).+",
+                         "^(.{2,}?)(永不|有点|才是|敲|很|能有|想|要|从不|才不|不|跟你|和你).+",
                         "^(.{2,})-(.{2,})$",
                         "^(.{2,}?)[最很超特别是没不想好可以能要]*有.+$"};
     for (int i = 0; i < extraExp.size(); i++)
@@ -15055,6 +15055,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QJsonArray medal = info[3].toArray();
         int medal_level = 0;
 
+        // 是否是串门的
         bool toView = pkBattleType &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
@@ -15109,10 +15110,11 @@ void MainWindow::handlePkMessage(QJsonObject json)
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        QString anchorRoomId;
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();
-            QString anchorRoomId = snum(qint64(medalInfo.value("anchor_room_id").toDouble())); // !注意：这个一直为0！
+            anchorRoomId = snum(qint64(medalInfo.value("anchor_room_id").toDouble())); // !注意：这个一直为0！
             QString anchorUname = medalInfo.value("anchor_uname").toString(); // !注意：也是空的
             int guardLevel = medalInfo.value("guard_level").toInt();
             int isLighted = medalInfo.value("is_lighted").toInt();
@@ -15133,8 +15135,15 @@ void MainWindow::handlePkMessage(QJsonObject json)
             }
         }
 
+        // 是否是串门的
+        bool toView = pkBattleType &&
+                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
+                 || (!pkRoomId.isEmpty() && anchorRoomId == roomId));
+
         danmaku.setPkLink(true);
-        // appendNewLiveDanmaku(danmaku);
+
+        if (toView) // 自己这边过去送礼物，居心何在！
+            appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_" + cmd, danmaku.with(data));
     }
