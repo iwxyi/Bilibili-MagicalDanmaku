@@ -2045,7 +2045,7 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
-    QString url = "http://translate.google.cn/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
+    QString url = "http://translate.google.com/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl=zh_cn&q="+msg;
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
@@ -2066,7 +2066,7 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
         if (!isItemExist(item))
             return ;
 
-        qDebug() << "翻译：" << msg << " => " << trans;
+        qInfo() << "翻译：" << msg << " => " << trans;
         item->setData(DANMAKU_TRANS_ROLE, trans);
 
         adjustItemTextDynamic(item);

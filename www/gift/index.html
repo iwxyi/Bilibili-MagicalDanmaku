@@ -3,39 +3,36 @@
     <script src="../js/jquery.js"></script>
     <link rel="stylesheet" href="gift.css" media="screen" type="text/css" />
     <link rel="stylesheet" href="gift_custom.css" media="screen" type="text/css" />
-    <meta name="referrer" content="no-referrer">
+	<meta name="referrer" content="no-referrer">
 </head>
-
 <body>
     <div>
         <img id="gif" src="" />
     </div>
     <script type="text/javascript">
-        var giftList = {};
-        $(document).ready(function () {
-            $.ajax({
-                // url: "gift_list.json",
-                url: "http://__DOMAIN__:__PORT__/api/netProxy?url=http://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc",
-                async: false,
-                dataType: "JSON",
-                success: function (data) {
-                    giftList = data["data"]["list"];
-                }
-            });
-
+		var giftList={};
+        $(document).ready(function() {
             var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
-            ws.onopen = function () {
+            ws.onopen = function() {
                 ws.send('{"cmd": "cmds", "data": ["SEND_GIFT", "GUARD_BUY"]}');
+				try {
+					socketInited(); // !socket初始化完毕
+				} catch (err) {
+					// console.log(err);
+				}
             };
-            ws.onmessage = function (e) {
+            ws.onmessage = function(e) {
                 console.log(e.data);
                 var json = JSON.parse(e.data);
                 var cmd = json['cmd'];
                 switch (cmd) {
+					case 'GET_INFO':
+                        readInfo(json['data']);
+                        break;
                     case 'SEND_GIFT':
                         var giftId = json['data']['gift_id'];
                         var giftNum = json['data']['number'];
-                        setGiftImage(giftId, giftNum);
+						setGiftImage(giftId, giftNum);
                         break;
                     case 'GUARD_BUY':
                         var level = json['data']['guard_level'];
@@ -48,40 +45,64 @@
                         break;
                 }
             };
-            //调试代码
-            setGiftImage(31028, 1, 3);
-            //调试代码
+			
+			function socketInited() {
+				var json = {
+					cmd: "GET_INFO",
+					data: {
+						room_id: "%room_id%",
+					}
+				}
+				ws.send(JSON.stringify(json));
+			}
+
+			function readInfo(data) {
+				var currentRoomId = data['room_id'];
+				$.ajax({
+					url: "http://__DOMAIN__:__PORT__/api/netProxy?url=https%3A%2F%2Fapi.live.bilibili.com%2Fxlive%2Fweb-room%2Fv1%2FgiftPanel%2FgiftConfig%3Fplatform%3Dpc%26room_id%3D"+currentRoomId,
+					async: false,
+					dataType: "JSON",
+					success: function (data) {
+						giftList = data["data"]["list"];
+					}
+				});
+			
+				//调试代码
+				setGiftImage(31028, 1, 3);
+				//调试代码
+			}
         });
-
+		
         var timer = null;
-
-        function setGiftImage(id, giftNum) {
-            var gif_url = "";
-            var giftStaytime = 0;
-            for (var i = 0; i < giftList.length; i++) {
-                var giftId = giftList[i]["id"];
-                if (id == giftId) {
-                    gif_url = giftList[i]["webp"];
-                    giftStaytime = giftList[i]["stay_time"];
-                    break;
-                }
-            }
-            if (gif_url != "") {
-                if (timer != null)
-                    clearTimeout(timer);
-                $('#gif').attr('src', gif_url);
-                timer = setTimeout(function () {
-                    $('#gif').attr('src', '');
-                }, (giftNum >= 25 ? 25 : giftNum) * giftStaytime * 1000);
-            }
-        }
-
-        function setImage(id, suffix, duration) {
+		
+		function setGiftImage(id, giftNum){
+			var gif_url="";
+			var giftStaytime = 0;
+			for(var i = 0; i < giftList.length;i++){
+				var giftId = giftList[i]["id"];
+				if(id == giftId)
+				{
+					gif_url = giftList[i]["webp"];
+					giftStaytime = giftList[i]["stay_time"];
+					break;
+				}
+			}
+			if(gif_url != ""){
+				if (timer != null)
+					clearTimeout(timer);
+				$('#gif').attr('src', gif_url);
+				timer = setTimeout(function() {
+					$('#gif').attr('src', '');
+				}, (giftNum>=25?25:giftNum) * giftStaytime * 1000);
+			}
+		}
+		
+		function setImage(id, suffix, duration) {
             if (timer != null)
                 clearTimeout(timer);
             // 素材来源：智播学院 http://college.zbmate.com/#/gifts/b_gift_icon
             $('#gif').attr('src', 'http://openapi.zbmate.com/gift_icons/b/' + id + suffix);
-            timer = setTimeout(function () {
+            timer = setTimeout(function() {
                 $('#gif').attr('src', '');
             }, duration);
         }

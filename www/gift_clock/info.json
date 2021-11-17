@@ -8,21 +8,7 @@
             "config": "config.html",
             "css": "style.css",
             "css_custom": "style_custom.css",
-            "desc": "自定义动态内容的文字",
-            "code": [
-                {
-                    "action": ">sendToSockets(CUSTOM_TEXT, \\\n\t{\\\n\t\t\"cmd\": \"CUSTOM_TEXT\",\\\n\t\t\"data\": \"等待第%[%guard_count%+1]%位舰长\"\\ // 这段就是要显示的文字\n\t})",
-                    "anchor_key": "神奇弹幕:EventAction",
-                    "enabled": true,
-                    "event": "SOCKET:CUSTOM_TEXT"
-                },
-                {
-                    "action": "// 对应的事件，刷新文字\n>triggerEvent(SOCKET:CUSTOM_TEXT)",
-                    "anchor_key": "神奇弹幕:EventAction",
-                    "enabled": true,
-                    "event": "NEW_GUARD_COUNT"
-                }
-            ]
+            "desc": "时钟倒计时，赠送指定礼物添加/减少时间"
         }
     ]
 }
