@@ -6,9 +6,9 @@
 #include "clickablewidget.h"
 #include "fileutil.h"
 
-BuyVIPDialog::BuyVIPDialog(QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, QWidget *parent) :
+BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, QWidget *parent) :
     QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
-    roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username)
+    dataPath(dataPath), roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username)
 
 {
     ui->setupUi(this);
@@ -311,7 +311,7 @@ void BuyVIPDialog::on_payButton_clicked()
         [=](MyJson json){
 
         QString html = json.s("data");
-        QString path = "pay.html";
+        QString path = dataPath + "pay.html";
         writeTextFile(path, html);
         QDesktopServices::openUrl(path);
 

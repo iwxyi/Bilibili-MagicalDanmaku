@@ -6593,7 +6593,7 @@ qint64 MainWindow::calcIntExpression(QString exp) const
     {
         bool ok = true;
         qint64 ll = val.toLongLong(&ok);
-        if (!ok && !ll)
+        if (!ok && !val.isEmpty())
         {
             showError("转换整数值失败", exp);
             qDebug() << "exp:" << exp << exp.startsWith("\"") << ll;
@@ -18970,7 +18970,7 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 
 void MainWindow::on_actionBuy_VIP_triggered()
 {
-    BuyVIPDialog* bvd = new BuyVIPDialog(roomId, upUid, cookieUid, roomTitle, upName, cookieUname, this);
+    BuyVIPDialog* bvd = new BuyVIPDialog(dataPath, roomId, upUid, cookieUid, roomTitle, upName, cookieUname, this);
     connect(bvd, &BuyVIPDialog::refreshVIP, this, [=]{
         updatePermission();
     });
