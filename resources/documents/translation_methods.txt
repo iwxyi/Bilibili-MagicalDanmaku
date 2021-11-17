@@ -67,3 +67,4 @@ AI回复=aiReply
 执行脚本=execScript
 复制文字=copyText
 设置本地模式=setLocalMode
+重新连接直播间=reconnectRoom

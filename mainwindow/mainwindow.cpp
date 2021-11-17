@@ -9270,6 +9270,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("reconnectRoom"))
+    {
+        re = RE("reconnectRoom\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            startConnectRoom();
+            return true;
+        }
+    }
+
 
     return false;
 }
