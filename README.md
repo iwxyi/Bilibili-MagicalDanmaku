@@ -1207,9 +1207,13 @@ tips：
 | removeValuesIf(exp, [condition])                   | 批量移除值如果   | 按条件移除配置文件中的多个值                                 |
 | openFile(path)                                     | 打开文件         | 打开文件                                                     |
 | playSound(path)                                    | 播放声音         | 播放音频文件                                                 |
-| improveSongOrder(username, order)                  | 提升点歌         | 点歌提前播放，order为提升的索引值                            |
-| cutOrderSong(username)                             | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
-| curOrderSong()                                     | 切歌             | 立即切歌，无论是谁点的                                       |
+| improveMusic(username, order)                      | 提升点歌         | 点歌提前播放，order为提升的索引值                            |
+| cutMusic(username)                                 | 切歌             | 切歌，仅限正在播放该用户自己点的歌时                         |
+| cutMusic()                                         | 切歌             | 立即切歌，无论是谁点的                                       |
+| addMusic(path/name)                                | 添加音乐         | 添加本地音乐（完整路径）或者自动搜索网络歌曲到播放列表       |
+| playMusic()                                        | 播放音乐         | 播放点歌姬的音乐；若没有歌曲，尝试播放下一首                 |
+| pauseMusic()                                       | 暂停音乐         | 暂停点歌姬的音乐                                             |
+| toggleMusicState()                                 | 切换音乐状态     | 切换点歌姬的音乐播放状态                                     |
 | messageBox(text)                                   | 消息弹窗         | 弹窗提示                                                     |
 | sendLongText(text)                                 | 发送长文本       | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format)          | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |

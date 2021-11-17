@@ -405,6 +405,61 @@ bool OrderPlayerWindow::isPlaying() const
     return player->state() == QMediaPlayer::State::PlayingState;
 }
 
+void OrderPlayerWindow::play()
+{
+    if (!playingSong.isValid())
+        playNext();
+    else if (player->state() != QMediaPlayer::State::PlayingState)
+        player->play();
+}
+
+void OrderPlayerWindow::pause()
+{
+    if (player->state() == QMediaPlayer::State::PlayingState)
+        player->pause();
+}
+
+/**
+ * 切换播放状态
+ */
+void OrderPlayerWindow::togglePlayState()
+{
+    if (playingSong.isValid())
+    {
+        if (player->state() == QMediaPlayer::State::PausedState)
+            player->play();
+        else
+            player->pause();
+    }
+    else
+    {
+        playNext();
+    }
+
+}
+
+/**
+ * 添加音乐
+ * 可能是需要网上搜索，也可能是本地导入
+ */
+void OrderPlayerWindow::addMusic(QString name)
+{
+    if (QUrl(name).isLocalFile())
+    {
+        // 添加本地歌曲
+        importSongs({name});
+    }
+    else if (QFileInfo(name).exists())
+    {
+        importSongs({"file:///" + name});
+    }
+    else
+    {
+        // 直接网络搜索
+        slotSearchAndAutoAppend(name, "[动态添加]");
+    }
+}
+
 void OrderPlayerWindow::on_searchEdit_returnPressed()
 {
     QString text = ui->searchEdit->text();
@@ -630,7 +685,10 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 
         // 没有搜索结果，也没有能播放的歌曲，直接返回
         if (!searchResultSongs.size() && !song.isValid())
+        {
+            qWarning() << "没有搜索结果或者能播放的歌曲";
             return ;
+        }
 
         if (playingSong.isValid() && playingSong.source == LocalMusic
                 && (playingSong.simpleString() == localCoverKey || playingSong.simpleString() == localLyricKey))

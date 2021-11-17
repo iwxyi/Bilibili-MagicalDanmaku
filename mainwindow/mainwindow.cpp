@@ -8647,9 +8647,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 提升点歌
-    if (msg.contains("improveSongOrder"))
+    if (msg.contains("improveSongOrder") || msg.contains("improveMusic"))
     {
-        re = RE("improveSongOrder\\s*\\(\\s*(.+?)\\s*,\\s*(\\d+)\\s*\\)");
+        re = RE("improve(?:SongOrder|Music)\\s*\\(\\s*(.+?)\\s*,\\s*(\\d+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8670,9 +8670,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 切歌
-    if (msg.contains("cutOrderSong"))
+    if (msg.contains("cutOrderSong") || msg.contains("cutMusic"))
     {
-        re = RE("cutOrderSong\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("cut(?:SongOrder|Music)\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8690,7 +8690,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
 
-        re = RE("cutOrderSong\\s*\\(\\s*\\)");
+        re = RE("cut(?:OrderSong|Music)\\s*\\(\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8698,6 +8698,55 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (musicWindow)
             {
                 musicWindow->cutSong();
+            }
+            else
+            {
+                localNotify("未开启点歌姬");
+                qWarning() << "未开启点歌姬";
+            }
+            return true;
+        }
+    }
+
+    // 播放暂停歌曲
+    if (msg.contains(QRegExp("(play|pause|toggle)(OrderSong|Music)")))
+    {
+        re = RE("(play|pause|toggle)(OrderSong|Music)(State)?\\s*\\(\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString action = caps[1];
+            qInfo() << "执行命令：" << caps;
+            if (musicWindow)
+            {
+                if (action == "play")
+                    musicWindow->play();
+                else if (action == "pause")
+                    musicWindow->pause();
+                else if (action == "toggle")
+                    musicWindow->togglePlayState();
+            }
+            else
+            {
+                localNotify("未开启点歌姬");
+                qWarning() << "未开启点歌姬";
+            }
+            return true;
+        }
+    }
+
+    // 提醒框
+    if (msg.contains("addMusic") || msg.contains("addOrderSong"))
+    {
+        re = RE("add(?:OrderSong|Music)\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString song = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            if (musicWindow)
+            {
+                musicWindow->addMusic(song);
             }
             else
             {
@@ -13932,7 +13981,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             triggerCmdEvent("SONG_PLAY_FINISHED", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongImproved, this, [=](Song song, int prev, int curr){
-            localNotify("提升歌曲：" + song.name + " : " + snum(prev+1) + "->" + snum(curr+1));
+            localNotify("提升歌曲：" + song.name + " : " + snum(prev+1) + "->" + snum(curr));
             LiveDanmaku danmaku(song.id, song.addBy, song.name);
             danmaku.setNumber(curr+1);
             danmaku.with(song.toJson());

@@ -139,6 +139,11 @@ public:
     bool isPlaying() const;
 
 public slots:
+    void play();
+    void pause();
+    void togglePlayState();
+    void addMusic(QString name);
+
     void slotSearchAndAutoAppend(QString key, QString by = "");
     void improveUserSongByOrder(QString username, int promote);
     void cutSongIfUser(QString username);
