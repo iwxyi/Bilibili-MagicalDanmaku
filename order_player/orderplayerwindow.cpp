@@ -3868,6 +3868,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     FacileMenu* accountMenu = menu->addMenu("账号");
 
     accountMenu->addAction("添加账号", [=]{
+        menu->close();
         LoginDialog* dialog = new LoginDialog(this);
         connect(dialog, &LoginDialog::signalLogined, this, [=](MusicSource source, QString cookies){
             switch (source) {
@@ -3899,6 +3900,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     accountMenu->split();
     accountMenu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
+        menu->close();
         if (QMessageBox::question(this, "网易云音乐", "是否退出网易云音乐账号？") == QMessageBox::Yes)
         {
             neteaseCookies = "";
@@ -3908,6 +3910,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->text(!neteaseNickname.isEmpty(), neteaseNickname)->disable(neteaseCookies.isEmpty());
 
     accountMenu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
+        menu->close();
         if (QMessageBox::question(this, "QQ音乐", "是否退出QQ音乐账号？") == QMessageBox::Yes)
         {
             qqmusicCookies = "";
