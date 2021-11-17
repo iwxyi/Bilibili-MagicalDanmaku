@@ -745,6 +745,37 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         ba = reply->readAll();
         reply->deleteLater();
     }
+    else if (url == "event") // 模拟事件： /api/event?event=SEND_GIFT&data=[urlEncode(json)]
+    {
+        if (!ui->allowWebControlCheck->isChecked())
+        {
+            qWarning() << "api/event: 需要解锁安全限制";
+            ba = "{ \"cmd\": \"event\", \"code\": \"1\", \"msg\": \"需要解锁安全限制\" }";
+            return ba;
+        }
+
+        *contentType = "application/json";
+        QString eventName = params.value("event");
+        QByteArray data;
+        if (eventName.isEmpty())
+        {
+            qWarning() << "api/event: ignore empty event";
+            ba = "{ \"cmd\": \"event\", \"code\": \"1\", \"msg\": \"ignore empty event\" }";
+            return ba;
+        }
+        if (params.contains("data"))
+        {
+            data = QByteArray::fromPercentEncoding(params.value("data").toUtf8());
+        }
+        else
+        {
+            data = req->body();
+        }
+
+        qInfo() << "模拟事件：" << eventName << data;
+        triggerCmdEvent(eventName, LiveDanmaku::fromDanmakuJson(MyJson(data)));
+        ba = "{ \"cmd\": \"event\", \"code\": \"0\", \"msg\": \"ok\" }";
+    }
 
     return ba;
 }
