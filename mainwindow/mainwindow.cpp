@@ -5987,6 +5987,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         int ch = match.captured(1).toInt();
         return snum(msgWaits[ch]);
     }
+    else if (key == "%local_mode%")
+    {
+        return localDebug ? "1" : "0";
+    }
     else
     {
         *ok = false;
@@ -9242,6 +9246,30 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
+
+    if (msg.contains("setLocalMode"))
+    {
+        re = RE("setLocalMode\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString val = caps[1];
+            qInfo() << "执行命令：" << caps;
+            if (val == "" || val == "0" || val.toLower() == "false")
+            {
+                // true -> false
+                ui->actionLocal_Mode->setChecked(false);
+            }
+            else
+            {
+                // false -> true
+                ui->actionLocal_Mode->setChecked(true);
+            }
+            on_actionLocal_Mode_triggered();
+            return true;
+        }
+    }
+
 
     return false;
 }
@@ -18831,11 +18859,13 @@ void MainWindow::on_actionLast_Candidate_triggered()
 void MainWindow::on_actionLocal_Mode_triggered()
 {
     settings->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
+    qInfo() << "本地模式：" << localDebug;
 }
 
 void MainWindow::on_actionDebug_Mode_triggered()
 {
     settings->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
+    qInfo() << "调试模式：" << debugPrint;
 }
 
 void MainWindow::on_actionGuard_Online_triggered()

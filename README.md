@@ -772,7 +772,7 @@ border-image: url(C:/Path/To/Image.png)
 | server_domain    | 网站域名         | 默认为 http://localhost                                      |
 | server_port      | 网站端口         | 默认为 5520                                                  |
 | server_url       | 网站网址         | 等于server_domain:server_port                                |
-| living           | 直播中           | 是：1，否：0                                                 |
+| living           | 直播中           | 直播：1，轮播：2，未开播：0                                  |
 | room_id          | 直播间ID         |                                                              |
 | room_name        | 直播间标题       |                                                              |
 | up_uid           | 主播ID           |                                                              |
@@ -794,6 +794,7 @@ border-image: url(C:/Path/To/Image.png)
 | pk_magical_room  | 对面也用神奇弹幕 | 是：1，否：0                                                 |
 | cd0~cd99         |                  | 冷却通道，等同于 `%>cd(X)%`                                  |
 | wait0~wait99     |                  | 等待通道，等同于 `%>wait(X)%`                                |
+| local_mode       | 本地模式         | 是：1，否：0                                                 |
 
 
 
@@ -1240,6 +1241,7 @@ tips：
 | copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |
 | setRoomTitle                                       | 设置直播标题     | 主播设置直播间的大标题                                       |
 | setRoomCover(path)                                 | 设置直播封面     | 主播设置直播间的封面图片，path为图片路径（不会裁剪，只是压缩上传） |
+| setLocalMode(true/false)                           | 设置本地模式     | 可通过回复、定时等开关本地模式，不发送弹幕                   |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

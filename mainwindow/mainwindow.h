@@ -221,6 +221,7 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     void changeEvent (QEvent * event) override;
     void paintEvent(QPaintEvent * event) override;
+    void test();
 
 signals:
     void signalRoomChanged(QString roomId);
