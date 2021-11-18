@@ -698,7 +698,13 @@ border-image: url(C:/Path/To/Image.png)
 | ai_name          | 用户智能昵称     | 优先专属昵称，其次简写昵称，无简写则用原昵称                 |
 | local_name       | 用户专属昵称     | 实时弹幕中右键-设置专属昵称                                  |
 | simple_name      | 用户简写昵称     | 去除前缀后缀各种字符                                         |
-| csrf             |                  | 用户的csrf token                                             |
+| room_id          | 直播间ID         |                                                              |
+| room_name        | 直播间标题       |                                                              |
+| up_uid           | 主播ID           |                                                              |
+| up_uname         | 主播名字         |                                                              |
+| my_uid           | 机器人ID         |                                                              |
+| my_uname         | 机器人名字       |                                                              |
+| csrf             | csrf             | 用户的csrf token                                             |
 | level            | 用户等级         | 进入直播间没有level                                          |
 | text             | 弹幕消息         | 几乎用不到                                                   |
 | come_count       | 用户进入次数     |                                                              |
@@ -737,6 +743,10 @@ border-image: url(C:/Path/To/Image.png)
 | pk_count         | 匹配次数         | 未在PK中为0，下同                                            |
 | pk_my_votes      | 己方积分         |                                                              |
 | pk_match_votes   | 对方积分         |                                                              |
+| area_id          | 分区ID           |                                                              |
+| area_name        | 分区名字         |                                                              |
+| parent_area_id   | 主分区ID         |                                                              |
+| parent_area_name | 主分区名字       |                                                              |
 | today_come       | 今日进入人次     | 每个人可能重复进入                                           |
 | today_newbie_msg | 今日新人人数     |                                                              |
 | today_danmaku    | 今日弹幕总数     |                                                              |
@@ -778,12 +788,6 @@ border-image: url(C:/Path/To/Image.png)
 | server_port      | 网站端口         | 默认为 5520                                                  |
 | server_url       | 网站网址         | 等于server_domain:server_port                                |
 | living           | 直播中           | 直播：1，轮播：2，未开播：0                                  |
-| room_id          | 直播间ID         |                                                              |
-| room_name        | 直播间标题       |                                                              |
-| up_uid           | 主播ID           |                                                              |
-| up_uname         | 主播名字         |                                                              |
-| my_uid           | 机器人ID         |                                                              |
-| my_uname         | 机器人名字       |                                                              |
 | is_up            | 是主播           |                                                              |
 | is_me            | 是机器人         |                                                              |
 | is_room_medal    | 戴本勋章         | 戴本直播间的粉丝勋章                                         |

@@ -5877,6 +5877,14 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return cookieUid;
     else if (key == "%my_uname%")
         return cookieUname;
+    else if (key == "%area_id%")
+        return areaId;
+    else if (key == "%area_name%")
+        return areaName;
+    else if (key == "%parent_area_id%")
+        return parentAreaId;
+    else if (key == "%parent_area_name%")
+        return parentAreaName;
 
     // 是主播
     else if (key == "%is_up%")

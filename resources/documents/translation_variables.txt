@@ -5,6 +5,11 @@
 用户智能昵称=ai_name
 用户专属昵称=local_name
 用户简写昵称=simple_name
+直播间ID=room_id
+直播间标题=room_name
+主播ID=up_uid
+主播名字=up_uname
+机器人ID=my_uid
 用户等级=level
 弹幕消息=text
 用户进入次数=come_count
@@ -40,6 +45,10 @@
 对面偷塔概率=pk_touta_prob
 己方积分=pk_my_votes
 对方积分=pk_match_votes
+分区ID=area_id
+分区名字=area_name
+主分区ID=parent_area_id
+主分区名字=parent_area_name
 大乱斗尾声=pk_ending
 大乱斗积分转金瓜子=pk_trans_gold
 大乱斗偷塔上限=pk_max_gold
@@ -84,11 +93,6 @@
 网站端口=server_port
 网站网址=server_url
 直播中=living
-直播间ID=room_id
-直播间标题=room_name
-主播ID=up_uid
-主播名字=up_uname
-机器人ID=my_uid
 是主播=is_up
 是机器人=is_me
 戴本勋章=is_room_medal
