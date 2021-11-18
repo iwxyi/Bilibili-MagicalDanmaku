@@ -1,6 +1,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QDesktopServices>
 #include <QInputDialog>
+#include <QClipboard>
 #include "buyvipdialog.h"
 #include "ui_buyvipdialog.h"
 #include "clickablewidget.h"
@@ -313,7 +314,13 @@ void BuyVIPDialog::on_payButton_clicked()
         QString html = json.s("data");
         QString path = dataPath + "pay.html";
         writeTextFile(path, html);
-        QDesktopServices::openUrl(path);
+        QMessageBox::information(this, "前往浏览器", "即将使用浏览器打开：" + path);
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
+        {
+            QApplication::clipboard()->setText(path);
+            QMessageBox::warning(this, "打开页面失败", "已复制路径：" + path + "\n可粘贴到浏览器打开");
+            return ;
+        }
 
         QTimer::singleShot(10000, this, [=]{
             deleteFile(path);

@@ -9009,13 +9009,39 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 模拟快捷键
     if (msg.contains("simulateKeys"))
     {
-        re = RE("simulateKeys\\s*\\(\\s*(.+)\\s*\\)");
+        re = RE("simulateKeys\\s*\\((.+)\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
             simulateKeys(text);
+            return true;
+        }
+    }
+
+    if (msg.contains("simulatePressKeys"))
+    {
+        re = RE("simulatePressKeys\\s*\\((.+)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            simulateKeys(text, true, false);
+            return true;
+        }
+    }
+
+    if (msg.contains("simulateReleaseKeys"))
+    {
+        re = RE("simulateReleaseKeys\\s*\\((.+)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            simulateKeys(text, false, true);
             return true;
         }
     }
@@ -9042,6 +9068,60 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             moveMouseTo(x, y);
             simulateClick();
+            return true;
+        }
+    }
+
+    // 指定按键的模拟
+    if (msg.contains("simulateClickButton"))
+    {
+        auto getFlags = [=](QString param) -> DWORD {
+            if (param == "left")
+                return MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
+            else if (param == "right")
+                return MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP;
+            else if (param == "middle")
+                return MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP;
+            else if (param == "x")
+                return MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP;
+            else if (param.indexOf(QRegExp("^\\d+$")) > -1)
+                return param.toUShort();
+            else
+            {
+                qWarning() << "无法识别的鼠标按键：" << param;
+                return 0;
+            }
+        };
+
+        // 点击当前位置
+        re = RE("simulateClickButton\\s*\\(\\s*(\\S*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString param = caps[1].toLower();
+            qInfo() << "执行命令：" << caps;
+            DWORD flag = getFlags(param);
+            if (flag == 0)
+                return true;
+
+            simulateClickButton(flag);
+            return true;
+        }
+
+        // 点击绝对位置
+        re = RE("simulateClickButton\\s*\\(\\s*(\\S+)\\s*,\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString param = caps[1].toLower();
+            unsigned long x = caps.at(2).toLong();
+            unsigned long y = caps.at(3).toLong();
+            qInfo() << "执行命令：" << caps;
+            DWORD flag = getFlags(param);
+            if (flag == 0)
+                return true;
+            moveMouseTo(x, y);
+            simulateClickButton(flag);
             return true;
         }
     }
@@ -9299,7 +9379,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     return false;
 }
 
-void MainWindow::simulateKeys(QString seq)
+void MainWindow::simulateKeys(QString seq, bool press, bool release)
 {
     if (seq.isEmpty())
         return ;
@@ -9315,7 +9395,9 @@ void MainWindow::simulateKeys(QString seq)
     // 字符串转KEY
     QList<int>keySeq;
     QStringList keyStrs = seq.toLower().split("+", QString::SkipEmptyParts);
-    if (keyStrs.contains("ctrl"))
+
+    // 先判断修饰键
+    /*if (keyStrs.contains("ctrl"))
         keySeq.append(VK_CONTROL);
     if (keyStrs.contains("shift"))
         keySeq.append(VK_SHIFT);
@@ -9323,24 +9405,53 @@ void MainWindow::simulateKeys(QString seq)
         keySeq.append(VK_MENU);
     keyStrs.removeOne("ctrl");
     keyStrs.removeOne("shift");
-    keyStrs.removeOne("alt");
+    keyStrs.removeOne("alt");*/
+
+    // 其他键
     for (int i = 0; i < keyStrs.size(); i++)
     {
         QString ch = keyStrs.at(i);
-        if (ch.length() != 1)
-            continue ;
-        if (ch >= "0" && ch <= "9")
+        if (ch == "ctrl" || ch == "control")
+            keySeq.append(VK_CONTROL);
+        else if (ch == "shift")
+            keySeq.append(VK_SHIFT);
+        else if (ch == "alt")
+            keySeq.append(VK_MENU);
+        /* else if (ch >= "0" && ch <= "9")
             keySeq.append(0x30 + ch.toInt());
         else if (ch >= "a" && ch <= "z")
-            keySeq.append(0x41 + ch.at(0).toLatin1() - 'a');
+            keySeq.append(0x41 + ch.at(0).toLatin1() - 'a'); */
+        else
+        {
+            char c;
+            // 特判名字
+            if (ch == "add")
+                c = '+';
+            else if (ch == "space")
+                c = ' ';
+            else
+                c = ch.at(0).toLatin1();
+
+            DWORD sc = OemKeyScan(c);
+            // DWORD shift = sc >> 16; // 判断有没有按下shift键（这里当做没有）
+            unsigned char vkey = MapVirtualKey(sc & 0xffff, 1);
+            keySeq.append(vkey);
+        }
     }
 
-    // 开始模拟
-    for (int i = 0; i < keySeq.size(); i++)
-        keybd_event(keySeq.at(i), (BYTE) 0, 0, 0);
+    // 模拟按下（全部）
+    if (press)
+    {
+        for (int i = 0; i < keySeq.size(); i++)
+            keybd_event(keySeq.at(i), (BYTE) 0, 0, 0);
+    }
 
-    for (int i = 0; i < keySeq.size(); i++)
-        keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+    // 模拟松开（全部）
+    if (release)
+    {
+        for (int i = 0; i < keySeq.size(); i++)
+            keybd_event(keySeq.at(i), (BYTE) 0, KEYEVENTF_KEYUP, 0);
+    }
 #endif
 }
 
@@ -9351,6 +9462,15 @@ void MainWindow::simulateClick()
     // mouse_event(dwFlags, dx, dy, dwData, dwExtraInfo)
 #ifdef Q_OS_WIN
     mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+#else
+    qWarning() << "不支持模拟鼠标点击";
+#endif
+}
+
+void MainWindow::simulateClickButton(DWORD keys)
+{
+#ifdef Q_OS_WIN
+    mouse_event(keys, 0, 0, 0, 0);
 #else
     qWarning() << "不支持模拟鼠标点击";
 #endif

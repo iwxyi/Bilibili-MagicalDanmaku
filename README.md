@@ -12,6 +12,11 @@
 QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
 
 
+
+![](pictures/propaganda.png)
+
+
+
 ## 神奇
 
 神奇在何处？哦，也就下面这些：
@@ -1232,9 +1237,13 @@ tips：
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
-| simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键                                       |
-| simulateClick()                                    | 模拟单击         | 模拟鼠标点击                                                 |
-| simulateClick(x, y)                                | 模拟单击         | 移动到指定x,y点，再模拟单击                                  |
+| simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键，不分大小写。加号使用“add”代替；不支持汉字等非键盘键位字符 |
+| simulatePressKeys(keys)                            | 模拟按下按键     | 同上                                                         |
+| simulateReleaseKeys(keys)                          | 模拟松开按键     | 同上                                                         |
+| simulateClick()                                    | 模拟点击         | 模拟鼠标左键点击                                             |
+| simulateClick(x, y)                                | 模拟点击         | 移动到指定x,y点，再模拟单击                                  |
+| simulateClickButton(flag)                          | 模拟点击按钮     | 模拟鼠标点击，flag为WIN API 中的mouse_event事件的DWORD参数，即鼠标事件的位或值。如6为左键单击，24为右键单击。可简写为 left、right、middle、x |
+| simulateClickButton(flag, x, y)                    | 模拟点击按钮     | 移动到指定x,y点，再模拟各按键点击；flag同上                  |
 | moveMouseTo(x, y)                                  | 移动鼠标至       | 移动鼠标到指定x,y点                                          |
 | moveMouse(dx, dy)                                  | 移动鼠标         | 移动鼠标，相对于现在的位置差                                 |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |

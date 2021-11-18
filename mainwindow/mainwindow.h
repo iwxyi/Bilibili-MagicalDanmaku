@@ -895,8 +895,9 @@ private:
 
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
-    void simulateKeys(QString seq);
+    void simulateKeys(QString seq, bool press = true, bool release = true);
     void simulateClick();
+    void simulateClickButton(DWORD keys);
     void moveMouse(unsigned long x, unsigned long dy);
     void moveMouseTo(unsigned long tx, unsigned long ty);
     QStringList splitLongDanmu(QString text) const;
@@ -1270,7 +1271,7 @@ private:
 
     // 直播间人气
     QTimer* minuteTimer;
-    int currentPopul = 0; // 当前人气
+    int currentPopul = 0;    // 当前人气
     qint64 sumPopul = 0;     // 自启动以来的人气
     qint64 countPopul = 0;   // 自启动以来的人气总和
 
