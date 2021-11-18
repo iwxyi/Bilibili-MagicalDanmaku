@@ -1,0 +1,12 @@
+{
+    "min_version": "4.4.1",
+	"list": [
+		{
+			"name": "实时人气",
+			"url": "index.html",
+			"css": "index.css",
+			"css_custom": "index_custom.css",
+            "desc": "实时人气值与分区排行榜显示"
+		}
+	]
+}

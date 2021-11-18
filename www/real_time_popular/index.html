@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1,user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.custom.css">
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <title>神奇弹幕实时人气</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div class="info">Top：<div id="rank" class="rank">--</div>&nbsp;&nbsp;人气：<div id="popula" class="popula">--</div>
+    </div>
+</body>
+<script type="text/javascript">
+    var currentRoomId = "";
+    var parent_area_id = 3;  //3是手游分区
+    var area_id = 321;  //321是原神分区
+    var refresh_time = 5000;  //人气刷新间隔, 太快会导致主程序崩溃
+    var isMatching = false;
+    var count = 0; //房间总数
+
+    $(document).ready(function () {
+        var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+        ws.onopen = function () {
+            try {
+                socketInited(); // !socket初始化完毕
+            } catch (err) {
+                // console.log(err);
+            }
+        }
+        ws.onmessage = function (e) {
+            console.log(e.data);
+            var json = JSON.parse(e.data);
+            var cmd = json['cmd'];
+            switch (cmd) {
+                case 'GET_INFO':
+                    readInfo(json['data']);
+                    break;
+            }
+        }
+
+        function socketInited() {
+            var json = {
+                cmd: "GET_INFO",
+                data: {
+                    room_id: "%room_id%",
+                    area_id: "%area_id%",
+                    parent_area_id: "%parent_area_id%"
+                }
+            }
+            ws.send(JSON.stringify(json));
+        }
+
+        function readInfo(data) {
+            currentRoomId = data['room_id'];
+            area_id = parseInt(data['area_id']);
+            parent_area_id = parseInt(data['parent_area_id']);
+            refresh();
+        }
+
+        function getPopular(page) {
+            var myRoom = {};
+            $.ajax({
+                url: "http://__DOMAIN__:__PORT__/api/netProxy?url=https%3A%2F%2Fapi.live.bilibili.com%2Froom%2Fv3%2FArea%2FgetRoomList%3Fparent_area_id%3D" + parent_area_id + "%26area_id%3D" + area_id + "%26sort_type%3Donline%26page%3D" + page + "%26page_size%3D99",
+                async: false,
+                dataType: "JSON",
+                success: function (data) {
+                    count = parseInt(data["data"]["count"]);
+                    var currentRoomList = data["data"]["list"];
+                    myRoom = findMyRoom(currentRoomList, page);
+                }
+            });
+            if (myRoom["roomid"]) {
+                isMatching = false;
+                return myRoom;
+            }
+            else {
+                if (page * 99 < count) {
+                    return getPopular(page + 1);
+                }
+                else {
+                    isMatching = false;
+                    return {};
+                }
+            }
+        }
+
+        var currentIndex = 0;
+
+        function findMyRoom(currentRoomList, page) {
+            for (var i = 0; i < currentRoomList.length; i++) {
+                if (currentRoomList[i]["roomid"] == currentRoomId) {
+                    currentIndex = (page - 1) * 99 + i + 1;
+                    return currentRoomList[i];
+                }
+            }
+            return {};
+        }
+
+        //定时更新人气信息
+        setInterval(refresh, refresh_time);
+
+        function refresh() {
+            if (!isMatching) {
+                isMatching = true;
+                var myRoomInfo = getPopular(1);
+                if (myRoomInfo["roomid"]) {
+                    $("#rank").text(currentIndex);
+                    $("#popula").text(myRoomInfo["online"]);
+                }
+                else {
+                    $("#rank").text("--");
+                    $("#popula").text("--");
+                }
+            }
+        }
+    });
+</script>
+
+</html>

@@ -1,0 +1,42 @@
+@font-face {
+	font-family: 'hanyiwenhei85W';
+	src:url('fonts/HYWenHei 85W.ttf');
+}
+body{
+	padding:0;
+	margin:0 auto;
+	padding-top: 30px;
+}
+.info{
+	font-size: 80px;
+	font-weight: bold;
+	color: #DEDAD6;
+	font-family: 'hanyiwenhei85W';
+	display: flex;
+}
+.rank,.popula {
+	animation: fireDiv 1s infinite;
+	color:#F6E2A3!important;
+}
+@keyframes fireDiv {
+	0% {
+	  text-shadow: 0 0 4px white, 0 -5px 4px #ff3, 2px -10px 6px #fd3,
+		-2px -15px 11px #f80, 2px -25px 18px #f20;
+	}
+	25% {
+	  text-shadow: 0 0 4px white, 2px -7px 6px #ff3, 2px -12px 8px #fd3,
+		-3px -20px 11px #f80, 4px -30px 22px #f20;
+	}
+	50% {
+	  text-shadow: 0 0 4px white, 2px -10px 8px #ff3, 2px -14px 10px #fd3,
+		-4px -25px 11px #f80, 4px -35px 25px #f20;
+	}
+	75% {
+	  text-shadow: 0 0 4px white, 2px -7px 6px #ff3, 2px -12px 8px #fd3,
+		-3px -20px 11px #f80, 4px -30px 22px #f20;
+	}
+	100% {
+	  text-shadow: 0 0 4px white, 0 -5px 4px #ff3, 2px -10px 6px #fd3,
+		-2px -15px 11px #f80, 2px -25px 18px #f20;
+	}
+}
