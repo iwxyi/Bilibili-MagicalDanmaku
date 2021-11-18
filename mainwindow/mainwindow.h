@@ -999,6 +999,7 @@ private:
     QString GetFileVertion(QString fullName);
     void upgradeVersionToLastest(QString oldVersion);
     void upgradeOneVersionData(QString beforeVersion);
+    static bool hasInstallVC2015();
 
     void generateDefaultCode(QString path = "");
     void readDefaultCode(QString path = "");

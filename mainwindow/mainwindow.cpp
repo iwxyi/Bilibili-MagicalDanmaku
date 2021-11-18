@@ -89,6 +89,19 @@ MainWindow::MainWindow(QWidget *parent)
     QTimer::singleShot(0, [=]{
         triggerCmdEvent("START_UP", LiveDanmaku(), true);
     });
+
+    // 检测VC2015
+    QTimer::singleShot(1000, [=]{
+        if (hasInstallVC2015())
+            return ;
+
+        // 提示下载安装
+        auto notify = new NotificationEntry("", "下载VC运行库", "系统缺少必须的VC2015");
+        connect(notify, &NotificationEntry::signalCardClicked, this, [=]{
+            QDesktopServices::openUrl(QUrl("https://aka.ms/vs/15/release/vc_redist.x64.exe"));
+        });
+        tip_box->createTipCard(notify);
+    });
 }
 
 void MainWindow::initView()
@@ -17362,6 +17375,42 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
         heaps->endGroup();
         settings->endGroup();
     }
+}
+
+bool MainWindow::hasInstallVC2015()
+{
+#ifdef Q_OS_WINDOWS
+    QString header = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\";
+    QSettings reg(header,QSettings::NativeFormat);
+    QMap<QString,QString> m_data;
+    QStringList sum = reg.allKeys();
+    for(int m  = 0 ; m < sum.size();++m){
+        QString id = sum.at(m);
+        int end = id.indexOf("}");
+        if(end > 0){
+            id = id.mid(0,end+1);
+
+            if(!m_data.keys().contains(id)){
+                QSettings gt(header + id,QSettings::NativeFormat);
+                QString name = gt.value("DisplayName").toString();
+                if(!name.isEmpty() && name.contains("Microsoft Visual C++")){
+                    m_data[id] = name;
+                }
+
+            }
+
+        }
+    }
+
+    QMap<QString,QString>::const_iterator it = m_data.constBegin();
+    while (it != m_data.constEnd()) {
+        if(it.value().contains(QRegExp("Microsoft Visual C\\+\\+ 20(1[56789]|[2-9])")))
+            return true;
+        ++it;
+
+    }
+#endif
+    return false;
 }
 
 void MainWindow::generateDefaultCode(QString path)
