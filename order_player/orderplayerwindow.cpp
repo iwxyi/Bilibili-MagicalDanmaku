@@ -547,6 +547,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 {
     if (key.trimmed().isEmpty())
         return ;
+    MUSIC_DEB << "搜索音乐：" << key << addBy << notify;
     MusicSource source = musicSource; // 需要暂存一个备份，因为可能会变回去
     QString url;
     auto keyBa = key.toUtf8().toPercentEncoding();
@@ -621,6 +622,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             break;
         }
 
+        // 搜索成功，开始遍历与显示
         QJsonArray songs;
         switch (source) {
         case UnknowMusic:
@@ -769,6 +771,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
         else if (insertOnce) // 强制播放啊
         {
+            MUSIC_DEB << "强制播放";
             Song song = getSuiableSongOnResults(key);
             if (isNotPlaying()) // 很可能是换源过来的
                 startPlaySong(song);
@@ -1405,6 +1408,9 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         menu->addAction("批量导入歌曲", [=]{
             openMultiImport();
         })->hide();
+
+        if (currentSong.isValid())
+            menu->split()->addAction(currentSong.sourceName())->disable();
 
         menu->exec();
     }
@@ -2905,6 +2911,7 @@ bool OrderPlayerWindow::switchSource(Song song, bool play)
 
     QString searchKey = song.name + " " + song.artistNames;
     // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
+    this->insertOrderOnce = true; // 必须要加上强制换源的标记
     qWarning() << "无法播放：" << song.name << "，开始换源：" << song.source << "->" << res << searchKey;
     searchMusicBySource(searchKey, res, song.addBy);
     return true;
