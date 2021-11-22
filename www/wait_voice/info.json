@@ -1,0 +1,12 @@
+{
+    "name": "连麦语音提示",
+    "list": [
+        {
+            "name": "连麦语音提示",
+            "url": "index.html",
+            "css": "index.css",
+            "css_custom": "index_custom.css",
+            "desc": "连麦语音提示与文字显示"
+        }
+    ]
+}

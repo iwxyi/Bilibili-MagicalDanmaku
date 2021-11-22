@@ -1,8 +1,13 @@
+body{
+	background:transparent;
+	margin:0px;
+	padding:0px;
+}
 div {
     width   : 100%;
     height  : 100%;
     position: relative;
-    margin  : auto;
+    margin  : 0 auto;
     overflow: hidden;
 }
 
@@ -15,4 +20,5 @@ img {
     margin-bottom: 2px;
     max-width    : 100%;
     margin       : auto;
+	-webkit-filter: drop-shadow(1px 1px 0.8px #000);
 }

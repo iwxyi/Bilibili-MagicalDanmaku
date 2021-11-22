@@ -31,8 +31,10 @@
                         break;
                     case 'SEND_GIFT':
                         var giftId = json['data']['gift_id'];
-                        var giftNum = json['data']['number'];
-						setGiftImage(giftId, giftNum);
+                        var giftNum = json['data']["extra"]["num"];
+						var giftPrice = json['data']["extra"]["price"];
+						var c_type = json['data']["coin_type"];
+						setGiftImage(giftId, giftNum, giftPrice, c_type);
                         break;
                     case 'GUARD_BUY':
                         var level = json['data']['guard_level'];
@@ -68,32 +70,44 @@
 				});
 			
 				//调试代码
-				setGiftImage(31028, 1, 3);
+				setGiftImage(31028, 1, 0, "gold");
 				//调试代码
 			}
         });
 		
         var timer = null;
+		var total_coin = -1;
+		var coin_type = "silver";
 		
-		function setGiftImage(id, giftNum){
-			var gif_url="";
-			var giftStaytime = 0;
-			for(var i = 0; i < giftList.length;i++){
-				var giftId = giftList[i]["id"];
-				if(id == giftId)
-				{
-					gif_url = giftList[i]["webp"];
-					giftStaytime = giftList[i]["stay_time"];
-					break;
+		function setGiftImage(id, giftNum, giftPrice, c_type){
+			   //电池礼物插队播放   //不播放时赠送银瓜子礼物                    //同为银瓜子礼物赠送时
+			if(c_type == "gold" || (timer == null && coin_type == "silver") || (coin_type == "silver" && c_type == "silver")){
+				if(giftPrice * giftNum > total_coin || (coin_type == "silver" && c_type == "gold")){
+					total_coin = giftPrice * giftNum;
+					coin_type = c_type;
+					var gif_url = "";
+					var giftStaytime = 0;
+					for(var i = 0; i < giftList.length;i++){
+						var giftId = giftList[i]["id"];
+						if(id == giftId)
+						{
+							gif_url = giftList[i]["webp"];
+							giftStaytime = giftList[i]["stay_time"];
+							break;
+						}
+					}
+					if(gif_url != ""){
+						if (timer != null)
+							clearTimeout(timer);
+						$('#gif').attr('src', gif_url);
+						timer = setTimeout(function() {
+							$('#gif').attr('src', '');
+							total_coin = -1;
+							coin_type = "silver";
+							timer = null;
+						}, (giftNum >= 25 ? 25 : giftNum) * giftStaytime * 1000);
+					}
 				}
-			}
-			if(gif_url != ""){
-				if (timer != null)
-					clearTimeout(timer);
-				$('#gif').attr('src', gif_url);
-				timer = setTimeout(function() {
-					$('#gif').attr('src', '');
-				}, (giftNum>=25?25:giftNum) * giftStaytime * 1000);
 			}
 		}
 		
@@ -102,8 +116,17 @@
                 clearTimeout(timer);
             // 素材来源：智播学院 http://college.zbmate.com/#/gifts/b_gift_icon
             $('#gif').attr('src', 'http://openapi.zbmate.com/gift_icons/b/' + id + suffix);
+			coin_type = "gold";
+			total_coin = 138000;
+			if (id == 'td')
+				total_coin = 1998000;
+			else if (id == 'zd')
+				total_coin = 19998000;
             timer = setTimeout(function() {
                 $('#gif').attr('src', '');
+				total_coin = -1;
+				coin_type = "silver";
+				timer = null;
             }, duration);
         }
     </script>

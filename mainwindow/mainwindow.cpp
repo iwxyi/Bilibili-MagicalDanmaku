@@ -16924,11 +16924,11 @@ void MainWindow::loadWebExtensinList()
             continue;
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
-        QString name = json.s("name");
+        QString extName = json.s("name");
         QString minVersion = json.s("min_version");
         if (!minVersion.isEmpty() && appVersion < minVersion)
         {
-            showError("扩展【" + name + "】要求版本：v" + minVersion);
+            showError("扩展不可用", "【" + extName + "】要求版本：v" + minVersion);
         }
         json.each("list", [=](MyJson inf){
             QString name = inf.s("name");
@@ -16942,6 +16942,8 @@ void MainWindow::loadWebExtensinList()
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
 
+            if (name.isEmpty())
+                name = extName;
             QString dirName = info.fileName();
             if (!urlR.isEmpty() && !urlR.startsWith("/"))
                 urlR = "/" + dirName + "/" + urlR;
