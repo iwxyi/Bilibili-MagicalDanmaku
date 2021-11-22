@@ -743,6 +743,10 @@ private slots:
 
     void on_shieldKeywordListButton_clicked();
 
+    void on_saveEveryGuardButton_customContextMenuRequested(const QPoint &pos);
+
+    void exportAllGuardsByMonth(QString exportPath);
+
 private:
     void initView();
     void initStyle();

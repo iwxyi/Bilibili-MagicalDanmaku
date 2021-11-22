@@ -1,3 +1,7 @@
+[toc]
+
+
+
 神奇弹幕
 ===
 
@@ -1579,7 +1583,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 `禁言 xxx`通过倒找弹幕发送人昵称的方法，通过弹幕禁言用户。其中所有属性同`DANMU_MSG`，例如`%uid%`、`%uname%`等。如果禁言对象是房管，那么将会禁言失败。
 
-添加事件`REMOTE_BLOCK`，添加动作：
+添加事件`REMOTE_BLOCK_OVERRIDE`，添加动作：
 
 ```
 [%uid%=%my_uid%]**>因为太帅无法被禁言

@@ -19619,3 +19619,140 @@ void MainWindow::on_shieldKeywordListButton_clicked()
 {
     QDesktopServices::openUrl(QUrl(SERVER_DOMAIN + "/web/keyword/list"));
 }
+
+void MainWindow::on_saveEveryGuardButton_customContextMenuRequested(const QPoint &pos)
+{
+    newFacileMenu;
+
+    menu->addAction("导出每月表格", [=]{
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv)");
+        if (path.isEmpty())
+            return ;
+        settings->setValue("danmaku/exportPath", path);
+
+        exportAllGuardsByMonth(path);
+    });
+
+    menu->exec();
+}
+
+/**
+ * 导出每个月所有舰长的表格
+ * 横向：月份
+ * 纵向：UID 昵称 备注
+ */
+void MainWindow::exportAllGuardsByMonth(QString exportPath)
+{
+    QString readPath = dataPath + "guard_histories/" + roomId + ".csv";
+    if (!isFileExist(readPath))
+    {
+        showError("不存在舰长记录", readPath);
+        return ;
+    }
+
+    /// 购买舰长的记录表
+    struct GuardTrade
+    {
+        QString date;
+        QString nickname;
+        QString giftName;
+        int count;
+        qint64 uid;
+        QString remark;
+    };
+
+    /// 读取表格数据
+    // 默认表格格式：日期 时间 昵称 礼物 数量 累计 UID 备注
+    QString content = readTextFileAutoCodec(readPath);
+    QStringList lines = content.split("\n", QString::SkipEmptyParts);
+    QList<GuardTrade> trades;
+    for (int i = 1; i < lines.size(); ++i)
+    {
+        QStringList cells = lines.at(i).split(",");
+        if (cells.size() < 7)
+        {
+            qWarning() << "不符合的格式：" << lines.at(i);
+            continue;
+        }
+        GuardTrade trade{cells[0], cells[2], cells[3], cells[4].toInt(), cells[6].toLongLong(), cells.size() >= 8 ? cells[7] : ""};
+        trades.append(trade);
+    }
+
+    // 获取所有月份
+    QList<QString> months; // 月份表，格式：2021-1,2021-2,2021-3...
+    QString prevMonth = "";
+    for (GuardTrade& trade: trades)
+    {
+        QString month = QDate::fromString(trade.date, "yyyy-MM-dd").toString("yyyy.MM");
+        trade.date = month;
+        if (prevMonth == month)
+            continue;
+        months.append(month);
+        prevMonth = month;
+    }
+
+    // 获取所有用户
+    QList<qint64> users;
+    QList<QString> nicknames;
+    for (const GuardTrade& trade: trades)
+    {
+        if (!users.contains(trade.uid))
+        {
+            users.append(trade.uid);
+            nicknames.append(trade.nickname); // 只用第一次上船时的昵称
+        }
+    }
+
+    /// 映射向量
+    int guardCount[users.size()][months.size()][3];
+    memset(guardCount, 0, sizeof (int) * users.size() * months.size() * 3);
+
+    const int ZD = 0; // 总督索引
+    const int TD = 1; // 提督
+    const int JZ = 2; // 舰长
+
+    for (const GuardTrade& trade: trades)
+    {
+        int userIndex = users.indexOf(trade.uid);
+        int monthIndex = months.indexOf(trade.date);
+        Q_ASSERT(userIndex > -1);
+        Q_ASSERT(monthIndex > -1);
+
+        if (trade.giftName == "总督")
+            guardCount[userIndex][monthIndex][ZD] += trade.count;
+        else if (trade.giftName == "提督")
+            guardCount[userIndex][monthIndex][TD] += trade.count;
+        else if (trade.giftName == "舰长")
+            guardCount[userIndex][monthIndex][JZ] += trade.count;
+        else
+            qWarning() << "未知的礼物：" << trade.giftName;
+    }
+
+    /// 导出表格
+    // 标题
+    QString fullText = "UID,昵称";
+    for (int i = 0; i < months.size(); i++)
+        fullText += "," + months.at(i);
+
+    // 内容每一行
+    for (int i = 0; i < users.size(); i++)
+    {
+        // 添加用户ID和昵称列
+        fullText += "\n" + snum(users.at(i)) + "," + nicknames.at(i);
+        // 添加每次上船的标记
+        for (int j = 0; j < months.size(); j++)
+        {
+            QStringList cellList;
+            if (guardCount[i][j][ZD] != 0)
+                cellList.append("总督" + (guardCount[i][j][ZD] > 1 ? snum(guardCount[i][j][ZD]) : ""));
+            if (guardCount[i][j][TD] != 0)
+                cellList.append("提督" + (guardCount[i][j][TD] > 1 ? snum(guardCount[i][j][TD]) : ""));
+            if (guardCount[i][j][JZ] != 0)
+                cellList.append("舰长" + (guardCount[i][j][JZ] > 1 ? snum(guardCount[i][j][JZ]) : ""));
+            fullText += "," + cellList.join(" / ");
+        }
+    }
+
+    writeTextFile(exportPath, fullText, recordFileCodec);
+}

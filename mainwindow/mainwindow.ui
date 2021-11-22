@@ -3654,6 +3654,9 @@ margin: 40px;</string>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::CustomContextMenu</enum>
+                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
