@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>867</width>
-    <height>1199</height>
+    <width>696</width>
+    <height>620</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -7342,7 +7342,7 @@ QTabBar::tab:selected
            <attribute name="title">
             <string>远程</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,1,0">
+           <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0">
             <property name="spacing">
              <number>12</number>
             </property>
@@ -7602,19 +7602,6 @@ QTabBar::tab:selected
                </item>
               </layout>
              </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>1</height>
-               </size>
-              </property>
-             </spacer>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -8266,7 +8253,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>867</width>
+     <width>696</width>
      <height>21</height>
     </rect>
    </property>

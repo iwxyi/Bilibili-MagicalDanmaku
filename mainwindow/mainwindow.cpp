@@ -2651,6 +2651,374 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         socket->close();
     }
+    else if (text == "爆出礼物")
+    {
+        QByteArray ba = "{\
+                        \"cmd\": \"SEND_GIFT\",\
+                        \"data\": {\
+                            \"anchor_roomid\": \"0\",\
+                            \"coin_type\": \"gold\",\
+                            \"extra\": {\
+                                \"action\": \"投喂\",\
+                                \"batch_combo_id\": \"f1100ee9-9068-4122-808d-2f4c7ebd5143\",\
+                                \"batch_combo_send\": {\
+                                    \"action\": \"投喂\",\
+                                    \"batch_combo_id\": \"f1100ee9-9068-4122-808d-2f4c7ebd5143\",\
+                                    \"batch_combo_num\": 1,\
+                                    \"blind_gift\": {\
+                                        \"blind_gift_config_id\": 27,\
+                                        \"gift_action\": \"爆出\",\
+                                        \"original_gift_id\": 31026,\
+                                        \"original_gift_name\": \"白银宝盒\"\
+                                    },\
+                                    \"gift_id\": 20011,\
+                                    \"gift_name\": \"金币\",\
+                                    \"gift_num\": 1,\
+                                    \"send_master\": null,\
+                                    \"uid\": 4303190,\
+                                    \"uname\": \"舞月雅白\"\
+                                },\
+                                \"beatId\": \"\",\
+                                \"biz_source\": \"Live\",\
+                                \"blind_gift\": {\
+                                    \"blind_gift_config_id\": 27,\
+                                    \"gift_action\": \"爆出\",\
+                                    \"original_gift_id\": 31026,\
+                                    \"original_gift_name\": \"白银宝盒\"\
+                                },\
+                                \"broadcast_id\": 0,\
+                                \"coin_type\": \"gold\",\
+                                \"combo_resources_id\": 1,\
+                                \"combo_send\": {\
+                                    \"action\": \"投喂\",\
+                                    \"combo_id\": \"4fa537d8-abf7-4e28-8f74-581ea050fde1\",\
+                                    \"combo_num\": 1,\
+                                    \"gift_id\": 20011,\
+                                    \"gift_name\": \"金币\",\
+                                    \"gift_num\": 1,\
+                                    \"send_master\": null,\
+                                    \"uid\": 4303190,\
+                                    \"uname\": \"舞月雅白\"\
+                                },\
+                                \"combo_stay_time\": 3,\
+                                \"combo_total_coin\": 600,\
+                                \"crit_prob\": 0,\
+                                \"demarcation\": 1,\
+                                \"discount_price\": 600,\
+                                \"dmscore\": 112,\
+                                \"draw\": 0,\
+                                \"effect\": 0,\
+                                \"effect_block\": 0,\
+                                \"face\": \"http://i2.hdslb.com/bfs/face/bdd1084ccdd3ecc55969a0ac4dd9be588ad1959a.jpg\",\
+                                \"float_sc_resource_id\": 0,\
+                                \"giftId\": 20011,\
+                                \"giftName\": \"金币\",\
+                                \"giftType\": 0,\
+                                \"gold\": 0,\
+                                \"guard_level\": 0,\
+                                \"is_first\": true,\
+                                \"is_special_batch\": 0,\
+                                \"magnification\": 1,\
+                                \"medal_info\": {\
+                                    \"anchor_roomid\": 0,\
+                                    \"anchor_uname\": \"\",\
+                                    \"guard_level\": 0,\
+                                    \"icon_id\": 0,\
+                                    \"is_lighted\": 0,\
+                                    \"medal_color\": 13081892,\
+                                    \"medal_color_border\": 12632256,\
+                                    \"medal_color_end\": 12632256,\
+                                    \"medal_color_start\": 12632256,\
+                                    \"medal_level\": 20,\
+                                    \"medal_name\": \"东方\",\
+                                    \"special\": \"\",\
+                                    \"target_id\": 12836417\
+                                },\
+                                \"name_color\": \"\",\
+                                \"num\": 1,\
+                                \"original_gift_name\": \"\",\
+                                \"price\": 600,\
+                                \"rcost\": 282839,\
+                                \"remain\": 0,\
+                                \"rnd\": \"1097737974\",\
+                                \"send_master\": null,\
+                                \"silver\": 0,\
+                                \"super\": 0,\
+                                \"super_batch_gift_num\": 1,\
+                                \"super_gift_num\": 1,\
+                                \"svga_block\": 0,\
+                                \"tag_image\": \"\",\
+                                \"tid\": \"1636295428121000002\",\
+                                \"timestamp\": 1636295428,\
+                                \"top_list\": null,\
+                                \"total_coin\": 1000,\
+                                \"uid\": 4303190,\
+                                \"uname\": \"舞月雅白\"\
+                            },\
+                            \"gift_id\": 20011,\
+                            \"gift_name\": \"金币\",\
+                            \"medal_color\": \"c79d24\",\
+                            \"medal_level\": 20,\
+                            \"medal_name\": \"东方\",\
+                            \"medal_up\": \"\",\
+                            \"msgType\": 2,\
+                            \"nickname\": \"舞月雅白\",\
+                            \"number\": 1,\
+                            \"timeline\": \"2021-11-07 22:30:33\",\
+                            \"total_coin\": 1000,\
+                            \"uid\": 4303190\
+                        }\
+                    }";
+
+        sendTextToSockets("SEND_GIFT", ba);
+    }
+    else if (text == "投喂银瓜子")
+    {
+        QByteArray ba = "{\
+                        \"cmd\": \"SEND_GIFT\",\
+                        \"data\": {\
+                            \"anchor_roomid\": \"0\",\
+                            \"coin_type\": \"silver\",\
+                            \"extra\": {\
+                                \"action\": \"投喂\",\
+                                \"batch_combo_id\": \"\",\
+                                \"batch_combo_send\": null,\
+                                \"beatId\": \"\",\
+                                \"biz_source\": \"Live\",\
+                                \"blind_gift\": null,\
+                                \"broadcast_id\": 0,\
+                                \"coin_type\": \"silver\",\
+                                \"combo_resources_id\": 1,\
+                                \"combo_send\": null,\
+                                \"combo_stay_time\": 3,\
+                                \"combo_total_coin\": 0,\
+                                \"crit_prob\": 0,\
+                                \"demarcation\": 1,\
+                                \"discount_price\": 0,\
+                                \"dmscore\": 12,\
+                                \"draw\": 0,\
+                                \"effect\": 0,\
+                                \"effect_block\": 1,\
+                                \"face\": \"http://i0.hdslb.com/bfs/face/member/noface.jpg\",\
+                                \"float_sc_resource_id\": 0,\
+                                \"giftId\": 1,\
+                                \"giftName\": \"辣条\",\
+                                \"giftType\": 5,\
+                                \"gold\": 0,\
+                                \"guard_level\": 0,\
+                                \"is_first\": true,\
+                                \"is_special_batch\": 0,\
+                                \"magnification\": 1,\
+                                \"medal_info\": {\
+                                    \"anchor_roomid\": 0,\
+                                    \"anchor_uname\": \"\",\
+                                    \"guard_level\": 0,\
+                                    \"icon_id\": 0,\
+                                    \"is_lighted\": 1,\
+                                    \"medal_color\": 6126494,\
+                                    \"medal_color_border\": 6126494,\
+                                    \"medal_color_end\": 6126494,\
+                                    \"medal_color_start\": 6126494,\
+                                    \"medal_level\": 7,\
+                                    \"medal_name\": \"戒不掉\",\
+                                    \"special\": \"\",\
+                                    \"target_id\": 300702024\
+                                },\
+                                \"name_color\": \"\",\
+                                \"num\": 1,\
+                                \"original_gift_name\": \"\",\
+                                \"price\": 100,\
+                                \"rcost\": 292387,\
+                                \"remain\": 0,\
+                                \"rnd\": \"AD3B6A47-5D22-45F3-8340-7C4A20B5DA53\",\
+                                \"send_master\": null,\
+                                \"silver\": 0,\
+                                \"super\": 0,\
+                                \"super_batch_gift_num\": 0,\
+                                \"super_gift_num\": 0,\
+                                \"svga_block\": 0,\
+                                \"tag_image\": \"\",\
+                                \"tid\": \"1636639739130000002\",\
+                                \"timestamp\": 1636639739,\
+                                \"top_list\": null,\
+                                \"total_coin\": 100,\
+                                \"uid\": 702014570,\
+                                \"uname\": \"花冢㐅\"\
+                            },\
+                            \"gift_id\": 1,\
+                            \"gift_name\": \"辣条\",\
+                            \"medal_color\": \"5d7b9e\",\
+                            \"medal_level\": 7,\
+                            \"medal_name\": \"戒不掉\",\
+                            \"medal_up\": \"\",\
+                            \"msgType\": 2,\
+                            \"nickname\": \"花冢㐅\",\
+                            \"number\": 1,\
+                            \"timeline\": \"2021-11-11 22:08:59\",\
+                            \"total_coin\": 100,\
+                            \"uid\": 702014570\
+                        }\
+                    }";
+        sendTextToSockets("SEND_GIFT", ba);
+    }
+    else if (text == "投喂电池")
+    {
+        QByteArray ba = "{\
+                        \"cmd\": \"SEND_GIFT\",\
+                        \"data\": {\
+                            \"anchor_roomid\": \"0\",\
+                            \"coin_type\": \"gold\",\
+                            \"extra\": {\
+                                \"action\": \"投喂\",\
+                                \"batch_combo_id\": \"batch:gift:combo_id:37794207:113579884:31039:1636639828.0140\",\
+                                \"batch_combo_send\": {\
+                                    \"action\": \"投喂\",\
+                                    \"batch_combo_id\": \"batch:gift:combo_id:37794207:113579884:31039:1636639828.0140\",\
+                                    \"batch_combo_num\": 1,\
+                                    \"blind_gift\": null,\
+                                    \"gift_id\": 31039,\
+                                    \"gift_name\": \"牛哇牛哇\",\
+                                    \"gift_num\": 1,\
+                                    \"send_master\": null,\
+                                    \"uid\": 37794207,\
+                                    \"uname\": \"雷神专用柒柒\"\
+                                },\
+                                \"beatId\": \"\",\
+                                \"biz_source\": \"Live\",\
+                                \"blind_gift\": null,\
+                                \"broadcast_id\": 0,\
+                                \"coin_type\": \"gold\",\
+                                \"combo_resources_id\": 1,\
+                                \"combo_send\": {\
+                                    \"action\": \"投喂\",\
+                                    \"combo_id\": \"gift:combo_id:37794207:113579884:31039:1636639828.0131\",\
+                                    \"combo_num\": 1,\
+                                    \"gift_id\": 31039,\
+                                    \"gift_name\": \"牛哇牛哇\",\
+                                    \"gift_num\": 1,\
+                                    \"send_master\": null,\
+                                    \"uid\": 37794207,\
+                                    \"uname\": \"雷神专用柒柒\"\
+                                },\
+                                \"combo_stay_time\": 3,\
+                                \"combo_total_coin\": 100,\
+                                \"crit_prob\": 0,\
+                                \"demarcation\": 1,\
+                                \"discount_price\": 100,\
+                                \"dmscore\": 120,\
+                                \"draw\": 0,\
+                                \"effect\": 0,\
+                                \"effect_block\": 0,\
+                                \"face\": \"http://i0.hdslb.com/bfs/face/eb101ef90ebc4e9bf79f65312a22ebac84946700.jpg\",\
+                                \"float_sc_resource_id\": 0,\
+                                \"giftId\": 31039,\
+                                \"giftName\": \"牛哇牛哇\",\
+                                \"giftType\": 0,\
+                                \"gold\": 0,\
+                                \"guard_level\": 3,\
+                                \"is_first\": true,\
+                                \"is_special_batch\": 0,\
+                                \"magnification\": 1,\
+                                \"medal_info\": {\
+                                    \"anchor_roomid\": 0,\
+                                    \"anchor_uname\": \"\",\
+                                    \"guard_level\": 3,\
+                                    \"icon_id\": 0,\
+                                    \"is_lighted\": 1,\
+                                    \"medal_color\": 1725515,\
+                                    \"medal_color_border\": 6809855,\
+                                    \"medal_color_end\": 5414290,\
+                                    \"medal_color_start\": 1725515,\
+                                    \"medal_level\": 21,\
+                                    \"medal_name\": \"女仆厨\",\
+                                    \"special\": \"\",\
+                                    \"target_id\": 113579884\
+                                },\
+                                \"name_color\": \"#00D1F1\",\
+                                \"num\": 1,\
+                                \"original_gift_name\": \"\",\
+                                \"price\": 100,\
+                                \"rcost\": 292391,\
+                                \"remain\": 0,\
+                                \"rnd\": \"180269212\",\
+                                \"send_master\": null,\
+                                \"silver\": 0,\
+                                \"super\": 0,\
+                                \"super_batch_gift_num\": 1,\
+                                \"super_gift_num\": 1,\
+                                \"svga_block\": 0,\
+                                \"tag_image\": \"\",\
+                                \"tid\": \"1636639827121700001\",\
+                                \"timestamp\": 1636639827,\
+                                \"top_list\": null,\
+                                \"total_coin\": 100,\
+                                \"uid\": 37794207,\
+                                \"uname\": \"雷神专用柒柒\"\
+                            },\
+                            \"gift_id\": 31039,\
+                            \"gift_name\": \"牛哇牛哇\",\
+                            \"medal_color\": \"1a544b\",\
+                            \"medal_level\": 21,\
+                            \"medal_name\": \"女仆厨\",\
+                            \"medal_up\": \"\",\
+                            \"msgType\": 2,\
+                            \"nickname\": \"雷神专用柒柒\",\
+                            \"number\": 1,\
+                            \"timeline\": \"2021-11-11 22:10:29\",\
+                            \"total_coin\": 100,  //1:100\
+                            \"uid\": 37794207\
+                        }\
+                    }";
+        sendTextToSockets("SEND_GIFT", ba);
+    }
+    else if (text == "礼物连击")
+    {
+        QByteArray ba = "{\
+                        \"cmd\": \"COMBO_SEND\",\
+                        \"data\": {\
+                            \"extra\": {\
+                                \"action\": \"投喂\",\
+                                \"batch_combo_id\": \"batch:gift:combo_id:14729370:113579884:30869:1637386968.9309\",\
+                                \"batch_combo_num\": 2,\
+                                \"combo_id\": \"gift:combo_id:14729370:113579884:30869:1637386968.9301\",\
+                                \"combo_num\": 200,\
+                                \"combo_total_coin\": 20000,\
+                                \"dmscore\": 112,\
+                                \"gift_id\": 30869,\
+                                \"gift_name\": \"心动卡\",\
+                                \"gift_num\": 100,\
+                                \"is_show\": 1,\
+                                \"medal_info\": {\
+                                    \"anchor_roomid\": 0,\
+                                    \"anchor_uname\": \"\",\
+                                    \"guard_level\": 0,\
+                                    \"icon_id\": 0,\
+                                    \"is_lighted\": 1,\
+                                    \"medal_color\": 6067854,\
+                                    \"medal_color_border\": 6067854,\
+                                    \"medal_color_end\": 6067854,\
+                                    \"medal_color_start\": 6067854,\
+                                    \"medal_level\": 4,\
+                                    \"medal_name\": \"绒冰球\",\
+                                    \"special\": \"\",\
+                                    \"target_id\": 21374533\
+                                },\
+                                \"name_color\": \"\",\
+                                \"r_uname\": \"水良子\",\
+                                \"ruid\": 113579884,\
+                                \"send_master\": null,\
+                                \"total_num\": 200,\
+                                \"uid\": 14729370,\
+                                \"uname\": \"半夏惜沫\"\
+                            },\
+                            \"msgType\": 0,\
+                            \"nickname\": \"\",\
+                            \"timeline\": \"\",\
+                            \"uid\": 0\
+                        }\
+                    }";
+        sendTextToSockets("COMBO_SEND", ba);
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,

@@ -1,11 +1,12 @@
 @font-face {
 	font-family: 'hanyiwenhei85W';
-	src:url('../fonts/HYWenHei 85W.ttf');
+	src:url('../fonts/default.ttf');
 }
 body{
 	padding:0;
 	margin:0 auto;
-	padding-top: 30px;
+	padding-top: 35px;
+	opacity: 1; 
 }
 .info{
 	font-size: 80px;
@@ -14,9 +15,9 @@ body{
 	font-family: 'hanyiwenhei85W';
 	display: flex;
 }
-.rank,.popula {
+.top,.popula {
 	animation: fireDiv 1s infinite;
-	color:#F6E2A3!important;
+	color:#E3AC01!important;
 }
 @keyframes fireDiv {
 	0% {

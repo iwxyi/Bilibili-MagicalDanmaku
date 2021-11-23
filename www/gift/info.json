@@ -5,7 +5,7 @@
 			"url": "index.html",
 			"css": "gift.css",
 			"css_custom": "gift_custom.css",
-			"desc": "送礼物后显示3~5秒钟的相应小动画"
+			"desc": "送礼物后根据礼物数量显示相应对应时间的小动画，电池礼物优先显示"
 		},
 		{
 			"name": "结束感谢列表",

@@ -1,13 +1,13 @@
 {
-    "name": "实时人气",
-    "min_version": "4.4.1",
+	"name": "实时排名",
+	"min_version": "4.4.1",
 	"list": [
 		{
-			"name": "实时人气",
+			"name": "实时排名",
 			"url": "index.html",
 			"css": "index.css",
-			"css_custom": "index_custom.css",
-            "desc": "实时人气值与分区排行榜显示"
+			"css_custom": "index.custom.css",
+			"desc": "定时更新直播间搜索排名和人气"
 		}
 	]
 }
