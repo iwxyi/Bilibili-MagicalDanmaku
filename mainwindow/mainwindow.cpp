@@ -2965,7 +2965,7 @@ void MainWindow::on_testDanmakuButton_clicked()
                             \"nickname\": \"雷神专用柒柒\",\
                             \"number\": 1,\
                             \"timeline\": \"2021-11-11 22:10:29\",\
-                            \"total_coin\": 100,  //1:100\
+                            \"total_coin\": 100,\
                             \"uid\": 37794207\
                         }\
                     }";
@@ -10440,7 +10440,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
-                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是开播十分钟后
+                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 60000) // 起码是上次下播10秒钟后
                 sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已开播");
             liveStatus = 1;
