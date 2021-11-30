@@ -12451,8 +12451,8 @@ void MainWindow::downloadAndSpeak(QString text)
     QString url = ui->voiceCustomUrlEdit->text();
     if (url.isEmpty())
         return ;
-    url = url.replace("%text%", text);
-    url = url.replace("%url_text%", QString::fromLocal8Bit(text.toLocal8Bit().toPercentEncoding()));
+    url = url.replace("%1", text).replace("%text%", text);
+    url = url.replace("%url_text%", QString::fromUtf8(text.toUtf8().toPercentEncoding()));
     qInfo() << url;
     const QString filePath = dataPath + "audios";
     QDir dir(filePath);
