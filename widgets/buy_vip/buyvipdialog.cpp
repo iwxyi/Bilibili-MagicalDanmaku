@@ -314,7 +314,7 @@ void BuyVIPDialog::on_payButton_clicked()
         QString html = json.s("data");
         QString path = dataPath + "pay.html";
         writeTextFile(path, html);
-        QMessageBox::information(this, "前往浏览器", "即将使用浏览器打开：" + path);
+        // QMessageBox::information(this, "前往浏览器", "即将使用浏览器打开：" + path);
         if (!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
         {
             QApplication::clipboard()->setText(path);

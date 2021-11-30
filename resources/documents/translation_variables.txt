@@ -87,6 +87,7 @@
 在游戏用户中=in_game_users
 在游戏数值中=in_game_numbers
 在游戏文本中=in_game_texts
+程序名字=app_name
 程序目录=app_path
 网站目录=www_path
 网站域名=server_domain

@@ -1021,6 +1021,7 @@ private:
     QSettings* extSettings;
     QString dataPath;
     QString appVersion; // 不带v
+    QString appFileName; // 应用程序文件名（不带exe）
     QString appNewVersion;
     QString appDownloadUrl;
 

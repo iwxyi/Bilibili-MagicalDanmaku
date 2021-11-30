@@ -786,9 +786,10 @@ border-image: url(C:/Path/To/Image.png)
 | in_game_users    | 在游戏用户中     | uid在gameUsers[0]中（高性能，但重启清空）                    |
 | in_game_numbers  | 在游戏数值中     | uid在gameNumbers[0]中                                        |
 | in_game_texts    | 在游戏文本中     | text在gameTexts[0]中，空格等都需要一模一样                   |
+| app_name         | 程序名字         | 返回exe名字（不带后缀），可用于多开区分                      |
 | app_path         | 程序目录         | 数据路径，绿色版为安装目录                                   |
 | www_path         | 网站目录         | 数据路径下的www目录的绝对路径                                |
-| server_domain    | 网站域名         | 默认为 http://localhost                                      |
+| server_domain    | 网站域名         | 默认为 `http://localhost`                                    |
 | server_port      | 网站端口         | 默认为 5520                                                  |
 | server_url       | 网站网址         | 等于server_domain:server_port                                |
 | living           | 直播中           | 直播：1，轮播：2，未开播：0                                  |

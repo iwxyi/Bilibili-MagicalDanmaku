@@ -503,6 +503,7 @@ void MainWindow::initStyle()
 
 void MainWindow::initPath()
 {
+    appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
     dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -6293,7 +6294,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%in_game_texts%")
         return gameTextLists[0].contains(danmaku.getText()) ? "1" : "0";
 
-    // 程序路径
+    // 程序文件、路径
+    else if (key == "%app_name%")
+        return appFileName;
+
     else if (key == "%app_path%")
         return QDir(dataPath).absolutePath();
 
