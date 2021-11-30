@@ -210,7 +210,7 @@ public:
     {
         VoiceLocal,
         VoiceXfy,
-        VoiceCustom
+        VoiceCustom,
     };
 
     const QSettings *getSettings() const;
@@ -747,6 +747,8 @@ private slots:
 
     void exportAllGuardsByMonth(QString exportPath);
 
+    void on_setCustomVoiceButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -884,7 +886,7 @@ private:
     void initTTS();
     void speekVariantText(QString text);
     void speakText(QString text);
-    void downloadAndSpeak(QString text);
+    void voiceDownloadAndSpeak(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();

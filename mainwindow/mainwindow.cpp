@@ -5,6 +5,7 @@
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QHeaderView>
+#include <QDataStream>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -102,6 +103,22 @@ MainWindow::MainWindow(QWidget *parent)
         });
         tip_box->createTipCard(notify);
     });
+
+    // 测试
+    /* get("https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=1", [=](MyJson json){
+        if (json.i("errno") != 0)
+        {
+            qWarning() << "百度语音解析错误：" << json;
+            return ;
+        }
+
+        QString base64 = json.s("data").split(",").last();
+        QByteArray ba = QByteArray::fromBase64(base64.toUtf8());
+        QFile file("D://a.mp3");
+        file.open(QIODevice::WriteOnly);
+        file.write(ba);
+        file.close();
+    }); */
 }
 
 void MainWindow::initView()
@@ -12445,12 +12462,50 @@ void MainWindow::speakText(QString text)
         xfyTTS->speakText(text);
         break;
     case VoiceCustom:
-        downloadAndSpeak(text);
+        voiceDownloadAndSpeak(text);
         break;
     }
 }
 
-void MainWindow::downloadAndSpeak(QString text)
+/**
+ * 快速设置自定义语音的类型
+ */
+void MainWindow::on_setCustomVoiceButton_clicked()
+{
+    QStringList names{"测试",
+                     "百度语音"};
+    QStringList urls{
+        "http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&voice=EkhoMandarin&speedDelta=0&pitchDelta=0&volumeDelta=0&text=%url_text%",
+        "https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=%url_text%"
+    };
+    QStringList descs{
+        "",
+        "spd：语速，0~15，默认为5中语速\n\
+pit：音调，0~15，默认为5中音调\n\
+vol：音量，0~15，默认为5中音量（取0时为音量最小值，并非静音）\n\
+per：（基础）0 度小美，1 度小宇，3 度逍遥，4 度丫丫，4115 度小贤，4105 度灵儿，4117 度小乔，4100 度小雯\n\
+per：（精品）5003 度逍遥，5118 度小鹿，106 度博文，110 度小童，111 度小萌，103 度米朵，5 度小娇\n\
+aue：3为mp3（必须）"
+    };
+
+    newFacileMenu;
+    for (int i = 0; i < names.size(); i++)
+    {
+        menu->addAction(names.at(i), [=]{
+            ui->voiceCustomUrlEdit->setText(urls.at(i));
+            on_voiceCustomUrlEdit_editingFinished();
+        })->tooltip(descs.at(i));
+    }
+    menu->addTitle("鼠标悬浮可查看参数");
+    menu->exec();
+}
+
+
+/**
+ * 针对返回是JSON/音频字节的类型
+ * 自动判断
+ */
+void MainWindow::voiceDownloadAndSpeak(QString text)
 {
     QString url = ui->voiceCustomUrlEdit->text();
     if (url.isEmpty())
@@ -12463,7 +12518,45 @@ void MainWindow::downloadAndSpeak(QString text)
     dir.mkpath(filePath);
 
     get(url, [=](QNetworkReply* reply1){
-        QByteArray fileData = reply1->readAll();
+        QByteArray fileData;
+
+        if (reply1->error() != QNetworkReply::NoError)
+        {
+            qWarning() << "获取网络音频错误：" << reply1->errorString();
+            return ;
+        }
+
+        auto contentType = reply1->header(QNetworkRequest::ContentTypeHeader).toString();
+        if (contentType.contains("json"))
+        {
+            // https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=这是一个测试文本
+            /*{
+                "errno": 0,
+                "msg": "success",
+                "data": "data:audio/x-mpeg;base64,//MoxAALoFpsC0YQAHIouk1FA6BPPUxbeUaQ4wQRgeY5r1DAg4/+thlOU4rq07Fc+ESwTDLvaj/r//6Vq1mEUtwleaDs7Wml//MoxAwPsxZ8AYkoATFi0S67rXu3Rn3///////6J5hFDfynZfOp2///9VvzqcVCbif/9P/p4cD4eDLiAmIjGYfzjiUANOENL//MoxAgNMdqwAdIQAIVzzsyjYgiL/r////////////yU+4QQhBbEDnfxZLmPQUONSCIw5/OA/dc2Of1IDiEuACgDeTarIQJS//MoxA4Qqua0AKKEuYv+v/U///+3//////r8ypOHcwYMKEjkU7p9luzfdDylMqMPkEuLKZLLb/nVDnQg44SQ78fq/USjj6Ay//MoxAYOAm7AAJnEuNQ9ctrf1CEcb/cz/n//////////3/1QWEHvfMd0b/f9zKiq5JgwVEeKG6doVegQjH1rARtltttrbgH8//MoxAkOmI8CXgrOTjxRJQ6Umv/5RDP+rFX8FHeJHckDHpOdQuf/yws4SkipEz1IEHUTBDIhImjgQHzn9rk1AIM//hw/Wikk//MoxAkO8c7JlJCElChQOnD31f4b/1K//t/6/+rf+p//T/0P/QCFGDnMgPlgqoxHrCTdY0wffEIVX62BdZ8wRQVM5+7omI/B//MoxAgM0j64ypiEuA8BiUXX/Av/sv///X/6f////+yv6o+cb/M6D/+JJcZHqCXPA0KsJbPaK2IVWmQCBtQxA16DJQ3U3+95//MoxA8McJaYABYETGtnAUf+oIUh7X+s7///4ieIgKRBWVd7aZIS5GS7FPI/6dOpAMA/wvW0d7En1exITIOpVVZmIIBSf+f///MoxBgM+cJ8VHhElMX/////////5jFKFARp1od1luqeyX//6Cz5LDQgaGDcNY80OCoEBYQIxKFAoInFl6MDI4HX1tW1Jxqz//MoxB8MaFI8AHpMJGYe/PuZXiqPWINla9PWx3tQn0UbqHqcH+uY4QRIAxug4GYWCo0ig/4iojrqGxdCLyDKE/JsSRb1aUen//MoxCgK0EI4AHpEJLfUyhWQUnwBoAQGmj4Z2ReCoSW65N99dmqkY+h7P/9XG//r37TLN3/v/7NClqtXKAFExmCgkBgKM3Jq//MoxDcJ6C5EFjJMAHv7fZS3K/644f9XR//+qvyVBH/LJkxBTUUzLjk5LjWqqqqqqqqqqqpMQU1FMy45OS41qqqqqqqqqqqq//MoxEoI8BokVhjGAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpMQU1FMy45OS41qqqqqqqqqqqq//MoxGEAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxJwAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxMQAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxMQAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+            }*/
+            QByteArray ba = reply1->readAll();
+            MyJson json(ba);
+            QString s = json.s("data");
+            if (s.startsWith("data:audio") && s.contains(","))
+            {
+                QStringList sl = s.split(",");
+                fileData = sl.at(1).toUtf8();
+                if (sl.at(0).contains("base64"))
+                    fileData = QByteArray::fromBase64(fileData);
+            }
+            else
+            {
+                qWarning() << "无法解析的语音返回：" << json;
+                return ;
+            }
+        }
+        else
+        {
+            // http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&voice=EkhoMandarin&speedDelta=0&pitchDelta=0&volumeDelta=0&text=这是一个测试文本
+            fileData = reply1->readAll();
+        }
+
         if (fileData.isEmpty())
         {
             qWarning() << "网络音频为空";
@@ -18457,6 +18550,7 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
 
 void MainWindow::on_voiceCustomRadio_toggled(bool checked)
 {
+    ui->voiceConfigSettingsCard->setVisible(!checked);
     if (checked)
     {
         voicePlatform = VoiceCustom;
@@ -18499,26 +18593,21 @@ void MainWindow::on_voiceNameSelectButton_clicked()
                          "讯飞小萍<aisxping>",
                          "讯飞小婧<aisjinger>",
                          "讯飞许小宝<aisbabyxu>"};
-        QStringListModel* model = new QStringListModel(names);
-        QListView* view = new QListView(nullptr);
-        view->setModel(model);
-        view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        connect(view, &QListView::activated, this, [=](const QModelIndex &index){
-            if (!index.isValid())
-                return ;
-            int row = index.row();
-            QString text = names.at(row);
-            QRegularExpression re("<(.+)>");
-            QRegularExpressionMatch match;
-            if (text.indexOf(re, 0, &match) > -1)
-                text = match.capturedTexts().at(1);
-            this->ui->voiceNameEdit->setText(text);
-            if (xfyTTS)
-                xfyTTS->setName(text);
-            view->deleteLater();
-            model->deleteLater();
-        });
-        view->show();
+
+        newFacileMenu;
+        for (int i = 0; i < names.size(); i++)
+        {
+            menu->addAction(names.at(i), [=]{
+                QString text = names.at(i);
+                QRegularExpression re("<(.+)>");
+                QRegularExpressionMatch match;
+                if (text.indexOf(re, 0, &match) > -1)
+                    text = match.capturedTexts().at(1);
+                this->ui->voiceNameEdit->setText(text);
+                on_voiceNameEdit_editingFinished();
+            });
+        }
+        menu->exec();
     }
 }
 
@@ -20132,3 +20221,4 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
 
     writeTextFile(exportPath, fullText, recordFileCodec);
 }
+

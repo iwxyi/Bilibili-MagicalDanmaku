@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>876</width>
-    <height>764</height>
+    <width>852</width>
+    <height>959</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>796</width>
-             <height>648</height>
+             <width>772</width>
+             <height>843</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4649,8 +4649,8 @@ margin: 40px;</string>
              <rect>
               <x>550</x>
               <y>570</y>
-              <width>161</width>
-              <height>81</height>
+              <width>191</width>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4705,13 +4705,6 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_9">
                <item>
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>API</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <widget class="QLineEdit" name="voiceCustomUrlEdit">
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用“%text%”替换要朗读的文字，“%url_text%”替换为url编码的文字&lt;/p&gt;&lt;p&gt;只支持直接生成并下载音频文件的API&lt;/p&gt;&lt;p&gt;例如：http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&amp;amp;voice=EkhoMandarin&amp;amp;speedDelta=0&amp;amp;pitchDelta=0&amp;amp;volumeDelta=0&amp;amp;text=%1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4729,6 +4722,40 @@ margin: 40px;</string>
                </item>
               </layout>
              </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_67">
+               <item>
+                <widget class="QPushButton" name="setCustomVoiceButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string>快速设置</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="voiceConfigSettingsCard" native="true">
@@ -4736,7 +4763,7 @@ margin: 40px;</string>
              <rect>
               <x>550</x>
               <y>400</y>
-              <width>161</width>
+              <width>191</width>
               <height>151</height>
              </rect>
             </property>
@@ -8253,7 +8280,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>876</width>
+     <width>852</width>
      <height>21</height>
     </rect>
    </property>
