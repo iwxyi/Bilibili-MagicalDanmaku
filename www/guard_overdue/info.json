@@ -1,0 +1,25 @@
+{
+    "name": "舰长过期私信提醒",
+    "min_version": "4.4.0",
+    "list": [
+        {
+            "name": "舰长过期私信提醒",
+            "url": "index.html",
+            "desc": "舰长过期后可自动发送私信提醒续费，先导入代码，然后直接在OBS中添加当前地址即可，无任何特殊显示",
+            "code": [
+				{
+					"action": "///舰长过期私信提醒\n//%.data.uid% 用户id\n//%.data.accompany% 上舰多少天\n//%.data.guard_type% 舰长类型 3:舰长, 2:提督, 1:总督\n//%.data.uname% 用户昵称\n//%.data.day% 离舰多少天\n[%.data.guard_type%=3, %.data.day%=1]>sendPrivateMsg(%.data.uid%, 亲爱的%.data.uname%，您的舰长过期啦，请问还要续舰么？)\n[%.data.guard_type%=2, %.data.day%=1]>sendPrivateMsg(%.data.uid%, 亲爱的%.data.uname%，您的提督过期啦，请问还要续舰么？)\n[%.data.guard_type%=1, %.data.day%=1]>sendPrivateMsg(%.data.uid%, 亲爱的%.data.uname%，您的总督过期啦，请问还要续舰么？)",
+					"anchor_key": "神奇弹幕:EventAction",
+					"enabled": true,
+					"event": "SOCKET:REMIND_GUARD_OVERDUE"
+				},
+				{
+					"action": "///舰长过期私信提醒\n>sendToSockets(GUARD_OVERDUE, \\\n\t{\\\n\t\t\"cmd\": \"GUARD_OVERDUE\"\\\n\t})",
+					"anchor_key": "神奇弹幕:EventAction",
+					"enabled": true,
+					"event": "NEW_DAY_FIRST"
+				}
+			]
+        }
+    ]
+}

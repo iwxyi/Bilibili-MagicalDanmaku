@@ -1,0 +1,70 @@
+<head>
+    <title>舰长过期提醒</title>
+    <script src="../js/jquery.js"></script>
+	<meta name="referrer" content="no-referrer">
+</head>
+<body>
+	<font id="msg" style="font-size:36px;">舰长过期私信提醒已启动<br>（本消息3秒后自动消失）</font>
+    <script type="text/javascript">
+		var page = 1;
+		var ws;
+        $(document).ready(function() {
+            ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd": "cmds", "data": ["GUARD_OVERDUE", "REMIND_GUARD_OVERDUE"]}');
+				try {
+					socketInited(); // !socket初始化完毕
+				} catch (err) {
+					// console.log(err);
+				}
+            };
+            ws.onmessage = function(e) {
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+					case 'GUARD_OVERDUE':
+                        readInfo();
+                        break;
+                }
+            };
+			
+			function socketInited() {
+				window.setTimeout(function(){
+					$("#msg").remove();
+				},3000);
+			}
+
+			function readInfo() {
+				var total_count = 0;
+				var page_size = 0;
+				$.ajax({
+					url: "http://__DOMAIN__:__PORT__/api/netProxy?url=https://api.live.bilibili.com/xlive/web-ucenter/v1/guard/GuardWarnList?type=1&page=" + page,
+					async: false,
+					dataType: "JSON",
+					success: function (data) {
+						var guardList = data["data"]["list"];
+						total_count = data["data"]["total_count"];
+						page_size = data["data"]["page_size"];
+						if(guardList != null && guardList != "null")
+						{
+							for(var i = 0; i< guardList.length; i++){
+								sendPrivateMsg(guardList[i]["uid"], guardList[i]["accompany"], guardList[i]["guard_type"], guardList[i]["uname"], guardList[i]["day"]);
+							}
+						}
+					}
+				});
+				if(page_size * page < total_count)
+				{
+					page += 1;
+					readInfo();
+				}
+			}
+        });
+		//转发私信
+		function sendPrivateMsg(uid, accompany, guard_type, uname, day) {
+			ws.send('{"cmd": "REMIND_GUARD_OVERDUE", "data": {"uid": "' + uid + '", "accompany": "' + accompany + '", "guard_type": "' + guard_type + '", "uname": "' + uname + '", "day": "' + day + '"}}');
+			console.log('{"cmd": "REMIND_GUARD_OVERDUE", "data": {"uid": "' + uid + '", "accompany": "' + accompany + '", "guard_type": "' + guard_type + '", "uname": "' + uname + '", "day": "' + day + '"}}');
+		} 
+    </script>
+</body>

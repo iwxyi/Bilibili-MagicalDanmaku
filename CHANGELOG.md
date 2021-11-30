@@ -1,3 +1,22 @@
+### v4.4.1 [百度语音、远程与多开](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.4.1)
+
+- 新增无限制百度语音支持，可切换发音人
+- 新增语音播报的URL编码
+- 新增设置本地模式命令，远程控制服务器上程序的开关
+- 新增%app_name%获取程序文件名，**作为多开的条件判断变量**
+- 新增强制重连直播间命令
+- 大幅度优化模拟按键输入、鼠标操作
+- 新增导出所有上船记录表格
+- 新增获取分区ID和名字的变量
+- 新增分区排行与人气值显示插件
+- 新增连麦提示插件
+- 新增系统 VC runtime 检测与提示
+- 修复点歌姬偶尔暂停的问题
+
+
+
+
+
 ### v4.4.0 [扩展](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.4.0)
 
 - 新增透明时钟、看板娘等多个扩展
