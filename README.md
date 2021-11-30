@@ -1227,7 +1227,7 @@ tips：
 | addMusic(path/name)                                | 添加音乐         | 添加本地音乐（完整路径）或者自动搜索网络歌曲到播放列表       |
 | playMusic()                                        | 播放音乐         | 播放点歌姬的音乐；若没有歌曲，尝试播放下一首                 |
 | pauseMusic()                                       | 暂停音乐         | 暂停点歌姬的音乐                                             |
-| toggleMusicState()                                 | 切换音乐状态     | 切换点歌姬的音乐播放状态                                     |
+| toggleMusicState()                                 | 切换音乐状态     | 切换音乐的播放/暂停状态                                      |
 | messageBox(text)                                   | 消息弹窗         | 弹窗提示                                                     |
 | sendLongText(text)                                 | 发送长文本       | 发送长文本，自动分割成多条                                   |
 | appendFileLine(dirName, fileName, format)          | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |

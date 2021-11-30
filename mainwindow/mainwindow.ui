@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>696</width>
-    <height>620</height>
+    <width>876</width>
+    <height>764</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>787</width>
-             <height>1083</height>
+             <width>796</width>
+             <height>648</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4338,9 +4338,9 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>550</x>
-              <y>270</y>
+              <y>260</y>
               <width>201</width>
-              <height>111</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4714,7 +4714,7 @@ margin: 40px;</string>
                <item>
                 <widget class="QLineEdit" name="voiceCustomUrlEdit">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用“%1”替换要朗读的文字&lt;/p&gt;&lt;p&gt;只支持直接生成并下载音频文件的API&lt;/p&gt;&lt;p&gt;例如：http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&amp;amp;voice=EkhoMandarin&amp;amp;speedDelta=0&amp;amp;pitchDelta=0&amp;amp;volumeDelta=0&amp;amp;text=%1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用“%text%”替换要朗读的文字，“%url_text%”替换为url编码的文字&lt;/p&gt;&lt;p&gt;只支持直接生成并下载音频文件的API&lt;/p&gt;&lt;p&gt;例如：http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&amp;amp;voice=EkhoMandarin&amp;amp;speedDelta=0&amp;amp;pitchDelta=0&amp;amp;volumeDelta=0&amp;amp;text=%1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QLineEdit
@@ -8253,7 +8253,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>696</width>
+     <width>876</width>
      <height>21</height>
     </rect>
    </property>
