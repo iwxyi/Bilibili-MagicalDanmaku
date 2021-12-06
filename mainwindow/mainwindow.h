@@ -537,6 +537,8 @@ private slots:
 #if defined (ENABLE_HTTP_SERVER)
     void serverHandle(QHttpRequest *req, QHttpResponse *resp);
 
+    void requestHandle(QHttpRequest *req, QHttpResponse *resp);
+
     void serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp);
 #endif
     void on_serverCheck_clicked();
@@ -1354,4 +1356,36 @@ private:
     // flag
     bool _loadingOldDanmakus = false;
 };
+
+class RequestBodyHelper : public QObject
+{
+    Q_OBJECT
+public:
+    RequestBodyHelper(QHttpRequest* req, QHttpResponse* resp)
+        : req(req), resp(resp)
+    {
+    }
+
+    void waitBody()
+    {
+        req->storeBody();
+        connect(req, SIGNAL(end()), this, SLOT(end()));
+    }
+
+public slots:
+    void end()
+    {
+        // qInfo() << "httprequest.end.body: " << req->body();
+        emit finished(req, resp);
+        this->deleteLater();
+    }
+
+signals:
+    void finished(QHttpRequest* req, QHttpResponse* resp);
+
+private:
+    QHttpRequest* req;
+    QHttpResponse* resp;
+};
+
 #endif // MAINWINDOW_H

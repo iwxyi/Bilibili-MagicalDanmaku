@@ -509,10 +509,17 @@ void MainWindow::syncMagicalRooms()
 #if defined(ENABLE_HTTP_SERVER)
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
+    RequestBodyHelper *helper = new RequestBodyHelper(req, resp);
+    helper->waitBody();
+    connect(helper, SIGNAL(finished(QHttpRequest *, QHttpResponse *)), this, SLOT(requestHandle(QHttpRequest *, QHttpResponse *)));
+}
+
+void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
+{
     // 解析参数
-    QString fullUrl = req->url().toString(); // 包含：/user/header?uid=123
+    const QString fullUrl = req->url().toString();
     QHash<QString, QString> params;
-    QString urlPath = fullUrl;
+    QString urlPath = fullUrl; // 示例：/user/abc?param=123，不包括 域名
     if (fullUrl.contains("?"))
     {
         int pos = fullUrl.indexOf("?");
@@ -535,7 +542,6 @@ void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
     }
 
     // 路径
-    // QString urlPath = req->path(); // 示例：/user/abc，不包括 域名/
     if (urlPath.startsWith("/"))
         urlPath = urlPath.right(urlPath.length() - 1);
     if (urlPath.endsWith("/"))
@@ -698,7 +704,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         ba = f.readAll();
         f.close();
     }
-    else if (url == "netProxy") // 网络代理，解决跨域问题 /api/webProxy?url=https://www.baidu.com  (urlEncode)
+    else if (url == "netProxy") // 网络代理，解决跨域问题 /api/netProxy?url=https://www.baidu.com  (urlEncode)
     {
         QString url = params.value("url", "");
         QHttpRequest::HttpMethod method = req->method();
