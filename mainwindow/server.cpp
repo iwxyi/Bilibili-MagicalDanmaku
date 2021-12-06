@@ -509,6 +509,11 @@ void MainWindow::syncMagicalRooms()
 #if defined(ENABLE_HTTP_SERVER)
 void MainWindow::serverHandle(QHttpRequest *req, QHttpResponse *resp)
 {
+    if (req->method() == QHttpRequest::HttpMethod::HTTP_GET)
+    {
+        // GET方法不用获取数据
+        return requestHandle(req, resp);
+    }
     RequestBodyHelper *helper = new RequestBodyHelper(req, resp);
     helper->waitBody();
     connect(helper, SIGNAL(finished(QHttpRequest *, QHttpResponse *)), this, SLOT(requestHandle(QHttpRequest *, QHttpResponse *)));
@@ -708,7 +713,6 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
     {
         QString url = params.value("url", "");
         QHttpRequest::HttpMethod method = req->method();
-        auto headers = req->headers();
         qInfo() << "代理URL：" << url;
 
         if (url.isEmpty())
@@ -716,11 +720,20 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
 
         QNetworkAccessManager manager;
         QNetworkRequest request(url);
-        setUrlCookie(url, &request);
 
-        if (headers.contains("content-type"))
-            request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant(req->header("content-type")));
-        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+        auto headers = req->headers();
+        // qInfo() << headers;
+        for (auto it = headers.begin(); it != headers.end(); it++)
+        {
+            if (it.key() == "host")
+                continue;
+             request.setRawHeader(it.key().toUtf8(), it.value().toUtf8());
+             // qDebug() << "----set:" << it.key().toUtf8() << it.value().toUtf8();
+        }
+        if (!headers.contains("content-type"))
+            request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+        if (!headers.contains("cookies"))
+            setUrlCookie(url, &request);
 
         QNetworkReply *reply = nullptr;
         QEventLoop loop;
