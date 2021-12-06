@@ -709,10 +709,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         ba = f.readAll();
         f.close();
     }
-    else if (url == "netProxy") // 网络代理，解决跨域问题 /api/netProxy?url=https://www.baidu.com  (urlEncode)
+    else if (url == "netProxy") // 网络代理，解决跨域问题 /api/netProxy?url=https://www.baidu.com(urlEncode)&referer=
     {
         QString url = params.value("url", "");
-        QHttpRequest::HttpMethod method = req->method();
+        QString referer = params.value("referer", "");
+        QString userAgent = params.value("user-agent", "");
+        auto method = req->method();
         qInfo() << "代理URL：" << url;
 
         if (url.isEmpty())
@@ -721,7 +723,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         QNetworkAccessManager manager;
         QNetworkRequest request(url);
 
-        auto headers = req->headers();
+        const auto& headers = req->headers();
         // qInfo() << headers;
         for (auto it = headers.begin(); it != headers.end(); it++)
         {
@@ -734,6 +736,10 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
         if (!headers.contains("cookies"))
             setUrlCookie(url, &request);
+        if (!referer.isEmpty())
+            request.setRawHeader("referer", referer.toUtf8());
+        if (!userAgent.isEmpty())
+            request.setRawHeader("user-agent", referer.toUtf8());
 
         QNetworkReply *reply = nullptr;
         QEventLoop loop;
@@ -746,7 +752,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         }
         else // post delete put 等
         {
-            QByteArray data = req->body(); // 这里body好像是空的？
+            QByteArray data = req->body();
             if (method == QHttpRequest::HttpMethod::HTTP_POST)
                 reply = manager.post(request, data);
             else if (method == QHttpRequest::HttpMethod::HTTP_PUT)
