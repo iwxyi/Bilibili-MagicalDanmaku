@@ -725,9 +725,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
 
         const auto& headers = req->headers();
         // qInfo() << headers;
+        QStringList igns {
+            "host", "accept-encoding"
+        };
         for (auto it = headers.begin(); it != headers.end(); it++)
         {
-            if (it.key() == "host")
+            if (igns.contains(it.key()))
                 continue;
              request.setRawHeader(it.key().toUtf8(), it.value().toUtf8());
              // qDebug() << "----set:" << it.key().toUtf8() << it.value().toUtf8();
@@ -768,6 +771,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             *contentType = reply->rawHeader("content-type");
         }
         ba = reply->readAll();
+        // qInfo() << "reply:" << ba;
         reply->deleteLater();
     }
     else if (url == "event") // 模拟事件： /api/event?event=SEND_GIFT&data=[urlEncode(json)]
