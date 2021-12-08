@@ -18394,7 +18394,7 @@ void MainWindow::slotPkEnding()
                                 .arg(toutaCount).arg(totalCount);
         }
 
-        localNotify(text);
+        // localNotify(text);
     }
     execTouta();
 

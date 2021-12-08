@@ -658,16 +658,16 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             if (danmaku.getLevel() == 0 && count <= 1 && danmaku.getMedalLevel() <= 1)
             {
                 if (simpleMode)
-                    nameText = "<font color='gray'>[新]</font>" + nameText;
+                    nameText = "[新] " + nameText;
                 else
-                    nameText = "<font color='red'>[新]</font>" + nameText;
+                    nameText = "<font color='red'>[新] </font>" + nameText;
             }
             else if (danmaku.getLevel() > 0 && count <= 1) // 10句话以内
             {
                 if (simpleMode)
-                    nameText = "<font color='gray'>[初]</font>" + nameText;
+                    nameText = "[初] " + nameText;
                 else
-                    nameText = "<font color='green'>[初]</font>" + nameText;
+                    nameText = "<font color='green'>[初] </font>" + nameText;
             }
         }
 
@@ -707,7 +707,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 醒目留言
         if (msgType == MSG_SUPER_CHAT && !simpleMode)
         {
-            int coin = danmaku.getTotalCoin();
+            qint64 coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
             if (coin % 1000 == 0)
                 text += snum(coin / 1000);
@@ -720,13 +720,13 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     {
         text = QString("<center>%1 赠送 %2")
                 .arg(nameText)
-                .arg("<font color='" + QVariant(this->nameColor).toString() + "'>" + danmaku.getGiftName() + "</font>");
+                .arg(simpleMode ? danmaku.getGiftName() : "<font color='" + QVariant(this->nameColor).toString() + "'>" + danmaku.getGiftName() + "</font>");
         if (danmaku.getNumber() > 1)
             text += "×" + snum(danmaku.getNumber());
         text += "</center>";
         if (danmaku.isGoldCoin() && !simpleMode)
         {
-            int coin = danmaku.getTotalCoin();
+            qint64 coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
             if (coin % 1000 == 0)
                 text += snum(coin / 1000);
@@ -742,16 +742,16 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (danmaku.getFirst() == 1) // 初次
         {
             if (simpleMode)
-                modify = "<font color='gray'>[初]</font>";
+                modify = "<font color='gray'>[初] </font>";
             else
-                modify = "<font color='green'>[初]</font>";
+                modify = "<font color='green'>[初] </font>";
         }
         else if (danmaku.getFirst() == 2) // 重新上传
         {
             if (simpleMode)
-                modify = "<font color='gray'>[回]</font>";
+                modify = "<font color='gray'>[回] </font>";
             else
-                modify = "<font color='red'>[回]</font>";
+                modify = "<font color='red'>[回] </font>";
         }
         else // 续船
         {
@@ -793,11 +793,17 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         {
             text += nameText + " ";
             if (danmaku.getNumber() > 0) // 不包括这一次的
-                text += QString("进入<font color='gray'> %1次</font>").arg(danmaku.getNumber());
+                text += simpleMode
+                        ? QString("进入 %1次").arg(danmaku.getNumber())
+                        : QString("进入 <font color='gray'>%1次</font>").arg(danmaku.getNumber());
             else if (!danmaku.getSpreadDesc().isEmpty())
-                text += "<font color='gray'>进入</font>";
+                text += simpleMode
+                        ? "进入"
+                        : "<font color='gray'>进入</font>";
             else
-                text += "<font color='gray'>进入直播间</font>";
+                text += simpleMode
+                        ? "进入直播间"
+                        : "<font color='gray'>进入直播间</font>";
         }
 
         // 推广
@@ -819,7 +825,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     }
     else if (msgType == MSG_FANS)
     {
-        text = QString("<font color='gray'>[粉丝]</font> 粉丝数：%1%3, 粉丝团：%2%4")
+        text = QString(simpleMode
+                       ? "[粉丝] 粉丝数：%1%3, 粉丝团：%2%4"
+                       :  "<font color='gray'>[粉丝]</font> 粉丝数：%1%3, 粉丝团：%2%4")
                 .arg(danmaku.getFans())
                 .arg(danmaku.getFansClub())
                 .arg(danmaku.getDeltaFans()
@@ -836,28 +844,28 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     else if (msgType == MSG_ATTENTION)
     {
 //        qint64 second = QDateTime::currentSecsSinceEpoch() - danmaku.getPrevTimestamp();
-        text = QString("<font color='gray'>[%3]</font> %1 %2")
+        text = QString(simpleMode ? "[%3] %1 %2" : "<font color='gray'>[%3]</font> %1 %2")
                 .arg(nameText)
                 .arg(danmaku.isAttention() ? "关注了主播" : "取消关注主播")
                 .arg(danmaku.getSpecial() ? "特别关注" : "关注");
     }
     else if (msgType == MSG_BLOCK)
     {
-        text = QString("<font color='gray'>[禁言]</font> %1 被房管禁言")
+        text = QString(simpleMode ? "[禁言] %1 被房管禁言" : "<font color='gray'>[禁言]</font> %1 被房管禁言")
                 .arg(danmaku.getNickname());
     }
     else if (msgType == MSG_MSG)
     {
-        text = QString("<font color='gray'>%1</font>")
+        text = QString(simpleMode ? "%1" : "<font color='gray'>%1</font>")
                 .arg(danmaku.getText());
     }
 
     // 主播判断
     if (upUid && (danmaku.getUid() == upUid || (pkStatus && danmaku.getUid() == pkUid && !danmaku.is(MSG_MSG))))
-        text = "<font color='#F08080'>[主播]</font> " + text;
+        text = (simpleMode ? "[主播] " : "<font color='#F08080'>[主播]</font> ") + text;
 
     if (danmaku.isRobot())
-        text = "<font color='#5E86C1'>[机]</font> " + text;
+        text = (simpleMode ? "[机] " : "<font color='#5E86C1'>[机]</font> ") + text;
 
     // 串门判断
     if (danmaku.isToView())
@@ -867,7 +875,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     // 消息同步
     if (danmaku.isPkLink()) // 这个最置顶前面
-        text = "<font color='gray'>[同步]</font> " + text;
+        text = (simpleMode ? "[同步] " : "<font color='gray'>[同步]</font> ") + text;
 
     // 文字与大小
     label->setText(text);
