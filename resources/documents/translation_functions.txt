@@ -29,3 +29,5 @@
 粘贴文字=pasteText
 设置直播标题=setRoomTitle
 设置直播封面=setRoomCover
+获取屏幕位置颜色=getScreenPositionColor
+获取窗口位置颜色=getWindowPositionColor

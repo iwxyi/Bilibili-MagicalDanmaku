@@ -878,34 +878,36 @@ border-image: url(C:/Path/To/Image.png)
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
 
-| 函数                           | 中文         | 描述                                                |
-| ------------------------------ | ------------ | --------------------------------------------------- |
-| cd(channel)                    | 冷却通道     | 获取冷却通道剩下的秒数                              |
-| wait(channel)                  | 等待通道     | 获取等待通道不是自己的弹幕数量                      |
-| time(format)                   | 格式化时间   | 当前时间转换为数值，如 yyyy-MM-dd                   |
-| unameToUid(uname)              | 查找用户名   | 由部分昵称倒找弹幕记录，获得UID                     |
-| inputText(title, default)      | 输入文本     | 输入文本，两个参数都可省略                          |
-| strlen(text)                   | 取文本长度   | 一串文字的长度                                      |
-| trim(text)                     | 删首尾空     | 去掉字符串首尾的空格和制表符                        |
-| substr(text, left, length)     | 取子串       | 获取文字的一部分                                    |
-| simpleName(name)               | 昵称简化     |                                                     |
-| simpleNum(number)              | 数值简化     |                                                     |
-| inGameUsers(listId, uid)       | 在游戏用户中 | listId可省略。程序重启数据会清空                    |
-| inGameNumbers(listId, num)     | 在游戏数值中 | listId可省略，程序重启数据仍在                      |
-| inGameTexts(listId, text)      | 在游戏文本中 | listId可省略，程序重启数据仍在                      |
-| getValue(key, def)             | 取变量值     | 等同于`%{key}%`，默认值def可省略                    |
-| random(min, max)               | 取随机数     | 包含两端数字                                        |
-| randomArray(a, b, c, d...)     | 随机数组     | 任意多参数，随机返回其中一个                        |
-| filterReject(filter)           | 过滤器拒绝   | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例） |
-| inFilterList(filter, content)  | 在过滤列表中 | 包含在空格分隔的词库中则返回1（参考过滤器示例）     |
-| inFilterMatch(filter, content) | 在过滤正则中 | 满足正则则返回1（参考过滤器示例）                   |
-| fileExists                     | 文件存在     | 有这个文件则返回1，否则0                            |
-| abs(val)                       | 取绝对值     |                                                     |
-| log2(val)                      | 取对数2      |                                                     |
-| log10(val)                     | 取对数10     |                                                     |
-| pow2(val)                      | 取平方       |                                                     |
-| pow(val, a)                    | 取乘方       |                                                     |
-| pasteText()                    | 粘贴文字     | 获取剪贴板的文本                                    |
+| 函数                               | 中文             | 描述                                                         |
+| ---------------------------------- | ---------------- | ------------------------------------------------------------ |
+| cd(channel)                        | 冷却通道         | 获取冷却通道剩下的秒数                                       |
+| wait(channel)                      | 等待通道         | 获取等待通道不是自己的弹幕数量                               |
+| time(format)                       | 格式化时间       | 当前时间转换为数值，如 yyyy-MM-dd                            |
+| unameToUid(uname)                  | 查找用户名       | 由部分昵称倒找弹幕记录，获得UID                              |
+| inputText(title, default)          | 输入文本         | 输入文本，两个参数都可省略                                   |
+| strlen(text)                       | 取文本长度       | 一串文字的长度                                               |
+| trim(text)                         | 删首尾空         | 去掉字符串首尾的空格和制表符                                 |
+| substr(text, left, length)         | 取子串           | 获取文字的一部分                                             |
+| simpleName(name)                   | 昵称简化         |                                                              |
+| simpleNum(number)                  | 数值简化         |                                                              |
+| inGameUsers(listId, uid)           | 在游戏用户中     | listId可省略。程序重启数据会清空                             |
+| inGameNumbers(listId, num)         | 在游戏数值中     | listId可省略，程序重启数据仍在                               |
+| inGameTexts(listId, text)          | 在游戏文本中     | listId可省略，程序重启数据仍在                               |
+| getValue(key, def)                 | 取变量值         | 等同于`%{key}%`，默认值def可省略                             |
+| random(min, max)                   | 取随机数         | 包含两端数字                                                 |
+| randomArray(a, b, c, d...)         | 随机数组         | 任意多参数，随机返回其中一个                                 |
+| filterReject(filter)               | 过滤器拒绝       | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例）          |
+| inFilterList(filter, content)      | 在过滤列表中     | 包含在空格分隔的词库中则返回1（参考过滤器示例）              |
+| inFilterMatch(filter, content)     | 在过滤正则中     | 满足正则则返回1（参考过滤器示例）                            |
+| fileExists                         | 文件存在         | 有这个文件则返回1，否则0                                     |
+| abs(val)                           | 取绝对值         |                                                              |
+| log2(val)                          | 取对数2          |                                                              |
+| log10(val)                         | 取对数10         |                                                              |
+| pow2(val)                          | 取平方           |                                                              |
+| pow(val, a)                        | 取乘方           |                                                              |
+| pasteText()                        | 粘贴文字         | 获取剪贴板的文本                                             |
+| getScreenPositionColor(wid, x, y)  | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
+| getWindowPositionColor(name, x, y) | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
 
 以获取时间为例：
 

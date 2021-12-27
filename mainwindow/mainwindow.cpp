@@ -24,6 +24,9 @@
 #include "warmwishutil.h"
 #include "httpuploader.h"
 #include "third_party/qss_editor/qsseditdialog.h"
+#ifdef Q_OS_WIN
+#include "widgets/windowshwnd.h"
+#endif
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -6823,6 +6826,67 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     {
         return QApplication::clipboard()->text();
     }
+    else if (funcName == "getScreenPositionColor") // 获取屏幕上某个点的颜色
+    {
+        int wid = argList.at(0).toInt(); // 屏幕ID
+        int x = argList.at(1).toInt(); // 横坐标
+        int y = argList.at(2).toInt(); // 纵坐标
+
+        auto screens = QGuiApplication::screens();
+        if (wid < 0 || wid >= screens.size())
+        {
+            showError("getScreenPositionColor", "没有该屏幕：" + QString::number(wid)
+                      + "/" + QString::number(screens.size()));
+            return "";
+        }
+        QScreen *screen = screens.at(wid);
+        QPixmap pixmap = screen->grabWindow(wid, x, y, 1, 1);
+        QColor color = pixmap.toImage().pixelColor(0, 0);
+        return QVariant(color).toString();
+    }
+    else if (funcName == "getWindowPositionColor") // 获取屏幕上某个点的颜色
+    {
+        QString name = argList.at(0); // 窗口名字
+        bool isId = false;
+        int useId = name.toInt(&isId);
+        int x = argList.at(1).toInt(); // 横坐标
+        int y = argList.at(2).toInt(); // 纵坐标
+
+        qint64 wid = 0;
+        // 获取窗口句柄
+#ifdef Q_OS_WIN
+        {
+            HWND pWnd = first_window(EXCLUDE_MINIMIZED); // 得到第一个窗口句柄
+            while (pWnd)
+            {
+                QString title = get_window_title(pWnd);
+                QString clss = get_window_class(pWnd);
+
+                if (!title.isEmpty())
+                {
+                    if (title.contains(name) || clss.contains(name)
+                            || (isId && (useId == reinterpret_cast<qint64>(pWnd))) )
+                    {
+                        wid = reinterpret_cast<qint64>(pWnd);
+                        break;
+                    }
+                }
+
+                pWnd = next_window(pWnd, EXCLUDE_MINIMIZED); // 得到下一个窗口句柄
+            }
+        }
+        if (wid == 0)
+        {
+            showError("getWindowPositionColor", "无法查询到窗口句柄");
+            return "";
+        }
+#endif
+
+        QScreen *screen = QGuiApplication::primaryScreen();
+        QPixmap pixmap = screen->grabWindow(wid, x, y, 1, 1);
+        QColor color = pixmap.toImage().pixelColor(0, 0);
+        return QVariant(color).toString();
+    }
 
     return "";
 }
@@ -9771,7 +9835,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
-
 
     return false;
 }

@@ -244,7 +244,8 @@ HEADERS += \
     third_party/utils/stringutil.h \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
-    widgets/video_lyric_creator/videolyricscreator.h
+    widgets/video_lyric_creator/videolyricscreator.h \
+    widgets/windowshwnd.h
 
 FORMS += \
     order_player/importsongsdialog.ui \
