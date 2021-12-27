@@ -15644,12 +15644,14 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
     switch(reason)
     {
     case QSystemTrayIcon::Trigger:
-        if (!this->isHidden())
-            this->hide();
-        else
+        if (this->isHidden())
         {
             this->showNormal();
             this->activateWindow();
+        }
+        else
+        {
+            this->hide();
         }
         break;
     case QSystemTrayIcon::MiddleClick:

@@ -313,7 +313,10 @@ void BuyVIPDialog::on_payButton_clicked()
 
         QString html = json.s("data");
         QString path = dataPath + "pay.html";
-        writeTextFile(path, html);
+        if (!writeTextFile(path, html))
+        {
+            QMessageBox::warning(this, "写入文件失败", "无法写入支付文件：" + path);
+        }
         // QMessageBox::information(this, "前往浏览器", "即将使用浏览器打开：" + path);
         if (!QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
         {
