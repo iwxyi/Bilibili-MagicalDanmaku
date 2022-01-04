@@ -159,7 +159,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     musicSource = static_cast<MusicSource>(settings.value("music/source", 0).toInt());
     if (musicSource == UnknowMusic)
         musicSource = NeteaseCloudMusic;
-    setMusicIconBySource();
+    setMusicLogicBySource();
 
     QPalette pa;
     pa.setColor(QPalette::Highlight, QColor(100, 149, 237, 88));
@@ -547,7 +547,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
 {
     if (key.trimmed().isEmpty())
         return ;
-    MUSIC_DEB << "搜索音乐：" << key << addBy << notify;
+    qInfo() << "搜索音乐：" << sourceName(musicSource) << key << addBy << notify;
     MusicSource source = musicSource; // 需要暂存一个备份，因为可能会变回去
     QString url;
     auto keyBa = key.toUtf8().toPercentEncoding();
@@ -695,7 +695,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         if (playingSong.isValid() && playingSong.source == LocalMusic
                 && (playingSong.simpleString() == localCoverKey || playingSong.simpleString() == localLyricKey))
         {
-            Song song = getSuiableSongOnResults(key);
+            Song song = getSuitableSongOnResults(key);
             if (!song.isValid())
             {
                 qWarning() << "未找到与本地歌曲匹配的云端音乐：" << key;
@@ -719,10 +719,21 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             }
 
             // 添加到 *importingList
-            Song song = getSuiableSongOnResults(key);
+            Song song = getSuitableSongOnResults(key);
             if (!song.isValid())
             {
                 qWarning() << "未找到歌曲：" << key;
+                if (playAfterDownloaded == song && autoSwitchSource)
+                {
+                    // 自动换源失败，该源没找到相应的歌曲，尝试换源
+                    int index = musicSourceQueue.indexOf(song.source);
+                    if (index > -1 && index < musicSourceQueue.size() - 1)
+                    {
+                        downloadSongFailed(song);
+                        return ;
+                    }
+                }
+                emit signalOrderSongNotFound(song);
                 return ;
             }
             qInfo() << "添加自动搜索的歌曲：" << song.simpleString();
@@ -738,7 +749,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         else if (!addBy.isEmpty()) // 从点歌的槽进来的
         {
             if (!song.isValid()) // 历史中没找到，就从搜索结果中找
-                song = getSuiableSongOnResults(key);
+                song = getSuitableSongOnResults(key);
             song.setAddDesc(addBy);
             prevOrderSong = song;
 
@@ -772,7 +783,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         else if (insertOnce) // 强制播放啊
         {
             MUSIC_DEB << "强制播放";
-            Song song = getSuiableSongOnResults(key);
+            Song song = getSuitableSongOnResults(key);
             if (isNotPlaying()) // 很可能是换源过来的
                 startPlaySong(song);
             else
@@ -1096,7 +1107,7 @@ bool OrderPlayerWindow::isNotPlaying() const
  * 其次：歌名 歌手
  * 默认：搜索结果第一首歌
  */
-Song OrderPlayerWindow::getSuiableSongOnResults(QString key) const
+Song OrderPlayerWindow::getSuitableSongOnResults(QString key) const
 {
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
@@ -1108,8 +1119,8 @@ Song OrderPlayerWindow::getSuiableSongOnResults(QString key) const
         QRegularExpressionMatch match;
         if (key.indexOf(re, 0, &match) > -1)
         {
-            QString name = match.captured(1);   // 歌名
-            QString author = match.captured(2); // 歌手
+            QString name = match.captured(1).trimmed();   // 歌名
+            QString author = match.captured(2).trimmed(); // 歌手
 
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
@@ -1141,7 +1152,7 @@ Song OrderPlayerWindow::getSuiableSongOnResults(QString key) const
         }
     }
 
-    // 歌 名 歌 手
+    // 歌 名 歌手
     if (key.contains(" "))
     {
         int pos = key.lastIndexOf(" ");
@@ -1410,7 +1421,7 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         })->hide();
 
         if (currentSong.isValid())
-            menu->split()->addAction(currentSong.sourceName())->disable();
+            menu->split()->addAction(sourceName(currentSong.source))->disable();
 
         menu->exec();
     }
@@ -1806,6 +1817,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             }
             else // QQMUSIC
             {
+                qDebug() << "获取QQ音乐直链：" << json;
                 if (json.value("result").toInt() != 100)
                 {
                     qWarning() << "QQ歌曲链接返回结果不为100：" << json;
@@ -1865,12 +1877,16 @@ void OrderPlayerWindow::downloadSong(Song song)
 
 void OrderPlayerWindow::downloadSongFailed(Song song)
 {
-    if (!song.addBy.isEmpty())
+    if (!song.addBy.isEmpty()) // 是有人点歌，不是手动点播放，那就报个错误事件
     {
-        emit signalOrderSongNoCopyright(song);
+        // 换源后无法播放会重复报错，因此这里要判断一下播放源
+        if (song.source == musicSource)
+        {
+            emit signalOrderSongNoCopyright(song);
+        }
     }
     qWarning() << "无法下载，可能没有版权" << song.simpleString();
-    if (playAfterDownloaded == song)
+    if (playAfterDownloaded == song) // 立即播放才尝试换源
     {
         if (orderSongs.contains(song))
         {
@@ -1880,9 +1896,9 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
         }
 
         if (autoSwitchSource /* && song.source == musicSource */
-                /*&& !song.addBy.isEmpty()*/) // 只有点歌才自动换源，普通播放自动跳过
+                /*&& !song.addBy.isEmpty()*/) // ~~只有点歌才自动换源，普通播放自动跳过~~
         {
-            slotSongPlayEnd(); // 先停止播放，然后才会开始播放新的；否则会插入到下一首
+            slotSongPlayEnd(); // 先调用停止播放来重置状态，然后才会开始播放新的；否则会插入到下一首
             insertOrderOnce = true;
             if (!switchSource(song, true))
                 playNext();
@@ -1904,8 +1920,19 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
         if (mp3Ba.isEmpty())
         {
             qWarning() << "无法下载歌曲，可能缺少版权：" << song.simpleString() << song.id << song.mid << song.source;
+
+            // 下载失败，尝试换源
+            int pos = musicSourceQueue.indexOf(song.source);
+            if (pos > -1 && pos < musicSourceQueue.size() - 1)
+            {
+                downloadSongFailed(song);
+                return ;
+            }
+
+            // 不播放了，直接切下一首
             downloadingSong = Song();
             downloadNext();
+
             return ;
         }
 
@@ -2833,7 +2860,14 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
 
 }
 
-void OrderPlayerWindow::setMusicIconBySource()
+/**
+ * 设置音源
+ * 网易云：=> QQ音乐 => 咪咕 => 酷狗
+ * QQ音乐：=> 网易云 => 咪咕 => 酷狗
+ * 咪咕：=> 网易云 => QQ音乐 => 酷狗
+ * 酷狗：=> 网易云 => QQ音乐 => 咪咕
+ */
+void OrderPlayerWindow::setMusicLogicBySource()
 {
     switch (musicSource) {
     case UnknowMusic:
@@ -2842,79 +2876,71 @@ void OrderPlayerWindow::setMusicIconBySource()
     case NeteaseCloudMusic:
         ui->musicSourceButton->setIcon(QIcon(":/musics/netease"));
         ui->musicSourceButton->setToolTip("当前播放源：网易云音乐\n点击切换");
+        musicSourceQueue = { NeteaseCloudMusic, QQMusic, MiguMusic, KugouMusic };
         break;
     case QQMusic:
         ui->musicSourceButton->setIcon(QIcon(":/musics/qq"));
         ui->musicSourceButton->setToolTip("当前播放源：QQ音乐\n点击切换");
+        musicSourceQueue = { QQMusic, NeteaseCloudMusic, MiguMusic, KugouMusic };
         break;
     case MiguMusic:
         ui->musicSourceButton->setIcon(QIcon(":/musics/migu"));
         ui->musicSourceButton->setToolTip("当前播放源：咪咕音乐\n点击切换");
+        musicSourceQueue = { MiguMusic, NeteaseCloudMusic, QQMusic, KugouMusic };
         break;
     case KugouMusic:
         ui->musicSourceButton->setIcon(QIcon(":/musics/kugou"));
         ui->musicSourceButton->setToolTip("当前播放源：酷狗音乐\n点击切换");
+        musicSourceQueue = { KugouMusic, NeteaseCloudMusic, QQMusic, MiguMusic };
         break;
     }
 }
 
 /**
  * 切换音源并播放
- * 网易云：=> QQ音乐 => 咪咕 => 酷狗
- * QQ音乐：=> 网易云 => 咪咕 => 酷狗
- * 咪咕：=> 网易云 => QQ音乐 => 酷狗
- * 酷狗：=> 网易云 => QQ音乐 => 咪咕
+ * 根据音源队列进行顺序尝试
  */
 bool OrderPlayerWindow::switchSource(Song song, bool play)
 {
-    MusicSource res = UnknowMusic;
-    switch (song.source) {
-    case UnknowMusic:
-    case LocalMusic:
-        res = NeteaseCloudMusic;
-        break;
-    case NeteaseCloudMusic:
-        if (musicSource == QQMusic)
-            res = MiguMusic;
-        else
-            res = QQMusic;
-        break;
-    case QQMusic:
-        if (musicSource == NeteaseCloudMusic || musicSource == KugouMusic)
-            res= MiguMusic;
-        else if (musicSource == MiguMusic)
-            res = KugouMusic;
-        else
-            res = NeteaseCloudMusic;
-        break;
-    case MiguMusic:
-        if (musicSource == MiguMusic)
-            res = NeteaseCloudMusic;
-        else
-            res = KugouMusic;
-        break;
-    case KugouMusic:
-        if (musicSource == KugouMusic)
-            res = NeteaseCloudMusic;
-        else
-            res = musicSource;
-        break;
-    }
-
-    if(res == musicSource) // 轮了一圈，又回来了
+    MusicSource nextSource = UnknowMusic;
+    int index = musicSourceQueue.indexOf(song.source);
+    // 轮了一圈，又回来了
+    if (index == -1 || index >= musicSourceQueue.size() - 1)
     {
         qWarning() << "所有平台都不支持，已结束";
         if (play)
             playNext();
         return false;
     }
+    nextSource = musicSourceQueue.at(index + 1);
 
+    // 重新搜索
     QString searchKey = song.name + " " + song.artistNames;
     // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
     this->insertOrderOnce = true; // 必须要加上强制换源的标记
-    qWarning() << "无法播放：" << song.name << "，开始换源：" << song.source << "->" << res << searchKey;
-    searchMusicBySource(searchKey, res, song.addBy);
+    qWarning() << "无法播放：" << searchKey << "，开始换源："
+               << sourceName(song.source) << "->" << sourceName(nextSource);
+    searchMusicBySource(searchKey, nextSource, song.addBy);
     return true;
+}
+
+QString OrderPlayerWindow::sourceName(MusicSource source) const
+{
+    switch (source)
+    {
+    case UnknowMusic:
+        return "未知音源";
+    case NeteaseCloudMusic:
+        return "网易云音乐";
+    case QQMusic:
+        return "QQ音乐";
+    case MiguMusic:
+        return "咪咕音乐";
+    case KugouMusic:
+        return "酷狗音乐";
+    case LocalMusic:
+        return "本地音乐";
+    }
 }
 
 void OrderPlayerWindow::fetch(QString url, NetStringFunc func, MusicSource cookie)
@@ -3483,7 +3509,7 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
     });
 
     if (currentSong.isValid())
-        menu->split()->addAction(currentSong.sourceName())->disable();
+        menu->split()->addAction(sourceName(currentSong.source))->disable();
 
     menu->exec();
 }
@@ -3543,7 +3569,7 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
     });
 
     if (currentSong.isValid())
-        menu->split()->addAction(currentSong.sourceName())->disable();
+        menu->split()->addAction(sourceName(currentSong.source))->disable();
 
     menu->exec();
 }
@@ -3635,7 +3661,7 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
     });
 
     if (currentSong.isValid())
-        menu->split()->addAction(currentSong.sourceName())->disable();
+        menu->split()->addAction(sourceName(currentSong.source))->disable();
 
     menu->exec();
 }
@@ -3712,7 +3738,7 @@ void OrderPlayerWindow::on_historySongsListView_customContextMenuRequested(const
     })->disable(!songs.size());
 
     if (currentSong.isValid())
-        menu->split()->addAction(currentSong.sourceName())->disable();
+        menu->split()->addAction(sourceName(currentSong.source))->disable();
 
     menu->exec();
 }
@@ -4020,7 +4046,7 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
         musicSource = MusicSource(s);
         settings.setValue("music/source", musicSource);
 
-        setMusicIconBySource();
+        setMusicLogicBySource();
 
         QString text = ui->searchEdit->text();
         if (!text.isEmpty())

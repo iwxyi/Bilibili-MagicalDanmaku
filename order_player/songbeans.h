@@ -391,26 +391,6 @@ struct Song
     {
         return this->source == source;
     }
-
-    QString sourceName() const
-    {
-        switch (source)
-        {
-        case UnknowMusic:
-            return "未知音源";
-        case NeteaseCloudMusic:
-            return "网易云音乐";
-        case QQMusic:
-            return "QQ音乐";
-        case MiguMusic:
-            return "咪咕音乐";
-        case KugouMusic:
-            return "酷狗音乐";
-        case LocalMusic:
-            return "本地音乐";
-        }
-    }
-
 };
 
 struct PlayListCreator

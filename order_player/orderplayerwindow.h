@@ -232,7 +232,7 @@ private:
     QString msecondToString(qint64 msecond);
     void activeSong(Song song);
     bool isNotPlaying() const;
-    Song getSuiableSongOnResults(QString key) const;
+    Song getSuitableSongOnResults(QString key) const;
 
     void startPlaySong(Song song);
     void playNext();
@@ -267,8 +267,9 @@ private:
 
     void readMp3Data(const QByteArray& array);
 
-    void setMusicIconBySource();
+    void setMusicLogicBySource();
     bool switchSource(Song song, bool play = false);
+    QString sourceName(MusicSource source) const;
 
     void fetch(QString url, NetStringFunc func, MusicSource cookie = UnknowMusic);
     void fetch(QString url, NetJsonFunc func, MusicSource cookie = UnknowMusic);
@@ -317,6 +318,7 @@ signals:
     void signalOrderSongCutted(Song song);
     void signalOrderSongStarted();
     void signalOrderSongEnded();
+    void signalOrderSongNotFound(Song song);
 
     void signalWindowClosed();
 
@@ -329,6 +331,7 @@ private:
     QDir musicsFileDir;
     QDir localMusicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
+    QList<MusicSource> musicSourceQueue;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 
