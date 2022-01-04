@@ -42,7 +42,7 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define MUSIC_DEB if (0) qDebug()
+#define MUSIC_DEB if (1) qDebug()
 
 enum MusicQuality
 {
@@ -232,7 +232,7 @@ private:
     QString msecondToString(qint64 msecond);
     void activeSong(Song song);
     bool isNotPlaying() const;
-    Song getSuitableSongOnResults(QString key) const;
+    Song getSuitableSongOnResults(QString key, bool strict = false) const;
 
     void startPlaySong(Song song);
     void playNext();
