@@ -9150,7 +9150,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 切歌
     if (msg.contains("cutOrderSong") || msg.contains("cutMusic"))
     {
-        re = RE("cut(?:SongOrder|Music)\\s*\\(\\s*(.+?)\\s*\\)");
+        re = RE("cut(?:OrderSong|Music)\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
