@@ -1714,6 +1714,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 | ORDER_SONG_SUCCEED          | 点歌成功，`%text%`获取歌名，`%prev_time%`获取几秒钟后播放，`%first%`获取第几首播放，`%.addBy%`获取点歌用户昵称 |
 | ORDER_SONG_SUCCEED_OVERRIDE | 同上，但是会**覆盖掉**自带的点歌成功回复                     |
 | ORDER_SONG_PLAY             | 点歌开始播放，`%text%`歌名，`%uname%`点歌的用户名，`%come_time%`点歌时间戳(秒) |
+| ORDER_SONG_NOT_FOUND        | 点歌未找到，`%text%`获取搜索词                               |
 | ORDER_SONG_FREQUENCY        | 点歌过于频繁                                                 |
 | ORDER_SONG_NO_MEDAL         | 点歌未戴勋章                                                 |
 | ~~ORDER_SONG_NO_COPYRIGHT~~ | ~~歌曲无版权~~（自动切换）                                   |

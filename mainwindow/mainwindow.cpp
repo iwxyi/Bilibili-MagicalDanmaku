@@ -14702,6 +14702,10 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             localNotify("已切歌");
             triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name).with(song.toJson()));
         });
+        connect(musicWindow, &OrderPlayerWindow::signalOrderSongNotFound, this, [=](QString key){
+            localNotify("未找到歌曲：" + key);
+            triggerCmdEvent("ORDER_SONG_NOT_FOUND", LiveDanmaku(key));
+        });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongModified, this, [=](const SongList& songs){
             if (ui->orderSongsToFileCheck->isChecked())
             {

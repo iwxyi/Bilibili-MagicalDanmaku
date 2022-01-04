@@ -42,7 +42,7 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define MUSIC_DEB if (1) qDebug()
+#define MUSIC_DEB if (0) qDebug()
 
 enum MusicQuality
 {
@@ -212,6 +212,9 @@ private slots:
 
     void on_nextSongButton_clicked();
 
+    void startLoading();
+    void stopLoading();
+
 private:
     void searchMusic(QString key, QString addBy = QString(), bool notify = false);
     void searchMusicBySource(QString key, MusicSource source, QString addBy = QString());
@@ -268,7 +271,8 @@ private:
     void readMp3Data(const QByteArray& array);
 
     void setMusicLogicBySource();
-    bool switchSource(Song song, bool play = false);
+    bool switchNextSource(Song song, bool play = false);
+    bool switchNextSource(QString key, MusicSource ms, QString addBy, bool play = false);
     QString sourceName(MusicSource source) const;
 
     void fetch(QString url, NetStringFunc func, MusicSource cookie = UnknowMusic);
@@ -318,7 +322,7 @@ signals:
     void signalOrderSongCutted(Song song);
     void signalOrderSongStarted();
     void signalOrderSongEnded();
-    void signalOrderSongNotFound(Song song);
+    void signalOrderSongNotFound(QString key);
 
     void signalWindowClosed();
 
