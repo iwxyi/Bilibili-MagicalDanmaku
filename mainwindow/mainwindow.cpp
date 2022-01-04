@@ -4763,6 +4763,7 @@ void MainWindow::updatePermission()
             }
         }
 
+        this->permissionDeadline = deadline;
         if (permissionLevel)
         {
             ui->droplight->setText(permissionText);
@@ -19781,7 +19782,7 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 
 void MainWindow::on_actionBuy_VIP_triggered()
 {
-    BuyVIPDialog* bvd = new BuyVIPDialog(dataPath, roomId, upUid, cookieUid, roomTitle, upName, cookieUname, this);
+    BuyVIPDialog* bvd = new BuyVIPDialog(dataPath, roomId, upUid, cookieUid, roomTitle, upName, cookieUname, permissionDeadline, this);
     connect(bvd, &BuyVIPDialog::refreshVIP, this, [=]{
         updatePermission();
     });

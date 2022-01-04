@@ -17,7 +17,7 @@ class BuyVIPDialog : public QDialog, public NetInterface
     Q_OBJECT
 
 public:
-    explicit BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, QWidget *parent = nullptr);
+    explicit BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, QWidget *parent = nullptr);
     ~BuyVIPDialog() override;
 
     void updatePrice();
@@ -45,6 +45,7 @@ private:
     QString roomTitle;
     QString upName;
     QString username;
+    qint64 deadline = 0;
 
     int vipLevel = 1;
     int vipType = VIP_TYPE_RR;

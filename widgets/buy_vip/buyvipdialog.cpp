@@ -7,9 +7,9 @@
 #include "clickablewidget.h"
 #include "fileutil.h"
 
-BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, QWidget *parent) :
+BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, QWidget *parent) :
     QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
-    dataPath(dataPath), roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username)
+    dataPath(dataPath), roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username), deadline(deadline)
 
 {
     ui->setupUi(this);
@@ -25,6 +25,12 @@ BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QStri
     ui->couponButton->setBgColor(Qt::white);
     ui->couponButton->adjustMinimumSize();
     ui->couponButton->setLeaveAfterClick(true);
+
+    qint64 currTime = QDateTime::currentSecsSinceEpoch();
+    if (currTime < deadline)
+    {
+        ui->label_4->setText("有效期：" + QString::number((deadline - currTime) / (24 * 3600)) + " 天");
+    }
 
     QStringList funcs {
         "关键词回复",

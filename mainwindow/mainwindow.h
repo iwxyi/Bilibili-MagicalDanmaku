@@ -1193,6 +1193,7 @@ private:
     int permissionLevel = 0;
     QTimer* permissionTimer = nullptr;
     QString permissionText = "捐赠版";
+    qint64 permissionDeadline = 0;
 
     // 每日数据
     QSettings* dailySettings = nullptr;
