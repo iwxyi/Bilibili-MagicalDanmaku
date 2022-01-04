@@ -9985,7 +9985,7 @@ void MainWindow::restoreCustomVariant(QString text)
     bool settedUpname = true;
     foreach (QString s, sl)
     {
-        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+        QRegularExpression re("^\\s*(\\S+?)\\s*=\\s?(.*)$");
         QRegularExpressionMatch match;
         if (s.indexOf(re, 0, &match) != -1)
         {
