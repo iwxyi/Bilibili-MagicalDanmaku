@@ -3964,12 +3964,12 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
     menu->addAction("下移 (&s)", [=]{
         moveToRow(row + 1);
     })->disable(!item || row >= listWidget->count()-1);
-    menu->split()->addAction("复制 (&c)", [=]{
+    menu->split()->addAction("复制片段 (&c)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         QApplication::clipboard()->setText(tw->toJson().toBa());
     })->disable(!item);
-    menu->addAction("继续复制", [=]{
+    menu->addAction("继续复制 (&n)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         MyJson twJson = tw->toJson();
@@ -3986,14 +3986,14 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
             array.append(twJson);
             QApplication::clipboard()->setText(QJsonDocument(array).toJson());
         }
-    })->disable(!item)->hide(!canContinueCopy);
-    menu->addAction("粘贴 (&v)", [=]{
+    })->disable(!item)->hide(!canContinueCopy)->tooltip("多次复制代码片段，组合成一串json格式数组\n可用来导入导出");
+    menu->addAction("粘贴片段 (&v)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         tw->fromJson(clipJson);
 
         (this->*saveFunc)();
-    })->disable(!canPaste);
+    })->disable(!canPaste)->tooltip("复制代码片段后可粘贴至当前位置\n可以快速导入他人的片段");
     menu->split()->addAction("删除 (&d)", [=]{
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
@@ -10095,7 +10095,7 @@ void MainWindow::restoreReplaceVariant(QString text)
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     foreach (QString s, sl)
     {
-        QRegularExpression re("^\\s*(\\S+)\\s*=\\s?(.*)$");
+        QRegularExpression re("^\\s*(\\S+?)\\s*=\\s?(.*)$");
         QRegularExpressionMatch match;
         if (s.indexOf(re, 0, &match) != -1)
         {
