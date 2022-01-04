@@ -4065,9 +4065,10 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         return ;
 
     // 判断关键词
+    QString lower = text.toLower();
     foreach (QString s, orderSongBlackList)
     {
-        if (text.contains(s)) // 有违禁词
+        if (lower.contains(s)) // 有违禁词
         {
             MyJson json;
             json.insert("key", s);
@@ -19704,7 +19705,8 @@ void MainWindow::on_musicBlackListButton_clicked()
 {
     QString blackList = orderSongBlackList.join(",");
     bool ok;
-    blackList = TextInputDialog::getText(this, "点歌黑名单", "带有关键词的点歌都将被阻止，并触发“ORDER_SONG_BLOCKED”事件\n多个关键词用空格隔开", blackList, &ok);
+    blackList = TextInputDialog::getText(this, "点歌黑名单", "带有关键词的点歌都将被阻止，并触发“ORDER_SONG_BLOCKED”事件"
+                                                        "\n多个关键词用空格隔开，英文字母均使用小写", blackList, &ok);
     if (!ok)
         return ;
     orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);

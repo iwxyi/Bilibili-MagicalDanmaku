@@ -1,3 +1,18 @@
+### v4.4.1 [优化点歌姬](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.4.2)
+
+- 新增获取屏幕指定位置颜色的命令（用于弹幕游戏）
+- 新增歌曲因各种原因下载失败时自动换源，而非无法下载时才换源
+- 新增精确点歌，只有点歌文字全部匹配才播放，避免错误点歌
+- 新增点歌未找到歌曲的 `ORDER_SONG_NOT_FOUND` 信号
+- 新增点歌黑名单统一使用小写字母
+- 新增自定义变量支持等号，现在可统一管理多个一样的条件了
+- 调整代码右键菜单的文字，“复制/粘贴片段”更容易理解
+- 修复上一版本更新后 `>cutOrderSong(username)` 失效问题
+
+
+
+
+
 ### v4.4.1 [百度语音、远程与多开](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.4.1)
 
 - 新增**百度语音**支持，可切换发音人
