@@ -888,6 +888,7 @@ private:
     void initTTS();
     void speekVariantText(QString text);
     void speakText(QString text);
+    void speakTextQueueNext();
     void voiceDownloadAndSpeak(QString text);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
@@ -1321,6 +1322,9 @@ private:
     int voiceSpeed = 50;
     int voiceVolume = 50;
     QString voiceName;
+    QStringList ttsQueue;
+    QMediaPlayer* ttsPlayer = nullptr;
+    bool ttsDownloading = false;
 
     // 全屏弹幕
     QFont screenDanmakuFont;

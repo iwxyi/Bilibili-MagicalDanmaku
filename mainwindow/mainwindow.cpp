@@ -12471,6 +12471,10 @@ void MainWindow::initTTS()
             tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
             tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
             tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
+            connect(tts, &QTextToSpeech::stateChanged, this, [=](QTextToSpeech::State state){
+                if (state == QTextToSpeech::Ready)
+                    speakTextQueueNext();
+            });
         }
 #endif
         break;
@@ -12517,7 +12521,10 @@ void MainWindow::speakText(QString text)
         if (!tts)
             initTTS();
         else if (tts->state() != QTextToSpeech::Ready)
+        {
+            ttsQueue.append(text);
             return ;
+        }
         tts->say(text);
 #endif
         break;
@@ -12527,9 +12534,24 @@ void MainWindow::speakText(QString text)
         xfyTTS->speakText(text);
         break;
     case VoiceCustom:
-        voiceDownloadAndSpeak(text);
+        if (ttsDownloading || (ttsPlayer && ttsPlayer->state() == QMediaPlayer::State::PlayingState))
+        {
+            ttsQueue.append(text);
+        }
+        else
+        {
+            voiceDownloadAndSpeak(text);
+        }
         break;
     }
+}
+
+void MainWindow::speakTextQueueNext()
+{
+    if (!ttsQueue.size())
+        return ;
+    QString text = ttsQueue.takeFirst();
+    speakText(text);
 }
 
 /**
@@ -12582,7 +12604,9 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
     QDir dir(filePath);
     dir.mkpath(filePath);
 
+    ttsDownloading = true;
     get(url, [=](QNetworkReply* reply1){
+        ttsDownloading = false;
         QByteArray fileData;
 
         if (reply1->error() != QNetworkReply::NoError)
@@ -12638,18 +12662,21 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
         file.close();
 
         // 播放文件
-        QMediaPlayer *player = new QMediaPlayer(this);
-        player->setMedia(QUrl::fromLocalFile(path));
-        connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
-            if (state == QMediaPlayer::StoppedState)
-            {
-                player->deleteLater();
+        if (!ttsPlayer)
+        {
+            ttsPlayer = new QMediaPlayer(this);
+            connect(ttsPlayer, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
+                if (state == QMediaPlayer::StoppedState)
+                {
+                    QFile file(path);
+                    file.remove();
+                    speakTextQueueNext();
+                }
+            });
+        }
+        ttsPlayer->setMedia(QUrl::fromLocalFile(path));
 
-                QFile file(path);
-                file.remove();
-            }
-        });
-        player->play();
+        ttsPlayer->play();
     });
 }
 
