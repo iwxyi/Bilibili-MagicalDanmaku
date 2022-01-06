@@ -573,7 +573,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     };
 
     auto toIndex = [&]() -> void {
-        return serverHandleUrl(urlPath + "/index.html", params, req, resp);
+        return serverHandleUrl( urlPath + (urlPath.endsWith("/") || urlPath.isEmpty() ? "" : "/") + "index.html", params, req, resp);
     };
 
     // 判断文件类型
@@ -618,7 +618,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     {
         doc = "<html><head><title>神奇弹幕</title></head><body><h1>服务开启成功！</h1></body></html>";
     }
-    else if (suffix.isEmpty() && !isFileExist(wwwDir.absoluteFilePath(urlPath))) // 没有后缀名，也没有特判的
+    else if (suffix.isEmpty() && QDir().exists(wwwDir.absoluteFilePath(urlPath))) // 没有后缀名，也没有特判的
     {
         return toIndex();
     }
@@ -643,7 +643,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
         if (!file.exists())
         {
             qWarning() << "文件：" << filePath << "不存在";
-            return errorStr("路径：" + urlPath + " 无法访问！", QHttpResponse::STATUS_NOT_FOUND);
+            return errorStr("File " + urlPath + " Not Found", QHttpResponse::STATUS_NOT_FOUND);
         }
         else if (isFileType("png|jpg|jpeg|bmp")) // 图片文件
         {
