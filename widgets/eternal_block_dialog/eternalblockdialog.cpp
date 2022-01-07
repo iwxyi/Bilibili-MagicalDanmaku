@@ -36,7 +36,7 @@ void EternalBlockDialog::on_listWidget_activated(const QModelIndex &index)
     if (!index.isValid())
         return ;
     int row = index.row();
-    emit signalCancelEternalBlock(users->at(row).uid);
+    emit signalCancelEternalBlock(users->at(row).uid, users->at(row).roomId);
     ui->listWidget->takeItem(row);
 }
 
@@ -59,11 +59,11 @@ void EternalBlockDialog::on_listWidget_customContextMenuRequested(const QPoint &
     menu->addAction(actionCancelBlock);
 
     connect(actionCancelEternalBlock, &QAction::triggered, this, [=]{
-        emit signalCancelEternalBlock(users->at(row).uid);
+        emit signalCancelEternalBlock(users->at(row).uid, users->at(row).roomId);
         ui->listWidget->takeItem(row);
     });
     connect(actionCancelBlock, &QAction::triggered, this, [=]{
-        emit signalCancelBlock(users->at(row).uid);
+        emit signalCancelBlock(users->at(row).uid, users->at(row).roomId);
         ui->listWidget->takeItem(row);
     });
 

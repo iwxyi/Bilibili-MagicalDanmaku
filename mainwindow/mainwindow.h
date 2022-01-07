@@ -327,7 +327,11 @@ private slots:
 
     void cancelEternalBlockUser(qint64 uid);
 
+    void cancelEternalBlockUser(qint64 uid, qint64 roomId);
+
     void cancelEternalBlockUserAndUnblock(qint64 uid);
+
+    void cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId);
 
     void saveEternalBlockUsers();
 

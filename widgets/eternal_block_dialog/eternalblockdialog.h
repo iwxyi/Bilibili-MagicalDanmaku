@@ -74,8 +74,8 @@ private slots:
     void on_listWidget_customContextMenuRequested(const QPoint &);
 
 signals:
-    void signalCancelEternalBlock(qint64 uid);
-    void signalCancelBlock(qint64 uid); // 取消永久禁言并取消禁言
+    void signalCancelEternalBlock(qint64 uid, qint64 roomId); // 仅取消永久禁言
+    void signalCancelBlock(qint64 uid, qint64 roomId); // 取消永久禁言并取消禁言
 
 private:
     Ui::EternalBlockDialog *ui;

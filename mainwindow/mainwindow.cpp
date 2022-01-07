@@ -482,6 +482,7 @@ void MainWindow::initView()
 
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(fluentRadius);
+    ui->eternalBlockListButton->adjustMinimumSize();
 
     // 网页
     ui->refreshExtensionListButton->setSquareSize();
@@ -14222,7 +14223,12 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
 {
-    EternalBlockUser user(uid, roomId.toLongLong());
+    cancelEternalBlockUser(uid, this->roomId.toLongLong());
+}
+
+void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
+{
+    EternalBlockUser user(uid, roomId);
     if (!eternalBlockUsers.contains(user))
         return ;
 
@@ -14233,9 +14239,14 @@ void MainWindow::cancelEternalBlockUser(qint64 uid)
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
 {
-    cancelEternalBlockUser(uid);
+    cancelEternalBlockUserAndUnblock(uid, this->roomId.toLongLong());
+}
 
-    delBlockUser(uid);
+void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
+{
+    cancelEternalBlockUser(uid, roomId);
+
+    delBlockUser(uid, roomId);
 }
 
 void MainWindow::saveEternalBlockUsers()
@@ -18872,8 +18883,8 @@ void MainWindow::on_voiceCustomUrlEdit_editingFinished()
 void MainWindow::on_eternalBlockListButton_clicked()
 {
     EternalBlockDialog* dialog = new EternalBlockDialog(&eternalBlockUsers, this);
-    connect(dialog, SIGNAL(signalCancelEternalBlock(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
-    connect(dialog, SIGNAL(signalCancelBlock(qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64)));
+    connect(dialog, SIGNAL(signalCancelEternalBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUser(qint64, qint64)));
+    connect(dialog, SIGNAL(signalCancelBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64, qint64)));
     dialog->exec();
 }
 
