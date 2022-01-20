@@ -6026,6 +6026,9 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%special%")
         return snum(danmaku.getSpecial());
 
+    else if (key == "%spread%")
+        return danmaku.getSpreadDesc();
+
     // 粉丝牌房间
     else if (key == "%anchor_roomid%" || key == "%medal_roomid%" || key == "%anchor_room_id%" || key == "%medal_room_id%")
         return danmaku.getAnchorRoomid();

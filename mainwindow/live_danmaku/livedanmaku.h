@@ -798,8 +798,8 @@ private:
     QString coin_type;
     qint64 total_coin = 0;
 
-    QString spread_desc;
-    QString spread_info;
+    QString spread_desc; // 星光推广
+    QString spread_info; // 颜色
 
     int fans = 0;
     int fans_club = 0;
