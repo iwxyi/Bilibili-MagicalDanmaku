@@ -805,6 +805,7 @@ border-image: url(C:/Path/To/Image.png)
 | song_order_uname | 当前歌曲点歌者   | 同上                                                         |
 | random100        | 随机100          | 1~100的随机数，同代码块中的都将随机替换为同一个数，可用于设置抽奖概率 |
 | special          | 特别关注         | 关注答谢里可用，判断特别关注                                 |
+| spread           | 推广方式         | 一般为空，可能是“星光推广”                                   |
 | pk_magical_room  | 对面也用神奇弹幕 | 是：1，否：0                                                 |
 | cd0~cd99         |                  | 冷却通道，等同于 `%>cd(X)%`                                  |
 | wait0~wait99     |                  | 等待通道，等同于 `%>wait(X)%`                                |

@@ -108,5 +108,6 @@
 点歌队列数量=order_song_count
 随机100=random100
 特别关注=special
+推广方式=spread
 对面也用神奇弹幕=pk_magical_room
 本地模式=local_mode
