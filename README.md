@@ -1586,16 +1586,17 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 #### 主程序事件
 
-| 事件命令                  | 说明                                              |
-| ------------------------- | ------------------------------------------------- |
-| START_UP                  | 程序启动完成                                      |
-| START_WORK                | 开播后启动程序，或者程序启动后再开播              |
-| LOGIN_FINISHED            | 连接直播间并登录账号后                            |
-| SHUT_DOWN                 | 程序关闭的一瞬间                                  |
-| **REMOTE_BLOCK**          | 远程禁言，信息为最后一条弹幕                      |
-| **REMOTE_BLOCK_OVERRIDE** | 同上，但是会覆盖掉自带的禁言回复                  |
-| FIND_USER_BY_UNAME        | `%>unameToUid(昵称)%`的结果，可能是送礼或弹幕数据 |
-| SOCKET_MSG_RECEIVED       | 接收到网页程序的socket消息                        |
+| 事件命令                  | 说明                                                        |
+| ------------------------- | ----------------------------------------------------------- |
+| START_UP                  | 程序启动完成                                                |
+| START_WORK                | 开播后启动程序，或者程序启动后再开播                        |
+| LOGIN_FINISHED            | 连接直播间并登录账号后                                      |
+| SHUT_DOWN                 | 程序关闭的一瞬间                                            |
+| **REMOTE_BLOCK**          | 远程禁言，信息为最后一条弹幕                                |
+| **REMOTE_BLOCK_OVERRIDE** | 同上，但是会覆盖掉自带的禁言回复                            |
+| FIND_USER_BY_UNAME        | `%>unameToUid(昵称)%`的结果，可能是送礼或弹幕数据           |
+| SOCKET_MSG_RECEIVED       | 接收到网页程序的socket消息                                  |
+| PLAY_SOUND_FINISHED       | `>playSound(path)`  播放音频文件结束，`%text%` 获取文件路径 |
 
 
 

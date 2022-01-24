@@ -8777,7 +8777,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             player->setMedia(QUrl::fromLocalFile(path));
             connect(player, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state) {
                 if (state == QMediaPlayer::StoppedState)
+                {
                     player->deleteLater();
+                    triggerCmdEvent("PLAY_SOUND_FINISHED", LiveDanmaku(path));
+                }
             });
             player->play();
             return true;
