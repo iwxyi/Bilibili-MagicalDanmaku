@@ -668,6 +668,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             break;
         }
 
+        MUSIC_DEB << "搜索到数量：" << searchResultSongs.size() << "条";
         setSearchResultTable(searchResultSongs);
 
         // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
@@ -811,7 +812,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
         else if (insertOnce) // 手动点的立即播放，换源后的自动搜索与播放
         {
-            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString();
+            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
             if (!song.isValid())
                 song = getSuitableSongOnResults(key, true);
             if (!song.isValid())
@@ -3048,7 +3049,13 @@ bool OrderPlayerWindow::switchNextSource(QString key, MusicSource ms, QString ad
     // 重新搜索
     this->insertOrderOnce = true; // 必须要加上强制换源的标记
     qWarning() << "开始换源：" << sourceName(ms) << "->" << sourceName(nextSource) << key;
-    searchMusicBySource(key, nextSource, addBy);
+    QString simpleKey = key;
+    simpleKey = simpleKey.replace(QRegularExpression("[\\(（].+?[\\)）]"), "").trimmed();
+    if (simpleKey != key)
+        MUSIC_DEB << "换源精简关键词：" << simpleKey;
+    if (simpleKey.trimmed().isEmpty())
+        simpleKey = key;
+    searchMusicBySource(simpleKey, nextSource, addBy);
     return true;
 }
 
