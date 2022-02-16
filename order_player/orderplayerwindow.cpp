@@ -3204,7 +3204,7 @@ QVariant OrderPlayerWindow::getCookies(QString cookieString)
     QList<QNetworkCookie> cookies;
 
     // 设置cookie
-    QString cookieText = cookieString;
+    QString cookieText = cookieString.replace("\n", ";");
     QStringList sl = cookieText.split(";");
     foreach (auto s, sl)
     {
@@ -3230,6 +3230,8 @@ void OrderPlayerWindow::getNeteaseAccount()
     }
     fetch(NETEASE_SERVER + "/login/status", [=](MyJson json) {
         // qInfo() << json;
+        if (json.contains("data"))
+            json = json.data();
         if (json.code() != 200) // 也是301
         {
             neteaseNickname = "";
