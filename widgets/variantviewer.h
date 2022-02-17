@@ -10,6 +10,7 @@
 #define SETTINGS_PREFIX QString("_settings/")
 #define COUNTS_PREFIX QString("_counts/")
 #define HEAPS_PREFIX QString("_heaps/")
+#define NAMES_PREFIX QString("_localNicknames/")
 
 class VariantViewer : public QDialog
 {

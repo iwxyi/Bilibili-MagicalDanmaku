@@ -144,10 +144,10 @@ function addMsgHtml(data, timestamp) {
             guardHtml = '<i class="medal-guard" style="background-image: url(http://i0.hdslb.com/bfs/activity-plat/static/20200716/1d0c5a1b042efb59f46d4ba1286c6727/icon-guard1.png@44w_44h.webp)"></i>'
         }
         else if (guard_level == "2") {
-            guardHtml = '<i class="medal-guard" style="background-image: url(http://i0.hdslb.com/bfs/activity-plat/static/20200716/1d0c5a1b042efb59f46d4ba1286c6727/icon-guard1.png@44w_44h.webp)"></i>'
+            guardHtml = '<i class="medal-guard" style="background-image: url(http://i0.hdslb.com/bfs/activity-plat/static/20200716/1d0c5a1b042efb59f46d4ba1286c6727/icon-guard2.png@44w_44h.webp)"></i>'
         }
         else if (guard_level == "3") {
-            guardHtml = '<i class="medal-guard" style="background-image: url(http://i0.hdslb.com/bfs/activity-plat/static/20200716/1d0c5a1b042efb59f46d4ba1286c6727/icon-guard1.png@44w_44h.webp)"></i>'
+            guardHtml = '<i class="medal-guard" style="background-image: url(http://i0.hdslb.com/bfs/activity-plat/static/20200716/1d0c5a1b042efb59f46d4ba1286c6727/icon-guard3.png@44w_44h.webp)"></i>'
         }
     }
 
