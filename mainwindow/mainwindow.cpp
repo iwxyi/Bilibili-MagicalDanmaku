@@ -12626,11 +12626,6 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
         if (contentType.contains("json"))
         {
             // https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=这是一个测试文本
-            /*{
-                "errno": 0,
-                "msg": "success",
-                "data": "data:audio/x-mpeg;base64,//MoxAALoFpsC0YQAHIouk1FA6BPPUxbeUaQ4wQRgeY5r1DAg4/+thlOU4rq07Fc+ESwTDLvaj/r//6Vq1mEUtwleaDs7Wml//MoxAwPsxZ8AYkoATFi0S67rXu3Rn3///////6J5hFDfynZfOp2///9VvzqcVCbif/9P/p4cD4eDLiAmIjGYfzjiUANOENL//MoxAgNMdqwAdIQAIVzzsyjYgiL/r////////////yU+4QQhBbEDnfxZLmPQUONSCIw5/OA/dc2Of1IDiEuACgDeTarIQJS//MoxA4Qqua0AKKEuYv+v/U///+3//////r8ypOHcwYMKEjkU7p9luzfdDylMqMPkEuLKZLLb/nVDnQg44SQ78fq/USjj6Ay//MoxAYOAm7AAJnEuNQ9ctrf1CEcb/cz/n//////////3/1QWEHvfMd0b/f9zKiq5JgwVEeKG6doVegQjH1rARtltttrbgH8//MoxAkOmI8CXgrOTjxRJQ6Umv/5RDP+rFX8FHeJHckDHpOdQuf/yws4SkipEz1IEHUTBDIhImjgQHzn9rk1AIM//hw/Wikk//MoxAkO8c7JlJCElChQOnD31f4b/1K//t/6/+rf+p//T/0P/QCFGDnMgPlgqoxHrCTdY0wffEIVX62BdZ8wRQVM5+7omI/B//MoxAgM0j64ypiEuA8BiUXX/Av/sv///X/6f////+yv6o+cb/M6D/+JJcZHqCXPA0KsJbPaK2IVWmQCBtQxA16DJQ3U3+95//MoxA8McJaYABYETGtnAUf+oIUh7X+s7///4ieIgKRBWVd7aZIS5GS7FPI/6dOpAMA/wvW0d7En1exITIOpVVZmIIBSf+f///MoxBgM+cJ8VHhElMX/////////5jFKFARp1od1luqeyX//6Cz5LDQgaGDcNY80OCoEBYQIxKFAoInFl6MDI4HX1tW1Jxqz//MoxB8MaFI8AHpMJGYe/PuZXiqPWINla9PWx3tQn0UbqHqcH+uY4QRIAxug4GYWCo0ig/4iojrqGxdCLyDKE/JsSRb1aUen//MoxCgK0EI4AHpEJLfUyhWQUnwBoAQGmj4Z2ReCoSW65N99dmqkY+h7P/9XG//r37TLN3/v/7NClqtXKAFExmCgkBgKM3Jq//MoxDcJ6C5EFjJMAHv7fZS3K/644f9XR//+qvyVBH/LJkxBTUUzLjk5LjWqqqqqqqqqqqpMQU1FMy45OS41qqqqqqqqqqqq//MoxEoI8BokVhjGAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpMQU1FMy45OS41qqqqqqqqqqqq//MoxGEAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxJwAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxMQAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//MoxMQAAANIAAAAAKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
-            }*/
             QByteArray ba = reply1->readAll();
             MyJson json(ba);
             QString s = json.s("data");
@@ -17781,6 +17776,8 @@ void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, userCookies);
+    if (url.contains("cloud.baidu.com"))
+        request->setRawHeader("Referer", "https://ai.baidu.com/tech/speech/tts_online");
 }
 
 void MainWindow::openLink(QString link)
