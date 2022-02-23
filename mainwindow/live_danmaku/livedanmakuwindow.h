@@ -164,6 +164,7 @@ private:
     QSettings* settings;
     QString dataPath;
 
+    QWidget* moveBar;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;
 #if defined(ENABLE_SHORTCUT)

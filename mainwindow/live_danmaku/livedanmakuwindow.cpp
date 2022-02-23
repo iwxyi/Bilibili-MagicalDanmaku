@@ -47,6 +47,14 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     lineSpacing = fm.lineSpacing();
     srand(time(0));
 
+    moveBar = new QWidget(this);
+    moveBar->setStyleSheet("QWidget { background: rgba(128, 128, 128, 32); border-radius: 2; }"
+                           "QWidget::hover { background: rgba(128, 128, 128, 128); }");
+    moveBar->setMinimumWidth(boundaryWidth);
+    moveBar->setMinimumHeight(boundaryWidth / 4);
+    moveBar->setMaximumHeight(boundaryWidth / 2);
+    moveBar->setCursor(Qt::SizeAllCursor);
+
     listWidget = new QListWidget(this);
     lineEdit = new TransparentEdit(this);
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -268,6 +276,9 @@ void LiveDanmakuWindow::mouseMoveEvent(QMouseEvent *e)
 
 void LiveDanmakuWindow::resizeEvent(QResizeEvent *)
 {
+    moveBar->move((this->width() - moveBar->width()) / 2, (boundaryWidth - moveBar->height()) / 2);
+    moveBar->setFixedWidth(qMax(boundaryWidth * 3, this->width() / 6));
+
     int w = listWidget->contentsRect().width();
     for (int i = 0; i < listWidget->count(); i++)
     {
