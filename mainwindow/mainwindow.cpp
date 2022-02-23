@@ -536,7 +536,7 @@ void MainWindow::initPath()
     }
     else // 通用文件夹
     {
-        dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
         // C:/Users/Administrator/AppData/Roaming/神奇弹幕    (未定义ApplicationName时为exe名)
         SOCKET_DEB << "路径：" << dataPath;
     }
