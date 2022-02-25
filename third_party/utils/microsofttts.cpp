@@ -24,7 +24,7 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     refreshToken();
 }
 
-void MicrosoftTTS::speakText(QString ssml)
+void MicrosoftTTS::speakSSML(QString ssml)
 {
     speakQueue.append(ssml);
     if (audio || getting)
@@ -37,13 +37,12 @@ void MicrosoftTTS::speakNext()
 {
     if (speakQueue.isEmpty())
         return ;
-
-    QString ssml = speakQueue.takeFirst();
     if (accessToken.isEmpty())
     {
         qWarning() << "MicrosoftTTS not get AccessToken";
         return ;
     }
+    QString ssml = speakQueue.takeFirst();
     getting = true;
 
     // 获取数据
@@ -67,10 +66,12 @@ void MicrosoftTTS::speakNext()
     if (code != 200)
     {
         qWarning() << "MicrosoftTTS Error Code:" << code;
+        emit signalError("错误码：" + QString::number(code));
     }
     if (reply->error() != QNetworkReply::NoError)
     {
         qWarning() << "MicrosoftTTS TTS Error:" << reply->errorString();
+        emit signalError(reply->errorString());
     }
 
     QByteArray ba = reply->readAll();
@@ -84,10 +85,10 @@ void MicrosoftTTS::speakNext()
     stream << ba;
     file.flush();
     file.close();
-    qDebug() << "MicrosoftTTS 保存文件：" << filePath;
+    // qDebug() << "MicrosoftTTS 保存文件：" << filePath;
 
     // 播放音频
-    playFile(filePath, false);
+    playFile(filePath, true);
 
     getting = false;
 }
@@ -113,6 +114,12 @@ void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
         }
     });
     audio->start(inputFile);
+}
+
+void MicrosoftTTS::setAreaCode(QString area)
+{
+    this->areaCode = area;
+    refreshToken();
 }
 
 void MicrosoftTTS::setSubscriptionKey(QString key)
@@ -145,7 +152,16 @@ void MicrosoftTTS::refreshToken()
     accessToken = reply->readAll();
     reply->deleteLater();
     if (accessToken.isEmpty())
-        qWarning() << "MicrosoftTTS can't get AccessToken:" << url;
-    else
+    {
         qInfo() << "MicrosoftTTS access token" << accessToken;
+        // 初始化结束后需要播放语音
+        if (!speakQueue.isEmpty() && !audio && !getting)
+            speakNext();
+    }
+    else
+    {
+        qWarning() << "MicrosoftTTS can't get AccessToken:" << url;
+        emit signalError("无法获取 AccessToken");
+    }
+
 }

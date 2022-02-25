@@ -97,6 +97,13 @@ QT_END_NAMESPACE
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
+#define DEFAULT_MS_TTS_SSML_FORMAT "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\n\
+        xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\">\n\
+    <voice name=\"zh-CN-XiaomoNeural\">\n\
+        %text%\n\
+    </voice>\n\
+</speak>"
+
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
@@ -212,6 +219,7 @@ public:
         VoiceLocal,
         VoiceXfy,
         VoiceCustom,
+        VoiceMS,
     };
 
     const QSettings *getSettings() const;
@@ -500,6 +508,8 @@ private slots:
 
     void on_voiceXfyRadio_toggled(bool checked);
 
+    void on_voiceMSRadio_toggled(bool checked);
+
     void on_voiceCustomRadio_toggled(bool checked);
 
     void on_voiceNameEdit_editingFinished();
@@ -517,6 +527,8 @@ private slots:
     void on_voiceLocalRadio_clicked();
 
     void on_voiceXfyRadio_clicked();
+
+    void on_voiceMSRadio_clicked();
 
     void on_voiceCustomRadio_clicked();
 
@@ -755,6 +767,12 @@ private slots:
     void exportAllGuardsByMonth(QString exportPath);
 
     void on_setCustomVoiceButton_clicked();
+
+    void on_MSAreaCodeEdit_editingFinished();
+
+    void on_MSSubscriptionKeyEdit_editingFinished();
+
+    void on_MS_TTS__SSML_Btn_clicked();
 
 private:
     void initView();
@@ -1330,6 +1348,8 @@ private:
     QStringList ttsQueue;
     QMediaPlayer* ttsPlayer = nullptr;
     bool ttsDownloading = false;
+    MicrosoftTTS* msTTS = nullptr;
+    QString msTTSFormat;
 
     // 全屏弹幕
     QFont screenDanmakuFont;

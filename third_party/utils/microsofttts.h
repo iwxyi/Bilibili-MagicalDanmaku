@@ -15,15 +15,15 @@ class MicrosoftTTS : public QObject
 public:
     explicit MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObject *parent = nullptr);
 
-    void speakText(QString ssml);
+    void speakSSML(QString ssml);
     void speakNext();
     void playFile(QString filePath, bool deleteAfterPlay = true);
 
-    void setHostUrl(QString url);
+    void setAreaCode(QString area);
     void setSubscriptionKey(QString key);
 
-
 signals:
+    void signalError(QString err);
 
 public slots:
 

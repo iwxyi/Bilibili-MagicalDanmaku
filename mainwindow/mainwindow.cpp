@@ -1012,6 +1012,13 @@ void MainWindow::readConfig()
         ui->xfyApiKeyEdit->setText(settings->value("xfytts/apikey").toString());
         ui->xfyApiSecretEdit->setText(settings->value("xfytts/apisecret").toString());
     }
+    else if (voicePlatform == VoiceMS)
+    {
+        ui->voiceMSRadio->setChecked(true);
+        ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
+        ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
+        msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+    }
     else if (voicePlatform == VoiceCustom)
     {
         ui->voiceCustomRadio->setChecked(true);
@@ -12507,6 +12514,23 @@ void MainWindow::initTTS()
             xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
         }
         break;
+    case VoiceMS:
+        if (!msTTS)
+        {
+            qInfo() << "初始化微软语音模块";
+            msTTS = new MicrosoftTTS(dataPath,
+                                     settings->value("mstts/areaCode").toString(),
+                                     settings->value("mstts/subscriptionKey").toString(),
+                                     this);
+            connect(msTTS, &MicrosoftTTS::signalError, this, [=](QString err) {
+                showError("微软语音", err);
+            });
+            ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
+            ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
+            msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+            // TODO: 设置音调等内容
+        }
+        break;
     case VoiceCustom:
         break;
     }
@@ -12543,6 +12567,20 @@ void MainWindow::speakText(QString text)
         if (!xfyTTS)
             initTTS();
         xfyTTS->speakText(text);
+        break;
+    case VoiceMS:
+    {
+        if (!msTTS)
+            initTTS();
+
+        // 替换文本
+        if (!text.startsWith("<speak"))
+        {
+            QString rpl = msTTSFormat;
+            text = rpl.replace("%text%", text);
+        }
+        msTTS->speakSSML(text);
+    }
         break;
     case VoiceCustom:
         if (ttsDownloading || (ttsPlayer && ttsPlayer->state() == QMediaPlayer::State::PlayingState))
@@ -18643,6 +18681,7 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
         ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
 
         ui->voiceXfySettingsCard->hide();
+        ui->voiceMSSettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
         ui->scrollArea->updateChildWidgets();
         ui->scrollArea->adjustWidgetsPos();
@@ -18658,6 +18697,23 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
         ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
 
         ui->voiceXfySettingsCard->show();
+        ui->voiceMSSettingsCard->hide();
+        ui->voiceCustomSettingsCard->hide();
+        ui->scrollArea->updateChildWidgets();
+        ui->scrollArea->adjustWidgetsPos();
+    }
+}
+
+void MainWindow::on_voiceMSRadio_toggled(bool checked)
+{
+    if (checked)
+    {
+        voicePlatform = VoiceMS;
+        settings->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
+
+        ui->voiceMSSettingsCard->show();
+        ui->voiceXfySettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
         ui->scrollArea->updateChildWidgets();
         ui->scrollArea->adjustWidgetsPos();
@@ -18674,6 +18730,7 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
         ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
 
         ui->voiceXfySettingsCard->hide();
+        ui->voiceMSSettingsCard->hide();
         ui->voiceCustomSettingsCard->show();
         ui->scrollArea->updateChildWidgets();
         ui->scrollArea->adjustWidgetsPos();
@@ -18838,6 +18895,20 @@ void MainWindow::on_voiceXfyRadio_clicked()
             xfyTTS->setPitch( voicePitch = settings->value("voice/pitch", 50).toInt() );
             xfyTTS->setSpeed( voiceSpeed = settings->value("voice/speed", 50).toInt() );
             xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
+        }
+    });
+}
+
+void MainWindow::on_voiceMSRadio_clicked()
+{
+    QTimer::singleShot(100, [=]{
+        if (!msTTS)
+        {
+            initTTS();
+        }
+        else
+        {
+            // TODO: 设置音调等内容
         }
     });
 }
@@ -20338,4 +20409,33 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
 
     writeTextFile(exportPath, fullText, recordFileCodec);
 }
+
+
+void MainWindow::on_MSAreaCodeEdit_editingFinished()
+{
+    settings->setValue("mstts/areaCode", ui->MSAreaCodeEdit->text());
+    if (msTTS)
+    {
+        msTTS->setAreaCode(ui->MSAreaCodeEdit->text());
+    }
+}
+
+void MainWindow::on_MSSubscriptionKeyEdit_editingFinished()
+{
+    settings->setValue("mstts/subscriptionKey", ui->MSSubscriptionKeyEdit->text());
+    if (msTTS)
+    {
+        msTTS->setSubscriptionKey(ui->MSSubscriptionKeyEdit->text());
+    }
+}
+
+void MainWindow::on_MS_TTS__SSML_Btn_clicked()
+{
+    bool ok;
+    QString fmt = TextInputDialog::getText(this, "微软语音SSML格式", "使用 %text% 替换要朗读的文字。<a href='https://docs.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup?tabs=csharp#create-an-ssml-document'>SSML文档</a>", msTTSFormat, &ok);
+    if (!ok)
+        return ;
+    settings->setValue("mstts/format", msTTSFormat = fmt);
+}
+
 
