@@ -39,6 +39,7 @@
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
 #include "xfytts.h"
+#include "microsofttts.h"
 #include "eternalblockdialog.h"
 #include "picturebrowser.h"
 #include "netinterface.h"

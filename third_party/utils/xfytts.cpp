@@ -9,7 +9,7 @@ XfyTTS::XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecre
     : QObject(parent), APPID(APPID), APIKey(APIKey), APISecret(APISecret)
 {
     AUTH_DEB << APIKey << APISecret;
-    savedDir = dataPath + "audios/";
+    savedDir = dataPath + "tts/";
     QDir dir(savedDir);
     dir.mkpath(savedDir);
 
@@ -23,10 +23,10 @@ XfyTTS::XfyTTS(QString dataPath, QString APPID, QString APIKey, QString APISecre
 
 void XfyTTS::speakText(QString text)
 {
+    speakQueue.append(text);
     if (socket) // 表示正在连接
         return ;
 
-    speakQueue.append(text);
     startConnect();
 }
 

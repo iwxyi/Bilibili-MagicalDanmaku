@@ -108,19 +108,23 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // 测试
-    /* get("https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=1", [=](MyJson json){
-        if (json.i("errno") != 0)
-        {
-            qWarning() << "百度语音解析错误：" << json;
-            return ;
-        }
-
-        QString base64 = json.s("data").split(",").last();
-        QByteArray ba = QByteArray::fromBase64(base64.toUtf8());
-        QFile file("D://a.mp3");
-        file.open(QIODevice::WriteOnly);
-        file.write(ba);
-        file.close();
+    /* MicrosoftTTS* mtts = new MicrosoftTTS(dataPath, "[地区]", "[订阅码]", this);
+    QTimer::singleShot(3000, [=]{
+        QString ssml =
+                "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\
+                xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\">\
+             <voice name=\"zh-CN-XiaomoNeural\">\
+                 女儿看见父亲走了进来，问道：\
+                 <mstts:express-as role=\"YoungAdultFemale\" style=\"calm\">\
+                     “您来的挺快的，怎么过来的？”\
+                 </mstts:express-as>\
+                 父亲放下手提包，说：\
+                 <mstts:express-as role=\"OlderAdultMale\" style=\"calm\">\
+                     “刚打车过来的，路上还挺顺畅。”\
+                 </mstts:express-as>\
+             </voice>\
+         </speak>";
+        mtts->speakText(ssml);
     }); */
 }
 
@@ -12607,7 +12611,7 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
     url = url.replace("%1", text).replace("%text%", text);
     url = url.replace("%url_text%", QString::fromUtf8(text.toUtf8().toPercentEncoding()));
     qInfo() << url;
-    const QString filePath = dataPath + "audios";
+    const QString filePath = dataPath + "tts";
     QDir dir(filePath);
     dir.mkpath(filePath);
 

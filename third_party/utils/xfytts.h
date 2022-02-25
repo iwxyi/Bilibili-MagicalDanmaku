@@ -19,7 +19,7 @@ public:
 
     void speakText(QString text);
     void speakNext();
-    void playFile(QString filePath, bool deleteAfterPlay = false);
+    void playFile(QString filePath, bool deleteAfterPlay = true);
 
     void setAppId(QString s);
     void setApiKey(QString s);
