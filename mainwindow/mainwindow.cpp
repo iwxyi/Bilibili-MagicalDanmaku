@@ -20435,6 +20435,8 @@ void MainWindow::on_MS_TTS__SSML_Btn_clicked()
     QString fmt = TextInputDialog::getText(this, "微软语音SSML格式", "使用 %text% 替换要朗读的文字。<a href='https://docs.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup?tabs=csharp#create-an-ssml-document'>SSML文档</a>", msTTSFormat, &ok);
     if (!ok)
         return ;
+    if (fmt.trimmed().isEmpty())
+        fmt = DEFAULT_MS_TTS_SSML_FORMAT;
     settings->setValue("mstts/format", msTTSFormat = fmt);
 }
 

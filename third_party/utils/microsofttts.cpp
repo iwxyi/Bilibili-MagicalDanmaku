@@ -151,7 +151,7 @@ void MicrosoftTTS::refreshToken()
 
     accessToken = reply->readAll();
     reply->deleteLater();
-    if (accessToken.isEmpty())
+    if (!accessToken.isEmpty())
     {
         qInfo() << "MicrosoftTTS access token" << accessToken;
         // 初始化结束后需要播放语音

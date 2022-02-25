@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>925</width>
-    <height>1268</height>
+    <width>928</width>
+    <height>1343</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>845</width>
-             <height>1148</height>
+             <width>848</width>
+             <height>1223</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5354,7 +5354,27 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item row="3" column="1">
-                <widget class="InteractiveButtonBase" name="MS_TTS__SSML_Btn">
+                <widget class="QPushButton" name="MS_TTS__SSML_Btn">
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
                  <property name="text">
                   <string> 设置SSML格式</string>
                  </property>
@@ -8434,7 +8454,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>925</width>
+     <width>928</width>
      <height>23</height>
     </rect>
    </property>

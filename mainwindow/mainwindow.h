@@ -99,9 +99,13 @@ QT_END_NAMESPACE
 
 #define DEFAULT_MS_TTS_SSML_FORMAT "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\n\
         xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\">\n\
-    <voice name=\"zh-CN-XiaomoNeural\">\n\
-        %text%\n\
-    </voice>\n\
+     <voice name=\"zh-CN-XiaoxiaoNeural\">\n\
+        <mstts:express-as style=\"affectionate\" >\n\
+            <prosody rate=\"0%\" pitch=\"0%\">\n\
+                %text%\n\
+            </prosody>\n\
+        </mstts:express-as>\n\
+     </voice>\n\
 </speak>"
 
 class MainWindow;
