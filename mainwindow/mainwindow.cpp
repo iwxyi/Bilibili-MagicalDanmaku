@@ -19048,6 +19048,8 @@ void MainWindow::on_voiceMSRadio_clicked()
         else
         {
             // TODO: 设置音调等内容
+            msTTS->clearQueue();
+            msTTS->refreshToken();
         }
     });
 }

@@ -26,9 +26,8 @@ signals:
     void signalError(QString err);
 
 public slots:
-
-private slots:
     void refreshToken();
+    void clearQueue();
 
 private:
     QString savedDir;

@@ -29,7 +29,7 @@ void MicrosoftTTS::speakSSML(QString ssml)
     speakQueue.append(ssml);
     if (audio || getting)
     {
-        qDebug() << "播放 SSML 进入队列";
+        qDebug() << "播放 SSML 进入队列，当前数量：" << speakQueue.size();
         return ;
     }
 
@@ -169,4 +169,15 @@ void MicrosoftTTS::refreshToken()
         emit signalError("无法获取 AccessToken");
     }
 
+}
+
+void MicrosoftTTS::clearQueue()
+{
+    speakQueue.clear();
+    if (audio)
+    {
+        audio->deleteLater();
+        audio = nullptr;
+    }
+    getting = false;
 }
