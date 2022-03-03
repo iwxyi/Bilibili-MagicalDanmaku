@@ -931,6 +931,8 @@ private:
 
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
+    QString getReplyExecutionResult(QString key, const LiveDanmaku &danmaku);
+    QString getEventExecutionResult(QString key, const LiveDanmaku &danmaku);
     void simulateKeys(QString seq, bool press = true, bool release = true);
     void simulateClick();
     void simulateClickButton(DWORD keys);

@@ -6845,6 +6845,10 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     }
     else if (funcName == "getScreenPositionColor") // 获取屏幕上某个点的颜色
     {
+        if (argList.size() < 3)
+        {
+            return errorArg("屏幕ID, 横坐标, 纵坐标");
+        }
         int wid = argList.at(0).toInt(); // 屏幕ID
         int x = argList.at(1).toInt(); // 横坐标
         int y = argList.at(2).toInt(); // 纵坐标
@@ -6903,6 +6907,24 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QPixmap pixmap = screen->grabWindow(wid, x, y, 1, 1);
         QColor color = pixmap.toImage().pixelColor(0, 0);
         return QVariant(color).toString();
+    }
+    else if (funcName == "getReplyExecutionResult")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+        {
+            return errorArg("回复内容");
+        }
+        QString key = args;
+        return getReplyExecutionResult(key, danmaku);
+    }
+    else if (funcName == "getEventExecutionResult")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+        {
+            return errorArg("事件名字");
+        }
+        QString key = args;
+        return getEventExecutionResult(key, danmaku);
     }
 
     return "";
@@ -9830,6 +9852,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
 
             auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, danmakuCounts, heaps, this);
+            viewer->setGeometry(this->geometry());
             viewer->show();
             return true;
         }
@@ -9956,6 +9979,55 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     return false;
+}
+
+/**
+ * 获取第一个符合条件的回复的文本
+ * 会返回所有文本，如果有换行符，则会以脚本的 \n（实际上是\\n）来保存
+ * 如果有命令，会继续保持文本形式，而不会触发
+ * 仅判断启用的
+ */
+QString MainWindow::getReplyExecutionResult(QString key, const LiveDanmaku& danmaku)
+{
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto rowItem = ui->replyListWidget->item(row);
+        auto widget = ui->replyListWidget->itemWidget(rowItem);
+        if (!widget)
+            continue;
+        auto replyWidget = static_cast<ReplyWidget*>(widget);
+        if (replyWidget->isEnabled() && key.contains(QRegularExpression(replyWidget->title())))
+        {
+            QString filterText = replyWidget->body();
+            QStringList msgs = getEditConditionStringList(filterText, danmaku);
+            if (!msgs.size())
+                return "";
+            return msgs.join("\\n");
+        }
+    }
+    return "";
+}
+
+QString MainWindow::getEventExecutionResult(QString key, const LiveDanmaku& danmaku)
+{
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto rowItem = ui->eventListWidget->item(row);
+        auto widget = ui->eventListWidget->itemWidget(rowItem);
+        if (!widget)
+            continue;
+        auto eventWidget = static_cast<EventWidget*>(widget);
+        if (eventWidget->isEnabled() && eventWidget->title() == key)
+        {
+            QString filterText = eventWidget->body();
+            QStringList msgs = getEditConditionStringList(filterText, danmaku);
+            if (!msgs.size())
+                return "";
+            qDebug() << "获取代码返回值：" << key << msgs.join("\\n");
+            return msgs.join("\\n");
+        }
+    }
+    return "";
 }
 
 void MainWindow::simulateKeys(QString seq, bool press, bool release)

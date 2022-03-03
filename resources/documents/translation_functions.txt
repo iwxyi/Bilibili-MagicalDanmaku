@@ -31,3 +31,5 @@
 设置直播封面=setRoomCover
 获取屏幕位置颜色=getScreenPositionColor
 获取窗口位置颜色=getWindowPositionColor
+获取回复执行结果=getReplyExecutionResult
+获取事件执行结果=getEventExecutionResult

@@ -909,6 +909,8 @@ border-image: url(C:/Path/To/Image.png)
 | pasteText()                        | 粘贴文字         | 获取剪贴板的文本                                             |
 | getScreenPositionColor(wid, x, y)  | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
 | getWindowPositionColor(name, x, y) | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
+| getReplyExecutionResult(text)      | 获取回复执行结果 | 获取满足text的第一个回复的执行结果；结果中若存在命令也会以纯文本的形式返回而不会执行，若有换行符\n则会发送多条弹幕 |
+| getEventExecutionResult(event)     | 获取事件执行结果 | 获取指定事件的执行结果，重复则取第一个，同上                 |
 
 以获取时间为例：
 
@@ -1202,6 +1204,11 @@ tips：
 | localNotify(msg)                                   | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
 | localNotify(uid, msg)                              | 本地通知         | 同上，带用户ID                                               |
 | speakText(msg)                                     | 播放语音         | 朗读文本                                                     |
+| speakTextSSML(ssml)                                | 播放语音SSML     | 使用微软语音来播放SSML文本（不能有换行）；需要配置API        |
+| setVoiceSpeaker(name)                              | 设置语音发音人   | 不同语音有不同的发音人，详细看程序说明                       |
+| setVoiceSpeed(speed)                               | 设置语音音速     | 0~100                                                        |
+| setVoicePitch(pitch)                               | 设置语音音调     | 0~100                                                        |
+| setVoiceVolume(volume)                             | 设置语音音量     | 0~100                                                        |
 | openUrl(url)                                       | 打开网址         | 浏览器打开网址                                               |
 | connectNet(url)                                    | 连接网址         | 用于连接其他API，不管返回结果                                |
 | getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
