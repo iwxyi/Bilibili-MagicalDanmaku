@@ -8433,6 +8433,105 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             speakText(text);
             return true;
         }
+
+        /* re = RE("speakTextXfy\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            if (!xfyTTS)
+            {
+                VoicePlatform temp = voicePlatform;
+                voicePlatform = VoiceXfy;
+                initTTS();
+                voicePlatform = temp;
+            }
+            xfyTTS->speakText(text);
+            return true;
+        } */
+
+        re = RE("speakTextSSML\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            if (!msTTS)
+            {
+                VoicePlatform temp = voicePlatform;
+                voicePlatform = VoiceMS;
+                initTTS();
+                voicePlatform = temp;
+            }
+            msTTS->speakSSML(text);
+            return true;
+        }
+    }
+
+    if (msg.contains("setVoice"))
+    {
+        // 发音人
+        re = RE("setVoiceSpeaker\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString text = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            ui->voiceNameEdit->setText(text);
+            return true;
+        }
+
+        // 音速
+        re = RE("setVoiceSpeed\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            bool ok;
+            int val = caps.at(1).toInt(&ok);
+            if (!ok)
+            {
+                showError("setVoiceSpeed", "无法识别的数字：" + caps.at(1));
+                return true;
+            }
+            qInfo() << "执行命令：" << caps;
+            ui->voiceSpeedSlider->setValue(val);
+            return true;
+        }
+
+        // 音调
+        re = RE("setVoicePitch\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            bool ok;
+            int val = caps.at(1).toInt(&ok);
+            if (!ok)
+            {
+                showError("setVoicePitch", "无法识别的数字：" + caps.at(1));
+                return true;
+            }
+            qInfo() << "执行命令：" << caps;
+            ui->voicePitchSlider->setValue(val);
+            return true;
+        }
+
+        // 音量
+        re = RE("setVoiceVolume\\s*\\(\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            bool ok;
+            int val = caps.at(1).toInt(&ok);
+            if (!ok)
+            {
+                showError("setVoiceSpeed", "无法识别的数字：" + caps.at(1));
+                return true;
+            }
+            qInfo() << "执行命令：" << caps;
+            ui->voiceVolumeSlider->setValue(val);
+            return true;
+        }
     }
 
     // 网络操作
@@ -18754,6 +18853,16 @@ void MainWindow::on_voiceNameEdit_editingFinished()
     case VoiceCustom:
         settings->setValue("voice/customName", voiceName);
         break;
+    case VoiceMS:
+    {
+        static bool notified = false;
+        if (!notified)
+        {
+            notified = true;
+            showNotify("微软语音", "暂不支持GUI调节");
+        }
+        break;
+    }
     }
 }
 
@@ -18806,6 +18915,16 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
         break;
     case VoiceCustom:
         break;
+    case VoiceMS:
+    {
+        static bool notified = false;
+        if (!notified)
+        {
+            notified = true;
+            showNotify("微软语音", "暂不支持GUI调节");
+        }
+        break;
+    }
     }
 }
 
@@ -18831,6 +18950,16 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
         break;
     case VoiceCustom:
         break;
+    case VoiceMS:
+    {
+        static bool notified = false;
+        if (!notified)
+        {
+            notified = true;
+            showNotify("微软语音", "暂不支持GUI调节");
+        }
+        break;
+    }
     }
 }
 
@@ -18856,6 +18985,16 @@ void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
         break;
     case VoiceCustom:
         break;
+    case VoiceMS:
+    {
+        static bool notified = false;
+        if (!notified)
+        {
+            notified = true;
+            showNotify("微软语音", "暂不支持GUI调节");
+        }
+        break;
+    }
     }
 }
 

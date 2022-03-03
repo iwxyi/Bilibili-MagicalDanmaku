@@ -28,7 +28,10 @@ void MicrosoftTTS::speakSSML(QString ssml)
 {
     speakQueue.append(ssml);
     if (audio || getting)
+    {
+        qDebug() << "播放 SSML 进入队列";
         return ;
+    }
 
     speakNext();
 }
@@ -98,7 +101,7 @@ void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
     QFile *inputFile = new QFile(filePath);
     inputFile->open(QIODevice::ReadOnly);
 
-    QAudioOutput *audio = new QAudioOutput(fmt);
+    audio = new QAudioOutput(fmt);
     connect(audio, &QAudioOutput::stateChanged, this, [=](QAudio::State state) {
         if (state == QAudio::IdleState)
         {
@@ -108,6 +111,8 @@ void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
             if (deleteAfterPlay)
                 inputFile->remove();
             inputFile->deleteLater();
+            audio->deleteLater();
+            audio = nullptr;
 
             // 播放下一个
             speakNext();

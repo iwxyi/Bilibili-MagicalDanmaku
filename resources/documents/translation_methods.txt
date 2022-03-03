@@ -17,6 +17,11 @@
 延迟发送=timerShot
 本地通知=localNotify
 播放语音=speakText
+播放语音SSML=speakTextSSML
+设置语音发音人=setVoiceSpeaker
+设置语音音速=setVoiceSpeed
+设置语音音调=setVoicePitch
+设置语音音量=setVoiceVolume
 打开网址=openUrl
 连接网址=connectNet
 get数据=getData
