@@ -21,13 +21,21 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     connect(refreshTimer, &QTimer::timeout, this, &MicrosoftTTS::refreshToken);
     refreshTimer->start();
 
+    timeoutTimer = new QTimer(this);
+    timeoutTimer->setInterval(10 * 1000); // MS语音合成+下载的超时时间
+    timeoutTimer->setSingleShot(true);
+    connect(timeoutTimer, &QTimer::timeout, this, [=]{
+        qWarning() << "MicroSoftTTS 超时";
+        connectLoop.quit();
+    });
+
     refreshToken();
 }
 
 void MicrosoftTTS::speakSSML(QString ssml)
 {
     speakQueue.append(ssml);
-    if (audio || getting)
+    if (isDownloadingOrSpeaking())
     {
         qDebug() << "播放 SSML 进入队列，当前数量：" << speakQueue.size();
         return ;
@@ -46,12 +54,11 @@ void MicrosoftTTS::speakNext()
         return ;
     }
     QString ssml = speakQueue.takeFirst();
-    getting = true;
+    // getting = true;
 
     // 获取数据
     QUrl url("https://" + areaCode + ".tts.speech.microsoft.com/cognitiveservices/v1");
     QNetworkAccessManager manager;
-    QEventLoop loop;
     QNetworkReply *reply;
     QNetworkRequest request(url);
 
@@ -61,8 +68,21 @@ void MicrosoftTTS::speakNext()
     request.setRawHeader("User-Agent", "MagicalDanmaku");
 
     reply = manager.post(request, ssml.toUtf8());
-    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
-    loop.exec(); //开启子事件循环
+    QObject::connect(reply, SIGNAL(finished()), &connectLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+    timeoutTimer->start();
+    connectLoop.exec(); //开启子事件循环
+
+    // 结束循环，可能是超时
+    // getting = false;
+    if (!timeoutTimer->isActive())
+    {
+        qDebug() << "超时，停止语音，播放下一个";
+        reply->abort();
+        reply->deleteLater();
+        speakNext();
+        return ;
+    }
+    timeoutTimer->stop();
 
     // 判断结果
     int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).value<int>();
@@ -79,6 +99,10 @@ void MicrosoftTTS::speakNext()
 
     QByteArray ba = reply->readAll();
     reply->deleteLater();
+    if (ba.isEmpty())
+    {
+        return ;
+    }
 
     // 保存文件
     QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
@@ -92,8 +116,6 @@ void MicrosoftTTS::speakNext()
 
     // 播放音频
     playFile(filePath, true);
-
-    getting = false;
 }
 
 void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
@@ -160,7 +182,7 @@ void MicrosoftTTS::refreshToken()
     {
         qInfo() << "MicrosoftTTS access token" << accessToken;
         // 初始化结束后需要播放语音
-        if (!speakQueue.isEmpty() && !audio && !getting)
+        if (!isDownloadingOrSpeaking())
             speakNext();
     }
     else
@@ -174,10 +196,11 @@ void MicrosoftTTS::refreshToken()
 void MicrosoftTTS::clearQueue()
 {
     speakQueue.clear();
-    if (audio)
-    {
-        audio->deleteLater();
-        audio = nullptr;
-    }
-    getting = false;
+    // getting = false;
 }
+
+bool MicrosoftTTS::isDownloadingOrSpeaking() const
+{
+    return timeoutTimer->isActive() || audio;
+}
+

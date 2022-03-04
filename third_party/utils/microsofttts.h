@@ -30,6 +30,9 @@ public slots:
     void clearQueue();
 
 private:
+    bool isDownloadingOrSpeaking() const;
+
+private:
     QString savedDir;
     QString areaCode;
     QString subscriptionKey;
@@ -38,7 +41,9 @@ private:
     QStringList speakQueue;
     QAudioOutput *audio = nullptr;
     QAudioFormat fmt;
-    bool getting = false; // 是否正在获取语音或正在播放
+    // bool getting = false; // 是否正在获取语音或正在播放
+    QTimer* timeoutTimer = nullptr; // 连接超时
+    QEventLoop connectLoop;
 
 };
 

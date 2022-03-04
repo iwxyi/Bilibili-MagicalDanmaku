@@ -10000,15 +10000,13 @@ QString MainWindow::getReplyExecutionResult(QString key, const LiveDanmaku& danm
         {
             QString filterText = replyWidget->body();
             QStringList msgs = getEditConditionStringList(filterText, danmaku);
-            if (!msgs.size())
-                return "";
-            return msgs.join("\\n");
+            return getExecutionResult(msgs, danmaku);
         }
     }
     return "";
 }
 
-QString MainWindow::getEventExecutionResult(QString key, const LiveDanmaku& danmaku)
+QString MainWindow::getEventExecutionResult(QString key, const LiveDanmaku &danmaku)
 {
     for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
@@ -10021,13 +10019,44 @@ QString MainWindow::getEventExecutionResult(QString key, const LiveDanmaku& danm
         {
             QString filterText = eventWidget->body();
             QStringList msgs = getEditConditionStringList(filterText, danmaku);
-            if (!msgs.size())
-                return "";
-            qDebug() << "获取代码返回值：" << key << msgs.join("\\n");
-            return msgs.join("\\n");
+            return getExecutionResult(msgs, danmaku);
         }
     }
     return "";
+}
+
+/**
+ * 多个可执行序列
+ * 选其中一个序列来执行与回复
+ */
+QString MainWindow::getExecutionResult(QStringList& msgs, const LiveDanmaku &_danmaku)
+{
+    if (!msgs.size())
+        return "";
+
+    // 随机获取其中的一条
+    int r = qrand() % msgs.size();
+    QStringList dms = msgs.at(r).split("\\n");
+
+    // 尝试执行
+    CmdResponse res = NullRes;
+    int resVal = 0;
+    LiveDanmaku& danmaku = const_cast<LiveDanmaku&>(_danmaku);
+    for (int i = 0; i < dms.size(); i++)
+    {
+        const QString& dm = dms.at(i);
+        if (execFunc(dm, danmaku, res, resVal))
+        {
+            if (res == AbortRes)
+                return "";
+            else if (res == DelayRes)
+                ;
+            dms.removeAt(i--);
+        }
+    }
+
+    // 返回的弹幕内容
+    return dms.join("\\n");
 }
 
 void MainWindow::simulateKeys(QString seq, bool press, bool release)
@@ -12437,10 +12466,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QString channelId = data.s("channel_id");
         qint64 currentTime = data.i("current_time"); // 10位
         int dmscore = data.i("dmscore");
-        QString toast = data.s("toast"); // 主播结束了视频连线
+        QString toast = data.s("toast"); // "主播结束了视频连线"
         localNotify(toast);
     }
-    else if (cmd == "VIDEO_CONNECTION_JOIN_END") // 视频连线结束，和上面重复的消息
+    else if (cmd == "VIDEO_CONNECTION_JOIN_END") // 视频连线结束，和上面重复的消息（会连续收到许多次）
     {
         MyJson data = json.value("data").toObject();
         QString channelId = data.s("channel_id");
@@ -12448,8 +12477,18 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 startAt = data.i("start_at"); // 10位
         int dmscore = data.i("dmscore");
         QString toast = data.s("toast"); // 主播结束了视频连线
-        qint64 roomId = data.i("roomid"); // 10位
-        // localNotify(toast);
+        qint64 roomId = json.value("roomid").toDouble(); // 10位
+    }
+    else if (cmd == "VIDEO_CONNECTION_JOIN_START") // 视频连线开始（会连续收到许多次）
+    {
+        MyJson data = json.value("data").toObject();
+        QString channelId = data.s("channel_id");
+        qint64 currentTime = data.i("current_time"); // 10位
+        QString invitedFace = data.s("invitedFace"); // 连线头像URL
+        qint64 invitedUid = data.i("invited_uid"); // 连续UID
+        QString invitedUname = data.s("invited_uname"); // 连接名字
+        qint64 startAt = data.i("start_at"); // 10位
+        qint64 roomId = json.value("roomid").toDouble(); // 10位
     }
     else
     {
