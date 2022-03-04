@@ -12431,6 +12431,26 @@ void MainWindow::handleMessage(QJsonObject json)
         ui->popularityLabel->setToolTip(textLarge);
         ui->popularityTextLabel->setToolTip(textLarge);
     }
+    else if (cmd == "VIDEO_CONNECTION_MSG")
+    {
+        MyJson data = json.value("data").toObject();
+        QString channelId = data.s("channel_id");
+        qint64 currentTime = data.i("current_time"); // 10位
+        int dmscore = data.i("dmscore");
+        QString toast = data.s("toast"); // 主播结束了视频连线
+        localNotify(toast);
+    }
+    else if (cmd == "VIDEO_CONNECTION_JOIN_END") // 视频连线结束，和上面重复的消息
+    {
+        MyJson data = json.value("data").toObject();
+        QString channelId = data.s("channel_id");
+        qint64 currentTime = data.i("current_time"); // 10位
+        qint64 startAt = data.i("start_at"); // 10位
+        int dmscore = data.i("dmscore");
+        QString toast = data.s("toast"); // 主播结束了视频连线
+        qint64 roomId = data.i("roomid"); // 10位
+        // localNotify(toast);
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
