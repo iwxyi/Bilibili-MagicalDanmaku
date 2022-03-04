@@ -12422,6 +12422,15 @@ void MainWindow::handleMessage(QJsonObject json)
             qWarning() << "未处理的 COMMON_NOTICE_DANMAKU：" << json;
         }
     }
+    else if (cmd == "WATCHED_CHANGE")
+    {
+        MyJson data = json.value("data").toObject();
+        // int num = data.i("num");
+        QString textLarge = data.s("text_large");
+        // QString textSmall = data.s("text_small");
+        ui->popularityLabel->setToolTip(textLarge);
+        ui->popularityTextLabel->setToolTip(textLarge);
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
