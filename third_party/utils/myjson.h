@@ -108,9 +108,9 @@ public:
         return QJsonObject::value(key).toString();
     }
 
-    QByteArray toBa() const
+    QByteArray toBa(QJsonDocument::JsonFormat format = QJsonDocument::Indented) const
     {
-        return QJsonDocument(*this).toJson();
+        return QJsonDocument(*this).toJson(format);
     }
 
     void eachVal(QString key, std::function<void(QJsonValue)> const valFunc) const

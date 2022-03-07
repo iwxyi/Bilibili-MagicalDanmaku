@@ -1819,6 +1819,7 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionHide, &QAction::triggered, this, [=]{
         this->hide();
+        settings->setValue("danmaku/liveWindow", false);
     });
 
     connect(actionPictureSelect, &QAction::triggered, this, [=]{

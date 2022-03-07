@@ -909,7 +909,7 @@ border-image: url(C:/Path/To/Image.png)
 | pasteText()                        | 粘贴文字         | 获取剪贴板的文本                                             |
 | getScreenPositionColor(wid, x, y)  | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
 | getWindowPositionColor(name, x, y) | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
-| getReplyExecutionResult(text)      | 获取回复执行结果 | 获取满足text的第一个回复的执行结果；结果中若存在命令也会以纯文本的形式返回而不会执行，若有换行符\n则会发送多条弹幕 |
+| getReplyExecutionResult(text)      | 获取回复执行结果 | 获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\n”则会返回用它分隔的单行文字 |
 | getEventExecutionResult(event)     | 获取事件执行结果 | 获取指定事件的执行结果，重复则取第一个，同上                 |
 
 以获取时间为例：

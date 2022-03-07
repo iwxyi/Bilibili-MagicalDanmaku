@@ -9470,11 +9470,27 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (text.isEmpty())
                 return true;
             int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的长度
-            if (caps.size() > 3 && !caps.at(3).isEmpty())
+            if (caps.size() > 3 && !caps.at(3).isEmpty()
+                    && caps.at(3).toInt() > 0)
                 maxLen = caps.at(3).toInt();
-            AIReply(id, text, [=](QString s){
-                sendLongText(s);
-            }, maxLen);
+            if (caps.size() > 4 && !caps.at(4).isEmpty())
+            {
+                // 触发事件
+                AIReply(id, text, [=](QString s){
+                    QJsonObject js;
+                    js.insert("reply", s);
+                    LiveDanmaku dm = danmaku;
+                    dm.with(js);
+                    triggerCmdEvent(caps.at(4), danmaku);
+                }, maxLen);
+            }
+            else
+            {
+                // 直接发送弹幕
+                AIReply(id, text, [=](QString s){
+                    sendLongText(s);
+                }, maxLen);
+            }
             return true;
         }
     }
@@ -17023,64 +17039,143 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     });
 }
 
+/**
+ * NLP：https://cloud.tencent.com/document/product/271/39416
+ * 公共参数：https://cloud.tencent.com/document/api/271/35487（Hash256参数是反的）
+ * 参数调试：https://console.cloud.tencent.com/api/explorer?Product=nlp&Version=2019-04-08&Action=ChatBot&SignVersion=
+ * 不得不吐槽一下，加个密不至于这么复杂吧！！！
+ */
 void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen, int retry)
 {
     if (text.isEmpty())
         return ;
 
     // 参数信息
-    QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
-    QString nonce_str = "replyAPPKEY";
-    QStringList params{"app_id", "2159207490",
-                       "nonce_str", nonce_str,
-                "question", text,
-                "session", snum(id),
-                "time_stamp", QString::number(QDateTime::currentSecsSinceEpoch()),
-                      };
+    QString url = "https://nlp.tencentcloudapi.com";
+    MyJson queryJson;
+    queryJson.insert("Query", text);
 
-    // 接口鉴权
-    QString pinjie;
-    for (int i = 0; i < params.size()-1; i+=2)
-        if (!params.at(i+1).isEmpty())
-            pinjie += params.at(i) + "=" + QUrl::toPercentEncoding(params.at(i+1)) + "&";
-    QString appkey = "sTuC8iS3R9yLNbL9";
-    pinjie += "app_key="+appkey;
+    // 公共参数
+    QByteArray secretId = "";
+    QByteArray secretKey = "";
+    qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+    QDateTime date = QDateTime::fromSecsSinceEpoch(timestamp);
+    QByteArray timestampS = snum(timestamp).toUtf8();
+    QByteArray dateS = date.toString("yyyy-MM-dd").toLocal8Bit();
+    QByteArray service = "nlp";
 
-    QString sign = QString(QCryptographicHash::hash(pinjie.toLocal8Bit(), QCryptographicHash::Md5).toHex().data()).toUpper();
-    params << "sign" << sign;
-//    qInfo() << pinjie << sign;
+    // 1. 拼接规范请求串
+    QByteArray HTTPRequestMethod = "POST";
+    QByteArray CanonicalURI  = "/";
+    QByteArray CanonicalQueryString = "";
+    QByteArray CanonicalHeaders = "content-type:application/json\nhost:nlp.tencentcloudapi.com\n";
+    QByteArray SignedHeaders = "content-type;host";
+    QByteArray content = queryJson.toBa(QJsonDocument::Compact);
+    QByteArray HashedRequestPayload = QCryptographicHash::hash(content, QCryptographicHash::Sha256).toHex().toLower();
+    QByteArray CanonicalRequest =
+                                HTTPRequestMethod + '\n' +
+                                CanonicalURI + '\n' +
+                                CanonicalQueryString + '\n' +
+                                CanonicalHeaders + '\n' +
+                                SignedHeaders + '\n' +
+                                HashedRequestPayload;
+
+    // 2. 拼接待签名请求串
+    QByteArray Algorithm = "TC3-HMAC-SHA256";
+    QByteArray RequestTimestamp = timestampS;
+    QByteArray CredentialScope = dateS + "/" + service + "/tc3_request";
+    QByteArray HashedCanonicalRequest = QCryptographicHash::hash(CanonicalRequest, QCryptographicHash::Sha256).toHex().toLower();;
+    QByteArray StringToSign =
+                                Algorithm + '\n' +
+                                RequestTimestamp + '\n' +
+                                CredentialScope + '\n' +
+                                HashedCanonicalRequest;
+
+    // 3. 计算签名
+    QByteArray SecretKey = secretKey;
+    QByteArray SecretDate = QMessageAuthenticationCode::hash(dateS, "TC3" + SecretKey, QCryptographicHash::Sha256);
+    QByteArray SecretService = QMessageAuthenticationCode::hash(service, SecretDate, QCryptographicHash::Sha256);
+    QByteArray SecretSigning = QMessageAuthenticationCode::hash("tc3_request", SecretService, QCryptographicHash::Sha256);
+    QByteArray Signature = QMessageAuthenticationCode::hash(StringToSign, SecretSigning, QCryptographicHash::Sha256).toHex();
+
+
+    QByteArray auth = "TC3-HMAC-SHA256 Credential=" + secretId + "/" + dateS + "/" + service + "/tc3_request, "
+            "SignedHeaders=content-type;host, Signature=" + Signature;
+
+    qDebug() << "------------post time             : " << timestamp;
+    qDebug() << "------------post data             : " << queryJson.toBa(QJsonDocument::Compact);
+    qDebug() << "------------HashedRequestPayload  : " << HashedRequestPayload;
+    qDebug() << "------------CanonicalRequest      : " << CanonicalRequest;
+    qDebug() << "------------StringToSign          : " << StringToSign;
+    qDebug() << "------------Signature             : " << Signature;
+    qDebug() << "------------authorization         : " << auth;
+
+    QNetworkAccessManager manager;
+    QNetworkReply *reply;
+    QNetworkRequest request(url);
+    QEventLoop connectLoop;
+
+    // 公共参数
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("X-TC-Action", "ChatBot");
+    request.setRawHeader("X-TC-Region", "ap-guangzhou");
+    request.setRawHeader("X-TC-Timestamp", timestampS);
+    request.setRawHeader("X-TC-Version", "2019-04-08");
+    request.setRawHeader("Authorization", auth);
+    request.setRawHeader("Host", "nlp.tencentcloudapi.com");
+    request.setRawHeader("X-TC-Language", "zh-CN");
+    // request.setRawHeader("X-TC-Token", "");
+    qDebug() << request.rawHeaderList();
+
+
+    // 开始联网
+    reply = manager.post(request, queryJson.toBa());
+    QObject::connect(reply, SIGNAL(finished()), &connectLoop, SLOT(quit()));
+    connectLoop.exec();
+
+    int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).value<int>();
+    if (code != 200)
+    {
+        qWarning() << "腾讯智能闲聊 错误码：" << QString::number(code);
+    }
+    if (reply->error() != QNetworkReply::NoError)
+    {
+        qWarning() << "腾讯智能闲聊 Error:" << reply->errorString();
+        showError(reply->errorString());
+    }
+
 
     // 获取信息
-    connect(new NetUtil(url, params), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qInfo() << "AI回复：" << error.errorString();
-            return ;
-        }
+    QByteArray result = reply->readAll();
+    qDebug() << "    result:" << result;
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(result, &error);
+    if (error.error != QJsonParseError::NoError)
+    {
+        qInfo() << "AI回复：" << error.errorString();
+        return ;
+    }
 
-        QJsonObject json = document.object();
-        if (json.value("ret").toInt() != 0)
-        {
-            QString msg = json.value("msg").toString();
-            qInfo() << "AI回复：" << msg << text;
-            if (msg.contains("not found") && retry > 0)
-                AIReply(id, text, func, maxLen, retry - 1);
-            return ;
-        }
+    QJsonObject json = document.object();
+    if (!json.value("Response").toObject().value("Error").toObject().value("Code").toString().isEmpty())
+    {
+        QString msg = json.value("Response").toObject().value("Error").toObject().value("Message").toString();
+        qWarning() << "AI回复：" << msg << queryJson.toBa(QJsonDocument::Compact);
+        /* if (msg.contains("not found") && retry > 0)
+            AIReply(id, text, func, maxLen, retry - 1); */
+        return ;
+    }
 
-        QString answer = json.value("data").toObject().value("answer").toString();
+    QString answer = json.value("data").toObject().value("answer").toString();
 
-        // 过滤文字
-        if (answer.contains("未搜到")
-                || answer.isEmpty())
-            return ;
+    // 过滤文字
+    if (answer.contains("未搜到")
+            || answer.isEmpty())
+        return ;
 
-        if (answer.length() > maxLen)
-            return ;
-        func(answer);
-    });
+    if (answer.length() > maxLen)
+        return ;
+    func(answer);
 }
 
 void MainWindow::joinBattle(int type)
