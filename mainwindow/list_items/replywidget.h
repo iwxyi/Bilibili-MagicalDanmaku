@@ -38,7 +38,7 @@ public slots:
     void slotNewDanmaku(LiveDanmaku danmaku);
     void autoResizeEdit() override;
     void triggerAction(LiveDanmaku danmaku);
-    void triggerIfMatch(QString msg, LiveDanmaku danmaku);
+    bool triggerIfMatch(QString msg, LiveDanmaku danmaku);
 
 public:
     QLineEdit* keyEdit;

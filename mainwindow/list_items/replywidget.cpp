@@ -85,7 +85,7 @@ void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
     // 判断有无条件
     if (keyEmpty || !keyRe.isValid())
     {
-        qWarning() << "无效的自动回复：" << keyEdit->text();
+        qWarning() << "无效的自动回复key：" << keyEdit->text();
         return ;
     }
 
@@ -123,22 +123,25 @@ void ReplyWidget::triggerAction(LiveDanmaku danmaku)
  * 强行运行，如果弹幕匹配
  * 无论是否开启
  */
-void ReplyWidget::triggerIfMatch(QString msg, LiveDanmaku danmaku)
+bool ReplyWidget::triggerIfMatch(QString msg, LiveDanmaku danmaku)
 {
     // 判断有无条件
+    if (!check->isChecked())
+        return false;
     if (keyEmpty || !keyRe.isValid())
     {
-        qWarning() << "无效的自动回复：" << keyEdit->text();
-        return ;
+        qWarning() << "检查到无效的自动回复key：" << keyEdit->text() << replyEdit->toPlainText();
+        return false;
     }
 
     QRegularExpressionMatch match;
     if (msg.indexOf(keyRe, 0, &match) == -1)
-        return ;
+        return false;
 
     // 开始发送
     qInfo() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
     danmaku.setArgs(match.capturedTexts());
     emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
+    return true;
 }
 

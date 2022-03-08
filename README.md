@@ -1250,8 +1250,8 @@ tips：
 | ignoreWelcome(uid)                                 | 不自动欢迎       | 不自动欢迎某用户                                             |
 | setLocalName(uid, name)                            | 设置专属昵称     | 设置用户专属昵称                                             |
 | joinBattle(type)                                   | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
-| triggerEvent(event)                                | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。 |
-| triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（**未开启也会触发，相当于private**），可作为有参数的方法进行传递 |
+| triggerEvent(event)                                | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。若有多个，都会触发 |
+| triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（未开启会被忽略），可作为有参数的方法进行传递。若有多个，都会触发；若未找到合适的回复动作，会报一个警告 |
 | setTimerTask(id, time)                             | 开启定时任务     | id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间 |
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |

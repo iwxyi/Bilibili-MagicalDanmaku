@@ -4787,7 +4787,10 @@ void MainWindow::updatePermission()
             ui->vipExtensionButton->hide();
             ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
 
-            permissionTimer->setInterval(qMin(int(deadline - timestamp), 24 * 3600) * 1000);
+            qint64 tm = deadline - timestamp;
+            if (tm > 24 * 3600)
+                tm = 24 * 3600;
+            permissionTimer->setInterval(tm * 1000);
             permissionTimer->start();
         }
         else
@@ -9413,10 +9416,17 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
+            bool replyed = false;
             for (int i = 0; i < ui->replyListWidget->count(); i++)
             {
                 auto rw = static_cast<ReplyWidget*>(ui->replyListWidget->itemWidget(ui->replyListWidget->item(i)));
-                rw->triggerIfMatch(text, danmaku);
+                if (rw->triggerIfMatch(text, danmaku))
+                    replyed = true;
+            }
+            if (!replyed)
+            {
+                qWarning() << "未找到合适的回复动作：" << text;
+                showError("triggerReply", "未找到合适的回复动作");
             }
             return true;
         }
