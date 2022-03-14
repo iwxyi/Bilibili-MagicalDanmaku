@@ -779,6 +779,12 @@ private slots:
 
     void on_MS_TTS__SSML_Btn_clicked();
 
+    void on_receivePrivateMsgCheck_clicked();
+
+    void on_receivePrivateMsgCheck_stateChanged(int arg1);
+
+    void on_processUnreadMsgCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -1004,6 +1010,8 @@ private:
     void showPkMenu();
     void showPkAssists();
     void showPkHistories();
+    void refreshPrivateMsg();
+    void receivedPrivateMsg(MyJson session);
 
     void startSplash();
     void loadWebExtensinList();
@@ -1120,6 +1128,10 @@ private:
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
     QString encServer = "http://iwxyi.com:6001/enc";
     int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
+
+    // 私信
+    QTimer* privateMsgTimer = nullptr;
+    qint64 privateMsgTimestamp = 0;
 
     // 活动信息
     int currentSeasonId = 0; // 大乱斗赛季，获取连胜需要赛季

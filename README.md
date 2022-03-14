@@ -710,7 +710,7 @@ border-image: url(C:/Path/To/Image.png)
 | my_uname         | 机器人名字       |                                                              |
 | csrf             | csrf             | 用户的csrf token                                             |
 | level            | 用户等级         | 进入直播间没有level                                          |
-| text             | 弹幕消息         | 几乎用不到                                                   |
+| text             | 弹幕消息         | 若有换行，则替换为 `%n%`                                     |
 | come_count       | 用户进入次数     |                                                              |
 | come_time        | 用户上次进入时间 | 10位时间戳，第一次进来是0；自动清理一周没来的。如果是串门回来，则是刚跑到对面串门的时间 |
 | come_time_delta  | 进入时间差       | 当前时间 - 用户上次进入时间                                  |

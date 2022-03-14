@@ -860,6 +860,11 @@ void MainWindow::readConfig()
     // 用户备注
     userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
+    // 接收私信
+    ui->receivePrivateMsgCheck->setChecked(settings->value("privateMsg/enabled", false).toBool());
+    ui->processUnreadMsgCheck->setChecked(settings->value("privateMsg/processUnread", false).toBool());
+    privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
+
     // 过滤器
     enableFilter = settings->value("danmaku/enableFilter", enableFilter).toBool();
     ui->enableFilterCheck->setChecked(enableFilter);
@@ -5923,7 +5928,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(danmaku.getLevel());
 
     else if (key == "%text%")
-        return danmaku.getText();
+        return danmaku.getText().replace("\n", "%n%");
 
     // 进来次数
     else if (key == "%come_count%")
@@ -17835,6 +17840,111 @@ void MainWindow::showPkHistories()
     });
 }
 
+void MainWindow::refreshPrivateMsg()
+{
+    if (cookieUid.isEmpty())
+        return ;
+
+    qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
+    get("https://api.vc.bilibili.com/session_svr/v1/session_svr/get_sessions?session_type=1&group_fold=1&unfollow_fold=0&build=0&mobi_app=web",
+    // get("https://api.vc.bilibili.com/session_svr/v1/session_svr/new_sessions?begin_ts=0&build=0&mobi_app=web",
+        [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            if (json.code() == -412)
+            {
+                showError("接收私信：" + snum(json.code()), "过于频繁，15分钟后自动重试");
+                ui->receivePrivateMsgCheck->setChecked(false);
+                QTimer::singleShot(15 * 60000, [=]{
+                    ui->receivePrivateMsgCheck->setChecked(true);
+                });
+            }
+            else
+            {
+                showError("接收私信：" + snum(json.code()), json.msg());
+                ui->receivePrivateMsgCheck->setChecked(false);
+            }
+            return ;
+        }
+
+        MyJson data = json.data();
+        QJsonArray sessionList = data.a("session_list");
+        foreach (QJsonValue sessionV, sessionList) // 默认按最新时间排序
+        {
+            MyJson session = sessionV.toObject();
+
+            // 判断未读消息
+            qint64 unreadCount = session.i("unread_count");
+            if (!unreadCount)
+                continue;
+
+            qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
+            if (sessionTs < privateMsgTimestamp) // 之前已处理
+                continue;
+
+            // 接收到会话信息
+            receivedPrivateMsg(session);
+        }
+        privateMsgTimestamp = currentTimestamp;
+    });
+}
+
+void MainWindow::receivedPrivateMsg(MyJson session)
+{
+    // 解析消息内容
+    qint64 talkerId = session.l("talker_id"); // 用户ID
+    if (!talkerId)
+        return ;
+    qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
+    int isFollow = session.i("is_follow");
+    int isDnd = session.i("is_dnd");
+    MyJson lastMsg = session.o("last_msg");
+    QString content = "";
+    int msgType = 0;
+    if (!lastMsg.isEmpty())
+    {
+        // 1纯文本，2图片，3撤回消息，6自定义表情，7分享稿件，10通知消息，11发布视频，12发布专栏，13卡片消息，14分享直播，
+        msgType = lastMsg.i("msg_type"); // 使用 %.msg_type% 获取
+        if (msgType != 1)
+            return ;
+        qint64 senderUid = lastMsg.l("sender_uid"); // 自己或者对面发送的
+        if (senderUid != talkerId) // 自己已经回复了
+            return ;
+        qint64 receiverId = lastMsg.l("receiver_id");
+        Q_ASSERT(receiverId == cookieUid.toLongLong());
+        MyJson lastContent = MyJson::from(lastMsg.s("content").toLocal8Bit());
+        if (lastContent.contains("content"))
+            content = lastContent.s("content");
+        else
+            content = lastContent.s("text");
+    }
+    qInfo() << "接收到私信: " << talkerId << " : " << content;
+
+    // 获取发送者信息
+    get("https://api.bilibili.com/x/space/acc/info?mid=" + snum(talkerId), [=](MyJson info) {
+        // 解析信息
+        QString name = snum(talkerId);
+        QString faceUrl = "";
+        if (info.code() == 0)
+        {
+            MyJson data = info.data();
+            name = data.s("name");
+            faceUrl = data.s("face");
+        }
+        else
+        {
+            qWarning() << "获取私信发送者信息失败：" << info.msg();
+        }
+
+        // 触发事件
+        LiveDanmaku danmaku(talkerId, name, content);
+        danmaku.with(session);
+        danmaku.setUid(talkerId);
+        danmaku.setTime(QDateTime::fromMSecsSinceEpoch(sessionTs));
+        triggerCmdEvent("RECEIVE_PRIVATE_MSG", danmaku);
+    });
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -20826,4 +20936,36 @@ void MainWindow::on_MS_TTS__SSML_Btn_clicked()
     settings->setValue("mstts/format", msTTSFormat = fmt);
 }
 
+void MainWindow::on_receivePrivateMsgCheck_clicked()
+{
+    settings->setValue("privateMsg/enabled", ui->receivePrivateMsgCheck->isChecked());
+}
 
+void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
+{
+    if (arg1)
+    {
+        if (!privateMsgTimer)
+        {
+            // 初始化时钟
+            privateMsgTimer = new QTimer(this);
+            privateMsgTimer->setInterval(5000);
+            privateMsgTimer->setSingleShot(false);
+            connect(privateMsgTimer, &QTimer::timeout, this, [=]{
+                refreshPrivateMsg();
+            });
+        }
+
+        privateMsgTimer->start();
+    }
+    else
+    {
+        if (privateMsgTimer)
+            privateMsgTimer->stop();
+    }
+}
+
+void MainWindow::on_processUnreadMsgCheck_clicked()
+{
+    settings->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
+}
