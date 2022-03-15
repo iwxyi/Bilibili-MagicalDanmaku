@@ -646,7 +646,7 @@ border-image: url(C:/Path/To/Image.png)
 
 如果经常遇见问题，请按以下方法开启日志：
 
-在程序根目录的 `settings.ini` 文件中， `[runtime]` 分组下（没有在自己新建），添加 `debugToFile=true`。
+在程序根目录的 `settings.ini` 文件中， `[runtime]` 分组下（没有则自己新建），添加 `debugToFile=true`。
 
 重启神奇弹幕，根目录下会出现 `debug.log`，这就是调试日志。
 
@@ -1582,6 +1582,26 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 
 
+#### 积分查看
+
+添加下述代码到任意可执行的地方，定时/回复/事件 均可，需要查看时点击“发送”按钮。
+
+##### 示例：所有用户积分
+
+```
+/// 显示所有用户积分
+>showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_:>, 动作:action__ID_, 坐骑:mount__ID_)
+```
+
+##### 示例：所有打卡记录
+
+```
+/// 显示所有打卡记录
+>showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\d+), ID:"_ID_", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)
+```
+
+
+
 ### 事件动作
 
 收到服务器CMD消息、一些程序的运行状态的改变，都会触发本程序中的“事件”。
@@ -1852,13 +1872,13 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 
 
-
-
 ##### 示例：QQ群推送开播消息
+
+支持可通过网络访问的任意机器人接口。
 
 以酷推为例：[https://cp.xuthus.cc](https://cp.xuthus.cc)，按其说明配置
 
-添加事件：`LIVE`，动作：
+添加开播事件：`LIVE`，动作：
 
 ```
 >connectNet(https://push.xuthus.cc/group/[skey]?c=[开播消息])
@@ -1866,7 +1886,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 其中`[skey]`为您的酷推Skey，`[开播消息]`按服务格式自定义
 
-一切配置妥当，开播时将会自动发送消息至QQ群
+一切配置妥当，开播时将会自动发送消息至QQ群。
 
 
 
@@ -1966,11 +1986,11 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 保存弹幕记录到 “mydir/danmu.txt”：
 事件：`DANMU_MSG`
-动作：`>appendFileLine(mydir, danmu.txt, %uname%: %text%)`
+动作：`>appendFileLine(mydir/danmu.txt, %uname%: %text%)`
 
 保存送礼记录到“mydir/gift.txt”：
 事件：`SEND_GIFT`
-动作：`>appendFileLine(mydir, gift.txt, %gift_name% %number% %uname%)`
+动作：`>appendFileLine(mydir/gift.txt, %gift_name% %number% %uname%)`
 
 
 
@@ -2272,6 +2292,8 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 ```
 
 生成的 `兑奖.csv` 文件可直接使用 Excel 打开、修改，或另存为 Excel 表格文件。
+
+> 如果生成的文件在www文件夹中，则可以通过浏览器访问，非常适合挂在服务器上供他人下载。
 
 
 
