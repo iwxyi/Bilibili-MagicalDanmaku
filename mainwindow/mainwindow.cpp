@@ -8808,19 +8808,20 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 写入文件
     if (msg.contains("writeTextFile"))
     {
-        re = RE("writeTextFile\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
+        re = RE("writeTextFile\\s*\\(\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString dirName = caps.at(1);
-            QString fileName = caps.at(2);
-            QString text = caps.at(3);
-            if (!dirName.isEmpty())
-                ensureDirExist(dirName);
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
+            QString text = caps.at(2);
             text.replace("%n%", "\n");
-            QString path = dirName.isEmpty() ? fileName : dirName + "/" + fileName;
-            writeTextFile(path, text);
+            QFileInfo info(fileName);
+            QDir dir = info.absoluteDir();
+            dir.mkpath(dir.absolutePath());
+            writeTextFile(info.absoluteFilePath(), text);
             return true;
         }
     }
@@ -8828,16 +8829,20 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 写入文件行
     if (msg.contains("appendFileLine"))
     {
-        re = RE("appendFileLine\\s*\\(\\s*(.*?)\\s*,\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
+        re = RE("appendFileLine\\s*\\(\\s*(.+?)\\s*\\,\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString dirName = caps.at(1);
-            QString fileName = caps.at(2);
-            QString format = caps.at(3);
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
+            QString format = caps.at(2);
             format.replace("%n%", "\n");
-            appendFileLine(dirName, fileName, format, lastDanmaku);
+            QFileInfo info(fileName);
+            QDir dir = info.absoluteDir();
+            dir.mkpath(dir.absolutePath());
+            appendFileLine(fileName, format, lastDanmaku);
             return true;
         }
     }
@@ -8850,15 +8855,17 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString file = caps.at(1);
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
             QString anchor = caps.at(2);
             QString content = caps.at(3);
-            QString text = readTextFile(file);
+            QString text = readTextFile(fileName);
             text.replace(anchor, content + anchor);
             if (!codeFileCodec.isEmpty())
-                writeTextFile(file, text, codeFileCodec);
+                writeTextFile(fileName, text, codeFileCodec);
             else
-                writeTextFile(file, text);
+                writeTextFile(fileName, text);
             return true;
         }
     }
@@ -8872,9 +8879,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
-            if (fileName.startsWith("/"))
-                fileName.replace(0, 1, "");
-            QFile file(dataPath + fileName);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
+            QFile file(fileName);
             file.remove();
             return true;
         }
@@ -8888,10 +8895,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString file = caps.at(1);
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
             QString code = caps.at(2);
             code.replace("%n%", "\\n");
-            QString content = readTextFileAutoCodec(file);
+            QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
             for (int i = 0; i < lines.size(); i++)
             {
@@ -16517,16 +16526,8 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     file.close();
 }
 
-void MainWindow::appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku)
+void MainWindow::appendFileLine(QString filePath, QString format, LiveDanmaku danmaku)
 {
-#ifdef Q_OS_WIN
-    if (dirName.startsWith("/"))
-        dirName.replace(0, 1, "");
-#endif
-    QDir dir(dataPath + dirName);
-    dir.mkpath(dir.absolutePath());
-    QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
-
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qWarning() << "打开文件失败：" << filePath;
@@ -17879,8 +17880,8 @@ void MainWindow::refreshPrivateMsg()
                 continue; */
 
             qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
-            if (sessionTs < privateMsgTimestamp) // 之前已处理
-                continue;
+            if (sessionTs <= privateMsgTimestamp) // 之前已处理
+                break;
 
             // 接收到会话信息
             receivedPrivateMsg(session);

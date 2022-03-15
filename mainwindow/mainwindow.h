@@ -981,7 +981,7 @@ private:
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);
     void saveEveryGift(LiveDanmaku danmaku);
-    void appendFileLine(QString dirName, QString fileName, QString format, LiveDanmaku danmaku);
+    void appendFileLine(QString filePath, QString format, LiveDanmaku danmaku);
 
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
