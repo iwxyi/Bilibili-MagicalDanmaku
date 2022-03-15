@@ -2121,11 +2121,12 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     // 分割与发送
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(qMakePair(sl, danmaku));
-    if (!autoMsgTimer->isActive() || !inDanmakuCd)
+    if (!autoMsgTimer->isActive() && !inDanmakuDelay)
     {
         slotSendAutoMsg(false); // 先运行一次
-        autoMsgTimer->start();
     }
+    if (!autoMsgTimer->isActive())
+        autoMsgTimer->start();
 }
 
 void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, int interval)
@@ -2221,14 +2222,20 @@ void MainWindow::slotSendAutoMsg(bool timeout)
             if (resVal < 0)
                 qCritical() << "设置延时时间出错";
             autoMsgTimer->setInterval(resVal);
+            if (!autoMsgTimer->isActive())
+                autoMsgTimer->start();
+            inDanmakuDelay = true;
+            QTimer::singleShot(resVal, [=]{
+                inDanmakuDelay = false;
+            });
             return ;
         }
     }
 
     // 如果后面是命令的话，尝试立刻执行
-    if (autoMsgQueues.size())
+    if (!inDanmakuDelay && autoMsgQueues.size())
     {
-        QString nextMsg = autoMsgQueues.first().first.first();
+        const QString& nextMsg = autoMsgQueues.first().first.first();
         QRegularExpression re("^\\s*>");
         if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
         {
@@ -8065,7 +8072,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     if (msg.indexOf(re) == -1)
         return false;
 
-    qInfo() << "尝试执行命令：" << msg;
+    // qDebug() << "尝试执行命令：" << msg;
     auto RE = [=](QString exp) -> QRegularExpression {
         return QRegularExpression("^\\s*>\\s*" + exp + "\\s*$");
     };
@@ -8410,17 +8417,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             int time = caps.at(1).toInt();
             QString msg = caps.at(2);
+            msg = msg.replace("%n%", "\\n");
             QTimer::singleShot(time, this, [=]{
                 LiveDanmaku ld = danmaku;
-                QRegularExpression re("^\\s*>");
-                if (msg.indexOf(re) > -1)
-                {
-                    CmdResponse res;
-                    int resVal;
-                    execFunc(msg, ld, res, resVal);
-                }
-                else
-                    sendAutoMsg(msg, danmaku);
+                sendAutoMsg(msg, danmaku);
             });
             return true;
         }
