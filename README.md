@@ -1245,8 +1245,8 @@ tips：
 | insertFileAnchor(fileName, anchor, content)        | 插入文件锚点     | 插入文字至文件中的“anchor”前。可组建HTML的`<table>` 内容     |
 | writeTextFile(fileName, text)                      | 保存文本文件     | 写入文本至“程序目录/fileName”                                |
 | removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/fileName”                                  |
-| fileEachLine(fileName, code)                       | 文件每一行       | 读取txt文件的每一行，执行code命令。code中多行弹幕/代码需要使用`%n%`替换`\n`，并且需要使用`\%`来转义替换`%`，例如 `\%text\%`。`\%number\%`获取行号（从1开始），`\%text\%`获取本行内容；会覆盖原有的这两个变量 |
-| csvEachLine(fileName, code)                        | CSV每一行        | 读取csv文件（表格）的每一行，同上。使用转义的 `%$数字%` 来获取这一行中的每列元素，如 `\%$2\%` 获取当前行第二列 |
+| fileEachLine(fileName, startLine, code)            | 文件每一行       | 读取txt文件的每一行，执行code命令。fileName 可以是相对文件名、绝对文件路径。startLine 为从哪一行开始读，可忽略。code中多行弹幕/代码需要使用`%n%`替换`\n`，并且需要使用`\%`来转义替换`%`，例如 `\%text\%`。`\%number\%`获取行号（从1开始），`\%text\%`获取本行内容；会覆盖原有的这两个变量 |
+| csvEachLine(fileName, startLine, code)             | CSV每一行        | 读取csv文件（表格）的每一行，同上。使用转义的 `%$数字%` 来获取这一行中的每列元素，如 `\%$2\%` 获取当前行第二列 |
 | aiReply(sessionId, text, maxLen)                   | AI回复           | 调用AI回复某文字（随机），id建议为`%uid%`。maxLen为长度上限，默认单条弹幕，超出则不回复 |
 | ignoreWelcome(uid)                                 | 不自动欢迎       | 不自动欢迎某用户                                             |
 | setLocalName(uid, name)                            | 设置专属昵称     | 设置用户专属昵称                                             |

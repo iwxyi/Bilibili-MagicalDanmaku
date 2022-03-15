@@ -8892,7 +8892,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 文件每一行
     if (msg.contains("fileEachLine"))
     {
-        re = RE("fileEachLine\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        re = RE("fileEachLine\\s*\\(\\s*(.+?)\\s*,(?:\\s*(\\d+),)?\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8900,11 +8900,15 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
                 fileName = dataPath + "/" + fileName;
-            QString code = caps.at(2);
+            QString startLineS = caps.at(2);
+            int startLine = 0;
+            if (!startLineS.isEmpty())
+                startLine = startLineS.toInt();
+            QString code = caps.at(3);
             code.replace("%n%", "\\n").replace("\\%", "%");
             QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
-            for (int i = 0; i < lines.size(); i++)
+            for (int i = startLine; i < lines.size(); i++)
             {
                 LiveDanmaku dmk = danmaku;
                 dmk.setNumber(i+1);
@@ -8921,7 +8925,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 文件每一行
     if (msg.contains("CSVEachLine") || msg.contains("csvEachLine"))
     {
-        re = RE("(?:CSV|csv)EachLine\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        re = RE("(?:CSV|csv)EachLine\\s*\\(\\s*(.+?)\\s*,(?:\\s*(\\d+),)?\\s*(.*)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -8929,11 +8933,15 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
                 fileName = dataPath + "/" + fileName;
-            QString code = caps.at(2);
+            QString startLineS = caps.at(2);
+            int startLine = 0;
+            if (!startLineS.isEmpty())
+                startLine = startLineS.toInt();
+            QString code = caps.at(3);
             code.replace("%n%", "\\n").replace("\\%", "%");
             QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
-            for (int i = 0; i < lines.size(); i++)
+            for (int i = startLine; i < lines.size(); i++)
             {
                 LiveDanmaku dmk = danmaku;
                 dmk.setNumber(i+1);
