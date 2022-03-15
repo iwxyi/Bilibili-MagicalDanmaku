@@ -2100,6 +2100,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 
 /**
  * 发送多条消息
+ * 不允许包含变量
  * 使用“\n”进行多行换行
  */
 void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
@@ -2150,7 +2151,8 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, in
 }
 
 /**
- * 执行发送队列中的发送弹幕，或者函数操作
+ * 执行发送队列中的发送弹幕，或者命令操作
+ * 不允许包括变量
  * // @return 是否是执行命令。为空或发送弹幕为false
  */
 void MainWindow::slotSendAutoMsg(bool timeout)
@@ -5654,7 +5656,7 @@ QString MainWindow::processTimeVariants(QString msg) const
 
 /**
  * 获取可以发送的代码的列表
- * @param plainText 为替换变量的纯文本
+ * @param plainText 为替换变量的纯文本，允许使用\\n分隔的单行
  * @param danmaku   弹幕变量
  * @return          一行一条执行序列，带发送选项
  */
@@ -8899,15 +8901,50 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (QFileInfo(fileName).isRelative())
                 fileName = dataPath + "/" + fileName;
             QString code = caps.at(2);
-            code.replace("%n%", "\\n");
+            code.replace("%n%", "\\n").replace("\\%", "%");
             QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
             for (int i = 0; i < lines.size(); i++)
             {
-                LiveDanmaku danmaku;
-                danmaku.setNumber(i+1);
-                danmaku.setText(lines.at(i));
-                sendAutoMsg(code, LiveDanmaku());
+                LiveDanmaku dmk = danmaku;
+                dmk.setNumber(i+1);
+                dmk.setText(lines.at(i));
+                QStringList sl = getEditConditionStringList(code, dmk);
+                if (!sl.empty())
+                    sendAutoMsg(sl.first(), dmk);
+            }
+            return true;
+        }
+    }
+
+
+    // 文件每一行
+    if (msg.contains("CSVEachLine") || msg.contains("csvEachLine"))
+    {
+        re = RE("(?:CSV|csv)EachLine\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + "/" + fileName;
+            QString code = caps.at(2);
+            code.replace("%n%", "\\n").replace("\\%", "%");
+            QString content = readTextFileAutoCodec(fileName);
+            QStringList lines = content.split("\n", QString::SkipEmptyParts);
+            for (int i = 0; i < lines.size(); i++)
+            {
+                LiveDanmaku dmk = danmaku;
+                dmk.setNumber(i+1);
+                dmk.setText(lines.at(i));
+
+                QStringList li = lines.at(i).split(QRegExp("\\s*,\\s*"));
+                dmk.setArgs(li);
+
+                QStringList sl = getEditConditionStringList(code, dmk);
+                if (!sl.empty())
+                    sendAutoMsg(sl.first(), dmk);
             }
             return true;
         }

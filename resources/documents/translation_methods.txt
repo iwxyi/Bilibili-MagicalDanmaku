@@ -55,6 +55,7 @@ post数据=postData
 保存文本文件=writeTextFile
 删除文件=removeFile
 文件每一行=fileEachLine
+CSV每一行=CSVEachLine
 AI回复=aiReply
 不自动欢迎=ignoreWelcome
 设置专属昵称=setLocalName
