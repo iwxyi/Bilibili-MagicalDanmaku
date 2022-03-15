@@ -17874,9 +17874,9 @@ void MainWindow::refreshPrivateMsg()
             MyJson session = sessionV.toObject();
 
             // 判断未读消息
-            qint64 unreadCount = session.i("unread_count");
-            if (!unreadCount)
-                continue;
+            /* qint64 unreadCount = session.i("unread_count");
+            if (!unreadCount) // TODO:有时候自动回复不会显示未读
+                continue; */
 
             qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
             if (sessionTs < privateMsgTimestamp) // 之前已处理
@@ -17905,23 +17905,26 @@ void MainWindow::receivedPrivateMsg(MyJson session)
     {
         // 1纯文本，2图片，3撤回消息，6自定义表情，7分享稿件，10通知消息，11发布视频，12发布专栏，13卡片消息，14分享直播，
         msgType = lastMsg.i("msg_type"); // 使用 %.msg_type% 获取
-        if (msgType != 1)
-            return ;
         qint64 senderUid = lastMsg.l("sender_uid"); // 自己或者对面发送的
         if (senderUid != talkerId) // 自己已经回复了
             return ;
         qint64 receiverId = lastMsg.l("receiver_id");
         Q_ASSERT(receiverId == cookieUid.toLongLong());
-        MyJson lastContent = MyJson::from(lastMsg.s("content").toLocal8Bit());
+        content = lastMsg.s("content");
+        MyJson lastContent = MyJson::from(content.toUtf8());
         if (lastContent.contains("content"))
             content = lastContent.s("content");
-        else
+        else if (lastContent.contains("text"))
             content = lastContent.s("text");
+        else
+            content.replace("\\n", "\n"); // 肯定有问题
     }
-    qInfo() << "接收到私信: " << talkerId << " : " << content;
+    qInfo() << "接收到私信：" << session;
 
     // 获取发送者信息
     get("https://api.bilibili.com/x/space/acc/info?mid=" + snum(talkerId), [=](MyJson info) {
+        MyJson newJson = session;
+
         // 解析信息
         QString name = snum(talkerId);
         QString faceUrl = "";
@@ -17930,11 +17933,15 @@ void MainWindow::receivedPrivateMsg(MyJson session)
             MyJson data = info.data();
             name = data.s("name");
             faceUrl = data.s("face");
+            newJson.insert("sender", info);
         }
         else
         {
             qWarning() << "获取私信发送者信息失败：" << info.msg();
         }
+        qInfo() << "接收到私信: " << name << "  " << msgType << " : " << content
+                << "    (" << sessionTs << "  in "
+                << privateMsgTimestamp << "~" << QDateTime::currentMSecsSinceEpoch() << ")";
 
         // 触发事件
         LiveDanmaku danmaku(talkerId, name, content);
