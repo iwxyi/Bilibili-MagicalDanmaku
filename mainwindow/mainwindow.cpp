@@ -8940,6 +8940,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 dmk.setText(lines.at(i));
 
                 QStringList li = lines.at(i).split(QRegExp("\\s*,\\s*"));
+                li.insert(0, lines.at(i));
                 dmk.setArgs(li);
 
                 QStringList sl = getEditConditionStringList(code, dmk);
