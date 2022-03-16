@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>928</width>
-    <height>1343</height>
+    <width>890</width>
+    <height>965</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>848</width>
-             <height>1223</height>
+             <width>810</width>
+             <height>845</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1833,14 +1833,14 @@ margin: 40px;</string>
            </widget>
            <widget class="QWidget" name="danmakuAISettingsCard" native="true">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="geometry">
              <rect>
               <x>370</x>
               <y>10</y>
               <width>151</width>
-              <height>131</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -1865,7 +1865,7 @@ margin: 40px;</string>
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>智能回复</string>
+                <string>智能闲聊</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -1895,7 +1895,7 @@ margin: 40px;</string>
              <item>
               <widget class="QCheckBox" name="AIReplyCheck">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -1904,14 +1904,14 @@ margin: 40px;</string>
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;调用图灵机器人来进行AI回复&lt;/p&gt;&lt;p&gt;可作为对弹幕评论的参考内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>AI回复参考</string>
+                <string>本地显示</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QCheckBox" name="AIReplyMsgCheck">
                <property name="enabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -1920,7 +1920,7 @@ margin: 40px;</string>
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要显示实时弹幕&lt;/p&gt;&lt;p&gt;开启后，发送AI回复的弹幕&lt;/p&gt;&lt;p&gt;否则只是本地显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>发送AI弹幕</string>
+                <string>回复弹幕</string>
                </property>
                <property name="tristate">
                 <bool>true</bool>
@@ -1928,64 +1928,51 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <item>
-                <widget class="QPushButton" name="AIReplyIdButton">
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-                 </property>
+              <widget class="QLabel" name="label_60">
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.cloud.tencent.com/cam/capi&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;腾讯NLP秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="openExternalLinks">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QFormLayout" name="formLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_6">
                  <property name="text">
                   <string>ID</string>
                  </property>
-                 <property name="flat">
-                  <bool>true</bool>
-                 </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QPushButton" name="AIReplyKeyButton">
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-                 </property>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_56">
                  <property name="text">
                   <string>Key</string>
                  </property>
-                 <property name="flat">
-                  <bool>true</bool>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="TXSecretIdEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="TXSecretKeyEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
                  </property>
                 </widget>
                </item>
@@ -8543,7 +8530,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>928</width>
+     <width>890</width>
      <height>23</height>
     </rect>
    </property>

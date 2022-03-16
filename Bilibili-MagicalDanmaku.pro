@@ -185,6 +185,7 @@ HEADERS += \
     third_party/qss_editor/qsshighlighteditor.h \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
+    third_party/utils/tx_nlp.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \
     widgets/clickablelabel.h \

@@ -597,10 +597,6 @@ private slots:
 
     void on_domainEdit_editingFinished();
 
-    void on_AIReplyIdButton_clicked();
-
-    void on_AIReplyKeyButton_clicked();
-
     void prepareQuit();
 
     void on_giftComboSendCheck_clicked();
@@ -784,6 +780,10 @@ private slots:
     void on_receivePrivateMsgCheck_stateChanged(int arg1);
 
     void on_processUnreadMsgCheck_clicked();
+
+    void on_TXSecretIdEdit_editingFinished();
+
+    void on_TXSecretKeyEdit_editingFinished();
 
 private:
     void initView();
@@ -994,7 +994,6 @@ private:
     void joinLOT(qint64 id, bool follow = true);
     void joinStorm(qint64 id);
     void sendPrivateMsg(qint64 uid, QString msg);
-    void AIReply(QString text, NetStringFunc func, int maxLen = 50);
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
     void adjustDanmakuLongest();

@@ -27,6 +27,7 @@
 #ifdef Q_OS_WIN
 #include "widgets/windowshwnd.h"
 #endif
+#include "tx_nlp.h"
 
 QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
 QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
@@ -50,6 +51,7 @@ QString CommonValues::browserCookie;
 QString CommonValues::browserData;
 QString CommonValues::csrf_token;
 QVariant CommonValues::userCookies;
+TxNlp* TxNlp::txNlp = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -201,8 +203,6 @@ void MainWindow::initView()
     ui->timerPushCmdSpin->hide();
     ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
-    ui->AIReplyIdButton->hide();
-    ui->AIReplyKeyButton->hide();
     ui->menubar->hide();
     ui->statusbar->hide();
 
@@ -1034,6 +1034,20 @@ void MainWindow::readConfig()
     ui->voiceSpeedSlider->setSliderPosition(settings->value("voice/speed", 50).toInt());
     ui->voiceVolumeSlider->setSliderPosition(settings->value("voice/volume", 50).toInt());
     ui->voiceCustomUrlEdit->setText(settings->value("voice/customUrl", "").toString());
+
+    // AI回复
+    QString TXSecretId = settings->value("tx_nlp/secretId").toString();
+    if (!TXSecretId.isEmpty())
+    {
+        TxNlp::instance()->setSecretId(TXSecretId);
+        ui->TXSecretIdEdit->setText(TXSecretId);
+    }
+    QString TXSecretKey = settings->value("tx_nlp/secretKey").toString();
+    if (!TXSecretKey.isEmpty())
+    {
+        TxNlp::instance()->setSecretKey(TXSecretKey);
+        ui->TXSecretKeyEdit->setText(TXSecretKey);
+    }
 
     // 开播
     ui->startLiveWordsEdit->setText(settings->value("live/startWords").toString());
@@ -9528,9 +9542,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 强制AI回复
-    if (msg.contains("aiReply"))
+    if (msg.contains("aiReply") || msg.contains("AIReply"))
     {
-        re = RE("aiReply\\s*\\(\\s*,\\s*(.*?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
+        re = RE("(?:ai|AI)Reply\\s*\\(\\s*(.+?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -9545,7 +9559,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (caps.size() > 3 && !caps.at(3).isEmpty())
             {
                 // 触发事件
-                AIReply(text, [=](QString s){
+                TxNlp::instance()->chat(text, [=](QString s){
                     QJsonObject js;
                     js.insert("reply", s);
                     LiveDanmaku dm = danmaku;
@@ -9556,7 +9570,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             else
             {
                 // 直接发送弹幕
-                AIReply(text, [=](QString s){
+                TxNlp::instance()->chat(text, [=](QString s){
                     sendLongText(s);
                 }, maxLen);
             }
@@ -17100,149 +17114,6 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     });
 }
 
-/**
- * NLP：https://cloud.tencent.com/document/product/271/39416
- * 公共参数：https://cloud.tencent.com/document/api/271/35487（Hash256参数是反的）
- * 参数调试：https://console.cloud.tencent.com/api/explorer?Product=nlp&Version=2019-04-08&Action=ChatBot&SignVersion=
- * 不得不吐槽一下，加个密不至于这么复杂吧！！！
- */
-void MainWindow::AIReply(QString text, NetStringFunc func, int maxLen)
-{
-    if (text.isEmpty())
-        return ;
-
-    // 参数信息
-    QString url = "https://nlp.tencentcloudapi.com/";
-    MyJson queryJson;
-    queryJson.insert("Query", text);
-
-    // 公共参数
-    QByteArray secretId = "";
-    QByteArray secretKey = "";
-    qint64 timestamp = QDateTime::currentSecsSinceEpoch();
-    QDateTime date = QDateTime::fromSecsSinceEpoch(timestamp);
-    QByteArray timestampS = snum(timestamp).toUtf8();
-    QByteArray dateS = date.toString("yyyy-MM-dd").toLocal8Bit();
-    QByteArray service = "nlp";
-
-    // 1. 拼接规范请求串
-    QByteArray HTTPRequestMethod = "POST";
-    QByteArray CanonicalURI  = "/";
-    QByteArray CanonicalQueryString = "";
-    QByteArray CanonicalHeaders = "content-type:application/json\nhost:nlp.tencentcloudapi.com\n";
-    QByteArray SignedHeaders = "content-type;host";
-    QByteArray content = queryJson.toBa(QJsonDocument::Compact);
-    QByteArray HashedRequestPayload = QCryptographicHash::hash(content, QCryptographicHash::Sha256).toHex().toLower();
-    QByteArray CanonicalRequest =
-                                HTTPRequestMethod + '\n' +
-                                CanonicalURI + '\n' +
-                                CanonicalQueryString + '\n' +
-                                CanonicalHeaders + '\n' +
-                                SignedHeaders + '\n' +
-                                HashedRequestPayload;
-
-    // 2. 拼接待签名请求串
-    QByteArray Algorithm = "TC3-HMAC-SHA256";
-    QByteArray RequestTimestamp = timestampS;
-    QByteArray CredentialScope = dateS + "/" + service + "/tc3_request";
-    QByteArray HashedCanonicalRequest = QCryptographicHash::hash(CanonicalRequest, QCryptographicHash::Sha256).toHex().toLower();;
-    QByteArray StringToSign =
-                                Algorithm + '\n' +
-                                RequestTimestamp + '\n' +
-                                CredentialScope + '\n' +
-                                HashedCanonicalRequest;
-
-    // 3. 计算签名
-    QByteArray SecretKey = secretKey;
-    QByteArray SecretDate = QMessageAuthenticationCode::hash(dateS, "TC3" + SecretKey, QCryptographicHash::Sha256);
-    QByteArray SecretService = QMessageAuthenticationCode::hash(service, SecretDate, QCryptographicHash::Sha256);
-    QByteArray SecretSigning = QMessageAuthenticationCode::hash("tc3_request", SecretService, QCryptographicHash::Sha256);
-    QByteArray Signature = QMessageAuthenticationCode::hash(StringToSign, SecretSigning, QCryptographicHash::Sha256).toHex();
-
-
-    QByteArray auth = "TC3-HMAC-SHA256 Credential=" + secretId + "/" + dateS + "/" + service + "/tc3_request, "
-            "SignedHeaders=content-type;host, Signature=" + Signature;
-
-    QNetworkAccessManager manager;
-    QNetworkReply *reply;
-    QNetworkRequest request(url);
-    QEventLoop connectLoop;
-
-    // 公共参数
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("X-TC-Action", "ChatBot");
-    request.setRawHeader("X-TC-Region", "ap-guangzhou");
-    request.setRawHeader("X-TC-Timestamp", timestampS);
-    request.setRawHeader("X-TC-Version", "2019-04-08");
-    request.setRawHeader("Authorization", auth);
-    request.setRawHeader("Host", "nlp.tencentcloudapi.com");
-    request.setRawHeader("X-TC-Language", "zh-CN");
-    request.setRawHeader("X-TC-RequestClient", "APIExplorer");
-
-    /* qDebug() << "------------post time             : " << timestamp;
-    qDebug() << "------------post data             : " << queryJson.toBa(QJsonDocument::Compact);
-    qDebug() << "------------HashedRequestPayload  : " << HashedRequestPayload;
-    qDebug() << "------------CanonicalRequest      : " << CanonicalRequest;
-    qDebug() << "------------StringToSign          : " << StringToSign;
-    qDebug() << "------------Signature             : " << Signature;
-    qDebug() << "------------authorization         : " << auth;
-    qDebug() << request.rawHeaderList();
-    foreach (auto h, request.rawHeaderList())
-        qDebug() << "   " << h << request.rawHeader(h); */
-
-
-    // 开始联网
-    reply = manager.post(request, content);
-    QObject::connect(reply, SIGNAL(finished()), &connectLoop, SLOT(quit()));
-    connectLoop.exec();
-
-    int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).value<int>();
-    if (code != 200)
-    {
-        qWarning() << "腾讯智能闲聊 错误码：" << QString::number(code);
-    }
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        qWarning() << "腾讯智能闲聊 Error:" << reply->errorString();
-        showError(reply->errorString());
-    }
-
-
-    // 获取信息
-    QByteArray result = reply->readAll();
-    // qInfo() << "result:" << result;
-    QJsonParseError error;
-    QJsonDocument document = QJsonDocument::fromJson(result, &error);
-    if (error.error != QJsonParseError::NoError)
-    {
-        qWarning() << "腾讯智能闲聊：" << error.errorString();
-        return ;
-    }
-
-    QJsonObject json = document.object();
-    if (!json.value("Response").toObject().value("Error").toObject().value("Code").toString().isEmpty())
-    {
-        QString msg = json.value("Response").toObject().value("Error").toObject().value("Message").toString();
-        qWarning() << "AI回复：" << msg << queryJson.toBa(QJsonDocument::Compact);
-        /* if (msg.contains("not found") && retry > 0)
-            AIReply(id, text, func, maxLen, retry - 1); */
-        return ;
-    }
-
-    MyJson resp = json.value("Response").toObject();
-    QString answer = resp.s("Reply");
-    // int confi = resp.d("Confidence"); // 置信度，0~1
-
-    // 过滤文字
-    if (answer.contains("未搜到")
-            || answer.isEmpty())
-        return ;
-
-    if (answer.length() > maxLen)
-        return ;
-    func(answer);
-}
-
 void MainWindow::joinBattle(int type)
 {
     if (!isLiving() || cookieUid != upUid)
@@ -19745,30 +19616,6 @@ void MainWindow::on_domainEdit_editingFinished()
     settings->setValue("server/domain", serverDomain);
 }
 
-void MainWindow::on_AIReplyIdButton_clicked()
-{
-    QString replyAppId = settings->value("reply/APPID", "").toString();
-    bool ok = false;
-    QString text = QInputDialog::getText(this, "AI回复的APPID", "可在 https://ai.qq.com/console 申请\n自定义机器人画像，包括名字、性格等", QLineEdit::Normal, replyAppId, &ok);
-    if (!ok)
-        return ;
-    settings->setValue("reply/APPID", text);
-    if (danmakuWindow)
-        danmakuWindow->readReplyKey();
-}
-
-void MainWindow::on_AIReplyKeyButton_clicked()
-{
-    QString replyAppKey = settings->value("reply/APPKEY", "").toString();
-    bool ok = false;
-    QString text = QInputDialog::getText(this, "AI回复的APPKEY", "可在 https://ai.qq.com/console 申请\n自定义机器人画像，包括名字、性格等", QLineEdit::Normal, replyAppKey, &ok);
-    if (!ok)
-        return ;
-    settings->setValue("reply/APPKEY", text);
-    if (danmakuWindow)
-        danmakuWindow->readReplyKey();
-}
-
 void MainWindow::prepareQuit()
 {
     releaseLiveData();
@@ -21027,4 +20874,18 @@ void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
 void MainWindow::on_processUnreadMsgCheck_clicked()
 {
     settings->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
+}
+
+void MainWindow::on_TXSecretIdEdit_editingFinished()
+{
+    QString text = ui->TXSecretIdEdit->text();
+    settings->setValue("tx_nlp/secretId", text);
+    TxNlp::instance()->setSecretId(text);
+}
+
+void MainWindow::on_TXSecretKeyEdit_editingFinished()
+{
+    QString text = ui->TXSecretKeyEdit->text();
+    settings->setValue("tx_nlp/secretKey", text);
+    TxNlp::instance()->setSecretKey(text);
 }

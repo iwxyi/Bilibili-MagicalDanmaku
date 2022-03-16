@@ -131,7 +131,6 @@ public slots:
 
     void releaseLiveData(bool prepare = false);
 
-    void readReplyKey();
     void closeTransMouse();
     void restart();
 
@@ -176,9 +175,6 @@ private:
     QString myPrevSendMsg; // 上次发送的内容，没有发送成功的话自动填充
     qint64 roomId = 0;
     qint64 upUid = 0; // 当前主播的UID，用来显示主播标志
-
-    QString replyAPPID;
-    QString replyAPPKEY;
 
     bool enableAnimation = true;
     QColor nameColor;

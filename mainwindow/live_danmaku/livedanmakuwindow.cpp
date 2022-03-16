@@ -4,6 +4,7 @@
 #include "livedanmakuwindow.h"
 #include "facilemenu.h"
 #include "guardonlinedialog.h"
+#include "tx_nlp.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -187,8 +188,6 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     blockComingMsg = settings->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
     blockSpecialGift = settings->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
     blockCommonNotice = settings->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
-
-    readReplyKey();
 
     headDir = dataPath + "headers/";
     QDir().mkpath(headDir);
@@ -2111,49 +2110,8 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     // 优化消息文本
     msg.replace(QRegularExpression("\\s+"), "，");
 
-    // 参数信息
-    QString url = "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat";
-    QString nonce_str = replyAPPKEY;
-    QStringList params{"app_id", replyAPPID,
-                       "nonce_str", nonce_str,
-                "question", msg,
-                "session", QString::number(danmaku.getUid()),
-                "time_stamp", QString::number(QDateTime::currentSecsSinceEpoch()),
-                      };
-
-    // 接口鉴权
-    QString pinjie;
-    for (int i = 0; i < params.size()-1; i+=2)
-        if (!params.at(i+1).isEmpty())
-            pinjie += params.at(i) + "=" + QUrl::toPercentEncoding(params.at(i+1)) + "&";
-    QString appkey = "sTuC8iS3R9yLNbL9";
-    pinjie += "app_key="+appkey;
-
-    QString sign = QString(QCryptographicHash::hash(pinjie.toLocal8Bit(), QCryptographicHash::Md5).toHex().data()).toUpper();
-    params << "sign" << sign;
-//    qDebug() << pinjie << sign;
-
-    // 获取信息
-    connect(new NetUtil(url, params), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "AI回复：" << error.errorString();
-            return ;
-        }
-
-        QJsonObject json = document.object();
-        if (json.value("ret").toInt() != 0)
-        {
-            qDebug() << "AI回复：" << json.value("msg").toString();
-            return ;
-        }
-
-        QString answer = json.value("data").toObject().value("answer").toString();
-
-        // 过滤文字
-        if (answer.contains("未搜到"))
+    TxNlp::instance()->chat(msg, [=](QString answer){
+        if (answer.isEmpty())
             return ;
 
         emit signalAIReplyed(answer, uid);
@@ -2161,11 +2119,11 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         if (!isItemExist(item))
             return ;
 
-        qDebug() << "回复：" << msg << " => " << answer;
+        qInfo() << "回复：" << msg << " => " << answer;
         item->setData(DANMAKU_REPLY_ROLE, answer);
 
         adjustItemTextDynamic(item);
-    });
+    }, 0);
 }
 
 void LiveDanmakuWindow::setEnableBlock(bool enable)
@@ -2525,19 +2483,6 @@ void LiveDanmakuWindow::releaseLiveData(bool prepare)
     }
 
     blockedTexts.clear();
-}
-
-void LiveDanmakuWindow::readReplyKey()
-{
-    settings->sync();
-    replyAPPID = settings->value("reply/APPID", "").toString();
-    replyAPPKEY = settings->value("reply/APPKEY", "").toString();
-
-    if (replyAPPID.isEmpty())
-    {
-        replyAPPID = "2159207490";
-        replyAPPKEY = "sTuC8iS3R9yLNbL9";
-    }
 }
 
 void LiveDanmakuWindow::closeTransMouse()
