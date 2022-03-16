@@ -4479,7 +4479,12 @@ void MainWindow::getRoomInit()
     });
 }
 
-void MainWindow::getRoomInfo(bool reconnect)
+/**
+ * 获取直播间信息，然后再开始连接
+ * @param reconnect       是否是重新获取信息
+ * @param reconnectCount  连接失败的重连次数
+ */
+void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 {
     gettingRoom = true;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
@@ -4488,6 +4493,17 @@ void MainWindow::getRoomInfo(bool reconnect)
         {
             qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
             setRoomCover(QPixmap(":/bg/bg"));
+            ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
+
+            if (reconnectCount >= 5)
+            {
+                ui->connectStateLabel->setText("无法连接");
+                return ;
+            }
+            qDebug() << "尝试重新获取房间信息：" << (reconnectCount + 1);
+            QTimer::singleShot(5000, [=]{
+                getRoomInfo(reconnect, reconnectCount + 1);
+            });
             return ;
         }
 

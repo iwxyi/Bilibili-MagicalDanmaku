@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>890</width>
-    <height>965</height>
+    <width>917</width>
+    <height>671</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>810</width>
-             <height>845</height>
+             <width>837</width>
+             <height>551</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2612,7 +2612,7 @@ margin: 40px;</string>
                 <string notr="true">color: gray;</string>
                </property>
                <property name="text">
-                <string>针对游戏主播，避免弹幕姬挡住游戏界面</string>
+                <string>避免弹幕姬挡住鼠标交互，请在弹幕姬中开启</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -8530,7 +8530,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>890</width>
+     <width>917</width>
      <height>23</height>
     </rect>
    </property>

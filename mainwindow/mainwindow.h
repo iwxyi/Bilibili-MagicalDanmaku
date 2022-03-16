@@ -835,7 +835,7 @@ private:
     void sendXliveHeartBeatX();
     void sendXliveHeartBeatX(QString s, qint64 timestamp);
     void getRoomInit();
-    void getRoomInfo(bool reconnect);
+    void getRoomInfo(bool reconnect, int reconnectCount = 0);
     bool isLivingOrMayliving();
     bool isWorking() const;
 
