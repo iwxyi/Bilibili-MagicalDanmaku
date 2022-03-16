@@ -57,6 +57,7 @@ post数据=postData
 文件每一行=fileEachLine
 CSV每一行=CSVEachLine
 AI回复=aiReply
+AI聊天=aiChat
 不自动欢迎=ignoreWelcome
 设置专属昵称=setLocalName
 开启大乱斗=joinBattle

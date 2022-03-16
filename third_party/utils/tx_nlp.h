@@ -82,7 +82,6 @@ public:
         // 3. 计算签名
         QByteArray SecretId = secretId;
         QByteArray SecretKey = secretKey;
-        qDebug() << secretId << secretKey;
         QByteArray SecretDate = QMessageAuthenticationCode::hash(dateS, "TC3" + SecretKey, QCryptographicHash::Sha256);
         QByteArray SecretService = QMessageAuthenticationCode::hash(service, SecretDate, QCryptographicHash::Sha256);
         QByteArray SecretSigning = QMessageAuthenticationCode::hash("tc3_request", SecretService, QCryptographicHash::Sha256);

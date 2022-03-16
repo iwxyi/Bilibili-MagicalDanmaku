@@ -9578,6 +9578,35 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("aiChat") || msg.contains("AIChat"))
+    {
+        re = RE("(?:ai|AI)Chat\\s*\\(\\s*\"(.+?)\"\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("(?:ai|AI)Chat\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*\\)");
+            msg.indexOf(re, 0, &match);
+        }
+
+        if (match.isValid())
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString text = caps.at(1).trimmed();
+            if (text.isEmpty())
+                return true;
+            QString code = caps.at(2);
+            code.replace("%n%", "\\n").replace("\\%", "%");
+            TxNlp::instance()->chat(text, [=](QString result) {
+                LiveDanmaku dmk = danmaku;
+                dmk.setText(result);
+                QStringList sl = getEditConditionStringList(code, dmk);
+                if (!sl.empty())
+                    sendAutoMsg(sl.first(), dmk);
+            });
+            return true;
+        }
+    }
+
     // 忽略自动欢迎
     if (msg.contains("ignoreWelcome"))
     {
@@ -17862,7 +17891,7 @@ void MainWindow::receivedPrivateMsg(MyJson session)
         {
             qWarning() << "获取私信发送者信息失败：" << info.msg();
         }
-        qInfo() << "接收到私信: " << name << "  " << msgType << " : " << content
+        qInfo() << "接收到私信: " << name << msgType << ":" << content
                 << "    (" << sessionTs << "  in "
                 << privateMsgTimestamp << "~" << QDateTime::currentMSecsSinceEpoch() << ")";
 
