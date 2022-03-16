@@ -9530,34 +9530,33 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 强制AI回复
     if (msg.contains("aiReply"))
     {
-        re = RE("aiReply\\s*\\(\\s*(\\d+)\\s*,\\s*(.*?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
+        re = RE("aiReply\\s*\\(\\s*,\\s*(.*?)\\s*(?:,\\s*(\\d+))?\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            qint64 id = caps.at(1).toLongLong();
-            QString text = caps.at(2).trimmed();
+            QString text = caps.at(1).trimmed();
             if (text.isEmpty())
                 return true;
             int maxLen = ui->danmuLongestSpin->value(); // 默认只有一条弹幕的长度
-            if (caps.size() > 3 && !caps.at(3).isEmpty()
-                    && caps.at(3).toInt() > 0)
-                maxLen = caps.at(3).toInt();
-            if (caps.size() > 4 && !caps.at(4).isEmpty())
+            if (caps.size() > 2 && !caps.at(2).isEmpty()
+                    && caps.at(2).toInt() > 0)
+                maxLen = caps.at(2).toInt();
+            if (caps.size() > 3 && !caps.at(3).isEmpty())
             {
                 // 触发事件
-                AIReply(id, text, [=](QString s){
+                AIReply(text, [=](QString s){
                     QJsonObject js;
                     js.insert("reply", s);
                     LiveDanmaku dm = danmaku;
                     dm.with(js);
-                    triggerCmdEvent(caps.at(4), danmaku);
+                    triggerCmdEvent(caps.at(3), danmaku);
                 }, maxLen);
             }
             else
             {
                 // 直接发送弹幕
-                AIReply(id, text, [=](QString s){
+                AIReply(text, [=](QString s){
                     sendLongText(s);
                 }, maxLen);
             }
@@ -17107,13 +17106,13 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
  * 参数调试：https://console.cloud.tencent.com/api/explorer?Product=nlp&Version=2019-04-08&Action=ChatBot&SignVersion=
  * 不得不吐槽一下，加个密不至于这么复杂吧！！！
  */
-void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen, int retry)
+void MainWindow::AIReply(QString text, NetStringFunc func, int maxLen)
 {
     if (text.isEmpty())
         return ;
 
     // 参数信息
-    QString url = "https://nlp.tencentcloudapi.com";
+    QString url = "https://nlp.tencentcloudapi.com/";
     MyJson queryJson;
     queryJson.insert("Query", text);
 
@@ -17164,14 +17163,6 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
     QByteArray auth = "TC3-HMAC-SHA256 Credential=" + secretId + "/" + dateS + "/" + service + "/tc3_request, "
             "SignedHeaders=content-type;host, Signature=" + Signature;
 
-    qDebug() << "------------post time             : " << timestamp;
-    qDebug() << "------------post data             : " << queryJson.toBa(QJsonDocument::Compact);
-    qDebug() << "------------HashedRequestPayload  : " << HashedRequestPayload;
-    qDebug() << "------------CanonicalRequest      : " << CanonicalRequest;
-    qDebug() << "------------StringToSign          : " << StringToSign;
-    qDebug() << "------------Signature             : " << Signature;
-    qDebug() << "------------authorization         : " << auth;
-
     QNetworkAccessManager manager;
     QNetworkReply *reply;
     QNetworkRequest request(url);
@@ -17186,12 +17177,22 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
     request.setRawHeader("Authorization", auth);
     request.setRawHeader("Host", "nlp.tencentcloudapi.com");
     request.setRawHeader("X-TC-Language", "zh-CN");
-    // request.setRawHeader("X-TC-Token", "");
+    request.setRawHeader("X-TC-RequestClient", "APIExplorer");
+
+    /* qDebug() << "------------post time             : " << timestamp;
+    qDebug() << "------------post data             : " << queryJson.toBa(QJsonDocument::Compact);
+    qDebug() << "------------HashedRequestPayload  : " << HashedRequestPayload;
+    qDebug() << "------------CanonicalRequest      : " << CanonicalRequest;
+    qDebug() << "------------StringToSign          : " << StringToSign;
+    qDebug() << "------------Signature             : " << Signature;
+    qDebug() << "------------authorization         : " << auth;
     qDebug() << request.rawHeaderList();
+    foreach (auto h, request.rawHeaderList())
+        qDebug() << "   " << h << request.rawHeader(h); */
 
 
     // 开始联网
-    reply = manager.post(request, queryJson.toBa());
+    reply = manager.post(request, content);
     QObject::connect(reply, SIGNAL(finished()), &connectLoop, SLOT(quit()));
     connectLoop.exec();
 
@@ -17209,12 +17210,12 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
 
     // 获取信息
     QByteArray result = reply->readAll();
-    qDebug() << "    result:" << result;
+    // qInfo() << "result:" << result;
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(result, &error);
     if (error.error != QJsonParseError::NoError)
     {
-        qInfo() << "AI回复：" << error.errorString();
+        qWarning() << "腾讯智能闲聊：" << error.errorString();
         return ;
     }
 
@@ -17228,7 +17229,9 @@ void MainWindow::AIReply(qint64 id, QString text, NetStringFunc func, int maxLen
         return ;
     }
 
-    QString answer = json.value("data").toObject().value("answer").toString();
+    MyJson resp = json.value("Response").toObject();
+    QString answer = resp.s("Reply");
+    // int confi = resp.d("Confidence"); // 置信度，0~1
 
     // 过滤文字
     if (answer.contains("未搜到")
@@ -17926,6 +17929,8 @@ void MainWindow::refreshPrivateMsg()
                 continue; */
 
             qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
+            if (sessionTs > currentTimestamp) // 连接中间的时间
+                continue;
             if (sessionTs <= privateMsgTimestamp) // 之前已处理
                 break;
 

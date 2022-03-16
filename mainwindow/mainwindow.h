@@ -994,7 +994,7 @@ private:
     void joinLOT(qint64 id, bool follow = true);
     void joinStorm(qint64 id);
     void sendPrivateMsg(qint64 uid, QString msg);
-    void AIReply(qint64 id, QString text, NetStringFunc func, int maxLen = 50, int retry = 3);
+    void AIReply(QString text, NetStringFunc func, int maxLen = 50);
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
     void adjustDanmakuLongest();
