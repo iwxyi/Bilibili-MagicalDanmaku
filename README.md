@@ -908,8 +908,12 @@ border-image: url(C:/Path/To/Image.png)
 | pasteText()                        | 粘贴文字         | 获取剪贴板的文本                                             |
 | getScreenPositionColor(wid, x, y)  | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
 | getWindowPositionColor(name, x, y) | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
-| getReplyExecutionResult(text)      | 获取回复执行结果 | 获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\n”则会返回用它分隔的单行文字 |
-| getEventExecutionResult(event)     | 获取事件执行结果 | 获取指定事件的执行结果，重复则取第一个，同上                 |
+| execReplyResult(text)              | 执行回复结果     | 获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\n”则会返回用它分隔的单行文字 |
+| execEventResult(event)             | 执行事件结果     | 获取指定事件的执行结果，重复则取第一个，同上                 |
+| readTextFile(fileName)             | 读取文本文件     | 读取文本文件中的所有内容，所有换行符 `\n` 将会被替换为 `%n%` |
+| getTextFileLine(fileName, line)    | 获取文本文件行   | 读取文本文件中的第 line 行，行数从 1 开始                    |
+| getTextFileLineCount(fileName)     | 获取文本文件行数 | 读取文本文件中的所有行数（以 `\n` 为准）                     |
+| isFileExist(fileName)              | 文件是否存在     | 判断有没有该文件，若有为 1，不存在则为 0                     |
 
 以获取时间为例：
 
@@ -1244,6 +1248,8 @@ tips：
 | insertFileAnchor(fileName, anchor, content)        | 插入文件锚点     | 插入文字至文件中的“anchor”前。可组建HTML的`<table>` 内容     |
 | writeTextFile(fileName, text)                      | 保存文本文件     | 写入文本至“程序目录/fileName”                                |
 | removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/fileName”                                  |
+| removeTextFileLine(fileName, line)                 | 移除文本文件行   | 删除文本文件中的某一行，行号从1开始                          |
+| modifyTextFileLine(fileName, line, newText)        | 修改文本文件行   | 修改文本文件中的某一行，行号从1开始                          |
 | fileEachLine(fileName, startLine, code)            | 文件每一行       | 读取txt文件的每一行，执行code命令。fileName 可以是相对文件名、绝对文件路径。startLine 为从哪一行开始读，可忽略。code中多行弹幕/代码需要使用`%n%`替换`\n`，并且需要使用`\%`来转义替换`%`，例如 `\%text\%`。`\%number\%`获取行号（从1开始），`\%text\%`获取本行内容；会覆盖原有的这两个变量 |
 | csvEachLine(fileName, startLine, code)             | CSV每一行        | 读取csv文件（表格）的每一行，同上。使用转义的 `%$数字%` 来获取这一行中的每列元素，如 `\%$2\%` 获取当前行第二列 |
 | aiReply(text, maxLen)                              | AI回复           | 调用AI回复某文字，并直接以弹幕的形式发送。maxLen为长度上限，默认单条弹幕，超出则不回复 |

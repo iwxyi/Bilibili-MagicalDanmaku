@@ -33,3 +33,7 @@
 获取窗口位置颜色=getWindowPositionColor
 获取回复执行结果=getReplyExecutionResult
 获取事件执行结果=getEventExecutionResult
+读取文本文件=readTextFile
+获取文本文件行=getTextFileLine
+获取文本文件行数=getTextFileLineCount
+文件是否存在=isFileExist

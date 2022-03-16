@@ -6982,7 +6982,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QColor color = pixmap.toImage().pixelColor(0, 0);
         return QVariant(color).toString();
     }
-    else if (funcName == "getReplyExecutionResult")
+    else if (funcName == "execReplyResult" || funcName == "getReplyExecutionResult")
     {
         if (argList.size() < 1 || args.isEmpty())
         {
@@ -6991,7 +6991,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QString key = args;
         return getReplyExecutionResult(key, danmaku);
     }
-    else if (funcName == "getEventExecutionResult")
+    else if (funcName == "execEventResult" || funcName == "getEventExecutionResult")
     {
         if (argList.size() < 1 || args.isEmpty())
         {
@@ -6999,6 +6999,45 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         QString key = args;
         return getEventExecutionResult(key, danmaku);
+    }
+    else if (funcName == "readTextFiile")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("文件路径");
+        QString fileName = toFilePath(argList.at(0));
+        QString content = readTextFileAutoCodec(fileName);
+        return content.replace("\n", "%n%");
+    }
+    else if (funcName == "isFileExist")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("文件路径");
+        QString fileName = toFilePath(argList.at(0));
+        return isFileExist(fileName) ? "1" : "0";
+    }
+    else if (funcName == "getTextFileLine")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("文件路径");
+        QString fileName = toFilePath(argList.at(0));
+        QString content = readTextFileAutoCodec(fileName);
+        QStringList sl = content.split("\n");
+        int line = argList.at(1).toInt();
+        line--;
+        if (line < 0 || line >= sl.size())
+        {
+            showError("getTextFileLine", "错误的行数：" + snum(line+1) + "不在1~" + snum(sl.size()) + "之间");
+            return "";
+        }
+        return sl.at(line);
+    }
+    else if (funcName == "getTextFileLineCount")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("文件路径");
+        QString fileName = toFilePath(argList.at(0));
+        QString content = readTextFileAutoCodec(fileName);
+        return snum(content.split("\n").size());
     }
 
     return "";
@@ -8872,9 +8911,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QString text = caps.at(2);
             text.replace("%n%", "\n");
             QFileInfo info(fileName);
@@ -8894,9 +8931,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QString format = caps.at(2);
             format.replace("%n%", "\n");
             QFileInfo info(fileName);
@@ -8916,9 +8951,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QString anchor = caps.at(2);
             QString content = caps.at(3);
             QString text = readTextFile(fileName);
@@ -8940,9 +8973,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             int line = caps.at(2).toInt();
 
             QString text = readTextFileAutoCodec(fileName);
@@ -8950,7 +8981,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             line--;
             if (line < 0 || line >= sl.size())
             {
-                showError("removeTextFileLine", "错误的行数：" + snum(line) + "不在1~" + snum(sl.size()) + "之间");
+                showError("removeTextFileLine", "错误的行数：" + snum(line+1) + "不在1~" + snum(sl.size()) + "之间");
                 return true;
             }
 
@@ -8970,9 +9001,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             int line = caps.at(2).toInt();
             QString newText = caps.at(3);
             if (newText.length() >= 2 && newText.startsWith("\"") && newText.startsWith("\""))
@@ -8983,7 +9012,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             line--;
             if (line < 0 || line >= sl.size())
             {
-                showError("modifyTextFileLine", "错误的行数：" + snum(line) + "不在1~" + snum(sl.size()) + "之间");
+                showError("modifyTextFileLine", "错误的行数：" + snum(line+1) + "不在1~" + snum(sl.size()) + "之间");
                 return true;
             }
 
@@ -9003,11 +9032,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QFile file(fileName);
             file.remove();
+            qInfo() << "删除文件：" << fileName;
             return true;
         }
     }
@@ -9020,9 +9048,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QString startLineS = caps.at(2);
             int startLine = 0;
             if (!startLineS.isEmpty())
@@ -9040,6 +9066,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 if (!sl.empty())
                     sendAutoMsg(sl.first(), dmk);
             }
+            qInfo() << "遍历文件：" << fileName;
             return true;
         }
     }
@@ -9053,9 +9080,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QString fileName = caps.at(1);
-            if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + fileName;
+            QString fileName = toFilePath(caps.at(1));
             QString startLineS = caps.at(2);
             int startLine = 0;
             if (!startLineS.isEmpty())
@@ -9078,6 +9103,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 if (!sl.empty())
                     sendAutoMsg(sl.first(), dmk);
             }
+            qInfo() << "遍历文件：" << fileName;
             return true;
         }
     }
@@ -9089,7 +9115,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString path = caps.at(1);
+            QString path = toFilePath(caps.at(1));
             qInfo() << "执行命令：" << caps;
             QMediaPlayer* player = new QMediaPlayer(this);
             player->setMedia(QUrl::fromLocalFile(path));
@@ -9101,6 +9127,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 }
             });
             player->play();
+            qInfo() << "播放音频：" << path;
             return true;
         }
     }
@@ -18801,6 +18828,17 @@ void MainWindow::showNotify(QString s) const
     statusLabel->setText(s);
     qInfo() << s;
     tip_box->createTipCard(new NotificationEntry("", "", s));
+}
+
+/**
+ * 用户设定的文件名
+ * 获取相应的文件绝对路径
+ */
+QString MainWindow::toFilePath(const QString &fileName) const
+{
+    if (QFileInfo(fileName).isRelative())
+        return dataPath + fileName;
+    return fileName;
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

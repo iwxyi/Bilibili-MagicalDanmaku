@@ -1059,6 +1059,8 @@ private:
     void showNotify(QString title, QString s) const;
     void showNotify(QString s) const;
 
+    QString toFilePath(const QString& fileName) const;
+
 private:
     // 应用信息
     Ui::MainWindow *ui;
