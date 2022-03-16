@@ -8438,7 +8438,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 发送私信
     if (msg.contains("sendPrivateMsg"))
     {
-        re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S*)\\s*\\)");
+        re = RE("sendPrivateMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();

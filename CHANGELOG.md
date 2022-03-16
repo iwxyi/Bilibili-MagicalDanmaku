@@ -1,4 +1,4 @@
-### v4.5.0 [优化点歌姬](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.0)
+### v4.5.0 [接收私信、微软语音、智能闲聊](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.0)
 
 #### 新增功能
 
@@ -21,7 +21,7 @@
 - 新增针对异步代码的回调逻辑，支持通过转义来嵌套
 - 新增获取AI回复的结果命令：`aiChat`，可直接针对结果进行操作，不限制必须回复弹幕
 - 新增获取指定代码块返回值：`getReplyExecutionResult`、`EventExecutionResult`
-- 新增 csv 问遍历的命令：`csvEachLine`
+- 新增 csv 文件遍历的命令：`csvEachLine`
 - 优化 `delay` 延迟有时候无效的问题
 - 调整AI回复命令 `aiReply`，去掉第一个 id 参数
 - 调整 `triggerReply` 命令不会触发未开启的回复（以前会）
