@@ -2342,7 +2342,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 ```json
 {
-    "talker_id": 324495090,
+    "talker_id": 324495090, // 用户ID
     "session_type": 1,
     "at_seqno": 0,
     "top_ts": 0,
@@ -2359,7 +2359,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
         "sender_uid": 324495090,
         "receiver_type": 1,
         "receiver_id": 20285041,
-        "msg_type": 1,
+        "msg_type": 1,    // 消息类型，1 用户私信
         "content": "{\"content\":\"测试消息\"}",
         "msg_seqno": 194835318046736,
         "timestamp": 1647309089,
@@ -2380,7 +2380,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
     "system_msg_type": 0,
     "live_status": 0,
     "biz_msg_unread_count": 0,
-    // 发送者信息
+    // 发送者信息（视网络，可能获取不到）
     "sender": {
         "code": 0,
         "message": "0",

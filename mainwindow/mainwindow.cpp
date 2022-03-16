@@ -1764,13 +1764,6 @@ MainWindow::~MainWindow()
 
     triggerCmdEvent("SHUT_DOWN", LiveDanmaku(), true);
 
-    delete ui;
-    tray->deleteLater();
-
-    // 删除缓存
-    if (isFileExist(webCache("")))
-        deleteDir(webCache(""));
-
     // 清理过期备份
     auto files = QDir(dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
     qint64 overdue = QDateTime::currentSecsSinceEpoch() - 3600 * 24 * qMax(ui->autoClearComeIntervalSpin->value(), 7); // 至少备份7天
@@ -1782,6 +1775,13 @@ MainWindow::~MainWindow()
             deleteFile(info.absoluteFilePath());
         }
     }
+
+    // 删除缓存
+    if (isFileExist(webCache("")))
+        deleteDir(webCache(""));
+
+    delete ui;
+    tray->deleteLater();
 
     // 自动更新
     QString pkgPath = QApplication::applicationDirPath() + "/update.zip";
