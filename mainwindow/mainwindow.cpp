@@ -8453,7 +8453,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 发送指定直播间弹幕
     if (msg.contains("sendRoomMsg"))
     {
-        re = RE("sendRoomMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S*)\\s*\\)");
+        re = RE("sendRoomMsg\\s*\\(\\s*(\\d+)\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
