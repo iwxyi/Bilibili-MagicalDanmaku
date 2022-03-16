@@ -3195,6 +3195,30 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     }
 
     // 连接信号
+    connectTimerTaskEvent(tw, item);
+
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    tw->check->setChecked(enable);
+    tw->spin->setValue(second);
+    tw->slotSpinChanged(second);
+    tw->edit->setPlainText(text);
+    tw->autoResizeEdit();
+    tw->adjustSize();
+
+    return tw;
+}
+
+TaskWidget *MainWindow::addTimerTask(MyJson json)
+{
+    auto item = addTimerTask(false, 1800, "");
+    item->fromJson(json);
+    return item;
+}
+
+void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
+{
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = tw->check->isChecked();
         int row = ui->taskListWidget->row(item);
@@ -3243,25 +3267,6 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     connect(tw, &TaskWidget::signalResized, tw, [=]{
         item->setSizeHint(tw->size());
     });
-
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
-
-    // 设置属性
-    tw->check->setChecked(enable);
-    tw->spin->setValue(second);
-    tw->slotSpinChanged(second);
-    tw->edit->setPlainText(text);
-    tw->autoResizeEdit();
-    tw->adjustSize();
-
-    return tw;
-}
-
-TaskWidget *MainWindow::addTimerTask(MyJson json)
-{
-    auto item = addTimerTask(false, 1800, "");
-    item->fromJson(json);
-    return item;
 }
 
 void MainWindow::saveTaskList()
@@ -3310,6 +3315,30 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     }
 
     // 连接信号
+    connectAutoReplyEvent(rw, item);
+
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    rw->check->setChecked(enable);
+    rw->keyEdit->setText(key);
+    rw->replyEdit->setPlainText(reply);
+    rw->autoResizeEdit();
+    rw->adjustSize();
+    item->setSizeHint(rw->sizeHint());
+
+    return rw;
+}
+
+ReplyWidget *MainWindow::addAutoReply(MyJson json)
+{
+    auto item = addAutoReply(false, "", "");
+    item->fromJson(json);
+    return item;
+}
+
+void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
+{
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->replyListWidget->row(item);
@@ -3370,25 +3399,6 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     connect(rw, &ReplyWidget::signalResized, rw, [=]{
         item->setSizeHint(rw->size());
     });
-
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
-
-    // 设置属性
-    rw->check->setChecked(enable);
-    rw->keyEdit->setText(key);
-    rw->replyEdit->setPlainText(reply);
-    rw->autoResizeEdit();
-    rw->adjustSize();
-    item->setSizeHint(rw->sizeHint());
-
-    return rw;
-}
-
-ReplyWidget *MainWindow::addAutoReply(MyJson json)
-{
-    auto item = addAutoReply(false, "", "");
-    item->fromJson(json);
-    return item;
 }
 
 void MainWindow::saveReplyList()
@@ -3475,6 +3485,30 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     }
 
     // 连接信号
+    connectEventActionEvent(rw, item);
+
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+
+    // 设置属性
+    rw->check->setChecked(enable);
+    rw->eventEdit->setText(cmd);
+    rw->actionEdit->setPlainText(action);
+    rw->autoResizeEdit();
+    rw->adjustSize();
+    item->setSizeHint(rw->sizeHint());
+
+    return rw;
+}
+
+EventWidget* MainWindow::addEventAction(MyJson json)
+{
+    auto item = addEventAction(false, "", "");
+    item->fromJson(json);
+    return item;
+}
+
+void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
+{
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->eventListWidget->row(item);
@@ -3535,25 +3569,6 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     connect(rw, &EventWidget::signalResized, rw, [=]{
         item->setSizeHint(rw->size());
     });
-
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
-
-    // 设置属性
-    rw->check->setChecked(enable);
-    rw->eventEdit->setText(cmd);
-    rw->actionEdit->setPlainText(action);
-    rw->autoResizeEdit();
-    rw->adjustSize();
-    item->setSizeHint(rw->sizeHint());
-
-    return rw;
-}
-
-EventWidget* MainWindow::addEventAction(MyJson json)
-{
-    auto item = addEventAction(false, "", "");
-    item->fromJson(json);
-    return item;
 }
 
 void MainWindow::saveEventList()
@@ -3971,19 +3986,31 @@ void MainWindow::showListMenu(QListWidget *listWidget, QString listKey, VoidFunc
         auto widget = listWidget->itemWidget(item);
         auto tw = static_cast<ListItemInterface*>(widget);
         MyJson json = tw->toJson();
+        listWidget->removeItemWidget(item);
         listWidget->takeItem(row);
+
         delete item;
         tw->deleteLater();
 
         auto newTw = new T(listWidget);
         newTw->fromJson(json);
-
         QListWidgetItem* newItem = new QListWidgetItem;
+
         listWidget->insertItem(newRow, newItem);
         listWidget->setItemWidget(newItem, newTw);
         newTw->autoResizeEdit();
         newItem->setSizeHint(newTw->sizeHint());
 
+        /* // 这个最简单的方式行不通，不知道为什么widget都会被删掉
+        auto item = listWidget->takeItem(row);
+        listWidget->insertItem(newRow, item); */
+
+        if (listKey == CODE_TIMER_TASK_KEY)
+            connectTimerTaskEvent((TaskWidget*)newTw, newItem);
+        else if (listKey == CODE_AUTO_REPLY_KEY)
+            connectAutoReplyEvent((ReplyWidget*)newTw, newItem);
+        else if (listKey == CODE_EVENT_ACTION_KEY)
+            connectEventActionEvent((EventWidget*)newTw, newItem);
         (this->*saveFunc)();
         listWidget->setCurrentRow(newRow);
     };
@@ -4500,7 +4527,7 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
                 ui->connectStateLabel->setText("无法连接");
                 return ;
             }
-            qDebug() << "尝试重新获取房间信息：" << (reconnectCount + 1);
+            qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
             QTimer::singleShot(5000, [=]{
                 getRoomInfo(reconnect, reconnectCount + 1);
             });

@@ -806,16 +806,19 @@ private:
 
     TaskWidget *addTimerTask(bool enable, int second, QString text, int index = -1);
     TaskWidget *addTimerTask(MyJson json);
+    void connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem* item);
     void saveTaskList();
     void restoreTaskList();
 
     ReplyWidget *addAutoReply(bool enable, QString key, QString reply, int index= -1);
     ReplyWidget *addAutoReply(MyJson json);
+    void connectAutoReplyEvent(ReplyWidget* rw, QListWidgetItem* item);
     void saveReplyList();
     void restoreReplyList();
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
     EventWidget *addEventAction(MyJson json);
+    void connectEventActionEvent(EventWidget* tw, QListWidgetItem* item);
     void saveEventList();
     void restoreEventList();
     bool hasEvent(QString cmd) const;
