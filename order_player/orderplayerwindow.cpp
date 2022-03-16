@@ -550,6 +550,13 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         qWarning() << "搜索词是空的！";
         return ;
     }
+
+    if (key.startsWith("http"))
+    {
+        openPlayList(key);
+        return ;
+    }
+
     qInfo() << "搜索音乐：" << sourceName(musicSource) << key << addBy << "   通知：" << notify;
     MusicSource source = musicSource; // 需要暂存一个备份，因为可能会变回去
     QString url;
