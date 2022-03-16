@@ -8874,13 +8874,14 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QString text = caps.at(2);
             text.replace("%n%", "\n");
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
             writeTextFile(info.absoluteFilePath(), text);
+            qInfo() << "写入文件：" << fileName;
             return true;
         }
     }
@@ -8895,13 +8896,14 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QString format = caps.at(2);
             format.replace("%n%", "\n");
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
             appendFileLine(fileName, format, lastDanmaku);
+            qInfo() << "修改文件：" << fileName;
             return true;
         }
     }
@@ -8916,7 +8918,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QString anchor = caps.at(2);
             QString content = caps.at(3);
             QString text = readTextFile(fileName);
@@ -8925,6 +8927,70 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 writeTextFile(fileName, text, codeFileCodec);
             else
                 writeTextFile(fileName, text);
+            qInfo() << "修改文件：" << fileName;
+            return true;
+        }
+    }
+
+    // 移除文件某一行，行数从1开始
+    if (msg.contains("removeTextFileLine"))
+    {
+        re = RE("removeTextFileLine\\s*\\(\\s*(.+?)\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + fileName;
+            int line = caps.at(2).toInt();
+
+            QString text = readTextFileAutoCodec(fileName);
+            QStringList sl = text.split("\n");
+            line--;
+            if (line < 0 || line >= sl.size())
+            {
+                showError("removeTextFileLine", "错误的行数：" + snum(line) + "不在1~" + snum(sl.size()) + "之间");
+                return true;
+            }
+
+            sl.removeAt(line);
+            writeTextFile(fileName, sl.join("\n"));
+            qInfo() << "修改文件：" << fileName;
+
+            return true;
+        }
+    }
+
+    // 修改文件行
+    if (msg.contains("modifyTextFileLine"))
+    {
+        re = RE("modifyTextFileLine\\s*\\(\\s*(.+?)\\s*,\\s*(\\d+)\\s*,\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString fileName = caps.at(1);
+            if (QFileInfo(fileName).isRelative())
+                fileName = dataPath + fileName;
+            int line = caps.at(2).toInt();
+            QString newText = caps.at(3);
+            if (newText.length() >= 2 && newText.startsWith("\"") && newText.startsWith("\""))
+                newText = newText.mid(1, newText.length() - 2);
+
+            QString text = readTextFileAutoCodec(fileName);
+            QStringList sl = text.split("\n");
+            line--;
+            if (line < 0 || line >= sl.size())
+            {
+                showError("modifyTextFileLine", "错误的行数：" + snum(line) + "不在1~" + snum(sl.size()) + "之间");
+                return true;
+            }
+
+            sl[line] = newText;
+            writeTextFile(fileName, sl.join("\n"));
+            qInfo() << "修改文件：" << fileName;
+
             return true;
         }
     }
@@ -8939,7 +9005,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QFile file(fileName);
             file.remove();
             return true;
@@ -8956,7 +9022,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QString startLineS = caps.at(2);
             int startLine = 0;
             if (!startLineS.isEmpty())
@@ -8989,7 +9055,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = caps.at(1);
             if (QFileInfo(fileName).isRelative())
-                fileName = dataPath + "/" + fileName;
+                fileName = dataPath + fileName;
             QString startLineS = caps.at(2);
             int startLine = 0;
             if (!startLineS.isEmpty())
