@@ -5994,7 +5994,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(danmaku.getLevel());
 
     else if (key == "%text%")
-        return danmaku.getText().replace("\n", "%n%");
+        return toSingleLine(danmaku.getText());
 
     // 进来次数
     else if (key == "%come_count%")
@@ -6892,10 +6892,6 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         double a = argList.at(0).toDouble();
         return QString::number(int(a * a));
     }
-    else if (funcName == "fileExists")
-    {
-        return isFileExist(args) ? "1" : "0";
-    }
     else if (funcName == "cd")
     {
         int ch = 0;
@@ -7000,15 +6996,15 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QString key = args;
         return getEventExecutionResult(key, danmaku);
     }
-    else if (funcName == "readTextFiile")
+    else if (funcName == "readTextFile")
     {
         if (argList.size() < 1 || args.isEmpty())
             return errorArg("文件路径");
         QString fileName = toFilePath(argList.at(0));
         QString content = readTextFileAutoCodec(fileName);
-        return content.replace("\n", "%n%");
+        return toSingleLine(content);
     }
-    else if (funcName == "isFileExist")
+    else if (funcName == "fileExists" || funcName == "isFileExist")
     {
         if (argList.size() < 1 || args.isEmpty())
             return errorArg("文件路径");
@@ -7043,13 +7039,13 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     {
         if (argList.size() < 1 || args.isEmpty())
             return errorArg("字符串");
-        return QByteArray(args.toUtf8().replace("%n%", "\n")).toPercentEncoding();
+        return QByteArray(toMultiLine(args).toUtf8()).toPercentEncoding();
     }
     else if (funcName == "urlDecode")
     {
         if (argList.size() < 1 || args.isEmpty())
             return errorArg("字符串");
-        return QByteArray::fromPercentEncoding(args.toUtf8()).replace("\n", "%n%");
+        return toSingleLine(QByteArray::fromPercentEncoding(args.toUtf8()));
     }
 
     return "";
@@ -8496,6 +8492,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             QString msg = caps.at(2);
             qInfo() << "执行命令：" << caps;
+            msg = toMultiLine(msg);
             sendPrivateMsg(uid, msg);
             return true;
         }
@@ -8525,7 +8522,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             int time = caps.at(1).toInt();
             QString msg = caps.at(2);
-            msg = msg.replace("%n%", "\\n");
+            msg = toRunableCode(toMultiLine(msg));
             QTimer::singleShot(time, this, [=]{
                 LiveDanmaku ld = danmaku;
                 sendAutoMsg(msg, danmaku);
@@ -8542,7 +8539,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString msg = caps.at(1);
-            msg.replace("%n%", "\n");
+            msg = toMultiLine(msg);
             qInfo() << "执行命令：" << caps;
             localNotify(msg);
             return true;
@@ -8554,7 +8551,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString uid = caps.at(1);
             QString msg = caps.at(2);
-            msg.replace("%n%", "\n");
+            msg = toMultiLine(msg);
             qInfo() << "执行命令：" << caps;
             localNotify(msg, uid.toLongLong());
             return true;
@@ -8744,7 +8741,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString url = caps.at(1);
             QString data = caps.at(2);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
-            data.replace("%n%", "\n");
+            data = toMultiLine(data);
             post(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
                 qInfo() << QString(ba);
@@ -8770,7 +8767,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
-            data.replace("%n%", "\n");
+            data = toMultiLine(data);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
@@ -8834,7 +8831,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
             QString data = caps.at(2);
-            data.replace("%n%", "\n");
+            data = toMultiLine(data);
 
             qInfo() << "执行命令：" << caps;
             sendTextToSockets(cmd, data.toUtf8());
@@ -8849,7 +8846,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
             QString data = caps.at(2);
-            data.replace("%n%", "\n");
+            data = toMultiLine(data);
 
             qInfo() << "执行命令：" << caps;
             if (danmakuSockets.size())
@@ -8866,7 +8863,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
-            cmd.replace("%n%", "\n");
+            cmd = toMultiLine(cmd);
             qInfo() << "执行命令：" << caps;
             QProcess p(nullptr);
             p.start(cmd);
@@ -8885,7 +8882,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             QString cmd = caps.at(1);
-            cmd.replace("%n%", "\n");
+            cmd = toMultiLine(cmd);
             qInfo() << "执行命令：" << caps;
             QProcess p(nullptr);
             p.startDetached(cmd);
@@ -8925,7 +8922,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = toFilePath(caps.at(1));
             QString text = caps.at(2);
-            text.replace("%n%", "\n");
+            text = toMultiLine(text);
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
@@ -8945,7 +8942,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString fileName = toFilePath(caps.at(1));
             QString format = caps.at(2);
-            format.replace("%n%", "\n");
+            format = toMultiLine(format);
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
@@ -9066,7 +9063,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (!startLineS.isEmpty())
                 startLine = startLineS.toInt();
             QString code = caps.at(3);
-            code.replace("%n%", "\\n").replace("\\%", "%");
+            code = toRunableCode(toMultiLine(code));
             QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
             for (int i = startLine; i < lines.size(); i++)
@@ -9098,7 +9095,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (!startLineS.isEmpty())
                 startLine = startLineS.toInt();
             QString code = caps.at(3);
-            code.replace("%n%", "\\n").replace("\\%", "%");
+            code = toRunableCode(toMultiLine(code));
             QString content = readTextFileAutoCodec(fileName);
             QStringList lines = content.split("\n", QString::SkipEmptyParts);
             for (int i = startLine; i < lines.size(); i++)
@@ -9743,7 +9740,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (text.isEmpty())
                 return true;
             QString code = caps.at(2);
-            code.replace("%n%", "\\n").replace("\\%", "%");
+            code = toRunableCode(toMultiLine(code));
             TxNlp::instance()->chat(text, [=](QString result) {
                 LiveDanmaku dmk = danmaku;
                 dmk.setText(result);
@@ -17269,7 +17266,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     params << "msg%5Breceiver_type%5D=1";
     params << "msg%5Bmsg_type%5D=1";
     params << "msg%5Bmsg_status%5D=0";
-    params << "msg%5Bcontent%5D=" + QUrl::toPercentEncoding("{\"content\":\"" + msg + "\"}");
+    params << "msg%5Bcontent%5D=" + QUrl::toPercentEncoding("{\"content\":\"" + msg.replace("\n", "\\n") + "\"}");
     params << "msg%5Btimestamp%5D="+snum(QDateTime::currentSecsSinceEpoch());
     params << "msg%5Bnew_face_version%5D=0";
     params << "msg%5Bdev_id%5D=81872DC0-FBC0-4CF8-8E93-093DE2083F51";
@@ -18868,6 +18865,11 @@ QString MainWindow::toSingleLine(QString text) const
 QString MainWindow::toMultiLine(QString text) const
 {
     return text.replace("%n%", "\n").replace("%m%", "\\n");
+}
+
+QString MainWindow::toRunableCode(QString text) const
+{
+    return text.replace("\\%", "%");
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

@@ -913,7 +913,6 @@ border-image: url(C:/Path/To/Image.png)
 | readTextFile(fileName)             | 读取文本文件     | 读取文本文件中的所有内容，所有换行符 `\n` 将会被替换为 `%n%` |
 | getTextFileLine(fileName, line)    | 获取文本文件行   | 读取文本文件中的第 line 行，行数从 1 开始                    |
 | getTextFileLineCount(fileName)     | 获取文本文件行数 | 读取文本文件中的所有行数（以 `\n` 为准）                     |
-| isFileExist(fileName)              | 文件是否存在     | 判断有没有该文件，若有为 1，不存在则为 0                     |
 
 以获取时间为例：
 
@@ -1203,7 +1202,7 @@ tips：
 | execRemoteCommand(cmd, 0)                          | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
 | sendPrivateMsg(uid, msg)                           | 发送私信         | 向指定用户发送私信                                           |
 | sendRoomMsg(roomId, msg)                           | 发送直播间弹幕   | 向指定直播间发送弹幕                                         |
-| timerShot(msecond, msg)                            | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令）           |
+| timerShot(msecond, msg)                            | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令，多个命令使用 `%m%` 分隔） |
 | localNotify(msg)                                   | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
 | localNotify(uid, msg)                              | 本地通知         | 同上，带用户ID                                               |
 | speakText(msg)                                     | 播放语音         | 朗读文本                                                     |

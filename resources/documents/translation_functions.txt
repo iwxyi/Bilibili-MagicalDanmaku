@@ -23,7 +23,6 @@
 取对数10=log10
 取平方=pow2
 取乘方=pow
-文件存在=fileExists
 冷却通道=msgCd
 等待通道=msgWait
 粘贴文字=pasteText
@@ -33,9 +32,9 @@
 获取窗口位置颜色=getWindowPositionColor
 获取回复执行结果=getReplyExecutionResult
 获取事件执行结果=getEventExecutionResult
+文件存在=fileExists
 读取文本文件=readTextFile
 获取文本文件行=getTextFileLine
 获取文本文件行数=getTextFileLineCount
-文件是否存在=isFileExist
 url编码=urlEncode
 url解码=urlDecode

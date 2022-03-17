@@ -1062,6 +1062,7 @@ private:
     QString toFilePath(const QString& fileName) const;
     QString toSingleLine(QString text) const;
     QString toMultiLine(QString text) const;
+    QString toRunableCode(QString text) const;
 
 private:
     // 应用信息
