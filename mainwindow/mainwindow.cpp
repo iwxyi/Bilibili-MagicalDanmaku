@@ -19409,12 +19409,12 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
         break;
     case VoiceMS:
     {
-        static bool notified = false;
-        if (!notified)
-        {
-            notified = true;
-            showNotify("微软语音", "暂不支持GUI调节");
-        }
+//        static bool notified = false;
+//        if (!notified)
+//        {
+//            notified = true;
+//            showNotify("微软语音", "暂不支持GUI调节");
+//        }
         break;
     }
     }
@@ -19444,12 +19444,12 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
         break;
     case VoiceMS:
     {
-        static bool notified = false;
-        if (!notified)
-        {
-            notified = true;
-            showNotify("微软语音", "暂不支持GUI调节");
-        }
+//        static bool notified = false;
+//        if (!notified)
+//        {
+//            notified = true;
+//            showNotify("微软语音", "暂不支持GUI调节");
+//        }
         break;
     }
     }
@@ -19479,12 +19479,12 @@ void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
         break;
     case VoiceMS:
     {
-        static bool notified = false;
-        if (!notified)
-        {
-            notified = true;
-            showNotify("微软语音", "暂不支持GUI调节");
-        }
+//        static bool notified = false;
+//        if (!notified)
+//        {
+//            notified = true;
+//            showNotify("微软语音", "暂不支持GUI调节");
+//        }
         break;
     }
     }
@@ -20303,6 +20303,7 @@ void MainWindow::on_actionLast_Candidate_triggered()
     dialog->setAttribute(Qt::WA_DeleteOnClose, true);
     dialog->setWindowTitle("变量历史");
     dialog->setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    dialog->setGeometry(this->geometry());
     dialog->exec();
 }
 
