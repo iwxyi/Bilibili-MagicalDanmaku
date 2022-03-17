@@ -7039,6 +7039,18 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QString content = readTextFileAutoCodec(fileName);
         return snum(content.split("\n").size());
     }
+    else if (funcName == "urlEncode")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("字符串");
+        return QByteArray(args.toUtf8().replace("%n%", "\n")).toPercentEncoding();
+    }
+    else if (funcName == "urlDecode")
+    {
+        if (argList.size() < 1 || args.isEmpty())
+            return errorArg("字符串");
+        return QByteArray::fromPercentEncoding(args.toUtf8()).replace("\n", "%n%");
+    }
 
     return "";
 }
@@ -18839,6 +18851,23 @@ QString MainWindow::toFilePath(const QString &fileName) const
     if (QFileInfo(fileName).isRelative())
         return dataPath + fileName;
     return fileName;
+}
+
+/**
+ * 从不安全的输入方式读取到的文本，如读取txt
+ * 转换为代码中可以解析的安全的文本
+ */
+QString MainWindow::toSingleLine(QString text) const
+{
+    return text.replace("\n", "%n%").replace("\\n", "%m%");
+}
+
+/**
+ * 从代码中解析到的文本，变为可以保存的文本
+ */
+QString MainWindow::toMultiLine(QString text) const
+{
+    return text.replace("%n%", "\n").replace("%m%", "\\n");
 }
 
 void MainWindow::on_actionMany_Robots_triggered()

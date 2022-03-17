@@ -37,3 +37,5 @@
 获取文本文件行=getTextFileLine
 获取文本文件行数=getTextFileLineCount
 文件是否存在=isFileExist
+url编码=urlEncode
+url解码=urlDecode

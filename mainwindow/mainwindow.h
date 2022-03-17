@@ -1060,6 +1060,8 @@ private:
     void showNotify(QString s) const;
 
     QString toFilePath(const QString& fileName) const;
+    QString toSingleLine(QString text) const;
+    QString toMultiLine(QString text) const;
 
 private:
     // 应用信息
