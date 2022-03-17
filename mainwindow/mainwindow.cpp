@@ -15120,17 +15120,17 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             {
                 for (int i = 0; i < roomDanmakus.size(); i++)
                     danmakuWindow->slotNewLiveDanmaku(roomDanmakus.at(i));
-                danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-                danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-
-                if (pking)
-                {
-                    danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
-                }
             }
             else // 没有之前的弹幕，从API重新pull下来
             {
                 pullLiveDanmaku();
+            }
+            danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+            danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+
+            if (pking)
+            {
+                danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
             }
         });
     }

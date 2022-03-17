@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>917</width>
-    <height>671</height>
+    <width>928</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>837</width>
-             <height>551</height>
+             <width>848</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1840,7 +1840,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>10</y>
               <width>151</width>
-              <height>171</height>
+              <height>191</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5455,6 +5455,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QCheckBox" name="processUnreadMsgCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -8530,7 +8533,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>917</width>
+     <width>928</width>
      <height>23</height>
     </rect>
    </property>

@@ -516,7 +516,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                             || msg.indexOf(eeyu) != -1
                             || msg.indexOf(fanti) != -1)
                     {
-                        qDebug() << "检测到外语，自动翻译";
+                        qInfo() << "检测到外语，自动翻译";
                         startTranslate(item);
                     }
                 }
@@ -2095,6 +2095,7 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
 void LiveDanmakuWindow::setAIReply(bool reply)
 {
     this->aiReply = reply;
+    // qInfo() << "智能闲聊开关：" << reply;
 }
 
 /// 腾讯AI开放平台 https://ai.qq.com/console/home
