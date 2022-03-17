@@ -25,6 +25,7 @@ QString readTextFile(QString path, QTextCodec *codec)
         return "";
     }
     QTextStream text_stream(&file);
+    text_stream.setGenerateByteOrderMark(true);
     text_stream.setCodec(codec);
     while(!text_stream.atEnd())
     {
@@ -75,6 +76,7 @@ bool writeTextFile(QString path, const QString& text, QTextCodec *codec)
         QMessageBox::critical(nullptr, QObject::tr("保存失败"), QObject::tr("打开文件失败\n路径：%1\n可能是无读写文件权限，请手动创建这个文件").arg(path));
     }
     QTextStream text_stream(&file);
+    text_stream.setGenerateByteOrderMark(true);
     text_stream.setCodec(codec);
     text_stream << text;
     file.close();

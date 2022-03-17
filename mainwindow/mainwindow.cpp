@@ -7667,6 +7667,9 @@ void MainWindow::startSaveDanmakuToFile()
     danmuLogFile = new QFile(dataPath+"danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
+    danmuLogStream->setGenerateByteOrderMark(true);
+    if (!externFileCodec.isEmpty())
+        danmuLogStream->setCodec(externFileCodec.toUtf8());
 }
 
 void MainWindow::finishSaveDanmuToFile()
@@ -10637,6 +10640,7 @@ void MainWindow::savePlayingSong()
     QFile file(dir.absoluteFilePath("playing.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!externFileCodec.isEmpty())
         stream.setCodec(externFileCodec.toUtf8());
     stream << text;
@@ -10683,6 +10687,7 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     QFile file(dir.absoluteFilePath("songs.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!externFileCodec.isEmpty())
         stream.setCodec(externFileCodec.toUtf8());
     stream << sl.join("\n");
@@ -10704,6 +10709,7 @@ void MainWindow::saveSongLyrics()
     QFile file(dir.absoluteFilePath("lyrics.txt"));
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!externFileCodec.isEmpty())
         stream.setCodec(externFileCodec.toUtf8());
     stream << lyrics.join("\n");
@@ -16678,6 +16684,7 @@ void MainWindow::saveMonthGuard()
     QFile file(filePath);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
 
@@ -16711,6 +16718,7 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qWarning() << "打开上船记录文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
 
@@ -16742,6 +16750,7 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qWarning() << "打开礼物记录文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
 
@@ -16765,6 +16774,7 @@ void MainWindow::appendFileLine(QString filePath, QString format, LiveDanmaku da
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append))
         qWarning() << "打开文件失败：" << filePath;
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!codeFileCodec.isEmpty())
         stream.setCodec(codeFileCodec.toUtf8());
     stream << processDanmakuVariants(format, danmaku) << "\n";
@@ -19905,6 +19915,7 @@ void MainWindow::on_exportDailyButton_clicked()
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
     if (!recordFileCodec.isEmpty())
         stream.setCodec(recordFileCodec.toUtf8());
 
