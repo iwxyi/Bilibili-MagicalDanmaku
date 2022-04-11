@@ -1245,7 +1245,7 @@ tips：
 | sendLongText(text)                                 | 发送长文本       | 发送长文本，自动分割成多条                                   |
 | appendFileLine(fileName, format)                   | 添加文件行       | 追加一行文本保存至“程序目录/dirName/fileName”末尾，支持变量。可用于保存送礼记录、上船记录等 |
 | insertFileAnchor(fileName, anchor, content)        | 插入文件锚点     | 插入文字至文件中的“anchor”前。可组建HTML的`<table>` 内容     |
-| writeTextFile(fileName, text)                      | 保存文本文件     | 写入文本至“程序目录/fileName”                                |
+| writeTextFile(fileName, text)                      | 保存文本文件     | 写入文本至“程序目录/fileName”，允许相对/绝对路径。注意路径的一些问题，比如“C:\new\a.txt”中的“\n”会被当做换行，可以使用“C://new/a.txt”的形式代替 |
 | removeFile(fileName)                               | 删除文件         | 删除文件“程序目录/fileName”                                  |
 | removeTextFileLine(fileName, line)                 | 移除文本文件行   | 删除文本文件中的某一行，行号从1开始                          |
 | modifyTextFileLine(fileName, line, newText)        | 修改文本文件行   | 修改文本文件中的某一行，行号从1开始                          |

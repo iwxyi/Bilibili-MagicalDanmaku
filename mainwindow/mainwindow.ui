@@ -1929,6 +1929,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="QLabel" name="label_60">
+               <property name="toolTip">
+                <string>需要到 自然语言处理 开通服务，才能使用秘钥</string>
+               </property>
                <property name="text">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.cloud.tencent.com/cam/capi&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;腾讯NLP秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -3972,7 +3975,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>关闭窗口后不退出程序</string>
+                <string>自动下载与安装新版安装包</string>
                </property>
                <property name="text">
                 <string>自动更新</string>

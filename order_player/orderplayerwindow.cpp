@@ -1157,7 +1157,7 @@ bool OrderPlayerWindow::isSongDownloaded(Song song)
 QString OrderPlayerWindow::msecondToString(qint64 msecond)
 {
     if (!msecond)
-        return "";
+        return "00:00";
     return QString("%1:%2").arg(msecond/1000 / 60, 2, 10, QLatin1Char('0'))
             .arg(msecond/1000 % 60, 2, 10, QLatin1Char('0'));
 }

@@ -798,7 +798,7 @@ QTableCornerButton::section
        <widget class="ClickSlider" name="playProgressSlider">
         <property name="styleSheet">
          <string notr="true">QSlider{ border-color: #bcbcbc; }
-QSlider::groove:horizontal { border: 1px solid #999999; height: 1px; margin: 0px 0; left: 5px; right: 5px; }
+QSlider::groove:horizontal { border: 1px solid #999999; height: 1px; margin: 0px 0;  }
 QSlider::handle:horizontal { border: 0px ; border-image: url(:/snow/snow4); width: 16px; margin: -8px -7px -8px -7px; }
 QSlider::add-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 #bcbcbc, stop:0.25 #bcbcbc, stop:0.5 #bcbcbc, stop:1 #bcbcbc); } 
 QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 #439cf3, stop:0.25 #439cf3, stop:0.5 #439cf3, stop:1 #439cf3); }</string>
@@ -911,7 +911,7 @@ QSlider::sub-page:horizontal{ background: qlineargradient(spread:pad, x1:0, y1:1
      <x>0</x>
      <y>0</y>
      <width>956</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

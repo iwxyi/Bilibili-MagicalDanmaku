@@ -6440,7 +6440,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%pk_magical_room%")
         return !pkRoomId.isEmpty() && magicalRooms.contains(pkRoomId) ? "1" : "0";
 
-    // 正则播放的音乐
+    // 正在播放的音乐
     else if (key == "%playing_song%")
     {
         QString name = "";
