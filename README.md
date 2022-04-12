@@ -870,7 +870,7 @@ border-image: url(C:/Path/To/Image.png)
 
 | 常量 | 描述                                                         |
 | ---- | ------------------------------------------------------------ |
-| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets`、`sendToLastSocket()`、`runCommandLine()` |
+| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets()`、`sendToLastSocket()`、`runCommandLine()` |
 
 
 
@@ -1217,14 +1217,14 @@ tips：
 | postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
 | postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送                                         |
 | downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件                     |
-| sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有WebSocket                                          |
-| sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket                                    |
+| sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket |
+| sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）     |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |
 | startProgram                                       | 运行程序         | 打开外部程序（例如守护进程）                                 |
 | setSetting                                         | 设置某项配置     | 等同于v3.7之前的setValue，已不建议使用                       |
 | removeSetting                                      | 移除某项配置     | 同上                                                         |
 | setValue(key, val)                                 | 设置值           | 保存值到配置文件，通过%{key}%获取，重启后仍在。默认保存在“heaps”分组下，使用“group/key”指定分组 |
-| addValue(key, delta)                               | 添加值           | 在原先值的基础上，添加delta大小                              |
+| addValue(key, val)                                 | 添加值           | 在原先值的基础上，添加val大小                                |
 | setValues(exp, val)                                | 批量设置值       | 批量修改**已有**的值，exp为正则表达式。不允许批量设置非默认分组（即不能带“/”） |
 | addValues(exp, val)                                | 批量添加值       | 批量添加已有的值                                             |
 | setValuesIf(exp, [condition], newVal)              | 批量设置值如果   | 按条件批量修改已有的值，`[condition]`同弹幕条件（带方括号），详见下方“批量修改配置” |
@@ -1392,7 +1392,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 如果要允许不存在的键或者超出范围的索引，可以在后面加上英文字符“?”，如：`%.data.list?.1000?%`，当没有list或者list数量不到1000时，会返回空白文本。“?”只影响单个键或者索引，例如若没有data，会原样返回 `%.data.list?.1000?%`，相当于报错。
 
-这样的作用是，JSON的**某些键可能是从变量中获取**，需要**先解析变量**才能开始读取完整的JSON。
+这样的作用是，JSON的**某些键可能是从变量中获取**，需要**先解析变量**才能开始读取完整的JSON，而变量可能会出问题。
 
 **该版本之前，默认允许错误，返回空白**。
 
@@ -2550,7 +2550,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 
 | 事件命令           | 说明                                                         |
 | ------------------ | ------------------------------------------------------------ |
-| NEW_WEBSOCKET      | 新连接进入                                                   |
+| NEW_WEBSOCKET      | 新连接进入（此时尚未收到它的cmds）                           |
 | WEBSOCKET_CMDS     | socket设置对应类型，%text%获取，英文逗号分隔，例如：“SONG_LIST,DANMAKU” |
 | SOCKET_MSG_RECEIVE | Socket接收到消息的事件（去除一些内置cmd）                    |
 | SOCKET:[cmd]       | Socket接收到对应cmd消息的事件（所有cmd）                     |
@@ -2567,16 +2567,17 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 [%text%=SQUAT]>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":%{squat}%})
 ```
 
-添加`初始化蹲起数量`的动作（事件可空，手动发送）：
+添加`初始化蹲起数量`的动作（事件建议留空，手动点击发送按钮）：
 
 ```
 >setValue(squat, 0)\n>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":0})
 ```
 
-添加`蹲起数量+1`的动作（事情可空，手动发送）：
+添加`蹲起数量+1`的动作（事件自选，可空着手动点发送来增加次数）：
 
 ```
->setValue(squat, %[%{squat}%+1]%)\n>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":%[%{squat}%+1]%})
+>setValue(squat, %[%{squat}%+1]%)\n\
+	>sendToSockets(SQUAT, {"cmd":"SQUAT", "data":%[%{squat}%+1]%})
 ```
 
 创建`www/squat.html`文件，写入：
@@ -2620,7 +2621,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
                 switch (cmd) {
                     case 'SQUAT':
                         console.log(json);
-                        var count = parseInt(json['data']);
+                        var count = parseInt(json['data']); // 这就是个数
                         $("#count").html('蹲起个数：' + count);
                         break;
                 }
@@ -2630,7 +2631,7 @@ showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积�
 </body>
 ```
 
-访问`localhost:5520/squat.html`（端口域名按照设定的来），显示`蹲起数量：0`。
+访问`localhost:5520/squat.html`（域名端口按照设置的来），显示`蹲起数量：0`。
 
 每次点事件中“蹲起数量+1”那一项的“**发送**”按钮，对应蹲起数量加一。
 
@@ -2964,14 +2965,15 @@ JSON格式：
 
 ```json
 {
-    /* 允许多个网页，list中一项一个 */
-	"list": [
+    "name": "点歌姬",			  // 扩展整体名字
+    "min_version": "4.4.0",		// 能用的神奇弹幕最低版本
+	"list": [					// 允许多个网页，list中一项一个
 		{
-			"name": "弹幕点歌列表", // 这是名字
+			"name": "弹幕点歌列表",       // 这是名字
 			"url": "/music/index.html", // 相对于主机地址的URL相对路径
-			"css": "/music/list.css", // 便于用户修改的CSS文件相对于www文件夹的路径
+			"css": "/music/list.css",   // 便于用户修改的CSS文件相对于www文件夹的路径
 			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除", // 简单描述与说明
-            "code": [], // 有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
+            "code": [], 	// 有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
 		},
 		{
 			"name": "当前歌曲名字",

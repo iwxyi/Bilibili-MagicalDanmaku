@@ -1,3 +1,20 @@
+### v4.5.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.1)
+
+- 添加修改文件行、删除文件行命令
+- 添加一些文本操作函数
+- 添加URL编码与解码函数
+- 添加单行与多行的转换`%n%`，支持发送多行私信
+- 优化`sendToSockets`当cmd为空时发送给所有已连接的WebSockets
+- 优化发送指定直播间弹幕、发送私信可以带空格
+- 优化检查变量窗口的大小
+- 优化写入UTF-8文件添加BOM
+- 修复点歌姬换源播放触发结束事件的问题
+- 修复点歌姬拖动进度条的偏移问题
+- 修复文件操作路径多余的斜杠
+- 修复智能闲聊需要开关才能使用
+
+
+
 ### v4.5.0 [接收私信、微软语音、智能闲聊](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.0)
 
 #### 新增功能

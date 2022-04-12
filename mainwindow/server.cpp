@@ -119,7 +119,7 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         // 点歌相关
         if (musicWindow)
         {
-            // 点歌列表D
+            // 点歌列表
             if (sl.contains("SONG_LIST"))
             {
                 sendSongListToSockets = true;
@@ -347,20 +347,23 @@ void MainWindow::sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket *soc
 void MainWindow::sendTextToSockets(QString cmd, QByteArray data, QWebSocket *socket)
 {
     if (!socket && !danmakuSockets.size())
+    {
+        qWarning() << "sendTextToSockets: 没有可发送的socket对象";
         return ;
+    }
 
     // 这个data是包含了一个cmd和data
     if (socket)
     {
-        SOCKET_DEB << "单独发送：" << data;
+        qInfo() << "发送至指定socket：" << data;
         socket->sendTextMessage(data);
     }
     else
     {
-        SOCKET_DEB << "发送至每个socket" << cmd << data;
+        qInfo() << "发送至" << danmakuSockets.size() << "个socket" << cmd << data;
         foreach (QWebSocket* socket, danmakuSockets)
         {
-            if (danmakuCmdsMaps.contains(socket) && danmakuCmdsMaps[socket].contains(cmd))
+            if (cmd.isEmpty() || (danmakuCmdsMaps.contains(socket) && danmakuCmdsMaps[socket].contains(cmd)))
             {
                 socket->sendTextMessage(data);
             }

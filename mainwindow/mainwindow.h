@@ -57,7 +57,8 @@ QT_END_NAMESPACE
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
-# define mDebug if (1) qDebug()
+#define mDebug if (1) qDebug()
+#define SERVER_DEB if (1) qDebug() // 输出服务器功能相关信息
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
