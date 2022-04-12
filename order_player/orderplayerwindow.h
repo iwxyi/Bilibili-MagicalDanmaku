@@ -162,12 +162,6 @@ private slots:
 
     void sortSearchResult(int col);
 
-    void on_playProgressSlider_sliderReleased();
-
-    void on_playProgressSlider_sliderMoved(int position);
-
-    void on_volumeSlider_sliderMoved(int position);
-
     void on_playButton_clicked();
 
     void on_volumeButton_clicked();

@@ -182,6 +182,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         }
     });
     connect(player, &QMediaPlayer::mediaStatusChanged, this, [=](QMediaPlayer::MediaStatus status){
+        MUSIC_DEB << "player status changed:" << status;
         if (status == QMediaPlayer::EndOfMedia)
         {
             slotSongPlayEnd();
@@ -189,7 +190,6 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         else if (status == QMediaPlayer::InvalidMedia)
         {
             qWarning() << "无效媒体：" << playingSong.simpleString() << songPath(playingSong);
-            // 此时应该换源
             playNext();
         }
     });
@@ -206,10 +206,12 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     connect(ui->lyricWidget, SIGNAL(signalAdjustLyricTime(QString)), this, SLOT(adjustCurrentLyricTime(QString)));
 
-    connect(ui->playProgressSlider, &ClickSlider::signalClickMove, this, [=](int position){
+    connect(ui->playProgressSlider, &ClickSlider::signalMoved, this, [=](int position){
+        MUSIC_DEB << "移动进度条：" << position / 1000 << " / " << ui->playProgressSlider->maximum() / 1000
+                  << "(" << player->duration() / 1000 << ")";
         player->setPosition(position);
     });
-    connect(ui->volumeSlider, &ClickSlider::signalClickMove, this, [=](int position){
+    connect(ui->volumeSlider, &ClickSlider::signalMoved, this, [=](int position){
         player->setVolume(position);
         settings.setValue("music/volume", position);
     });
@@ -308,7 +310,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
         }
 
         // 不自动播放
-        player->stop();
+        player->pause();
     }
     else
     {
@@ -849,7 +851,6 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                 if (searchResultSongs.size())
                 {
                     qWarning() << "未找到匹配的歌曲，使用第一项";
-                    qDebug() << "playAfterDownloaded:" << playAfterDownloaded.simpleString();
                     song = searchResultSongs.first();
                 }
                 else
@@ -1941,7 +1942,7 @@ void OrderPlayerWindow::downloadSong(Song song)
             }
             else // QQMUSIC
             {
-                qDebug() << "获取QQ音乐直链：" << json;
+                qInfo() << "获取QQ音乐直链：" << json;
                 if (json.value("result").toInt() != 100)
                 {
                     qWarning() << "QQ歌曲链接返回结果不为100：" << json;
@@ -3471,32 +3472,6 @@ void OrderPlayerWindow::sortSearchResult(int col)
 }
 
 /**
- * 播放进度条被拖动
- */
-void OrderPlayerWindow::on_playProgressSlider_sliderReleased()
-{
-    int position = ui->playProgressSlider->sliderPosition();
-    player->setPosition(position);
-}
-
-/**
- * 播放进度条被拖动
- */
-void OrderPlayerWindow::on_playProgressSlider_sliderMoved(int position)
-{
-    player->setPosition(position);
-}
-
-/**
- * 音量进度被拖动
- */
-void OrderPlayerWindow::on_volumeSlider_sliderMoved(int position)
-{
-    player->setVolume(position);
-    settings.setValue("music/volume", position);
-}
-
-/**
  * 暂停/播放/随机推荐
  */
 void OrderPlayerWindow::on_playButton_clicked()
@@ -4009,7 +3984,8 @@ void OrderPlayerWindow::slotPlayerPositionChanged()
         connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
         ani->start();
     }
-    ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
+    if (!ui->playProgressSlider->isPressing())
+        ui->playProgressSlider->setSliderPosition(static_cast<int>(position));
     update();
 }
 
