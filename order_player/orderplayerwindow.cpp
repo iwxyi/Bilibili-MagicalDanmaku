@@ -2010,11 +2010,12 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
             emit signalOrderSongNoCopyright(song);
         }
     }
-    qWarning() << "无法下载，可能没有版权" << song.simpleString();
+    qWarning() << "无法下载，可能没有版权" << song.simpleString() ;
     if (playAfterDownloaded == song) // 立即播放才尝试换源
     {
         if (orderSongs.contains(song))
         {
+            MUSIC_DEB << "播放列表移除歌曲：" << song.simpleString();
             orderSongs.removeOne(song);
             saveSongList("music/order", orderSongs);
             setSongModelToView(orderSongs, ui->orderSongsListView);
@@ -2023,15 +2024,21 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
         if (autoSwitchSource /* && song.source == musicSource */
                 /*&& !song.addBy.isEmpty()*/) // ~~只有点歌才自动换源，普通播放自动跳过~~
         {
-            slotSongPlayEnd(); // 先调用停止播放来重置状态，然后才会开始播放新的；否则会插入到下一首
+            // slotSongPlayEnd(); // 先调用停止播放来重置状态，然后才会开始播放新的；否则会插入到下一首
+            clearPlaying();
             insertOrderOnce = true;
             if (!switchNextSource(song, true))
                 playNext();
         }
         else
         {
+            MUSIC_DEB << "未开启自动换源，播放下一首";
             playNext();
         }
+    }
+    else
+    {
+        MUSIC_DEB << "即将播放：" << playAfterDownloaded.simpleString();
     }
 
     downloadingSong = Song();
@@ -2658,6 +2665,18 @@ void OrderPlayerWindow::clearHoaryFiles()
     }
 }
 
+void OrderPlayerWindow::clearPlaying()
+{
+    player->stop();
+    playingSong = Song();
+    settings.setValue("music/currentSong", "");
+    ui->playingNameLabel->clear();
+    ui->playingArtistLabel->clear();
+    ui->playingCoverLabel->clear();
+    coveringSong = Song();
+    setCurrentLyric("");
+}
+
 void OrderPlayerWindow::playNextRandomSong()
 {
     if (!normalSongs.size()) // 空闲列表没有歌曲
@@ -3194,8 +3213,7 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qWarning() << error.errorString() << url;
-            return ;
+            qWarning() << "解析返回的JSON失败：" << error.errorString() << url;
         }
         func(document.object());
 
@@ -3549,14 +3567,7 @@ void OrderPlayerWindow::slotSongPlayEnd()
     if (circleMode == OrderList) // 列表顺序
     {
         // 清除播放
-        player->stop();
-        playingSong = Song();
-        settings.setValue("music/currentSong", "");
-        ui->playingNameLabel->clear();
-        ui->playingArtistLabel->clear();
-        ui->playingCoverLabel->clear();
-        coveringSong = Song();
-        setCurrentLyric("");
+        clearPlaying();
 
         // 没有歌了，真正清空
         if (!orderSongs.size() && !normalSongs.size())
