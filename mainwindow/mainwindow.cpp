@@ -5836,7 +5836,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     msg = processTimeVariants(msg);
 
     // 弹幕变量、环境变量（固定文字）
-    re = QRegularExpression("%[\\w_]+?%");
+    re = QRegularExpression("%[\\w_]+%");
     int matchPos = 0;
     bool ok;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
@@ -6588,7 +6588,7 @@ QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& k
     if (obj.isNull() || obj.isUndefined())
         return "";
     if (obj.isString())
-        return obj.toString();
+        return toSingleLine(obj.toString());
     if (obj.isBool())
         return obj.toBool(false) ? "1" : "0";
     if (obj.isDouble())
@@ -7084,7 +7084,7 @@ QString MainWindow::processMsgHeaderConditions(QString msg) const
 
 /**
  * 判断逻辑条件是否成立
- * exp1, exp2; exp3
+ * @param exprs exp1, exp2; exp3
  */
 bool MainWindow::processVariantConditions(QString exprs) const
 {

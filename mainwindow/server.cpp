@@ -797,15 +797,21 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         }
         if (params.contains("data"))
         {
+            // 可以直接使用get的形式来设置data（不能包含特殊字符，尽量URL编码）
             data = QByteArray::fromPercentEncoding(params.value("data").toUtf8());
         }
         else
         {
+            // 也可以是post的形式发送json过来
             data = req->body();
         }
 
-        qInfo() << "模拟事件：" << eventName << data;
-        triggerCmdEvent(eventName, LiveDanmaku::fromDanmakuJson(MyJson(data)));
+        MyJson json(data);
+        qInfo() << "模拟事件：" << eventName << json;
+        LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(json);
+        if (!json.contains("extra"))
+            danmaku.with(json);
+        triggerCmdEvent(eventName, danmaku);
         ba = "{ \"cmd\": \"event\", \"code\": \"0\", \"msg\": \"ok\" }";
     }
 
