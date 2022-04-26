@@ -2031,6 +2031,12 @@ void MainWindow::localNotify(QString text, qint64 uid)
  */
 void MainWindow::sendMsg(QString msg)
 {
+    if (localDebug)
+    {
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
+
     sendRoomMsg(roomId, msg);
 }
 
@@ -2043,12 +2049,6 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     }
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
-
-    if (localDebug)
-    {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
-    }
 
     // 设置数据（JSON的ByteArray）
     QString s = browserData;

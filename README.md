@@ -1338,7 +1338,7 @@ tips：
 > 在之前的默认签到代码中，未加上保存昵称，所以uname是空的
 
 ```
-showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_:>)
+>showValueTable(积分查询, integral_(\d+), ID:"_ID_", 昵称:uname__ID_, 积分:integral__ID_:>)
 ```
 
 假定某个用户 id 是 123456，那么通过 `integral_(\d+)` 遍历到 `integral_123456` ，则 `_ID_` 是 123456，通过这一行来获取后面的 `name_123456`、`integral_123456` 等的值。

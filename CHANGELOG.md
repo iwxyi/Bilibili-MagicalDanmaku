@@ -1,3 +1,11 @@
+### v4.5.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.5)
+
+- 调整开启本地模式时可通过 `>sendRoomMsg(roomId,msg)` 来发送弹幕
+
+
+
+
+
 ### v4.5.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.1)
 
 - 添加一些文本操作函数
@@ -8,6 +16,7 @@
 - 优化发送指定直播间弹幕、发送私信可以带空格
 - 优化检查变量窗口的大小
 - 优化写入UTF-8文件添加BOM
+- 优化JSON带有换行的问题
 - 修复点歌姬换源播放触发结束事件的问题
 - 修复点歌姬拖动进度条的偏移问题
 - 修复文件操作路径多余的斜杠
