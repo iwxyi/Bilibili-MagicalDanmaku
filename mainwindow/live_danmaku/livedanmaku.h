@@ -759,6 +759,28 @@ public:
         return *this;
     }
 
+    LiveDanmaku& withRoomId(QString roomId)
+    {
+        this->roomId = roomId;
+        return *this;
+    }
+
+    QString getRoomId() const
+    {
+        return roomId;
+    }
+
+    LiveDanmaku& withRetry(int r = 1)
+    {
+        retry = r;
+        return *this;
+    }
+
+    int isRetry() const
+    {
+        return retry > 0;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -816,6 +838,9 @@ private:
     qint64 prev_timestamp = 0;
     int first = 0; // 初次：1；新的：2
     int special = 0;
+
+    QString roomId;
+    int retry = 0;
 
 public:
     QStringList args;

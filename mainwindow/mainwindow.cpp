@@ -2078,17 +2078,15 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             if (!ui->retryFailedDanmuCheck->isChecked())
                 return ;
 
-            if (roomId != this->roomId) // 不是这个房间的弹幕，发送失败就算了
-                return ;
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku(), 5000);
+                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
             }
             else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {
                 localNotify("[4s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku(), 4200);
+                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
             }
             else if (errorMsg.contains("超出限制长度"))
             {
@@ -2099,7 +2097,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
                 else
                 {
                     localNotify("[自动分割长度]");
-                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), LiveDanmaku(), 1000);
+                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
                 }
             }
             else if (errorMsg == "f") // 系统敏感词
@@ -2217,7 +2215,10 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     {    
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
-        sendMsg(msg);
+        if (danmaku->isRetry())
+            sendRoomMsg(danmaku->getRoomId(), msg);
+        else
+            sendMsg(msg);
         inDanmakuCd = true;
         settings->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
         ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
