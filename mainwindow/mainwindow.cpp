@@ -333,6 +333,10 @@ void MainWindow::initView()
     ui->saveEveryGuardButton->setRadius(rt->fluentRadius);
     ui->saveMonthGuardButton->setSquareSize();
     ui->saveMonthGuardButton->setRadius(rt->fluentRadius);
+    ui->saveDanmakuToFileButton->setSquareSize();
+    ui->saveDanmakuToFileButton->setRadius(rt->fluentRadius);
+    ui->calculateDailyDataButton->setSquareSize();
+    ui->calculateDailyDataButton->setRadius(rt->fluentRadius);
 
     // 答谢页面
     thankTabButtons = {
@@ -20880,4 +20884,16 @@ void MainWindow::on_TXSecretKeyEdit_editingFinished()
     QString text = ui->TXSecretKeyEdit->text();
     us->setValue("tx_nlp/secretKey", text);
     TxNlp::instance()->setSecretKey(text);
+}
+
+void MainWindow::on_saveDanmakuToFileButton_clicked()
+{
+    QDir dir(rt->dataPath + "danmaku_histories");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_calculateDailyDataButton_clicked()
+{
+    QDir dir(rt->dataPath + "live_daily");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }

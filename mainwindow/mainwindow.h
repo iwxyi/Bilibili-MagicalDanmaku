@@ -789,6 +789,10 @@ private slots:
 
     void on_TXSecretKeyEdit_editingFinished();
 
+    void on_saveDanmakuToFileButton_clicked();
+
+    void on_calculateDailyDataButton_clicked();
+
 private:
     void initView();
     void initStyle();

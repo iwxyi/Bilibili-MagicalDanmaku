@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>928</width>
-    <height>624</height>
+    <width>811</width>
+    <height>1043</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -198,7 +198,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>848</width>
-             <height>504</height>
+             <width>731</width>
+             <height>923</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1572,7 +1572,7 @@ margin: 6px;</string>
 	border-radius: 5px;
 }</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_15" stretch="1,0,1,1,1">
+            <layout class="QVBoxLayout" name="verticalLayout_15" stretch="1,0,1,1,0">
              <item>
               <widget class="QLabel" name="label_13">
                <property name="sizePolicy">
@@ -1688,17 +1688,38 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveDanmakuToFileCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
-               </property>
-               <property name="text">
-                <string>保存弹幕记录</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_68" stretch="1,0">
+               <item>
+                <widget class="QCheckBox" name="saveDanmakuToFileCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
+                 </property>
+                 <property name="text">
+                  <string>保存弹幕记录</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="saveDanmakuToFileButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -3436,17 +3457,38 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="calculateDailyDataCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-               </property>
-               <property name="text">
-                <string>每日数据统计</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+               <item>
+                <widget class="QCheckBox" name="calculateDailyDataCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+                 </property>
+                 <property name="text">
+                  <string>每日数据统计</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="calculateDailyDataButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -3588,7 +3630,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_56">
+              <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="1,0">
                <property name="topMargin">
                 <number>0</number>
                </property>
@@ -3611,21 +3653,21 @@ margin: 40px;</string>
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_58">
+              <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="1,0">
                <item>
                 <widget class="QCheckBox" name="saveEveryGuardCheck">
                  <property name="cursor">
@@ -3648,21 +3690,21 @@ margin: 40px;</string>
                   <enum>Qt::CustomContextMenu</enum>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_59">
+              <layout class="QHBoxLayout" name="horizontalLayout_59" stretch="1,0">
                <item>
                 <widget class="QCheckBox" name="saveMonthGuardCheck">
                  <property name="cursor">
@@ -3682,14 +3724,14 @@ margin: 40px;</string>
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
@@ -8536,7 +8578,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>928</width>
+     <width>811</width>
      <height>23</height>
     </rect>
    </property>
