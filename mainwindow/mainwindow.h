@@ -1069,9 +1069,8 @@ private:
 private:
     // 应用信息
     Ui::MainWindow *ui;
-    QSettings* settings;
-    QSettings* heaps;
-    QSettings* extSettings;
+    MySettings* heaps;
+    MySettings* extSettings;
 
     // 控件
     QList<WaterZoomButton*> sideButtonList;
@@ -1317,7 +1316,7 @@ private:
 
     // 机器人
     int judgeRobot = 0;
-    QSettings* robotRecord;
+    MySettings* robotRecord;
     QList<QWebSocket*> robots_sockets;
 
     // 点歌

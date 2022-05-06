@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     a.setFont(font);
 
     rt = new RuntimeInfo;
-    us = new UserSettings("data.ini");
+    us = nullptr;
     ac = new AccountInfo;
     pl = new PlatformInfo;
 

@@ -10,15 +10,15 @@ QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
 QT_END_NAMESPACE
 
-LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *parent)
-    : QWidget(nullptr), settings(st), dataPath(dataPath)
+LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
+    : QWidget(nullptr)
 {
     this->setWindowTitle("实时弹幕");
     this->setMinimumSize(45,45);                        //设置最小尺寸
 #ifdef Q_OS_ANDROID
     this->setAttribute(Qt::WA_TranslucentBackground, false);
 #else
-    if (settings->value("livedanmakuwindow/jiWindow", false).toBool())
+    if (us->value("livedanmakuwindow/jiWindow", false).toBool())
     {
         this->setWindowFlags(Qt::FramelessWindowHint);
         this->setAttribute(Qt::WA_TranslucentBackground, false);
@@ -29,10 +29,10 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
         this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     }
 
-    bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
+    bool onTop = us->value("livedanmakuwindow/onTop", true).toBool();
     if (onTop)
         this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
-    if (settings->value("livedanmakuwindow/transMouse", false).toBool())
+    if (us->value("livedanmakuwindow/transMouse", false).toBool())
     {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
         this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
@@ -82,7 +82,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     // 发送消息后返回原窗口
     auto returnPrevWindow = [=]{
         // 如果单次显示了输入框，则退出时隐藏
-        bool showEdit = settings->value("livedanmakuwindow/sendEdit", false).toBool();
+        bool showEdit = us->value("livedanmakuwindow/sendEdit", false).toBool();
         if (!showEdit)
             lineEdit->hide();
 #ifdef Q_OS_WIN32
@@ -100,20 +100,20 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
             myPrevSendMsg = text.trimmed();
             emit signalSendMsg(myPrevSendMsg);
             lineEdit->clear();
-            if (settings->value("livedanmakuwindow/sendOnce", false).toBool())
+            if (us->value("livedanmakuwindow/sendOnce", false).toBool())
                 returnPrevWindow();
             lineEdit->setPlaceholderText("");
         }
     });
     connect(lineEdit, &QLineEdit::customContextMenuRequested, this, &LiveDanmakuWindow::showEditMenu);
-    if (!settings->value("livedanmakuwindow/sendEdit", false).toBool())
+    if (!us->value("livedanmakuwindow/sendEdit", false).toBool())
         lineEdit->hide();
 #ifdef Q_OS_LINUX
 
 #endif
 #if defined(ENABLE_SHORTCUT)
     editShortcut = new QxtGlobalShortcut(this);
-    QString def_key = settings->value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
+    QString def_key = us->value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
     editShortcut->setShortcut(QKeySequence(def_key));
     connect(lineEdit, &TransparentEdit::signalESC, this, [=]{
         returnPrevWindow();
@@ -141,32 +141,32 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
             }
         }
     });
-    if (!settings->value("livedanmakuwindow/sendEditShortcut", false).toBool())
+    if (!us->value("livedanmakuwindow/sendEditShortcut", false).toBool())
         editShortcut->setEnabled(false);
 #endif
 
     // 颜色
-    nameColor = qvariant_cast<QColor>(settings->value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
-    msgColor = qvariant_cast<QColor>(settings->value("livedanmakuwindow/msgColor", QColor(Qt::white)));
-    bgColor = qvariant_cast<QColor>(settings->value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
-    hlColor = qvariant_cast<QColor>(settings->value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
-    QString fontString = settings->value("livedanmakuwindow/font").toString();
+    nameColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/nameColor", QColor(247, 110, 158)));
+    msgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/msgColor", QColor(Qt::white)));
+    bgColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/bgColor", QColor(0x88, 0x88, 0x88, 0x32)));
+    hlColor = qvariant_cast<QColor>(us->value("livedanmakuwindow/hlColor", QColor(255, 0, 0)));
+    QString fontString = us->value("livedanmakuwindow/font").toString();
     if (!fontString.isEmpty())
         danmakuFont.fromString(fontString);
-    labelStyleSheet = settings->value("livedanmakuwindow/labelStyleSheet").toString();
+    labelStyleSheet = us->value("livedanmakuwindow/labelStyleSheet").toString();
 
     // 背景图片
-    pictureFilePath = settings->value("livedanmakuwindow/pictureFilePath", "").toString();
-    pictureDirPath = settings->value("livedanmakuwindow/pictureDirPath", "").toString();
-    pictureAlpha = settings->value("livedanmakuwindow/pictureAlpha", 64).toInt();
-    pictureBlur = settings->value("livedanmakuwindow/pictureBlur", 0).toInt();
+    pictureFilePath = us->value("livedanmakuwindow/pictureFilePath", "").toString();
+    pictureDirPath = us->value("livedanmakuwindow/pictureDirPath", "").toString();
+    pictureAlpha = us->value("livedanmakuwindow/pictureAlpha", 64).toInt();
+    pictureBlur = us->value("livedanmakuwindow/pictureBlur", 0).toInt();
     switchBgTimer = new QTimer(this);
-    int switchInterval = settings->value("livedanmakuwindow/pictureInterval", 20).toInt();
+    int switchInterval = us->value("livedanmakuwindow/pictureInterval", 20).toInt();
     switchBgTimer->setInterval(switchInterval * 1000);
     connect(switchBgTimer, &QTimer::timeout, this, [=]{
         selectBgPicture();
     });
-    aspectRatio = settings->value("livedanmakuwindow/aspectRatio", false).toBool();
+    aspectRatio = us->value("livedanmakuwindow/aspectRatio", false).toBool();
     if (!pictureDirPath.isEmpty())
     {
         selectBgPicture();
@@ -179,17 +179,17 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
     update();
 
     // 忽略的颜色
-    ignoreDanmakuColors = settings->value("livedanmakuwindow/ignoreColor").toString().split(";");
+    ignoreDanmakuColors = us->value("livedanmakuwindow/ignoreColor").toString().split(";");
 
     // 模式
-    simpleMode = settings->value("livedanmakuwindow/simpleMode", simpleMode).toBool();
-    chatMode = settings->value("livedanmakuwindow/chatMode", chatMode).toBool();
-    allowH5 = settings->value("livedanmakuwindow/allowH5", allowH5).toBool();
-    blockComingMsg = settings->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
-    blockSpecialGift = settings->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
-    blockCommonNotice = settings->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
+    simpleMode = us->value("livedanmakuwindow/simpleMode", simpleMode).toBool();
+    chatMode = us->value("livedanmakuwindow/chatMode", chatMode).toBool();
+    allowH5 = us->value("livedanmakuwindow/allowH5", allowH5).toBool();
+    blockComingMsg = us->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
+    blockSpecialGift = us->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
+    blockCommonNotice = us->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
 
-    headDir = dataPath + "headers/";
+    headDir = rt->dataPath + "headers/";
     QDir().mkpath(headDir);
 
     statusLabel = new QLabel(this);
@@ -201,14 +201,14 @@ LiveDanmakuWindow::LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *p
 
 LiveDanmakuWindow::~LiveDanmakuWindow()
 {
-    settings->setValue("livedanmakuwindow/geometry", this->saveGeometry());
+    us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
 }
 
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
 {
 #ifndef Q_OS_ANDROID
     // 如果是安卓，就显示全屏吧！
-    restoreGeometry(settings->value("livedanmakuwindow/geometry").toByteArray());
+    restoreGeometry(us->value("livedanmakuwindow/geometry").toByteArray());
 #endif
     enableAnimation = true;
     QWidget::showEvent(event);
@@ -216,7 +216,7 @@ void LiveDanmakuWindow::showEvent(QShowEvent *event)
 
 void LiveDanmakuWindow::hideEvent(QHideEvent *event)
 {
-    settings->setValue("livedanmakuwindow/geometry", this->saveGeometry());
+    us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
     enableAnimation = false;
     QWidget::hideEvent(event);
 }
@@ -1142,20 +1142,20 @@ void LiveDanmakuWindow::showMenu()
     actionSendMsg->setChecked(!lineEdit->isHidden());
     actionDialogSend->setToolTip("shift+alt+D 触发编辑框，输入后ESC返回原先窗口");
     actionDialogSend->setCheckable(true);
-    actionDialogSend->setChecked(settings->value("livedanmakuwindow/sendEditShortcut", false).toBool());
+    actionDialogSend->setChecked(us->value("livedanmakuwindow/sendEditShortcut", false).toBool());
     actionSendOnce->setToolTip("发送后，返回原窗口（如果有）");
     actionSendOnce->setCheckable(true);
-    actionSendOnce->setChecked(settings->value("livedanmakuwindow/sendOnce", false).toBool());
+    actionSendOnce->setChecked(us->value("livedanmakuwindow/sendOnce", false).toBool());
     actionSimpleMode->setCheckable(true);
     actionSimpleMode->setChecked(simpleMode);
     actionChatMode->setCheckable(true);
     actionChatMode->setChecked(chatMode);
     actionWindow->setCheckable(true);
-    actionWindow->setChecked(settings->value("livedanmakuwindow/jiWindow", false).toBool());
+    actionWindow->setChecked(us->value("livedanmakuwindow/jiWindow", false).toBool());
     actionOnTop->setCheckable(true);
-    actionOnTop->setChecked(settings->value("livedanmakuwindow/onTop", true).toBool());
+    actionOnTop->setChecked(us->value("livedanmakuwindow/onTop", true).toBool());
     actionTransMouse->setCheckable(true);
-    actionTransMouse->setChecked(settings->value("livedanmakuwindow/transMouse", false).toBool());
+    actionTransMouse->setChecked(us->value("livedanmakuwindow/transMouse", false).toBool());
     actionPictureSelect->setCheckable(true);
     actionPictureSelect->setChecked(!pictureFilePath.isEmpty());
     actionPictureFolder->setCheckable(true);
@@ -1381,7 +1381,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         if (c != nameColor)
         {
-            settings->setValue("livedanmakuwindow/nameColor", nameColor = c);
+            us->setValue("livedanmakuwindow/nameColor", nameColor = c);
             resetItemsText();
         }
     });
@@ -1391,7 +1391,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         if (c != msgColor)
         {
-            settings->setValue("livedanmakuwindow/msgColor", msgColor = c);
+            us->setValue("livedanmakuwindow/msgColor", msgColor = c);
             resetItemsTextColor();
         }
         if (statusLabel)
@@ -1405,7 +1405,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         if (c != bgColor)
         {
-            settings->setValue("livedanmakuwindow/bgColor", bgColor = c);
+            us->setValue("livedanmakuwindow/bgColor", bgColor = c);
             update();
         }
     });
@@ -1415,7 +1415,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         if (c != hlColor)
         {
-            settings->setValue("livedanmakuwindow/hlColor", hlColor = c);
+            us->setValue("livedanmakuwindow/hlColor", hlColor = c);
             resetItemsTextColor();
         }
     });
@@ -1426,7 +1426,7 @@ void LiveDanmakuWindow::showMenu()
             return ;
         this->danmakuFont = font;
         this->setFont(font);
-        settings->setValue("livedanmakuwindow/font", danmakuFont.toString());
+        us->setValue("livedanmakuwindow/font", danmakuFont.toString());
         resetItemsFont();
     });
     connect(actionLabelStyleSheet, &QAction::triggered, this, [=]{
@@ -1435,20 +1435,20 @@ void LiveDanmakuWindow::showMenu()
         if (!ok)
             return ;
         labelStyleSheet = ss;
-        settings->setValue("livedanmakuwindow/labelStyleSheet", labelStyleSheet);
+        us->setValue("livedanmakuwindow/labelStyleSheet", labelStyleSheet);
         resetItemsStyleSheet();
     });
     connect(actionAllowH5, &QAction::triggered, this, [=]{
         allowH5 = !allowH5;
-        settings->setValue("livedanmakuwindow/allowH5", allowH5);
+        us->setValue("livedanmakuwindow/allowH5", allowH5);
     });
     connect(actionBlockComing, &QAction::triggered, this, [=]{
         blockComingMsg = !blockComingMsg;
-        settings->setValue("livedanmakuwindow/blockComingMsg", blockComingMsg);
+        us->setValue("livedanmakuwindow/blockComingMsg", blockComingMsg);
     });
     connect(actionBlockSpecialGift, &QAction::triggered, this, [=]{
         blockSpecialGift = !blockSpecialGift;
-        settings->setValue("livedanmakuwindow/blockSpecialGift", blockSpecialGift);
+        us->setValue("livedanmakuwindow/blockSpecialGift", blockSpecialGift);
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1470,7 +1470,7 @@ void LiveDanmakuWindow::showMenu()
         QStringList ress;
         foreach (qint64 uid, us->careUsers)
             ress << QString::number(uid);
-        settings->setValue("danmaku/careUsers", ress.join(";"));
+        us->setValue("danmaku/careUsers", ress.join(";"));
     });
     connect(actionStrongNotify, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1492,7 +1492,7 @@ void LiveDanmakuWindow::showMenu()
         QStringList ress;
         foreach (qint64 uid, us->strongNotifyUsers)
             ress << QString::number(uid);
-        settings->setValue("danmaku/strongNotifyUsers", ress.join(";"));
+        us->setValue("danmaku/strongNotifyUsers", ress.join(";"));
     });
     connect(actionSetName, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1538,7 +1538,7 @@ void LiveDanmakuWindow::showMenu()
             ress << QString("%1=>%2").arg(it.key()).arg(it.value());
             it++;
         }
-        settings->setValue("danmaku/localNicknames", ress.join(";"));
+        us->setValue("danmaku/localNicknames", ress.join(";"));
     });
     connect(actionUserMark, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1573,7 +1573,7 @@ void LiveDanmakuWindow::showMenu()
         QStringList ress;
         foreach (qint64 uid, us->notWelcomeUsers)
             ress << QString::number(uid);
-        settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
+        us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
     });
     connect(actionNotReply, &QAction::triggered, this, [=]{
         if (us->notReplyUsers.contains(uid))
@@ -1584,7 +1584,7 @@ void LiveDanmakuWindow::showMenu()
         QStringList ress;
         foreach (qint64 uid, us->notReplyUsers)
             ress << QString::number(uid);
-        settings->setValue("danmaku/notReplyUsers", ress.join(";"));
+        us->setValue("danmaku/notReplyUsers", ress.join(";"));
     });
     connect(actionSetGiftName, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1624,7 +1624,7 @@ void LiveDanmakuWindow::showMenu()
             ress << QString("%1=>%2").arg(it.key()).arg(it.value());
             it++;
         }
-        settings->setValue("danmaku/giftNames", ress.join(";"));
+        us->setValue("danmaku/giftNames", ress.join(";"));
     });
     connect(actionCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -1688,7 +1688,7 @@ void LiveDanmakuWindow::showMenu()
             ignoreDanmakuColors.append(s);
         }
 
-        settings->setValue("livedanmakuwindow/ignoreColor", ignoreDanmakuColors.join(";"));
+        us->setValue("livedanmakuwindow/ignoreColor", ignoreDanmakuColors.join(";"));
         resetItemsText();
     });
     connect(actionSendMsg, &QAction::triggered, this, [=]{
@@ -1696,31 +1696,31 @@ void LiveDanmakuWindow::showMenu()
             lineEdit->show();
         else
             lineEdit->hide();
-        settings->setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
+        us->setValue("livedanmakuwindow/sendEdit", !lineEdit->isHidden());
     });
 #if defined(ENABLE_SHORTCUT)
     connect(actionDialogSend, &QAction::triggered, this, [=]{
-        bool enable = !settings->value("livedanmakuwindow/sendEditShortcut", false).toBool();
-        settings->setValue("livedanmakuwindow/sendEditShortcut", enable);
+        bool enable = !us->value("livedanmakuwindow/sendEditShortcut", false).toBool();
+        us->setValue("livedanmakuwindow/sendEditShortcut", enable);
         editShortcut->setEnabled(enable);
     });
     connect(actionShortCut, &QAction::triggered, this, [=]{
-        QString def_key = settings->value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
+        QString def_key = us->value("livedanmakuwindow/shortcutKey", "shift+alt+D").toString();
         QString key = QInputDialog::getText(this, "发弹幕快捷键", "设置显示弹幕发送框的快捷键", QLineEdit::Normal, def_key);
         if (!key.isEmpty())
         {
             if (editShortcut->setShortcut(QKeySequence(key)))
-                settings->setValue("livedanmakuwindow/shortcutKey", key);
+                us->setValue("livedanmakuwindow/shortcutKey", key);
         }
     });
 #endif
     connect(actionSendOnce, &QAction::triggered, this, [=]{
-        bool enable = !settings->value("livedanmakuwindow/sendOnce", false).toBool();
-        settings->setValue("livedanmakuwindow/sendOnce", enable);
+        bool enable = !us->value("livedanmakuwindow/sendOnce", false).toBool();
+        us->setValue("livedanmakuwindow/sendOnce", enable);
     });
     connect(actionWindow, &QAction::triggered, this, [=]{
-        bool enable = !settings->value("livedanmakuwindow/jiWindow", false).toBool();
-        settings->setValue("livedanmakuwindow/jiWindow", enable);
+        bool enable = !us->value("livedanmakuwindow/jiWindow", false).toBool();
+        us->setValue("livedanmakuwindow/jiWindow", enable);
         if (enable)
         {
             qDebug() << "开启直播姬窗口模式";
@@ -1736,35 +1736,35 @@ void LiveDanmakuWindow::showMenu()
         restart();
     });
     connect(actionOnTop, &QAction::triggered, this, [=]{
-        bool onTop = !settings->value("livedanmakuwindow/onTop", true).toBool();
+        bool onTop = !us->value("livedanmakuwindow/onTop", true).toBool();
         this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
-        settings->setValue("livedanmakuwindow/onTop", onTop);
+        us->setValue("livedanmakuwindow/onTop", onTop);
         qDebug() << "置顶显示：" << onTop;
         this->show();
     });
     connect(actionTransMouse, &QAction::triggered, this, [=]{
-        bool trans = !settings->value("livedanmakuwindow/transMouse", false).toBool();
+        bool trans = !us->value("livedanmakuwindow/transMouse", false).toBool();
         setAttribute(Qt::WA_TransparentForMouseEvents, trans);
-        settings->setValue("livedanmakuwindow/transMouse", trans);
+        us->setValue("livedanmakuwindow/transMouse", trans);
         emit signalTransMouse(trans);
 
         // 需要切换一遍置顶才生效
-        bool onTop = settings->value("livedanmakuwindow/onTop", true).toBool();
+        bool onTop = us->value("livedanmakuwindow/onTop", true).toBool();
         this->setWindowFlag(Qt::WindowStaysOnTopHint, !onTop);
         this->setWindowFlag(Qt::WindowStaysOnTopHint, onTop);
         this->show();
 
-        if (settings->value("ask/transMouse", true).toBool())
+        if (us->value("ask/transMouse", true).toBool())
         {
             QMessageBox::information(this, "鼠标穿透", "开启鼠标穿透后，弹幕姬中所有内容都将无法点击\n\n在程序主界面的“弹幕”选项卡中点击“关闭鼠标穿透”");
-            settings->setValue("ask/transMouse", false);
+            us->setValue("ask/transMouse", false);
         }
     });
     connect(actionSimpleMode, &QAction::triggered, this, [=]{
-        settings->setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
+        us->setValue("livedanmakuwindow/simpleMode", simpleMode = !simpleMode);
     });
     connect(actionChatMode, &QAction::triggered, this, [=]{
-        settings->setValue("livedanmakuwindow/chatMode", chatMode = !chatMode);
+        us->setValue("livedanmakuwindow/chatMode", chatMode = !chatMode);
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
@@ -1818,7 +1818,7 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionHide, &QAction::triggered, this, [=]{
         this->hide();
-        settings->setValue("danmaku/liveWindow", false);
+        us->setValue("danmaku/liveWindow", false);
     });
 
     connect(actionPictureSelect, &QAction::triggered, this, [=]{
@@ -1828,8 +1828,8 @@ void LiveDanmakuWindow::showMenu()
 
         pictureFilePath = path;
         pictureDirPath = "";
-        settings->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
-        settings->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        us->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        us->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
         switchBgTimer->stop();
         selectBgPicture();
         update();
@@ -1844,8 +1844,8 @@ void LiveDanmakuWindow::showMenu()
 
         pictureFilePath = "";
         pictureDirPath = dir;
-        settings->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
-        settings->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        us->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        us->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
         bgPixmap = QPixmap();
         switchBgTimer->start();
         selectBgPicture();
@@ -1858,7 +1858,7 @@ void LiveDanmakuWindow::showMenu()
         if (!ok)
             return ;
         switchBgTimer->setInterval(val * 1000);
-        settings->setValue("livedanmakuwindow/pictureInterval", val);
+        us->setValue("livedanmakuwindow/pictureInterval", val);
         update();
     });
     connect(actionPictureAlpha, &QAction::triggered, this, [=]{
@@ -1867,12 +1867,12 @@ void LiveDanmakuWindow::showMenu()
         if (!ok)
             return ;
         pictureAlpha = val;
-        settings->setValue("livedanmakuwindow/pictureAlpha", pictureAlpha);
+        us->setValue("livedanmakuwindow/pictureAlpha", pictureAlpha);
         update();
     });
     connect(actionPictureRatio, &QAction::triggered, this, [=]{
         aspectRatio = !aspectRatio;
-        settings->setValue("livedanmakuwindow/aspectRatio", aspectRatio);
+        us->setValue("livedanmakuwindow/aspectRatio", aspectRatio);
         update();
     });
     connect(actionPictureBlur, &QAction::triggered, this, [=]{
@@ -1881,15 +1881,15 @@ void LiveDanmakuWindow::showMenu()
         if (!ok)
             return ;
         pictureBlur = val;
-        settings->setValue("livedanmakuwindow/pictureBlur", pictureBlur);
+        us->setValue("livedanmakuwindow/pictureBlur", pictureBlur);
         selectBgPicture();
         update();
     });
     connect(actionCancelPicture, &QAction::triggered, this, [=]{
         pictureFilePath = "";
         pictureDirPath = "";
-        settings->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
-        settings->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
+        us->setValue("livedanmakuwindow/pictureFilePath", pictureFilePath);
+        us->setValue("livedanmakuwindow/pictureDirPath", pictureDirPath);
         switchBgTimer->stop();
         selectBgPicture();
         update();
@@ -2035,7 +2035,7 @@ void LiveDanmakuWindow::showPkMenu()
         emit signalShowPkVideo();
     });
     connect(actionOnline, &QAction::triggered, this, [=]{
-        GuardOnlineDialog* god = new GuardOnlineDialog(settings, snum(pkRoomId), snum(pkUid), this);
+        GuardOnlineDialog* god = new GuardOnlineDialog(us, snum(pkRoomId), snum(pkUid), this);
         god->show();
     });
 
@@ -2490,7 +2490,7 @@ void LiveDanmakuWindow::closeTransMouse()
 {
     const bool trans = false;
     setAttribute(Qt::WA_TransparentForMouseEvents, trans);
-    settings->setValue("livedanmakuwindow/transMouse", trans);
+    us->setValue("livedanmakuwindow/transMouse", trans);
     emit signalTransMouse(trans);
 
     restart();

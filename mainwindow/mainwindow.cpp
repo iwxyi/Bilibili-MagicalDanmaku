@@ -144,7 +144,7 @@ void MainWindow::initView()
             switchPageAnimation(i);
 
             // 当前项
-            settings->setValue("mainwindow/stackIndex", i);
+            us->setValue("mainwindow/stackIndex", i);
             foreach (auto btn, sideButtonList)
             {
                 btn->setNormalColor(Qt::transparent);
@@ -216,7 +216,7 @@ void MainWindow::initView()
         menu->addAction(ui->actionAdd_Room_To_List);
         menu->split();
 
-        QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+        QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
         for (int i = 0; i < list.size(); i++)
         {
             QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
@@ -549,10 +549,10 @@ void MainWindow::readConfig()
         copyFile(rt->dataPath + "heaps.ini", rt->dataPath + "/backup/heaps_" + ts + ".ini");
     }
 
-    settings = new QSettings(rt->dataPath + "settings.ini", QSettings::Format::IniFormat);
-    heaps = new QSettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
-    extSettings = new QSettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
-    robotRecord = new QSettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
+    us = new UserSettings(rt->dataPath + "settings.ini");
+    heaps = new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
+    extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
+    robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(rt->dataPath + "www");
 
     // extSettings->setValue("testStr", "true");
@@ -569,20 +569,20 @@ void MainWindow::readConfig()
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
-    if (rt->appVersion != settings->value("runtime/appVersion").toString())
+    if (rt->appVersion != us->value("runtime/appVersion").toString())
     {
-        upgradeVersionToLastest(settings->value("runtime/appVersion").toString());
-        settings->setValue("runtime/appVersion", rt->appVersion);
+        upgradeVersionToLastest(us->value("runtime/appVersion").toString());
+        us->setValue("runtime/appVersion", rt->appVersion);
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
 
     // 页面
-    int stackIndex = settings->value("mainwindow/stackIndex", 0).toInt();
+    int stackIndex = us->value("mainwindow/stackIndex", 0).toInt();
     if (stackIndex >= 0 && stackIndex < ui->stackedWidget->count())
         ui->stackedWidget->setCurrentIndex(stackIndex);
 
     // 标签组
-    int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
+    int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
         ui->tabWidget->setCurrentIndex(tabIndex);
     if (tabIndex > 2)
@@ -591,17 +591,17 @@ void MainWindow::readConfig()
         appendListItemButton->show();
 
     // 答谢标签
-    int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
+    int thankStackIndex = us->value("mainwindow/thankStackIndex", 0).toInt();
     if (thankStackIndex >= 0 && thankStackIndex < ui->thankStackedWidget->count())
         ui->thankStackedWidget->setCurrentIndex(thankStackIndex);
 
     // 音乐标签
-    int musicStackIndex = settings->value("mainwindow/musicStackIndex", 0).toInt();
+    int musicStackIndex = us->value("mainwindow/musicStackIndex", 0).toInt();
     if (musicStackIndex >= 0 && musicStackIndex < ui->musicConfigStack->count())
         ui->musicConfigStack->setCurrentIndex(musicStackIndex);
 
     // 房间号
-    ac->roomId = settings->value("danmaku/roomId", "").toString();
+    ac->roomId = us->value("danmaku/roomId", "").toString();
     if (!ac->roomId.isEmpty())
         ui->roomIdEdit->setText(ac->roomId);
     else // 设置为默认界面
@@ -617,24 +617,24 @@ void MainWindow::readConfig()
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    int removeIv = settings->value("danmaku/removeInterval", 60).toInt();
+    int removeIv = us->value("danmaku/removeInterval", 60).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
 
-    removeIv = settings->value("danmaku/removeTipInterval", 20).toInt();
+    removeIv = us->value("danmaku/removeTipInterval", 20).toInt();
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuTipInterval = removeIv * 1000;
 
     // 单条弹幕最长长度
-    danmuLongest = settings->value("danmaku/danmuLongest", 20).toInt();
+    danmuLongest = us->value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
-    ui->adjustDanmakuLongestCheck->setChecked(settings->value("danmaku/adjustDanmakuLongest", true).toBool());
-    robotTotalSendMsg = settings->value("danmaku/robotTotalSend", 0).toInt();
+    ui->adjustDanmakuLongestCheck->setChecked(us->value("danmaku/adjustDanmakuLongest", true).toBool());
+    robotTotalSendMsg = us->value("danmaku/robotTotalSend", 0).toInt();
     ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
     ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
 
     // 失败重试
-    ui->retryFailedDanmuCheck->setChecked(settings->value("danmaku/retryFailedDanmu", true).toBool());
+    ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
@@ -644,75 +644,75 @@ void MainWindow::readConfig()
     });
 
     // 点歌自动复制
-    diangeAutoCopy = settings->value("danmaku/diangeAutoCopy", true).toBool();
+    diangeAutoCopy = us->value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
-    ui->diangeNeedMedalCheck->setChecked(settings->value("danmaku/diangeNeedMedal", true).toBool());
+    ui->diangeNeedMedalCheck->setChecked(us->value("danmaku/diangeNeedMedal", true).toBool());
     QString defaultDiangeFormat = "^[点點]歌[ :：,，]+(.+)";
-    diangeFormatString = settings->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
+    diangeFormatString = us->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
-    ui->diangeReplyCheck->setChecked(settings->value("danmaku/diangeReply", false).toBool());
-    ui->diangeShuaCheck->setChecked(settings->value("danmaku/diangeShua", true).toBool());
-    ui->autoPauseOuterMusicCheck->setChecked(settings->value("danmaku/autoPauseOuterMusic", false).toBool());
-    ui->outerMusicKeyEdit->setText(settings->value("danmaku/outerMusicPauseKey").toString());
-    ui->orderSongsToFileCheck->setChecked(settings->value("danmaku/orderSongsToFile", false).toBool());
-    ui->orderSongsToFileFormatEdit->setText(settings->value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
-    ui->playingSongToFileCheck->setChecked(settings->value("danmaku/playingSongToFile", false).toBool());
-    ui->playingSongToFileFormatEdit->setText(settings->value("danmaku/playingSongToFileFormat", "正在播放：{歌名} - {歌手}").toString());
-    ui->orderSongsToFileMaxSpin->setValue(settings->value("danmaku/orderSongsToFileMax", 9).toInt());
-    ui->songLyricsToFileCheck->setChecked(settings->value("danmaku/songLyricsToFile", false).toBool());
-    ui->songLyricsToFileMaxSpin->setValue(settings->value("danmaku/songLyricsToFileMax", 2).toInt());
-    ui->orderSongShuaSpin->setValue(settings->value("danmaku/diangeShuaCount", 0).toInt());
+    ui->diangeReplyCheck->setChecked(us->value("danmaku/diangeReply", false).toBool());
+    ui->diangeShuaCheck->setChecked(us->value("danmaku/diangeShua", true).toBool());
+    ui->autoPauseOuterMusicCheck->setChecked(us->value("danmaku/autoPauseOuterMusic", false).toBool());
+    ui->outerMusicKeyEdit->setText(us->value("danmaku/outerMusicPauseKey").toString());
+    ui->orderSongsToFileCheck->setChecked(us->value("danmaku/orderSongsToFile", false).toBool());
+    ui->orderSongsToFileFormatEdit->setText(us->value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
+    ui->playingSongToFileCheck->setChecked(us->value("danmaku/playingSongToFile", false).toBool());
+    ui->playingSongToFileFormatEdit->setText(us->value("danmaku/playingSongToFileFormat", "正在播放：{歌名} - {歌手}").toString());
+    ui->orderSongsToFileMaxSpin->setValue(us->value("danmaku/orderSongsToFileMax", 9).toInt());
+    ui->songLyricsToFileCheck->setChecked(us->value("danmaku/songLyricsToFile", false).toBool());
+    ui->songLyricsToFileMaxSpin->setValue(us->value("danmaku/songLyricsToFileMax", 2).toInt());
+    ui->orderSongShuaSpin->setValue(us->value("danmaku/diangeShuaCount", 0).toInt());
 
     // 自动翻译
-    bool trans = settings->value("danmaku/autoTrans", true).toBool();
+    bool trans = us->value("danmaku/autoTrans", true).toBool();
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
-    bool reply = settings->value("danmaku/aiReply", false).toBool();
+    bool reply = us->value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
-    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(settings->value("danmaku/aiReplyMsg", 0).toInt()));
+    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->value("danmaku/aiReplyMsg", 0).toInt()));
     ui->AIReplyMsgCheck->setEnabled(reply);
 
     // 黑名单管理
-    ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
-    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", false).toBool());
+    ui->enableBlockCheck->setChecked(us->value("block/enableBlock", false).toBool());
+    ui->syncShieldKeywordCheck->setChecked(us->value("block/syncShieldKeyword", false).toBool());
 
     // 新人提示
-    ui->newbieTipCheck->setChecked(settings->value("block/newbieTip", true).toBool());
+    ui->newbieTipCheck->setChecked(us->value("block/newbieTip", true).toBool());
 
     // 自动禁言
-    ui->autoBlockNewbieCheck->setChecked(settings->value("block/autoBlockNewbie", false).toBool());
-    ui->autoBlockNewbieKeysEdit->setPlainText(settings->value("block/autoBlockNewbieKeys").toString());
+    ui->autoBlockNewbieCheck->setChecked(us->value("block/autoBlockNewbie", false).toBool());
+    ui->autoBlockNewbieKeysEdit->setPlainText(us->value("block/autoBlockNewbieKeys").toString());
 
-    ui->autoBlockNewbieNotifyCheck->setChecked(settings->value("block/autoBlockNewbieNotify", false).toBool());
-    ui->autoBlockNewbieNotifyWordsEdit->setPlainText(settings->value("block/autoBlockNewbieNotifyWords").toString());
+    ui->autoBlockNewbieNotifyCheck->setChecked(us->value("block/autoBlockNewbieNotify", false).toBool());
+    ui->autoBlockNewbieNotifyWordsEdit->setPlainText(us->value("block/autoBlockNewbieNotifyWords").toString());
     ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 
-    ui->promptBlockNewbieCheck->setChecked(settings->value("block/promptBlockNewbie", false).toBool());
-    ui->promptBlockNewbieKeysEdit->setPlainText(settings->value("block/promptBlockNewbieKeys").toString());
+    ui->promptBlockNewbieCheck->setChecked(us->value("block/promptBlockNewbie", false).toBool());
+    ui->promptBlockNewbieKeysEdit->setPlainText(us->value("block/promptBlockNewbieKeys").toString());
 
-    ui->notOnlyNewbieCheck->setChecked(settings->value("block/notOnlyNewbie", false).toBool());
-    ui->blockNotOnlyNewbieCheck->setChecked(settings->value("block/blockNotOnlyNewbieCheck", false).toBool());
+    ui->notOnlyNewbieCheck->setChecked(us->value("block/notOnlyNewbie", false).toBool());
+    ui->blockNotOnlyNewbieCheck->setChecked(us->value("block/blockNotOnlyNewbieCheck", false).toBool());
 
-    ui->autoBlockTimeSpin->setValue(settings->value("block/autoTime", 1).toInt());
+    ui->autoBlockTimeSpin->setValue(us->value("block/autoTime", 1).toInt());
 
     // 实时弹幕
 #ifndef Q_OS_ANDROID
     // 安装因为界面的问题，不主动显示弹幕姬
-    if (settings->value("danmaku/liveWindow", false).toBool())
+    if (us->value("danmaku/liveWindow", false).toBool())
          on_actionShow_Live_Danmaku_triggered();
 #endif
 
     // 点歌姬
-    if (settings->value("danmaku/playerWindow", false).toBool())
+    if (us->value("danmaku/playerWindow", false).toBool())
         on_actionShow_Order_Player_Window_triggered();
-    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
+    orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
-    if (settings->value("danmaku/record", false).toBool())
+    if (us->value("danmaku/record", false).toBool())
         ui->recordCheck->setChecked(true);
-    int recordSplit = settings->value("danmaku/recordSplit", 30).toInt();
+    int recordSplit = us->value("danmaku/recordSplit", 30).toInt();
     ui->recordSplitSpin->setValue(recordSplit);
     recordTimer = new QTimer(this);
     recordTimer->setInterval(recordSplit * 60000); // 默认30分钟断开一次
@@ -727,8 +727,8 @@ void MainWindow::readConfig()
     ui->recordCheck->setToolTip("保存地址：" + rt->dataPath + "record/房间名_时间.mp4");
 
     // 发送弹幕
-    ac->browserCookie = settings->value("danmaku/browserCookie", "").toString();
-    ac->browserData = settings->value("danmaku/browserData", "").toString();
+    ac->browserCookie = us->value("danmaku/browserCookie", "").toString();
+    ac->browserData = us->value("danmaku/browserData", "").toString();
     int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
     int posr = ac->browserCookie.indexOf(";", posl);
     if (posr == -1) posr = ac->browserCookie.length();
@@ -737,22 +737,22 @@ void MainWindow::readConfig()
     getCookieAccount();
 
     // 保存弹幕
-    bool saveDanmuToFile = settings->value("danmaku/saveDanmakuToFile", false).toBool();
+    bool saveDanmuToFile = us->value("danmaku/saveDanmakuToFile", false).toBool();
     if (saveDanmuToFile)
         ui->saveDanmakuToFileCheck->setChecked(true);
 
     // 每日数据
-    bool calcDaliy = settings->value("live/calculateDaliyData", true).toBool();
+    bool calcDaliy = us->value("live/calculateDaliyData", true).toBool();
     ui->calculateDailyDataCheck->setChecked(calcDaliy);
     if (calcDaliy)
         startCalculateDailyData();
 
     // PK串门提示
-    pkChuanmenEnable = settings->value("pk/chuanmen", false).toBool();
+    pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
     ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
 
     // PK消息同步
-    pkMsgSync = settings->value("pk/msgSync", 0).toInt();
+    pkMsgSync = us->value("pk/msgSync", 0).toInt();
     if (pkMsgSync == 0)
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
     else if (pkMsgSync == 1)
@@ -763,12 +763,12 @@ void MainWindow::readConfig()
     ui->pkMsgSyncCheck->setEnabled(pkChuanmenEnable);
 
     // 判断机器人
-    judgeRobot = settings->value("danmaku/judgeRobot", 0).toInt();
+    judgeRobot = us->value("danmaku/judgeRobot", 0).toInt();
     ui->judgeRobotCheck->setCheckState((Qt::CheckState)judgeRobot);
     ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
 
     // 本地昵称
-    QStringList namePares = settings->value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
+    QStringList namePares = us->value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
@@ -779,7 +779,7 @@ void MainWindow::readConfig()
     }
 
     // 礼物别名
-    namePares = settings->value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
+    namePares = us->value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
@@ -790,48 +790,48 @@ void MainWindow::readConfig()
     }
 
     // 特别关心
-    QStringList usersS = settings->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersS = us->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersS)
     {
         us->careUsers.append(s.toLongLong());
     }
 
     // 强提醒
-    QStringList usersSN = settings->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersSN = us->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersSN)
     {
         us->strongNotifyUsers.append(s.toLongLong());
     }
 
     // 不自动欢迎
-    QStringList usersNW = settings->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNW = us->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNW)
     {
         us->notWelcomeUsers.append(s.toLongLong());
     }
 
     // 不自动回复
-    QStringList usersNR = settings->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNR = us->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNR)
     {
         us->notReplyUsers.append(s.toLongLong());
     }
 
     // 礼物连击
-    ui->giftComboSendCheck->setChecked(settings->value("danmaku/giftComboSend", false).toBool());
-    ui->giftComboDelaySpin->setValue(settings->value("danmaku/giftComboDelay",  5).toInt());
-    ui->giftComboTopCheck->setChecked(settings->value("danmaku/giftComboTop", false).toBool());
-    ui->giftComboMergeCheck->setChecked(settings->value("danmaku/giftComboMerge", false).toBool());
+    ui->giftComboSendCheck->setChecked(us->value("danmaku/giftComboSend", false).toBool());
+    ui->giftComboDelaySpin->setValue(us->value("danmaku/giftComboDelay",  5).toInt());
+    ui->giftComboTopCheck->setChecked(us->value("danmaku/giftComboTop", false).toBool());
+    ui->giftComboMergeCheck->setChecked(us->value("danmaku/giftComboMerge", false).toBool());
     comboTimer = new QTimer(this);
     comboTimer->setInterval(500);
     connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
 
     // 仅开播发送
-    ui->sendAutoOnlyLiveCheck->setChecked(settings->value("danmaku/sendAutoOnlyLive", true).toBool());
-    ui->autoDoSignCheck->setChecked(settings->value("danmaku/autoDoSign", false).toBool());
+    ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", true).toBool());
+    ui->autoDoSignCheck->setChecked(us->value("danmaku/autoDoSign", false).toBool());
 
     // 勋章升级
-    ui->listenMedalUpgradeCheck->setChecked(settings->value("danmaku/listenMedalUpgrade", false).toBool());
+    ui->listenMedalUpgradeCheck->setChecked(us->value("danmaku/listenMedalUpgrade", false).toBool());
 
     // 弹幕次数
     us->danmakuCounts = new QSettings(rt->dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
@@ -840,12 +840,12 @@ void MainWindow::readConfig()
     us->userMarks = new QSettings(rt->dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
     // 接收私信
-    ui->receivePrivateMsgCheck->setChecked(settings->value("privateMsg/enabled", false).toBool());
-    ui->processUnreadMsgCheck->setChecked(settings->value("privateMsg/processUnread", false).toBool());
+    ui->receivePrivateMsgCheck->setChecked(us->value("privateMsg/enabled", false).toBool());
+    ui->processUnreadMsgCheck->setChecked(us->value("privateMsg/processUnread", false).toBool());
     privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 过滤器
-    enableFilter = settings->value("danmaku/enableFilter", enableFilter).toBool();
+    enableFilter = us->value("danmaku/enableFilter", enableFilter).toBool();
     ui->enableFilterCheck->setChecked(enableFilter);
     /* filter_musicOrder = settings->value("filter/musicOrder", "").toString();
     filter_musicOrderRe = QRegularExpression(filter_musicOrder);
@@ -906,30 +906,30 @@ void MainWindow::readConfig()
     // 大乱斗自动赠送吃瓜
     pkEndingTimer = new QTimer(this);
     connect(pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
-    bool melon = settings->value("pk/autoMelon", false).toBool();
+    bool melon = us->value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
-    pkMaxGold = settings->value("pk/maxGold", 300).toInt();
-    pkJudgeEarly = settings->value("pk/judgeEarly", 2000).toInt();
-    toutaCount = settings->value("pk/toutaCount", 0).toInt();
-    chiguaCount = settings->value("pk/chiguaCount", 0).toInt();
-    toutaGold = settings->value("pk/toutaGold", 0).toInt();
-    goldTransPk = settings->value("pk/goldTransPk", goldTransPk).toInt();
-    toutaBlankList = settings->value("pk/blankList").toString().split(";");
-    ui->pkAutoMaxGoldCheck->setChecked(settings->value("pk/autoMaxGold", true).toBool());
+    pkMaxGold = us->value("pk/maxGold", 300).toInt();
+    pkJudgeEarly = us->value("pk/judgeEarly", 2000).toInt();
+    toutaCount = us->value("pk/toutaCount", 0).toInt();
+    chiguaCount = us->value("pk/chiguaCount", 0).toInt();
+    toutaGold = us->value("pk/toutaGold", 0).toInt();
+    goldTransPk = us->value("pk/goldTransPk", goldTransPk).toInt();
+    toutaBlankList = us->value("pk/blankList").toString().split(";");
+    ui->pkAutoMaxGoldCheck->setChecked(us->value("pk/autoMaxGold", true).toBool());
 
     // 大乱斗自动赠送礼物
-    ui->toutaGiftCheck->setChecked(settings->value("danmaku/toutaGift").toBool());
-    QString toutaGiftCountsStr = settings->value("danmaku/toutaGiftCounts").toString();
+    ui->toutaGiftCheck->setChecked(us->value("danmaku/toutaGift").toBool());
+    QString toutaGiftCountsStr = us->value("danmaku/toutaGiftCounts").toString();
     ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
     toutaGiftCounts.clear();
     foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
         toutaGiftCounts.append(s.toInt());
-    restoreToutaGifts(settings->value("danmaku/toutaGifts", "").toString());
+    restoreToutaGifts(us->value("danmaku/toutaGifts", "").toString());
 
 
     // 自定义变量
-    restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
-    restoreReplaceVariant(settings->value("danmaku/replaceVariant", "").toString());
+    restoreCustomVariant(us->value("danmaku/customVariant", "").toString());
+    restoreReplaceVariant(us->value("danmaku/replaceVariant", "").toString());
 
     // 多语言翻译
     restoreVariantTranslation();
@@ -948,26 +948,26 @@ void MainWindow::readConfig()
     restoreEventList();
 
     // 保存舰长
-    ui->saveEveryGuardCheck->setChecked(settings->value("danmaku/saveEveryGuard", false).toBool());
-    ui->saveMonthGuardCheck->setChecked(settings->value("danmaku/saveMonthGuard", false).toBool());
-    ui->saveEveryGiftCheck->setChecked(settings->value("danmaku/saveEveryGift", false).toBool());
+    ui->saveEveryGuardCheck->setChecked(us->value("danmaku/saveEveryGuard", false).toBool());
+    ui->saveMonthGuardCheck->setChecked(us->value("danmaku/saveMonthGuard", false).toBool());
+    ui->saveEveryGiftCheck->setChecked(us->value("danmaku/saveEveryGift", false).toBool());
 
     // 自动发送
-    ui->autoSendWelcomeCheck->setChecked(settings->value("danmaku/sendWelcome", false).toBool());
-    ui->autoSendGiftCheck->setChecked(settings->value("danmaku/sendGift", false).toBool());
-    ui->autoSendAttentionCheck->setChecked(settings->value("danmaku/sendAttention", false).toBool());
-    ui->sendWelcomeCDSpin->setValue(settings->value("danmaku/sendWelcomeCD", 10).toInt());
-    ui->sendGiftCDSpin->setValue(settings->value("danmaku/sendGiftCD", 5).toInt());
-    ui->sendAttentionCDSpin->setValue(settings->value("danmaku/sendAttentionCD", 5).toInt());
-    ui->autoWelcomeWordsEdit->setPlainText(settings->value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
-    ui->autoThankWordsEdit->setPlainText(settings->value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
-    ui->autoAttentionWordsEdit->setPlainText(settings->value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
-    ui->sendWelcomeTextCheck->setChecked(settings->value("danmaku/sendWelcomeText", true).toBool());
-    ui->sendWelcomeVoiceCheck->setChecked(settings->value("danmaku/sendWelcomeVoice", false).toBool());
-    ui->sendGiftTextCheck->setChecked(settings->value("danmaku/sendGiftText", true).toBool());
-    ui->sendGiftVoiceCheck->setChecked(settings->value("danmaku/sendGiftVoice", false).toBool());
-    ui->sendAttentionTextCheck->setChecked(settings->value("danmaku/sendAttentionText", true).toBool());
-    ui->sendAttentionVoiceCheck->setChecked(settings->value("danmaku/sendAttentionVoice", false).toBool());
+    ui->autoSendWelcomeCheck->setChecked(us->value("danmaku/sendWelcome", false).toBool());
+    ui->autoSendGiftCheck->setChecked(us->value("danmaku/sendGift", false).toBool());
+    ui->autoSendAttentionCheck->setChecked(us->value("danmaku/sendAttention", false).toBool());
+    ui->sendWelcomeCDSpin->setValue(us->value("danmaku/sendWelcomeCD", 10).toInt());
+    ui->sendGiftCDSpin->setValue(us->value("danmaku/sendGiftCD", 5).toInt());
+    ui->sendAttentionCDSpin->setValue(us->value("danmaku/sendAttentionCD", 5).toInt());
+    ui->autoWelcomeWordsEdit->setPlainText(us->value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
+    ui->autoThankWordsEdit->setPlainText(us->value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
+    ui->autoAttentionWordsEdit->setPlainText(us->value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
+    ui->sendWelcomeTextCheck->setChecked(us->value("danmaku/sendWelcomeText", true).toBool());
+    ui->sendWelcomeVoiceCheck->setChecked(us->value("danmaku/sendWelcomeVoice", false).toBool());
+    ui->sendGiftTextCheck->setChecked(us->value("danmaku/sendGiftText", true).toBool());
+    ui->sendGiftVoiceCheck->setChecked(us->value("danmaku/sendGiftVoice", false).toBool());
+    ui->sendAttentionTextCheck->setChecked(us->value("danmaku/sendAttentionText", true).toBool());
+    ui->sendAttentionVoiceCheck->setChecked(us->value("danmaku/sendAttentionVoice", false).toBool());
     ui->sendWelcomeTextCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
     ui->sendWelcomeVoiceCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
     ui->sendGiftTextCheck->setEnabled(ui->autoSendGiftCheck->isChecked());
@@ -976,52 +976,52 @@ void MainWindow::readConfig()
     ui->sendAttentionVoiceCheck->setEnabled(ui->autoSendAttentionCheck->isChecked());
 
     // 文字转语音
-    ui->autoSpeekDanmakuCheck->setChecked(settings->value("danmaku/autoSpeek", false).toBool());
-    ui->dontSpeakOnPlayingSongCheck->setChecked(settings->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
+    ui->autoSpeekDanmakuCheck->setChecked(us->value("danmaku/autoSpeek", false).toBool());
+    ui->dontSpeakOnPlayingSongCheck->setChecked(us->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
 
-    voicePlatform = static_cast<VoicePlatform>(settings->value("voice/platform", 0).toInt());
+    voicePlatform = static_cast<VoicePlatform>(us->value("voice/platform", 0).toInt());
     if (voicePlatform == VoiceLocal)
     {
         ui->voiceLocalRadio->setChecked(true);
-        ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
+        ui->voiceNameEdit->setText(us->value("voice/localName").toString());
     }
     else if (voicePlatform == VoiceXfy)
     {
         ui->voiceXfyRadio->setChecked(true);
-        ui->voiceNameEdit->setText(settings->value("xfytts/name").toString());
-        ui->xfyAppIdEdit->setText(settings->value("xfytts/appid").toString());
-        ui->xfyApiKeyEdit->setText(settings->value("xfytts/apikey").toString());
-        ui->xfyApiSecretEdit->setText(settings->value("xfytts/apisecret").toString());
+        ui->voiceNameEdit->setText(us->value("xfytts/name").toString());
+        ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
+        ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
+        ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
     }
     else if (voicePlatform == VoiceMS)
     {
         ui->voiceMSRadio->setChecked(true);
-        ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
-        ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
-        msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+        ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
+        ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
+        msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
     }
     else if (voicePlatform == VoiceCustom)
     {
         ui->voiceCustomRadio->setChecked(true);
-        ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
+        ui->voiceNameEdit->setText(us->value("voice/customName").toString());
     }
 
-    ui->voicePitchSlider->setSliderPosition(settings->value("voice/pitch", 50).toInt());
-    ui->voiceSpeedSlider->setSliderPosition(settings->value("voice/speed", 50).toInt());
-    ui->voiceVolumeSlider->setSliderPosition(settings->value("voice/volume", 50).toInt());
-    ui->voiceCustomUrlEdit->setText(settings->value("voice/customUrl", "").toString());
+    ui->voicePitchSlider->setSliderPosition(us->value("voice/pitch", 50).toInt());
+    ui->voiceSpeedSlider->setSliderPosition(us->value("voice/speed", 50).toInt());
+    ui->voiceVolumeSlider->setSliderPosition(us->value("voice/volume", 50).toInt());
+    ui->voiceCustomUrlEdit->setText(us->value("voice/customUrl", "").toString());
 
     // AI回复
-    QString TXSecretId = settings->value("tx_nlp/secretId").toString();
+    QString TXSecretId = us->value("tx_nlp/secretId").toString();
     if (!TXSecretId.isEmpty())
     {
         TxNlp::instance()->setSecretId(TXSecretId);
         ui->TXSecretIdEdit->setText(TXSecretId);
     }
-    QString TXSecretKey = settings->value("tx_nlp/secretKey").toString();
+    QString TXSecretKey = us->value("tx_nlp/secretKey").toString();
     if (!TXSecretKey.isEmpty())
     {
         TxNlp::instance()->setSecretKey(TXSecretKey);
@@ -1029,22 +1029,22 @@ void MainWindow::readConfig()
     }
 
     // 开播
-    ui->startLiveWordsEdit->setText(settings->value("live/startWords").toString());
-    ui->endLiveWordsEdit->setText(settings->value("live/endWords").toString());
-    ui->startLiveSendCheck->setChecked(settings->value("live/startSend").toBool());
+    ui->startLiveWordsEdit->setText(us->value("live/startWords").toString());
+    ui->endLiveWordsEdit->setText(us->value("live/endWords").toString());
+    ui->startLiveSendCheck->setChecked(us->value("live/startSend").toBool());
 
     // 启动动画
-    ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", firstOpen).toBool());
-    ui->enableTrayCheck->setChecked(settings->value("mainwindow/enableTray", false).toBool());
+    ui->startupAnimationCheck->setChecked(us->value("mainwindow/splash", firstOpen).toBool());
+    ui->enableTrayCheck->setChecked(us->value("mainwindow/enableTray", false).toBool());
     if (ui->enableTrayCheck->isChecked())
         tray->show(); // 让托盘图标显示在系统托盘上
-    permissionText = settings->value("mainwindow/permissionText", permissionText).toString();
+    permissionText = us->value("mainwindow/permissionText", permissionText).toString();
 
     // 定时连接
-    ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
-    ui->startLiveHourSpin->setValue(settings->value("live/startLiveHour", 0).toInt());
-    ui->endLiveHourSpin->setValue(settings->value("live/endLiveHour", 0).toInt());
-    ui->timerConnectIntervalSpin->setValue(settings->value("live/timerConnectInterval", 30).toInt());
+    ui->timerConnectServerCheck->setChecked(us->value("live/timerConnectServer", false).toBool());
+    ui->startLiveHourSpin->setValue(us->value("live/startLiveHour", 0).toInt());
+    ui->endLiveHourSpin->setValue(us->value("live/endLiveHour", 0).toInt());
+    ui->timerConnectIntervalSpin->setValue(us->value("live/timerConnectInterval", 30).toInt());
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
@@ -1090,7 +1090,7 @@ void MainWindow::readConfig()
     });
 
     // 隐藏偷塔
-    if (!settings->value("danmaku/touta", false).toBool())
+    if (!us->value("danmaku/touta", false).toBool())
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->danmakuToutaSettingsCard->hide();
@@ -1100,10 +1100,10 @@ void MainWindow::readConfig()
     }
 
     // 粉丝勋章
-    ui->autoSwitchMedalCheck->setChecked(settings->value("danmaku/autoSwitchMedal", false).toBool());
+    ui->autoSwitchMedalCheck->setChecked(us->value("danmaku/autoSwitchMedal", false).toBool());
 
     // 读取自定义快捷房间
-    QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
     ui->menu_3->addSeparator();
     for (int i = 0; i < list.size(); i++)
     {
@@ -1121,18 +1121,18 @@ void MainWindow::readConfig()
     }
 
     // 滚屏
-    ui->enableScreenDanmakuCheck->setChecked(settings->value("screendanmaku/enableDanmaku", false).toBool());
-    ui->enableScreenMsgCheck->setChecked(settings->value("screendanmaku/enableMsg", false).toBool());
-    ui->screenDanmakuLeftSpin->setValue(settings->value("screendanmaku/left", 0).toInt());
-    ui->screenDanmakuRightSpin->setValue(settings->value("screendanmaku/right", 0).toInt());
-    ui->screenDanmakuTopSpin->setValue(settings->value("screendanmaku/top", 10).toInt());
-    ui->screenDanmakuBottomSpin->setValue(settings->value("screendanmaku/bottom", 60).toInt());
-    ui->screenDanmakuSpeedSpin->setValue(settings->value("screendanmaku/speed", 10).toInt());
+    ui->enableScreenDanmakuCheck->setChecked(us->value("screendanmaku/enableDanmaku", false).toBool());
+    ui->enableScreenMsgCheck->setChecked(us->value("screendanmaku/enableMsg", false).toBool());
+    ui->screenDanmakuLeftSpin->setValue(us->value("screendanmaku/left", 0).toInt());
+    ui->screenDanmakuRightSpin->setValue(us->value("screendanmaku/right", 0).toInt());
+    ui->screenDanmakuTopSpin->setValue(us->value("screendanmaku/top", 10).toInt());
+    ui->screenDanmakuBottomSpin->setValue(us->value("screendanmaku/bottom", 60).toInt());
+    ui->screenDanmakuSpeedSpin->setValue(us->value("screendanmaku/speed", 10).toInt());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
-    QString danmakuFontString = settings->value("screendanmaku/font").toString();
+    QString danmakuFontString = us->value("screendanmaku/font").toString();
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
-    screenDanmakuColor = qvariant_cast<QColor>(settings->value("screendanmaku/color", QColor(0, 0, 0)));
+    screenDanmakuColor = qvariant_cast<QColor>(us->value("screendanmaku/color", QColor(0, 0, 0)));
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
 //        QtConcurrent::run([&]{
             showScreenDanmaku(danmaku);
@@ -1150,25 +1150,25 @@ void MainWindow::readConfig()
     });
 
     // 自动签到
-    if (settings->value("danmaku/autoDoSign", false).toBool())
+    if (us->value("danmaku/autoDoSign", false).toBool())
     {
         ui->autoDoSignCheck->setChecked(true);
     }
 
     // 自动参与天选
-    ui->autoLOTCheck->setChecked(settings->value("danmaku/autoLOT", false).toBool());
+    ui->autoLOTCheck->setChecked(us->value("danmaku/autoLOT", false).toBool());
 
     // 自动获取小心心
-    ui->acquireHeartCheck->setChecked(settings->value("danmaku/acquireHeart", false).toBool());
-    ui->heartTimeSpin->setValue(settings->value("danmaku/acquireHeartTime", 120).toInt());
-    todayHeartMinite = settings->value("danmaku/todayHeartMinite").toInt();
+    ui->acquireHeartCheck->setChecked(us->value("danmaku/acquireHeart", false).toBool());
+    ui->heartTimeSpin->setValue(us->value("danmaku/acquireHeartTime", 120).toInt());
+    todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
     ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
 
     // 自动赠送过期礼物
-    ui->sendExpireGiftCheck->setChecked(settings->value("danmaku/sendExpireGift", false).toBool());
+    ui->sendExpireGiftCheck->setChecked(us->value("danmaku/sendExpireGift", false).toBool());
 
     // 永久禁言
-    QJsonArray eternalBlockArray = settings->value("danmaku/eternalBlockUsers").toJsonArray();
+    QJsonArray eternalBlockArray = us->value("danmaku/eternalBlockUsers").toJsonArray();
     int eternalBlockSize = eternalBlockArray.size();
     for (int i = 0; i < eternalBlockSize; i++)
     {
@@ -1178,10 +1178,10 @@ void MainWindow::readConfig()
     }
 
     // 开机自启
-    if (settings->value("runtime/startOnReboot", false).toBool())
+    if (us->value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
     // 自动更新
-    if (settings->value("runtime/autoUpdate", true).toBool())
+    if (us->value("runtime/autoUpdate", true).toBool())
         ui->autoUpdateCheck->setChecked(true);
 
     // 每分钟定时
@@ -1234,7 +1234,7 @@ void MainWindow::readConfig()
         }
 
         // 版权声明
-        if (isLiving() && !settings->value("danmaku/copyright", false).toBool()
+        if (isLiving() && !us->value("danmaku/copyright", false).toBool()
                 && qrand() % 3 == 0)
         {
             /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
@@ -1328,7 +1328,7 @@ void MainWindow::readConfig()
         const QDate currDate = QDate::currentDate();
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        settings->setValue("runtime/open_day", currDate.day());
+        us->setValue("runtime/open_day", currDate.day());
         updatePermission();
 
         processNewDay();
@@ -1338,7 +1338,7 @@ void MainWindow::readConfig()
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
             triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-            settings->setValue("runtime/open_month", currDate.month());
+            us->setValue("runtime/open_month", currDate.month());
 
             // 判断每一年初
             if (currDate.month() == 1)
@@ -1346,7 +1346,7 @@ void MainWindow::readConfig()
                 triggerCmdEvent("NEW_YEAR", LiveDanmaku(), true);
                 triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
                 triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku(), true);
-                settings->setValue("runtime/open_year", currDate.year());
+                us->setValue("runtime/open_year", currDate.year());
             }
         }
 
@@ -1355,38 +1355,38 @@ void MainWindow::readConfig()
         {
             triggerCmdEvent("NEW_WEEK", LiveDanmaku(), true);
             triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-            settings->setValue("runtime/open_week_number", currDate.weekNumber());
+            us->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
     dayTimer->start();
 
     // 判断第一次打开
     QDate currDate = QDate::currentDate();
-    int prevYear = settings->value("runtime/open_year", -1).toInt();
-    int prevMonth = settings->value("runtime/open_month", -1).toInt();
-    int prevDay = settings->value("runtime/open_day", -1).toInt();
-    int prevWeekNumber = settings->value("runtime/open_week_number", -1).toInt();
+    int prevYear = us->value("runtime/open_year", -1).toInt();
+    int prevMonth = us->value("runtime/open_month", -1).toInt();
+    int prevDay = us->value("runtime/open_day", -1).toInt();
+    int prevWeekNumber = us->value("runtime/open_week_number", -1).toInt();
     if (prevYear != currDate.year())
     {
         prevMonth = prevDay = -1; // 避免是不同年的同一月
         triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
-        settings->setValue("runtime/open_year", currDate.year());
+        us->setValue("runtime/open_year", currDate.year());
     }
     if (prevMonth != currDate.month())
     {
         prevDay = -1; // 避免不同月的同一天
         triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-        settings->setValue("runtime/open_month", currDate.month());
+        us->setValue("runtime/open_month", currDate.month());
     }
     if (prevDay != currDate.day())
     {
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        settings->setValue("runtime/open_day", currDate.day());
+        us->setValue("runtime/open_day", currDate.day());
     }
     if (prevWeekNumber != currDate.weekNumber())
     {
         triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-        settings->setValue("runtime/open_week_number", currDate.weekNumber());
+        us->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
     // sync
@@ -1405,23 +1405,23 @@ void MainWindow::readConfig()
     });
 
     // 数据清理
-    ui->autoClearComeIntervalSpin->setValue(settings->value("danmaku/clearDidntComeInterval", 7).toInt());
+    ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
 
     // 调试模式
-    localDebug = settings->value("debug/localDebug", false).toBool();
+    localDebug = us->value("debug/localDebug", false).toBool();
     ui->actionLocal_Mode->setChecked(localDebug);
-    debugPrint = settings->value("debug/debugPrint", false).toBool();
+    debugPrint = us->value("debug/debugPrint", false).toBool();
     ui->actionDebug_Mode->setChecked(debugPrint);
-    saveRecvCmds = settings->value("debug/saveRecvCmds", false).toBool();
+    saveRecvCmds = us->value("debug/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
     if (saveRecvCmds)
         on_saveRecvCmdsCheck_clicked();
 
     // 模拟CMDS
-    ui->timerPushCmdCheck->setChecked(settings->value("debug/pushCmdsTimer", false).toBool());
-    ui->timerPushCmdSpin->setValue(settings->value("debug/pushCmdsInterval", 10).toInt());
+    ui->timerPushCmdCheck->setChecked(us->value("debug/pushCmdsTimer", false).toBool());
+    ui->timerPushCmdSpin->setValue(us->value("debug/pushCmdsInterval", 10).toInt());
 
-    if (!settings->value("danmaku/copyright", false).toBool())
+    if (!us->value("danmaku/copyright", false).toBool())
     {
         /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
         {
@@ -1432,14 +1432,14 @@ void MainWindow::readConfig()
     }
 
     // 开启服务端
-    bool enableServer = settings->value("server/enabled", false).toBool();
+    bool enableServer = us->value("server/enabled", false).toBool();
     ui->serverCheck->setChecked(enableServer);
-    int port = settings->value("server/port", 5520).toInt();
+    int port = us->value("server/port", 5520).toInt();
     ui->serverPortSpin->setValue(port);
-    serverDomain = settings->value("server/domain", "localhost").toString();
-    ui->allowWebControlCheck->setChecked(settings->value("server/allowWebControl", false).toBool());
-    ui->allowRemoteControlCheck->setChecked(remoteControl = settings->value("danmaku/remoteControl", true).toBool());
-    ui->allowAdminControlCheck->setChecked(settings->value("danmaku/adminControl", false).toBool());
+    serverDomain = us->value("server/domain", "localhost").toString();
+    ui->allowWebControlCheck->setChecked(us->value("server/allowWebControl", false).toBool());
+    ui->allowRemoteControlCheck->setChecked(remoteControl = us->value("danmaku/remoteControl", true).toBool());
+    ui->allowAdminControlCheck->setChecked(us->value("danmaku/adminControl", false).toBool());
     ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
@@ -1460,8 +1460,8 @@ void MainWindow::readConfig()
     restoreGameTexts();
 
     // 回复统计数据
-    int appOpenCount = settings->value("mainwindow/appOpenCount", 0).toInt();
-    settings->setValue("mainwindow/appOpenCount", ++appOpenCount);
+    int appOpenCount = us->value("mainwindow/appOpenCount", 0).toInt();
+    us->setValue("mainwindow/appOpenCount", ++appOpenCount);
     ui->robotSendCountTextLabel->setToolTip("累计启动 " + snum(appOpenCount) + " 次");
 }
 
@@ -1776,7 +1776,7 @@ MainWindow::~MainWindow()
 
 const QSettings* MainWindow::getSettings() const
 {
-    return settings;
+    return us;
 }
 
 void MainWindow::showEvent(QShowEvent *event)
@@ -1789,7 +1789,7 @@ void MainWindow::showEvent(QShowEvent *event)
         firstShow = false;
 
         // 恢复窗口位置
-        restoreGeometry(settings->value("mainwindow/geometry").toByteArray());
+        restoreGeometry(us->value("mainwindow/geometry").toByteArray());
 
         // 显示启动动画
         startSplash();
@@ -1799,7 +1799,7 @@ void MainWindow::showEvent(QShowEvent *event)
         if (ui->stackedWidget->currentIndex() != 0)
             roomIdBgWidget->hide();
     }
-    settings->setValue("mainwindow/autoShow", true);
+    us->setValue("mainwindow/autoShow", true);
 
     if (!roomCover.isNull())
         adjustCoverSizeByRoomCover(roomCover);
@@ -1807,8 +1807,8 @@ void MainWindow::showEvent(QShowEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    settings->setValue("mainwindow/geometry", this->saveGeometry());
-    settings->sync();
+    us->setValue("mainwindow/geometry", this->saveGeometry());
+    us->sync();
 
 #if defined(ENABLE_TRAY)
 
@@ -1823,7 +1823,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QTimer::singleShot(5000, [=]{
         if (!this->isHidden())
             return ;
-        settings->setValue("mainwindow/autoShow", false);
+        us->setValue("mainwindow/autoShow", false);
     });
 #else
     QMainWindow::closeEvent(event);
@@ -2199,7 +2199,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
         else
             sendMsg(msg);
         inDanmakuCd = true;
-        settings->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
+        us->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
         ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
         ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
     }
@@ -2478,7 +2478,7 @@ void MainWindow::slotComboSend()
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
 {
-    settings->setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
+    us->setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
 }
 
 void MainWindow::on_testDanmakuButton_clicked()
@@ -3071,7 +3071,7 @@ void MainWindow::on_testDanmakuButton_clicked()
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuInterval = arg1 * 1000;
-    settings->setValue("danmaku/removeInterval", arg1);
+    us->setValue("danmaku/removeInterval", arg1);
 }
 
 void MainWindow::on_roomIdEdit_editingFinished()
@@ -3088,7 +3088,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     }
     ac->roomId = ui->roomIdEdit->text();
     ac->upUid = "";
-    settings->setValue("danmaku/roomId", ac->roomId);
+    us->setValue("danmaku/roomId", ac->roomId);
 
     releaseLiveData();
 
@@ -3105,14 +3105,14 @@ void MainWindow::on_roomIdEdit_editingFinished()
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
 {
     auto trans = ui->languageAutoTranslateCheck->isChecked();
-    settings->setValue("danmaku/autoTrans", trans);
+    us->setValue("danmaku/autoTrans", trans);
     if (danmakuWindow)
         danmakuWindow->setAutoTranslate(trans);
 }
 
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
-    settings->setValue("mainwindow/tabIndex", index);
+    us->setValue("mainwindow/tabIndex", index);
     if (index > 2)
         appendListItemButton->hide();
     else
@@ -3132,7 +3132,7 @@ void MainWindow::on_SendMsgButton_clicked()
 void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
     bool reply = ui->AIReplyCheck->isChecked();
-    settings->setValue("danmaku/aiReply", reply);
+    us->setValue("danmaku/aiReply", reply);
     if (danmakuWindow)
         danmakuWindow->setAIReply(reply);
 
@@ -3177,7 +3177,7 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     // 连接信号
     connectTimerTaskEvent(tw, item);
 
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     tw->check->setChecked(enable);
@@ -3202,12 +3202,12 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = tw->check->isChecked();
         int row = ui->taskListWidget->row(item);
-        settings->setValue("task/r"+QString::number(row)+"Enable", enable);
+        us->setValue("task/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(tw, &TaskWidget::spinChanged, this, [=](int val){
         int row = ui->taskListWidget->row(item);
-        settings->setValue("task/r"+QString::number(row)+"Interval", val);
+        us->setValue("task/r"+QString::number(row)+"Interval", val);
     });
 
     connect(tw->edit, &ConditionEditor::textChanged, this, [=]{
@@ -3215,7 +3215,7 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
 
         QString content = tw->edit->toPlainText();
         int row = ui->taskListWidget->row(item);
-        settings->setValue("task/r"+QString::number(row)+"Msg", content);
+        us->setValue("task/r"+QString::number(row)+"Msg", content);
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
@@ -3251,25 +3251,25 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
 
 void MainWindow::saveTaskList()
 {
-    settings->setValue("task/count", ui->taskListWidget->count());
+    us->setValue("task/count", ui->taskListWidget->count());
     for (int row = 0; row < ui->taskListWidget->count(); row++)
     {
         auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(row));
         auto tw = static_cast<TaskWidget*>(widget);
-        settings->setValue("task/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        settings->setValue("task/r"+QString::number(row)+"Interval", tw->spin->value());
-        settings->setValue("task/r"+QString::number(row)+"Msg", tw->edit->toPlainText());
+        us->setValue("task/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        us->setValue("task/r"+QString::number(row)+"Interval", tw->spin->value());
+        us->setValue("task/r"+QString::number(row)+"Msg", tw->edit->toPlainText());
     }
 }
 
 void MainWindow::restoreTaskList()
 {
-    int count = settings->value("task/count", 0).toInt();
+    int count = us->value("task/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings->value("task/r"+QString::number(row)+"Enable", false).toBool();
-        int interval = settings->value("task/r"+QString::number(row)+"Interval", 1800).toInt();
-        QString msg = settings->value("task/r"+QString::number(row)+"Msg", "").toString();
+        bool enable = us->value("task/r"+QString::number(row)+"Enable", false).toBool();
+        int interval = us->value("task/r"+QString::number(row)+"Interval", 1800).toInt();
+        QString msg = us->value("task/r"+QString::number(row)+"Msg", "").toString();
         addTimerTask(enable, interval, msg);
     }
 }
@@ -3297,7 +3297,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     // 连接信号
     connectAutoReplyEvent(rw, item);
 
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     rw->check->setChecked(enable);
@@ -3322,12 +3322,12 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->replyListWidget->row(item);
-        settings->setValue("reply/r"+QString::number(row)+"Enable", enable);
+        us->setValue("reply/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(rw->keyEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->replyListWidget->row(item);
-        settings->setValue("reply/r"+QString::number(row)+"Key", text);
+        us->setValue("reply/r"+QString::number(row)+"Key", text);
     });
 
     connect(rw->replyEdit, &ConditionEditor::textChanged, this, [=]{
@@ -3335,7 +3335,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
 
         QString content = rw->replyEdit->toPlainText();
         int row = ui->replyListWidget->row(item);
-        settings->setValue("reply/r"+QString::number(row)+"Reply", content);
+        us->setValue("reply/r"+QString::number(row)+"Reply", content);
     });
 
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
@@ -3383,25 +3383,25 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
 
 void MainWindow::saveReplyList()
 {
-    settings->setValue("reply/count", ui->replyListWidget->count());
+    us->setValue("reply/count", ui->replyListWidget->count());
     for (int row = 0; row < ui->replyListWidget->count(); row++)
     {
         auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
         auto tw = static_cast<ReplyWidget*>(widget);
-        settings->setValue("reply/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        settings->setValue("reply/r"+QString::number(row)+"Key", tw->keyEdit->text());
-        settings->setValue("reply/r"+QString::number(row)+"Reply", tw->replyEdit->toPlainText());
+        us->setValue("reply/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        us->setValue("reply/r"+QString::number(row)+"Key", tw->keyEdit->text());
+        us->setValue("reply/r"+QString::number(row)+"Reply", tw->replyEdit->toPlainText());
     }
 }
 
 void MainWindow::restoreReplyList()
 {
-    int count = settings->value("reply/count", 0).toInt();
+    int count = us->value("reply/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings->value("reply/r"+QString::number(row)+"Enable", false).toBool();
-        QString key = settings->value("reply/r"+QString::number(row)+"Key").toString();
-        QString reply = settings->value("reply/r"+QString::number(row)+"Reply").toString();
+        bool enable = us->value("reply/r"+QString::number(row)+"Enable", false).toBool();
+        QString key = us->value("reply/r"+QString::number(row)+"Key").toString();
+        QString reply = us->value("reply/r"+QString::number(row)+"Reply").toString();
         addAutoReply(enable, key, reply);
     }
 }
@@ -3467,7 +3467,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     // 连接信号
     connectEventActionEvent(rw, item);
 
-    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     rw->check->setChecked(enable);
@@ -3492,12 +3492,12 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->eventListWidget->row(item);
-        settings->setValue("event/r"+QString::number(row)+"Enable", enable);
+        us->setValue("event/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(rw->eventEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->eventListWidget->row(item);
-        settings->setValue("event/r"+QString::number(row)+"Cmd", text);
+        us->setValue("event/r"+QString::number(row)+"Cmd", text);
     });
 
     connect(rw->actionEdit, &ConditionEditor::textChanged, this, [=]{
@@ -3505,7 +3505,7 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
 
         QString content = rw->actionEdit->toPlainText();
         int row = ui->eventListWidget->row(item);
-        settings->setValue("event/r"+QString::number(row)+"Action", content);
+        us->setValue("event/r"+QString::number(row)+"Action", content);
 
         /* // 处理特殊操作，比如过滤器
         QString event = rw->title();
@@ -3553,25 +3553,25 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
 
 void MainWindow::saveEventList()
 {
-    settings->setValue("event/count", ui->eventListWidget->count());
+    us->setValue("event/count", ui->eventListWidget->count());
     for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
         auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
         auto tw = static_cast<EventWidget*>(widget);
-        settings->setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        settings->setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
-        settings->setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
+        us->setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        us->setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
+        us->setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
     }
 }
 
 void MainWindow::restoreEventList()
 {
-    int count = settings->value("event/count", 0).toInt();
+    int count = us->value("event/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = settings->value("event/r"+QString::number(row)+"Enable", false).toBool();
-        QString key = settings->value("event/r"+QString::number(row)+"Cmd").toString();
-        QString event = settings->value("event/r"+QString::number(row)+"Action").toString();
+        bool enable = us->value("event/r"+QString::number(row)+"Enable", false).toBool();
+        QString key = us->value("event/r"+QString::number(row)+"Cmd").toString();
+        QString event = us->value("event/r"+QString::number(row)+"Action").toString();
         addEventAction(enable, key, event);
     }
 }
@@ -3590,7 +3590,7 @@ bool MainWindow::hasEvent(QString cmd) const
 
 void MainWindow::autoSetCookie(QString s)
 {
-    settings->setValue("danmaku/browserCookie", ac->browserCookie = s);
+    us->setValue("danmaku/browserCookie", ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
         return ;
 
@@ -3610,7 +3610,7 @@ void MainWindow::autoSetCookie(QString s)
         ac->browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
     ac->browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + ac->csrf_token);
     ac->browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + ac->csrf_token);
-    settings->setValue("danmaku/browserData", ac->browserData);
+    us->setValue("danmaku/browserData", ac->browserData);
     qInfo() << "设置弹幕格式：" << ac->browserData;
 }
 
@@ -4451,7 +4451,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
-        settings->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
+        us->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
         ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
         if (todayHeartMinite >= ui->heartTimeSpin->value())
             if (xliveHeartBeatTimer)
@@ -4869,7 +4869,7 @@ int MainWindow::hasPermission()
  */
 void MainWindow::processNewDay()
 {
-    settings->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
+    us->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -7495,9 +7495,9 @@ void MainWindow::saveCalculateDailyData()
 
 void MainWindow::saveTouta()
 {
-    settings->setValue("pk/toutaCount", toutaCount);
-    settings->setValue("pk/chiguaCount", chiguaCount);
-    settings->setValue("pk/toutaGold", toutaGold);
+    us->setValue("pk/toutaCount", toutaCount);
+    us->setValue("pk/chiguaCount", chiguaCount);
+    us->setValue("pk/toutaGold", toutaGold);
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
@@ -7923,7 +7923,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     {
         ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
-        if (settings->value("danmaku/aiReply", false).toBool())
+        if (us->value("danmaku/aiReply", false).toBool())
             ui->AIReplyCheck->setChecked(false);
         if (response)
             sendNotifyMsg(">已关闭弹幕回复");
@@ -8917,7 +8917,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 key = "heaps/" + key;
             QString value = caps.at(2);
             qInfo() << "执行命令：" << caps;
-            settings->setValue(key, value);
+            us->setValue(key, value);
             return true;
         }
     }
@@ -8934,7 +8934,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 key = "heaps/" + key;
             qInfo() << "执行命令：" << caps;
 
-            settings->remove(key);
+            us->remove(key);
             return true;
         }
     }
@@ -9533,7 +9533,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 QStringList ress;
                 foreach (qint64 uid, us->notWelcomeUsers)
                     ress << QString::number(uid);
-                settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
+                us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
             return true;
@@ -9557,7 +9557,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 QStringList ress;
                 foreach (qint64 uid, us->notWelcomeUsers)
                     ress << QString::number(uid);
-                settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
+                us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
             return true;
@@ -9594,7 +9594,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                     ress << QString("%1=>%2").arg(it.key()).arg(it.value());
                     it++;
                 }
-                settings->setValue("danmaku/localNicknames", ress.join(";"));
+                us->setValue("danmaku/localNicknames", ress.join(";"));
             }
             return true;
         }
@@ -9885,7 +9885,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             else if (loopKeyStr.startsWith(SETTINGS_PREFIX))
             {
                 loopKeyStr.remove(0, SETTINGS_PREFIX.length());
-                sts = settings;
+                sts = us;
             }
 
             auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, us->danmakuCounts, heaps, this);
@@ -9939,7 +9939,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             int val = caps.at(1).toInt();
-            settings->setValue("pk/maxGold", pkMaxGold = val);
+            us->setValue("pk/maxGold", pkMaxGold = val);
             return true;
         }
     }
@@ -12765,9 +12765,9 @@ void MainWindow::initTTS()
         {
             qInfo() << "初始化TTS语音模块";
             tts = new QTextToSpeech(this);
-            tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
-            tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
+            tts->setRate( (voiceSpeed = us->value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = us->value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = us->value("voice/volume", 50).toInt()) / 100.0 );
             connect(tts, &QTextToSpeech::stateChanged, this, [=](QTextToSpeech::State state){
                 if (state == QTextToSpeech::Ready)
                     speakTextQueueNext();
@@ -12780,17 +12780,17 @@ void MainWindow::initTTS()
         {
             qInfo() << "初始化讯飞语音模块";
             xfyTTS = new XfyTTS(rt->dataPath,
-                                settings->value("xfytts/appid").toString(),
-                                settings->value("xfytts/apikey").toString(),
-                                settings->value("xfytts/apisecret").toString(),
+                                us->value("xfytts/appid").toString(),
+                                us->value("xfytts/apikey").toString(),
+                                us->value("xfytts/apisecret").toString(),
                                 this);
-            ui->xfyAppIdEdit->setText(settings->value("xfytts/appid").toString());
-            ui->xfyApiKeyEdit->setText(settings->value("xfytts/apikey").toString());
-            ui->xfyApiSecretEdit->setText(settings->value("xfytts/apisecret").toString());
-            xfyTTS->setName( voiceName = settings->value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = settings->value("voice/pitch", 50).toInt() );
-            xfyTTS->setSpeed( voiceSpeed = settings->value("voice/speed", 50).toInt() );
-            xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
+            ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
+            ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
+            ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
+            xfyTTS->setName( voiceName = us->value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = us->value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = us->value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = us->value("voice/speed", 50).toInt() );
         }
         break;
     case VoiceMS:
@@ -12798,15 +12798,15 @@ void MainWindow::initTTS()
         {
             qInfo() << "初始化微软语音模块";
             msTTS = new MicrosoftTTS(rt->dataPath,
-                                     settings->value("mstts/areaCode").toString(),
-                                     settings->value("mstts/subscriptionKey").toString(),
+                                     us->value("mstts/areaCode").toString(),
+                                     us->value("mstts/subscriptionKey").toString(),
                                      this);
             connect(msTTS, &MicrosoftTTS::signalError, this, [=](QString err) {
                 showError("微软语音", err);
             });
-            ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
-            ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
-            msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+            ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
+            ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
+            msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
             // TODO: 设置音调等内容
         }
         break;
@@ -14345,68 +14345,68 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
-    settings->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
+    us->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
     ui->sendWelcomeTextCheck->setEnabled(arg1);
     ui->sendWelcomeVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoSendGiftCheck_stateChanged(int arg1)
 {
-    settings->setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
+    us->setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
     ui->sendGiftTextCheck->setEnabled(arg1);
     ui->sendGiftVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoWelcomeWordsEdit_textChanged()
 {
-    settings->setValue("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText());
+    us->setValue("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText());
 }
 
 void MainWindow::on_autoThankWordsEdit_textChanged()
 {
-    settings->setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
+    us->setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
 }
 
 void MainWindow::on_startLiveWordsEdit_editingFinished()
 {
-    settings->setValue("live/startWords", ui->startLiveWordsEdit->text());
+    us->setValue("live/startWords", ui->startLiveWordsEdit->text());
 }
 
 void MainWindow::on_endLiveWordsEdit_editingFinished()
 {
-    settings->setValue("live/endWords", ui->endLiveWordsEdit->text());
+    us->setValue("live/endWords", ui->endLiveWordsEdit->text());
 }
 
 void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 {
-    settings->setValue("live/startSend", ui->startLiveSendCheck->isChecked());
+    us->setValue("live/startSend", ui->startLiveSendCheck->isChecked());
 }
 
 void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
 {
-    settings->setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
+    us->setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
     ui->sendAttentionTextCheck->setEnabled(arg1);
     ui->sendAttentionVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoAttentionWordsEdit_textChanged()
 {
-    settings->setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
+    us->setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
 }
 
 void MainWindow::on_sendWelcomeCDSpin_valueChanged(int arg1)
 {
-    settings->setValue("danmaku/sendWelcomeCD", arg1);
+    us->setValue("danmaku/sendWelcomeCD", arg1);
 }
 
 void MainWindow::on_sendGiftCDSpin_valueChanged(int arg1)
 {
-    settings->setValue("danmaku/sendGiftCD", arg1);
+    us->setValue("danmaku/sendGiftCD", arg1);
 }
 
 void MainWindow::on_sendAttentionCDSpin_valueChanged(int arg1)
 {
-    settings->setValue("danmaku/sendAttentionCD", arg1);
+    us->setValue("danmaku/sendAttentionCD", arg1);
 }
 
 void MainWindow::showDiangeHistory()
@@ -14577,7 +14577,7 @@ void MainWindow::saveEternalBlockUsers()
     int size = us->eternalBlockUsers.size();
     for (int i = 0; i < size; i++)
         array.append(us->eternalBlockUsers.at(i).toJson());
-    settings->setValue("danmaku/eternalBlockUsers", array);
+    us->setValue("danmaku/eternalBlockUsers", array);
     qInfo() << "保存永久禁言，当前人数：" << us->eternalBlockUsers.size();
 }
 
@@ -14613,7 +14613,7 @@ void MainWindow::detectEternalBlockUsers()
 void MainWindow::on_enableBlockCheck_clicked()
 {
     bool enable = ui->enableBlockCheck->isChecked();
-    settings->setValue("block/enableBlock", enable);
+    us->setValue("block/enableBlock", enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
 
@@ -14625,36 +14625,36 @@ void MainWindow::on_enableBlockCheck_clicked()
 void MainWindow::on_newbieTipCheck_clicked()
 {
     bool enable = ui->newbieTipCheck->isChecked();
-    settings->setValue("block/newbieTip", enable);
+    us->setValue("block/newbieTip", enable);
     if (danmakuWindow)
         danmakuWindow->setNewbieTip(enable);
 }
 
 void MainWindow::on_autoBlockNewbieCheck_clicked()
 {
-    settings->setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
+    us->setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
     ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 }
 
 void MainWindow::on_autoBlockNewbieKeysEdit_textChanged()
 {
-    settings->setValue("block/autoBlockNewbieKeys", ui->autoBlockNewbieKeysEdit->toPlainText());
+    us->setValue("block/autoBlockNewbieKeys", ui->autoBlockNewbieKeysEdit->toPlainText());
 }
 
 void MainWindow::on_autoBlockNewbieNotifyCheck_clicked()
 {
-    settings->setValue("block/autoBlockNewbieNotify", ui->autoBlockNewbieNotifyCheck->isChecked());
+    us->setValue("block/autoBlockNewbieNotify", ui->autoBlockNewbieNotifyCheck->isChecked());
 }
 
 void MainWindow::on_autoBlockNewbieNotifyWordsEdit_textChanged()
 {
-    settings->setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
+    us->setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
 }
 
 void MainWindow::on_saveDanmakuToFileCheck_clicked()
 {
     bool enabled = ui->saveDanmakuToFileCheck->isChecked();
-    settings->setValue("danmaku/saveDanmakuToFile", enabled);
+    us->setValue("danmaku/saveDanmakuToFile", enabled);
     if (enabled)
         startSaveDanmakuToFile();
     else
@@ -14663,18 +14663,18 @@ void MainWindow::on_saveDanmakuToFileCheck_clicked()
 
 void MainWindow::on_promptBlockNewbieCheck_clicked()
 {
-    settings->setValue("block/promptBlockNewbie", ui->promptBlockNewbieCheck->isChecked());
+    us->setValue("block/promptBlockNewbie", ui->promptBlockNewbieCheck->isChecked());
 }
 
 void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 {
-    settings->setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
+    us->setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
 }
 
 void MainWindow::on_timerConnectServerCheck_clicked()
 {
     bool enable = ui->timerConnectServerCheck->isChecked();
-    settings->setValue("live/timerConnectServer", enable);
+    us->setValue("live/timerConnectServer", enable);
     if (!isLiving() && enable)
         startConnectRoom();
     else if (!enable && (!socket || socket->state() == QAbstractSocket::UnconnectedState))
@@ -14683,14 +14683,14 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
-    settings->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
+    us->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
     if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
-    settings->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
+    us->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
     if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
@@ -14698,7 +14698,7 @@ void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 void MainWindow::on_calculateDailyDataCheck_clicked()
 {
     bool enable = ui->calculateDailyDataCheck->isChecked();
-    settings->setValue("live/calculateDaliyData", enable);
+    us->setValue("live/calculateDaliyData", enable);
     if (enable)
         startCalculateDailyData();
 }
@@ -14724,7 +14724,7 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuTipInterval = arg1 * 1000;
-    settings->setValue("danmaku/removeTipInterval", arg1);
+    us->setValue("danmaku/removeTipInterval", arg1);
 }
 
 void MainWindow::on_doveCheck_clicked()
@@ -14735,13 +14735,13 @@ void MainWindow::on_doveCheck_clicked()
 void MainWindow::on_notOnlyNewbieCheck_clicked()
 {
     bool enable = ui->notOnlyNewbieCheck->isChecked();
-    settings->setValue("block/notOnlyNewbie", enable);
+    us->setValue("block/notOnlyNewbie", enable);
 }
 
 void MainWindow::on_pkAutoMelonCheck_clicked()
 {
     bool enable = ui->pkAutoMelonCheck->isChecked();
-    settings->setValue("pk/autoMelon", enable);
+    us->setValue("pk/autoMelon", enable);
 }
 
 void MainWindow::on_pkMaxGoldButton_clicked()
@@ -14752,7 +14752,7 @@ void MainWindow::on_pkMaxGoldButton_clicked()
     if (!ok)
         return ;
 
-    settings->setValue("pk/maxGold", pkMaxGold = v);
+    us->setValue("pk/maxGold", pkMaxGold = v);
 }
 
 void MainWindow::on_pkJudgeEarlyButton_clicked()
@@ -14762,7 +14762,7 @@ void MainWindow::on_pkJudgeEarlyButton_clicked()
     if (!ok)
         return ;
 
-    settings->setValue("pk/judgeEarly", pkJudgeEarly = v);
+    us->setValue("pk/judgeEarly", pkJudgeEarly = v);
 }
 
 template<typename T>
@@ -14804,7 +14804,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 {
     if (!danmakuWindow)
     {
-        danmakuWindow = new LiveDanmakuWindow(settings, rt->dataPath, this);
+        danmakuWindow = new LiveDanmakuWindow(this);
 
         connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](LiveDanmaku danmaku) {
             if (danmaku.is(MSG_DANMAKU))
@@ -14906,7 +14906,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     {
         danmakuWindow->hide();
     }
-    settings->setValue("danmaku/liveWindow", hidding);
+    us->setValue("danmaku/liveWindow", hidding);
 }
 
 void MainWindow::on_actionSet_Cookie_triggered()
@@ -14935,7 +14935,7 @@ void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
     if (!ok)
         return ;
 
-    settings->setValue("danmaku/browserData", ac->browserData = s);
+    us->setValue("danmaku/browserData", ac->browserData = s);
     int posl = ac->browserData.indexOf("csrf_token=") + 9;
     int posr = ac->browserData.indexOf("&", posl);
     if (posr == -1) posr = ac->browserData.length();
@@ -14965,7 +14965,7 @@ void MainWindow::on_actionCookie_Help_triggered()
 
 void MainWindow::on_actionCreate_Video_LRC_triggered()
 {
-    VideoLyricsCreator* vlc = new VideoLyricsCreator(settings, nullptr);
+    VideoLyricsCreator* vlc = new VideoLyricsCreator(us, nullptr);
     vlc->show();
 }
 
@@ -15103,7 +15103,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         });
         connect(musicWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
             QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
-                settings->setValue("danmaku/playerWindow", false);
+                us->setValue("danmaku/playerWindow", false);
             });
         });
     }
@@ -15118,12 +15118,12 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     {
         musicWindow->hide();
     }
-    settings->setValue("danmaku/playerWindow", hidding);
+    us->setValue("danmaku/playerWindow", hidding);
 }
 
 void MainWindow::on_diangeReplyCheck_clicked()
 {
-    settings->setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
+    us->setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -15152,7 +15152,7 @@ void MainWindow::on_actionCustom_Variant_triggered()
     text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量，可在答谢、定时中使用：\n示例格式：%var%=val", text, &ok);
     if (!ok)
         return ;
-    settings->setValue("danmaku/customVariant", text);
+    us->setValue("danmaku/customVariant", text);
 
     restoreCustomVariant(text);
 }
@@ -15199,7 +15199,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
         return ;
     }
 
-    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(us, nullptr);
     connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
     connect(player, SIGNAL(signalRestart()), this, SLOT(on_actionShow_Live_Video_triggered()));
     player->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -15214,7 +15214,7 @@ void MainWindow::on_actionShow_PK_Video_triggered()
     if (pkRoomId.isEmpty())
         return ;
 
-    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(us, nullptr);
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(pkRoomId);
     player->show();
@@ -15223,7 +15223,7 @@ void MainWindow::on_actionShow_PK_Video_triggered()
 void MainWindow::on_pkChuanmenCheck_clicked()
 {
     pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
-    settings->setValue("pk/chuanmen", pkChuanmenEnable);
+    us->setValue("pk/chuanmen", pkChuanmenEnable);
 
     if (pkChuanmenEnable)
     {
@@ -15249,7 +15249,7 @@ void MainWindow::on_pkMsgSyncCheck_clicked()
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
     }
     ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
-    settings->setValue("pk/msgSync", pkMsgSync);
+    us->setValue("pk/msgSync", pkMsgSync);
 }
 
 void MainWindow::pkPre(QJsonObject json)
@@ -17223,8 +17223,8 @@ void MainWindow::myLiveSelectArea(bool update)
                     ac->areaName = name;
                     ac->parentAreaId = parentId;
                     ac->parentAreaName = parentName;
-                    settings->setValue("myLive/areaId", ac->areaId);
-                    settings->setValue("myLive/parentAreaId", ac->parentAreaId);
+                    us->setValue("myLive/areaId", ac->areaId);
+                    us->setValue("myLive/parentAreaId", ac->parentAreaId);
                     qInfo() << "选择分区：" << parentName << parentId << ac->areaName << ac->areaId;
                     if (update)
                     {
@@ -17252,7 +17252,7 @@ void MainWindow::myLiveUpdateArea(QString area)
 
 void MainWindow::myLiveStartLive()
 {
-    int lastAreaId = settings->value("myLive/areaId", 0).toInt();
+    int lastAreaId = us->value("myLive/areaId", 0).toInt();
     if (!lastAreaId)
     {
         showError("一键开播", "必须选择分类才能开播");
@@ -17364,11 +17364,11 @@ void MainWindow::myLiveSetCover(QString path)
     if (path.isEmpty())
     {
         // 选择封面
-        QString oldPath = settings->value("recent/coverPath", "").toString();
+        QString oldPath = us->value("recent/coverPath", "").toString();
         path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
         if (path.isEmpty())
             return ;
-        settings->setValue("recent/coverPath", path);
+        us->setValue("recent/coverPath", path);
     }
     else
     {
@@ -18301,9 +18301,9 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 
     // 本地已有，直接设置
     qint64 id = danmaku.getGiftId();
-    if (pl->giftImages.contains(id))
+    if (pl->giftPixmaps.contains(id))
     {
-        addToList(pl->giftImages[id]);
+        addToList(pl->giftPixmaps[id]);
         return ;
     }
 
@@ -18335,7 +18335,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
             return ;
         }
 
-        pl->giftImages[id] = pixmap;
+        pl->giftPixmaps[id] = pixmap;
         addToList(pixmap);
     });
 }
@@ -18444,17 +18444,17 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
 {
     if (beforeVersion == "3.6.3")
     {
-        settings->beginGroup("heaps");
+        us->beginGroup("heaps");
         heaps->beginGroup("heaps");
-        auto keys = settings->allKeys();
+        auto keys = us->allKeys();
         for (int i = 0; i < keys.size(); i++)
         {
             QString key = keys.at(i);
-            heaps->setValue(key, settings->value(key));
-            settings->remove(key);
+            heaps->setValue(key, us->value(key));
+            us->remove(key);
         }
         heaps->endGroup();
-        settings->endGroup();
+        us->endGroup();
     }
 }
 
@@ -18685,7 +18685,7 @@ void MainWindow::on_judgeRobotCheck_clicked()
         ui->judgeRobotCheck->setCheckState(Qt::Checked);
     ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
 
-    settings->setValue("danmaku/judgeRobot", judgeRobot);
+    us->setValue("danmaku/judgeRobot", judgeRobot);
 }
 
 void MainWindow::on_actionAdd_Room_To_List_triggered()
@@ -18693,7 +18693,7 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
     if (ac->roomId.isEmpty())
         return ;
 
-    QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
     for (int i = 0; i < list.size(); i++)
     {
         QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
@@ -18705,7 +18705,7 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
         {
             ui->menu_3->removeAction(ui->menu_3->actions().at(ui->menu_3->actions().size() - (list.size() - i)));
             list.removeAt(i);
-            settings->setValue("custom/rooms", list.join(";"));
+            us->setValue("custom/rooms", list.join(";"));
             return ;
         }
     }
@@ -18714,7 +18714,7 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
     QString name = ac->upName;
 
     list.append(id + "," + name.replace(";","").replace(",",""));
-    settings->setValue("custom/rooms", list.join(";"));
+    us->setValue("custom/rooms", list.join(";"));
 
     QAction* action = new QAction(name, this);
     ui->menu_3->addAction(action);
@@ -18727,7 +18727,7 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
 void MainWindow::on_recordCheck_clicked()
 {
     bool check = ui->recordCheck->isChecked();
-    settings->setValue("danmaku/record", check);
+    us->setValue("danmaku/record", check);
 
     if (check)
     {
@@ -18740,19 +18740,19 @@ void MainWindow::on_recordCheck_clicked()
 
 void MainWindow::on_recordSplitSpin_valueChanged(int arg1)
 {
-    settings->setValue("danmaku/recordSplit", arg1);
+    us->setValue("danmaku/recordSplit", arg1);
     if (recordTimer)
         recordTimer->setInterval(arg1 * 60000);
 }
 
 void MainWindow::on_sendWelcomeTextCheck_clicked()
 {
-    settings->setValue("danmaku/sendWelcomeText", ui->sendWelcomeTextCheck->isChecked());
+    us->setValue("danmaku/sendWelcomeText", ui->sendWelcomeTextCheck->isChecked());
 }
 
 void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
-    settings->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
+    us->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
         initTTS();
@@ -18761,12 +18761,12 @@ void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 
 void MainWindow::on_sendGiftTextCheck_clicked()
 {
-    settings->setValue("danmaku/sendGiftText", ui->sendGiftTextCheck->isChecked());
+    us->setValue("danmaku/sendGiftText", ui->sendGiftTextCheck->isChecked());
 }
 
 void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
-    settings->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
+    us->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendGiftVoiceCheck->isChecked())
         initTTS();
@@ -18775,12 +18775,12 @@ void MainWindow::on_sendGiftVoiceCheck_clicked()
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
 {
-    settings->setValue("danmaku/sendAttentionText", ui->sendAttentionTextCheck->isChecked());
+    us->setValue("danmaku/sendAttentionText", ui->sendAttentionTextCheck->isChecked());
 }
 
 void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
-    settings->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
+    us->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
         initTTS();
@@ -18789,38 +18789,38 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
 {
-    settings->setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
+    us->setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
 }
 
 void MainWindow::on_enableScreenMsgCheck_clicked()
 {
-    settings->setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
+    us->setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
 }
 
 void MainWindow::on_screenDanmakuLeftSpin_valueChanged(int arg1)
 {
-    settings->setValue("screendanmaku/left", arg1);
+    us->setValue("screendanmaku/left", arg1);
 }
 
 void MainWindow::on_screenDanmakuRightSpin_valueChanged(int arg1)
 {
-    settings->setValue("screendanmaku/right", arg1);
+    us->setValue("screendanmaku/right", arg1);
 }
 
 void MainWindow::on_screenDanmakuTopSpin_valueChanged(int arg1)
 {
-    settings->setValue("screendanmaku/top", arg1);
+    us->setValue("screendanmaku/top", arg1);
 }
 
 void MainWindow::on_screenDanmakuBottomSpin_valueChanged(int arg1)
 {
-    settings->setValue("screendanmaku/bottom", arg1);
+    us->setValue("screendanmaku/bottom", arg1);
 }
 
 void MainWindow::on_screenDanmakuSpeedSpin_valueChanged(int arg1)
 {
-    settings->setValue("screendanmaku/speed", arg1);
+    us->setValue("screendanmaku/speed", arg1);
 }
 
 void MainWindow::on_screenDanmakuFontButton_clicked()
@@ -18831,7 +18831,7 @@ void MainWindow::on_screenDanmakuFontButton_clicked()
         return ;
     this->screenDanmakuFont = font;
     this->setFont(font);
-    settings->setValue("screendanmaku/font", screenDanmakuFont.toString());
+    us->setValue("screendanmaku/font", screenDanmakuFont.toString());
 }
 
 void MainWindow::on_screenDanmakuColorButton_clicked()
@@ -18841,13 +18841,13 @@ void MainWindow::on_screenDanmakuColorButton_clicked()
         return ;
     if (c != screenDanmakuColor)
     {
-        settings->setValue("screendanmaku/color", screenDanmakuColor = c);
+        us->setValue("screendanmaku/color", screenDanmakuColor = c);
     }
 }
 
 void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 {
-    settings->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
+    us->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
@@ -18857,12 +18857,12 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
 {
     diangeFormatString = text;
-    settings->setValue("danmaku/diangeFormat", diangeFormatString);
+    us->setValue("danmaku/diangeFormat", diangeFormatString);
 }
 
 void MainWindow::on_diangeNeedMedalCheck_clicked()
 {
-    settings->setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
+    us->setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
 }
 
 void MainWindow::on_showOrderPlayerButton_clicked()
@@ -18872,12 +18872,12 @@ void MainWindow::on_showOrderPlayerButton_clicked()
 
 void MainWindow::on_diangeShuaCheck_clicked()
 {
-    settings->setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
+    us->setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
 }
 
 void MainWindow::on_orderSongShuaSpin_editingFinished()
 {
-    settings->setValue("danmaku/diangeShuaCount", ui->orderSongShuaSpin->value());
+    us->setValue("danmaku/diangeShuaCount", ui->orderSongShuaSpin->value());
 }
 
 void MainWindow::on_pkMelonValButton_clicked()
@@ -18887,7 +18887,7 @@ void MainWindow::on_pkMelonValButton_clicked()
     if (!ok)
         return ;
     goldTransPk = val;
-    settings->setValue("pk/goldTransPk", goldTransPk);
+    us->setValue("pk/goldTransPk", goldTransPk);
 }
 
 void MainWindow::slotPkEnding()
@@ -18983,7 +18983,7 @@ void MainWindow::slotStartWork()
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
 {
-    settings->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
+    us->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
     if (!ac->roomId.isEmpty() && isLiving())
     {
         // switchMedalToRoom(roomId.toLongLong());
@@ -18993,34 +18993,34 @@ void MainWindow::on_autoSwitchMedalCheck_clicked()
 
 void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
 {
-    settings->setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
+    us->setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
 }
 
 void MainWindow::on_autoDoSignCheck_clicked()
 {
-    settings->setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
+    us->setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
 }
 
 void MainWindow::on_actionRoom_Status_triggered()
 {
-    RoomStatusDialog* rsd = new RoomStatusDialog(settings, rt->dataPath, nullptr);
+    RoomStatusDialog* rsd = new RoomStatusDialog(us, rt->dataPath, nullptr);
     rsd->show();
 }
 
 void MainWindow::on_autoLOTCheck_clicked()
 {
-    settings->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
+    us->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
 }
 
 void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
 {
     bool enable = ui->blockNotOnlyNewbieCheck->isChecked();
-    settings->setValue("block/blockNotOnlyNewbieCheck", enable);
+    us->setValue("block/blockNotOnlyNewbieCheck", enable);
 }
 
 void MainWindow::on_autoBlockTimeSpin_editingFinished()
 {
-    settings->setValue("block/autoTime", ui->autoBlockTimeSpin->value());
+    us->setValue("block/autoTime", ui->autoBlockTimeSpin->value());
 }
 
 /**
@@ -19040,8 +19040,8 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceLocal;
-        settings->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
+        us->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(us->value("voice/localName").toString());
 
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
@@ -19056,8 +19056,8 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceXfy;
-        settings->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
+        us->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
 
         ui->voiceXfySettingsCard->show();
         ui->voiceMSSettingsCard->hide();
@@ -19072,8 +19072,8 @@ void MainWindow::on_voiceMSRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceMS;
-        settings->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
+        us->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
 
         ui->voiceMSSettingsCard->show();
         ui->voiceXfySettingsCard->hide();
@@ -19089,8 +19089,8 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceCustom;
-        settings->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
+        us->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(us->value("voice/customName").toString());
 
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
@@ -19105,17 +19105,17 @@ void MainWindow::on_voiceNameEdit_editingFinished()
     voiceName = ui->voiceNameEdit->text();
     switch (voicePlatform) {
     case VoiceLocal:
-        settings->setValue("voice/localName", voiceName);
+        us->setValue("voice/localName", voiceName);
         break;
     case VoiceXfy:
-        settings->setValue("xfytts/name", voiceName);
+        us->setValue("xfytts/name", voiceName);
         if (xfyTTS)
         {
             xfyTTS->setName(voiceName);
         }
         break;
     case VoiceCustom:
-        settings->setValue("voice/customName", voiceName);
+        us->setValue("voice/customName", voiceName);
         break;
     case VoiceMS:
     {
@@ -19159,7 +19159,7 @@ void MainWindow::on_voiceNameSelectButton_clicked()
 
 void MainWindow::on_voicePitchSlider_valueChanged(int value)
 {
-    settings->setValue("voice/pitch", voicePitch = value);
+    us->setValue("voice/pitch", voicePitch = value);
     ui->voicePitchLabel->setText("音调" + snum(value));
 
     switch (voicePlatform) {
@@ -19194,7 +19194,7 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
 
 void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 {
-    settings->setValue("voice/speed", voiceSpeed = value);
+    us->setValue("voice/speed", voiceSpeed = value);
     ui->voiceSpeedLabel->setText("音速" + snum(value));
 
     switch (voicePlatform) {
@@ -19229,7 +19229,7 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 
 void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 {
-    settings->setValue("voice/volume", voiceVolume = value);
+    us->setValue("voice/volume", voiceVolume = value);
     ui->voiceVolumeLabel->setText("音量" + snum(value));
 
     switch (voicePlatform) {
@@ -19277,9 +19277,9 @@ void MainWindow::on_voiceLocalRadio_clicked()
         }
         else
         {
-            tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
-            tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
+            tts->setRate( (voiceSpeed = us->value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = us->value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = us->value("voice/volume", 50).toInt()) / 100.0 );
         }
     });
 #endif
@@ -19294,10 +19294,10 @@ void MainWindow::on_voiceXfyRadio_clicked()
         }
         else
         {
-            xfyTTS->setName( voiceName = settings->value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = settings->value("voice/pitch", 50).toInt() );
-            xfyTTS->setSpeed( voiceSpeed = settings->value("voice/speed", 50).toInt() );
-            xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
+            xfyTTS->setName( voiceName = us->value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = us->value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = us->value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = us->value("voice/speed", 50).toInt() );
         }
     });
 }
@@ -19332,7 +19332,7 @@ void MainWindow::on_label_10_linkActivated(const QString &link)
 
 void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 {
-    settings->setValue("xfytts/appid", text);
+    us->setValue("xfytts/appid", text);
     if (xfyTTS)
     {
         xfyTTS->setAppId(text);
@@ -19341,7 +19341,7 @@ void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 
 void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 {
-    settings->setValue("xfytts/apisecret", text);
+    us->setValue("xfytts/apisecret", text);
     if (xfyTTS)
     {
         xfyTTS->setApiSecret(text);
@@ -19350,7 +19350,7 @@ void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 
 void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 {
-    settings->setValue("xfytts/apikey", text);
+    us->setValue("xfytts/apikey", text);
     if (xfyTTS)
     {
         xfyTTS->setApiKey(text);
@@ -19359,7 +19359,7 @@ void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 
 void MainWindow::on_voiceCustomUrlEdit_editingFinished()
 {
-    settings->setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
+    us->setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
 }
 
 
@@ -19374,7 +19374,7 @@ void MainWindow::on_eternalBlockListButton_clicked()
 void MainWindow::on_AIReplyMsgCheck_clicked()
 {
     Qt::CheckState state = ui->AIReplyMsgCheck->checkState();
-    settings->setValue("danmaku/aiReplyMsg", state);
+    us->setValue("danmaku/aiReplyMsg", state);
     if (state != Qt::PartiallyChecked)
         ui->AIReplyMsgCheck->setText("回复弹幕");
     else
@@ -19410,19 +19410,19 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 void MainWindow::on_danmuLongestSpin_editingFinished()
 {
     danmuLongest = ui->danmuLongestSpin->value();
-    settings->setValue("danmaku/danmuLongest", danmuLongest);
+    us->setValue("danmaku/danmuLongest", danmuLongest);
 }
 
 
 void MainWindow::on_startupAnimationCheck_clicked()
 {
-    settings->setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
+    us->setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
 }
 
 void MainWindow::on_serverCheck_clicked()
 {
     bool enabled = ui->serverCheck->isChecked();
-    settings->setValue("server/enabled", enabled);
+    us->setValue("server/enabled", enabled);
     if (enabled)
         openServer();
     else
@@ -19431,7 +19431,7 @@ void MainWindow::on_serverCheck_clicked()
 
 void MainWindow::on_serverPortSpin_editingFinished()
 {
-    settings->setValue("server/port", ui->serverPortSpin->value());
+    us->setValue("server/port", ui->serverPortSpin->value());
 #if defined(ENABLE_HTTP_SERVER)
     if (server)
     {
@@ -19445,17 +19445,17 @@ void MainWindow::on_serverPortSpin_editingFinished()
 
 void MainWindow::on_autoPauseOuterMusicCheck_clicked()
 {
-    settings->setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
+    us->setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
 }
 
 void MainWindow::on_outerMusicKeyEdit_textEdited(const QString &arg1)
 {
-    settings->setValue("danmaku/outerMusicPauseKey", arg1);
+    us->setValue("danmaku/outerMusicPauseKey", arg1);
 }
 
 void MainWindow::on_acquireHeartCheck_clicked()
 {
-    settings->setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
+    us->setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
 
     if (ui->acquireHeartCheck->isChecked())
     {
@@ -19472,7 +19472,7 @@ void MainWindow::on_acquireHeartCheck_clicked()
 void MainWindow::on_sendExpireGiftCheck_clicked()
 {
     bool enable = ui->sendExpireGiftCheck->isChecked();
-    settings->setValue("danmaku/sendExpireGift", enable);
+    us->setValue("danmaku/sendExpireGift", enable);
 
     if (enable)
     {
@@ -19484,7 +19484,7 @@ void MainWindow::on_actionPicture_Browser_triggered()
 {
     if (!pictureBrowser)
     {
-        pictureBrowser = new PictureBrowser(settings, nullptr);
+        pictureBrowser = new PictureBrowser(us, nullptr);
     }
     pictureBrowser->show();
     pictureBrowser->readDirectory(rt->dataPath + "captures");
@@ -19492,7 +19492,7 @@ void MainWindow::on_actionPicture_Browser_triggered()
 
 void MainWindow::on_orderSongsToFileCheck_clicked()
 {
-    settings->setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
+    us->setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19502,7 +19502,7 @@ void MainWindow::on_orderSongsToFileCheck_clicked()
 
 void MainWindow::on_orderSongsToFileFormatEdit_textEdited(const QString &arg1)
 {
-    settings->setValue("danmaku/orderSongsToFileFormat", arg1);
+    us->setValue("danmaku/orderSongsToFileFormat", arg1);
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19512,7 +19512,7 @@ void MainWindow::on_orderSongsToFileFormatEdit_textEdited(const QString &arg1)
 
 void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
 {
-    settings->setValue("danmaku/orderSongsToFileMax", ui->orderSongsToFileMaxSpin->value());
+    us->setValue("danmaku/orderSongsToFileMax", ui->orderSongsToFileMaxSpin->value());
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19522,7 +19522,7 @@ void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
 
 void MainWindow::on_playingSongToFileCheck_clicked()
 {
-    settings->setValue("danmaku/playingSongToFile", ui->playingSongToFileCheck->isChecked());
+    us->setValue("danmaku/playingSongToFile", ui->playingSongToFileCheck->isChecked());
 
     if (musicWindow && ui->playingSongToFileCheck->isChecked())
     {
@@ -19532,7 +19532,7 @@ void MainWindow::on_playingSongToFileCheck_clicked()
 
 void MainWindow::on_playingSongToFileFormatEdit_textEdited(const QString &arg1)
 {
-    settings->setValue("danmaku/playingSongToFileFormat", arg1);
+    us->setValue("danmaku/playingSongToFileFormat", arg1);
 
     if (musicWindow && ui->playingSongToFileCheck->isChecked())
     {
@@ -19542,7 +19542,7 @@ void MainWindow::on_playingSongToFileFormatEdit_textEdited(const QString &arg1)
 
 void MainWindow::on_actionCatch_You_Online_triggered()
 {
-    CatchYouWidget* cyw = new CatchYouWidget(settings, rt->dataPath, nullptr);
+    CatchYouWidget* cyw = new CatchYouWidget(us, rt->dataPath, nullptr);
     cyw->show();
     // cyw->catchUser(upUid);
     cyw->setDefaultUser(ac->upUid);
@@ -19556,7 +19556,7 @@ void MainWindow::on_pkBlankButton_clicked()
     if (!ok)
         return ;
     toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
-    settings->setValue("pk/blankList", toutaBlankList.join(";"));
+    us->setValue("pk/blankList", toutaBlankList.join(";"));
 }
 
 void MainWindow::on_actionUpdate_New_Version_triggered()
@@ -19574,7 +19574,7 @@ void MainWindow::on_actionUpdate_New_Version_triggered()
 void MainWindow::on_startOnRebootCheck_clicked()
 {
     bool enable = ui->startOnRebootCheck->isChecked();
-    settings->setValue("runtime/startOnReboot", enable);
+    us->setValue("runtime/startOnReboot", enable);
 
     QString appName = QApplication::applicationName();
     QString appPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
@@ -19592,7 +19592,7 @@ void MainWindow::on_domainEdit_editingFinished()
     serverDomain = ui->domainEdit->text().trimmed();
     if (serverDomain.isEmpty())
         serverDomain = "localhost";
-    settings->setValue("server/domain", serverDomain);
+    us->setValue("server/domain", serverDomain);
 }
 
 void MainWindow::prepareQuit()
@@ -19603,22 +19603,22 @@ void MainWindow::prepareQuit()
 
 void MainWindow::on_giftComboSendCheck_clicked()
 {
-    settings->setValue("danmaku/giftComboSend", ui->giftComboSendCheck->isChecked());
+    us->setValue("danmaku/giftComboSend", ui->giftComboSendCheck->isChecked());
 }
 
 void MainWindow::on_giftComboDelaySpin_editingFinished()
 {
-    settings->setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
+    us->setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
 }
 
 void MainWindow::on_retryFailedDanmuCheck_clicked()
 {
-    settings->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
+    us->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
 }
 
 void MainWindow::on_songLyricsToFileCheck_clicked()
 {
-    settings->setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
+    us->setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
 
     if (musicWindow && ui->songLyricsToFileCheck->isChecked())
     {
@@ -19632,7 +19632,7 @@ void MainWindow::on_songLyricsToFileCheck_clicked()
 
 void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
 {
-    settings->setValue("danmaku/songLyricsToFileMax", ui->songLyricsToFileMaxSpin->value());
+    us->setValue("danmaku/songLyricsToFileMax", ui->songLyricsToFileMaxSpin->value());
 
     if (musicWindow && ui->songLyricsToFileCheck->isChecked())
     {
@@ -19646,22 +19646,22 @@ void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
 
 void MainWindow::on_allowWebControlCheck_clicked()
 {
-    settings->setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
+    us->setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
 }
 
 void MainWindow::on_saveEveryGuardCheck_clicked()
 {
-    settings->setValue("danmaku/saveEveryGuard", ui->saveEveryGuardCheck->isChecked());
+    us->setValue("danmaku/saveEveryGuard", ui->saveEveryGuardCheck->isChecked());
 }
 
 void MainWindow::on_saveMonthGuardCheck_clicked()
 {
-    settings->setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
+    us->setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
 }
 
 void MainWindow::on_saveEveryGiftCheck_clicked()
 {
-    settings->setValue("danmaku/saveEveryGift", ui->saveEveryGiftCheck->isChecked());
+    us->setValue("danmaku/saveEveryGift", ui->saveEveryGiftCheck->isChecked());
 }
 
 void MainWindow::on_exportDailyButton_clicked()
@@ -19669,11 +19669,11 @@ void MainWindow::on_exportDailyButton_clicked()
     if (ac->roomId.isEmpty())
         return ;
 
-    QString oldPath = settings->value("danmaku/exportPath", "").toString();
+    QString oldPath = us->value("danmaku/exportPath", "").toString();
     QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv *.txt)");
     if (path.isEmpty())
         return ;
-    settings->setValue("danmaku/exportPath", path);
+    us->setValue("danmaku/exportPath", path);
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
@@ -19719,13 +19719,13 @@ void MainWindow::on_closeTransMouseButton_clicked()
 
 void MainWindow::on_pkAutoMaxGoldCheck_clicked()
 {
-    settings->setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
+    us->setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
 }
 
 void MainWindow::on_saveRecvCmdsCheck_clicked()
 {
     saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
-    settings->setValue("debug/saveRecvCmds", saveRecvCmds);
+    us->setValue("debug/saveRecvCmds", saveRecvCmds);
 
     if (saveRecvCmds)
     {
@@ -19747,7 +19747,7 @@ void MainWindow::on_saveRecvCmdsCheck_clicked()
 
 void MainWindow::on_allowRemoteControlCheck_clicked()
 {
-    settings->setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
+    us->setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
 }
 
 void MainWindow::on_actionJoin_Battle_triggered()
@@ -19766,7 +19766,7 @@ void MainWindow::on_actionQRCode_Login_triggered()
 
 void MainWindow::on_allowAdminControlCheck_clicked()
 {
-    settings->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
+    us->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
 }
 
 void MainWindow::on_actionSponsor_triggered()
@@ -19808,7 +19808,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->taskListWidget->scrollToBottom();
                 });
             }
-            settings->setValue("task/count", ui->taskListWidget->count());
+            us->setValue("task/count", ui->taskListWidget->count());
         }
         else if (anchor_key == CODE_AUTO_REPLY_KEY)
         {
@@ -19821,7 +19821,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->replyListWidget->scrollToBottom();
                 });
             }
-            settings->setValue("reply/count", ui->replyListWidget->count());
+            us->setValue("reply/count", ui->replyListWidget->count());
         }
         else if (anchor_key == CODE_EVENT_ACTION_KEY)
         {
@@ -19834,7 +19834,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->eventListWidget->scrollToBottom();
                 });
             }
-            settings->setValue("event/count", ui->eventListWidget->count());
+            us->setValue("event/count", ui->eventListWidget->count());
         }
         else
         {
@@ -19907,39 +19907,39 @@ void MainWindow::on_actionPaste_Code_triggered()
 
 void MainWindow::on_actionGenerate_Default_Code_triggered()
 {
-    QString oldPath = settings->value("danmaku/codePath", "").toString();
+    QString oldPath = us->value("danmaku/codePath", "").toString();
     QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Json (*.json *.txt)");
     if (path.isEmpty())
         return ;
-    settings->setValue("danmaku/codePath", path);
+    us->setValue("danmaku/codePath", path);
 
     generateDefaultCode(path);
 }
 
 void MainWindow::on_actionRead_Default_Code_triggered()
 {
-    QString oldPath = settings->value("danmaku/codePath", "").toString();
+    QString oldPath = us->value("danmaku/codePath", "").toString();
     QString path = QFileDialog::getOpenFileName(this, "选择读取位置", oldPath, "Json (*.json *.txt)");
     if (path.isEmpty())
         return ;
-    settings->setValue("danmaku/codePath", path);
+    us->setValue("danmaku/codePath", path);
 
     readDefaultCode(path);
 }
 
 void MainWindow::on_giftComboTopCheck_clicked()
 {
-    settings->setValue("danmaku/giftComboTop", ui->giftComboTopCheck->isChecked());
+    us->setValue("danmaku/giftComboTop", ui->giftComboTopCheck->isChecked());
 }
 
 void MainWindow::on_giftComboMergeCheck_clicked()
 {
-    settings->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
+    us->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
 }
 
 void MainWindow::on_listenMedalUpgradeCheck_clicked()
 {
-    settings->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
+    us->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
 }
 
 void MainWindow::on_pushRecvCmdsButton_clicked()
@@ -19947,11 +19947,11 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     if (!pushCmdsFile) // 开启模拟输入
     {
         // 输入文件
-        QString oldPath = settings->value("debug/cmdsPath", "").toString();
+        QString oldPath = us->value("debug/cmdsPath", "").toString();
         QString path = QFileDialog::getOpenFileName(this, "选择模拟输入的CMDS文件位置", oldPath, "Text (*.txt)");
         if (path.isEmpty())
             return ;
-        settings->setValue("debug/cmdsPath", path);
+        us->setValue("debug/cmdsPath", path);
 
         // 创建文件对象
         pushCmdsFile = new QFile(path);
@@ -19988,10 +19988,10 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     }
     else // 关闭模拟输入
     {
-        if (ui->actionLocal_Mode->isChecked() && settings->value("debug/localDebug", false).toBool())
+        if (ui->actionLocal_Mode->isChecked() && us->value("debug/localDebug", false).toBool())
             ui->actionLocal_Mode->setChecked(localDebug = false);
 
-        if (settings->value("debug/saveRecvCmds", false).toBool())
+        if (us->value("debug/saveRecvCmds", false).toBool())
             ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
 
         if (pushCmdsTimer)
@@ -20029,7 +20029,7 @@ void MainWindow::on_pushNextCmdButton_clicked()
 void MainWindow::on_timerPushCmdCheck_clicked()
 {
     bool enable = ui->timerPushCmdCheck->isChecked();
-    settings->setValue("debug/pushCmdsTimer", enable);
+    us->setValue("debug/pushCmdsTimer", enable);
 
     if (pushCmdsFile && pushCmdsTimer)
     {
@@ -20043,7 +20043,7 @@ void MainWindow::on_timerPushCmdCheck_clicked()
 void MainWindow::on_timerPushCmdSpin_editingFinished()
 {
     int val = ui->timerPushCmdSpin->value();
-    settings->setValue("debug/pushCmdsInterval", val);
+    us->setValue("debug/pushCmdsInterval", val);
 
     if (pushCmdsTimer)
         pushCmdsTimer->setInterval(val * 100);
@@ -20082,19 +20082,19 @@ void MainWindow::on_actionLast_Candidate_triggered()
 
 void MainWindow::on_actionLocal_Mode_triggered()
 {
-    settings->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
+    us->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
     qInfo() << "本地模式：" << localDebug;
 }
 
 void MainWindow::on_actionDebug_Mode_triggered()
 {
-    settings->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
+    us->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
     qInfo() << "调试模式：" << debugPrint;
 }
 
 void MainWindow::on_actionGuard_Online_triggered()
 {
-    GuardOnlineDialog* god = new GuardOnlineDialog(settings, ac->roomId, ac->upUid, this);
+    GuardOnlineDialog* god = new GuardOnlineDialog(us, ac->roomId, ac->upUid, this);
     god->show();
 }
 
@@ -20120,7 +20120,7 @@ void MainWindow::on_robotNameButton_clicked()
 void MainWindow::on_thankWelcomeTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(0);
-    settings->setValue("mainwindow/thankStackIndex", 0);
+    us->setValue("mainwindow/thankStackIndex", 0);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20134,7 +20134,7 @@ void MainWindow::on_thankWelcomeTabButton_clicked()
 void MainWindow::on_thankGiftTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(1);
-    settings->setValue("mainwindow/thankStackIndex", 1);
+    us->setValue("mainwindow/thankStackIndex", 1);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20148,7 +20148,7 @@ void MainWindow::on_thankGiftTabButton_clicked()
 void MainWindow::on_thankAttentionTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(2);
-    settings->setValue("mainwindow/thankStackIndex", 2);
+    us->setValue("mainwindow/thankStackIndex", 2);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20209,7 +20209,7 @@ void MainWindow::on_musicBlackListButton_clicked()
     if (!ok)
         return ;
     orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);
-    settings->setValue("music/blackListKeys", blackList);
+    us->setValue("music/blackListKeys", blackList);
 }
 
 /// 添加或者删除过滤器
@@ -20240,13 +20240,13 @@ void MainWindow::setFilter(QString filterName, QString content)
     }
     else // 不是系统过滤器
         return ;
-    settings->setValue(filterKey, content);
+    us->setValue(filterKey, content);
     qInfo() << "设置过滤器：" << filterKey << content;
 }
 
 void MainWindow::on_enableFilterCheck_clicked()
 {
-    settings->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
+    us->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
 }
 
 void MainWindow::on_actionReplace_Variant_triggered()
@@ -20256,14 +20256,14 @@ void MainWindow::on_actionReplace_Variant_triggered()
     text = TextInputDialog::getText(this, "替换变量", "请输入发送前的替换内容，支持正则表达式：\n示例格式：发送前内容=发送后内容\n仅影响自动发送的弹幕", text, &ok);
     if (!ok)
         return ;
-    settings->setValue("danmaku/replaceVariant", text);
+    us->setValue("danmaku/replaceVariant", text);
 
     restoreReplaceVariant(text);
 }
 
 void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
 {
-    settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
+    us->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
 
 void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
@@ -20274,7 +20274,7 @@ void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
 void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 {
     bool en = ui->adjustDanmakuLongestCheck->isChecked();
-    settings->setValue("danmaku/adjustDanmakuLongest", en);
+    us->setValue("danmaku/adjustDanmakuLongest", en);
     if (en)
     {
         adjustDanmakuLongest();
@@ -20303,7 +20303,7 @@ void MainWindow::on_vipExtensionButton_clicked()
 void MainWindow::on_enableTrayCheck_clicked()
 {
     bool en = ui->enableTrayCheck->isChecked();
-    settings->setValue("mainwindow/enableTray", en);
+    us->setValue("mainwindow/enableTray", en);
     if (en)
     {
         tray->show();
@@ -20316,7 +20316,7 @@ void MainWindow::on_enableTrayCheck_clicked()
 
 void MainWindow::on_toutaGiftCheck_clicked()
 {
-    settings->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
+    us->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
 
     // 设置默认值
     if (!toutaGiftCounts.size())
@@ -20340,7 +20340,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
                 30072 疯狂打call 52000\n\
                 30087 天空之翼 100000\n\
                 30924 机车娘 200000";
-        settings->setValue("danmaku/toutaGifts", s);
+        us->setValue("danmaku/toutaGifts", s);
         restoreToutaGifts(s);
     }
 }
@@ -20348,7 +20348,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
 void MainWindow::on_toutaGiftCountsEdit_textEdited(const QString &arg1)
 {
     // 允许的数量，如：1 2 3 4 5 10 11 100 101
-    settings->setValue("danmaku/toutaGiftCounts", arg1);
+    us->setValue("danmaku/toutaGiftCounts", arg1);
     QStringList sl = arg1.split(" ", QString::SkipEmptyParts);
     toutaGiftCounts.clear();
     foreach (QString s, sl)
@@ -20370,25 +20370,25 @@ void MainWindow::on_toutaGiftListButton_clicked()
     QString totalText = TextInputDialog::getText(this, "允许赠送的礼物列表", "一行一个礼物，格式：\n礼物ID 礼物名字 金瓜子数量", sl.join("\n"), &ok);
     if (!ok)
         return ;
-    settings->setValue("danmaku/toutaGifts", totalText);
+    us->setValue("danmaku/toutaGifts", totalText);
     restoreToutaGifts(totalText);
 }
 
 void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 {
-    settings->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
+    us->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
 }
 
 void MainWindow::on_heartTimeSpin_editingFinished()
 {
-    settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
+    us->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
 }
 
 void MainWindow::on_syncShieldKeywordCheck_clicked()
 {
     bool enabled = ui->syncShieldKeywordCheck->isChecked();
-    settings->setValue("block/syncShieldKeyword", enabled);
+    us->setValue("block/syncShieldKeyword", enabled);
     if (enabled)
         pullRoomShieldKeyword();
 }
@@ -20447,7 +20447,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
 
     // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存直播间封面", [=]{
-        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        QString oldPath = us->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
         {
             QFileInfo info(oldPath);
@@ -20457,7 +20457,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
         QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
         if (path.isEmpty())
             return ;
-        settings->setValue("danmaku/exportPath", path);
+        us->setValue("danmaku/exportPath", path);
 
         roomCover.save(path);
     })->disable(roomCover.isNull());
@@ -20469,7 +20469,7 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
     menu->addAction(QIcon(":/icons/save"), "保存主播头像", [=]{
-        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        QString oldPath = us->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
         {
             QFileInfo info(oldPath);
@@ -20479,7 +20479,7 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
         QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
         if (path.isEmpty())
             return ;
-        settings->setValue("danmaku/exportPath", path);
+        us->setValue("danmaku/exportPath", path);
 
         upFace.save(path);
     })->disable(upFace.isNull());
@@ -20520,7 +20520,7 @@ void MainWindow::on_musicConfigButton_clicked()
 
 void MainWindow::on_musicConfigStack_currentChanged(int arg1)
 {
-    settings->setValue("mainwindow/musicStackIndex", arg1);
+    us->setValue("mainwindow/musicStackIndex", arg1);
 }
 
 void MainWindow::on_addMusicToLiveButton_clicked()
@@ -20633,7 +20633,7 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
         QString s = QInputDialog::getText(this, "自定义文字", "高度自定义捐赠版的显示文字", QLineEdit::Normal, permissionText, &ok);
         if (!ok)
             return ;
-        settings->setValue("mainwindow/permissionText", permissionText = s);
+        us->setValue("mainwindow/permissionText", permissionText = s);
         ui->droplight->setText(permissionText);
         ui->droplight->adjustMinimumSize();
     })->disable(!hasPermission());
@@ -20643,12 +20643,12 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_autoUpdateCheck_clicked()
 {
-    settings->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
+    us->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
 }
 
 void MainWindow::on_dontSpeakOnPlayingSongCheck_clicked()
 {
-    settings->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
+    us->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
 }
 
 void MainWindow::on_shieldKeywordListButton_clicked()
@@ -20661,11 +20661,11 @@ void MainWindow::on_saveEveryGuardButton_customContextMenuRequested(const QPoint
     newFacileMenu;
 
     menu->addAction("导出每月表格", [=]{
-        QString oldPath = settings->value("danmaku/exportPath", "").toString();
+        QString oldPath = us->value("danmaku/exportPath", "").toString();
         QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv)");
         if (path.isEmpty())
             return ;
-        settings->setValue("danmaku/exportPath", path);
+        us->setValue("danmaku/exportPath", path);
 
         exportAllGuardsByMonth(path);
     });
@@ -20796,7 +20796,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
 
 void MainWindow::on_MSAreaCodeEdit_editingFinished()
 {
-    settings->setValue("mstts/areaCode", ui->MSAreaCodeEdit->text());
+    us->setValue("mstts/areaCode", ui->MSAreaCodeEdit->text());
     if (msTTS)
     {
         msTTS->setAreaCode(ui->MSAreaCodeEdit->text());
@@ -20805,7 +20805,7 @@ void MainWindow::on_MSAreaCodeEdit_editingFinished()
 
 void MainWindow::on_MSSubscriptionKeyEdit_editingFinished()
 {
-    settings->setValue("mstts/subscriptionKey", ui->MSSubscriptionKeyEdit->text());
+    us->setValue("mstts/subscriptionKey", ui->MSSubscriptionKeyEdit->text());
     if (msTTS)
     {
         msTTS->setSubscriptionKey(ui->MSSubscriptionKeyEdit->text());
@@ -20820,12 +20820,12 @@ void MainWindow::on_MS_TTS__SSML_Btn_clicked()
         return ;
     if (fmt.trimmed().isEmpty())
         fmt = DEFAULT_MS_TTS_SSML_FORMAT;
-    settings->setValue("mstts/format", msTTSFormat = fmt);
+    us->setValue("mstts/format", msTTSFormat = fmt);
 }
 
 void MainWindow::on_receivePrivateMsgCheck_clicked()
 {
-    settings->setValue("privateMsg/enabled", ui->receivePrivateMsgCheck->isChecked());
+    us->setValue("privateMsg/enabled", ui->receivePrivateMsgCheck->isChecked());
 }
 
 void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
@@ -20854,19 +20854,19 @@ void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
 
 void MainWindow::on_processUnreadMsgCheck_clicked()
 {
-    settings->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
+    us->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
 }
 
 void MainWindow::on_TXSecretIdEdit_editingFinished()
 {
     QString text = ui->TXSecretIdEdit->text();
-    settings->setValue("tx_nlp/secretId", text);
+    us->setValue("tx_nlp/secretId", text);
     TxNlp::instance()->setSecretId(text);
 }
 
 void MainWindow::on_TXSecretKeyEdit_editingFinished()
 {
     QString text = ui->TXSecretKeyEdit->text();
-    settings->setValue("tx_nlp/secretKey", text);
+    us->setValue("tx_nlp/secretKey", text);
     TxNlp::instance()->setSecretKey(text);
 }

@@ -65,7 +65,7 @@ class LiveDanmakuWindow : public QWidget
     friend class MainWindow;
     Q_ENUM(MessageType)
 public:
-    LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *parent = nullptr);
+    LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
 
 protected:
@@ -162,9 +162,6 @@ private:
     int getPrevAlpha() const;
 
 private:
-    QSettings* settings;
-    QString dataPath;
-
     QWidget* moveBar;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;

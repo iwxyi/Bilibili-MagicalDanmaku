@@ -234,13 +234,13 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         QString key = data.value("key").toString();
         QJsonValue val = data.value("value");
         if (val.isString())
-            settings->setValue(key, val.toString());
+            us->setValue(key, val.toString());
         else if (val.isBool())
-            settings->setValue(key, val.toBool());
+            us->setValue(key, val.toBool());
         else if (val.isDouble())
-            settings->setValue(key, val.toDouble());
+            us->setValue(key, val.toDouble());
         else
-            settings->setValue(key, val.toVariant());
+            us->setValue(key, val.toVariant());
     }
     else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {
@@ -836,7 +836,7 @@ void MainWindow::pullRoomShieldKeyword()
     qInfo() << "当前直播间屏蔽词：" << roomList.count() << "个";
 
     // 获取云端的（根据上次同步时间）
-    qint64 time = settings->value("sync/shieldKeywordTimestamp_" + ac->roomId, 0).toLongLong();
+    qint64 time = us->value("sync/shieldKeywordTimestamp_" + ac->roomId, 0).toLongLong();
     MyJson cloudSK(NetUtil::getWebData(serverPath + "keyword/getNewerShieldKeyword?time=" + snum(time)));
     if (cloudSK.code() != 0)
         return showError("获取云端屏蔽词失败", cloudSK.msg());
@@ -847,7 +847,7 @@ void MainWindow::pullRoomShieldKeyword()
         return ;
     // 没有可修改的，后面全部跳过
     // 也不更新时间了，因为有可能是网络断开，或者服务端挂掉
-    settings->setValue("sync/shieldKeywordTimestamp_" + ac->roomId, QDateTime::currentSecsSinceEpoch());
+    us->setValue("sync/shieldKeywordTimestamp_" + ac->roomId, QDateTime::currentSecsSinceEpoch());
 
     // 添加新的
     foreach (auto k, addedArray)

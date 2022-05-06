@@ -7,7 +7,7 @@
 class PlatformInfo
 {
 public:
-    QHash<qint64, QPixmap> giftImages; // 礼物图片（因为数量不多，直接用即可）
+    QHash<qint64, QPixmap> giftPixmaps; // 礼物图片（因为数量不多，直接用即可）
 };
 
 extern PlatformInfo* pl;
