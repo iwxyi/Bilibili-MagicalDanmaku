@@ -814,7 +814,11 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
             _dmk.setText(eventName);
             _dmk.with(json);
             if (isFilterRejected("FILTER_API_EVENT", _dmk))
+            {
+                qInfo() << "过滤器阻止Event：" << eventName;
+                ba = "{ \"cmd\": \"event\", \"code\": \"2\", \"msg\": \"prevent event by filter\" }";
                 return ba;
+            }
         }
 
         qInfo() << "模拟事件：" << eventName << json;
