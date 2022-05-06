@@ -36,12 +36,6 @@ protected:
     static QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
     static QHash<qint64, QString> currentGuards; // 当前船员ID-Name
     static QHash<qint64, QPixmap> giftImages; // 礼物图片（因为数量不多，直接用即可）
-
-    // 登陆信息
-    static QString browserCookie;
-    static QString browserData;
-    static QString csrf_token;
-    static QVariant userCookies;
 };
 
 #endif // COMMANDVALUES_H

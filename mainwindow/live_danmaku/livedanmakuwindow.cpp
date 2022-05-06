@@ -2727,7 +2727,7 @@ QVariant LiveDanmakuWindow::getCookies()
     QList<QNetworkCookie> cookies;
 
     // 设置cookie
-    QString cookieText = browserCookie;
+    QString cookieText = ac->browserCookie;
     QStringList sl = cookieText.split(";");
     foreach (auto s, sl)
     {

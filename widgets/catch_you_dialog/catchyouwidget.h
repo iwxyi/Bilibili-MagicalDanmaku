@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <functional>
 #include <QSettings>
-#include "commonvalues.h"
+#include "accountinfo.h"
 
 namespace Ui {
 class CatchYouWidget;
@@ -12,7 +12,7 @@ class CatchYouWidget;
 
 class QNetworkReply;
 
-class CatchYouWidget : public QWidget, public CommonValues
+class CatchYouWidget : public QWidget
 {
     Q_OBJECT
 public:

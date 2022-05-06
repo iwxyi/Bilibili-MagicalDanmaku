@@ -44,6 +44,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 }
 
 INCLUDEPATH += \
+    global/ \
     mainwindow/ \
     third_party/utils/ \
     mainwindow/list_items/ \
@@ -149,6 +150,9 @@ SOURCES += \
     widgets/video_lyric_creator/videolyricscreator.cpp
 
 HEADERS += \
+    global/accountinfo.h \
+    global/runtimeinfo.h \
+    global/usersettings.h \
     order_player/importsongsdialog.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
@@ -183,8 +187,10 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/conditionutil.h \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
+    third_party/utils/mysettings.h \
     third_party/utils/tx_nlp.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \

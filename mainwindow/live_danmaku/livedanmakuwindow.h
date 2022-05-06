@@ -35,6 +35,9 @@
 #include <QGraphicsDropShadowEffect>
 #include <QNetworkCookie>
 #include <QFontDialog>
+#include "runtimeinfo.h"
+#include "usersettings.h"
+#include "accountinfo.h"
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"

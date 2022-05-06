@@ -11,6 +11,10 @@ LONG ApplicationCrashHandler(EXCEPTION_POINTERS *pException)
 }
 #endif
 
+RuntimeInfo* rt;
+UserSettings* us;
+AccountInfo* ac;
+
 int main(int argc, char *argv[])
 {
     QApplication::setDesktopSettingsAware(true); // 据说是避免不同分辨率导致显示的字体大小不一致
@@ -29,6 +33,10 @@ int main(int argc, char *argv[])
     QFont font(a.font());
     font.setFamily("微软雅黑");
     a.setFont(font);
+
+    rt = new RuntimeInfo;
+    us = new UserSettings("data.ini");
+    ac = new AccountInfo;
 
     MainWindow w;
     if (w.getSettings()->value("runtime/debugToFile", false).toBool())

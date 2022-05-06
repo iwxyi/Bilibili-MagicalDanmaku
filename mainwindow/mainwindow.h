@@ -27,6 +27,9 @@
 #include <qhttpresponse.h>
 #endif
 #include <QWebSocketServer>
+#include "runtimeinfo.h"
+#include "usersettings.h"
+#include "accountinfo.h"
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"

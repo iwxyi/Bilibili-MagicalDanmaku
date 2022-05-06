@@ -47,10 +47,6 @@ QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
 QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
 QHash<qint64, QString> CommonValues::currentGuards;  // 当前船员
 QHash<qint64, QPixmap> CommonValues::giftImages;     // 礼物图片
-QString CommonValues::browserCookie;
-QString CommonValues::browserData;
-QString CommonValues::csrf_token;
-QVariant CommonValues::userCookies;
 TxNlp* TxNlp::txNlp = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -748,13 +744,13 @@ void MainWindow::readConfig()
     ui->recordCheck->setToolTip("保存地址：" + dataPath + "record/房间名_时间.mp4");
 
     // 发送弹幕
-    browserCookie = settings->value("danmaku/browserCookie", "").toString();
-    browserData = settings->value("danmaku/browserData", "").toString();
-    int posl = browserCookie.indexOf("bili_jct=") + 9;
-    int posr = browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = browserCookie.length();
-    csrf_token = browserCookie.mid(posl, posr - posl);
-    userCookies = getCookies();
+    ac->browserCookie = settings->value("danmaku/browserCookie", "").toString();
+    ac->browserData = settings->value("danmaku/browserData", "").toString();
+    int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
+    int posr = ac->browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = ac->browserCookie.length();
+    ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
+    ac->userCookies = getCookies();
     getCookieAccount();
 
     // 保存弹幕
@@ -2042,7 +2038,7 @@ void MainWindow::sendMsg(QString msg)
 
 void MainWindow::sendRoomMsg(QString roomId, QString msg)
 {
-    if (browserCookie.isEmpty() || browserData.isEmpty())
+    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
         showError("未设置Cookie信息");
         return ;
@@ -2051,7 +2047,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         return ;
 
     // 设置数据（JSON的ByteArray）
-    QString s = browserData;
+    QString s = ac->browserData;
     int posl = s.indexOf("msg=")+4;
     int posr = s.indexOf("&", posl);
     if (posr == -1)
@@ -3611,28 +3607,28 @@ bool MainWindow::hasEvent(QString cmd) const
 
 void MainWindow::autoSetCookie(QString s)
 {
-    settings->setValue("danmaku/browserCookie", browserCookie = s);
-    if (browserCookie.isEmpty())
+    settings->setValue("danmaku/browserCookie", ac->browserCookie = s);
+    if (ac->browserCookie.isEmpty())
         return ;
 
-    userCookies = getCookies();
+    ac->userCookies = getCookies();
     getCookieAccount();
 
     // 自动设置弹幕格式
-    int posl = browserCookie.indexOf("bili_jct=") + 9;
+    int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
     if (posl == -1)
         return ;
-    int posr = browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = browserCookie.length();
-    csrf_token = browserCookie.mid(posl, posr - posl);
-    qInfo() << "检测到csrf_token:" << csrf_token;
+    int posr = ac->browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = ac->browserCookie.length();
+    ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
+    qInfo() << "检测到csrf_token:" << ac->csrf_token;
 
-    if (browserData.isEmpty())
-        browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
-    browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
-    browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
-    settings->setValue("danmaku/browserData", browserData);
-    qInfo() << "设置弹幕格式：" << browserData;
+    if (ac->browserData.isEmpty())
+        ac->browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
+    ac->browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + ac->csrf_token);
+    ac->browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + ac->csrf_token);
+    settings->setValue("danmaku/browserData", ac->browserData);
+    qInfo() << "设置弹幕格式：" << ac->browserData;
 }
 
 QVariant MainWindow::getCookies() const
@@ -3640,7 +3636,7 @@ QVariant MainWindow::getCookies() const
     QList<QNetworkCookie> cookies;
 
     // 设置cookie
-    QString cookieText = browserCookie;
+    QString cookieText = ac->browserCookie;
     QStringList sl = cookieText.split(";");
     foreach (auto s, sl)
     {
@@ -3662,7 +3658,7 @@ QVariant MainWindow::getCookies() const
  */
 void MainWindow::getCookieAccount()
 {
-    if (browserCookie.isEmpty())
+    if (ac->browserCookie.isEmpty())
         return ;
     gettingUser = true;
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
@@ -3933,7 +3929,7 @@ void MainWindow::getRoomUserInfo()
         }
     }*/
 
-    if (browserCookie.isEmpty())
+    if (ac->browserCookie.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + roomId;
     get(url, [=](QJsonObject json){
@@ -4354,8 +4350,8 @@ void MainWindow::sendXliveHeartBeatE()
     datas << "is_patch=0";
     datas << "heart_beat=[]";
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
-    datas << "csrf_token=" + csrf_token;
-    datas << "csrf=" + csrf_token;
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -4410,8 +4406,8 @@ void MainWindow::sendXliveHeartBeatX()
     postData.insert("benchmark", xliveHeartBeatBenchmark);
     postData.insert("time", xliveHeartBeatInterval);
     postData.insert("ua", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36");
-    postData.insert("csrf_token", csrf_token);
-    postData.insert("csrf", csrf_token);
+    postData.insert("csrf_token", ac->csrf_token);
+    postData.insert("csrf", ac->csrf_token);
     QJsonObject calcText;
     calcText.insert("t", postData);
     calcText.insert("r", xliveHeartBeatSecretRule);
@@ -4439,8 +4435,8 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     datas << "time=" + snum(xliveHeartBeatInterval);
     datas << "ts=" + snum(timestamp);
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
-    datas << "csrf_token=" + csrf_token;
-    datas << "csrf=" + csrf_token;
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -6427,7 +6423,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // cookie
     else if (key == "%csrf%")
-        return csrf_token;
+        return ac->csrf_token;
 
     // 工作状态
     else if (key == "%working%")
@@ -13818,7 +13814,7 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
 
 void MainWindow::refreshBlockList()
 {
-    if (browserData.isEmpty())
+    if (ac->browserData.isEmpty())
     {
         showError("请先设置用户数据");
         return ;
@@ -13864,7 +13860,7 @@ bool MainWindow::isInFans(qint64 uid)
 
 void MainWindow::sendGift(int giftId, int giftNum)
 {
-    if (roomId.isEmpty() || browserCookie.isEmpty())
+    if (roomId.isEmpty() || ac->browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -13893,8 +13889,8 @@ void MainWindow::sendGift(int giftId, int giftNum)
     datas << "storm_beat_id=0";
     datas << "metadata=";
     datas << "price=0";
-    datas << "csrf_token=" + csrf_token;
-    datas << "csrf=" + csrf_token;
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
     datas << "visit_id=";
 
     QByteArray ba(datas.join("&").toStdString().data());
@@ -13913,7 +13909,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
 
 void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 {
-    if (roomId.isEmpty() || browserCookie.isEmpty())
+    if (roomId.isEmpty() || ac->browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -13940,8 +13936,8 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
     datas << "storm_beat_id=0";
     datas << "metadata=";
     datas << "price=0";
-    datas << "csrf_token=" + csrf_token;
-    datas << "csrf=" + csrf_token;
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
     datas << "visit_id=";
 
     QByteArray ba(datas.join("&").toStdString().data());
@@ -13991,7 +13987,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 void MainWindow::roomEntryAction()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction?room_id="
-            + roomId + "&platform=pc&csrf_token=" + csrf_token + "&csrf=" + csrf_token + "&visit_id=";
+            + roomId + "&platform=pc&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=";
     post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -14008,7 +14004,7 @@ void MainWindow::sendExpireGift()
 
 void MainWindow::getBagList(qint64 sendExpire)
 {
-    if (roomId.isEmpty() || browserCookie.isEmpty())
+    if (roomId.isEmpty() || ac->browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -14114,7 +14110,7 @@ void MainWindow::updateExistGuards(int page)
         updateGuarding = true;
 
         // 参数是0的话，自动判断是否需要
-        if (browserCookie.isEmpty())
+        if (ac->browserCookie.isEmpty())
             return ;
     }
 
@@ -14669,7 +14665,7 @@ void MainWindow::addBlockUser(qint64 uid, int hour)
 
 void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
 {
-    if(browserData.isEmpty())
+    if(ac->browserData.isEmpty())
     {
         showError("请先设置登录信息");
         return ;
@@ -14683,7 +14679,7 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
 
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(csrf_token).arg(csrf_token);
+                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token);
     qInfo() << "禁言：" << uid << hour;
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14704,7 +14700,7 @@ void MainWindow::delBlockUser(qint64 uid)
 
 void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
 {
-    if(browserData.isEmpty())
+    if(ac->browserData.isEmpty())
     {
         showError("请先设置登录信息");
         return ;
@@ -14754,7 +14750,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 {
     QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
     QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(roomId).arg(csrf_token).arg(csrf_token);
+                    .arg(id).arg(roomId).arg(ac->csrf_token).arg(ac->csrf_token);
 
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -15152,7 +15148,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 void MainWindow::on_actionSet_Cookie_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, browserCookie, &ok);
+    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, ac->browserCookie, &ok);
     if (!ok)
         return ;
 
@@ -15171,15 +15167,15 @@ void MainWindow::on_actionSet_Cookie_triggered()
 void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Data", "设置弹幕的data\n自动从cookie中提取，可不用设置", QLineEdit::Normal, browserData, &ok);
+    QString s = QInputDialog::getText(this, "设置Data", "设置弹幕的data\n自动从cookie中提取，可不用设置", QLineEdit::Normal, ac->browserData, &ok);
     if (!ok)
         return ;
 
-    settings->setValue("danmaku/browserData", browserData = s);
-    int posl = browserData.indexOf("csrf_token=") + 9;
-    int posr = browserData.indexOf("&", posl);
-    if (posr == -1) posr = browserData.length();
-    csrf_token = browserData.mid(posl, posr - posl);
+    settings->setValue("danmaku/browserData", ac->browserData = s);
+    int posl = ac->browserData.indexOf("csrf_token=") + 9;
+    int posr = ac->browserData.indexOf("&", posl);
+    if (posr == -1) posr = ac->browserData.length();
+    ac->csrf_token = ac->browserData.mid(posl, posr - posl);
 }
 
 void MainWindow::on_actionCookie_Help_triggered()
@@ -17134,8 +17130,8 @@ void MainWindow::wearMedal(qint64 medalId)
     QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
     QStringList datas;
     datas << "medal_id=" + QString::number(medalId);
-    datas << "csrf_token=" + csrf_token;
-    datas << "csrf=" + csrf_token;
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -17155,7 +17151,7 @@ void MainWindow::wearMedal(qint64 medalId)
  */
 void MainWindow::doSign()
 {
-    if (csrf_token.isEmpty())
+    if (ac->csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17189,7 +17185,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
 {
     if (!id )
         return ;
-    if (csrf_token.isEmpty())
+    if (ac->csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17199,7 +17195,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
     }
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
-             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
+             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
     qInfo() << "参与天选：" << id << follow << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
@@ -17226,7 +17222,7 @@ void MainWindow::joinStorm(qint64 id)
 {
     if (!id )
         return ;
-    if (csrf_token.isEmpty())
+    if (ac->csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17236,7 +17232,7 @@ void MainWindow::joinStorm(qint64 id)
     }
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
-             "?id="+QString::number(id)+"&color=5566168&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
+             "?id="+QString::number(id)+"&color=5566168&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
     qInfo() << "参与节奏风暴：" << id << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
@@ -17264,7 +17260,7 @@ void MainWindow::joinStorm(qint64 id)
 
 void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 {
-    if (csrf_token.isEmpty())
+    if (ac->csrf_token.isEmpty())
     {
         return ;
     }
@@ -17284,8 +17280,8 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     params << "from_firework=0";
     params << "build=0";
     params << "mobi_app=web";
-    params << "csrf_token=" + csrf_token;
-    params << "csrf=" + csrf_token;
+    params << "csrf_token=" + ac->csrf_token;
+    params << "csrf=" + ac->csrf_token;
     QByteArray ba(params.join("&").toStdString().data());
 
     // 连接槽
@@ -17311,8 +17307,8 @@ void MainWindow::joinBattle(int type)
         "room_id", roomId,
         "platform", "pc",
         "battle_type", snum(type),
-        "csrf_token", csrf_token,
-        "csrf", csrf_token
+        "csrf_token", ac->csrf_token,
+        "csrf", ac->csrf_token
     };
     post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -17483,7 +17479,7 @@ void MainWindow::myLiveUpdateArea(QString area)
     qInfo() << "更新AreaId:" << area;
     post("https://api.live.bilibili.com/room/v1/Room/update",
     {"room_id", roomId, "area_id", area,
-         "csrf_token", csrf_token, "csrf", csrf_token},
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
          [=](MyJson json) {
         if (json.code() != 0)
             return showError("修改分区失败", json.msg());
@@ -17500,7 +17496,7 @@ void MainWindow::myLiveStartLive()
     }
     post("https://api.live.bilibili.com/room/v1/Room/startLive",
     {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
-         "csrf_token", csrf_token, "csrf", csrf_token},
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
          [=](MyJson json) {
         qInfo() << "开播：" << json;
         if (json.code() != 0)
@@ -17515,7 +17511,7 @@ void MainWindow::myLiveStopLive()
 {
     post("https://api.live.bilibili.com/room/v1/Room/stopLive",
     {"room_id", roomId, "platform", "pc",
-         "csrf_token", csrf_token, "csrf", csrf_token},
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
          [=](MyJson json) {
         qInfo() << "下播：" << json;
         if (json.code() != 0)
@@ -17540,8 +17536,8 @@ void MainWindow::myLiveSetTitle(QString newTitle)
          QStringList{
              "room_id", roomId,
              "title", newTitle,
-             "csrf_token", csrf_token,
-             "csrf", csrf_token
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置直播间标题：" << json;
         if (json.code() != 0)
@@ -17564,8 +17560,8 @@ void MainWindow::myLiveSetNews()
              "room_id", roomId,
              "uid", cookieUid,
              "content", content,
-             "csrf_token", csrf_token,
-             "csrf", csrf_token
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置主播公告：" << json;
         if (json.code() != 0)
@@ -17586,8 +17582,8 @@ void MainWindow::myLiveSetDescription()
          QStringList{
              "room_id", roomId,
              "description", content,
-             "csrf_token", csrf_token,
-             "csrf", csrf_token
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置个人简介：" << json;
         if (json.code() != 0)
@@ -17628,8 +17624,8 @@ void MainWindow::myLiveSetCover(QString path)
     pixmap.save(clipPath);
 
     // 开始上传
-    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + csrf_token);
-    uploader->setCookies(userCookies);
+    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + ac->csrf_token);
+    uploader->setCookies(ac->userCookies);
     uploader->addTextField("bucket", "live");
     uploader->addTextField("dir", "new_room_cover");
     uploader->addFileField("file", "blob", clipPath, "image/jpeg");
@@ -17650,8 +17646,8 @@ void MainWindow::myLiveSetCover(QString path)
             {"room_id", roomId,
              "url", location,
              "type", "cover",
-             "csrf_token", csrf_token,
-             "csrf", csrf_token,
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token,
              "visit_id", getRandomKey(12)
                  }, [=](MyJson json) {
                 qInfo() << "添加封面：" << json;
@@ -17676,8 +17672,8 @@ void MainWindow::myLiveSetCover(QString path)
                  "url", location,
                  "pic_id", snum(picId),
                  "type", "cover",
-                 "csrf_token", csrf_token,
-                 "csrf", csrf_token,
+                 "csrf_token", ac->csrf_token,
+                 "csrf", ac->csrf_token,
                  "visit_id", getRandomKey(12)
                      }, [=](MyJson json) {
                     qInfo() << "设置封面：" << json;
@@ -17706,9 +17702,9 @@ void MainWindow::myLiveSetTags()
                              QStringList{
                                  "room_id", roomId,
                                  action, tag,
-                                 "csrf_token", csrf_token,
-                                 "csrf", csrf_token
-                             }, userCookies);
+                                 "csrf_token", ac->csrf_token,
+                                 "csrf", ac->csrf_token
+                             }, ac->userCookies);
         MyJson json(rst.toUtf8());
         qInfo() << "修改个人标签：" << json;
         if (json.code() != 0)
@@ -18385,8 +18381,8 @@ void MainWindow::restoreGameTexts()
 
 void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
-    if (url.contains("bilibili.com") && !browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, userCookies);
+    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
+        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
     if (url.contains("cloud.baidu.com"))
         request->setRawHeader("Referer", "https://ai.baidu.com/tech/speech/tts_online");
 }
