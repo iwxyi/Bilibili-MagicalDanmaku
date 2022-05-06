@@ -24,11 +24,11 @@ VS_VERSION_INFO VERSIONINFO
                 VALUE "CompanyName", "懒一夕智能科技"
                 VALUE "FileDescription", "神奇弹幕"
                 VALUE "FileVersion", "1.0"
-                VALUE "InternalName", "Bilibili-MagicalDanmaku"
+                VALUE "InternalName", "MagicalDanmaku"
                 VALUE "LegalCopyright", "Copyright (C)2020-2022"
-                VALUE "OriginalFilename", "Bilibili-MagicalDanmaku.exe"
+                VALUE "OriginalFilename", "MagicalDanmaku.exe"
                 VALUE "ProductName", "神奇弹幕"
-                VALUE "ProductVersion", "4.5.1"
+                VALUE "ProductVersion", "4.6"
             END
         END
         BLOCK "VarFileInfo"
