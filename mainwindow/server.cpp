@@ -779,12 +779,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
     }
     else if (url == "event") // 模拟事件： /api/event?event=SEND_GIFT&data=[urlEncode(json)]
     {
-        if (!ui->allowWebControlCheck->isChecked())
+        /* if (!ui->allowWebControlCheck->isChecked())
         {
             qWarning() << "api/event: 需要解锁安全限制";
             ba = "{ \"cmd\": \"event\", \"code\": \"1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
-        }
+        } */
 
         *contentType = "application/json";
         QString eventName = params.value("event");
@@ -807,6 +807,16 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         }
 
         MyJson json(data);
+
+        // 判断权限
+        {
+            LiveDanmaku _dmk;
+            _dmk.setText(eventName);
+            _dmk.with(json);
+            if (isFilterRejected("FILTER_API_EVENT", _dmk))
+                return ba;
+        }
+
         qInfo() << "模拟事件：" << eventName << json;
         LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(json);
         if (!json.contains("extra"))
