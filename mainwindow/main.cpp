@@ -14,6 +14,7 @@ LONG ApplicationCrashHandler(EXCEPTION_POINTERS *pException)
 RuntimeInfo* rt;
 UserSettings* us;
 AccountInfo* ac;
+PlatformInfo* pl;
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
     rt = new RuntimeInfo;
     us = new UserSettings("data.ini");
     ac = new AccountInfo;
+    pl = new PlatformInfo;
 
     MainWindow w;
     if (w.getSettings()->value("runtime/debugToFile", false).toBool())

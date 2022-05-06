@@ -28,25 +28,8 @@
 #include "widgets/windowshwnd.h"
 #endif
 #include "tx_nlp.h"
+#include "conditionutil.h"
 
-QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
-QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
-QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
-QSettings* CommonValues::danmakuCounts = nullptr;    // 每个用户的统计
-QSettings* CommonValues::userMarks = nullptr;        // 每个用户的备注
-QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
-QList<qint64> CommonValues::careUsers;               // 特别关心
-QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
-QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
-QList<QPair<QString, QString>> CommonValues::customVariant; // 自定义变量
-QList<QPair<QString, QString>> CommonValues::variantTranslation; // 变量翻译
-QList<QPair<QString, QString>> CommonValues::replaceVariant; // 替换变量
-QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
-QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
-QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
-QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
-QHash<qint64, QString> CommonValues::currentGuards;  // 当前船员
-QHash<qint64, QPixmap> CommonValues::giftImages;     // 礼物图片
 TxNlp* TxNlp::txNlp = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -792,7 +775,7 @@ void MainWindow::readConfig()
         if (sl.size() < 2)
             continue;
 
-        localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+        us->localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
     }
 
     // 礼物别名
@@ -803,35 +786,35 @@ void MainWindow::readConfig()
         if (sl.size() < 2)
             continue;
 
-        giftNames.insert(sl.at(0).toInt(), sl.at(1));
+        us->giftAlias.insert(sl.at(0).toInt(), sl.at(1));
     }
 
     // 特别关心
     QStringList usersS = settings->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersS)
     {
-        careUsers.append(s.toLongLong());
+        us->careUsers.append(s.toLongLong());
     }
 
     // 强提醒
     QStringList usersSN = settings->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersSN)
     {
-        strongNotifyUsers.append(s.toLongLong());
+        us->strongNotifyUsers.append(s.toLongLong());
     }
 
     // 不自动欢迎
     QStringList usersNW = settings->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNW)
     {
-        notWelcomeUsers.append(s.toLongLong());
+        us->notWelcomeUsers.append(s.toLongLong());
     }
 
     // 不自动回复
     QStringList usersNR = settings->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNR)
     {
-        notReplyUsers.append(s.toLongLong());
+        us->notReplyUsers.append(s.toLongLong());
     }
 
     // 礼物连击
@@ -851,10 +834,10 @@ void MainWindow::readConfig()
     ui->listenMedalUpgradeCheck->setChecked(settings->value("danmaku/listenMedalUpgrade", false).toBool());
 
     // 弹幕次数
-    danmakuCounts = new QSettings(dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
+    us->danmakuCounts = new QSettings(dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
 
     // 用户备注
-    userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
+    us->userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
     // 接收私信
     ui->receivePrivateMsgCheck->setChecked(settings->value("privateMsg/enabled", false).toBool());
@@ -1100,7 +1083,7 @@ void MainWindow::readConfig()
             {
                 QString han = line.at(0);
                 QString pinyin = line.right(line.length()-1);
-                pinyinMap.insert(han, pinyin);
+                rt->pinyinMap.insert(han, pinyin);
             }
             line = pinyinIn.readLine();
         }
@@ -1191,7 +1174,7 @@ void MainWindow::readConfig()
     {
         EternalBlockUser eb = EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject());
         if (eb.uid && eb.roomId)
-            eternalBlockUsers.append(eb);
+            us->eternalBlockUsers.append(eb);
     }
 
     // 开机自启
@@ -1337,7 +1320,7 @@ void MainWindow::readConfig()
             startCalculateDailyData();
         if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
-        userComeTimes.clear();
+        us->userComeTimes.clear();
         sumPopul = 0;
         countPopul = 0;
 
@@ -1963,14 +1946,14 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 {
     // 添加到队列
     roomDanmakus.append(danmakus);
-    allDanmakus.append(danmakus);
+    rt->allDanmakus.append(danmakus);
 }
 
 void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 {
     roomDanmakus.append(danmaku);
     lastDanmaku = danmaku;
-    allDanmakus.append(danmaku);
+    rt->allDanmakus.append(danmaku);
     newLiveDanmakuAdded(danmaku);
 }
 
@@ -2121,7 +2104,7 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     }
 
     // 发送前替换
-    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
+    for (auto it = us->replaceVariant.begin(); it != us->replaceVariant.end(); ++it)
     {
         msgs.replace(QRegularExpression(it->first), it->second);
     }
@@ -2415,7 +2398,7 @@ void MainWindow::slotComboSend()
         {
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            if (strongNotifyUsers.contains(danmaku.getUid()))
+            if (us->strongNotifyUsers.contains(danmaku.getUid()))
             {
                 if (debugPrint)
                     localNotify("[强提醒]");
@@ -2573,7 +2556,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         LiveDanmaku danmaku(qrand() % 3 + 1, uname, uid, QDateTime::currentDateTime());
         appendNewLiveDanmaku(danmaku);
 
-        if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
+        if (ui->autoSendWelcomeCheck->isChecked() && !us->notWelcomeUsers.contains(uid))
         {
             sendWelcome(danmaku);
         }
@@ -4313,11 +4296,11 @@ void MainWindow::startConnectRoom()
     popularVal = 2;
 
     // 准备房间数据
-    if (danmakuCounts)
-        danmakuCounts->deleteLater();
+    if (us->danmakuCounts)
+        us->danmakuCounts->deleteLater();
     QDir dir;
     dir.mkdir(dataPath+"danmaku_counts");
-    danmakuCounts = new QSettings(dataPath+"danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
+    us->danmakuCounts = new QSettings(dataPath+"danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
     if (ui->calculateDailyDataCheck->isChecked())
         startCalculateDailyData();
 
@@ -5575,8 +5558,8 @@ void MainWindow::sendHeartPacket()
 
 QString MainWindow::getLocalNickname(qint64 uid) const
 {
-    if (localNicknames.contains(uid))
-        return localNicknames.value(uid);
+    if (us->localNicknames.contains(uid))
+        return us->localNicknames.value(uid);
     return "";
 }
 
@@ -5818,13 +5801,13 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 自定义变量
-    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
     {
         msg.replace(it->first, it->second);
     }
 
     // 翻译
-    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
+    for (auto it = us->variantTranslation.begin(); it != us->variantTranslation.end(); ++it)
     {
         msg.replace(it->first, it->second);
     }
@@ -5906,7 +5889,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         {
             QString _var = match.captured(0);
             QString text = match.captured(1);
-            text = snum(calcIntExpression(text));
+            text = snum(ConditionUtil::calcIntExpression(text));
             msg.replace(_var, text); // 默认使用变量类型吧
             find = true;
         }
@@ -5999,7 +5982,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
             return snum(danmaku.getNumber());
         else
-            return snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
+            return snum(us->danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
     }
 
     // 上次进来
@@ -6007,7 +5990,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return snum(danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                                         ? danmaku.getPrevTimestamp()
-                                        : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
+                                        : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
     }
 
     // 和现在的时间差
@@ -6015,7 +5998,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         qint64 prevTime = danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                 ? danmaku.getPrevTimestamp()
-                : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
+                : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
         return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
     }
 
@@ -6042,7 +6025,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 本次送礼名字
     else if (key == "%gift_name%")
-        return giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName();
+        return us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName();
 
     // 原始礼物名字
     else if (key == "%origin_gift_name%")
@@ -6087,18 +6070,18 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
-        return snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
+        return snum(us->danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
 
     // 总共赠送银瓜子
     else if (key == "%total_silver%")
-        return snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
+        return snum(us->danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
 
     // 购买舰长
     else if (key == "%guard_buy%")
         return danmaku.is(MSG_GUARD_BUY) ? "1" : "0";
 
     else if (key == "%guard_buy_count%")
-        return snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
+        return snum(us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
 
     // 0续费，1第一次上船，2重新上船
     else if (key == "%guard_first%" || key == "%first%")
@@ -6193,11 +6176,11 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 礼物名字长度
     else if (key == "%giftname_len%")
-        return snum((giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum((us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     // 昵称+礼物名字长度
     else if (key == "%name_sum_len%")
-        return snum(danmaku.getNickname().length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum(danmaku.getNickname().length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     else if (key == "%ainame_sum_len%")
     {
@@ -6206,7 +6189,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
             local = nicknameSimplify(danmaku.getNickname());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        return snum(local.length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum(local.length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
     }
 
     // 是否新关注
@@ -6311,14 +6294,14 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%pk_uname%")
         return pkUname;
     else if (key == "%pk_count%")
-        return snum(!pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
+        return snum(!pkRoomId.isEmpty() ? us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
     else if (key == "%pk_touta_prob%")
     {
         int prob = 0;
         if (pking && !pkRoomId.isEmpty())
         {
-            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             if (totalCount > 1)
                 prob = toutaCount * 100 / totalCount;
         }
@@ -6376,19 +6359,19 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 本地设置
     // 特别关心
     else if (key == "%care%")
-        return careUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return us->careUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 强提醒
     else if (key == "%strong_notify%")
-        return strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return us->strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 是否被禁言
     else if (key == "%blocked%")
-        return userBlockIds.contains(danmaku.getUid()) ? "1" : "0";
+        return us->userBlockIds.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_welcome%")
-        return notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return us->notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_reply%")
-        return notReplyUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return us->notReplyUsers.contains(danmaku.getUid()) ? "1" : "0";
 
     // 弹幕人气
     else if (key == "%danmu_popularity%")
@@ -6431,7 +6414,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 用户备注
     else if (key == "%umark%")
-        return userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
+        return us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
 
     // 对面直播间也在用神奇弹幕
     else if (key == "%pk_magical_room%")
@@ -7074,228 +7057,9 @@ QString MainWindow::processMsgHeaderConditions(QString msg) const
     QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
     QString exprs = match.capturedTexts().at(1);
 
-    if (!processVariantConditions(exprs))
+    if (!ConditionUtil::judgeCondition(exprs))
         return "";
     return msg.right(msg.length() - totalExp.length());
-}
-
-/**
- * 判断逻辑条件是否成立
- * @param exprs exp1, exp2; exp3
- */
-bool MainWindow::processVariantConditions(QString exprs) const
-{
-    QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
-    bool isTrue = false;
-    QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
-    QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
-    // QRegularExpression overlayIntRe("\\d{11,}");
-    QRegularExpressionMatch match;
-    foreach (QString orExp, orExps)
-    {
-        isTrue = true;
-        QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
-        CALC_DEB << "表达式or内：" << andExps;
-        foreach (QString exp, andExps)
-        {
-            CALC_DEB << "表达式and内：" << exp;
-            exp = exp.trimmed();
-            if (exp.indexOf(compRe, 0, &match) == -1         // 非比较
-                    || (match.captured(1).isEmpty() && match.captured(2) == "!"))    // 取反类型
-            {
-                bool notTrue = exp.startsWith("!"); // 与否取反
-                if (notTrue) // 取反……
-                {
-                    exp = exp.right(exp.length() - 1);
-                }
-                if (exp.isEmpty() || exp == "0" || exp.toLower() == "false") // false
-                {
-                    if (!notTrue)
-                    {
-                        isTrue = false;
-                        break;
-                    }
-                    else // 取反
-                    {
-                        isTrue = true;
-                        break;
-                    }
-                }
-                else // true
-                {
-                    if (notTrue)
-                    {
-                        isTrue = false;
-                        break;
-                    }
-                }
-                continue;
-            }
-
-            // 比较类型
-            QStringList caps = match.capturedTexts();
-            QString s1 = caps.at(1);
-            QString op = caps.at(2);
-            QString s2 = caps.at(3);
-            CALC_DEB << "比较：" << s1 << op << s2;
-            if (s1.contains(intRe) && s2.contains(intRe) // 都是整数
-                    && QStringList{">", "<", "=", ">=", "<=", "==", "!="}.contains(op)) // 是这个运算符
-                    // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
-            {
-                qint64 i1 = calcIntExpression(s1);
-                qint64 i2 = calcIntExpression(s2);
-                CALC_DEB << "比较整数" << i1 << op << i2;
-                if (!isConditionTrue<qint64>(i1, i2, op))
-                {
-                    isTrue = false;
-                    break;
-                }
-            }
-            else/* if (s1.startsWith("\"") || s1.endsWith("\"") || s1.startsWith("'") || s1.endsWith("'")
-                    || s2.startsWith("\"") || s2.startsWith("\"") || s2.startsWith("'") || s2.startsWith("'")) // 都是字符串*/
-            {
-                auto removeQuote = [=](QString s) -> QString{
-                    if (s.startsWith("\"") && s.endsWith("\""))
-                        return s.mid(1, s.length()-2);
-                    if (s.startsWith("'") && s.endsWith("'"))
-                        return s.mid(1, s.length()-2);
-                    return s;
-                };
-                s1 = removeQuote(s1);
-                s2 = removeQuote(s2);
-                CALC_DEB << "比较字符串" << s1 << op << s2;
-                if (op == "~")
-                {
-                    if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
-                    {
-                        QString full = caps.at(0);
-                        if (full.indexOf(QRegularExpression("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$"), 0, &match) == -1)
-                        {
-                            qWarning() << "错误的~运算：" << full;
-                            isTrue = false;
-                            break;
-                        }
-                        caps = match.capturedTexts();
-                        s1 = caps.at(1);
-                        s2 = caps.at(3);
-                        CALC_DEB << "纠正运算：" << s1 << "~" << s2;
-                    }
-
-                    // 预定义的一个集合
-                    translateUnicode(s2);
-
-                    QRegularExpression re(s2);
-                    if (!re.isValid())
-                        showError("错误的~表达式", s2);
-                    if (!s1.contains(QRegularExpression(s2)))
-                    {
-                        isTrue = false;
-                        break;
-                    }
-                }
-                else if (!isConditionTrue<QString>(s1, s2, op))
-                {
-                    isTrue = false;
-                    break;
-                }
-            }
-            /*else
-            {
-                qCritical() << "error: 无法比较的表达式:" << match.capturedTexts().first();
-                qCritical() << "    原始语句：" << msg;
-            }*/
-        }
-        if (isTrue)
-            break;
-    }
-    return isTrue;
-}
-
-/**
- * 计算纯int、运算符组成的表达式
- */
-qint64 MainWindow::calcIntExpression(QString exp) const
-{
-    exp = exp.replace(QRegularExpression("\\s*"), ""); // 去掉所有空白
-    QRegularExpression opRe("[\\+\\-\\*/%]");
-
-    // 获取所有整型数值
-    QStringList valss = exp.split(opRe); // 如果是-开头，那么会当做 0-x
-    if (valss.size() == 0)
-        return 0;
-    QList<qint64> vals;
-    foreach (QString val, valss)
-    {
-        bool ok = true;
-        qint64 ll = val.toLongLong(&ok);
-        if (!ok && !val.isEmpty())
-        {
-            showError("转换整数值失败", exp);
-            qDebug() << "exp:" << exp << exp.startsWith("\"") << ll;
-            if (val.length() > 18) // 19位数字，超出了ll的范围
-                ll = val.right(18).toLongLong();
-        }
-        vals << ll;
-    }
-
-    // 获取所有运算符
-    QStringList ops;
-    QRegularExpressionMatchIterator i = opRe.globalMatch(exp);
-    while (i.hasNext())
-    {
-        ops << i.next().captured(0);
-    }
-    if (valss.size() != ops.size() + 1)
-    {
-        qCritical() << "错误的表达式：" << valss << ops << exp;
-        return 0;
-    }
-
-    // 入栈：* / %
-    for (int i = 0; i < ops.size(); i++)
-    {
-        // op[i] 操作 vals[i] x vals[i+1]
-        if (ops[i] == "*")
-        {
-            vals[i] *= vals[i+1];
-        }
-        else if (ops[i] == "/")
-        {
-            // qDebug() << "除法" << ops << vals;
-            if (vals[i+1] == 0)
-            {
-                qWarning() << "!!!被除数是0 ：" << exp;
-                vals[i+1] = 1;
-            }
-            vals[i] /= vals[i+1];
-        }
-        else if (ops[i] == "%")
-        {
-            if (vals[i+1] == 0)
-            {
-                qWarning() << "!!!被模数是0 ：" << exp;
-                vals[i+1] = 1;
-            }
-            vals[i] %= vals[i+1];
-        }
-        else
-            continue;
-        vals.removeAt(i+1);
-        ops.removeAt(i);
-        i--;
-    }
-
-    // 顺序计算：+ -
-    qint64 val = vals.first();
-    for (int i = 0; i < ops.size(); i++)
-    {
-        if (ops[i] == "-")
-            val -= vals[i+1];
-        else if (ops[i] == "+")
-            val += vals[i+1];
-    }
-
-    return val;
 }
 
 bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku)
@@ -7391,9 +7155,9 @@ qint64 MainWindow::unameToUid(QString text)
         if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
             continue;
         qint64 uid = danmaku.getUid();
-        if (hadMatches.contains(uid) || !localNicknames.contains(uid))
+        if (hadMatches.contains(uid) || !us->localNicknames.contains(uid))
             continue;
-        QString nick = localNicknames.value(uid);
+        QString nick = us->localNicknames.value(uid);
         if (nick.contains(text))
         {
             // 就是这个人
@@ -7705,8 +7469,8 @@ void MainWindow::startCalculateDailyData()
     dailyGuard = dailySettings->value("guard", 0).toInt();
     dailyMaxPopul = dailySettings->value("max_popularity", 0).toInt();
     dailyAvePopul = 0;
-    if (currentGuards.size())
-        dailySettings->setValue("guard_count", currentGuards.size());
+    if (us->currentGuards.size())
+        dailySettings->setValue("guard_count", us->currentGuards.size());
     else
         updateExistGuards(0);
 }
@@ -7716,7 +7480,7 @@ void MainWindow::saveCalculateDailyData()
     if (dailySettings)
     {
         dailySettings->setValue("come", dailyCome);
-        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), userComeTimes.size()));
+        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), us->userComeTimes.size()));
         dailySettings->setValue("danmaku", dailyDanmaku);
         dailySettings->setValue("newbie_msg", dailyNewbieMsg);
         dailySettings->setValue("new_fans", dailyNewFans);
@@ -7724,8 +7488,8 @@ void MainWindow::saveCalculateDailyData()
         dailySettings->setValue("gift_silver", dailyGiftSilver);
         dailySettings->setValue("gift_gold", dailyGiftGold);
         dailySettings->setValue("guard", dailyGuard);
-        if (currentGuards.size())
-            dailySettings->setValue("guard_count", currentGuards.size());
+        if (us->currentGuards.size())
+            dailySettings->setValue("guard_count", us->currentGuards.size());
     }
 }
 
@@ -8048,9 +7812,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
         delBlockUser(danmaku.getUid());
-        if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
+        if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
         {
-            eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
+            us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
             saveEternalBlockUsers();
         }
         if (response)
@@ -8087,9 +7851,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
+                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
+                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -8110,9 +7874,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
+                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
+                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -9306,7 +9070,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                             exp.replace(_var, var.toString());
                         }
                     }
-                    if (processVariantConditions(exp))
+                    if (ConditionUtil::judgeCondition(exp))
                     {
                         // 处理 newValue
                         if (newValue.contains("_VALUE_"))
@@ -9322,7 +9086,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                                 {
                                     QString _var = match2.captured(0);
                                     QString text = match2.captured(1);
-                                    text = snum(calcIntExpression(text));
+                                    text = snum(ConditionUtil::calcIntExpression(text));
                                     newValue.replace(_var, text); // 默认使用变量类型吧
                                 }
                             }
@@ -9382,7 +9146,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                         }
                     }
 
-                    if (processVariantConditions(exp))
+                    if (ConditionUtil::judgeCondition(exp))
                     {
                         heaps->setValue(keys.at(i), heaps->value(keys.at(i)).toLongLong() + modify);
                     }
@@ -9476,7 +9240,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                             exp.replace(_var, var.toString());
                         }
                     }
-                    if (processVariantConditions(exp))
+                    if (ConditionUtil::judgeCondition(exp))
                     {
                         heaps->remove(keys.takeAt(i--));
                     }
@@ -9762,12 +9526,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             qInfo() << "执行命令：" << caps;
 
-            if (!notWelcomeUsers.contains(uid))
+            if (!us->notWelcomeUsers.contains(uid))
             {
-                notWelcomeUsers.append(uid);
+                us->notWelcomeUsers.append(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, notWelcomeUsers)
+                foreach (qint64 uid, us->notWelcomeUsers)
                     ress << QString::number(uid);
                 settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
@@ -9786,12 +9550,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             qInfo() << "执行命令：" << caps;
 
-            if (notWelcomeUsers.contains(uid))
+            if (us->notWelcomeUsers.contains(uid))
             {
-                notWelcomeUsers.removeOne(uid);
+                us->notWelcomeUsers.removeOne(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, notWelcomeUsers)
+                foreach (qint64 uid, us->notWelcomeUsers)
                     ress << QString::number(uid);
                 settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
@@ -9816,16 +9580,16 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             else if (name.isEmpty()) // 移除
             {
-                if (localNicknames.contains(uid))
-                    localNicknames.remove(uid);
+                if (us->localNicknames.contains(uid))
+                    us->localNicknames.remove(uid);
             }
             else // 添加
             {
-                localNicknames[uid] = name;
+                us->localNicknames[uid] = name;
 
                 QStringList ress;
-                auto it = localNicknames.begin();
-                while (it != localNicknames.end())
+                auto it = us->localNicknames.begin();
+                while (it != us->localNicknames.end())
                 {
                     ress << QString("%1=>%2").arg(it.key()).arg(it.value());
                     it++;
@@ -10116,7 +9880,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (loopKeyStr.startsWith(COUNTS_PREFIX))
             {
                 loopKeyStr.remove(0, COUNTS_PREFIX.length());
-                sts = danmakuCounts;
+                sts = us->danmakuCounts;
             }
             else if (loopKeyStr.startsWith(SETTINGS_PREFIX))
             {
@@ -10124,7 +9888,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 sts = settings;
             }
 
-            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, danmakuCounts, heaps, this);
+            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, us->danmakuCounts, heaps, this);
             viewer->setGeometry(this->geometry());
             viewer->show();
             return true;
@@ -10472,7 +10236,7 @@ void MainWindow::sendLongText(QString text)
 
 void MainWindow::restoreCustomVariant(QString text)
 {
-    customVariant.clear();
+    us->customVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     bool settedUpname = true;
     foreach (QString s, sl)
@@ -10483,7 +10247,7 @@ void MainWindow::restoreCustomVariant(QString text)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            customVariant.append(QPair<QString, QString>(key, val));
+            us->customVariant.append(QPair<QString, QString>(key, val));
             if ((key == "%upname%") && val.trimmed().isEmpty())
             {
                 settedUpname = false;
@@ -10502,7 +10266,7 @@ void MainWindow::restoreCustomVariant(QString text)
 QString MainWindow::saveCustomVariant()
 {
     QStringList sl;
-    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
+    for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
     {
         sl << it->first + " = " + it->second;
     }
@@ -10511,7 +10275,7 @@ QString MainWindow::saveCustomVariant()
 
 void MainWindow::restoreVariantTranslation()
 {
-    variantTranslation.clear();
+    us->variantTranslation.clear();
     QStringList allVariants;
 
     // 变量
@@ -10527,7 +10291,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = "%" + key + "%";
             val = "%" + val + "%";
-            variantTranslation.append(QPair<QString, QString>(key, val));
+            us->variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10547,7 +10311,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = ">" + key + "(";
             val = ">" + val + "(";
-            variantTranslation.append(QPair<QString, QString>(key, val));
+            us->variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10567,7 +10331,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = "%>" + key + "(";
             val = "%>" + val + "(";
-            variantTranslation.append(QPair<QString, QString>(key, val));
+            us->variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10583,7 +10347,7 @@ void MainWindow::restoreVariantTranslation()
 
 void MainWindow::restoreReplaceVariant(QString text)
 {
-    replaceVariant.clear();
+    us->replaceVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     foreach (QString s, sl)
     {
@@ -10593,7 +10357,7 @@ void MainWindow::restoreReplaceVariant(QString text)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            replaceVariant.append(QPair<QString, QString>(key, val));
+            us->replaceVariant.append(QPair<QString, QString>(key, val));
         }
         else
             qCritical() << "替换变量读取失败：" << s;
@@ -10603,7 +10367,7 @@ void MainWindow::restoreReplaceVariant(QString text)
 QString MainWindow::saveReplaceVariant()
 {
     QStringList sl;
-    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
+    for (auto it = us->replaceVariant.begin(); it != us->replaceVariant.end(); ++it)
     {
         sl << it->first + " = " + it->second;
     }
@@ -11107,8 +10871,8 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
 
         // 统计弹幕次数
-        int danmuCount = danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
-        danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+        int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
         dailyDanmaku++;
         if (dailySettings)
             dailySettings->setValue("danmaku", dailyDanmaku);
@@ -11215,9 +10979,9 @@ void MainWindow::handleMessage(QJsonObject json)
                         if (ui->autoBlockNewbieNotifyCheck->isChecked())
                         {
                             static int prevNotifyInCount = -20; // 上次发送通知时的弹幕数量
-                            if (allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
+                            if (rt->allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
                             {
-                                prevNotifyInCount = allDanmakus.size();
+                                prevNotifyInCount = rt->allDanmakus.size();
 
                                 QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
                                 if (words.size())
@@ -11471,7 +11235,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     {
                         int r = qrand() % words.size();
                         QString msg = words.at(r);
-                        if (strongNotifyUsers.contains(uid))
+                        if (us->strongNotifyUsers.contains(uid))
                         {
                             if (debugPrint)
                                 localNotify("[强提醒]");
@@ -11509,9 +11273,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (coinType == "silver")
         {
-            qint64 userSilver = danmakuCounts->value("silver/" + snum(uid)).toLongLong();
+            qint64 userSilver = us->danmakuCounts->value("silver/" + snum(uid)).toLongLong();
             userSilver += totalCoin;
-            danmakuCounts->setValue("silver/"+snum(uid), userSilver);
+            us->danmakuCounts->setValue("silver/"+snum(uid), userSilver);
 
             dailyGiftSilver += totalCoin;
             if (dailySettings)
@@ -11519,9 +11283,9 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (coinType == "gold")
         {
-            qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+            qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
             userGold += totalCoin;
-            danmakuCounts->setValue("gold/"+snum(uid), userGold);
+            us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
             dailyGiftGold += totalCoin;
             if (dailySettings)
@@ -11967,8 +11731,8 @@ void MainWindow::handleMessage(QJsonObject json)
 
             QString gd = results.at(1);
             QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
-            if (currentGuards.contains(uid))
-                uname = currentGuards[uid];
+            if (us->currentGuards.contains(uid))
+                uname = us->currentGuards[uid];
             int guardLevel = 0;
             if (gd == "总督")
                 guardLevel = 1;
@@ -12158,10 +11922,10 @@ void MainWindow::handleMessage(QJsonObject json)
         int guard_level = data.value("guard_level").toInt();
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
-        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int guardCount = us->danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         qInfo() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
-                            guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
+                            guardCount == 0 ? 1 : us->currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
         addGuiGiftList(danmaku);
@@ -12170,14 +11934,14 @@ void MainWindow::handleMessage(QJsonObject json)
             saveEveryGuard(danmaku);
 
         // 新船员数量事件
-        if (!currentGuards.contains(uid))
+        if (!us->currentGuards.contains(uid))
             newGuardUpdate(danmaku);
 
         if (!guardCount)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku.with(data), true);
         }
-        currentGuards[uid] = username;
+        us->currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
@@ -12196,9 +11960,9 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }
 
-        qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+        qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
         userGold += price;
-        danmakuCounts->setValue("gold/"+snum(uid), userGold);
+        us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
         int addition = 1;
         if (giftName == "舰长")
@@ -12208,7 +11972,7 @@ void MainWindow::handleMessage(QJsonObject json)
         else if (giftName == "总督")
             addition = 100;
         guardCount += addition;
-        danmakuCounts->setValue("guard/" + snum(uid), guardCount);
+        us->danmakuCounts->setValue("guard/" + snum(uid), guardCount);
 
         dailyGuard += num;
         if (dailySettings)
@@ -12929,7 +12693,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
-    if (notWelcomeUsers.contains(danmaku.getUid())
+    if (us->notWelcomeUsers.contains(danmaku.getUid())
             || (!ui->sendWelcomeTextCheck->isChecked()
             && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
@@ -12944,7 +12708,7 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (debugPrint && !(words.size() == 1 && words.first().trimmed().isEmpty()))
         localNotify("[rand " + snum(r) + " in " + snum(words.size()) + "]");
     QString msg = words.at(r);
-    if (strongNotifyUsers.contains(danmaku.getUid()))
+    if (us->strongNotifyUsers.contains(danmaku.getUid()))
     {
         if (debugPrint)
             localNotify("[强提醒]");
@@ -13766,15 +13530,15 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
 
     // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
     // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-    int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
+    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
     danmaku.setNumber(userCome);
-    danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
 
     appendNewLiveDanmaku(danmaku);
 
     userCome++;
-    danmakuCounts->setValue("come/"+snum(uid), userCome);
-    danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
+    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
 
     dailyCome++;
     if (dailySettings)
@@ -13799,12 +13563,12 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
     if (!justStart && ui->autoSendWelcomeCheck->isChecked()) // 发送欢迎
     {
-        userComeTimes[uid] = currentTime;
+        us->userComeTimes[uid] = currentTime;
         sendWelcomeIfNotRobot(danmaku);
     }
     else // 不发送欢迎，只是查看
     {
-        userComeTimes[uid] = currentTime; // 直接更新了
+        us->userComeTimes[uid] = currentTime; // 直接更新了
         if (judgeRobot == 2)
         {
             judgeRobotAndMark(danmaku);
@@ -13834,14 +13598,14 @@ void MainWindow::refreshBlockList()
             return ;
         }
         QJsonArray list = json.value("data").toArray();
-        userBlockIds.clear();
+        us->userBlockIds.clear();
         foreach (QJsonValue val, list)
         {
             QJsonObject obj = val.toObject();
             qint64 id = static_cast<qint64>(obj.value("id").toDouble());
             qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
             QString uname = obj.value("uname").toString();
-            userBlockIds.insert(uid, id);
+            us->userBlockIds.insert(uid, id);
 //            qInfo() << "已屏蔽:" << id << uname << uid;
         }
 
@@ -14105,7 +13869,7 @@ void MainWindow::updateExistGuards(int page)
             return ;
 
         page = 1;
-        currentGuards.clear();
+        us->currentGuards.clear();
         guardInfos.clear();
         updateGuarding = true;
 
@@ -14138,7 +13902,7 @@ void MainWindow::updateExistGuards(int page)
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
         guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
-        currentGuards[uid] = username;
+        us->currentGuards[uid] = username;
 
         if (uid == this->cookieUid.toLongLong())
         {
@@ -14147,7 +13911,7 @@ void MainWindow::updateExistGuards(int page)
                 adjustDanmakuLongest();
         }
 
-        int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int count = us->danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {
             int count = 1;
@@ -14159,7 +13923,7 @@ void MainWindow::updateExistGuards(int page)
                 count = 100;
             else
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
-            danmakuCounts->setValue("guard/" + snum(uid), count);
+            us->danmakuCounts->setValue("guard/" + snum(uid), count);
             // qInfo() << "设置舰长：" << username << uid << count;
         }
     };
@@ -14202,9 +13966,9 @@ void MainWindow::updateExistGuards(int page)
                 saveMonthGuard();
 
             if (dailySettings)
-                dailySettings->setValue("guard_count", currentGuards.size());
+                dailySettings->setValue("guard_count", us->currentGuards.size());
             updateGuarding = false;
-            ui->guardCountLabel->setText(snum(currentGuards.size()));
+            ui->guardCountLabel->setText(snum(us->currentGuards.size()));
         }
     });
 }
@@ -14689,7 +14453,7 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
         }
         QJsonObject d = json.value("data").toObject();
         qint64 id = static_cast<qint64>(d.value("id").toDouble());
-        userBlockIds[uid] = id;
+        us->userBlockIds[uid] = id;
     });
 }
 
@@ -14712,11 +14476,11 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
         return ;
     }
 
-    if (userBlockIds.contains(uid))
+    if (us->userBlockIds.contains(uid))
     {
-        qInfo() << "取消禁言：" << uid << "  id =" << userBlockIds.value(uid);
-        delRoomBlockUser(userBlockIds.value(uid));
-        userBlockIds.remove(uid);
+        qInfo() << "取消禁言：" << uid << "  id =" << us->userBlockIds.value(uid);
+        delRoomBlockUser(us->userBlockIds.value(uid));
+        us->userBlockIds.remove(uid);
         return ;
     }
 
@@ -14766,7 +14530,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 
 void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 {
-    if (eternalBlockUsers.contains(EternalBlockUser(uid, roomId.toLongLong())))
+    if (us->eternalBlockUsers.contains(EternalBlockUser(uid, roomId.toLongLong())))
     {
         localNotify("该用户已经在永久禁言中");
         return ;
@@ -14774,9 +14538,9 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     addBlockUser(uid, 720);
 
-    eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, upName, roomTitle, QDateTime::currentSecsSinceEpoch()));
+    us->eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, upName, roomTitle, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
-    qInfo() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
+    qInfo() << "添加永久禁言：" << uname << "    当前人数：" << us->eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
@@ -14787,12 +14551,12 @@ void MainWindow::cancelEternalBlockUser(qint64 uid)
 void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
 {
     EternalBlockUser user(uid, roomId);
-    if (!eternalBlockUsers.contains(user))
+    if (!us->eternalBlockUsers.contains(user))
         return ;
 
-    eternalBlockUsers.removeOne(user);
+    us->eternalBlockUsers.removeOne(user);
     saveEternalBlockUsers();
-    qInfo() << "移除永久禁言：" << uid << "    当前人数：" << eternalBlockUsers.size();
+    qInfo() << "移除永久禁言：" << uid << "    当前人数：" << us->eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
@@ -14810,11 +14574,11 @@ void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
 void MainWindow::saveEternalBlockUsers()
 {
     QJsonArray array;
-    int size = eternalBlockUsers.size();
+    int size = us->eternalBlockUsers.size();
     for (int i = 0; i < size; i++)
-        array.append(eternalBlockUsers.at(i).toJson());
+        array.append(us->eternalBlockUsers.at(i).toJson());
     settings->setValue("danmaku/eternalBlockUsers", array);
-    qInfo() << "保存永久禁言，当前人数：" << eternalBlockUsers.size();
+    qInfo() << "保存永久禁言，当前人数：" << us->eternalBlockUsers.size();
 }
 
 /**
@@ -14827,9 +14591,9 @@ void MainWindow::detectEternalBlockUsers()
     qint64 maxBlockSecond = MAX_BLOCK_HOUR * 3600;
     const int netDelay = 5; // 5秒的屏蔽时长
     bool blocked = false;
-    for (int i = 0; i < eternalBlockUsers.size(); i++)
+    for (int i = 0; i < us->eternalBlockUsers.size(); i++)
     {
-        EternalBlockUser user = eternalBlockUsers.first();
+        EternalBlockUser user = us->eternalBlockUsers.first();
         if (user.time + maxBlockSecond + netDelay >= currentSecond) // 仍在冷却中
             break;
 
@@ -14839,8 +14603,8 @@ void MainWindow::detectEternalBlockUsers()
         addBlockUser(user.uid, user.roomId, MAX_BLOCK_HOUR);
 
         user.time = currentSecond;
-        eternalBlockUsers.removeFirst();
-        eternalBlockUsers.append(user);
+        us->eternalBlockUsers.removeFirst();
+        us->eternalBlockUsers.append(user);
     }
     if (blocked)
         saveEternalBlockUsers();
@@ -14943,7 +14707,7 @@ void MainWindow::on_pushButton_clicked()
 {
     QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd\n");
     text += "\n进来人次：" + snum(dailyCome);
-    text += "\n观众人数：" + snum(userComeTimes.count());
+    text += "\n观众人数：" + snum(us->userComeTimes.count());
     text += "\n弹幕数量：" + snum(dailyDanmaku);
     text += "\n新人弹幕：" + snum(dailyNewbieMsg);
     text += "\n新增关注：" + snum(dailyNewFans);
@@ -15553,7 +15317,7 @@ void MainWindow::pkPre(QJsonObject json)
             danmakuWindow->setStatusText("大乱斗匹配中...");
         else if (!pkRoomId.isEmpty())
         {
-            int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
             QString text = "匹配：" + uname;
             if(pkCount > 0)
                 text += "[" + QString::number(pkCount) + "]";
@@ -15634,8 +15398,8 @@ void MainWindow::pkStart(QJsonObject json)
     qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << pkBattleType;
 
     // 保存PK信息
-    int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-    danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+    int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+    us->danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
     qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
 
     // PK提示
@@ -15827,8 +15591,8 @@ void MainWindow::pkEnd(QJsonObject json)
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
-        int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
@@ -15962,8 +15726,8 @@ void MainWindow::pkSettle(QJsonObject json)
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
-        int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
@@ -16727,9 +16491,9 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
            << danmaku.getNickname() << ","
            << danmaku.getGiftName() << ","
            << danmaku.getNumber() << ","
-           << danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
+           << us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
            << danmaku.getUid() << ","
-           << userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
+           << us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
 
     file.close();
 }
@@ -16805,7 +16569,7 @@ void MainWindow::releaseLiveData(bool prepare)
         myAudience.clear();
         oppositeAudience.clear();
         fansList.clear();
-        currentGuards.clear();
+        us->currentGuards.clear();
         guardInfos.clear();
         currentFans = 0;
         currentFansClub = 0;
@@ -16892,34 +16656,34 @@ void MainWindow::releaseLiveData(bool prepare)
 
     // 清理一周没来的用户
     int day = ui->autoClearComeIntervalSpin->value();
-    danmakuCounts->beginGroup("comeTime");
+    us->danmakuCounts->beginGroup("comeTime");
     QStringList removedKeys;
-    auto keys = danmakuCounts->allKeys();
+    auto keys = us->danmakuCounts->allKeys();
     qint64 week = QDateTime::currentSecsSinceEpoch() - day * 24 * 3600;
     foreach (auto key, keys)
     {
-        qint64 value = danmakuCounts->value(key).toLongLong();
+        qint64 value = us->danmakuCounts->value(key).toLongLong();
         if (value < week)
         {
             removedKeys.append(key);
         }
     }
-    danmakuCounts->endGroup();
+    us->danmakuCounts->endGroup();
 
-    danmakuCounts->beginGroup("comeTime");
+    us->danmakuCounts->beginGroup("comeTime");
     foreach (auto key, removedKeys)
     {
-        danmakuCounts->remove(key);
+        us->danmakuCounts->remove(key);
     }
-    danmakuCounts->endGroup();
+    us->danmakuCounts->endGroup();
 
-    danmakuCounts->beginGroup("come");
+    us->danmakuCounts->beginGroup("come");
     foreach (auto key, removedKeys)
     {
-        danmakuCounts->remove(key);
+        us->danmakuCounts->remove(key);
     }
-    danmakuCounts->endGroup();
-    danmakuCounts->sync();
+    us->danmakuCounts->endGroup();
+    us->danmakuCounts->sync();
 }
 
 QRect MainWindow::getScreenRect()
@@ -18537,13 +18301,14 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 
     // 本地已有，直接设置
     qint64 id = danmaku.getGiftId();
-    if (giftImages.contains(id))
+    if (pl->giftImages.contains(id))
     {
-        addToList(giftImages[id]);
+        addToList(pl->giftImages[id]);
         return ;
     }
 
     // 先下载图片，然后进行设置
+    // TODO: 这个URL的图片有些是不准确的
     QString url = "http://openapi.zbmate.com/gift_icons/b/";
     if (danmaku.isGuard()) // 舰长礼物的话，是静态的图片
     {
@@ -18570,7 +18335,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
             return ;
         }
 
-        giftImages[id] = pixmap;
+        pl->giftImages[id] = pixmap;
         addToList(pixmap);
     });
 }
@@ -19139,8 +18904,8 @@ void MainWindow::slotPkEnding()
                 .arg(myVotes).arg(matchVotes);
         if (!pkRoomId.isEmpty())
         {
-            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                 text += QString("  偷塔概率:%1/%2")
                                 .arg(toutaCount).arg(totalCount);
@@ -19600,7 +19365,7 @@ void MainWindow::on_voiceCustomUrlEdit_editingFinished()
 
 void MainWindow::on_eternalBlockListButton_clicked()
 {
-    EternalBlockDialog* dialog = new EternalBlockDialog(&eternalBlockUsers, this);
+    EternalBlockDialog* dialog = new EternalBlockDialog(&us->eternalBlockUsers, this);
     connect(dialog, SIGNAL(signalCancelEternalBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUser(qint64, qint64)));
     connect(dialog, SIGNAL(signalCancelBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64, qint64)));
     dialog->exec();

@@ -30,20 +30,20 @@
 #include "runtimeinfo.h"
 #include "usersettings.h"
 #include "accountinfo.h"
+#include "platforminfo.h"
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
 #include "replywidget.h"
 #include "eventwidget.h"
-#include "commonvalues.h"
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
 #include "xfytts.h"
 #include "microsofttts.h"
-#include "eternalblockdialog.h"
+#include "externalblockdialog.h"
 #include "picturebrowser.h"
 #include "netinterface.h"
 #include "waterfloatbutton.h"
@@ -121,7 +121,7 @@ typedef ListItemInterface*(MainWindow::*InsertItemFunc)(MyJson);
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
-class MainWindow : public QMainWindow, public CommonValues, public NetInterface
+class MainWindow : public QMainWindow, public NetInterface
 {
     Q_OBJECT
     Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
@@ -901,8 +901,6 @@ private:
     QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;
-    bool processVariantConditions(QString exprs) const;
-    qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
     bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);

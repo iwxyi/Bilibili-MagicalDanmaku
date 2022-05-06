@@ -151,6 +151,7 @@ SOURCES += \
 
 HEADERS += \
     global/accountinfo.h \
+    global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
     order_player/importsongsdialog.h \
@@ -165,7 +166,6 @@ HEADERS += \
     third_party/interactive_buttons/infobutton.h \
     third_party/interactive_buttons/interactivebuttonbase.h \
     mainwindow/list_items/listiteminterface.h \
-    mainwindow/live_danmaku/commonvalues.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
@@ -198,6 +198,8 @@ HEADERS += \
     widgets/clickablewidget.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
+    widgets/eternal_block_dialog/externalblockdialog.h \
+    widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \
     mainwindow/mainwindow.h \
@@ -237,7 +239,6 @@ HEADERS += \
     widgets/editor/conditioneditor.h \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
-    widgets/eternal_block_dialog/eternalblockdialog.h \
     mainwindow/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \

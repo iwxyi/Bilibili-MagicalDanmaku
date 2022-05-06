@@ -45,8 +45,7 @@
 #include "qxtglobalshortcut.h"
 #endif
 #include "portraitlabel.h"
-#include "commonvalues.h"
-#include "eternalblockdialog.h"
+#include "externalblockdialog.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -58,7 +57,7 @@
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
-class LiveDanmakuWindow : public QWidget, public CommonValues
+class LiveDanmakuWindow : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(int bgAlpha READ getBgAlpha WRITE setBgAlpha)
