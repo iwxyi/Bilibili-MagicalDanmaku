@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>811</width>
-    <height>1043</height>
+    <width>897</width>
+    <height>1318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>731</width>
-             <height>923</height>
+             <width>817</width>
+             <height>1198</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1690,7 +1690,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_68" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="saveDanmakuToFileCheck">
+                <widget class="CheckBox1" name="saveDanmakuToFileCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -1825,7 +1825,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="adjustDanmakuLongestCheck">
+              <widget class="CheckBox1" name="adjustDanmakuLongestCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -1838,7 +1838,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="retryFailedDanmuCheck">
+              <widget class="CheckBox1" name="retryFailedDanmuCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -1914,7 +1914,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="AIReplyCheck">
+              <widget class="CheckBox1" name="AIReplyCheck">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -1930,7 +1930,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="AIReplyMsgCheck">
+              <widget class="CheckBox1" name="AIReplyMsgCheck">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -2063,7 +2063,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="languageAutoTranslateCheck">
+              <widget class="CheckBox1" name="languageAutoTranslateCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2076,7 +2076,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="newbieTipCheck">
+              <widget class="CheckBox1" name="newbieTipCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2089,7 +2089,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="judgeRobotCheck">
+              <widget class="CheckBox1" name="judgeRobotCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2175,7 +2175,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableBlockCheck">
+              <widget class="CheckBox1" name="enableBlockCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2188,7 +2188,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="syncShieldKeywordCheck">
+              <widget class="CheckBox1" name="syncShieldKeywordCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2313,7 +2313,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkChuanmenCheck">
+              <widget class="CheckBox1" name="pkChuanmenCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2330,7 +2330,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkMsgSyncCheck">
+              <widget class="CheckBox1" name="pkMsgSyncCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2410,7 +2410,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkAutoMelonCheck">
+              <widget class="CheckBox1" name="pkAutoMelonCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2462,7 +2462,7 @@ QPushButton:pressed
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="pkAutoMaxGoldCheck">
+                <widget class="CheckBox1" name="pkAutoMaxGoldCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -2734,7 +2734,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startLiveSendCheck">
+              <widget class="CheckBox1" name="startLiveSendCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2804,7 +2804,7 @@ margin: 40px;</string>
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoSwitchMedalCheck">
+              <widget class="CheckBox1" name="autoSwitchMedalCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2879,7 +2879,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
-                <widget class="QCheckBox" name="timerConnectServerCheck">
+                <widget class="CheckBox1" name="timerConnectServerCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -2892,7 +2892,7 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="doveCheck">
+                <widget class="CheckBox1" name="doveCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3079,7 +3079,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoLOTCheck">
+              <widget class="CheckBox1" name="autoLOTCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3092,7 +3092,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoDoSignCheck">
+              <widget class="CheckBox1" name="autoDoSignCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3108,7 +3108,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="sendExpireGiftCheck">
+              <widget class="CheckBox1" name="sendExpireGiftCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3239,7 +3239,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+              <widget class="CheckBox1" name="sendAutoOnlyLiveCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3255,7 +3255,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="listenMedalUpgradeCheck">
+              <widget class="CheckBox1" name="listenMedalUpgradeCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3268,7 +3268,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableFilterCheck">
+              <widget class="CheckBox1" name="enableFilterCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3341,7 +3341,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="recordCheck">
+              <widget class="CheckBox1" name="recordCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3459,7 +3459,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="calculateDailyDataCheck">
+                <widget class="CheckBox1" name="calculateDailyDataCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3635,7 +3635,7 @@ margin: 40px;</string>
                 <number>0</number>
                </property>
                <item>
-                <widget class="QCheckBox" name="saveEveryGiftCheck">
+                <widget class="CheckBox1" name="saveEveryGiftCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3669,7 +3669,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="saveEveryGuardCheck">
+                <widget class="CheckBox1" name="saveEveryGuardCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3706,7 +3706,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_59" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="saveMonthGuardCheck">
+                <widget class="CheckBox1" name="saveMonthGuardCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3798,7 +3798,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveRecvCmdsCheck">
+              <widget class="CheckBox1" name="saveRecvCmdsCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3878,7 +3878,7 @@ QPushButton:pressed
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="timerPushCmdCheck">
+              <widget class="CheckBox1" name="timerPushCmdCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3973,7 +3973,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startOnRebootCheck">
+              <widget class="CheckBox1" name="startOnRebootCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3986,7 +3986,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startupAnimationCheck">
+              <widget class="CheckBox1" name="startupAnimationCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3999,7 +3999,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableTrayCheck">
+              <widget class="CheckBox1" name="enableTrayCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4012,7 +4012,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoUpdateCheck">
+              <widget class="CheckBox1" name="autoUpdateCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4085,7 +4085,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableScreenDanmakuCheck">
+              <widget class="CheckBox1" name="enableScreenDanmakuCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4095,7 +4095,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableScreenMsgCheck">
+              <widget class="CheckBox1" name="enableScreenMsgCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4425,12 +4425,12 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_38">
+              <layout class="QHBoxLayout" name="horizontalLayout_38" stretch="1,0">
                <property name="topMargin">
                 <number>0</number>
                </property>
                <item>
-                <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+                <widget class="CheckBox1" name="autoSpeekDanmakuCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -4438,19 +4438,6 @@ margin: 40px;</string>
                   <string>朗读弹幕</string>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_21">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <widget class="QPushButton" name="voicePreviewButton">
@@ -4488,7 +4475,7 @@ QPushButton:pressed
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="dontSpeakOnPlayingSongCheck">
+              <widget class="CheckBox1" name="dontSpeakOnPlayingSongCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5165,7 +5152,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="toutaGiftCheck">
+              <widget class="CheckBox1" name="toutaGiftCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5485,7 +5472,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="receivePrivateMsgCheck">
+              <widget class="CheckBox1" name="receivePrivateMsgCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5499,7 +5486,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="processUnreadMsgCheck">
+              <widget class="CheckBox1" name="processUnreadMsgCheck">
                <property name="enabled">
                 <bool>false</bool>
                </property>
@@ -8578,7 +8565,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>811</width>
+     <width>897</width>
      <height>23</height>
     </rect>
    </property>
@@ -9089,6 +9076,11 @@ font-weight: 500;</string>
    <class>WaterCircleButton</class>
    <extends>QPushButton</extends>
    <header>watercirclebutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CheckBox1</class>
+   <extends>QCheckBox</extends>
+   <header>checkbox1.h</header>
   </customwidget>
  </customwidgets>
  <resources>

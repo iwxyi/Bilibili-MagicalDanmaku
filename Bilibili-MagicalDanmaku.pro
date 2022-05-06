@@ -69,7 +69,8 @@ INCLUDEPATH += \
     widgets/editor/ \
     third_party/gif/ \
     third_party/picture_browser/ \
-    third_party/notification/
+    third_party/notification/ \
+    third_party/linear_check_box/
 
 SOURCES += \
     order_player/importsongsdialog.cpp \
@@ -97,6 +98,8 @@ SOURCES += \
     third_party/interactive_buttons/winminbutton.cpp \
     third_party/interactive_buttons/winrestorebutton.cpp \
     third_party/interactive_buttons/winsidebarbutton.cpp \
+    third_party/linear_check_box/anicheckbox.cpp \
+    third_party/linear_check_box/checkbox1.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
@@ -182,6 +185,8 @@ HEADERS += \
     third_party/interactive_buttons/winminbutton.h \
     third_party/interactive_buttons/winrestorebutton.h \
     third_party/interactive_buttons/winsidebarbutton.h \
+    third_party/linear_check_box/anicheckbox.h \
+    third_party/linear_check_box/checkbox1.h \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
