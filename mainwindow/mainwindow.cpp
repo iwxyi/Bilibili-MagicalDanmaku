@@ -566,6 +566,7 @@ void MainWindow::readConfig()
     qDebug("Bool Type is %s", vBool.typeName());
     qDebug() << vStr << vBool; */
 
+    // 版本
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
@@ -575,6 +576,9 @@ void MainWindow::readConfig()
         us->setValue("runtime/appVersion", rt->appVersion);
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
+
+    // 平台
+    rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
 
     // 页面
     int stackIndex = us->value("mainwindow/stackIndex", 0).toInt();
@@ -4493,200 +4497,207 @@ void MainWindow::getRoomInit()
  */
 void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 {
-    gettingRoom = true;
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
-    get(url, [=](QJsonObject json) {
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
-            setRoomCover(QPixmap(":/bg/bg"));
-            ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
-
-            if (reconnectCount >= 5)
+    switch (rt->livePlatform)
+    {
+    case Bilibili:
+    {
+        gettingRoom = true;
+        QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
+        get(url, [=](QJsonObject json) {
+            if (json.value("code").toInt() != 0)
             {
-                ui->connectStateLabel->setText("无法连接");
+                qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
+                setRoomCover(QPixmap(":/bg/bg"));
+                ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
+
+                if (reconnectCount >= 5)
+                {
+                    ui->connectStateLabel->setText("无法连接");
+                    return ;
+                }
+                qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
+                QTimer::singleShot(5000, [=]{
+                    getRoomInfo(reconnect, reconnectCount + 1);
+                });
                 return ;
             }
-            qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
-            QTimer::singleShot(5000, [=]{
-                getRoomInfo(reconnect, reconnectCount + 1);
-            });
-            return ;
-        }
 
-        QJsonObject dataObj = json.value("data").toObject();
-        QJsonObject roomInfo = dataObj.value("room_info").toObject();
-        QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
+            QJsonObject dataObj = json.value("data").toObject();
+            QJsonObject roomInfo = dataObj.value("room_info").toObject();
+            QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
 
-        // 获取房间信息
-        ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
-        ui->roomIdEdit->setText(ac->roomId);
-        ac->shortId = QString::number(roomInfo.value("short_id").toInt());
-        ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
-        ac->liveStatus = roomInfo.value("live_status").toInt();
-        int pkStatus = roomInfo.value("pk_status").toInt();
-        if (danmakuWindow)
-            danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
-        ac->roomTitle = roomInfo.value("title").toString();
-        ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-        ac->roomDescription = roomInfo.value("description").toString();
-        ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
-        setWindowTitle(ac->roomTitle + " - " + ac->upName);
-        tray->setToolTip(ac->roomTitle + " - " + ac->upName);
-        if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
-            ui->roomNameLabel->setText(ac->roomTitle);
-        ui->upNameLabel->setText(ac->upName);
-        ac->roomNews = dataObj.value("news_info").toObject().value("content").toString();
+            // 获取房间信息
+            ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
+            ui->roomIdEdit->setText(ac->roomId);
+            ac->shortId = QString::number(roomInfo.value("short_id").toInt());
+            ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
+            ac->liveStatus = roomInfo.value("live_status").toInt();
+            int pkStatus = roomInfo.value("pk_status").toInt();
+            if (danmakuWindow)
+                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+            ac->roomTitle = roomInfo.value("title").toString();
+            ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
+            ac->roomDescription = roomInfo.value("description").toString();
+            ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+            setWindowTitle(ac->roomTitle + " - " + ac->upName);
+            tray->setToolTip(ac->roomTitle + " - " + ac->upName);
+            if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
+                ui->roomNameLabel->setText(ac->roomTitle);
+            ui->upNameLabel->setText(ac->upName);
+            ac->roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
-        // 设置房间描述
-        setRoomDescription(ac->roomDescription);
+            // 设置房间描述
+            setRoomDescription(ac->roomDescription);
 
-        // 设置直播状态
-        if (ac->liveStatus == 0)
-        {
-            ui->liveStatusButton->setText("未开播");
-            if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
-                connectServerTimer->start();
-        }
-        else if (ac->liveStatus == 1)
-        {
-            ui->liveStatusButton->setText("已开播");
-        }
-        else if (ac->liveStatus == 2)
-        {
-            ui->liveStatusButton->setText("轮播中");
-        }
-        else
-        {
-            ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
-        }
-
-        qInfo() << "房间信息: roomid=" << ac->roomId
-                 << "  shortid=" << ac->shortId
-                 << "  upName=" << ac->upName
-                 << "  uid=" << ac->upUid;
-
-        // 设置PK状态
-        if (pkStatus)
-        {
-            QJsonObject battleInfo = dataObj.value("battle_info").toObject();
-            QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
-            if (pkId.toLongLong() > 0 && reconnect)
+            // 设置直播状态
+            if (ac->liveStatus == 0)
             {
-                // 这个 pk_status 不是 battle_type
-                pking = true;
-                // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
-                setPkInfoById(ac->roomId, pkId);
-                qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
+                ui->liveStatusButton->setText("未开播");
+                if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
+                    connectServerTimer->start();
             }
-        }
-        else
-        {
-            QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
-                if (ac->cookieUid == ac->upUid)
-                    ui->actionJoin_Battle->setEnabled(true);
-            });
-        }
+            else if (ac->liveStatus == 1)
+            {
+                ui->liveStatusButton->setText("已开播");
+            }
+            else if (ac->liveStatus == 2)
+            {
+                ui->liveStatusButton->setText("轮播中");
+            }
+            else
+            {
+                ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
+            }
 
-        // 发送心跳要用到的直播信息
-        ac->areaId = snum(roomInfo.value("area_id").toInt());
-        ac->areaName = roomInfo.value("area_name").toString();
-        ac->parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
-        ac->parentAreaName = roomInfo.value("parent_area_name").toString();
-        ui->roomAreaLabel->setText(ac->areaName);
+            qInfo() << "房间信息: roomid=" << ac->roomId
+                     << "  shortid=" << ac->shortId
+                     << "  upName=" << ac->upName
+                     << "  uid=" << ac->upUid;
 
-        // 疑似在线人数
-        int online = roomInfo.value("online").toInt();
-        ui->popularityLabel->setText(snum(online));
+            // 设置PK状态
+            if (pkStatus)
+            {
+                QJsonObject battleInfo = dataObj.value("battle_info").toObject();
+                QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
+                if (pkId.toLongLong() > 0 && reconnect)
+                {
+                    // 这个 pk_status 不是 battle_type
+                    pking = true;
+                    // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
+                    setPkInfoById(ac->roomId, pkId);
+                    qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
+                }
+            }
+            else
+            {
+                QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
+                    if (ac->cookieUid == ac->upUid)
+                        ui->actionJoin_Battle->setEnabled(true);
+                });
+            }
 
-        // 获取主播信息
-        ac->currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
-        ac->currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-//        qInfo() << s8("粉丝数：") << ac->currentFans << s8("    粉丝团：") << ac->currentFansClub;
-        ui->fansCountLabel->setText(snum(ac->currentFans));
-        ui->fansClubCountLabel->setText(snum(ac->currentFansClub));
-        // getFansAndUpdate();
+            // 发送心跳要用到的直播信息
+            ac->areaId = snum(roomInfo.value("area_id").toInt());
+            ac->areaName = roomInfo.value("area_name").toString();
+            ac->parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
+            ac->parentAreaName = roomInfo.value("parent_area_name").toString();
+            ui->roomAreaLabel->setText(ac->areaName);
 
-        // 获取主播等级
-        QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
-        ac->anchorLiveLevel = liveInfo.value("level").toInt();
-        ac->anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
-        ac->anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
-        // TODO: 显示主播等级和积分
+            // 疑似在线人数
+            int online = roomInfo.value("online").toInt();
+            ui->popularityLabel->setText(snum(online));
 
-        // 设置标签
-        ui->tagsButtonGroup->initStringList(ac->roomTags);
+            // 获取主播信息
+            ac->currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
+            ac->currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
+    //        qInfo() << s8("粉丝数：") << ac->currentFans << s8("    粉丝团：") << ac->currentFansClub;
+            ui->fansCountLabel->setText(snum(ac->currentFans));
+            ui->fansClubCountLabel->setText(snum(ac->currentFansClub));
+            // getFansAndUpdate();
 
-        // 获取热门榜信息
-        QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
-        int rank = hotRankInfo.value("rank").toInt();
-        QString rankArea = hotRankInfo.value("area_name").toString();
-        int countdown = hotRankInfo.value("countdown").toInt();
-        if (!rankArea.isEmpty())
-        {
-            ui->roomRankLabel->setText(snum(rank));
-            if (!rankArea.endsWith("榜"))
-                rankArea += "榜";
-            ui->roomRankTextLabel->setText(rankArea);
-            ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
-        }
+            // 获取主播等级
+            QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
+            ac->anchorLiveLevel = liveInfo.value("level").toInt();
+            ac->anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
+            ac->anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
+            // TODO: 显示主播等级和积分
 
-        // 获取直播排行榜
-        QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
-        ac->areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
-        ac->liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
-        // TODO: 显示直播排行榜
+            // 设置标签
+            ui->tagsButtonGroup->initStringList(ac->roomTags);
 
-        // 获取大乱斗段位
-        QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
-        ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
-        QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
-        ui->battleRankNameLabel->setText(ac->battleRankName);
-        if (!ac->battleRankName.isEmpty())
-        {
-            ui->battleInfoWidget->show();
-            get(battleRankUrl, [=](QNetworkReply* reply1){
-                QPixmap pixmap;
-                pixmap.loadFromData(reply1->readAll());
-                if (!pixmap.isNull())
-                    pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
-                ui->battleRankIconLabel->setPixmap(pixmap);
-            });
-            upgradeWinningStreak(false);
-        }
-        else
-        {
-            ui->battleInfoWidget->hide();
-        }
+            // 获取热门榜信息
+            QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
+            int rank = hotRankInfo.value("rank").toInt();
+            QString rankArea = hotRankInfo.value("area_name").toString();
+            int countdown = hotRankInfo.value("countdown").toInt();
+            if (!rankArea.isEmpty())
+            {
+                ui->roomRankLabel->setText(snum(rank));
+                if (!rankArea.endsWith("榜"))
+                    rankArea += "榜";
+                ui->roomRankTextLabel->setText(rankArea);
+                ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
+            }
 
-        // 异步获取房间封面
-        getRoomCover(roomInfo.value("cover").toString());
+            // 获取直播排行榜
+            QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
+            ac->areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
+            ac->liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
+            // TODO: 显示直播排行榜
 
-        // 获取主播头像
-        getUpInfo(ac->upUid);
-        gettingRoom = false;
-        if (!gettingUser)
-            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
-        updatePermission();
+            // 获取大乱斗段位
+            QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
+            ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
+            QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
+            ui->battleRankNameLabel->setText(ac->battleRankName);
+            if (!ac->battleRankName.isEmpty())
+            {
+                ui->battleInfoWidget->show();
+                get(battleRankUrl, [=](QNetworkReply* reply1){
+                    QPixmap pixmap;
+                    pixmap.loadFromData(reply1->readAll());
+                    if (!pixmap.isNull())
+                        pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+                    ui->battleRankIconLabel->setPixmap(pixmap);
+                });
+                upgradeWinningStreak(false);
+            }
+            else
+            {
+                ui->battleInfoWidget->hide();
+            }
 
-        // 判断房间，未开播则暂停连接，等待开播
-        if (!isLivingOrMayliving())
-            return ;
+            // 异步获取房间封面
+            getRoomCover(roomInfo.value("cover").toString());
 
-        // 开始工作
-        if (isLiving())
-            slotStartWork();
+            // 获取主播头像
+            getUpInfo(ac->upUid);
+            gettingRoom = false;
+            if (!gettingUser)
+                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
+            updatePermission();
 
-        if (!reconnect)
-            return ;
+            // 判断房间，未开播则暂停连接，等待开播
+            if (!isLivingOrMayliving())
+                return ;
 
-        // 获取弹幕信息
-        getDanmuInfo();
+            // 开始工作
+            if (isLiving())
+                slotStartWork();
 
-        // 录播
-        if (ui->recordCheck->isChecked() && isLiving())
-            startLiveRecord();
-    });
+            if (!reconnect)
+                return ;
+
+            // 获取弹幕信息
+            getDanmuInfo();
+
+            // 录播
+            if (ui->recordCheck->isChecked() && isLiving())
+                startLiveRecord();
+        });
+    }
+        break;
+    }
 
     if (reconnect)
         ui->connectStateLabel->setText("获取房间信息...");

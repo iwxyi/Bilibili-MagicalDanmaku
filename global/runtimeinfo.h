@@ -15,9 +15,20 @@
 
 class LiveDanmaku;
 
+enum LivePlatform
+{
+    Bilibili,   // 哔哩哔哩
+    Huya,       // 虎牙
+    Douyu,      // 斗鱼
+    Douyin,     // 抖音
+    Kuaishou,   // 快手
+};
+
 class RuntimeInfo
 {
 public:
+    LivePlatform livePlatform = Bilibili;
+
     QHash<QString, QString> pinyinMap; // 拼音
     QList<LiveDanmaku> allDanmakus;
 
