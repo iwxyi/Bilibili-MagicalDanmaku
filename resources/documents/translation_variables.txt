@@ -12,6 +12,7 @@
 机器人ID=my_uid
 用户等级=level
 弹幕消息=text
+URL编码的弹幕消息=url_text
 用户进入次数=come_count
 用户上次进入时间=come_time
 进入时间差=come_time_delta

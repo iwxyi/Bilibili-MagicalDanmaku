@@ -933,6 +933,7 @@ private:
     void speakText(QString text);
     void speakTextQueueNext();
     void voiceDownloadAndSpeak(QString text);
+    void playNetAudio(QString url);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();

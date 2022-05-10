@@ -1035,6 +1035,9 @@ void MainWindow::readConfig()
         TxNlp::instance()->setSecretKey(TXSecretKey);
         ui->TXSecretKeyEdit->setText(TXSecretKey);
     }
+    connect(TxNlp::instance(), &TxNlp::signalError, this, [=](const QString& err){
+        showError("智能闲聊", err);
+    });
 
     // 开播
     ui->startLiveWordsEdit->setText(us->value("live/startWords").toString());
@@ -5993,6 +5996,9 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%text%")
         return toSingleLine(danmaku.getText());
 
+    else if (key == "%url_text%")
+        return QString::fromUtf8(danmaku.getText().toUtf8().toPercentEncoding());
+
     // 进来次数
     else if (key == "%come_count%")
     {
@@ -8383,6 +8389,16 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 voicePlatform = temp;
             }
             msTTS->speakSSML(text);
+            return true;
+        }
+
+        re = RE("speakTextUrl\\s*\\(\\s*(.+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString link = caps.at(1).trimmed();
+            qInfo() << "执行命令：" << caps;
+            playNetAudio(link);
             return true;
         }
     }
@@ -12948,7 +12964,12 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
         return ;
     url = url.replace("%1", text).replace("%text%", text);
     url = url.replace("%url_text%", QString::fromUtf8(text.toUtf8().toPercentEncoding()));
-    qInfo() << url;
+    playNetAudio(url);
+}
+
+void MainWindow::playNetAudio(QString url)
+{
+    qInfo() << "播放网络音频：" << url;
     const QString filePath = rt->dataPath + "tts";
     QDir dir(filePath);
     dir.mkpath(filePath);
@@ -12981,6 +13002,7 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
             else
             {
                 qWarning() << "无法解析的语音返回：" << json;
+                showError("在线音频", json.errOrMsg());
                 return ;
             }
         }
