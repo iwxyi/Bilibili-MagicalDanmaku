@@ -1105,6 +1105,8 @@ void MainWindow::readConfig()
         ui->scrollArea->removeWidget(ui->danmakuToutaSettingsCard);
         ui->toutaGiftSettingsCard->hide();
         ui->scrollArea->removeWidget(ui->toutaGiftSettingsCard);
+        ui->scrollArea->removeWidget(ui->debugSettingsCard);
+        ui->debugSettingsCard->hide();
     }
 
     // 粉丝勋章
@@ -8395,6 +8397,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
             ui->voiceNameEdit->setText(text);
+            on_voiceNameEdit_editingFinished();
             return true;
         }
 
@@ -8412,6 +8415,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voiceSpeedSlider->setValue(val);
+            on_voiceSpeedSlider_valueChanged(val);
             return true;
         }
 
@@ -8429,6 +8433,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voicePitchSlider->setValue(val);
+            on_voicePitchSlider_valueChanged(val);
             return true;
         }
 
@@ -8446,6 +8451,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voiceVolumeSlider->setValue(val);
+            on_voiceVolumeSlider_valueChanged(val);
             return true;
         }
     }
@@ -10108,7 +10114,7 @@ QString MainWindow::getExecutionResult(QStringList& msgs, const LiveDanmaku &_da
     }
 
     // 返回的弹幕内容
-    return dms.join("\\n");
+    return toSingleLine(dms.join("\\n"));
 }
 
 void MainWindow::simulateKeys(QString seq, bool press, bool release)
@@ -19118,6 +19124,7 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
 void MainWindow::on_voiceNameEdit_editingFinished()
 {
     voiceName = ui->voiceNameEdit->text();
+    qInfo() << "设置发音人：" << voiceName;
     switch (voicePlatform) {
     case VoiceLocal:
         us->setValue("voice/localName", voiceName);

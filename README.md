@@ -1258,6 +1258,8 @@ tips：
 | joinBattle(type)                                   | 开启大乱斗       | 开启大乱斗，1普通，2视频                                     |
 | triggerEvent(event)                                | 触发事件         | 触发自定义事件，可在“事件动作”中响应；附带当前最近处理的数据。若有多个，都会触发 |
 | triggerReply(msg)                                  | 触发自动回复     | 触发自动回复（未开启会被忽略），可作为有参数的方法进行传递。若有多个，都会触发；若未找到合适的回复动作，会报一个警告 |
+| getReplyExecutionResult(msg)                       | 获取回复执行结果 | 获取**第一个**符合`msg`弹幕的回复的执行结果，并返回最终**弹幕**的拼凑结果，使用`%n%`连接（写入到文件时会替换为换行）。该回复的代码中的命令会被立刻执行；若没有相应的回复，返回空字符串 |
+| getEventExecutionResult(event)                     | 获取事件执行结果 | 同上                                                         |
 | setTimerTask(id, time)                             | 开启定时任务     | id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间 |
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
@@ -2445,22 +2447,23 @@ tips：
 
 若有多行，同其他代码一样，随机获取一行；其他弹幕或命令正常发送。
 
-| 过滤事件                 | 说明（reject时）                          |
-| ------------------------ | ----------------------------------------- |
-| FILTER_MUSIC_ORDER       | 阻止点歌                                  |
-| FILTER_AUTO_REPLY        | 阻止所有的自动回复                        |
-| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上                |
-| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上                |
-| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上           |
-| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上                |
-| FILTER_DANMAKU_NOTICE    | 阻止普通通知(Common Notice)显示在弹幕姬上 |
-| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                        |
+| 过滤事件                 | 说明（reject时）                             |
+| ------------------------ | -------------------------------------------- |
+| FILTER_MUSIC_ORDER       | 阻止点歌                                     |
+| FILTER_AUTO_REPLY        | 阻止所有的自动回复                           |
+| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上                   |
+| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上                   |
+| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上              |
+| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上                   |
+| FILTER_DANMAKU_NOTICE    | 阻止普通通知(Common Notice)显示在弹幕姬上    |
+| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                           |
+| FILTER_API_EVENT         | 阻止HTTP触发事件的接口，`%text%`获取事件名字 |
 
 若有多个相同过滤器，只要**任意其中一个**包括 `>reject()` 命令，则本操作不允许。
 
 另外，过滤器不支持发送选项（冷却通道、等待通道）；若有需要，放到条件判断中。
 
-注意：默认的过滤器可能会在一定程度上造成卡顿，可在弹幕设置中关闭。
+注意：默认开启过滤器，可能会在一定程度上造成卡顿，可在弹幕设置中关闭。
 
 
 
