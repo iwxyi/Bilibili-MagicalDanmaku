@@ -1023,7 +1023,7 @@ private:
     void receivedPrivateMsg(MyJson session);
 
     void startSplash();
-    void loadWebExtensinList();
+    void loadWebExtensionList();
     void shakeWidget(QWidget* widget);
 
     void saveGameNumbers(int channel);

@@ -3056,7 +3056,7 @@ JSON格式：
 
 ### 讯飞语音没有声音？
 
-在大部分设备上确实无法使用，目前原因未知。
+同上，需要安装解码器。
 
 
 
@@ -3076,7 +3076,7 @@ JSON格式：
 >
 > - 能针对关键词，回复指定弹幕吗？（能看到这句话为什么看不到上面这么多回复示例）
 > - 为什么运行一段时间后闪退了？（不说详细操作，不可能找到原因）
-> - 欢迎进入/弹幕回复/点歌/切歌/...不管用？（先看看上面“为什么不发弹幕”再问吧）
+> - 欢迎/回复/点歌/切歌/...不管用？（先看看上面“为什么不发弹幕”再问吧）
 
 
 
@@ -3097,3 +3097,4 @@ JSON格式：
 > - 酷狗音乐下载地址：https://cloud.tencent.com/developer/article/1795030
 > - Star图标：https://www.behance.net/gallery/83133509/Logo-animations-collaboration
 > - 服务端模块：https://github.com/nikhilm/qhttpserver
+> - 数据库模块：https://blog.csdn.net/gongjianbo1992/article/details/88070605

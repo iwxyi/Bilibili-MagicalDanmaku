@@ -36,7 +36,7 @@ public:
         if (secretId.isEmpty() || secretKey.isEmpty())
         {
             qWarning() << "腾讯智能闲聊：未设置ID或Key";
-            emit signalError("腾讯智能闲聊：未设置ID或Key");
+            emit signalError("未设置ID或Key");
             return ;
         }
         if (text.isEmpty())
@@ -128,13 +128,13 @@ public:
         if (code != 200)
         {
             qWarning() << "腾讯智能闲聊 错误码：" << QString::number(code);
-            emit signalError("腾讯智能闲聊 错误码" + QString::number(code));
+            emit signalError("错误码：" + QString::number(code));
             return ;
         }
         if (reply->error() != QNetworkReply::NoError)
         {
             qWarning() << "腾讯智能闲聊 Error:" << reply->errorString();
-            emit signalError("腾讯智能闲聊 Error：" + reply->errorString());
+            emit signalError("Error：" + reply->errorString());
             return ;
         }
 
@@ -146,7 +146,7 @@ public:
         if (error.error != QJsonParseError::NoError)
         {
             qWarning() << "腾讯智能闲聊：" << error.errorString();
-            emit signalError("腾讯智能闲聊：" + error.errorString());
+            emit signalError(error.errorString());
             return ;
         }
 

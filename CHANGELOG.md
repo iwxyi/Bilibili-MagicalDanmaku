@@ -1,22 +1,20 @@
-### v4.5.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.5)
+### v4.5.1 [添加命令、修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.1)
 
-- 调整开启本地模式时可通过 `>sendRoomMsg(roomId,msg)` 来发送弹幕
-
-
-
-
-
-### v4.5.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.1)
-
-- 添加一些文本操作函数
-- 添加URL编码与解码函数
-- 添加修改文件行、删除文件行命令
-- 添加单行与多行的转换`%n%`，支持发送多行私信
-- 优化`sendToSockets`当cmd为空时发送给所有已连接的WebSockets
+- 新增播放在线语音命令：`speakTextUrl(url)`
+- 新增一些文本文件操作函数和命令
+- 新增URL编码与解码函数：`urlEncode`和`urlDecode`
+- 新增单行与多行的转换`%n%`，支持发送多行私信
+- 新增打开弹幕历史记录的按钮
+- 优化弹幕设置中复选框的动画效果
 - 优化发送指定直播间弹幕、发送私信可以带空格
+- 优化发送给其他直播间的弹幕也可以自动重发了
 - 优化检查变量窗口的大小
 - 优化写入UTF-8文件添加BOM
 - 优化JSON带有换行的问题
+- 优化各语音实时更改发音人、音调等数值
+- 调整`sendToSockets`当cmd为空时发送给所有已连接的WebSockets
+- 调整本地模式时可通过`>sendRoomMsg(roomId,msg)`来发送弹幕
+- 调整Http的Event接口从安全限制开关改为过滤器的形式：`FILTER_API_EVENT`
 - 修复点歌姬换源播放触发结束事件的问题
 - 修复点歌姬拖动进度条的偏移问题
 - 修复文件操作路径多余的斜杠

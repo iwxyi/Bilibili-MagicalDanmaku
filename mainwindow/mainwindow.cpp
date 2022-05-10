@@ -1460,7 +1460,7 @@ void MainWindow::readConfig()
     }
 
     // 加载网页
-    loadWebExtensinList();
+    loadWebExtensionList();
 
     // 设置默认配置
     if (firstOpen)
@@ -17895,7 +17895,7 @@ void MainWindow::startSplash()
 #endif
 }
 
-void MainWindow::loadWebExtensinList()
+void MainWindow::loadWebExtensionList()
 {
     // 清空旧的列表
     for (int i = 0; i < ui->extensionListWidget->count(); i++)
@@ -17908,6 +17908,8 @@ void MainWindow::loadWebExtensinList()
 
     // 加载url列表，允许一键复制
     QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    QFontMetrics fm(font());
+    int lineHeight = fm.lineSpacing();
     foreach (auto info, dirs)
     {
         QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
@@ -17916,12 +17918,15 @@ void MainWindow::loadWebExtensinList()
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
         QString extName = json.s("name");
+        QString auth = json.s("author");
+        QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
         if (!minVersion.isEmpty() && rt->appVersion < minVersion)
         {
             showError("扩展不可用", "【" + extName + "】要求版本：v" + minVersion);
         }
         json.each("list", [=](MyJson inf){
+            /// 读取数值
             QString name = inf.s("name");
             QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
             QString stsR = inf.s("config");
@@ -17932,9 +17937,15 @@ void MainWindow::loadWebExtensinList()
             QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
+            QString coverPath = inf.s("cover");
+            coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath);
+            if (isFileExist(coverPath))
+                coverPath = ":/icons/default_cover";
 
             if (name.isEmpty())
                 name = extName;
+            if (desc.isEmpty())
+                desc = descAll;
             QString dirName = info.fileName();
             if (!urlR.isEmpty() && !urlR.startsWith("/"))
                 urlR = "/" + dirName + "/" + urlR;
@@ -17954,12 +17965,12 @@ void MainWindow::loadWebExtensinList()
             if (name.isEmpty() && urlR.isEmpty())
                 return;
 
-            auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
-            auto layout = new QHBoxLayout(widget);
-            layout->addStretch(1);
-            layout->setSpacing(0);
-            layout->setMargin(0);
-            widget->setLayout(layout);
+            /// 创建控件
+            const int labelCount = 4;
+            const int cardHeight = (lineHeight + 9) * labelCount;
+            const int coverSize = lineHeight * 4;
+            // 主卡片
+            auto widget = new InteractiveButtonBase(ui->serverUrlsCard);
             widget->setPaddings(8);
             widget->setAlign(Qt::AlignLeft);
             widget->setRadius(rt->fluentRadius);
@@ -17967,6 +17978,46 @@ void MainWindow::loadWebExtensinList()
             if (!desc.isEmpty())
                 widget->setToolTip(desc);
             widget->setCursor(Qt::PointingHandCursor);
+
+            // 封面
+            auto coverVLayout = new QVBoxLayout;
+            QLabel* coverLabel = new QLabel(widget);
+            coverLabel->setFixedSize(coverSize, coverSize);
+            coverVLayout->addWidget(coverLabel);
+            coverLabel->setPixmap(QPixmap(coverPath));
+            coverLabel->setScaledContents(true);
+
+            // 信息
+            auto infoVLayout = new QVBoxLayout;
+            infoVLayout->addWidget(new QLabel(name, widget));
+            if (!desc.isEmpty())
+                infoVLayout->addWidget(new QLabel(desc, widget));
+            if (!urlR.isEmpty())
+                infoVLayout->addWidget(new QLabel(urlR, widget));
+            if (!auth.isEmpty())
+                infoVLayout->addWidget(new QLabel(auth, widget));
+            infoVLayout->setSpacing(3);
+
+            // 布局
+            auto mainHLayout = new QHBoxLayout(widget);
+            widget->setLayout(mainHLayout);
+            mainHLayout->addLayout(coverVLayout);
+            mainHLayout->addLayout(infoVLayout);
+            mainHLayout->setSpacing(9);
+            mainHLayout->setMargin(9);
+            mainHLayout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+            mainHLayout->setStretch(0, 0);
+            mainHLayout->setStretch(1, 1);
+            widget->setFixedHeight(cardHeight);
+
+            /// 交互按钮
+            auto btnHLayout = new QHBoxLayout;
+            infoVLayout->addLayout(btnHLayout);
+            const int btnSize = lineHeight * 3 / 2;
+            // 占位符
+            auto placehold = new QWidget(widget);
+            placehold->setFixedSize(1, btnSize);
+            btnHLayout->addWidget(placehold);
 
             // URL
             if (!urlR.isEmpty())
@@ -17981,14 +18032,15 @@ void MainWindow::loadWebExtensinList()
                 });
 
                 auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QApplication::clipboard()->setText(getDomainPort() + urlR);
                 });
@@ -17998,14 +18050,15 @@ void MainWindow::loadWebExtensinList()
             if (!stsR.isEmpty())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/generate"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展的基础配置\n更深层次的设置需要修改源代码");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QDesktopServices::openUrl(getDomainPort() + stsR);
                 });
@@ -18015,14 +18068,15 @@ void MainWindow::loadWebExtensinList()
             if (inf.contains("code") && code.isArray())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/code"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("一键导入要用到的代码\n如果已经存在，可能会重复导入");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     qInfo() << "导入网页小程序代码";
                     QApplication::clipboard()->setText(QJsonDocument(code.toArray()).toJson());
@@ -18038,14 +18092,15 @@ void MainWindow::loadWebExtensinList()
                 if (cssC.startsWith("/"))
                     cssC = cssC.right(cssC.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("修改或者导入CSS样式");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(cssR);
                     QString pathC = wwwDir.absoluteFilePath(cssC);
@@ -18069,14 +18124,15 @@ void MainWindow::loadWebExtensinList()
                 if (dirR.startsWith("/"))
                     dirR = dirR.right(dirR.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/dir"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展指定目录，修改相关资源");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(dirR);
                     QDesktopServices::openUrl(QUrl(path));
@@ -18089,19 +18145,22 @@ void MainWindow::loadWebExtensinList()
                 if (fileR.startsWith("/"))
                     fileR = fileR.right(fileR.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/file"), widget);
-                layout->addWidget(btn);
+                btnHLayout->addWidget(btn);
+                btn->setFixedSize(btnSize, btnSize);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展指定文件，如抽奖结果");
-                btn->hide();
-                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                // btn->hide();
+                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(fileR);
                     QDesktopServices::openUrl(QUrl(path));
                 });
             }
+
+            btnHLayout->addStretch(1);
 
             auto item = new QListWidgetItem(ui->extensionListWidget);
             ui->extensionListWidget->setItemWidget(item, widget);
@@ -20664,7 +20723,7 @@ void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_refreshExtensionListButton_clicked()
 {
-    loadWebExtensinList();
+    loadWebExtensionList();
     qInfo() << "网页扩展数量：" << ui->extensionListWidget->count();
 }
 
