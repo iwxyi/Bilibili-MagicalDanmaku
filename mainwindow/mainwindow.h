@@ -793,6 +793,8 @@ private slots:
 
     void on_calculateDailyDataButton_clicked();
 
+    void on_syntacticSugarCheck_clicked();
+
 private:
     void initView();
     void initStyle();

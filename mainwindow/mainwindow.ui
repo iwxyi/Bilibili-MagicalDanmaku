@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>863</width>
-    <height>814</height>
+    <width>761</width>
+    <height>1208</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1544,8 +1544,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>783</width>
-             <height>694</height>
+             <width>681</width>
+             <height>1088</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5525,6 +5525,88 @@ margin: 40px;</string>
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="programmingSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>980</y>
+              <width>161</width>
+              <height>71</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#programmingSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_75">
+             <item>
+              <widget class="QLabel" name="label_62">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>编程</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_37" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="syntacticSugarCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>开启简化的代码功能，但可能会与用户弹幕重合，导致意外的修改行为。
+支持的语法糖如下：
+{key} = val	等同于	&gt;setValue(key, val)
+{key} += val	等同于	&gt;setValue(key, %[%{key}%+val]%)
+{key} -= val
+{key} *= val
+{key} /= val
+{key} %= val
+{key}++		等同于 &gt;setValue(key, %[%{key}%+1]%)
+{key}--</string>
+               </property>
+               <property name="text">
+                <string>语法糖</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -8585,7 +8667,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>863</width>
+     <width>761</width>
      <height>23</height>
     </rect>
    </property>

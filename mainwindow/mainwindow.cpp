@@ -861,6 +861,9 @@ void MainWindow::readConfig()
     filter_danmakuCome = settings->value("filter/danmakuCome", "").toString();
     filter_danmakuGift = settings->value("filter/danmakuGift").toString();*/
 
+    // 编程
+    ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
+
     // 状态栏
     statusLabel = new QLabel(this);
     statusLabel->setObjectName("statusLabel");
@@ -2204,7 +2207,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     int resVal = 0;
     bool exec = execFunc(msg, *danmaku, res, resVal);
 
-    if (!exec) // 先判断能否执行命令，如果是发送弹幕
+    if (!exec) // 如果是发送弹幕
     {    
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
@@ -2241,10 +2244,12 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     }
 
     // 如果后面是命令的话，尝试立刻执行
+    // 可以取消间隔，大大加快速度
+    // 因为大部分复杂的代码，也就是一条弹幕+一堆命令
     if (!inDanmakuDelay && autoMsgQueues.size())
     {
         const QString& nextMsg = autoMsgQueues.first().first.first();
-        QRegularExpression re("^\\s*>");
+        QRegularExpression re("^\\s*(>.+\\)|\\{.+\\}.*[=\\+\\-].*)\\s*$");
         if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
         {
             slotSendAutoMsg(false); // 递归
@@ -7959,8 +7964,80 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
 bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, int &resVal)
 {
-    QRegularExpression re("^\\s*>");
+    // 语法糖
     QRegularExpressionMatch match;
+    if (ui->syntacticSugarCheck->isChecked())
+    {
+        // {key} = val
+        // {key} += val
+        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*(.?)=\\s*(.*)\\s*$");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString key = match.captured(1);
+            QString ope = match.captured(2); // 操作符
+            QString val = match.captured(3);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            if (ope.isEmpty())
+            {
+                heaps->setValue(key, val);
+                qInfo() << "set value" << key << "=" << val;
+            }
+            else // 数值运算
+            {
+                qint64 v = heaps->value(key).toLongLong();
+                qint64 x = val.toLongLong();
+                if (ope == "+")
+                    v += x;
+                else if (ope == "-")
+                    v -= x;
+                else if (ope == "*")
+                    v *= x;
+                else if (ope == "/")
+                {
+                    if (x == 0)
+                    {
+                        showError("错误的/运算", msg);
+                        x = 1;
+                    }
+                    v /= x;
+                }
+                else if (ope == "%")
+                {
+                    if (x == 0)
+                    {
+                        showError("错误的%运算", msg);
+                        x = 1;
+                    }
+                    v /= x;
+                }
+                heaps->setValue(key, v);
+                qInfo() << "set value" << key << "=" << v;
+            }
+            return true;
+        }
+
+        // {key}++  {key}--
+        re = QRegularExpression("^\\s*\\{(.+)\\}\\s*(\\+\\+|\\-\\-)\\s*$");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QString key = match.captured(1);
+            QString ope = match.captured(2);
+            if (!key.contains("/"))
+                key = "heaps/" + key;
+            qint64 v = heaps->value(key).toLongLong();
+            if (ope == "++")
+                v++;
+            else if (ope == "--")
+                v--;
+            heaps->setValue(key, v);
+            qInfo() << "set value" << key << "=" << v;
+            return true;
+        }
+    }
+
+    // 总体判断判断是不是 >func() 格式的命令
+    QRegularExpression re("^\\s*>");
     if (msg.indexOf(re) == -1)
         return false;
 
@@ -7977,7 +8054,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             return true;
         }
-        return false;
     }
 
     // 禁言
@@ -17919,13 +17995,15 @@ void MainWindow::loadWebExtensionList()
     QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
     foreach (auto info, dirs)
     {
-        QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
+        QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("package.json");
+        if (!isFileExist(infoPath))
+            infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
         if (!isFileExist(infoPath))
             continue;
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
         QString extName = json.s("name");
-        QString author = json.s("author");
+        QString authorAll = json.s("author");
         QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
         if (!minVersion.isEmpty() && rt->appVersion < minVersion)
@@ -17935,6 +18013,7 @@ void MainWindow::loadWebExtensionList()
         json.each("list", [=](MyJson inf){
             /// 读取数值
             QString name = inf.s("name");
+            QString author= inf.s("author");
             QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
             QString stsR = inf.s("config");
             QString cssR = inf.s("css");
@@ -17955,6 +18034,8 @@ void MainWindow::loadWebExtensionList()
 
             if (name.isEmpty())
                 name = extName;
+            if (author.isEmpty())
+                author = authorAll;
             if (desc.isEmpty())
                 desc = descAll;
             QString dirName = info.fileName();
@@ -21011,4 +21092,9 @@ void MainWindow::on_calculateDailyDataButton_clicked()
 {
     QDir dir(rt->dataPath + "live_daily");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_syntacticSugarCheck_clicked()
+{
+    us->setValue("programming/syntacticSugar", ui->syntacticSugarCheck->isChecked());
 }
