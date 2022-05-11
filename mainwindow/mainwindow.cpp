@@ -29,6 +29,7 @@
 #endif
 #include "tx_nlp.h"
 #include "conditionutil.h"
+#include "order_player/roundedpixmaplabel.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -17906,10 +17907,16 @@ void MainWindow::loadWebExtensionList()
     }
     ui->extensionListWidget->clear();
 
+    // 设置界面值
+    QFontMetrics fm(font());
+    const int lineHeight = fm.lineSpacing();
+    const int btnSize = lineHeight * 3 / 2;
+    QFont titleFont;
+    titleFont.setPointSize(titleFont.pointSize() * 5 / 4);
+    titleFont.setBold(true);
+
     // 加载url列表，允许一键复制
     QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
-    QFontMetrics fm(font());
-    int lineHeight = fm.lineSpacing();
     foreach (auto info, dirs)
     {
         QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
@@ -17918,7 +17925,7 @@ void MainWindow::loadWebExtensionList()
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
         QString extName = json.s("name");
-        QString auth = json.s("author");
+        QString author = json.s("author");
         QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
         if (!minVersion.isEmpty() && rt->appVersion < minVersion)
@@ -17938,9 +17945,13 @@ void MainWindow::loadWebExtensionList()
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
             QString coverPath = inf.s("cover");
+            if (coverPath.isEmpty())
+                coverPath = "cover.png";
             coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath);
-            if (isFileExist(coverPath))
+            if (!isFileExist(coverPath))
+            {
                 coverPath = ":/icons/default_cover";
+            }
 
             if (name.isEmpty())
                 name = extName;
@@ -17981,29 +17992,45 @@ void MainWindow::loadWebExtensionList()
 
             // 封面
             auto coverVLayout = new QVBoxLayout;
-            QLabel* coverLabel = new QLabel(widget);
+            QLabel* coverLabel = new RoundedPixmapLabel(widget);
             coverLabel->setFixedSize(coverSize, coverSize);
             coverVLayout->addWidget(coverLabel);
             coverLabel->setPixmap(QPixmap(coverPath));
             coverLabel->setScaledContents(true);
 
+            if (!author.isEmpty())
+            {
+                QLabel* label = new QLabel("by " + author, widget);
+                label->setAlignment(Qt::AlignCenter);
+                label->setStyleSheet("color: grey;");
+                coverVLayout->addWidget(label);
+            }
+
             // 信息
             auto infoVLayout = new QVBoxLayout;
-            infoVLayout->addWidget(new QLabel(name, widget));
+            QLabel* nameLabel = new QLabel(name, widget);
+            nameLabel->setFont(titleFont);
+            infoVLayout->addWidget(nameLabel);
             if (!desc.isEmpty())
-                infoVLayout->addWidget(new QLabel(desc, widget));
+            {
+                QLabel* label = new QLabel(desc, widget);
+                label->setStyleSheet("color: grey;");
+                infoVLayout->addWidget(label);
+            }
             if (!urlR.isEmpty())
-                infoVLayout->addWidget(new QLabel(urlR, widget));
-            if (!auth.isEmpty())
-                infoVLayout->addWidget(new QLabel(auth, widget));
-            infoVLayout->setSpacing(3);
+            {
+                QLabel* label = new QLabel(urlR, widget);
+                label->setStyleSheet("color: grey;");
+                infoVLayout->addWidget(label);
+            }
+            infoVLayout->setSpacing(4);
 
             // 布局
             auto mainHLayout = new QHBoxLayout(widget);
             widget->setLayout(mainHLayout);
             mainHLayout->addLayout(coverVLayout);
             mainHLayout->addLayout(infoVLayout);
-            mainHLayout->setSpacing(9);
+            mainHLayout->setSpacing(12);
             mainHLayout->setMargin(9);
             mainHLayout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
             mainHLayout->setStretch(0, 0);
@@ -18013,7 +18040,7 @@ void MainWindow::loadWebExtensionList()
             /// 交互按钮
             auto btnHLayout = new QHBoxLayout;
             infoVLayout->addLayout(btnHLayout);
-            const int btnSize = lineHeight * 3 / 2;
+
             // 占位符
             auto placehold = new QWidget(widget);
             placehold->setFixedSize(1, btnSize);

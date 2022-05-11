@@ -12,6 +12,12 @@ public:
     {
     }
 
+    void setRadius(int x)
+    {
+        this->radius = x;
+        update();
+    }
+
 protected:
     void paintEvent(QPaintEvent *) override
     {
@@ -20,11 +26,14 @@ protected:
             return ;
         QPainter painter(this);
         QPainterPath path;
-        path.addRoundedRect(rect(), 5, 5);
+        path.addRoundedRect(rect(), radius, radius);
         painter.setClipPath(path);
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.drawPixmap(rect(), *pixmap);
     }
+
+private:
+    int radius = 5;
 };
 
 #endif // ROUNDEDLABEL_H
