@@ -17203,6 +17203,11 @@ void MainWindow::joinBattle(int type)
     });
 }
 
+/**
+ * 监听勋章升级
+ * 一个小问题：如果用户一点一点的点击送礼物，那么升级那段时间获取到的亲密度刚好在送礼物边缘
+ * 可能会多播报几次，或者压根就不播报
+ */
 void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
 {
     /* {
@@ -17261,7 +17266,7 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
     int giftIntimacy = danmaku.getTotalCoin() / 100;
     if (danmaku.getGiftId() == 30607)
     {
-        if ((danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21 || !danmaku.isGuard()))
+        if ((danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21) || !danmaku.isGuard())
         {
             giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
         }
