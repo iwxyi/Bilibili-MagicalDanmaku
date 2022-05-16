@@ -1358,6 +1358,9 @@ private:
     QList<qint64> gameNumberLists[CHANNEL_COUNT];
     QList<QString> gameTextLists[CHANNEL_COUNT];
 
+    // 粉丝牌
+    QList<qint64> medalUpgradeWaiting;
+
     // 服务端
 #ifdef ENABLE_HTTP_SERVER
     QHttpServer *server = nullptr;

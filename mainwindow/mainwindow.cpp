@@ -17246,21 +17246,22 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             "can_delete": false
         }
     } */
+    // 如果是一点一点的点过去，则会出问题
+    qint64 uid = danmaku.getUid();
+    if (medalUpgradeWaiting.contains(uid)) // 只计算第一次
+        return ;
 
-    if (ac->upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0，不需要判断
+    QList<int> specialGifts { 30607 };
+    if (ac->upUid.isEmpty() || (!danmaku.getTotalCoin() && !specialGifts.contains(danmaku.getGiftId()))) // 亲密度为0，不需要判断
     {
         if (debugPrint)
             localNotify("[勋章升级：免费礼物]");
         return ;
     }
     int giftIntimacy = danmaku.getTotalCoin() / 100;
-    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
-    {
-        return ;
-    }
     if (danmaku.getGiftId() == 30607)
     {
-        if (danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21 && !danmaku.isGuard())
+        if ((danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21 || !danmaku.isGuard()))
         {
             giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
         }
@@ -17271,36 +17272,57 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             return ;
         }
     }
+    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
+    {
+        if (debugPrint)
+            localNotify("[勋章升级：0电池礼物]");
+        return ;
+    }
+
+    QString currentAnchorRoom = danmaku.getAnchorRoomid();
+    int currentMedalLevel = danmaku.getMedalLevel();
+    if (debugPrint)
+        localNotify("[当前勋章：房间" + currentAnchorRoom + "，等级" + snum(currentMedalLevel) + "]");
+
+    // 获取新的等级
     QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
             + snum(danmaku.getUid()) + "&target_id=" + ac->upUid;
-    get(url, [=](MyJson json){
-        MyJson medalObject = json.data();
-        if (medalObject.isEmpty())
-        {
+
+    medalUpgradeWaiting.append(uid);
+    QTimer::singleShot(0, [=]{
+        medalUpgradeWaiting.removeOne(uid);
+        get(url, [=](MyJson json){
+            MyJson medalObject = json.data();
+            if (medalObject.isEmpty())
+            {
+                if (debugPrint)
+                    localNotify("[勋章升级：无勋章]");
+                return ; // 没有勋章，更没有亲密度
+            }
+            int intimacy = medalObject.i("intimacy"); // 当前亲密度
+            int nextIntimacy = medalObject.i("next_intimacy"); // 下一级亲密度
             if (debugPrint)
-                localNotify("[勋章升级：无勋章]");
-            return ; // 没有勋章，更没有亲密度
-        }
-        int intimacy = medalObject.i("intimacy");
-        if (intimacy >= giftIntimacy) // 没有升级
-        {
+                localNotify("[亲密度：" + snum(intimacy) + "/" + snum(nextIntimacy) + "]");
+            if (intimacy >= giftIntimacy) // 没有升级，或者刚拿到粉丝牌升到1级
+            {
+                if (debugPrint)
+                    localNotify("[勋章升级：未升级，已有" + snum(intimacy) + ">=礼物" + snum(giftIntimacy) + "]");
+                return ;
+            }
+            LiveDanmaku ld = danmaku;
+            int level = medalObject.i("level");
             if (debugPrint)
-                localNotify("[勋章升级：未升级]");
-            return ;
-        }
-        LiveDanmaku ld = danmaku;
-        int level = medalObject.i("level");
-        if (debugPrint)
-        {
-            localNotify("[勋章升级：" + snum(level) + "级]");
-        }
-        if (ld.getAnchorRoomid() != ac->roomId && (!ac->shortId.isEmpty() && ld.getAnchorRoomid() != ac->shortId)) // 没有戴本房间的牌子
-        {
-            if (debugPrint)
-                localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
+            {
+                localNotify("[勋章升级：" + snum(level) + "级]");
+            }
+            if (ld.getAnchorRoomid() != ac->roomId && (!ac->shortId.isEmpty() && ld.getAnchorRoomid() != ac->shortId)) // 没有戴本房间的牌子
+            {
+                if (debugPrint)
+                    localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
+            }
             ld.setMedalLevel(level); // 设置为本房间的牌子
-        }
-        triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
+            triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
+        });
     });
 }
 
