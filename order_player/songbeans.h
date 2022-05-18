@@ -374,6 +374,16 @@ struct Song
         return this->id != song.id || this->mid != song.mid;
     }
 
+    bool isSame(const Song& song, bool art = false) const
+    {
+        if (art)
+            if (!this->artistNames.contains(song.artistNames)
+                    && !song.artistNames.contains(this->artistNames))
+                return false;
+        return this->name.contains(song.name)
+                || song.name.contains(this->name);
+    }
+
     QString simpleString() const
     {
         if (artistNames.isEmpty())

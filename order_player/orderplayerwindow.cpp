@@ -847,12 +847,12 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
         else if (insertOnce) // 手动点的立即播放，换源后的自动搜索与播放
         {
-            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
             if (!song.isValid())
                 song = getSuitableSongOnResults(key, true);
+            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
             if (!song.isValid())
             {
-                MUSIC_DEB << "无法找到要播放的歌曲：" << key;
+                qWarning() << "无法找到要播放的歌曲：" << key << "   自动换源：" << autoSwitchSource;
                 if (autoSwitchSource)
                 {
                     MUSIC_DEB << "尝试自动换源：" << playAfterDownloaded.simpleString();
@@ -886,10 +886,16 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                     return ;
                 }
             }
-            if (isNotPlaying()) // 很可能是换源过来的
+
+            // 播放歌曲
+            if (isNotPlaying() || playAfterDownloaded.isSame(song)) // 很可能是换源过来的
+            {
                 startPlaySong(song);
+            }
             else
+            {
                 appendNextSongs(SongList{song});
+            }
         }
     }, source);
 }
