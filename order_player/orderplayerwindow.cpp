@@ -279,6 +279,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     }
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
+    validMusicTime = settings.value("music/validMusicTime", false).toBool();
 
     // 读取cookie
     songBr = settings.value("music/br", 320000).toInt();
@@ -2107,6 +2108,25 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
         file.write(mp3Ba);
         file.flush();
         file.close();
+
+        // 判断时长
+        if (validMusicTime && song.duration > 1000)
+        {
+            QMediaPlayer player;
+            player.setMedia(QUrl::fromLocalFile(songPath(song)));
+            QEventLoop loop;
+            connect(&player, SIGNAL(durationChanged(qint64)), &loop, SLOT(quit()));
+            loop.exec();
+            qint64 realDuration = player.duration();
+            qint64 delta = song.duration / 1000 - realDuration / 1000;
+            if (delta > 3)
+            {
+                qWarning() << "下载的音乐文件时间不对：" << song.duration << "!=" << realDuration;
+                downloadSongFailed(song);
+                return ;
+            }
+        }
+
 
         emit signalSongDownloadFinished(song);
         MUSIC_DEB << "歌曲mp3下载完成：" << song.simpleString();
@@ -4104,6 +4124,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         {
             qqmusicCookies = "";
             qqmusicCookiesVariant.clear();
+            qqmusicNickname.clear();
             settings.setValue("music/qqmusicCookies", "");
         }
     })->text(!qqmusicNickname.isEmpty(), qqmusicNickname)->disable(qqmusicCookies.isEmpty());
@@ -4131,6 +4152,10 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     playMenu->split()->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
     })->setChecked(autoSwitchSource);
+
+    playMenu->split()->addAction("验证时间", [=]{
+        settings.setValue("music/validMusicTime", validMusicTime = !validMusicTime);
+    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果少于应有的时间（如试听只有1分钟或30秒）则自动换源");
 
     playMenu->addAction("试听接口", [=]{
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);

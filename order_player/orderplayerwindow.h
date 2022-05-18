@@ -384,6 +384,7 @@ private:
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
     Song prevOrderSong;
     bool autoSwitchSource = true; // 自动切换音源
+    bool validMusicTime = false;  // 验证歌曲时间
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;

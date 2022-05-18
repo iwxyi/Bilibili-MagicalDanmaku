@@ -1,22 +1,28 @@
-### v4.5.1 [添加命令、修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.5.1)
+### v4.6.0 [添加命令、优化点歌姬、修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.0)
 
 - 新增播放在线语音命令：`speakTextUrl(url)`
+- 新增几个代码语法糖，如 `{积分}=1`、`{打卡}++`
 - 新增一些文本文件操作函数和命令
 - 新增URL编码与解码函数：`urlEncode`和`urlDecode`
 - 新增单行与多行的转换`%n%`，支持发送多行私信
 - 新增打开弹幕历史记录的按钮
+- 新增论坛按钮
+- 新增插件封面、作者的显示
 - 优化弹幕设置中复选框的动画效果
 - 优化发送指定直播间弹幕、发送私信可以带空格
 - 优化发送给其他直播间的弹幕也可以自动重发了
+- 优化勋章升级的公告
 - 优化检查变量窗口的大小
 - 优化写入UTF-8文件添加BOM
 - 优化JSON带有换行的问题
 - 优化各语音实时更改发音人、音调等数值
+- 优化点歌姬同时有多人点歌时进入队列
 - 调整`sendToSockets`当cmd为空时发送给所有已连接的WebSockets
 - 调整本地模式时可通过`>sendRoomMsg(roomId,msg)`来发送弹幕
 - 调整Http的Event接口从安全限制开关改为过滤器的形式：`FILTER_API_EVENT`
 - 修复点歌姬换源播放触发结束事件的问题
 - 修复点歌姬拖动进度条的偏移问题
+- 修复点歌姬搜索框变灰的问题
 - 修复文件操作路径多余的斜杠
 - 修复智能闲聊需要开关才能使用
 
