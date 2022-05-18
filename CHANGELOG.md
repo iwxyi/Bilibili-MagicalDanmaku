@@ -17,6 +17,7 @@
 - 优化JSON带有换行的问题
 - 优化各语音实时更改发音人、音调等数值
 - 优化点歌姬同时有多人点歌时进入队列
+- 去掉点歌姬的试听接口
 - 调整`sendToSockets`当cmd为空时发送给所有已连接的WebSockets
 - 调整本地模式时可通过`>sendRoomMsg(roomId,msg)`来发送弹幕
 - 调整Http的Event接口从安全限制开关改为过滤器的形式：`FILTER_API_EVENT`

@@ -287,7 +287,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     neteaseCookiesVariant = getCookies(neteaseCookies);
     qqmusicCookies = settings.value("music/qqmusicCookies").toString();
     qqmusicCookiesVariant = getCookies(qqmusicCookies);
-    unblockQQMusic = settings.value("music/unblockQQMusic").toBool();
+    unblockQQMusic = false; // settings.value("music/unblockQQMusic").toBool();
     auto getRandom = [=]{ return "qwertyuiopasdfghjklzxcvbnm1234567890"[qrand() % 36]; };
     kugouCookies = "kg_mid=";
     for (int i = 0; i < 10; i++)
@@ -4139,11 +4139,11 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     playMenu->addAction("伴奏优先", [=]{
         settings.setValue("music/accompanyMode", accompanyMode = !accompanyMode);
-    })->check(accompanyMode)->tooltip("外部点歌，自动搜索伴奏");
+    })->check(accompanyMode)->tooltip("外部点歌，自动搜索伴奏（搜索词带“伴奏”二字）");
 
     playMenu->addAction("双击播放", [=]{
         settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
-    })->check(doubleClickToPlay);
+    })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
 
     playMenu->addAction("音乐品质", [=]{
         bool ok = false;
@@ -4153,11 +4153,11 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         if (songBr != br)
             clearDownloadFiles();
         settings.setValue("music/br", songBr = br);
-    })->check(songBr >= 320000);
+    })->check(songBr >= 320000)->tooltip("越高的码率可能带来更好地聆听效果，但下载时间较长");
 
     playMenu->split()->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
-    })->setChecked(autoSwitchSource);
+    })->setChecked(autoSwitchSource)->tooltip("无法播放的歌曲自动切换到其他平台，能播放绝大部分歌曲");
 
     playMenu->split()->addAction("验证时间", [=]{
         settings.setValue("music/validMusicTime", validMusicTime = !validMusicTime);
@@ -4167,11 +4167,11 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
         if (unblockQQMusic)
             QMessageBox::information(this, "试听接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");
-    })->check(unblockQQMusic);
+    })->check(unblockQQMusic)->disable();
 
     playMenu->split()->addAction("清理缓存", [=]{
         clearDownloadFiles();
-    })->uncheck();
+    })->tooltip("清理已经下载的所有歌曲，腾出空间");
 
     FacileMenu* stMenu = menu->addMenu("设置");
 
