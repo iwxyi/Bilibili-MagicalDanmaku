@@ -221,6 +221,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     time= QTime::currentTime();
     qsrand(uint(time.msec()+time.second()*1000));
 
+    searchingOverTimeTimer = new QTimer(this);
+    searchingOverTimeTimer->setInterval(5000);
+    searchingOverTimeTimer->setSingleShot(true);
+    connect(searchingOverTimeTimer, SIGNAL(timeout()), this, SLOT(stopLoading()));
+
     bool lyricStack = settings.value("music/lyricStream", false).toBool();
     if (lyricStack)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
@@ -4230,6 +4235,7 @@ void OrderPlayerWindow::on_nextSongButton_clicked()
 void OrderPlayerWindow::startLoading()
 {
     ui->widget->setEnabled(false);
+    searchingOverTimeTimer->start(5000);
 }
 
 void OrderPlayerWindow::stopLoading()

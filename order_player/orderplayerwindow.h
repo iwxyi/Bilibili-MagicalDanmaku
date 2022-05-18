@@ -383,6 +383,7 @@ private:
     Song prevOrderSong;
     bool autoSwitchSource = true; // 自动切换音源
     bool insertOrderOnce = false; // 插入到前面
+    QTimer* searchingOverTimeTimer;
 
     // 音乐账号
     int songBr = 320000; // 码率，单位bps
