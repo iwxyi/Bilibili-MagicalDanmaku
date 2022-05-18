@@ -1,4 +1,5 @@
 {
+    "author": "小乂",
 	"list": [
 		{
 			"name": "实时弹幕",
@@ -10,6 +11,7 @@
 		},
         {
             "name": "底部弹幕",
+            "author": "水良子",
             "url": "index_bottom.html",
             "config": "config.html",
             "css": "index.css",

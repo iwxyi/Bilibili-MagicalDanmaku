@@ -1,0 +1,44 @@
+﻿@font-face {
+	font-family: 'hanyiwenhei85W';
+	src:url('../fonts/default.ttf');
+}
+body{
+	padding:0;
+	margin:0 auto;
+}
+.info{
+	font-size: 48px;
+	font-weight: bold;
+	font-family: 'hanyiwenhei85W';
+	display: flex;
+	height:58px;
+	line-height:58px;
+	white-space: nowrap;
+	color:#FF0000;
+	text-shadow:0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD,
+    0px 0px 5px #FDFDFD;
+}
+.divCurrent{
+	display: flex;
+}
+.currentVoice{
+	vertical-align:middle;
+	display: inline-flex;
+}
+.currentVoice img{
+	width: 54px;
+	height: 54px;
+	border-radius: 50%;
+	display: inline-flex;
+}
+.currentVoice span{
+	width: 480px;
+	overflow-x:hidden;
+	text-overflow: ellipsis;
+}

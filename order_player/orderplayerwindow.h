@@ -208,6 +208,8 @@ private slots:
 
     void startLoading();
     void stopLoading();
+    void startOrderSearching();
+    void stopOrderSearching();
 
 private:
     void searchMusic(QString key, QString addBy = QString(), bool notify = false);
@@ -382,7 +384,10 @@ private:
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
     Song prevOrderSong;
     bool autoSwitchSource = true; // 自动切换音源
+    bool validMusicTime = false;  // 验证歌曲时间
     bool insertOrderOnce = false; // 插入到前面
+    QTimer* searchingOverTimeTimer;
+    QList<QPair<QString, QString>> userOrderSongQueue;
 
     // 音乐账号
     int songBr = 320000; // 码率，单位bps

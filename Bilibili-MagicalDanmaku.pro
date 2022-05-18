@@ -44,6 +44,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 }
 
 INCLUDEPATH += \
+    global/ \
     mainwindow/ \
     third_party/utils/ \
     mainwindow/list_items/ \
@@ -68,7 +69,8 @@ INCLUDEPATH += \
     widgets/editor/ \
     third_party/gif/ \
     third_party/picture_browser/ \
-    third_party/notification/
+    third_party/notification/ \
+    third_party/linear_check_box/
 
 SOURCES += \
     order_player/importsongsdialog.cpp \
@@ -96,6 +98,8 @@ SOURCES += \
     third_party/interactive_buttons/winminbutton.cpp \
     third_party/interactive_buttons/winrestorebutton.cpp \
     third_party/interactive_buttons/winsidebarbutton.cpp \
+    third_party/linear_check_box/anicheckbox.cpp \
+    third_party/linear_check_box/checkbox1.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
@@ -149,6 +153,10 @@ SOURCES += \
     widgets/video_lyric_creator/videolyricscreator.cpp
 
 HEADERS += \
+    global/accountinfo.h \
+    global/platforminfo.h \
+    global/runtimeinfo.h \
+    global/usersettings.h \
     order_player/importsongsdialog.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
@@ -161,7 +169,6 @@ HEADERS += \
     third_party/interactive_buttons/infobutton.h \
     third_party/interactive_buttons/interactivebuttonbase.h \
     mainwindow/list_items/listiteminterface.h \
-    mainwindow/live_danmaku/commonvalues.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
     mainwindow/live_danmaku/livedanmaku.h \
@@ -178,13 +185,17 @@ HEADERS += \
     third_party/interactive_buttons/winminbutton.h \
     third_party/interactive_buttons/winrestorebutton.h \
     third_party/interactive_buttons/winsidebarbutton.h \
+    third_party/linear_check_box/anicheckbox.h \
+    third_party/linear_check_box/checkbox1.h \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/conditionutil.h \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
+    third_party/utils/mysettings.h \
     third_party/utils/tx_nlp.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \
@@ -192,6 +203,8 @@ HEADERS += \
     widgets/clickablewidget.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
+    widgets/eternal_block_dialog/externalblockdialog.h \
+    widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
     widgets/lucky_draw/luckydrawwindow.h \
     mainwindow/mainwindow.h \
@@ -231,7 +244,6 @@ HEADERS += \
     widgets/editor/conditioneditor.h \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
-    widgets/eternal_block_dialog/eternalblockdialog.h \
     mainwindow/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \

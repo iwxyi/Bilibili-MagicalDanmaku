@@ -5,8 +5,9 @@
 #include <QEventLoop>
 #include "netinterface.h"
 
-class TxNlp
+class TxNlp : public QObject
 {
+    Q_OBJECT
 private:
     TxNlp() {}
 public:
@@ -35,6 +36,7 @@ public:
         if (secretId.isEmpty() || secretKey.isEmpty())
         {
             qWarning() << "腾讯智能闲聊：未设置ID或Key";
+            emit signalError("未设置ID或Key");
             return ;
         }
         if (text.isEmpty())
@@ -126,11 +128,13 @@ public:
         if (code != 200)
         {
             qWarning() << "腾讯智能闲聊 错误码：" << QString::number(code);
+            emit signalError("错误码：" + QString::number(code));
             return ;
         }
         if (reply->error() != QNetworkReply::NoError)
         {
             qWarning() << "腾讯智能闲聊 Error:" << reply->errorString();
+            emit signalError("Error：" + reply->errorString());
             return ;
         }
 
@@ -142,6 +146,7 @@ public:
         if (error.error != QJsonParseError::NoError)
         {
             qWarning() << "腾讯智能闲聊：" << error.errorString();
+            emit signalError(error.errorString());
             return ;
         }
 
@@ -150,6 +155,7 @@ public:
         {
             QString msg = json.value("Response").toObject().value("Error").toObject().value("Message").toString();
             qWarning() << "AI回复：" << msg << queryJson.toBa(QJsonDocument::Compact);
+            emit signalError("AI回复：" + msg);
             /* if (msg.contains("not found") && retry > 0)
                 AIReply(id, text, func, maxLen, retry - 1); */
             return ;
@@ -168,6 +174,9 @@ public:
             return ;
         func(answer);
     }
+
+signals:
+    void signalError(const QString& err);
 
 private:
     QByteArray secretId;

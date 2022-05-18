@@ -1,7 +1,7 @@
 #include <QDateTime>
 #include <QMenu>
 #include <QAction>
-#include "eternalblockdialog.h"
+#include "externalblockdialog.h"
 #include "ui_eternalblockdialog.h"
 
 EternalBlockDialog::EternalBlockDialog(QList<EternalBlockUser> *users, QWidget *parent) :

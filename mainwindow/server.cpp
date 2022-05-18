@@ -234,13 +234,13 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         QString key = data.value("key").toString();
         QJsonValue val = data.value("value");
         if (val.isString())
-            settings->setValue(key, val.toString());
+            us->setValue(key, val.toString());
         else if (val.isBool())
-            settings->setValue(key, val.toBool());
+            us->setValue(key, val.toBool());
         else if (val.isDouble())
-            settings->setValue(key, val.toDouble());
+            us->setValue(key, val.toDouble());
         else
-            settings->setValue(key, val.toVariant());
+            us->setValue(key, val.toVariant());
     }
     else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {
@@ -426,7 +426,7 @@ void MainWindow::sendLyricList(QWebSocket *socket)
 
 QString MainWindow::webCache(QString name) const
 {
-    return dataPath + "cache/" + name;
+    return rt->dataPath + "cache/" + name;
 }
 
 void MainWindow::syncMagicalRooms()
@@ -436,11 +436,11 @@ void MainWindow::syncMagicalRooms()
         appVersion.replace(0, 1, "");
 
     get(serverPath + "client/active",
-        {"room_id", roomId, "user_id", cookieUid, "up_id", upUid,
-         "room_title", roomTitle, "username", cookieUname, "up_name", upName,
+        {"room_id", ac->roomId, "user_id", ac->cookieUid, "up_id", ac->upUid,
+         "room_title", ac->roomTitle, "username", ac->cookieUname, "up_name", ac->upName,
          "version", appVersion, "platform", "windows",
          "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
-         "randkey", csrf_token.toLatin1().toBase64()},
+         "randkey", ac->csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
         // 检测数组
         json = json.data();
@@ -458,13 +458,13 @@ void MainWindow::syncMagicalRooms()
 
         if (latestVersion > appVersion)
         {
-            this->appNewVersion = latestVersion;
-            this->appDownloadUrl = json.value("download_url").toString();
-            ui->actionUpdate_New_Version->setText("有新版本：" + appNewVersion);
+            rt->appNewVersion = latestVersion;
+            rt->appDownloadUrl = json.value("download_url").toString();
+            ui->actionUpdate_New_Version->setText("有新版本：" + rt->appNewVersion);
             ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));
             ui->actionUpdate_New_Version->setEnabled(true);
-            statusLabel->setText("有新版本：" + appNewVersion);
-            qInfo() << "有新版本：" << appVersion << "->" << appNewVersion << appDownloadUrl;
+            statusLabel->setText("有新版本：" + rt->appNewVersion);
+            qInfo() << "有新版本：" << appVersion << "->" << rt->appNewVersion << rt->appDownloadUrl;
 
             QString packageUrl = json.s("package_url");
             if (!packageUrl.isEmpty())
@@ -478,7 +478,7 @@ void MainWindow::syncMagicalRooms()
                 {
                     auto noti = new NotificationEntry("", "版本更新", appVersion + " -> " + latestVersion);
                     connect(noti, &NotificationEntry::signalCardClicked, this, [=]{
-                        QDesktopServices::openUrl(appDownloadUrl);
+                        QDesktopServices::openUrl(rt->appDownloadUrl);
                     });
                     tip_box->createTipCard(noti);
                     localNotify("【有新版本】" + appVersion + " -> " + latestVersion);
@@ -500,8 +500,8 @@ void MainWindow::syncMagicalRooms()
 
         if(json.value("auto_open").toBool())
         {
-            QMessageBox::information(this, "版本更新", "您的版本已过旧，可能存在潜在问题，请尽快更新\n" + appVersion + " => " + appNewVersion);
-            QDesktopServices::openUrl(appDownloadUrl);
+            QMessageBox::information(this, "版本更新", "您的版本已过旧，可能存在潜在问题，请尽快更新\n" + appVersion + " => " + rt->appNewVersion);
+            QDesktopServices::openUrl(rt->appDownloadUrl);
         }
 
         if (json.value("force_update").toBool())
@@ -779,12 +779,12 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
     }
     else if (url == "event") // 模拟事件： /api/event?event=SEND_GIFT&data=[urlEncode(json)]
     {
-        if (!ui->allowWebControlCheck->isChecked())
+        /* if (!ui->allowWebControlCheck->isChecked())
         {
             qWarning() << "api/event: 需要解锁安全限制";
             ba = "{ \"cmd\": \"event\", \"code\": \"1\", \"msg\": \"需要解锁安全限制\" }";
             return ba;
-        }
+        } */
 
         *contentType = "application/json";
         QString eventName = params.value("event");
@@ -807,6 +807,20 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         }
 
         MyJson json(data);
+
+        // 判断权限
+        {
+            LiveDanmaku _dmk;
+            _dmk.setText(eventName);
+            _dmk.with(json);
+            if (isFilterRejected("FILTER_API_EVENT", _dmk))
+            {
+                qInfo() << "过滤器阻止Event：" << eventName;
+                ba = "{ \"cmd\": \"event\", \"code\": \"2\", \"msg\": \"prevent event by filter\" }";
+                return ba;
+            }
+        }
+
         qInfo() << "模拟事件：" << eventName << json;
         LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(json);
         if (!json.contains("extra"))
@@ -820,14 +834,14 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
 
 void MainWindow::pullRoomShieldKeyword()
 {
-    if (roomId.isEmpty() || cookieUid.isEmpty()) // 没登录
+    if (ac->roomId.isEmpty() || ac->cookieUid.isEmpty()) // 没登录
         return ;
     if (!ui->syncShieldKeywordCheck->isChecked()) // 没开启
         return ;
 
     // 获取直播间的屏蔽词
     // 先获取这个是为了判断权限，不是房管的话直接ban掉
-    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + roomId, userCookies));
+    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + ac->roomId, ac->userCookies));
     if (roomSK.code() != 0)
         return showError("获取房间屏蔽词失败", roomSK.msg());
     QStringList roomList;
@@ -836,7 +850,7 @@ void MainWindow::pullRoomShieldKeyword()
     qInfo() << "当前直播间屏蔽词：" << roomList.count() << "个";
 
     // 获取云端的（根据上次同步时间）
-    qint64 time = settings->value("sync/shieldKeywordTimestamp_" + roomId, 0).toLongLong();
+    qint64 time = us->value("sync/shieldKeywordTimestamp_" + ac->roomId, 0).toLongLong();
     MyJson cloudSK(NetUtil::getWebData(serverPath + "keyword/getNewerShieldKeyword?time=" + snum(time)));
     if (cloudSK.code() != 0)
         return showError("获取云端屏蔽词失败", cloudSK.msg());
@@ -847,7 +861,7 @@ void MainWindow::pullRoomShieldKeyword()
         return ;
     // 没有可修改的，后面全部跳过
     // 也不更新时间了，因为有可能是网络断开，或者服务端挂掉
-    settings->setValue("sync/shieldKeywordTimestamp_" + roomId, QDateTime::currentSecsSinceEpoch());
+    us->setValue("sync/shieldKeywordTimestamp_" + ac->roomId, QDateTime::currentSecsSinceEpoch());
 
     // 添加新的
     foreach (auto k, addedArray)
@@ -862,7 +876,7 @@ void MainWindow::pullRoomShieldKeyword()
         qInfo() << "添加直播间屏蔽词：" << s;
         localNotify("添加屏蔽词：" + s);
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
-        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
+        { "room_id", ac->roomId, "keyword", s, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
         if (json.code() != 0)
             qWarning() << "添加直播间屏蔽词失败：" << json.msg();
     }
@@ -880,7 +894,7 @@ void MainWindow::pullRoomShieldKeyword()
         qInfo() << "移除直播间屏蔽词：" << s;
         localNotify("移除屏蔽词：" + s);
         MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
-        { "room_id", roomId, "keyword", s, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
+        { "room_id", ac->roomId, "keyword", s, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
         if (json.code() != 0)
             qWarning() << "移除直播间屏蔽词失败：" << json.msg();
     }
@@ -890,14 +904,14 @@ void MainWindow::addCloudShieldKeyword(QString keyword)
 {
     // 添加到直播间
     MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
-    { "room_id", roomId, "keyword", keyword, "scrf_token", csrf_token, "csrf", csrf_token, "visit_id", ""}, userCookies).toLatin1());
+    { "room_id", ac->roomId, "keyword", keyword, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
     if (json.code() != 0)
         qWarning() << "添加直播间屏蔽词失败：" << json.msg();
 
     // 添加到云端
     qInfo() << "添加云端屏蔽词：" << keyword;
     json = MyJson(NetUtil::postWebData(serverPath + "keyword/addShieldKeyword",
-                {"keyword", keyword, "userId", cookieUid, "username", cookieUname, "roomId", roomId}, userCookies).toLatin1());
+                {"keyword", keyword, "userId", ac->cookieUid, "username", ac->cookieUname, "roomId", ac->roomId}, ac->userCookies).toLatin1());
     if (json.code() != 0)
         qWarning() << "添加云端屏蔽词失败：" << json;
 }

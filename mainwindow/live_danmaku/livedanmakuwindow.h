@@ -35,6 +35,9 @@
 #include <QGraphicsDropShadowEffect>
 #include <QNetworkCookie>
 #include <QFontDialog>
+#include "runtimeinfo.h"
+#include "usersettings.h"
+#include "accountinfo.h"
 #include "livedanmaku.h"
 #include "netutil.h"
 #include "freecopyedit.h"
@@ -42,8 +45,7 @@
 #include "qxtglobalshortcut.h"
 #endif
 #include "portraitlabel.h"
-#include "commonvalues.h"
-#include "eternalblockdialog.h"
+#include "externalblockdialog.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -55,7 +57,7 @@
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
-class LiveDanmakuWindow : public QWidget, public CommonValues
+class LiveDanmakuWindow : public QWidget
 {
     Q_OBJECT
     Q_PROPERTY(int bgAlpha READ getBgAlpha WRITE setBgAlpha)
@@ -63,7 +65,7 @@ class LiveDanmakuWindow : public QWidget, public CommonValues
     friend class MainWindow;
     Q_ENUM(MessageType)
 public:
-    LiveDanmakuWindow(QSettings *st, QString dataPath, QWidget *parent = nullptr);
+    LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
 
 protected:
@@ -160,9 +162,6 @@ private:
     int getPrevAlpha() const;
 
 private:
-    QSettings* settings;
-    QString dataPath;
-
     QWidget* moveBar;
     QListWidget* listWidget;
     TransparentEdit* lineEdit;

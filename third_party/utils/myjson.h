@@ -163,6 +163,14 @@ public:
         return "";
     }
 
+    QString errOrMsg() const
+    {
+        QString e = err();
+        if (!e.isEmpty())
+            return e;
+        return msg();
+    }
+
     // ["aaa", "bbb", "ccc"]
     QStringList ss(QString key) const
     {

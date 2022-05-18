@@ -350,7 +350,7 @@ void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const fun
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     if (url.contains("bilibili.com"))
-        request->setHeader(QNetworkRequest::CookieHeader, userCookies);
+        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);

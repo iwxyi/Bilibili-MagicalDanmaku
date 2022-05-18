@@ -221,6 +221,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     time= QTime::currentTime();
     qsrand(uint(time.msec()+time.second()*1000));
 
+    searchingOverTimeTimer = new QTimer(this);
+    searchingOverTimeTimer->setInterval(5000);
+    searchingOverTimeTimer->setSingleShot(true);
+    connect(searchingOverTimeTimer, SIGNAL(timeout()), this, SLOT(stopLoading()));
+
     bool lyricStack = settings.value("music/lyricStream", false).toBool();
     if (lyricStack)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
@@ -274,6 +279,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     }
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
+    validMusicTime = settings.value("music/validMusicTime", false).toBool();
 
     // 读取cookie
     songBr = settings.value("music/br", 320000).toInt();
@@ -488,6 +494,9 @@ void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
         return ;
     }
 
+    if (key.isEmpty())
+        return ;
+
     if (!playingSong.isValid() && (!playAfterDownloaded.isValid() || !downloadingSong.isValid()))
         emit signalOrderSongStarted();
     ui->searchEdit->setText(key);
@@ -496,7 +505,10 @@ void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
         // 在前面加上“伴奏”俩字
         key = "伴奏 " + key;
     }
-    searchMusic(key, by, true);
+
+    userOrderSongQueue.append(qMakePair(key, by));
+    if (userOrderSongQueue.size() == 1)
+        searchMusic(key, by, true);
 }
 
 /**
@@ -553,11 +565,15 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         return ;
     }
 
+    // 打开歌单，不算搜索
     if (key.startsWith("http"))
     {
         openPlayList(key);
         return ;
     }
+
+    if (!addBy.isEmpty())
+        startOrderSearching();
 
     qInfo() << "搜索音乐：" << sourceName(musicSource) << key << addBy << "   通知：" << notify;
     MusicSource source = musicSource; // 需要暂存一个备份，因为可能会变回去
@@ -604,11 +620,13 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         switch (source) {
         case UnknowMusic:
         case LocalMusic:
+            stopOrderSearching();
             return ;
         case NeteaseCloudMusic:
             if (json.value("code").toInt() != 200)
             {
                 qWarning() << "网易云返回结果不为200：" << json.value("message").toString();
+                stopOrderSearching();
                 return ;
             }
             break;
@@ -617,6 +635,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             if (json.value("result").toInt() != 100)
             {
                 qWarning() << "QQ搜索返回结果不为0：" << json;
+                stopOrderSearching();
                 return ;
             }
             break;
@@ -625,6 +644,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             if (json.value("result").toInt() != 100)
             {
                 qWarning() << "咪咕搜索返回结果不为1000：" << json.value("result").toInt();
+                stopOrderSearching();
                 return ;
             }
             break;
@@ -632,6 +652,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             if (json.value("errCode").toInt() != 0)
             {
                 qWarning() << "酷狗搜索返回结果不为0：" << json.value("errCode").toInt() << json.value("error").toString();
+                stopOrderSearching();
                 return ;
             }
             break;
@@ -705,6 +726,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         if (!searchResultSongs.size() && !song.isValid())
         {
             qWarning() << "没有搜索结果或者能播放的歌曲";
+            stopOrderSearching();
             return ;
         }
 
@@ -715,6 +737,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             if (!song.isValid())
             {
                 qWarning() << "未找到与本地歌曲匹配的云端音乐：" << key;
+                stopOrderSearching();
                 return ;
             }
             if (playingSong.simpleString() == localCoverKey) // 加载封面
@@ -782,6 +805,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                 else
                 {
                     qWarning() << "没有可用的搜索结果";
+                    stopOrderSearching();
                     playNext();
                     return ;
                 }
@@ -793,6 +817,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
             if (playingSong == song || orderSongs.contains(song)) // 重复点歌
             {
                 qWarning() << "重复点歌：" << song.simpleString();
+                stopOrderSearching();
                 return ;
             }
 
@@ -818,15 +843,16 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                 }
                 emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
             }
+            stopOrderSearching();
         }
         else if (insertOnce) // 手动点的立即播放，换源后的自动搜索与播放
         {
-            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
             if (!song.isValid())
                 song = getSuitableSongOnResults(key, true);
+            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
             if (!song.isValid())
             {
-                MUSIC_DEB << "无法找到要播放的歌曲：" << key;
+                qWarning() << "无法找到要播放的歌曲：" << key << "   自动换源：" << autoSwitchSource;
                 if (autoSwitchSource)
                 {
                     MUSIC_DEB << "尝试自动换源：" << playAfterDownloaded.simpleString();
@@ -860,10 +886,16 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
                     return ;
                 }
             }
-            if (isNotPlaying()) // 很可能是换源过来的
+
+            // 播放歌曲
+            if (isNotPlaying() || playAfterDownloaded.isSame(song)) // 很可能是换源过来的
+            {
                 startPlaySong(song);
+            }
             else
+            {
                 appendNextSongs(SongList{song});
+            }
         }
     }, source);
 }
@@ -2082,6 +2114,25 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
         file.write(mp3Ba);
         file.flush();
         file.close();
+
+        // 判断时长
+        if (validMusicTime && song.duration > 1000)
+        {
+            QMediaPlayer player;
+            player.setMedia(QUrl::fromLocalFile(songPath(song)));
+            QEventLoop loop;
+            connect(&player, SIGNAL(durationChanged(qint64)), &loop, SLOT(quit()));
+            loop.exec();
+            qint64 realDuration = player.duration();
+            qint64 delta = song.duration / 1000 - realDuration / 1000;
+            if (delta > 3)
+            {
+                qWarning() << "下载的音乐文件时间不对：" << song.duration << "!=" << realDuration;
+                downloadSongFailed(song);
+                return ;
+            }
+        }
+
 
         emit signalSongDownloadFinished(song);
         MUSIC_DEB << "歌曲mp3下载完成：" << song.simpleString();
@@ -4079,6 +4130,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         {
             qqmusicCookies = "";
             qqmusicCookiesVariant.clear();
+            qqmusicNickname.clear();
             settings.setValue("music/qqmusicCookies", "");
         }
     })->text(!qqmusicNickname.isEmpty(), qqmusicNickname)->disable(qqmusicCookies.isEmpty());
@@ -4106,6 +4158,10 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     playMenu->split()->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
     })->setChecked(autoSwitchSource);
+
+    playMenu->split()->addAction("验证时间", [=]{
+        settings.setValue("music/validMusicTime", validMusicTime = !validMusicTime);
+    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果少于应有的时间（如试听只有1分钟或30秒）则自动换源");
 
     playMenu->addAction("试听接口", [=]{
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
@@ -4230,9 +4286,27 @@ void OrderPlayerWindow::on_nextSongButton_clicked()
 void OrderPlayerWindow::startLoading()
 {
     ui->widget->setEnabled(false);
+    searchingOverTimeTimer->start(10000);
 }
 
 void OrderPlayerWindow::stopLoading()
 {
     ui->widget->setEnabled(true);
+}
+
+void OrderPlayerWindow::startOrderSearching()
+{
+
+}
+
+void OrderPlayerWindow::stopOrderSearching()
+{
+    if (userOrderSongQueue.size())
+        userOrderSongQueue.removeFirst();
+    if (userOrderSongQueue.size())
+    {
+        QString key = userOrderSongQueue.first().first;
+        QString by = userOrderSongQueue.first().second;
+        searchMusic(key, by, true);
+    }
 }

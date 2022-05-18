@@ -27,20 +27,23 @@
 #include <qhttpresponse.h>
 #endif
 #include <QWebSocketServer>
+#include "runtimeinfo.h"
+#include "usersettings.h"
+#include "accountinfo.h"
+#include "platforminfo.h"
 #include "netutil.h"
 #include "livedanmaku.h"
 #include "livedanmakuwindow.h"
 #include "taskwidget.h"
 #include "replywidget.h"
 #include "eventwidget.h"
-#include "commonvalues.h"
 #include "orderplayerwindow.h"
 #include "textinputdialog.h"
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
 #include "xfytts.h"
 #include "microsofttts.h"
-#include "eternalblockdialog.h"
+#include "externalblockdialog.h"
 #include "picturebrowser.h"
 #include "netinterface.h"
 #include "waterfloatbutton.h"
@@ -118,7 +121,7 @@ typedef ListItemInterface*(MainWindow::*InsertItemFunc)(MyJson);
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
-class MainWindow : public QMainWindow, public CommonValues, public NetInterface
+class MainWindow : public QMainWindow, public NetInterface
 {
     Q_OBJECT
     Q_PROPERTY(double paletteProg READ getPaletteBgProg WRITE setPaletteBgProg)
@@ -786,6 +789,14 @@ private slots:
 
     void on_TXSecretKeyEdit_editingFinished();
 
+    void on_saveDanmakuToFileButton_clicked();
+
+    void on_calculateDailyDataButton_clicked();
+
+    void on_syntacticSugarCheck_clicked();
+
+    void on_forumButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -865,7 +876,7 @@ private:
     void setPkInfoById(QString roomId, QString pkId);
     void startMsgLoop();
     QByteArray makePack(QByteArray body, qint32 operation);
-    void sendVeriPacket(QWebSocket *socket, QString roomId, QString token);
+    void sendVeriPacket(QWebSocket *socket, QString roomId, QString cookieToken);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
     bool mergeGiftCombo(LiveDanmaku danmaku);
@@ -898,8 +909,6 @@ private:
     QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
     QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
     QString processMsgHeaderConditions(QString msg) const;
-    bool processVariantConditions(QString exprs) const;
-    qint64 calcIntExpression(QString exp) const;
     template<typename T>
     bool isConditionTrue(T a, T b, QString op) const;
     bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);
@@ -928,6 +937,7 @@ private:
     void speakText(QString text);
     void speakTextQueueNext();
     void voiceDownloadAndSpeak(QString text);
+    void playNetAudio(QString url);
     void showScreenDanmaku(LiveDanmaku danmaku);
 
     void startSaveDanmakuToFile();
@@ -1017,7 +1027,7 @@ private:
     void receivedPrivateMsg(MyJson session);
 
     void startSplash();
-    void loadWebExtensinList();
+    void loadWebExtensionList();
     void shakeWidget(QWidget* widget);
 
     void saveGameNumbers(int channel);
@@ -1068,19 +1078,10 @@ private:
 private:
     // 应用信息
     Ui::MainWindow *ui;
-    QSettings* settings;
-    QSettings* heaps;
-    QSettings* extSettings;
-    QString dataPath;
-    QString appVersion; // 不带v
-    QString appFileName; // 应用程序文件名（不带exe）
-    QString appNewVersion;
-    QString appDownloadUrl;
+    MySettings* heaps;
+    MySettings* extSettings;
 
     // 控件
-    const int widgetSizeL = 48;
-    const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
-    const int giftImgSize = 60;
     QList<WaterZoomButton*> sideButtonList;
     QLabel* roomCoverLabel;
     QWidget* roomIdBgWidget;
@@ -1095,27 +1096,8 @@ private:
     InteractiveButtonBase* droplight;
 
     // 房间信息
-    QString roomId;
-    int liveStatus = 0; // 是否正在直播
-    QString upName;
-    QString roomTitle;
     QPixmap roomCover; // 直播间封面原图
     QPixmap upFace; // 主播头像原图
-    QString areaId; // 例：21（整型，为了方便用字符串）
-    QString areaName; // 例：视频唱见
-    QString parentAreaId; // 例：1（整型，为了方便用字符串）
-    QString parentAreaName; // 例：娱乐
-    QString roomNews; // 主播公告
-    QString roomDescription; // 主播个人简介
-    QStringList roomTags; // 主播个人标签
-    int anchorLiveLevel = 0; // 主播等级
-    qint64 anchorLiveScore = 0; // 主播积分（金瓜子）
-    qint64 anchorUpgradeScore = 0; // 升级剩余积分
-    QString areaRank; // 分区排行（字符串，比如 >100）
-    QString liveRank; // 总排行（字符串），也是主播排行
-    QString battleRankName; // 大乱斗段位
-    int winningStreak = 0; // 连胜
-    qint64 lastMatchRoomId = 0;
 
     // 我的直播
     QString myLiveRtmp; // rtmp地址
@@ -1158,10 +1140,7 @@ private:
     QColor themeGradient = Qt::white;
 
     // 粉丝数量
-    int currentFans = 0;
-    int currentFansClub = 0;
     QList<FanBean> fansList; // 最近的关注，按时间排序
-    int popularVal = 2;
 
     // 弹幕信息
     QList<LiveDanmaku> roomDanmakus;
@@ -1223,15 +1202,6 @@ private:
     OrderPlayerWindow* musicWindow = nullptr;
 
     // 连接信息
-    QString cookieUid; // 自己的UID
-    QString cookieUname; // 自己的昵称
-    QString token;
-    int cookieULevel = 0; // 自己的等级
-    int cookieGuardLevel = 0; // 自己的大航海
-
-    QString shortId; // 房间短号（有些没有，也没什么用）
-    QString upUid; // 主播的UID
-
     QList<HostInfo> hostList;
     QWebSocket* socket;
     QTimer* heartTimer;
@@ -1334,7 +1304,7 @@ private:
 
     // 直播间人气
     QTimer* minuteTimer;
-    int currentPopul = 0;    // 当前人气
+    int popularVal = 2;
     qint64 sumPopul = 0;     // 自启动以来的人气
     qint64 countPopul = 0;   // 自启动以来的人气总和
 
@@ -1355,7 +1325,7 @@ private:
 
     // 机器人
     int judgeRobot = 0;
-    QSettings* robotRecord;
+    MySettings* robotRecord;
     QList<QWebSocket*> robots_sockets;
 
     // 点歌
@@ -1389,6 +1359,9 @@ private:
     QList<qint64> gameUsers[CHANNEL_COUNT];
     QList<qint64> gameNumberLists[CHANNEL_COUNT];
     QList<QString> gameTextLists[CHANNEL_COUNT];
+
+    // 粉丝牌
+    QList<qint64> medalUpgradeWaiting;
 
     // 服务端
 #ifdef ENABLE_HTTP_SERVER

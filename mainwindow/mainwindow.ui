@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>928</width>
+    <width>850</width>
     <height>624</height>
    </rect>
   </property>
@@ -192,13 +192,30 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="WaterZoomButton" name="forumButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>直播论坛：提问/反馈/建议</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/modify</normaloff>:/icons/modify</iconset>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1544,7 +1561,7 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>848</width>
+             <width>770</width>
              <height>504</height>
             </rect>
            </property>
@@ -1572,7 +1589,7 @@ margin: 6px;</string>
 	border-radius: 5px;
 }</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_15" stretch="1,0,1,1,1">
+            <layout class="QVBoxLayout" name="verticalLayout_15" stretch="1,0,1,1,0">
              <item>
               <widget class="QLabel" name="label_13">
                <property name="sizePolicy">
@@ -1688,17 +1705,38 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveDanmakuToFileCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
-               </property>
-               <property name="text">
-                <string>保存弹幕记录</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_68" stretch="1,0">
+               <item>
+                <widget class="CheckBox1" name="saveDanmakuToFileCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>保存所有弹幕历史（包含提示信息）到单独的文件</string>
+                 </property>
+                 <property name="text">
+                  <string>保存弹幕记录</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="saveDanmakuToFileButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -1804,7 +1842,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="adjustDanmakuLongestCheck">
+              <widget class="CheckBox1" name="adjustDanmakuLongestCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -1817,7 +1855,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="retryFailedDanmuCheck">
+              <widget class="CheckBox1" name="retryFailedDanmuCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -1893,7 +1931,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="AIReplyCheck">
+              <widget class="CheckBox1" name="AIReplyCheck">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -1909,7 +1947,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="AIReplyMsgCheck">
+              <widget class="CheckBox1" name="AIReplyMsgCheck">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -1928,20 +1966,40 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_60">
-               <property name="toolTip">
-                <string>需要到 自然语言处理 开通服务，才能使用秘钥</string>
-               </property>
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.cloud.tencent.com/cam/capi&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;腾讯NLP秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-               <property name="openExternalLinks">
-                <bool>true</bool>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_69">
+               <item>
+                <widget class="QLabel" name="label_60">
+                 <property name="toolTip">
+                  <string>开通腾讯NLP服务</string>
+                 </property>
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.cloud.tencent.com/nlp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;开通服务&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="openExternalLinks">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_61">
+                 <property name="toolTip">
+                  <string>需要到 自然语言处理 开通服务，才能使用秘钥</string>
+                 </property>
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://console.cloud.tencent.com/cam/capi&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;查看秘钥&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="openExternalLinks">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QFormLayout" name="formLayout">
@@ -2042,7 +2100,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="languageAutoTranslateCheck">
+              <widget class="CheckBox1" name="languageAutoTranslateCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2055,7 +2113,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="newbieTipCheck">
+              <widget class="CheckBox1" name="newbieTipCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2068,7 +2126,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="judgeRobotCheck">
+              <widget class="CheckBox1" name="judgeRobotCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2154,7 +2212,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableBlockCheck">
+              <widget class="CheckBox1" name="enableBlockCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2167,7 +2225,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="syncShieldKeywordCheck">
+              <widget class="CheckBox1" name="syncShieldKeywordCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2292,7 +2350,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkChuanmenCheck">
+              <widget class="CheckBox1" name="pkChuanmenCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2309,7 +2367,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkMsgSyncCheck">
+              <widget class="CheckBox1" name="pkMsgSyncCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2389,7 +2447,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="pkAutoMelonCheck">
+              <widget class="CheckBox1" name="pkAutoMelonCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2441,7 +2499,7 @@ QPushButton:pressed
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="pkAutoMaxGoldCheck">
+                <widget class="CheckBox1" name="pkAutoMaxGoldCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -2713,7 +2771,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startLiveSendCheck">
+              <widget class="CheckBox1" name="startLiveSendCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2783,7 +2841,7 @@ margin: 40px;</string>
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoSwitchMedalCheck">
+              <widget class="CheckBox1" name="autoSwitchMedalCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -2858,7 +2916,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_12">
                <item>
-                <widget class="QCheckBox" name="timerConnectServerCheck">
+                <widget class="CheckBox1" name="timerConnectServerCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -2871,7 +2929,7 @@ margin: 40px;</string>
                 </widget>
                </item>
                <item>
-                <widget class="QCheckBox" name="doveCheck">
+                <widget class="CheckBox1" name="doveCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3058,7 +3116,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoLOTCheck">
+              <widget class="CheckBox1" name="autoLOTCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3071,7 +3129,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoDoSignCheck">
+              <widget class="CheckBox1" name="autoDoSignCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3087,7 +3145,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="sendExpireGiftCheck">
+              <widget class="CheckBox1" name="sendExpireGiftCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3105,7 +3163,7 @@ margin: 40px;</string>
                 <number>0</number>
                </property>
                <item>
-                <widget class="QCheckBox" name="acquireHeartCheck">
+                <widget class="CheckBox1" name="acquireHeartCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3218,7 +3276,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="sendAutoOnlyLiveCheck">
+              <widget class="CheckBox1" name="sendAutoOnlyLiveCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3234,7 +3292,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="listenMedalUpgradeCheck">
+              <widget class="CheckBox1" name="listenMedalUpgradeCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3247,7 +3305,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableFilterCheck">
+              <widget class="CheckBox1" name="enableFilterCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3320,7 +3378,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="recordCheck">
+              <widget class="CheckBox1" name="recordCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3436,17 +3494,38 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="calculateDailyDataCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
-               </property>
-               <property name="text">
-                <string>每日数据统计</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+               <item>
+                <widget class="CheckBox1" name="calculateDailyDataCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+                 </property>
+                 <property name="text">
+                  <string>每日数据统计</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="calculateDailyDataButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -3588,12 +3667,12 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_56">
+              <layout class="QHBoxLayout" name="horizontalLayout_56" stretch="1,0">
                <property name="topMargin">
                 <number>0</number>
                </property>
                <item>
-                <widget class="QCheckBox" name="saveEveryGiftCheck">
+                <widget class="CheckBox1" name="saveEveryGiftCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3611,23 +3690,23 @@ margin: 40px;</string>
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_58">
+              <layout class="QHBoxLayout" name="horizontalLayout_58" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="saveEveryGuardCheck">
+                <widget class="CheckBox1" name="saveEveryGuardCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3648,23 +3727,23 @@ margin: 40px;</string>
                   <enum>Qt::CustomContextMenu</enum>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_59">
+              <layout class="QHBoxLayout" name="horizontalLayout_59" stretch="1,0">
                <item>
-                <widget class="QCheckBox" name="saveMonthGuardCheck">
+                <widget class="CheckBox1" name="saveMonthGuardCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -3682,14 +3761,14 @@ margin: 40px;</string>
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;查看/编辑&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
-                   <normaloff>:/icons/rice</normaloff>:/icons/rice</iconset>
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
                  </property>
                 </widget>
                </item>
@@ -3756,7 +3835,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="saveRecvCmdsCheck">
+              <widget class="CheckBox1" name="saveRecvCmdsCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3836,7 +3915,7 @@ QPushButton:pressed
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="timerPushCmdCheck">
+              <widget class="CheckBox1" name="timerPushCmdCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3931,7 +4010,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startOnRebootCheck">
+              <widget class="CheckBox1" name="startOnRebootCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3944,7 +4023,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="startupAnimationCheck">
+              <widget class="CheckBox1" name="startupAnimationCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3957,7 +4036,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableTrayCheck">
+              <widget class="CheckBox1" name="enableTrayCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -3970,7 +4049,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="autoUpdateCheck">
+              <widget class="CheckBox1" name="autoUpdateCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4043,7 +4122,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableScreenDanmakuCheck">
+              <widget class="CheckBox1" name="enableScreenDanmakuCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4053,7 +4132,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="enableScreenMsgCheck">
+              <widget class="CheckBox1" name="enableScreenMsgCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -4383,12 +4462,12 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_38">
+              <layout class="QHBoxLayout" name="horizontalLayout_38" stretch="1,0">
                <property name="topMargin">
                 <number>0</number>
                </property>
                <item>
-                <widget class="QCheckBox" name="autoSpeekDanmakuCheck">
+                <widget class="CheckBox1" name="autoSpeekDanmakuCheck">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -4396,19 +4475,6 @@ margin: 40px;</string>
                   <string>朗读弹幕</string>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_21">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <widget class="QPushButton" name="voicePreviewButton">
@@ -4446,7 +4512,7 @@ QPushButton:pressed
               </layout>
              </item>
              <item>
-              <widget class="QCheckBox" name="dontSpeakOnPlayingSongCheck">
+              <widget class="CheckBox1" name="dontSpeakOnPlayingSongCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5123,7 +5189,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="toutaGiftCheck">
+              <widget class="CheckBox1" name="toutaGiftCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5443,7 +5509,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="receivePrivateMsgCheck">
+              <widget class="CheckBox1" name="receivePrivateMsgCheck">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5457,7 +5523,7 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="processUnreadMsgCheck">
+              <widget class="CheckBox1" name="processUnreadMsgCheck">
                <property name="enabled">
                 <bool>false</bool>
                </property>
@@ -5471,6 +5537,88 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>包括未读的旧消息</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="programmingSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>980</y>
+              <width>161</width>
+              <height>71</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#programmingSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_75">
+             <item>
+              <widget class="QLabel" name="label_62">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>编程</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_37" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="syntacticSugarCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>开启简化的代码功能，但可能会与用户弹幕重合，导致意外的修改行为。
+支持的语法糖如下：
+{key} = val	等同于	&gt;setValue(key, val)
+{key} += val	等同于	&gt;setValue(key, %[%{key}%+val]%)
+{key} -= val
+{key} *= val
+{key} /= val
+{key} %= val
+{key}++		等同于 &gt;setValue(key, %[%{key}%+1]%)
+{key}--</string>
+               </property>
+               <property name="text">
+                <string>语法糖</string>
                </property>
               </widget>
              </item>
@@ -7526,7 +7674,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -8536,7 +8684,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>928</width>
+     <width>850</width>
      <height>23</height>
     </rect>
    </property>
@@ -9047,6 +9195,11 @@ font-weight: 500;</string>
    <class>WaterCircleButton</class>
    <extends>QPushButton</extends>
    <header>watercirclebutton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CheckBox1</class>
+   <extends>QCheckBox</extends>
+   <header>checkbox1.h</header>
   </customwidget>
  </customwidgets>
  <resources>
