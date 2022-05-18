@@ -795,6 +795,8 @@ private slots:
 
     void on_syntacticSugarCheck_clicked();
 
+    void on_forumButton_clicked();
+
 private:
     void initView();
     void initStyle();

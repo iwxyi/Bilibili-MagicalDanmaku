@@ -123,7 +123,8 @@ void MainWindow::initView()
                   ui->thankPageButton,
                   ui->musicPageButton,
                   ui->extensionPageButton,
-                  ui->preferencePageButton
+                  ui->preferencePageButton,
+                  ui->forumButton
                 };
     for (int i = 0; i < sideButtonList.size(); i++)
     {
@@ -134,6 +135,10 @@ void MainWindow::initView()
         button->setRadius(rt->fluentRadius, rt->fluentRadius);
         button->setIconPaddingProper(0.23);
 //        button->setChokingProp(0.08);
+
+        if (i == sideButtonList.size() - 1) // 最后面的不是切换页面，不设置
+            continue;
+
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
             int prevIndex = ui->stackedWidget->currentIndex();
             if (prevIndex == i) // 同一个索引，不用重复切换
@@ -21124,4 +21129,9 @@ void MainWindow::on_calculateDailyDataButton_clicked()
 void MainWindow::on_syntacticSugarCheck_clicked()
 {
     us->setValue("programming/syntacticSugar", ui->syntacticSugarCheck->isChecked());
+}
+
+void MainWindow::on_forumButton_clicked()
+{
+    QDesktopServices::openUrl(QUrl("http://live.lyixi.com"));
 }

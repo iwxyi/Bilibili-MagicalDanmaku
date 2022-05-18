@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>761</width>
-    <height>1208</height>
+    <width>850</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -191,6 +191,23 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="WaterZoomButton" name="forumButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>直播论坛：提问/反馈/建议</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/modify</normaloff>:/icons/modify</iconset>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1544,8 +1561,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>681</width>
-             <height>1088</height>
+             <width>770</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -8667,7 +8684,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>761</width>
+     <width>850</width>
      <height>23</height>
     </rect>
    </property>
