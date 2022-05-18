@@ -120,6 +120,7 @@
         <file alias="dir">icons/dir.png</file>
         <file alias="file">icons/file.png</file>
         <file alias="folder">icons/folder.png</file>
+        <file alias="forum">icons/forum.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
