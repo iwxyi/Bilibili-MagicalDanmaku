@@ -10789,7 +10789,28 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 else if (handlePK(json))
                 {
-
+                }
+                else if (cmd == "HOT_RANK_CHANGED_V2")
+                {
+                    /*{
+                        "cmd": "HOT_RANK_CHANGED_V2",
+                        "data": {
+                            "rank": 0,
+                            "trend": 0,
+                            "countdown": 1070,
+                            "timestamp": 1652929930,
+                            "web_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=2\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145",
+                            "live_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=1\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,12,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,12,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0",
+                            "blink_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=3\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026is_cling_player=1\\u0026hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,0,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,0,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0",
+                            "live_link_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=5\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026is_cling_player=1\\u0026hybrid_half_ui=1,3,100p,70p,f4eefa,0,30,100,0,0;2,2,375,100p,f4eefa,0,30,100,0,0;3,3,100p,70p,f4eefa,0,30,100,0,0;4,2,375,100p,f4eefa,0,30,100,0,0;5,3,100p,70p,f4eefa,0,30,100,0,0;6,3,100p,70p,f4eefa,0,30,100,0,0;7,3,100p,70p,f4eefa,0,30,100,0,0;8,3,100p,70p,f4eefa,0,30,100,0,0",
+                            "pc_link_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=4\\u0026is_live_half_webview=1\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026pc_ui=338,465,f4eefa,0",
+                            "icon": "https://i0.hdslb.com/bfs/live/cb2e160ac4f562b347bb5ae6e635688ebc69580f.png",
+                            "area_name": "视频聊天",
+                            "rank_desc": ""
+                        }
+                    }*/
+                    QJsonObject data = json.value("data").toObject();
+                    int countdown = data.value("countdown").toInt();
                 }
                 else
                 {
@@ -12648,6 +12669,21 @@ void MainWindow::handleMessage(QJsonObject json)
         QString invitedUname = data.s("invited_uname"); // 连接名字
         qint64 startAt = data.i("start_at"); // 10位
         qint64 roomId = json.value("roomid").toDouble(); // 10位
+    }
+    else if (cmd == "WATCHED_CHANGE")
+    {
+        /*{
+            "cmd": "WATCHED_CHANGE",
+            "data": {
+                "num": 83,
+                "text_large": "83人看过",
+                "text_small": "83"
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        QString textLarge = data.s("text_large");
+        ui->popularityLabel->setToolTip(textLarge);
+        ui->popularityTextLabel->setToolTip(textLarge);
     }
     else
     {
