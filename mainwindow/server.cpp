@@ -473,6 +473,10 @@ void MainWindow::syncMagicalRooms()
                 {
                     // 自动更新，直接下载！
                     downloadNewPackage(latestVersion, packageUrl);
+
+                    auto noti = new NotificationEntry("", "版本更新", "自动更新：" + appVersion + " -> " + latestVersion);
+                    tip_box->createTipCard(noti);
+                    localNotify("【自动更新】" + appVersion + " -> " + latestVersion);
                 }
                 else
                 {
