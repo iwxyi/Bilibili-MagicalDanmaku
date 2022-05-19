@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -7432,7 +7432,7 @@ QCheckBox::indicator:checked:pressed {
 }</string>
                         </property>
                         <property name="placeholderText">
-                         <string>ctrl+alt+p</string>
+                         <string>例如 ctrl+alt+p</string>
                         </property>
                        </widget>
                       </item>
