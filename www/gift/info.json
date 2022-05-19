@@ -13,7 +13,8 @@
 			"url": "end_thanks.html",
 			"css": "end_thanks.css",
 			"css_custom": "end_thanks_custom.css",
-			"desc": "直播结束时可播放的所有感谢列表"
+			"desc": "直播结束时可播放的所有感谢列表",
+			"cover": "thank.png"
 		}
 	]
 }

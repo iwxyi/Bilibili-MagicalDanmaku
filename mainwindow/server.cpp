@@ -563,6 +563,7 @@ void MainWindow::requestHandle(QHttpRequest *req, QHttpResponse *resp)
 void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString> &params, QHttpRequest *req, QHttpResponse *resp)
 {
     QByteArray doc;
+//    qInfo() << "http access:" << urlPath;
 
     auto errorResp = [=](QByteArray err, QHttpResponse::StatusCode code = QHttpResponse::STATUS_BAD_REQUEST) -> void {
         resp->setHeader("Content-Length", snum(err.size()));
@@ -582,7 +583,7 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     // 判断文件类型
     QRegularExpressionMatch match;
     QString suffix;
-    if (urlPath.indexOf(QRegularExpression("\\.(\\w{1,4})$"), 0, &match) > -1)
+    if (urlPath.indexOf(QRegularExpression("\\.(\\w+)$"), 0, &match) > -1)
         suffix = match.captured(1);
 
     auto isFileType = [=](QString types) -> bool {

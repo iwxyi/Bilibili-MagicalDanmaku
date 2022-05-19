@@ -6,21 +6,24 @@
 			"url": "index.html",
 			"css": "list.css",
 			"css_custom": "list_custom.css",
-			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除"
+			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除",
+			"cover": "cover_list.jpg"
 		},
 		{
 			"name": "当前歌曲名字",
 			"url": "playing.html",
 			"css": "playing.css",
 			"css_custom": "playing_custom.css",
-			"desc": "点歌姬正在播放的歌曲的名字"
+			"desc": "点歌姬正在播放的歌曲的名字",
+			"cover": "cover_current.jpg"
 		},
 		{
 			"name": "当前歌曲歌词",
 			"url": "lyrics.html",
 			"css": "lyrics.css",
 			"css_custom": "lyrics_custom.css",
-			"desc": "点歌姬正在播放的歌曲的歌词"
+			"desc": "点歌姬正在播放的歌曲的歌词",
+			"cover": "cover_current.jpg"
 		}
 	]
 }

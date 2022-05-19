@@ -1,0 +1,13 @@
+{
+    "author": "小乂",
+	"list": [
+		{
+			"name": "QQ消息弹幕",
+            "url": "index.html",
+            "config": "config.html",
+			"css": "index.css",
+			"css_custom": "index_custom.css",
+			"desc": "将QQ群消息转化为直播间弹幕"
+		}
+	]
+}

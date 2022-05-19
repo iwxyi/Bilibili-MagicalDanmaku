@@ -28,7 +28,7 @@
                         var songs = json['data'];
                         for (var i = 0; i < songs.length; i++) {
                             var song = songs[i];
-                            olText += '<li>' + song['name'] + ' - ' + song['addBy'] + "</li>";
+                            olText += '<li>' + song['name'] + (song['addBy'] != undefined ? ' - ' + song['addBy'] : "") + "</li>";
                         }
                         break;
                 }

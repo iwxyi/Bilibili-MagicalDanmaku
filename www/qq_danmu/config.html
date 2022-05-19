@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹幕配置</title>
+    <script src="../js/jquery.js"></script>
+    <script src="../js/mdui.js"></script>
+    <script src="../js/magical_danmaku.js"></script>
+    <link rel="stylesheet" href="../css/mdui.css" />
+</head>
+
+<body style="margin: 20px;">
+    <h1>弹幕样式设置</h1>
+
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='showHeader' />
+            <i class="mdui-checkbox-icon"></i>
+            显示头像
+        </label>
+    </div>
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='showUname' />
+            <i class="mdui-checkbox-icon"></i>
+            显示昵称
+        </label>
+    </div>
+
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='showBubble' />
+            <i class="mdui-checkbox-icon"></i>
+            显示气泡
+        </label>
+    </div>
+
+    <div style='margin-top: 20px;'>
+        <div>最大弹幕数量</div>
+        <div>
+            <label class="mdui-slider mdui-slider-discrete">
+                <input id='msgCount' type="range" step="1" min="1" max="100" />
+            </label>
+        </div>
+    </div>
+
+    <div style='margin-top: 20px;'>
+        <div>最大显示秒数</div>
+        <div>
+            <label class="mdui-slider mdui-slider-discrete">
+                <input id='showTime' type="range" step="1" min="3" max="300" />
+            </label>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        configGroup = 'qq_danmu';
+
+        function readConfig(data) {
+            var addCheck = function (id) {
+                if (data[id] == true)
+                    $('#' + id).attr("checked", true);
+                $('#' + id).click(function () {
+                    saveConfig(id, $(this).is(':checked'));
+                });
+            };
+
+            var addSpin = function (id) {
+                if (data[id] != undefined)
+                    $('#' + id).val(data[id]);
+                $('#' + id).change(function () {
+                    saveConfig(id, $(this).val());
+                });
+            };
+
+            addCheck('showHeader');
+            addCheck('showUname');
+            addCheck('showBubble');
+            addSpin('msgCount');
+            addSpin('showTime');
+            mdui.updateSliders();
+        }
+
+    </script>
+</body>
+
+</html>

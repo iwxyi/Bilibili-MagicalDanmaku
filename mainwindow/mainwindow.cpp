@@ -18057,13 +18057,20 @@ void MainWindow::loadWebExtensionList()
             QJsonValue code = inf.value("code");
             QString coverPath = inf.s("cover");
             if (coverPath.isEmpty())
-                coverPath = "cover.png";
-            coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath);
-            if (!isFileExist(coverPath))
             {
-                coverPath = ":/icons/default_cover";
+                if (isFileExist(QDir(info.absoluteFilePath()).absoluteFilePath(coverPath = "cover.png"))
+                        || isFileExist(QDir(info.absoluteFilePath()).absoluteFilePath(coverPath = "cover.jpg")))
+                    coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath);
+                else
+                    coverPath = ":/icons/gray_cover";
             }
-
+            else
+            {
+                if (isFileExist(coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath)))
+                    ;
+                else
+                    coverPath = ":/icons/gray_cover";
+            }
             if (name.isEmpty())
                 name = extName;
             if (author.isEmpty())

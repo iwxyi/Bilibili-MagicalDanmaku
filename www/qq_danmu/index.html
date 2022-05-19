@@ -1,0 +1,41 @@
+<head>
+    <title>神奇弹幕</title>
+    <meta name="referrer" content="no-referrer" />
+    <link rel="stylesheet" href="../css/mdui.css" />
+    <script src="../js/jquery.js"></script>
+    <script src="../js/magical_danmaku.js"></script>
+    <link rel="stylesheet" href="index.css" type="text/css" />
+    <link rel="stylesheet" href="index_custom.css" type="text/css" />
+    <script src="index.js"></script>
+    <script src="EasyDanmaku.js"></script>
+</head>
+
+<body id="container">
+    <script type="text/javascript">
+        const Danmaku = new EasyDanmaku({
+            el: '#container',                        //弹幕挂载节点
+            colourful: true,                         //彩色弹幕
+            line: 10,                                //弹幕行数
+            wrapperStyle: 'danmaku-wrapper',         //默认弹幕样式
+            speed: 5,                                //弹幕播放速度
+            runtime: 3,                              //播放一次的时常
+            loop: false,                              //开启循环播放
+            hover: true,                             //鼠标移入悬停
+            onComplete: () => {                       //播放结束
+
+            },                                      //hover时 参数为该悬停元素（初始化属性hover必须为true）
+            onHover: (dom) => {
+
+            }
+        })
+
+        const data = ['danmaku1', 'danmaku2', 'danmaku3', 'danmaku4', 'danmaku5', 'danmaku6']
+        Danmaku.batchSend(data)
+
+        // 接收到的消息，转换为弹幕
+        function parseMsg(data) {
+            console.log(data);
+            Danmaku.batchSend([{ avatar: 'http://q1.qlogo.cn/g?b=qq&nk=' + data['user_id'] + '&s=640', content: data['message'] }], true, 'danmaku-wrapper')
+        }
+    </script>
+</body>

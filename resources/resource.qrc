@@ -121,6 +121,7 @@
         <file alias="file">icons/file.png</file>
         <file alias="folder">icons/folder.png</file>
         <file alias="forum">icons/forum.png</file>
+        <file alias="gray_cover">icons/cover.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
