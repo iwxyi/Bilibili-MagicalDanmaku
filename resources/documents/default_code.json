@@ -1,4 +1,4 @@
-{
+﻿{
     "attention": "感谢%ai_name%的关注%punc%\n感谢%ai_name%关注%up_name%%punc%\n感谢%ai_name%的关注，啾咪~\n谢谢%ai_name%的关注，喜欢可以领牌牌哦\n谢谢%ai_name%的关注~入股不亏哦~~",
     "auto_reply": [
         {
@@ -16,14 +16,38 @@
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
-            "key": "叫(\\S+)\\s+(.*)",
+            "key": "叫\\s+(\\S+)\\s+(.*)",
             "reply": "/// 房管修改别人的专属昵称：叫张三 小张\n[%admin%]>setNickname(%(%$1%)%, %$2%)\\n>修改专属昵称成功"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^(签到|打卡)$",
-            "reply": "/// 记录每位用户是第几个打卡以及累计天数\n/// 若要使用，事件中的“NEW_DAY”也需开启\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>打卡成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%+1]%天\\n>setValue(daka, %[%{daka}%+1]%)\\n>setValue(daka_today_%uid%, 1)\\n>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)"
+            "reply": "/// 记录每位用户是第几个打卡以及累计天数\n/// 若要使用，事件中的“NEW_DAY_FIRST”也需开启\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+1000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": false,
+            "key": "^(查询(打卡|签到)|(打卡|签到)查询)$",
+            "reply": "[%living%+1]>连续%[%{daka_keep_%uid%}%]%天，本月%[%{daka_month_%uid%}%]%天，累计%[%{daka_sum_%uid%}%]%天"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": false,
+            "key": "^查询积分|积分查询|我的积分|积分$",
+            "reply": "[%living%+1]>您的积分：%[%{integral_%uid%}%+0]%"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": false,
+            "key": "开启礼物打卡",
+            "reply": "[%{daka_today_%uid%}%!=1]>setValue(daka_auto_%uid%, 1)\\n>开启赠送礼物打卡\n[%{daka_today_%uid%}%=1]>您已开启赠送礼物自动打卡"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": false,
+            "key": "关闭礼物打卡",
+            "reply": "[%{daka_auto_%uid%}%=1]>setValue(daka_auto_%uid%, 0)\\n>关闭赠送礼物打卡\n[%{daka_auto_%uid%}%!=1]>您未开启赠送礼物自动打卡"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
@@ -67,10 +91,16 @@
             "event": "MEDAL_UPGRADE"
         },
         {
-            "action": "/// 每天打卡的人数清零\n[%living%+1]>removeValues(daka_today_\\d+)\\n>setValue(daka, 0)",
+            "action": "/// 重置每天打卡的人数\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
-            "event": "NEW_DAY"
+            "event": "NEW_DAY_FIRST"
+        },
+        {
+            "action": "/// 重置每月打卡天数\n[%living%+1]>setValues(daka_month_\\d+, 0)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "NEW_MONTH_FIRST"
         },
         {
             "action": "/// 开播QQ群通知（需配置），详见文档\n>connectNet(https://push.xuthus.cc/group/[skey]?c=[开播消息])",
@@ -91,13 +121,13 @@
             "event": "GUARD_BUY"
         },
         {
-            "action": "/// （主播）循环开启大乱斗\n>timerShot(5000, >joinBattle(1))",
+            "action": "/// （主播号专用）循环开启大乱斗，需Web版开播\n>timerShot(5000, >joinBattle(1))",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_BATTLE_SETTLE"
         },
         {
-            "action": "/// （非主播）大乱斗尊严票：被碾压时送个吃瓜……\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
+            "action": "/// （非主播可用）大乱斗尊严票：被碾压时送个吃瓜……\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_FINAL"
@@ -113,6 +143,60 @@
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "ORDER_SONG_SUCCEED"
+        },
+        {
+            "action": "/// 送礼物增加积分\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "SEND_GIFT"
+        },
+        {
+            "action": "/// 上船增加积分\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "GUARD_BUY"
+        },
+        {
+            "action": "/// 大乱斗结束前提醒\n>timerShot(265000, 离大乱斗结束还有30秒)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "PK_BATTLE_START"
+        },
+        {
+            "action": "/// 送礼物自动签到（需要先开启礼物签到）\n[%{daka_auto_%uid%}%=1, %{daka_today_%uid%}%!=1, %living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+10000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "SEND_GIFT"
+        },
+        {
+            "action": "/// PK播报对面直播间信息\n第%[%pk_count%+1]%次匹配：%>simpleName(%.anchor_info.base_info.uname%)%，%>simpleNum(%.guard_info.count%)%船，%>simpleNum(%.anchor_info.relation_info.attention%)%粉，%>replaceReg(%.battle_rank_entry_info.rank_name%, ×.*, )%\\n\\\n\t>setValue(online_rank_gold, %gift_coin%)\\n\\ // 保存下来，等舰长数量提示\n\t>setValue(online_rank_num, %number%)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "PK_MATCH_INFO"
+        },
+        {
+            "action": "/// PK播报对面舰长信息\n[%number%>10, %{online_rank_num}% = 0]*对面有%number%名舰长在线，但没人送礼物！\n[%number%>2, %.guard1%>0, %{online_rank_num}% = 0]**对面在线%.guard3%名舰长，%.guard1%名提督，%.guard1%名总督\n[%number%=0, %{online_rank_num}% = 0]对面很惨，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面好欺负，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面很可怜，没人！\n[%number%>0, %{online_rank_num}% = 0]对面有%number%名舰长在线！\n[%number%=0, %{online_rank_gold}% > 1000]*对面没有舰长在线，但高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%=0, %{online_rank_num}% > 0]对面高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_num}%)%分\n[%number%>0, %{online_rank_num}% > 0]对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%>10, %{online_rank_gold}% > 10000]*危！对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "PK_MATCH_ONLINE_GUARD"
+        },
+        {
+            "action": "/// 勋章升级提示\n[%medal_level%>=5, %anchor_room_id% == %room_id%]恭喜%ai_name%勋章升级至%medal_level%~",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "MEDAL_UPGRADE"
+        },
+        {
+            "action": "/// 新舰长发弹幕\n恭喜%uname%成为%upname%的第%number%名舰长！",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "NEW_GUARD_COUNT"
+        },
+        {
+            "action": "/// 进来就补充/更新昵称\n[%{integral_%uid%}% > 0]>setValue(uname_%uid%, %uname%)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "INTERACT_WORD"
         }
     ],
     "gift": "// ---------- 小礼物不答谢 ----------\n[%gift_gold%=0, %gift_silver%<1000, %gift_num% < 6]*\n// ---------- 普通的答谢 ----------\n感谢%ai_name%赠送的%gift_name%%punc%\n十分感谢%ai_name%相赠的%gift_name%%punc%\n谢谢%ai_name%的%gift_multi_num%%gift_name% ~~~\n感谢%ai_name%的%gift_multi_num%%gift_name%，么么哒~\n感谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n多谢%ai_name%的%gift_multi_num%%gift_name%，mua~\n多谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n// ---------- 50元以上的 ----------\n[%gift_gold%>50000]*(cd13:0)哇噢！感谢%ai_name%的%gift_multi_num%%gift_name%！\\n老板大气！\n// ---------- 指定礼物 ----------\n[%gift_name%=小电视飞船]**哇！谢谢%ai_name%带大家上太空~\n// ---------- 上船通知 ----------\n[%guard_buy%, %guard_first%!=0]**(cd13:0)哇塞！感谢%ai_name%开通%gift_name%！\\n老板大气！！！\n[%guard_buy%, %guard_first%=0]**(cd13:0)哇塞！感谢%ai_name%续费%gift_name%！\\n老板大气！！！\n// 屏蔽自动送的吃瓜\n[%uid%=%my_uid%,%gift_name%=吃瓜]**",
@@ -131,10 +215,22 @@
         },
         {
             "anchor_key": "神奇弹幕:TimerTask",
+            "enabled": false,
+            "interval": 1800,
+            "text": "/// 显示所有用户积分\n>showValueTable(积分查询, integral_(\\d+), ID:\"_ID_\", 昵称:uname__ID_, 积分:integral__ID_:>, 动作:action__ID_, 坐骑:mount__ID_)"
+        },
+        {
+            "anchor_key": "神奇弹幕:TimerTask",
+            "enabled": false,
+            "interval": 1800,
+            "text": "/// 显示所有打卡记录\n>showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\\d+), ID:\"_ID_\", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)"
+        },
+        {
+            "anchor_key": "神奇弹幕:TimerTask",
             "enabled": true,
             "interval": 7200,
-            "text": "/// 免费软件，靠爱发电，还请帮忙宣传分享~\n[%working%]答谢姬【神奇弹幕】为您服务~"
+            "text": "/// 这是个理直气壮的广告！\n[%working%]答谢姬【神奇弹幕】为您服务~"
         }
     ],
-    "welcome": "// 只欢迎戴勋章的用户\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// 一分钟内重复进出不算\n[%come_time%>%timestamp%-60]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~"
+    "welcome": "// 只欢迎戴勋章的用户。如果要全部欢迎，只需把下面一行去掉\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~"
 }

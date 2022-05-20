@@ -679,7 +679,7 @@ void MainWindow::readConfig()
     ui->orderSongShuaSpin->setValue(us->value("danmaku/diangeShuaCount", 0).toInt());
 
     // 自动翻译
-    bool trans = us->value("danmaku/autoTrans", true).toBool();
+    bool trans = us->value("danmaku/autoTrans", false).toBool();
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
@@ -693,7 +693,7 @@ void MainWindow::readConfig()
     ui->syncShieldKeywordCheck->setChecked(us->value("block/syncShieldKeyword", false).toBool());
 
     // 新人提示
-    ui->newbieTipCheck->setChecked(us->value("block/newbieTip", true).toBool());
+    ui->newbieTipCheck->setChecked(us->value("block/newbieTip", false).toBool());
 
     // 自动禁言
     ui->autoBlockNewbieCheck->setChecked(us->value("block/autoBlockNewbie", false).toBool());
@@ -841,7 +841,7 @@ void MainWindow::readConfig()
     connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
 
     // 仅开播发送
-    ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", true).toBool());
+    ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", false).toBool());
     ui->autoDoSignCheck->setChecked(us->value("danmaku/autoDoSign", false).toBool());
 
     // 勋章升级
@@ -21178,3 +21178,4 @@ void MainWindow::on_forumButton_clicked()
 {
     QDesktopServices::openUrl(QUrl("http://live.lyixi.com"));
 }
+
