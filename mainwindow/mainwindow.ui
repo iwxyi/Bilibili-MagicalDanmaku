@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>850</width>
-    <height>624</height>
+    <width>886</width>
+    <height>1269</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1561,8 +1561,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>770</width>
-             <height>504</height>
+             <width>806</width>
+             <height>1149</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5548,7 +5548,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>980</y>
               <width>161</width>
-              <height>71</height>
+              <height>101</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5619,6 +5619,25 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>语法糖</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="complexCalcCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>在表达式 %[...]% 中，允许使用更加复杂的计算方式。
+但无法保证稳定性，可能导致程序崩溃。
+最终结果同样将会变成整数，四舍五入。
+例如：
+1+2+3+4
+1+(2*3/4)
+1+log(2)*sin(3)/cos(4)</string>
+               </property>
+               <property name="text">
+                <string>复杂计算</string>
                </property>
               </widget>
              </item>
@@ -8684,7 +8703,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>850</width>
+     <width>886</width>
      <height>23</height>
     </rect>
    </property>

@@ -797,6 +797,8 @@ private slots:
 
     void on_forumButton_clicked();
 
+    void on_complexCalcCheck_clicked();
+
 private:
     void initView();
     void initStyle();

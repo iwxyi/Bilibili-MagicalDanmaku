@@ -20,7 +20,7 @@ public:
         QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
         bool isTrue = false;
         QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
-        QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
+        QRegularExpression intRe("^[\\d\\+\\-\\*\\/% \\(\\)]+$");
         // QRegularExpression overlayIntRe("\\d{11,}");
         QRegularExpressionMatch match;
         foreach (QString orExp, orExps)
@@ -141,6 +141,9 @@ public:
 
     /**
      * 计算纯int、运算符组成的表达式
+     * 不支持括号、优先级判断
+     * 1 + 2 + 3
+     * 1 + 2 * 3 / 4
      */
     static qint64 calcIntExpression(QString exp)
     {

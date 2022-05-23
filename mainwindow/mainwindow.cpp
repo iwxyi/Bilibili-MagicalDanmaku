@@ -24,6 +24,7 @@
 #include "warmwishutil.h"
 #include "httpuploader.h"
 #include "third_party/qss_editor/qsseditdialog.h"
+#include "third_party/calculator/calculator_util.h"
 #ifdef Q_OS_WIN
 #include "widgets/windowshwnd.h"
 #endif
@@ -868,6 +869,7 @@ void MainWindow::readConfig()
 
     // 编程
     ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
+    ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", true).toBool());
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -5915,12 +5917,18 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 进行数学计算的变量
-        re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%");
+        if (ui->complexCalcCheck->isChecked())
+            re = QRegularExpression("%\\[([\\d\\+\\-\\*/% \\(\\)]+)\\]%"); // 纯数字+运算符+括号
+        else
+            re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%"); // 允许里面带点字母，用来扩展函数
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
             QString text = match.captured(1);
-            text = snum(ConditionUtil::calcIntExpression(text));
+            if (ui->complexCalcCheck->isChecked())
+                text = QString::number(ConditionUtil::calcIntExpression(text));
+            else
+                text = QString::number(CalculatorUtil::calculate(text.toStdString().c_str()));
             msg.replace(_var, text); // 默认使用变量类型吧
             find = true;
         }
@@ -21179,3 +21187,7 @@ void MainWindow::on_forumButton_clicked()
     QDesktopServices::openUrl(QUrl("http://live.lyixi.com"));
 }
 
+void MainWindow::on_complexCalcCheck_clicked()
+{
+    us->setValue("programming/compexCalc", ui->complexCalcCheck->isChecked());
+}
