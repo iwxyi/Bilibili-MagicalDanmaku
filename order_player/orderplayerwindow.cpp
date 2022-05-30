@@ -4190,6 +4190,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
 
     playMenu->addAction("音乐品质", [=]{
+        menu->close();
         bool ok = false;
         int br = QInputDialog::getInt(this, "设置码率", "请输入音乐码率，越高越清晰，体积也更大\n修改后将清理所有缓存，重新下载歌曲文件", songBr, 128000, 1280000, 10000, &ok);
         if (!ok)
@@ -4208,6 +4209,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果少于应有的时间（如试听只有1分钟或30秒）则自动换源");
 
     playMenu->addAction("试听接口", [=]{
+        menu->close();
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
         if (unblockQQMusic)
             QMessageBox::information(this, "试听接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");

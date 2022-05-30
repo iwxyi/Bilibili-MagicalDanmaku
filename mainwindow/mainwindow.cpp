@@ -90,6 +90,9 @@ MainWindow::MainWindow(QWidget *parent)
         tip_box->createTipCard(notify);
     });
 
+    // 检查更新
+    syncTimer->start((qrand() % 10 + 10) * 1000);
+
     // 测试
     /* MicrosoftTTS* mtts = new MicrosoftTTS(dataPath, "[地区]", "[订阅码]", this);
     QTimer::singleShot(3000, [=]{
@@ -1417,8 +1420,8 @@ void MainWindow::readConfig()
     syncTimer = new QTimer(this);
     syncTimer->setSingleShot(true);
     connect(syncTimer, &QTimer::timeout, this, [=]{
-        if (ac->roomId.isEmpty() || !isLiving()) // 使用一段时间后才算真正用上
-            return ;
+        /* if (ac->roomId.isEmpty() || !isLiving()) // 使用一段时间后才算真正用上
+            return ; */
         syncMagicalRooms();
     });
 
@@ -19329,7 +19332,7 @@ void MainWindow::slotStartWork()
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
     QString usedRoom = ac->roomId;
-    syncTimer->start((qrand() % 3 + 5) * 1000);
+    syncTimer->start((qrand() % 10 + 10) * 1000);
 
     // 本次直播数据
     liveAllGifts.clear();
