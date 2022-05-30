@@ -3,6 +3,7 @@
     <script src="../js/jquery.js"></script>
     <link rel="stylesheet" href="lyrics.css" media="screen" type="text/css" />
     <link rel="stylesheet" href="lyrics_custom.css" media="screen" type="text/css" />
+    <script src="../js/magical_danmaku.js"></script>
 </head>
 
 <body>
@@ -13,31 +14,23 @@
     </ul>
 
     <script type="text/javascript">
-        $(document).ready(function() {
-            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__"); // 注意端口，会被修改
-            ws.onopen = function() {
-                ws.send('{"cmd":"cmds", "data":["LYRIC_LIST"]}');
-            };
-            ws.onmessage = function(e) {
-                console.log(e.data);
-                var json = JSON.parse(e.data);
-                var cmd = json['cmd'];
-                switch (cmd) {
-                    case 'LYRIC_LIST':
-                        var data = json['data'];
-                        var list = data.split('\n');
-                        var ulText = '';
-                        for (var i = 0; i < list.length; i++) {
-                            var lyric = list[i];
-                            if (!i)
-                                ulText += '<li id="currentLine">' + lyric + "</li>";
-                            else
-                                ulText += '<li id="nextLine">' + lyric + "</li>";
-                        }
-                        $("#lyrics").html(ulText);
-                        break;
-                }
-            };
-        });
+        usedMsgType = ['LYRIC_LIST'];
+        
+        function parseCmd(cmd, data) {
+            switch (cmd) {
+                case 'LYRIC_LIST':
+                    var list = data.split('\n');
+                    var ulText = '';
+                    for (var i = 0; i < list.length; i++) {
+                        var lyric = list[i];
+                        if (!i)
+                            ulText += '<li id="currentLine">' + lyric + "</li>";
+                        else
+                            ulText += '<li id="nextLine">' + lyric + "</li>";
+                    }
+                    $("#lyrics").html(ulText);
+                    break;
+            }
+        }
     </script>
 </body>
