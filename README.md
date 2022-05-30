@@ -7,13 +7,13 @@
 
 ## 简介
 
-一个Bilibili直播弹幕姬+答谢姬+点歌姬+录播姬+回复姬。
+神奇弹幕是以直播间为平台，利用网络通信技术、音视频技术、自动控制技术将直播有关的功能集成，构建高效的播出环境与观众互动的管理系统，提升直播亲密性、便利性、艺术性，并提供全方位的信息交互。
 
-支持弹幕聊天、观众互动、自动点歌、数据统计、私信处理等。
+整合弹幕姬+答谢姬+点歌姬+录播姬+回复姬，支持弹幕聊天、观众互动、自动点歌、数据统计、私信处理等。最大的特点是可编程控制，自由制定规则，拥有无限可能！
 
-最大的特点是可编程控制，自由制定规则，拥有无限可能！
+本程序基于哔哩哔哩平台，以打造优质直播间为主线，以建设高粘性粉丝团体为目标，坚持办好每一场直播、帮助每一名主播，保持观众互动，实现粉丝裂变，打造直播高峰，做有温度的直播助手。
 
-QQ群：**1038738410**，欢迎大家一起交流反馈与研究新功能~
+QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 
 
 
@@ -1217,7 +1217,8 @@ tips：
 | connectNet(url)                                    | 连接网址         | 用于连接其他API，不管返回结果                                |
 | getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
 | postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
-| postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送                                         |
+| postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送（仅Content-Type区别）                   |
+| postHeaderData(url, headers, data, [callback])     | post头数据       | 同上。headers多个之间用`&`分隔，格式：key1=value1&key2=value2&key3=value3 |
 | downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件                     |
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）     |

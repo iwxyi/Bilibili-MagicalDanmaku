@@ -8644,6 +8644,61 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
+    if (msg.contains("postHeaderData"))
+    {
+        re = RE("postHeaderData\\s*\\(\\s*(.+?)\\s*,\\s*(.*?)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("postHeaderData\\s*\\(\\s*(.+?)\\s*,\\s*(.*?)\\s*,\\s*(.*)\\s*\\)"); // 不带参数三
+            if (msg.indexOf(re, 0, &match) == -1)
+                return false;
+        }
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString url = caps.at(1);
+            QString headerS = caps.at(2);
+            QString data = caps.at(3);
+            QString callback = caps.size() > 4 ? caps.at(4) : "";
+            data = toMultiLine(data);
+            QStringList headers = headerS.split("&", QString::SkipEmptyParts);
+
+            // 开始联网
+            QNetworkAccessManager* manager = new QNetworkAccessManager;
+            QNetworkRequest* request = new QNetworkRequest(url);
+            setUrlCookie(url, request);
+            request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+            request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+            for (auto header: headers)
+            {
+                int find = header.indexOf("=");
+                if (find == -1)
+                {
+                    qWarning() << "错误的 Post Header：" << header;
+                    continue;
+                }
+                QString key = header.left(find);
+                QString val = header.right(header.length() - find - 1);
+                request->setRawHeader(key.toStdString().data(), val.toStdString().data());
+            }
+            // 连接槽
+            QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
+                QByteArray ba(reply->readAll());
+                qInfo() << QString(ba);
+                if (!callback.isEmpty())
+                {
+                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                }
+
+                manager->deleteLater();
+                delete request;
+                reply->deleteLater();
+            });
+
+            manager->post(*request, data.toStdString().data());
+            return true;
+        }
+    }
     if (msg.contains("postJson"))
     {
         re = RE("postJson\\s*\\(\\s*(.+?)\\s*,\\s*(.*)\\s*,\\s*(\\S+?)\\s*\\)"); // 带参数三
@@ -9412,7 +9467,18 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
-                musicWindow->cutSongIfUser(uname);
+                if (musicWindow->cutSongIfUser(uname))
+                    localNotify(uname + " 切歌成功");
+                else
+                {
+                    const Song &song = musicWindow->getPlayingSong();
+                    if (!song.isValid())
+                        localNotify("未在播放歌曲");
+                    else if (song.addBy.isEmpty())
+                        localNotify("用户不能切手动播放的歌");
+                    else
+                        localNotify("“" + uname + "”无法切“" + song.addBy + "”的歌");
+                }
             }
             else
             {
@@ -9429,7 +9495,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
-                musicWindow->cutSong();
+                if (musicWindow->cutSong())
+                    localNotify("切歌成功");
+                else
+                    localNotify("切歌失败，未在播放歌曲");
             }
             else
             {

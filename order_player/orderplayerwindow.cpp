@@ -226,6 +226,13 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     searchingOverTimeTimer->setSingleShot(true);
     connect(searchingOverTimeTimer, SIGNAL(timeout()), this, SLOT(stopLoading()));
 
+    notifyTimer = new QTimer(this);
+    notifyTimer->setInterval(10000);
+    notifyTimer->setSingleShot(true);
+    connect(notifyTimer, &QTimer::timeout, this, [=]{
+        ui->notifyLabel->setText("");
+    });
+
     bool lyricStack = settings.value("music/lyricStream", false).toBool();
     if (lyricStack)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
@@ -536,22 +543,24 @@ void OrderPlayerWindow::improveUserSongByOrder(QString username, int promote)
     }
 }
 
-void OrderPlayerWindow::cutSongIfUser(QString username)
+bool OrderPlayerWindow::cutSongIfUser(QString username)
 {
     if (!playingSong.isValid())
-        return ;
+        return false;
     if (playingSong.addBy != username)
-        return ;
+        return false;
     emit signalOrderSongCutted(playingSong);
     on_nextSongButton_clicked();
+    return true;
 }
 
-void OrderPlayerWindow::cutSong()
+bool OrderPlayerWindow::cutSong()
 {
     if (!playingSong.isValid())
-        return ;
+        return false;
     emit signalOrderSongCutted(playingSong);
     on_nextSongButton_clicked();
+    return true;
 }
 
 /**
@@ -1978,7 +1987,7 @@ void OrderPlayerWindow::downloadSong(Song song)
                 if (json.value("result").toInt() != 100)
                 {
                     qWarning() << "QQ歌曲链接返回结果不为100：" << json;
-                    switchNextSource(song);
+                    downloadSongFailed(song);
                     return ;
                 }
 
@@ -2032,6 +2041,9 @@ void OrderPlayerWindow::downloadSong(Song song)
     downloadSongCover(song);
 }
 
+/**
+ * 无法获取
+ */
 void OrderPlayerWindow::downloadSongFailed(Song song)
 {
     if (!song.addBy.isEmpty()) // 是有人点歌，不是手动点播放，那就报个错误事件
@@ -2043,7 +2055,8 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
             emit signalOrderSongNoCopyright(song);
         }
     }
-    qWarning() << "无法下载，可能没有版权" << song.simpleString() ;
+    qWarning() << "无法下载，可能没有版权" << song.simpleString();
+    notify("无法播放：" + song.simpleString());
     if (playAfterDownloaded == song) // 立即播放才尝试换源
     {
         if (orderSongs.contains(song))
@@ -2128,14 +2141,14 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
             if (delta > 3)
             {
                 qWarning() << "下载的音乐文件时间不对：" << song.duration << "!=" << realDuration;
+                // deleteFile(songPath(song));
                 downloadSongFailed(song);
                 return ;
             }
         }
 
-
         emit signalSongDownloadFinished(song);
-        MUSIC_DEB << "歌曲mp3下载完成：" << song.simpleString();
+        qInfo() << "歌曲mp3下载完成：" << song.simpleString();
 
         if (playAfterDownloaded == song)
             playLocalSong(song);
@@ -3502,6 +3515,12 @@ void OrderPlayerWindow::importNextSongByName()
         return ;
 
     searchMusic(importingSongNames.takeFirst().simpleString());
+}
+
+void OrderPlayerWindow::notify(const QString &text)
+{
+    ui->notifyLabel->setText(text);
+    notifyTimer->start();
 }
 
 /**

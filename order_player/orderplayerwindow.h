@@ -146,8 +146,8 @@ public slots:
 
     void slotSearchAndAutoAppend(QString key, QString by = "");
     void improveUserSongByOrder(QString username, int promote);
-    void cutSongIfUser(QString username);
-    void cutSong();
+    bool cutSongIfUser(QString username);
+    bool cutSong();
 
 private slots:
     void on_searchEdit_returnPressed();
@@ -284,6 +284,8 @@ private:
     void importSongs(const QStringList& lines);
     void importNextSongByName();
 
+    void notify(const QString& text);
+
 protected:
     void showEvent(QShowEvent*e) override;
     void closeEvent(QCloseEvent*) override;
@@ -388,6 +390,7 @@ private:
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;
+    QTimer* notifyTimer;
 
     // 音乐账号
     int songBr = 320000; // 码率，单位bps
