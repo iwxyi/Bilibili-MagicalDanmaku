@@ -253,6 +253,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
     setSongModelToView(normalSongs, ui->normalSongsListView);
     setSongModelToView(historySongs, ui->historySongsListView);
+    restoreSourceQueue();
 
     int volume = settings.value("music/volume", 50).toInt();
     bool mute = settings.value("music/mute", false).toBool();
@@ -3069,6 +3070,30 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
 
 }
 
+void OrderPlayerWindow::restoreSourceQueue()
+{
+    sourceQueueString = settings.value("music/sourceQueue", "网易云 QQ 咪咕 酷狗").toString();
+    qInfo() << "点歌顺序：" << sourceQueueString;
+    QStringList list = sourceQueueString.split(" ", QString::SkipEmptyParts);
+    musicSourceQueue.clear();
+    for (int i = 0; i < list.size(); i++)
+    {
+        QString s = list.at(i);
+        if (s.contains("网") || s.contains("易") || s.contains("云"))
+            musicSourceQueue.append(NeteaseCloudMusic);
+        else if (s.contains("Q") || s.contains("q"))
+            musicSourceQueue.append(QQMusic);
+        else if (s.contains("酷") || s.contains("狗"))
+            musicSourceQueue.append(KugouMusic);
+        else if (s.contains("咪") || s.contains("咕"))
+            musicSourceQueue.append(MiguMusic);
+        else
+            qWarning() << "无法识别的音源：" << s;
+    }
+    if (!musicSourceQueue.size())
+        setMusicLogicBySource();
+}
+
 /**
  * 设置音源
  * 网易云：=> QQ音乐 => 咪咕 => 酷狗
@@ -4252,7 +4277,7 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
         musicSource = MusicSource(s);
         settings.setValue("music/source", musicSource);
 
-        setMusicLogicBySource();
+        // setMusicLogicBySource();
 
         QString text = ui->searchEdit->text();
         if (!text.isEmpty())
@@ -4271,27 +4296,59 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
 
     auto menu = new FacileMenu(this);
 
-    menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
-        changeSource(NeteaseCloudMusic);
-    });
+    for (int i = 0; i < musicSourceQueue.size(); i++)
+    {
+        MusicSource source = musicSourceQueue.at(i);
+        switch (source)
+        {
+        case UnknowMusic:
+            menu->addAction(QIcon(":/musics/"), "未知音源", [=]{
+                changeSource(NeteaseCloudMusic);
+            })->check(musicSource == source);
+            break;
+        case NeteaseCloudMusic:
+            menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
+                changeSource(NeteaseCloudMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/netease"));
+            })->check(musicSource == source);
+            break;
+        case QQMusic:
+            menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
+                changeSource(QQMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/qq"));
+            })->check(musicSource == source);
+            break;
+        case MiguMusic:
+            menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
+                changeSource(MiguMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/migu"));
+            })->check(musicSource == source);
+            break;
+        case KugouMusic:
+            menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
+                changeSource(KugouMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/kugou"));
+            })->check(musicSource == source);
+            break;
+        case LocalMusic:
+            menu->addAction(QIcon(":/musics/"), "本地音源", [=]{
+                changeSource(NeteaseCloudMusic);
+            })->check(musicSource == source);
+            break;
+        }
+    }
 
-    menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
-        changeSource(QQMusic);
+    menu->addAction(QIcon(":/music/custom"), "自定义顺序", [=]{
+        menu->close();
+        bool ok = false;
+        QString s = QInputDialog::getText(this, "播放顺序", "请依次输入音源名称，使用空格分隔\n目前支持：网易云 QQ 咪咕 酷狗", QLineEdit::Normal, sourceQueueString, &ok);
+        if (!ok)
+            return ;
+        settings.setValue("music/sourceQueue", s);
+        restoreSourceQueue();
     });
-
-    menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
-        changeSource(MiguMusic);
-    });
-
-    menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
-        changeSource(KugouMusic);
-    });
-
-    if (musicSource >= NeteaseCloudMusic && musicSource <= KugouMusic)
-        menu->at(musicSource)->check();
 
     menu->exec();
-
 }
 
 void OrderPlayerWindow::on_nextSongButton_clicked()

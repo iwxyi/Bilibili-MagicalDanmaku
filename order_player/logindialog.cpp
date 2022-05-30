@@ -158,7 +158,14 @@ void LoginDialog::on_testButton_clicked()
                 return ;
             }
             QString nickname = json.data().o("creator").s("nick");
-            QMessageBox::information(this, "测试账号", nickname + "\n检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）");
+            QString mymusictype = json.data().s("mymusictype");
+            QString msg = "检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）";
+            if (mymusictype == "TA的音乐")
+            {
+                msg = "检测到账号，但是似乎无法使用";
+                qWarning() << "检测到：" << mymusictype;
+            }
+            QMessageBox::information(this, "测试账号", nickname + "\n" + msg);
         }, getCookies(cookieString));
     }
 }

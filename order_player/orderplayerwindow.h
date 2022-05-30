@@ -267,6 +267,7 @@ private:
 
     void readMp3Data(const QByteArray& array);
 
+    void restoreSourceQueue();
     void setMusicLogicBySource();
     bool switchNextSource(Song song, bool play = false);
     bool switchNextSource(QString key, MusicSource ms, QString addBy, bool play = false);
@@ -335,6 +336,7 @@ private:
     QDir localMusicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
     QList<MusicSource> musicSourceQueue;
+    QString sourceQueueString;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 
