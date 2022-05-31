@@ -1243,10 +1243,18 @@ void MainWindow::readConfig()
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
 
-    // 每小时的事件（不准时，每隔一小时执行）
+    // 每小时整点的的事件
     hourTimer = new QTimer(this);
-    hourTimer->setInterval(3600000);
+    QTime currentTime = QTime::currentTime();
+    QTime nextTime = currentTime;
+    nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
+    hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
     connect(hourTimer, &QTimer::timeout, this, [=]{
+        QTime currentTime = QTime::currentTime();
+        QTime nextTime = currentTime;
+        nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
+        hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
+
         // 永久禁言
         detectEternalBlockUsers();
 
