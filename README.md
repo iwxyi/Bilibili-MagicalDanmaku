@@ -810,6 +810,7 @@ border-image: url(C:/Path/To/Image.png)
 | cd0~cd99         |                   | 冷却通道，等同于 `%>cd(X)%`                                  |
 | wait0~wait99     |                   | 等待通道，等同于 `%>wait(X)%`                                |
 | local_mode       | 本地模式          | 是：1，否：0                                                 |
+| repeat_10        | 重复弹幕10        | 最后一条与最近10条弹幕是否重复，是：1，否：0                 |
 
 
 

@@ -525,7 +525,28 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             // AI回复
             if (aiReply)
             {
-                startReply(item);
+                // 过滤重复消息
+                bool repeat = false;
+                QString msg = danmaku.getText();
+                int count = 10;
+                for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+                {
+                    const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+                    if (!danmaku.is(MessageType::MSG_DANMAKU))
+                        continue;
+                    if (danmaku.getText() == msg)
+                    {
+                        repeat = true;
+                        break;
+                    }
+                    if (--count <= 0)
+                        break;
+                }
+
+                if (!repeat)
+                    startReply(item);
+                else
+                    qInfo() << "AI回复：忽略重复的弹幕";
             }
         }
     }
@@ -2108,8 +2129,9 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
+
     // 优化消息文本
-    msg.replace(QRegularExpression("\\s+"), "，");
+    // msg.replace(QRegularExpression("\\s+"), "，");
 
     TxNlp::instance()->chat(msg, [=](QString answer){
         if (answer.isEmpty())

@@ -6520,6 +6520,22 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return localDebug ? "1" : "0";
     }
+    else if (key == "%repeat_10%")
+    {
+        int count = 10;
+        const QString& s = danmaku.getText();
+        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+        {
+            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+            if (!danmaku.is(MessageType::MSG_DANMAKU))
+                continue;
+            if (danmaku.getText() == s)
+                return "0";
+            if (--count <= 0)
+                break;
+        }
+        return "1";
+    }
     else
     {
         *ok = false;

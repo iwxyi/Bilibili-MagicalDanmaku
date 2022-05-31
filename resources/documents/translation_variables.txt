@@ -112,3 +112,4 @@ URL编码的弹幕消息=url_text
 推广方式=spread
 对面也用神奇弹幕=pk_magical_room
 本地模式=local_mode
+重复弹幕10=repeat_10
