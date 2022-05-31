@@ -801,6 +801,8 @@ private slots:
 
     void on_positiveVoteCheck_clicked();
 
+    void on_saveLogCheck_clicked();
+
 private:
     void initView();
     void initStyle();

@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     pl = new PlatformInfo;
 
     MainWindow w;
-    if (w.getSettings()->value("runtime/debugToFile", false).toBool())
+    if (w.getSettings()->value("debug/logFile", false).toBool())
         qInstallMessageHandler(myMsgOutput);
 #if defined(ENABLE_TRAY)
     if (w.getSettings()->value("mainwindow/autoShow", true).toBool()

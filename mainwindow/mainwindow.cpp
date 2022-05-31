@@ -1122,8 +1122,6 @@ void MainWindow::readConfig()
         ui->scrollArea->removeWidget(ui->danmakuToutaSettingsCard);
         ui->toutaGiftSettingsCard->hide();
         ui->scrollArea->removeWidget(ui->toutaGiftSettingsCard);
-        ui->scrollArea->removeWidget(ui->debugSettingsCard);
-        ui->debugSettingsCard->hide();
     }
 
     // 粉丝勋章
@@ -1449,6 +1447,7 @@ void MainWindow::readConfig()
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
     if (saveRecvCmds)
         on_saveRecvCmdsCheck_clicked();
+    ui->saveLogCheck->setChecked(us->value("debug/logFile", false).toBool());
 
     // 模拟CMDS
     ui->timerPushCmdCheck->setChecked(us->value("debug/pushCmdsTimer", false).toBool());
@@ -21384,5 +21383,14 @@ void MainWindow::on_positiveVoteCheck_clicked()
     else // 先获取登录信息，再进行好评
     {
         positiveVoteLogin();
+    }
+}
+
+void MainWindow::on_saveLogCheck_clicked()
+{
+    us->setValue("debug/logFile", ui->saveLogCheck->isChecked());
+    if (ui->saveLogCheck->isChecked())
+    {
+        showNotify("打印日志", "重启生效：安装路径/debug.log");
     }
 }
