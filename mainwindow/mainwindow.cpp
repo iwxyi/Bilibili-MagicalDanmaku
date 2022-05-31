@@ -1335,8 +1335,7 @@ void MainWindow::readConfig()
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
-    qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
-    dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
+    dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
@@ -1346,8 +1345,7 @@ void MainWindow::readConfig()
             QDate tomorrowDate = QDate::currentDate();
             tomorrowDate = tomorrowDate.addDays(1);
             QDateTime tomorrow(tomorrowDate, zeroTime);
-            qint64 zeroMSecond = tomorrow.toMSecsSinceEpoch();
-            dayTimer->setInterval(zeroMSecond - QDateTime::currentMSecsSinceEpoch());
+            dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
         }
 
         // 每天重新计算
