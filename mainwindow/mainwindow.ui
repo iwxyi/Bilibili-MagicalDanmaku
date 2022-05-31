@@ -5643,6 +5643,80 @@ margin: 40px;</string>
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="feedbackCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>189</x>
+              <y>1000</y>
+              <width>162</width>
+              <height>71</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#feedbackCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_76">
+             <item>
+              <widget class="QLabel" name="label_63">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>反馈</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_38" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="positiveVoteCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>针对应用页面（饭贩）上一键好评
+简单点一下此处的开关即可</string>
+               </property>
+               <property name="text">
+                <string>好评</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>

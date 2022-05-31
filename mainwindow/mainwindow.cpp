@@ -1480,6 +1480,7 @@ void MainWindow::readConfig()
     if (firstOpen)
     {
         readDefaultCode();
+        us->setValue("runtime/first_use_time", QDateTime::currentSecsSinceEpoch());
     }
 
     // 恢复游戏数据
@@ -3698,6 +3699,7 @@ void MainWindow::getCookieAccount()
         if (!gettingRoom)
             triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
+        getPositiveVote();
     });
 }
 
@@ -18104,6 +18106,72 @@ void MainWindow::receivedPrivateMsg(MyJson session)
     });
 }
 
+void MainWindow::getPositiveVote()
+{
+    get("https://api.live.bilibili.com/xlive/virtual-interface/v1/app/detail?app_id=1653383145397", [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            qWarning() << "获取饭贩商店应用失败：" << json;
+            return ;
+        }
+        MyJson data = json.data();
+        // bool own = data.b("own");
+        _hasPositiveVote = data.b("is_like");
+        _fanfanLikeCount = data.i("like_count");
+        ui->positiveVoteCheck->setChecked(_hasPositiveVote);
+        ui->positiveVoteCheck->setText("好评(" + snum(_fanfanLikeCount) + ")");
+    });
+}
+
+/**
+ * 饭贩好评
+ * 需要 Cookie 带有 PEA_AU 字段
+ */
+void MainWindow::positiveVote()
+{
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/like";
+    MyJson json;
+    json.insert("app_id", 1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
+
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() != 0)
+        {
+            qWarning() << "饭贩好评失败";
+            QDesktopServices::openUrl(QUrl("https://play-live.bilibili.com/details/1653383145397"));
+        }
+
+        QTimer::singleShot(0, [=]{
+            getPositiveVote();
+        });
+    });
+}
+
+void MainWindow::positiveVoteLogin()
+{
+    post("https://api.live.bilibili.com/xlive/virtual-interface/v1/user/login", "", [=](QNetworkReply* reply){
+        QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
+        QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+        if (!cookies.size())
+        {
+            qWarning() << "login 没有返回 set cookie。" << variantCookies;
+            return ;
+        }
+        QNetworkCookie cookie = cookies.at(0);
+        QString DataAsString =cookie.toRawForm(); // 转换为QByteArray
+        qInfo() << "饭贩连接：" << DataAsString;
+        autoSetCookie(ac->browserCookie + "; " + DataAsString);
+
+        QTimer::singleShot(3000, [=]{
+            positiveVote();
+        });
+    });
+}
+
 void MainWindow::startSplash()
 {
 #ifndef Q_OS_ANDROID
@@ -18803,6 +18871,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         oldVersion.replace(0, 1, "");
     QStringList versions = {
         "3.6.3",
+        "4.6.0",
         rt->appVersion // 最后一个一定是最新版本
     };
     int index = 0;
@@ -18836,6 +18905,10 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
         }
         heaps->endGroup();
         us->endGroup();
+    }
+    else if (beforeVersion == "4.6.0")
+    {
+        us->setValue("runtime/first_use_time", QDateTime::currentSecsSinceEpoch());
     }
 }
 
@@ -21278,4 +21351,32 @@ void MainWindow::on_forumButton_clicked()
 void MainWindow::on_complexCalcCheck_clicked()
 {
     us->setValue("programming/compexCalc", ui->complexCalcCheck->isChecked());
+}
+
+/**
+ * 饭贩好评
+ * 需要 Cookie 带有 PEA_AU 字段
+ */
+void MainWindow::on_positiveVoteCheck_clicked()
+{
+    if (ac->browserData.isEmpty()) // 未登录
+    {
+        QDesktopServices::openUrl(QUrl("https://play-live.bilibili.com/details/1653383145397"));
+        return ;
+    }
+
+    if (_hasPositiveVote > 0) // 取消好评
+    {
+        if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，确定要取消吗？") != QMessageBox::Yes)
+            return ;
+    }
+
+    if (ac->browserCookie.contains("PEA_AU=")) // 浏览器复制的cookie，一键好评
+    {
+        positiveVote();
+    }
+    else // 先获取登录信息，再进行好评
+    {
+        positiveVoteLogin();
+    }
 }

@@ -1,12 +1,17 @@
+
 ### v4.6.1 [优化点歌姬](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.1)
 
 - 新增点歌姬设置音源开关和顺序
-- 新增音乐无版权提示
-- 新增音乐插件自动重连
+- 新增音乐无版权的文字提示
 - 新增AI回复过滤重复弹幕（抽奖、天选等）
+- 新增重启软件后已添加到直播姬/OBS的音乐插件自动重连
+- 新增与最近10条弹幕的判断变量 `%repeat_10%`
+- 新增 `>postHeaderData(url, headers, data, event)` 命令，可用于上传带 Header 的 post
 - 更新扩展的自带代码
 - 默认关闭翻译、新观众提醒等功能
 - 修复QQ音乐强制换源的问题
+
+
 
 
 
