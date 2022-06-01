@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>854</width>
-    <height>624</height>
+    <width>874</width>
+    <height>1285</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1561,8 +1561,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>774</width>
-             <height>504</height>
+             <width>794</width>
+             <height>1165</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5562,7 +5562,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>980</y>
               <width>161</width>
-              <height>101</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5638,6 +5638,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="CheckBox1" name="complexCalcCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -5652,6 +5655,22 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>复杂计算</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="stringSimilarCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>影响智能闲聊功能与变量%repeat_10%的判断方式，
+如果开启此功能，则会以字符串编辑距离算法来判断是否为重复弹幕，可过滤一些故意重复的弹幕。
+目前阈值为 80% 及以上则判定为重复弹幕。
+可能会在一定程度上影响相关功能的运行速度。</string>
+               </property>
+               <property name="text">
+                <string>字符串相似度算法</string>
                </property>
               </widget>
              </item>
@@ -8791,7 +8810,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>854</width>
+     <width>874</width>
      <height>23</height>
     </rect>
    </property>

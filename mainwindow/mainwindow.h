@@ -803,6 +803,8 @@ private slots:
 
     void on_saveLogCheck_clicked();
 
+    void on_stringSimilarCheck_clicked();
+
 private:
     void initView();
     void initStyle();

@@ -1,5 +1,4 @@
-
-### v4.6.1 [优化点歌姬](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.1)
+### v4.6.1 [优化点歌姬、自定义机器人](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.1)
 
 - 新增点歌姬设置音源开关和顺序
 - 新增音乐无版权的文字提示

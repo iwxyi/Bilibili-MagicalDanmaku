@@ -5,6 +5,7 @@
 #include "facilemenu.h"
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
+#include "string_distance_util.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -528,16 +529,29 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
                 // 过滤重复消息
                 bool repeat = false;
                 QString msg = danmaku.getText();
-                int count = 10;
+                int count = us->danmuSimilarJudgeCount;
                 for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
                 {
                     const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
                     if (!danmaku.is(MessageType::MSG_DANMAKU))
                         continue;
-                    if (danmaku.getText() == msg)
+                    if (!us->useStringSimilar)
                     {
-                        repeat = true;
-                        break;
+                        if (danmaku.getText() == msg)
+                        {
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+                        if (similar >= us->stringSimilarThreshold)
+                        {
+                            qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                            repeat = true;
+                            break;
+                        }
                     }
                     if (--count <= 0)
                         break;

@@ -31,6 +31,7 @@
 #include "tx_nlp.h"
 #include "conditionutil.h"
 #include "order_player/roundedpixmaplabel.h"
+#include "string_distance_util.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -872,7 +873,8 @@ void MainWindow::readConfig()
 
     // 编程
     ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
-    ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", true).toBool());
+    // ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", true).toBool());
+    ui->stringSimilarCheck->setChecked(us->useStringSimilar = us->value("programming/stringSimilar", false).toBool());
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -6529,15 +6531,23 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
     else if (key == "%repeat_10%")
     {
-        int count = 10;
+        int count = us->danmuSimilarJudgeCount;
         const QString& s = danmaku.getText();
         for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
         {
             const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
             if (!danmaku.is(MessageType::MSG_DANMAKU))
                 continue;
-            if (danmaku.getText() == s)
-                return "0";
+            if (!us->useStringSimilar)
+            {
+                if (danmaku.getText() == s)
+                    return "0";
+            }
+            else
+            {
+                if (StringDistanceUtil::getSimilarity(danmaku.getText(), s) >= us->stringSimilarThreshold)
+                    return "0";
+            }
             if (--count <= 0)
                 break;
         }
@@ -21393,4 +21403,9 @@ void MainWindow::on_saveLogCheck_clicked()
     {
         showNotify("打印日志", "重启生效：安装路径/debug.log");
     }
+}
+
+void MainWindow::on_stringSimilarCheck_clicked()
+{
+    us->setValue("programming/stringSimilar", us->useStringSimilar = ui->stringSimilarCheck->isChecked());
 }

@@ -201,6 +201,7 @@ HEADERS += \
     third_party/utils/microsofttts.h \
     third_party/utils/mysettings.h \
     third_party/utils/simplecalculatorutil.h \
+    third_party/utils/string_distance_util.h \
     third_party/utils/tx_nlp.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \
