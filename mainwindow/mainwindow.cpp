@@ -875,6 +875,8 @@ void MainWindow::readConfig()
     ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
     // ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", true).toBool());
     ui->stringSimilarCheck->setChecked(us->useStringSimilar = us->value("programming/stringSimilar", false).toBool());
+    us->stringSimilarThreshold = us->value("programming/stringSimilarThreshold", 80).toInt();
+    us->danmuSimilarJudgeCount = us->value("programming/danmuSimilarJudgeCount", 10).toInt();
 
     // 状态栏
     statusLabel = new QLabel(this);

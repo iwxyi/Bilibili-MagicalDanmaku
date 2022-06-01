@@ -1,3 +1,11 @@
+### v4.6.2 [算法优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
+
+- 新增重复弹幕的相似度过滤算法
+
+
+
+
+
 ### v4.6.1 [优化点歌姬、自定义机器人](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.1)
 
 - 新增点歌姬设置音源开关和顺序
