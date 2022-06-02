@@ -91,6 +91,8 @@ signals:
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);
+    void signalAppointAdmin(qint64 uid);
+    void signalDismissAdmin(qint64 uid);
 
 public slots:
     void slotNewLiveDanmaku(LiveDanmaku danmaku);

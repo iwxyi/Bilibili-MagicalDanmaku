@@ -159,6 +159,7 @@
         <file alias="gift">danmaku/gift.png</file>
         <file alias="block2">danmaku/block2.png</file>
         <file alias="mark">danmaku/mark.png</file>
+        <file alias="admin">danmaku/admin.png</file>
     </qresource>
     <qresource prefix="/documents">
         <file alias="content_type">documents/content_type.txt</file>

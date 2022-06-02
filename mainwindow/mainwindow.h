@@ -331,28 +331,20 @@ private slots:
 
     void showDiangeHistory();
 
+    void appointAdmin(qint64 uid);
+    void dismissAdmin(qint64 uid);
+
     void addBlockUser(qint64 uid, int hour);
-
     void addBlockUser(qint64 uid, qint64 roomId, int hour);
-
     void delBlockUser(qint64 uid);
-
     void delBlockUser(qint64 uid, qint64 roomId);
-
     void delRoomBlockUser(qint64 id);
-
     void eternalBlockUser(qint64 uid, QString uname);
-
     void cancelEternalBlockUser(qint64 uid);
-
     void cancelEternalBlockUser(qint64 uid, qint64 roomId);
-
     void cancelEternalBlockUserAndUnblock(qint64 uid);
-
     void cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId);
-
     void saveEternalBlockUsers();
-
     void detectEternalBlockUsers();
 
     void on_enableBlockCheck_clicked();

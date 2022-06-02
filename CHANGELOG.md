@@ -1,6 +1,9 @@
 ### v4.6.2 [算法优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
 
 - 新增重复弹幕的相似度过滤算法
+- 新增弹幕姬菜单直接任命与取消房管，并显示任命情况
+- 新增任命房管的命令：`appointAdmin(uid)`
+- 新增撤销房管的命令：`dismissAdmin(uid)`
 
 
 

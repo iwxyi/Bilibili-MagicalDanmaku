@@ -8165,6 +8165,34 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 任命房管
+    if (msg.contains("appointAdmin"))
+    {
+        re = RE("appointAdmin\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            appointAdmin(uid);
+            return true;
+        }
+    }
+
+    // 取消房管
+    if (msg.contains("dismissAdmin"))
+    {
+        re = RE("dismissAdmin\\s*\\(\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            dismissAdmin(uid);
+            return true;
+        }
+    }
+
     // 赠送礼物
     if (msg.contains("sendGift"))
     {
@@ -12670,11 +12698,27 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QString msg = json.value("msg").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
-        if (snum(uid) == ac->cookieUid) // 不是自己的话，不用理会
+        if (snum(uid) == ac->cookieUid)
         {
             localNotify(msg, uid);
-            triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
         }
+        else
+        {
+            localNotify(uidToName(uid) + " 被任命为房管", uid);
+        }
+        triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
+    }
+    else if (cmd == "ROOM_ADMIN_REVOKE")
+    {
+        /*{
+            "cmd": "ROOM_ADMIN_REVOKE",
+            "msg":"撤销房管",
+            "uid": 324495090
+        }*/
+        QString msg = json.value("msg").toString();
+        qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
+        localNotify(uidToName(uid) + " 被取消房管", uid);
+        triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
     }
     else if (cmd == "ROOM_ADMINS")
     {
@@ -14702,6 +14746,45 @@ void MainWindow::showDiangeHistory()
     QMessageBox::information(this, "点歌历史", text);
 }
 
+void MainWindow::appointAdmin(qint64 uid)
+{
+    if (ac->upUid != ac->cookieUid)
+    {
+        showError("房管操作", "仅主播可用");
+        return ;
+    }
+    post("https://api.live.bilibili.com/xlive/web-ucenter/v1/roomAdmin/appoint",
+         ("admin=" + snum(uid) + "&admin_level=1&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
+         [=](MyJson json) {
+        qInfo() << "任命房管：" << json;
+        if (json.code() != 0)
+        {
+            showError("任命房管", json.msg());
+            return ;
+        }
+
+    });
+}
+
+void MainWindow::dismissAdmin(qint64 uid)
+{
+    if (ac->upUid != ac->cookieUid)
+    {
+        showError("房管操作", "仅主播可用");
+        return ;
+    }
+    post("https://api.live.bilibili.com/xlive/app-ucenter/v1/roomAdmin/dismiss",
+         ("uid=" + snum(uid) + "&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
+         [=](MyJson json) {
+        qInfo() << "取消任命房管：" << json;
+        if (json.code() != 0)
+        {
+            showError("取消任命房管", json.msg());
+            return ;
+        }
+    });
+}
+
 void MainWindow::addBlockUser(qint64 uid, int hour)
 {
     addBlockUser(uid, ac->roomId.toLongLong(), hour);
@@ -15141,6 +15224,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
                 ui->closeTransMouseButton->hide();
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
+        connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), this, SLOT(appointAdmin(qint64)));
+        connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), this, SLOT(dismissAdmin(qint64)));
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());

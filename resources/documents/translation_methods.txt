@@ -2,6 +2,8 @@
 禁言=block
 解禁=unblock
 永久禁言=eternalBlock
+任命房管=appointAdmin
+撤销房管=dismissAdmin
 延时=delay
 添加游戏用户=addGameUser
 移除游戏用户=removeGameUser

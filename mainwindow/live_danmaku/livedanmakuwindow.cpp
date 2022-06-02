@@ -1113,6 +1113,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSetName = new QAction(QIcon(":/danmaku/nick"), "设置专属昵称", this);
     QAction* actionUserMark = new QAction(QIcon(":/danmaku/mark"), "设置用户备注", this);
     QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/gift"), "设置礼物别名", this);
+    QAction* actionSetAdmin = new QAction(QIcon(":/danmaku/admin"), "任命为房管", this);
 
     QAction* actionAddBlockTemp = new QAction(QIcon(":/danmaku/block2"), "禁言1小时", this);
     QAction* actionAddBlock = new QAction(QIcon(":/danmaku/block2"), "禁言720小时", this);
@@ -1252,6 +1253,13 @@ void LiveDanmakuWindow::showMenu()
                 actionSetGiftName->setText("礼物别名：" + us->giftAlias.value(danmaku.getGiftId()));
         }
 
+        if (ac->cookieUid != ac->upUid)
+            actionSetAdmin->setEnabled(false);
+        if (danmaku.isAdmin())
+        {
+            actionSetAdmin->setText("撤销房管资格");
+        }
+
         if (us->careUsers.contains(uid))
             actionAddCare->setText("移除特别关心");
         if (us->strongNotifyUsers.contains(uid))
@@ -1285,6 +1293,7 @@ void LiveDanmakuWindow::showMenu()
         actionDelBlock->setEnabled(false);
         actionEternalBlock->setEnabled(false);
         actionCancelEternalBlock->setEnabled(false);
+        actionSetAdmin->setEnabled(false);
         actionMedal->setEnabled(false);
         actionValue->setEnabled(false);
         actionAddCare->setEnabled(false);
@@ -1351,6 +1360,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionAddCare);
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
+    menu->addAction(actionSetAdmin);
     menu->addAction(actionUserMark);
     menu->addAction(actionNotWelcome);
     menu->addAction(actionNotReply);
@@ -1574,6 +1584,14 @@ void LiveDanmakuWindow::showMenu()
             it++;
         }
         us->setValue("danmaku/localNicknames", ress.join(";"));
+    });
+    connect(actionSetAdmin, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        if (danmaku.isAdmin())
+            emit signalDismissAdmin(uid);
+        else
+            emit signalAppointAdmin(uid);
     });
     connect(actionUserMark, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

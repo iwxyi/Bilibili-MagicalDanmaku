@@ -1245,7 +1245,9 @@ tips：
 | block(uid, hour)                                   | 禁言             | 禁言用户，`uid` 可使用参数 `%uid%` 获得                      |
 | block(uid)                                         | 禁言             | 同上，默认使用自动禁言的时间                                 |
 | unblock(uid)                                       | 解禁             | 解除禁言                                                     |
-| eternalBlock(uid, markname)                        | 永久禁言         | 永久禁言某用户（需保持在线），`markname`为标记名字（避免时间长了改名不知道） |
+| eternalBlock(uid, markname)                        | 永久禁言         | 永久禁言某用户（需保持程序在线），`markname`为标记名字（避免时间长了改名不知道） |
+| appointAdmin(uid)                                  | 任命房管         | 任命用户为房管，仅主播可用                                   |
+| dismissAdmin(uid)                                  | 撤销房管         | 取消用户的房管身份，仅主播可用                               |
 | delay(msecond)                                     | 延时             | 延迟执行后面所有待执行的操作，单位毫秒                       |
 | addGameUser(listId, uid)                           | 添加游戏用户     | 添加用户至游戏队列，listId从0到99，使用`%>inGameUsers(listId, uid)%`判断在不在。**程序重启后清空**，长期保存可使用`addGameNumbers` |
 | addGameUser(uid)                                   | 添加游戏用户     | 同上，默认listId使用0，可使用`[%in_game_users%]`快速判断     |
