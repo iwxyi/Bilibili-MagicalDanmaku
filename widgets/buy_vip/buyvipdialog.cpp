@@ -7,10 +7,9 @@
 #include "clickablewidget.h"
 #include "fileutil.h"
 
-BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, QWidget *parent) :
+BuyVIPDialog::BuyVIPDialog(QString dataPath, QString roomId, QString upId, QString userId, QString roomTitle, QString upName, QString username, qint64 deadline, bool *types, QWidget *parent) :
     QDialog(parent), NetInterface(this), ui(new Ui::BuyVIPDialog),
-    dataPath(dataPath), roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username), deadline(deadline)
-
+    dataPath(dataPath), roomId(roomId), upId(upId), userId(userId), roomTitle(roomTitle), upName(upName), username(username), deadline(deadline), types(types)
 {
     ui->setupUi(this);
 
@@ -152,7 +151,11 @@ void BuyVIPDialog::updatePrice()
         [=](MyJson json) {
         if (json.code() != 0)
         {
-            QMessageBox::warning(this, "获取价格", json.msg() + "\n优惠券：" + couponCode);
+            if (!isDefaultCoupon)
+            {
+                QMessageBox::warning(this, "获取价格", json.msg() + "\n优惠券：" + couponCode);
+                isDefaultCoupon = false;
+            }
             couponCode = "";
             ui->couponButton->setText("无优惠券");
             ui->couponButton->adjustMinimumSize();
@@ -273,7 +276,15 @@ void BuyVIPDialog::showEvent(QShowEvent *e)
                 typeIndications.at(vipType - 1)->setStyleSheet("background: white; margin: 35px;");
             });
         }
-        btns.first()->simulateStatePress();
+
+        if (types[1])
+            btns[0]->simulateStatePress();
+        else if (types[2])
+            btns[1]->simulateStatePress();
+        else if (types[3])
+            btns[2]->simulateStatePress();
+        else
+            btns.first()->simulateStatePress();
     }
 }
 
@@ -344,6 +355,7 @@ void BuyVIPDialog::on_couponButton_clicked()
     coupon = QInputDialog::getText(this, "神奇弹幕", "请输入优惠券码，将会在最终支付时折扣", QLineEdit::Normal, this->couponCode, &ok);
     if (!ok)
         return ;
+    this->isDefaultCoupon = false;
     this->couponCode = coupon;
     ui->couponButton->setText(coupon);
     ui->couponButton->adjustMinimumSize();

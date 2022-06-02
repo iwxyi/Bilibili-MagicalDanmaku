@@ -4844,6 +4844,7 @@ void MainWindow::updatePermission()
             {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                 deadline = qMax(deadline, info.l("deadline"));
+                permissionType[1] = true;
             }
         }
         if (!jdata.value("ROOM").isNull())
@@ -4853,6 +4854,7 @@ void MainWindow::updatePermission()
             {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                 deadline = qMax(deadline, info.l("deadline"));
+                permissionType[2] = true;
             }
         }
         if (!jdata.value("ROBOT").isNull())
@@ -4862,6 +4864,7 @@ void MainWindow::updatePermission()
             {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                 deadline = qMax(deadline, info.l("deadline"));
+                permissionType[3] = true;
             }
         }
         if (!jdata.value("GIFT").isNull())
@@ -4871,6 +4874,7 @@ void MainWindow::updatePermission()
             {
                 permissionLevel = qMax(permissionLevel, info.i("vipLevel"));
                 deadline = qMax(deadline, info.l("deadline"));
+                permissionType[10] = true;
             }
         }
 
@@ -20755,7 +20759,7 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 
 void MainWindow::on_actionBuy_VIP_triggered()
 {
-    BuyVIPDialog* bvd = new BuyVIPDialog(rt->dataPath, ac->roomId, ac->upUid, ac->cookieUid, ac->roomTitle, ac->upName, ac->cookieUname, permissionDeadline, this);
+    BuyVIPDialog* bvd = new BuyVIPDialog(rt->dataPath, ac->roomId, ac->upUid, ac->cookieUid, ac->roomTitle, ac->upName, ac->cookieUname, permissionDeadline, permissionType, this);
     connect(bvd, &BuyVIPDialog::refreshVIP, this, [=]{
         updatePermission();
     });
@@ -21384,8 +21388,11 @@ void MainWindow::on_positiveVoteCheck_clicked()
 
     if (_hasPositiveVote > 0) // 取消好评
     {
-        if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，确定要取消吗？") != QMessageBox::Yes)
+        if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，确定要取消吗？", QMessageBox::Yes | QMessageBox::No, 1) != QMessageBox::Yes)
+        {
+            ui->positiveVoteCheck->setChecked(true);
             return ;
+        }
     }
 
     if (ac->browserCookie.contains("PEA_AU=")) // 浏览器复制的cookie，一键好评
