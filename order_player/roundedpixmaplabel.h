@@ -19,11 +19,11 @@ public:
     }
 
 protected:
-    void paintEvent(QPaintEvent *) override
+    void paintEvent(QPaintEvent *e) override
     {
         const QPixmap* pixmap = this->pixmap();
         if (!pixmap)
-            return ;
+            return QLabel::paintEvent(e);
         QPainter painter(this);
         QPainterPath path;
         path.addRoundedRect(rect(), radius, radius);

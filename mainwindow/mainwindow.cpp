@@ -873,7 +873,7 @@ void MainWindow::readConfig()
 
     // 编程
     ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
-    // ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", true).toBool());
+    ui->complexCalcCheck->setChecked(us->value("programming/complexCalc", false).toBool());
     ui->stringSimilarCheck->setChecked(us->useStringSimilar = us->value("programming/stringSimilar", false).toBool());
     us->stringSimilarThreshold = us->value("programming/stringSimilarThreshold", 80).toInt();
     us->danmuSimilarJudgeCount = us->value("programming/danmuSimilarJudgeCount", 10).toInt();
@@ -1367,6 +1367,7 @@ void MainWindow::readConfig()
         updatePermission();
 
         processNewDay();
+        qInfo() << "当前 month =" << currDate.month() << ", day =" << currDate.day() << ", week =" << currDate.dayOfWeek();
 
         // 判断每一月初
         if (currDate.day() == 1)
@@ -10959,6 +10960,9 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QJsonObject data = json.value("data").toObject();
                     int countdown = data.value("countdown").toInt();
                 }
+                else if (cmd == "HOT_ROOM_NOTIFY")
+                {
+                }
                 else
                 {
                     qWarning() << "未处理的命令=" << cmd << "   正文=" << QString(body);
@@ -14368,9 +14372,8 @@ void MainWindow::updateOnlineGoldRank()
     }*/
     QString _upUid = ac->upUid;
     QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?roomId="
-            +pkRoomId+"&page="+snum(1)+"&ruid="+ac->upUid+"&pageSize="+snum(50);
+            +ac->roomId+"&page="+snum(1)+"&ruid="+ac->upUid+"&pageSize="+snum(50);
     onlineGoldRank.clear();
-
     get(url, [=](QJsonObject json){
         if (_upUid != ac->upUid)
             return ;
@@ -14392,6 +14395,7 @@ void MainWindow::updateOnlineGoldRank()
                                 "", "", "");
             danmaku.setFirst(rank);
             danmaku.setTotalCoin(score);
+            danmaku.extraJson = item;
 
             if (guard_level)
                 danmaku.setGuardLevel(guard_level);
@@ -14418,9 +14422,65 @@ void MainWindow::updateOnlineGoldRank()
 
             onlineGoldRank.append(danmaku);
         }
-        if (names.size())
-            qInfo() << "高能榜：" << names;
+        qInfo() << "高能榜：" << names;
+        updateOnlineRankGUI();
     });
+}
+
+void MainWindow::updateOnlineRankGUI()
+{
+    // 获取头像
+    for (int i = 0; i < onlineGoldRank.size(); i++)
+    {
+        const LiveDanmaku &danmaku = onlineGoldRank.at(i);
+        qint64 uid = danmaku.getUid();
+        if (!pl->userHeaders.contains(uid))
+        {
+            QString url = danmaku.extraJson.value("face").toString();
+            // qInfo() << "获取头像：" << uid << url;
+            get(url, [=](QNetworkReply* reply){
+                if (pl->userHeaders.contains(uid)) // 可能是多线程冲突了
+                    return ;
+                QByteArray jpegData = reply->readAll();
+                QPixmap pixmap;
+                pixmap.loadFromData(jpegData);
+                if (pixmap.isNull())
+                {
+                    showError("获取头像图片出错");
+                    qWarning() << "头像地址：" << url;
+                    return ;
+                }
+
+                pl->userHeaders[uid] = pixmap;
+                updateOnlineRankGUI();
+            });
+            return ;
+        }
+    }
+
+    // 放到GUI
+    ui->onlineRankListWidget->clear();
+    const int headerRadius = 24;
+    for (int i = 0; i < onlineGoldRank.size(); i++)
+    {
+        auto& danmaku = onlineGoldRank.at(i);
+        qint64 uid = danmaku.getUid();
+        if (pl->userHeaders.contains(uid))
+        {
+            auto item = new QListWidgetItem();
+            item->setData(Qt::UserRole, uid);
+            ui->onlineRankListWidget->addItem(item);
+            RoundedPixmapLabel* label = new RoundedPixmapLabel(ui->onlineRankListWidget);
+            label->setRadius(headerRadius);
+            label->setFixedSize(headerRadius * 2, headerRadius * 2);
+            label->show();
+             label->setPixmap(pl->userHeaders.value(uid));
+            label->setToolTip(danmaku.getNickname() + " " + snum(danmaku.getTotalCoin()));
+            item->setSizeHint(label->size());
+            ui->onlineRankListWidget->setItemWidget(item, label);
+        }
+    }
+    ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高能榜 " : "");
 }
 
 /**

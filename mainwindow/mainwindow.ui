@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>874</width>
-    <height>1285</height>
+    <width>853</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -943,6 +943,79 @@ background-repeat:none;</string>
               </layout>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_70">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="onlineRankDescLabel">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QListWidget" name="onlineRankListWidget">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>64</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>64</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">#onlineRankListWidget
+{
+	background: transparent;
+	border: none;
+}</string>
+                 </property>
+                 <property name="verticalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="horizontalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="editTriggers">
+                  <set>QAbstractItemView::EditKeyPressed</set>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::SingleSelection</enum>
+                 </property>
+                 <property name="verticalScrollMode">
+                  <enum>QAbstractItemView::ScrollPerPixel</enum>
+                 </property>
+                 <property name="horizontalScrollMode">
+                  <enum>QAbstractItemView::ScrollPerPixel</enum>
+                 </property>
+                 <property name="flow">
+                  <enum>QListView::LeftToRight</enum>
+                 </property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
+                 <property name="viewMode">
+                  <enum>QListView::ListMode</enum>
+                 </property>
+                 <property name="selectionRectVisible">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QListWidget" name="giftListWidget">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -1006,7 +1079,7 @@ background-repeat:none;</string>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>1</width>
-                 <height>20</height>
+                 <height>2</height>
                 </size>
                </property>
               </spacer>
@@ -1561,8 +1634,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>794</width>
-             <height>1165</height>
+             <width>773</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -8810,7 +8883,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>874</width>
+     <width>853</width>
      <height>23</height>
     </rect>
    </property>

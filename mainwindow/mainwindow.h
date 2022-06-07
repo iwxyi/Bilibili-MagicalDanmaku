@@ -893,6 +893,7 @@ private:
     void updateExistGuards(int page);
     void newGuardUpdate(const LiveDanmaku &danmaku);
     void updateOnlineGoldRank();
+    void updateOnlineRankGUI();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
     void getPkMatchInfo();
@@ -1249,6 +1250,7 @@ private:
     // 高能榜
     QList<LiveDanmaku> onlineGoldRank;
     QList<LiveDanmaku> onlineGuards;
+    QList<qint64> onlineRankGuiIds;
 
     // 录播
     qint64 startRecordTime = 0;
