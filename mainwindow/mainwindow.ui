@@ -991,7 +991,7 @@ background-repeat:none;</string>
                   <set>QAbstractItemView::EditKeyPressed</set>
                  </property>
                  <property name="selectionMode">
-                  <enum>QAbstractItemView::SingleSelection</enum>
+                  <enum>QAbstractItemView::NoSelection</enum>
                  </property>
                  <property name="verticalScrollMode">
                   <enum>QAbstractItemView::ScrollPerPixel</enum>

@@ -28,7 +28,7 @@ protected:
         QPainterPath path;
         path.addRoundedRect(rect(), radius, radius);
         painter.setClipPath(path);
-        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        // painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.drawPixmap(rect(), *pixmap);
     }
 

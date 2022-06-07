@@ -14458,10 +14458,27 @@ void MainWindow::updateOnlineRankGUI()
         }
     }
 
+    // 找到不同点，提升性能（前几应该都不变的）
+    int diff = 0;
+    for (diff = 0; diff < onlineGoldRank.size() && diff < ui->onlineRankListWidget->count(); diff++)
+    {
+        qint64 id1 = onlineGoldRank.at(diff).getUid();
+        qint64 id2 = ui->onlineRankListWidget->item(diff)->data(Qt::UserRole).toLongLong();
+        if (id1 != id2)
+            break;
+    }
+    while (ui->onlineRankListWidget->count() > diff)
+    {
+        auto item = ui->onlineRankListWidget->item(diff);
+        auto widget = ui->onlineRankListWidget->itemWidget(item);
+        ui->onlineRankListWidget->takeItem(diff);
+        delete item;
+        widget->deleteLater();
+    }
+
     // 放到GUI
-    ui->onlineRankListWidget->clear();
     const int headerRadius = 24;
-    for (int i = 0; i < onlineGoldRank.size(); i++)
+    for (int i = diff; i < onlineGoldRank.size(); i++)
     {
         auto& danmaku = onlineGoldRank.at(i);
         qint64 uid = danmaku.getUid();
@@ -14474,13 +14491,13 @@ void MainWindow::updateOnlineRankGUI()
             label->setRadius(headerRadius);
             label->setFixedSize(headerRadius * 2, headerRadius * 2);
             label->show();
-             label->setPixmap(pl->userHeaders.value(uid));
-            label->setToolTip(danmaku.getNickname() + " " + snum(danmaku.getTotalCoin()));
+            label->setPixmap(pl->userHeaders.value(uid));
+            label->setToolTip(danmaku.getNickname() + "  " + snum(danmaku.getTotalCoin()));
             item->setSizeHint(label->size());
             ui->onlineRankListWidget->setItemWidget(item, label);
         }
     }
-    ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高能榜 " : "");
+    ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高能榜" : "");
 }
 
 /**
@@ -16996,6 +17013,7 @@ void MainWindow::releaseLiveData(bool prepare)
         fansList.clear();
         us->currentGuards.clear();
         guardInfos.clear();
+        onlineGoldRank.clear();
         ac->currentFans = 0;
         ac->currentFansClub = 0;
 
@@ -17031,6 +17049,7 @@ void MainWindow::releaseLiveData(bool prepare)
             widget->deleteLater();
         }
         ui->giftListWidget->clear();
+        ui->onlineRankListWidget->clear();
     }
     else // 下播，依旧保持连接
     {
@@ -21562,4 +21581,9 @@ void MainWindow::on_saveLogCheck_clicked()
 void MainWindow::on_stringSimilarCheck_clicked()
 {
     us->setValue("programming/stringSimilar", us->useStringSimilar = ui->stringSimilarCheck->isChecked());
+}
+
+void MainWindow::on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item)
+{
+    openLink("https://space.bilibili.com/" + snum(item->data(Qt::UserRole).toLongLong()));
 }

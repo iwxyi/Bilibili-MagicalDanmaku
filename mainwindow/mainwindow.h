@@ -797,6 +797,8 @@ private slots:
 
     void on_stringSimilarCheck_clicked();
 
+    void on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     void initView();
     void initStyle();
