@@ -457,6 +457,8 @@ private slots:
 
     void on_enableScreenMsgCheck_clicked();
 
+    void on_screenDanmakuWithNameCheck_clicked();
+
     void on_screenDanmakuLeftSpin_valueChanged(int arg1);
 
     void on_screenDanmakuRightSpin_valueChanged(int arg1);

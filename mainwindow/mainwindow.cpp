@@ -1152,6 +1152,7 @@ void MainWindow::readConfig()
     // 滚屏
     ui->enableScreenDanmakuCheck->setChecked(us->value("screendanmaku/enableDanmaku", false).toBool());
     ui->enableScreenMsgCheck->setChecked(us->value("screendanmaku/enableMsg", false).toBool());
+    ui->screenDanmakuWithNameCheck->setChecked(us->value("screendanmaku/showName", true).toBool());
     ui->screenDanmakuLeftSpin->setValue(us->value("screendanmaku/left", 0).toInt());
     ui->screenDanmakuRightSpin->setValue(us->value("screendanmaku/right", 0).toInt());
     ui->screenDanmakuTopSpin->setValue(us->value("screendanmaku/top", 10).toInt());
@@ -13344,17 +13345,23 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
     label->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
     label->setAttribute(Qt::WA_TransparentForMouseEvents, true);
 
+    QString disp;
     if (danmaku.getMsgType() == MSG_DANMAKU || !danmaku.getText().isEmpty())
-        label->setText(danmaku.getText());
+    {
+        disp = danmaku.getText();
+        if (ui->screenDanmakuWithNameCheck->isChecked())
+            disp = danmaku.getNickname() + "：" + disp;
+    }
     else
     {
         QString text = danmaku.toString();
-        QRegularExpression re("^\\d+:\\d+:\\d+\\s+(.+)$"); // 简化表达式
+        QRegularExpression re("^\\d+:\\d+:\\d+\\s+(.+)$"); // 简化表达式，去掉时间信息
         QRegularExpressionMatch match;
         if (text.indexOf(re, 0, &match) > -1)
             text = match.capturedTexts().at(1);
-        label->setText(text);
+        disp = text;
     }
+    label->setText(disp);
     label->setFont(screenDanmakuFont);
 
     auto isBlankColor = [=](QString c) -> bool {
@@ -19431,6 +19438,11 @@ void MainWindow::on_enableScreenDanmakuCheck_clicked()
 void MainWindow::on_enableScreenMsgCheck_clicked()
 {
     us->setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
+}
+
+void MainWindow::on_screenDanmakuWithNameCheck_clicked()
+{
+    us->setValue("screendanmaku/showName", ui->screenDanmakuWithNameCheck->isChecked());
 }
 
 void MainWindow::on_screenDanmakuLeftSpin_valueChanged(int arg1)

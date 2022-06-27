@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>853</width>
-    <height>624</height>
+    <width>852</width>
+    <height>796</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1634,8 +1634,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>773</width>
-             <height>504</height>
+             <width>772</width>
+             <height>676</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4209,14 +4209,31 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="CheckBox1" name="enableScreenDanmakuCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>全屏滚动弹幕</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_71">
+               <item>
+                <widget class="CheckBox1" name="enableScreenDanmakuCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>显示弹幕</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="CheckBox1" name="screenDanmakuWithNameCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>显示发送者的昵称</string>
+                 </property>
+                 <property name="text">
+                  <string>包含昵称</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="CheckBox1" name="enableScreenMsgCheck">
@@ -4224,7 +4241,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
-                <string>全屏滚动信息</string>
+                <string>显示信息</string>
                </property>
               </widget>
              </item>
@@ -8883,7 +8900,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>853</width>
+     <width>852</width>
      <height>23</height>
     </rect>
    </property>
