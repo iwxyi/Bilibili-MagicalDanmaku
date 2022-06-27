@@ -1907,7 +1907,10 @@ void OrderPlayerWindow::downloadSong(Song song)
         if (unblockQQMusic)
             url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
         else
+        {
+            // TODO: 根据比特率，设置最近的选项。还要记录每首歌支持哪些比特率
             url = QQMUSIC_SERVER + "/song/url?id=" + song.mid + "&mediaId=" + song.mediaId;
+        }
         break;
     case MiguMusic:
         if (!song.url.isEmpty())

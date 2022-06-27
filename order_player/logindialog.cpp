@@ -70,7 +70,7 @@ void LoginDialog::loginNetease(QString username, QString password)
         int code = json.value("code").toInt();
         if (code != 200)
         {
-            QMessageBox::warning(this, "登录错误", "账号或密码错误，请重试\n错误码：" + QString::number(code));
+            QMessageBox::warning(this, "登录错误", json.value("message").toString() + "\n错误码：" + QString::number(code));
             return ;
         }
 
