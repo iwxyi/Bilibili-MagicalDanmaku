@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>852</width>
-    <height>796</height>
+    <width>847</width>
+    <height>852</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1634,8 +1634,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>772</width>
-             <height>676</height>
+             <width>767</width>
+             <height>732</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3456,7 +3456,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：&lt;/p&gt;&lt;p&gt;安装目录/records/&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：安装目录/records/&lt;/p&gt;&lt;p&gt;保存 flv 原始数据，未进行编解码，可能需要使用 PotPlayer 等自带解码功能的播放器才能打开，Windows 自带的 Media Player 无法打开录播&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>原画录播</string>
@@ -8900,7 +8900,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>852</width>
+     <width>847</width>
      <height>23</height>
     </rect>
    </property>
