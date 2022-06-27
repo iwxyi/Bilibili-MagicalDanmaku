@@ -2058,19 +2058,26 @@ void OrderPlayerWindow::downloadSong(Song song)
             break;
         }
         case MiguMusic:
+        {
             if (json.value("result").toInt() != 100)
             {
                 qWarning() << "咪咕歌曲链接返回结果不为100：" << json << url;
                 switchNextSource(song);
                 return ;
             }
-            fileUrl = json.value("data").toObject().value("url").toString();
+            QJsonObject miguData = json.value("data").toObject();
+            fileUrl = miguData.value("url").toString();
+            if (fileUrl.isEmpty())
+                fileUrl = miguData.value("128").toString();
+            if (fileUrl.isEmpty())
+                fileUrl = miguData.value("320").toString();
             if (fileUrl.isEmpty())
             {
                 downloadSongFailed(song);
                 return ;
             }
             break;
+        }
         case KugouMusic:
             if (json.value("err_code").toInt() != 0)
             {
