@@ -28,9 +28,29 @@
 #include "widgets/windowshwnd.h"
 #endif
 #include "tx_nlp.h"
-#include "conditionutil.h"
-#include "order_player/roundedpixmaplabel.h"
 
+QHash<qint64, QString> CommonValues::localNicknames; // 本地昵称
+QHash<qint64, qint64> CommonValues::userComeTimes;   // 用户进来的时间（客户端时间戳为准）
+QHash<qint64, qint64> CommonValues::userBlockIds;    // 本次用户屏蔽的ID
+QSettings* CommonValues::danmakuCounts = nullptr;    // 每个用户的统计
+QSettings* CommonValues::userMarks = nullptr;        // 每个用户的备注
+QList<LiveDanmaku> CommonValues::allDanmakus;        // 本次启动的所有弹幕
+QList<qint64> CommonValues::careUsers;               // 特别关心
+QList<qint64> CommonValues::strongNotifyUsers;       // 强提醒
+QHash<QString, QString> CommonValues::pinyinMap;     // 拼音
+QList<QPair<QString, QString>> CommonValues::customVariant; // 自定义变量
+QList<QPair<QString, QString>> CommonValues::variantTranslation; // 变量翻译
+QList<QPair<QString, QString>> CommonValues::replaceVariant; // 替换变量
+QList<qint64> CommonValues::notWelcomeUsers;         // 不自动欢迎
+QList<qint64> CommonValues::notReplyUsers;           // 不自动回复
+QHash<int, QString> CommonValues::giftNames;         // 自定义礼物名字
+QList<EternalBlockUser> CommonValues::eternalBlockUsers; // 永久禁言
+QHash<qint64, QString> CommonValues::currentGuards;  // 当前船员
+QHash<qint64, QPixmap> CommonValues::giftImages;     // 礼物图片
+QString CommonValues::browserCookie;
+QString CommonValues::browserData;
+QString CommonValues::csrf_token;
+QVariant CommonValues::userCookies;
 TxNlp* TxNlp::txNlp = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -68,7 +88,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->roomNameLabel->setText(warmWish);
 
         QTimer::singleShot(500 * warmWish.length(), [=]{
-            ui->roomNameLabel->setText(ac->roomTitle);
+            ui->roomNameLabel->setText(roomTitle);
         });
     }
 
@@ -123,22 +143,17 @@ void MainWindow::initView()
                   ui->thankPageButton,
                   ui->musicPageButton,
                   ui->extensionPageButton,
-                  ui->preferencePageButton,
-                  ui->forumButton
+                  ui->preferencePageButton
                 };
     for (int i = 0; i < sideButtonList.size(); i++)
     {
         auto button = sideButtonList.at(i);
         button->setSquareSize();
         button->setFixedForePos();
-        button->setFixedSize(QSize(rt->widgetSizeL, rt->widgetSizeL));
-        button->setRadius(rt->fluentRadius, rt->fluentRadius);
+        button->setFixedSize(QSize(widgetSizeL, widgetSizeL));
+        button->setRadius(fluentRadius, fluentRadius);
         button->setIconPaddingProper(0.23);
 //        button->setChokingProp(0.08);
-
-        if (i == sideButtonList.size() - 1) // 最后面的不是切换页面，不设置
-            continue;
-
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
             int prevIndex = ui->stackedWidget->currentIndex();
             if (prevIndex == i) // 同一个索引，不用重复切换
@@ -150,7 +165,7 @@ void MainWindow::initView()
             switchPageAnimation(i);
 
             // 当前项
-            us->setValue("mainwindow/stackIndex", i);
+            settings->setValue("mainwindow/stackIndex", i);
             foreach (auto btn, sideButtonList)
             {
                 btn->setNormalColor(Qt::transparent);
@@ -173,14 +188,14 @@ void MainWindow::initView()
     ril->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     ui->roomIdSpacingWidget->setAttribute(Qt::WA_TransparentForMouseEvents, true);
     ui->upLevelLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
-    ui->robotNameButton->setRadius(rt->fluentRadius);
+    ui->robotNameButton->setRadius(fluentRadius);
     ui->robotNameButton->setTextDynamicSize();
     ui->robotNameButton->setFontSize(12);
     ui->robotNameButton->setFixedForePos();
     ui->robotNameButton->setPaddings(6);
     ui->liveStatusButton->setTextDynamicSize(true);
     ui->liveStatusButton->setText("");
-    ui->liveStatusButton->setRadius(rt->fluentRadius);
+    ui->liveStatusButton->setRadius(fluentRadius);
 
     // 隐藏用不到的工具
     ui->pushNextCmdButton->hide();
@@ -202,7 +217,7 @@ void MainWindow::initView()
     ui->robotHeaderLabel->setMinimumSize(ui->upHeaderLabel->size());
     ui->robotHeaderLabel->setFixedHeight(ui->upHeaderLabel->height());
     roomSelectorBtn->setSquareSize();
-    roomSelectorBtn->setRadius(rt->fluentRadius);
+    roomSelectorBtn->setRadius(fluentRadius);
     roomSelectorBtn->setFocusPolicy(Qt::FocusPolicy::ClickFocus);
     ui->tagsButtonGroup->setSelecteable(false);
     ui->robotInfoWidget->setMinimumWidth(upHeaderSize * 2);
@@ -222,7 +237,7 @@ void MainWindow::initView()
         menu->addAction(ui->actionAdd_Room_To_List);
         menu->split();
 
-        QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+        QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
         for (int i = 0; i < list.size(); i++)
         {
             QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
@@ -240,36 +255,36 @@ void MainWindow::initView()
     });
 
     connect(ui->robotHeaderLabel, &ClickableLabel::clicked, this, [=]{
-        if (!ac->cookieUid.isEmpty())
-            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + ac->cookieUid));
+        if (!cookieUid.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + cookieUid));
     });
 
     connect(ui->upHeaderLabel, &ClickableLabel::clicked, this, [=]{
-        if (!ac->roomId.isEmpty())
-            QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + ac->roomId));
+        if (!roomId.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomId));
     });
 
     connect(ui->upNameLabel, &ClickableLabel::clicked, this, [=]{
-        if (!ac->upUid.isEmpty())
-            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + ac->upUid));
+        if (!upUid.isEmpty())
+            QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + upUid));
     });
 
     connect(ui->roomAreaLabel, &ClickableLabel::clicked, this, [=]{
-        if (ac->cookieUid == ac->upUid)
+        if (cookieUid == upUid)
         {
             myLiveSelectArea(true);
         }
         else
         {
-            if (!ac->areaId.isEmpty())
+            if (!areaId.isEmpty())
             {
-                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/p/eden/area-tags?areaId=" + ac->areaId + "&parentAreaId=" + ac->parentAreaId));
+                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/p/eden/area-tags?areaId=" + areaId + "&parentAreaId=" + parentAreaId));
             }
         }
     });
 
     connect(ui->roomNameLabel, &ClickableLabel::clicked, this, [=]{
-        if (ac->upUid.isEmpty() || ac->upUid != ac->cookieUid)
+        if (upUid.isEmpty() || upUid != cookieUid)
             return ;
 
        myLiveSetTitle();
@@ -290,7 +305,7 @@ void MainWindow::initView()
     // 吊灯
     ui->droplight->setPaddings(12, 12, 2, 2);
     ui->droplight->adjustMinimumSize();
-    ui->droplight->setRadius(rt->fluentRadius);
+    ui->droplight->setRadius(fluentRadius);
 
     // 礼物列表
     const int giftImgSize = ui->upHeaderLabel->width(); // 礼物小图片的高度
@@ -316,7 +331,7 @@ void MainWindow::initView()
         w->setStyleSheet("#" + w->objectName() + "{"
                                                  "background: white;"
                                                  "border: none;"
-                                                 "border-radius:" + snum(rt->fluentRadius) + ";"
+                                                 "border-radius:" + snum(fluentRadius) + ";"
                                                  "}");
 
         // 设置阴影
@@ -329,20 +344,16 @@ void MainWindow::initView()
     }
 
     ui->SendMsgButton->setFixedForeSize();
-    ui->SendMsgButton->setRadius(rt->fluentRadius);
+    ui->SendMsgButton->setRadius(fluentRadius);
     ui->sendMsgMoreButton->setSquareSize();
-    ui->sendMsgMoreButton->setRadius(rt->fluentRadius);
+    ui->sendMsgMoreButton->setRadius(fluentRadius);
 
     ui->saveEveryGiftButton->setSquareSize();
-    ui->saveEveryGiftButton->setRadius(rt->fluentRadius);
+    ui->saveEveryGiftButton->setRadius(fluentRadius);
     ui->saveEveryGuardButton->setSquareSize();
-    ui->saveEveryGuardButton->setRadius(rt->fluentRadius);
+    ui->saveEveryGuardButton->setRadius(fluentRadius);
     ui->saveMonthGuardButton->setSquareSize();
-    ui->saveMonthGuardButton->setRadius(rt->fluentRadius);
-    ui->saveDanmakuToFileButton->setSquareSize();
-    ui->saveDanmakuToFileButton->setRadius(rt->fluentRadius);
-    ui->calculateDailyDataButton->setSquareSize();
-    ui->calculateDailyDataButton->setRadius(rt->fluentRadius);
+    ui->saveMonthGuardButton->setRadius(fluentRadius);
 
     // 答谢页面
     thankTabButtons = {
@@ -360,7 +371,7 @@ void MainWindow::initView()
     ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
     customVarsButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->thankPage);
-    customVarsButton->setRadius(rt->fluentRadius);
+    customVarsButton->setRadius(fluentRadius);
     customVarsButton->setSquareSize();
     customVarsButton->setCursor(Qt::PointingHandCursor);
     int tabBarHeight = ui->thankTopTabGroup->height();
@@ -401,8 +412,8 @@ void MainWindow::initView()
     ui->musicImageWidget->setPart([=](QRect canvas) -> QPainterPath {
         int w = canvas.width(), h = canvas.height();
         QPainterPath path;
-        path.addRoundedRect(w / 9, h / 3, w / 3, h * 2 / 3, rt->fluentRadius, rt->fluentRadius);
-        path.addRoundedRect(w * 5 / 9, 0, w / 3, h * 2 / 3, rt->fluentRadius, rt->fluentRadius);
+        path.addRoundedRect(w / 9, h / 3, w / 3, h * 2 / 3, fluentRadius, fluentRadius);
+        path.addRoundedRect(w * 5 / 9, 0, w / 3, h * 2 / 3, fluentRadius, fluentRadius);
         return path;
     });
     musicTitleDecorateWidget = new CustomPaintWidget(ui->musicContainerWidget);
@@ -422,14 +433,14 @@ void MainWindow::initView()
     musicTitleDecorateWidget->lower();
     musicTitleDecorateWidget->stackUnder(ui->musicBigTitleLabel);
     ui->musicBlackListButton->setTextColor(Qt::gray);
-    ui->musicBlackListButton->setRadius(rt->fluentRadius);
+    ui->musicBlackListButton->setRadius(fluentRadius);
     ui->musicBlackListButton->adjustMinimumSize();
     ui->musicBlackListButton->setFixedForePos();
     ui->musicConfigButton->setSquareSize();
     ui->musicConfigButton->setFixedForePos();
-    ui->musicConfigButton->setRadius(rt->fluentRadius);
+    ui->musicConfigButton->setRadius(fluentRadius);
     ui->musicConfigButtonSpacingWidget->setFixedWidth(ui->musicConfigButton->width());
-    ui->addMusicToLiveButton->setRadius(rt->fluentRadius);
+    ui->addMusicToLiveButton->setRadius(fluentRadius);
     ui->addMusicToLiveButton->setPaddings(8);
     ui->addMusicToLiveButton->adjustMinimumSize();
     ui->addMusicToLiveButton->setBorderWidth(1);
@@ -438,7 +449,7 @@ void MainWindow::initView()
 
     // 扩展页面
     extensionButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->tabWidget);
-    extensionButton->setRadius(rt->fluentRadius);
+    extensionButton->setRadius(fluentRadius);
     extensionButton->setSquareSize();
     extensionButton->setCursor(Qt::PointingHandCursor);
     tabBarHeight = ui->tabWidget->tabBar()->height();
@@ -459,8 +470,8 @@ void MainWindow::initView()
     });
 
     appendListItemButton = new AppendButton(ui->tabWidget);
-    appendListItemButton->setFixedSize(rt->widgetSizeL, rt->widgetSizeL);
-    appendListItemButton->setRadius(rt->widgetSizeL);
+    appendListItemButton->setFixedSize(widgetSizeL, widgetSizeL);
+    appendListItemButton->setRadius(widgetSizeL);
     appendListItemButton->setCursor(Qt::PointingHandCursor);
     appendListItemButton->setBgColor(Qt::white);
     {
@@ -474,7 +485,7 @@ void MainWindow::initView()
     connect(appendListItemButton, SIGNAL(clicked()), this, SLOT(addListItemOnCurrentPage()));
 
     ui->vipExtensionButton->setBgColor(Qt::white);
-    ui->vipExtensionButton->setRadius(rt->fluentRadius);
+    ui->vipExtensionButton->setRadius(fluentRadius);
     ui->eternalBlockListButton->adjustMinimumSize();
 
     // 网页
@@ -482,7 +493,7 @@ void MainWindow::initView()
 
     // 禁言
     ui->eternalBlockListButton->setBgColor(Qt::white);
-    ui->eternalBlockListButton->setRadius(rt->fluentRadius);
+    ui->eternalBlockListButton->setRadius(fluentRadius);
 
     // 通知
     tip_box = new TipBox(this);
@@ -499,39 +510,39 @@ void MainWindow::initStyle()
     ui->roomInfoMainWidget->setStyleSheet("#roomInfoMainWidget\
                         {\
                             background: white;\
-                            border-radius: " + snum(rt->fluentRadius) + "px;\
+                            border-radius: " + snum(fluentRadius) + "px;\
                         }");
     ui->guardCountCard->setStyleSheet("#guardCountWidget\
                         {\
                             background: #f7f7ff;\
                             border: none;\
-                            border-radius: " + snum(rt->fluentRadius) + "px;\
+                            border-radius: " + snum(fluentRadius) + "px;\
                         }");
     ui->hotCountCard->setStyleSheet("#hotCountWidget\
                        {\
                            background: #f7f7ff;\
                            border: none;\
-                           border-radius: " + snum(rt->fluentRadius) + "px;\
+                           border-radius: " + snum(fluentRadius) + "px;\
                                       }");
 }
 
 void MainWindow::initPath()
 {
-    rt->appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
-    rt->dataPath = QApplication::applicationDirPath() + "/";
+    appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
+    dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
-    if (QFileInfo(rt->dataPath+"green_version").exists()
-            || QFileInfo(rt->dataPath+"green_version.txt").exists())
+    if (QFileInfo(dataPath+"green_version").exists()
+            || QFileInfo(dataPath+"green_version.txt").exists())
     {
         // 安装路径，不需要改
 
     }
     else // 通用文件夹
     {
-        rt->dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
+        dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
         // C:/Users/Administrator/AppData/Roaming/神奇弹幕    (未定义ApplicationName时为exe名)
-        SOCKET_DEB << "路径：" << rt->dataPath;
+        SOCKET_DEB << "路径：" << dataPath;
     }
 #else
     dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
@@ -549,21 +560,21 @@ void MainWindow::initRuntime()
 /// 所以里面的所有变量都要做好重复初始化的准备
 void MainWindow::readConfig()
 {
-    bool firstOpen = !QFileInfo(rt->dataPath + "settings.ini").exists();
+    bool firstOpen = !QFileInfo(dataPath + "settings.ini").exists();
     if (!firstOpen)
     {
         // 备份当前配置：settings和heaps
-        ensureDirExist(rt->dataPath + "backup");
+        ensureDirExist(dataPath + "backup");
         QString ts = QDateTime::currentDateTime().toString("yyyy_MM_dd_hh_mm");
-        copyFile(rt->dataPath + "settings.ini", rt->dataPath + "/backup/settings_" + ts + ".ini");
-        copyFile(rt->dataPath + "heaps.ini", rt->dataPath + "/backup/heaps_" + ts + ".ini");
+        copyFile(dataPath + "settings.ini", dataPath + "/backup/settings_" + ts + ".ini");
+        copyFile(dataPath + "heaps.ini", dataPath + "/backup/heaps_" + ts + ".ini");
     }
 
-    us = new UserSettings(rt->dataPath + "settings.ini");
-    heaps = new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
-    extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
-    robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
-    wwwDir = QDir(rt->dataPath + "www");
+    settings = new QSettings(dataPath + "settings.ini", QSettings::Format::IniFormat);
+    heaps = new QSettings(dataPath + "heaps.ini", QSettings::Format::IniFormat);
+    extSettings = new QSettings(dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
+    robotRecord = new QSettings(dataPath + "robots.ini", QSettings::Format::IniFormat);
+    wwwDir = QDir(dataPath + "www");
 
     // extSettings->setValue("testStr", "true");
     // extSettings->setValue("testBool", true);
@@ -576,27 +587,23 @@ void MainWindow::readConfig()
     qDebug("Bool Type is %s", vBool.typeName());
     qDebug() << vStr << vBool; */
 
-    // 版本
-    rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
-    if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
-            rt->appVersion.replace(0, 1, "");
-    if (rt->appVersion != us->value("runtime/appVersion").toString())
+    appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
+    if (appVersion.startsWith("v") || appVersion.startsWith("V"))
+            appVersion.replace(0, 1, "");
+    if (appVersion != settings->value("runtime/appVersion").toString())
     {
-        upgradeVersionToLastest(us->value("runtime/appVersion").toString());
-        us->setValue("runtime/appVersion", rt->appVersion);
+        upgradeVersionToLastest(settings->value("runtime/appVersion").toString());
+        settings->setValue("runtime/appVersion", appVersion);
     }
-    ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
-
-    // 平台
-    rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
+    ui->appNameLabel->setText("神奇弹幕 v" + appVersion);
 
     // 页面
-    int stackIndex = us->value("mainwindow/stackIndex", 0).toInt();
+    int stackIndex = settings->value("mainwindow/stackIndex", 0).toInt();
     if (stackIndex >= 0 && stackIndex < ui->stackedWidget->count())
         ui->stackedWidget->setCurrentIndex(stackIndex);
 
     // 标签组
-    int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
+    int tabIndex = settings->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
         ui->tabWidget->setCurrentIndex(tabIndex);
     if (tabIndex > 2)
@@ -605,19 +612,19 @@ void MainWindow::readConfig()
         appendListItemButton->show();
 
     // 答谢标签
-    int thankStackIndex = us->value("mainwindow/thankStackIndex", 0).toInt();
+    int thankStackIndex = settings->value("mainwindow/thankStackIndex", 0).toInt();
     if (thankStackIndex >= 0 && thankStackIndex < ui->thankStackedWidget->count())
         ui->thankStackedWidget->setCurrentIndex(thankStackIndex);
 
     // 音乐标签
-    int musicStackIndex = us->value("mainwindow/musicStackIndex", 0).toInt();
+    int musicStackIndex = settings->value("mainwindow/musicStackIndex", 0).toInt();
     if (musicStackIndex >= 0 && musicStackIndex < ui->musicConfigStack->count())
         ui->musicConfigStack->setCurrentIndex(musicStackIndex);
 
     // 房间号
-    ac->roomId = us->value("danmaku/roomId", "").toString();
-    if (!ac->roomId.isEmpty())
-        ui->roomIdEdit->setText(ac->roomId);
+    roomId = settings->value("danmaku/roomId", "").toString();
+    if (!roomId.isEmpty())
+        ui->roomIdEdit->setText(roomId);
     else // 设置为默认界面
     {
         QTimer::singleShot(0, [=]{
@@ -631,24 +638,24 @@ void MainWindow::readConfig()
     connect(removeTimer, SIGNAL(timeout()), this, SLOT(removeTimeoutDanmaku()));
     removeTimer->start();
 
-    int removeIv = us->value("danmaku/removeInterval", 60).toInt();
+    int removeIv = settings->value("danmaku/removeInterval", 60).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuInterval = removeIv * 1000;
 
-    removeIv = us->value("danmaku/removeTipInterval", 20).toInt();
+    removeIv = settings->value("danmaku/removeTipInterval", 20).toInt();
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
     this->removeDanmakuTipInterval = removeIv * 1000;
 
     // 单条弹幕最长长度
-    danmuLongest = us->value("danmaku/danmuLongest", 20).toInt();
+    danmuLongest = settings->value("danmaku/danmuLongest", 20).toInt();
     ui->danmuLongestSpin->setValue(danmuLongest);
-    ui->adjustDanmakuLongestCheck->setChecked(us->value("danmaku/adjustDanmakuLongest", true).toBool());
-    robotTotalSendMsg = us->value("danmaku/robotTotalSend", 0).toInt();
+    ui->adjustDanmakuLongestCheck->setChecked(settings->value("danmaku/adjustDanmakuLongest", true).toBool());
+    robotTotalSendMsg = settings->value("danmaku/robotTotalSend", 0).toInt();
     ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
     ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
 
     // 失败重试
-    ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
+    ui->retryFailedDanmuCheck->setChecked(settings->value("danmaku/retryFailedDanmu", true).toBool());
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
@@ -658,75 +665,75 @@ void MainWindow::readConfig()
     });
 
     // 点歌自动复制
-    diangeAutoCopy = us->value("danmaku/diangeAutoCopy", true).toBool();
+    diangeAutoCopy = settings->value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
-    ui->diangeNeedMedalCheck->setChecked(us->value("danmaku/diangeNeedMedal", true).toBool());
+    ui->diangeNeedMedalCheck->setChecked(settings->value("danmaku/diangeNeedMedal", true).toBool());
     QString defaultDiangeFormat = "^[点點]歌[ :：,，]+(.+)";
-    diangeFormatString = us->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
+    diangeFormatString = settings->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
-    ui->diangeReplyCheck->setChecked(us->value("danmaku/diangeReply", false).toBool());
-    ui->diangeShuaCheck->setChecked(us->value("danmaku/diangeShua", true).toBool());
-    ui->autoPauseOuterMusicCheck->setChecked(us->value("danmaku/autoPauseOuterMusic", false).toBool());
-    ui->outerMusicKeyEdit->setText(us->value("danmaku/outerMusicPauseKey").toString());
-    ui->orderSongsToFileCheck->setChecked(us->value("danmaku/orderSongsToFile", false).toBool());
-    ui->orderSongsToFileFormatEdit->setText(us->value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
-    ui->playingSongToFileCheck->setChecked(us->value("danmaku/playingSongToFile", false).toBool());
-    ui->playingSongToFileFormatEdit->setText(us->value("danmaku/playingSongToFileFormat", "正在播放：{歌名} - {歌手}").toString());
-    ui->orderSongsToFileMaxSpin->setValue(us->value("danmaku/orderSongsToFileMax", 9).toInt());
-    ui->songLyricsToFileCheck->setChecked(us->value("danmaku/songLyricsToFile", false).toBool());
-    ui->songLyricsToFileMaxSpin->setValue(us->value("danmaku/songLyricsToFileMax", 2).toInt());
-    ui->orderSongShuaSpin->setValue(us->value("danmaku/diangeShuaCount", 0).toInt());
+    ui->diangeReplyCheck->setChecked(settings->value("danmaku/diangeReply", false).toBool());
+    ui->diangeShuaCheck->setChecked(settings->value("danmaku/diangeShua", true).toBool());
+    ui->autoPauseOuterMusicCheck->setChecked(settings->value("danmaku/autoPauseOuterMusic", false).toBool());
+    ui->outerMusicKeyEdit->setText(settings->value("danmaku/outerMusicPauseKey").toString());
+    ui->orderSongsToFileCheck->setChecked(settings->value("danmaku/orderSongsToFile", false).toBool());
+    ui->orderSongsToFileFormatEdit->setText(settings->value("danmaku/orderSongsToFileFormat", "{歌名} - {歌手}").toString());
+    ui->playingSongToFileCheck->setChecked(settings->value("danmaku/playingSongToFile", false).toBool());
+    ui->playingSongToFileFormatEdit->setText(settings->value("danmaku/playingSongToFileFormat", "正在播放：{歌名} - {歌手}").toString());
+    ui->orderSongsToFileMaxSpin->setValue(settings->value("danmaku/orderSongsToFileMax", 9).toInt());
+    ui->songLyricsToFileCheck->setChecked(settings->value("danmaku/songLyricsToFile", false).toBool());
+    ui->songLyricsToFileMaxSpin->setValue(settings->value("danmaku/songLyricsToFileMax", 2).toInt());
+    ui->orderSongShuaSpin->setValue(settings->value("danmaku/diangeShuaCount", 0).toInt());
 
     // 自动翻译
-    bool trans = us->value("danmaku/autoTrans", true).toBool();
+    bool trans = settings->value("danmaku/autoTrans", true).toBool();
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
-    bool reply = us->value("danmaku/aiReply", false).toBool();
+    bool reply = settings->value("danmaku/aiReply", false).toBool();
     ui->AIReplyCheck->setChecked(reply);
-    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->value("danmaku/aiReplyMsg", 0).toInt()));
+    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(settings->value("danmaku/aiReplyMsg", 0).toInt()));
     ui->AIReplyMsgCheck->setEnabled(reply);
 
     // 黑名单管理
-    ui->enableBlockCheck->setChecked(us->value("block/enableBlock", false).toBool());
-    ui->syncShieldKeywordCheck->setChecked(us->value("block/syncShieldKeyword", false).toBool());
+    ui->enableBlockCheck->setChecked(settings->value("block/enableBlock", false).toBool());
+    ui->syncShieldKeywordCheck->setChecked(settings->value("block/syncShieldKeyword", false).toBool());
 
     // 新人提示
-    ui->newbieTipCheck->setChecked(us->value("block/newbieTip", true).toBool());
+    ui->newbieTipCheck->setChecked(settings->value("block/newbieTip", true).toBool());
 
     // 自动禁言
-    ui->autoBlockNewbieCheck->setChecked(us->value("block/autoBlockNewbie", false).toBool());
-    ui->autoBlockNewbieKeysEdit->setPlainText(us->value("block/autoBlockNewbieKeys").toString());
+    ui->autoBlockNewbieCheck->setChecked(settings->value("block/autoBlockNewbie", false).toBool());
+    ui->autoBlockNewbieKeysEdit->setPlainText(settings->value("block/autoBlockNewbieKeys").toString());
 
-    ui->autoBlockNewbieNotifyCheck->setChecked(us->value("block/autoBlockNewbieNotify", false).toBool());
-    ui->autoBlockNewbieNotifyWordsEdit->setPlainText(us->value("block/autoBlockNewbieNotifyWords").toString());
+    ui->autoBlockNewbieNotifyCheck->setChecked(settings->value("block/autoBlockNewbieNotify", false).toBool());
+    ui->autoBlockNewbieNotifyWordsEdit->setPlainText(settings->value("block/autoBlockNewbieNotifyWords").toString());
     ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 
-    ui->promptBlockNewbieCheck->setChecked(us->value("block/promptBlockNewbie", false).toBool());
-    ui->promptBlockNewbieKeysEdit->setPlainText(us->value("block/promptBlockNewbieKeys").toString());
+    ui->promptBlockNewbieCheck->setChecked(settings->value("block/promptBlockNewbie", false).toBool());
+    ui->promptBlockNewbieKeysEdit->setPlainText(settings->value("block/promptBlockNewbieKeys").toString());
 
-    ui->notOnlyNewbieCheck->setChecked(us->value("block/notOnlyNewbie", false).toBool());
-    ui->blockNotOnlyNewbieCheck->setChecked(us->value("block/blockNotOnlyNewbieCheck", false).toBool());
+    ui->notOnlyNewbieCheck->setChecked(settings->value("block/notOnlyNewbie", false).toBool());
+    ui->blockNotOnlyNewbieCheck->setChecked(settings->value("block/blockNotOnlyNewbieCheck", false).toBool());
 
-    ui->autoBlockTimeSpin->setValue(us->value("block/autoTime", 1).toInt());
+    ui->autoBlockTimeSpin->setValue(settings->value("block/autoTime", 1).toInt());
 
     // 实时弹幕
 #ifndef Q_OS_ANDROID
     // 安装因为界面的问题，不主动显示弹幕姬
-    if (us->value("danmaku/liveWindow", false).toBool())
+    if (settings->value("danmaku/liveWindow", false).toBool())
          on_actionShow_Live_Danmaku_triggered();
 #endif
 
     // 点歌姬
-    if (us->value("danmaku/playerWindow", false).toBool())
+    if (settings->value("danmaku/playerWindow", false).toBool())
         on_actionShow_Order_Player_Window_triggered();
-    orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
+    orderSongBlackList = settings->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
-    if (us->value("danmaku/record", false).toBool())
+    if (settings->value("danmaku/record", false).toBool())
         ui->recordCheck->setChecked(true);
-    int recordSplit = us->value("danmaku/recordSplit", 30).toInt();
+    int recordSplit = settings->value("danmaku/recordSplit", 30).toInt();
     ui->recordSplitSpin->setValue(recordSplit);
     recordTimer = new QTimer(this);
     recordTimer->setInterval(recordSplit * 60000); // 默认30分钟断开一次
@@ -738,35 +745,35 @@ void MainWindow::readConfig()
         // 停止之后，录播会检测是否还需要重新录播
         // 如果是，则继续录
     });
-    ui->recordCheck->setToolTip("保存地址：" + rt->dataPath + "record/房间名_时间.mp4");
+    ui->recordCheck->setToolTip("保存地址：" + dataPath + "record/房间名_时间.mp4");
 
     // 发送弹幕
-    ac->browserCookie = us->value("danmaku/browserCookie", "").toString();
-    ac->browserData = us->value("danmaku/browserData", "").toString();
-    int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
-    int posr = ac->browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = ac->browserCookie.length();
-    ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
-    ac->userCookies = getCookies();
+    browserCookie = settings->value("danmaku/browserCookie", "").toString();
+    browserData = settings->value("danmaku/browserData", "").toString();
+    int posl = browserCookie.indexOf("bili_jct=") + 9;
+    int posr = browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = browserCookie.length();
+    csrf_token = browserCookie.mid(posl, posr - posl);
+    userCookies = getCookies();
     getCookieAccount();
 
     // 保存弹幕
-    bool saveDanmuToFile = us->value("danmaku/saveDanmakuToFile", false).toBool();
+    bool saveDanmuToFile = settings->value("danmaku/saveDanmakuToFile", false).toBool();
     if (saveDanmuToFile)
         ui->saveDanmakuToFileCheck->setChecked(true);
 
     // 每日数据
-    bool calcDaliy = us->value("live/calculateDaliyData", true).toBool();
+    bool calcDaliy = settings->value("live/calculateDaliyData", true).toBool();
     ui->calculateDailyDataCheck->setChecked(calcDaliy);
     if (calcDaliy)
         startCalculateDailyData();
 
     // PK串门提示
-    pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
+    pkChuanmenEnable = settings->value("pk/chuanmen", false).toBool();
     ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
 
     // PK消息同步
-    pkMsgSync = us->value("pk/msgSync", 0).toInt();
+    pkMsgSync = settings->value("pk/msgSync", 0).toInt();
     if (pkMsgSync == 0)
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
     else if (pkMsgSync == 1)
@@ -777,97 +784,94 @@ void MainWindow::readConfig()
     ui->pkMsgSyncCheck->setEnabled(pkChuanmenEnable);
 
     // 判断机器人
-    judgeRobot = us->value("danmaku/judgeRobot", 0).toInt();
+    judgeRobot = settings->value("danmaku/judgeRobot", 0).toInt();
     ui->judgeRobotCheck->setCheckState((Qt::CheckState)judgeRobot);
     ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
 
     // 本地昵称
-    QStringList namePares = us->value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
+    QStringList namePares = settings->value("danmaku/localNicknames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
         if (sl.size() < 2)
             continue;
 
-        us->localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
+        localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
     }
 
     // 礼物别名
-    namePares = us->value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
+    namePares = settings->value("danmaku/giftNames").toString().split(";", QString::SkipEmptyParts);
     foreach (QString pare, namePares)
     {
         QStringList sl = pare.split("=>");
         if (sl.size() < 2)
             continue;
 
-        us->giftAlias.insert(sl.at(0).toInt(), sl.at(1));
+        giftNames.insert(sl.at(0).toInt(), sl.at(1));
     }
 
     // 特别关心
-    QStringList usersS = us->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersS = settings->value("danmaku/careUsers", "20285041").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersS)
     {
-        us->careUsers.append(s.toLongLong());
+        careUsers.append(s.toLongLong());
     }
 
     // 强提醒
-    QStringList usersSN = us->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersSN = settings->value("danmaku/strongNotifyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersSN)
     {
-        us->strongNotifyUsers.append(s.toLongLong());
+        strongNotifyUsers.append(s.toLongLong());
     }
 
     // 不自动欢迎
-    QStringList usersNW = us->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNW = settings->value("danmaku/notWelcomeUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNW)
     {
-        us->notWelcomeUsers.append(s.toLongLong());
+        notWelcomeUsers.append(s.toLongLong());
     }
 
     // 不自动回复
-    QStringList usersNR = us->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList usersNR = settings->value("danmaku/notReplyUsers", "").toString().split(";", QString::SkipEmptyParts);
     foreach (QString s, usersNR)
     {
-        us->notReplyUsers.append(s.toLongLong());
+        notReplyUsers.append(s.toLongLong());
     }
 
     // 礼物连击
-    ui->giftComboSendCheck->setChecked(us->value("danmaku/giftComboSend", false).toBool());
-    ui->giftComboDelaySpin->setValue(us->value("danmaku/giftComboDelay",  5).toInt());
-    ui->giftComboTopCheck->setChecked(us->value("danmaku/giftComboTop", false).toBool());
-    ui->giftComboMergeCheck->setChecked(us->value("danmaku/giftComboMerge", false).toBool());
+    ui->giftComboSendCheck->setChecked(settings->value("danmaku/giftComboSend", false).toBool());
+    ui->giftComboDelaySpin->setValue(settings->value("danmaku/giftComboDelay",  5).toInt());
+    ui->giftComboTopCheck->setChecked(settings->value("danmaku/giftComboTop", false).toBool());
+    ui->giftComboMergeCheck->setChecked(settings->value("danmaku/giftComboMerge", false).toBool());
     comboTimer = new QTimer(this);
     comboTimer->setInterval(500);
     connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
 
     // 仅开播发送
-    ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", true).toBool());
-    ui->autoDoSignCheck->setChecked(us->value("danmaku/autoDoSign", false).toBool());
+    ui->sendAutoOnlyLiveCheck->setChecked(settings->value("danmaku/sendAutoOnlyLive", true).toBool());
+    ui->autoDoSignCheck->setChecked(settings->value("danmaku/autoDoSign", false).toBool());
 
     // 勋章升级
-    ui->listenMedalUpgradeCheck->setChecked(us->value("danmaku/listenMedalUpgrade", false).toBool());
+    ui->listenMedalUpgradeCheck->setChecked(settings->value("danmaku/listenMedalUpgrade", false).toBool());
 
     // 弹幕次数
-    us->danmakuCounts = new QSettings(rt->dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
+    danmakuCounts = new QSettings(dataPath+"danmu_count.ini", QSettings::Format::IniFormat);
 
     // 用户备注
-    us->userMarks = new QSettings(rt->dataPath+"user_mark.ini", QSettings::Format::IniFormat);
+    userMarks = new QSettings(dataPath+"user_mark.ini", QSettings::Format::IniFormat);
 
     // 接收私信
-    ui->receivePrivateMsgCheck->setChecked(us->value("privateMsg/enabled", false).toBool());
-    ui->processUnreadMsgCheck->setChecked(us->value("privateMsg/processUnread", false).toBool());
+    ui->receivePrivateMsgCheck->setChecked(settings->value("privateMsg/enabled", false).toBool());
+    ui->processUnreadMsgCheck->setChecked(settings->value("privateMsg/processUnread", false).toBool());
     privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 过滤器
-    enableFilter = us->value("danmaku/enableFilter", enableFilter).toBool();
+    enableFilter = settings->value("danmaku/enableFilter", enableFilter).toBool();
     ui->enableFilterCheck->setChecked(enableFilter);
     /* filter_musicOrder = settings->value("filter/musicOrder", "").toString();
     filter_musicOrderRe = QRegularExpression(filter_musicOrder);
     filter_danmakuCome = settings->value("filter/danmakuCome", "").toString();
     filter_danmakuGift = settings->value("filter/danmakuGift").toString();*/
-
-    // 编程
-    ui->syntacticSugarCheck->setChecked(us->value("programming/syntacticSugar", true).toBool());
 
     // 状态栏
     statusLabel = new QLabel(this);
@@ -923,30 +927,30 @@ void MainWindow::readConfig()
     // 大乱斗自动赠送吃瓜
     pkEndingTimer = new QTimer(this);
     connect(pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
-    bool melon = us->value("pk/autoMelon", false).toBool();
+    bool melon = settings->value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
-    pkMaxGold = us->value("pk/maxGold", 300).toInt();
-    pkJudgeEarly = us->value("pk/judgeEarly", 2000).toInt();
-    toutaCount = us->value("pk/toutaCount", 0).toInt();
-    chiguaCount = us->value("pk/chiguaCount", 0).toInt();
-    toutaGold = us->value("pk/toutaGold", 0).toInt();
-    goldTransPk = us->value("pk/goldTransPk", goldTransPk).toInt();
-    toutaBlankList = us->value("pk/blankList").toString().split(";");
-    ui->pkAutoMaxGoldCheck->setChecked(us->value("pk/autoMaxGold", true).toBool());
+    pkMaxGold = settings->value("pk/maxGold", 300).toInt();
+    pkJudgeEarly = settings->value("pk/judgeEarly", 2000).toInt();
+    toutaCount = settings->value("pk/toutaCount", 0).toInt();
+    chiguaCount = settings->value("pk/chiguaCount", 0).toInt();
+    toutaGold = settings->value("pk/toutaGold", 0).toInt();
+    goldTransPk = settings->value("pk/goldTransPk", goldTransPk).toInt();
+    toutaBlankList = settings->value("pk/blankList").toString().split(";");
+    ui->pkAutoMaxGoldCheck->setChecked(settings->value("pk/autoMaxGold", true).toBool());
 
     // 大乱斗自动赠送礼物
-    ui->toutaGiftCheck->setChecked(us->value("danmaku/toutaGift").toBool());
-    QString toutaGiftCountsStr = us->value("danmaku/toutaGiftCounts").toString();
+    ui->toutaGiftCheck->setChecked(settings->value("danmaku/toutaGift").toBool());
+    QString toutaGiftCountsStr = settings->value("danmaku/toutaGiftCounts").toString();
     ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
     toutaGiftCounts.clear();
     foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
         toutaGiftCounts.append(s.toInt());
-    restoreToutaGifts(us->value("danmaku/toutaGifts", "").toString());
+    restoreToutaGifts(settings->value("danmaku/toutaGifts", "").toString());
 
 
     // 自定义变量
-    restoreCustomVariant(us->value("danmaku/customVariant", "").toString());
-    restoreReplaceVariant(us->value("danmaku/replaceVariant", "").toString());
+    restoreCustomVariant(settings->value("danmaku/customVariant", "").toString());
+    restoreReplaceVariant(settings->value("danmaku/replaceVariant", "").toString());
 
     // 多语言翻译
     restoreVariantTranslation();
@@ -965,26 +969,26 @@ void MainWindow::readConfig()
     restoreEventList();
 
     // 保存舰长
-    ui->saveEveryGuardCheck->setChecked(us->value("danmaku/saveEveryGuard", false).toBool());
-    ui->saveMonthGuardCheck->setChecked(us->value("danmaku/saveMonthGuard", false).toBool());
-    ui->saveEveryGiftCheck->setChecked(us->value("danmaku/saveEveryGift", false).toBool());
+    ui->saveEveryGuardCheck->setChecked(settings->value("danmaku/saveEveryGuard", false).toBool());
+    ui->saveMonthGuardCheck->setChecked(settings->value("danmaku/saveMonthGuard", false).toBool());
+    ui->saveEveryGiftCheck->setChecked(settings->value("danmaku/saveEveryGift", false).toBool());
 
     // 自动发送
-    ui->autoSendWelcomeCheck->setChecked(us->value("danmaku/sendWelcome", false).toBool());
-    ui->autoSendGiftCheck->setChecked(us->value("danmaku/sendGift", false).toBool());
-    ui->autoSendAttentionCheck->setChecked(us->value("danmaku/sendAttention", false).toBool());
-    ui->sendWelcomeCDSpin->setValue(us->value("danmaku/sendWelcomeCD", 10).toInt());
-    ui->sendGiftCDSpin->setValue(us->value("danmaku/sendGiftCD", 5).toInt());
-    ui->sendAttentionCDSpin->setValue(us->value("danmaku/sendAttentionCD", 5).toInt());
-    ui->autoWelcomeWordsEdit->setPlainText(us->value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
-    ui->autoThankWordsEdit->setPlainText(us->value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
-    ui->autoAttentionWordsEdit->setPlainText(us->value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
-    ui->sendWelcomeTextCheck->setChecked(us->value("danmaku/sendWelcomeText", true).toBool());
-    ui->sendWelcomeVoiceCheck->setChecked(us->value("danmaku/sendWelcomeVoice", false).toBool());
-    ui->sendGiftTextCheck->setChecked(us->value("danmaku/sendGiftText", true).toBool());
-    ui->sendGiftVoiceCheck->setChecked(us->value("danmaku/sendGiftVoice", false).toBool());
-    ui->sendAttentionTextCheck->setChecked(us->value("danmaku/sendAttentionText", true).toBool());
-    ui->sendAttentionVoiceCheck->setChecked(us->value("danmaku/sendAttentionVoice", false).toBool());
+    ui->autoSendWelcomeCheck->setChecked(settings->value("danmaku/sendWelcome", false).toBool());
+    ui->autoSendGiftCheck->setChecked(settings->value("danmaku/sendGift", false).toBool());
+    ui->autoSendAttentionCheck->setChecked(settings->value("danmaku/sendAttention", false).toBool());
+    ui->sendWelcomeCDSpin->setValue(settings->value("danmaku/sendWelcomeCD", 10).toInt());
+    ui->sendGiftCDSpin->setValue(settings->value("danmaku/sendGiftCD", 5).toInt());
+    ui->sendAttentionCDSpin->setValue(settings->value("danmaku/sendAttentionCD", 5).toInt());
+    ui->autoWelcomeWordsEdit->setPlainText(settings->value("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText()).toString());
+    ui->autoThankWordsEdit->setPlainText(settings->value("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText()).toString());
+    ui->autoAttentionWordsEdit->setPlainText(settings->value("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText()).toString());
+    ui->sendWelcomeTextCheck->setChecked(settings->value("danmaku/sendWelcomeText", true).toBool());
+    ui->sendWelcomeVoiceCheck->setChecked(settings->value("danmaku/sendWelcomeVoice", false).toBool());
+    ui->sendGiftTextCheck->setChecked(settings->value("danmaku/sendGiftText", true).toBool());
+    ui->sendGiftVoiceCheck->setChecked(settings->value("danmaku/sendGiftVoice", false).toBool());
+    ui->sendAttentionTextCheck->setChecked(settings->value("danmaku/sendAttentionText", true).toBool());
+    ui->sendAttentionVoiceCheck->setChecked(settings->value("danmaku/sendAttentionVoice", false).toBool());
     ui->sendWelcomeTextCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
     ui->sendWelcomeVoiceCheck->setEnabled(ui->autoSendWelcomeCheck->isChecked());
     ui->sendGiftTextCheck->setEnabled(ui->autoSendGiftCheck->isChecked());
@@ -993,78 +997,75 @@ void MainWindow::readConfig()
     ui->sendAttentionVoiceCheck->setEnabled(ui->autoSendAttentionCheck->isChecked());
 
     // 文字转语音
-    ui->autoSpeekDanmakuCheck->setChecked(us->value("danmaku/autoSpeek", false).toBool());
-    ui->dontSpeakOnPlayingSongCheck->setChecked(us->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
+    ui->autoSpeekDanmakuCheck->setChecked(settings->value("danmaku/autoSpeek", false).toBool());
+    ui->dontSpeakOnPlayingSongCheck->setChecked(settings->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
 
-    voicePlatform = static_cast<VoicePlatform>(us->value("voice/platform", 0).toInt());
+    voicePlatform = static_cast<VoicePlatform>(settings->value("voice/platform", 0).toInt());
     if (voicePlatform == VoiceLocal)
     {
         ui->voiceLocalRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("voice/localName").toString());
+        ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
     }
     else if (voicePlatform == VoiceXfy)
     {
         ui->voiceXfyRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("xfytts/name").toString());
-        ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
-        ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
-        ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
+        ui->voiceNameEdit->setText(settings->value("xfytts/name").toString());
+        ui->xfyAppIdEdit->setText(settings->value("xfytts/appid").toString());
+        ui->xfyApiKeyEdit->setText(settings->value("xfytts/apikey").toString());
+        ui->xfyApiSecretEdit->setText(settings->value("xfytts/apisecret").toString());
     }
     else if (voicePlatform == VoiceMS)
     {
         ui->voiceMSRadio->setChecked(true);
-        ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
-        ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
-        msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+        ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
+        ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
+        msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
     }
     else if (voicePlatform == VoiceCustom)
     {
         ui->voiceCustomRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("voice/customName").toString());
+        ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
     }
 
-    ui->voicePitchSlider->setSliderPosition(us->value("voice/pitch", 50).toInt());
-    ui->voiceSpeedSlider->setSliderPosition(us->value("voice/speed", 50).toInt());
-    ui->voiceVolumeSlider->setSliderPosition(us->value("voice/volume", 50).toInt());
-    ui->voiceCustomUrlEdit->setText(us->value("voice/customUrl", "").toString());
+    ui->voicePitchSlider->setSliderPosition(settings->value("voice/pitch", 50).toInt());
+    ui->voiceSpeedSlider->setSliderPosition(settings->value("voice/speed", 50).toInt());
+    ui->voiceVolumeSlider->setSliderPosition(settings->value("voice/volume", 50).toInt());
+    ui->voiceCustomUrlEdit->setText(settings->value("voice/customUrl", "").toString());
 
     // AI回复
-    QString TXSecretId = us->value("tx_nlp/secretId").toString();
+    QString TXSecretId = settings->value("tx_nlp/secretId").toString();
     if (!TXSecretId.isEmpty())
     {
         TxNlp::instance()->setSecretId(TXSecretId);
         ui->TXSecretIdEdit->setText(TXSecretId);
     }
-    QString TXSecretKey = us->value("tx_nlp/secretKey").toString();
+    QString TXSecretKey = settings->value("tx_nlp/secretKey").toString();
     if (!TXSecretKey.isEmpty())
     {
         TxNlp::instance()->setSecretKey(TXSecretKey);
         ui->TXSecretKeyEdit->setText(TXSecretKey);
     }
-    connect(TxNlp::instance(), &TxNlp::signalError, this, [=](const QString& err){
-        showError("智能闲聊", err);
-    });
 
     // 开播
-    ui->startLiveWordsEdit->setText(us->value("live/startWords").toString());
-    ui->endLiveWordsEdit->setText(us->value("live/endWords").toString());
-    ui->startLiveSendCheck->setChecked(us->value("live/startSend").toBool());
+    ui->startLiveWordsEdit->setText(settings->value("live/startWords").toString());
+    ui->endLiveWordsEdit->setText(settings->value("live/endWords").toString());
+    ui->startLiveSendCheck->setChecked(settings->value("live/startSend").toBool());
 
     // 启动动画
-    ui->startupAnimationCheck->setChecked(us->value("mainwindow/splash", firstOpen).toBool());
-    ui->enableTrayCheck->setChecked(us->value("mainwindow/enableTray", false).toBool());
+    ui->startupAnimationCheck->setChecked(settings->value("mainwindow/splash", firstOpen).toBool());
+    ui->enableTrayCheck->setChecked(settings->value("mainwindow/enableTray", false).toBool());
     if (ui->enableTrayCheck->isChecked())
         tray->show(); // 让托盘图标显示在系统托盘上
-    permissionText = us->value("mainwindow/permissionText", permissionText).toString();
+    permissionText = settings->value("mainwindow/permissionText", permissionText).toString();
 
     // 定时连接
-    ui->timerConnectServerCheck->setChecked(us->value("live/timerConnectServer", false).toBool());
-    ui->startLiveHourSpin->setValue(us->value("live/startLiveHour", 0).toInt());
-    ui->endLiveHourSpin->setValue(us->value("live/endLiveHour", 0).toInt());
-    ui->timerConnectIntervalSpin->setValue(us->value("live/timerConnectInterval", 30).toInt());
+    ui->timerConnectServerCheck->setChecked(settings->value("live/timerConnectServer", false).toBool());
+    ui->startLiveHourSpin->setValue(settings->value("live/startLiveHour", 0).toInt());
+    ui->endLiveHourSpin->setValue(settings->value("live/endLiveHour", 0).toInt());
+    ui->timerConnectIntervalSpin->setValue(settings->value("live/timerConnectInterval", 30).toInt());
     connectServerTimer = new QTimer(this);
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
     connect(connectServerTimer, &QTimer::timeout, this, [=]{
@@ -1103,29 +1104,27 @@ void MainWindow::readConfig()
             {
                 QString han = line.at(0);
                 QString pinyin = line.right(line.length()-1);
-                rt->pinyinMap.insert(han, pinyin);
+                pinyinMap.insert(han, pinyin);
             }
             line = pinyinIn.readLine();
         }
     });
 
     // 隐藏偷塔
-    if (!us->value("danmaku/touta", false).toBool())
+    if (!settings->value("danmaku/touta", false).toBool())
     {
         ui->pkAutoMelonCheck->setText("此项禁止使用");
         ui->danmakuToutaSettingsCard->hide();
         ui->scrollArea->removeWidget(ui->danmakuToutaSettingsCard);
         ui->toutaGiftSettingsCard->hide();
         ui->scrollArea->removeWidget(ui->toutaGiftSettingsCard);
-        ui->scrollArea->removeWidget(ui->debugSettingsCard);
-        ui->debugSettingsCard->hide();
     }
 
     // 粉丝勋章
-    ui->autoSwitchMedalCheck->setChecked(us->value("danmaku/autoSwitchMedal", false).toBool());
+    ui->autoSwitchMedalCheck->setChecked(settings->value("danmaku/autoSwitchMedal", false).toBool());
 
     // 读取自定义快捷房间
-    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
     ui->menu_3->addSeparator();
     for (int i = 0; i < list.size(); i++)
     {
@@ -1143,18 +1142,18 @@ void MainWindow::readConfig()
     }
 
     // 滚屏
-    ui->enableScreenDanmakuCheck->setChecked(us->value("screendanmaku/enableDanmaku", false).toBool());
-    ui->enableScreenMsgCheck->setChecked(us->value("screendanmaku/enableMsg", false).toBool());
-    ui->screenDanmakuLeftSpin->setValue(us->value("screendanmaku/left", 0).toInt());
-    ui->screenDanmakuRightSpin->setValue(us->value("screendanmaku/right", 0).toInt());
-    ui->screenDanmakuTopSpin->setValue(us->value("screendanmaku/top", 10).toInt());
-    ui->screenDanmakuBottomSpin->setValue(us->value("screendanmaku/bottom", 60).toInt());
-    ui->screenDanmakuSpeedSpin->setValue(us->value("screendanmaku/speed", 10).toInt());
+    ui->enableScreenDanmakuCheck->setChecked(settings->value("screendanmaku/enableDanmaku", false).toBool());
+    ui->enableScreenMsgCheck->setChecked(settings->value("screendanmaku/enableMsg", false).toBool());
+    ui->screenDanmakuLeftSpin->setValue(settings->value("screendanmaku/left", 0).toInt());
+    ui->screenDanmakuRightSpin->setValue(settings->value("screendanmaku/right", 0).toInt());
+    ui->screenDanmakuTopSpin->setValue(settings->value("screendanmaku/top", 10).toInt());
+    ui->screenDanmakuBottomSpin->setValue(settings->value("screendanmaku/bottom", 60).toInt());
+    ui->screenDanmakuSpeedSpin->setValue(settings->value("screendanmaku/speed", 10).toInt());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
-    QString danmakuFontString = us->value("screendanmaku/font").toString();
+    QString danmakuFontString = settings->value("screendanmaku/font").toString();
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
-    screenDanmakuColor = qvariant_cast<QColor>(us->value("screendanmaku/color", QColor(0, 0, 0)));
+    screenDanmakuColor = qvariant_cast<QColor>(settings->value("screendanmaku/color", QColor(0, 0, 0)));
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
 //        QtConcurrent::run([&]{
             showScreenDanmaku(danmaku);
@@ -1172,38 +1171,38 @@ void MainWindow::readConfig()
     });
 
     // 自动签到
-    if (us->value("danmaku/autoDoSign", false).toBool())
+    if (settings->value("danmaku/autoDoSign", false).toBool())
     {
         ui->autoDoSignCheck->setChecked(true);
     }
 
     // 自动参与天选
-    ui->autoLOTCheck->setChecked(us->value("danmaku/autoLOT", false).toBool());
+    ui->autoLOTCheck->setChecked(settings->value("danmaku/autoLOT", false).toBool());
 
     // 自动获取小心心
-    ui->acquireHeartCheck->setChecked(us->value("danmaku/acquireHeart", false).toBool());
-    ui->heartTimeSpin->setValue(us->value("danmaku/acquireHeartTime", 120).toInt());
-    todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
+    ui->acquireHeartCheck->setChecked(settings->value("danmaku/acquireHeart", false).toBool());
+    ui->heartTimeSpin->setValue(settings->value("danmaku/acquireHeartTime", 120).toInt());
+    todayHeartMinite = settings->value("danmaku/todayHeartMinite").toInt();
     ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
 
     // 自动赠送过期礼物
-    ui->sendExpireGiftCheck->setChecked(us->value("danmaku/sendExpireGift", false).toBool());
+    ui->sendExpireGiftCheck->setChecked(settings->value("danmaku/sendExpireGift", false).toBool());
 
     // 永久禁言
-    QJsonArray eternalBlockArray = us->value("danmaku/eternalBlockUsers").toJsonArray();
+    QJsonArray eternalBlockArray = settings->value("danmaku/eternalBlockUsers").toJsonArray();
     int eternalBlockSize = eternalBlockArray.size();
     for (int i = 0; i < eternalBlockSize; i++)
     {
         EternalBlockUser eb = EternalBlockUser::fromJson(eternalBlockArray.at(i).toObject());
         if (eb.uid && eb.roomId)
-            us->eternalBlockUsers.append(eb);
+            eternalBlockUsers.append(eb);
     }
 
     // 开机自启
-    if (us->value("runtime/startOnReboot", false).toBool())
+    if (settings->value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
     // 自动更新
-    if (us->value("runtime/autoUpdate", true).toBool())
+    if (settings->value("runtime/autoUpdate", true).toBool())
         ui->autoUpdateCheck->setChecked(true);
 
     // 每分钟定时
@@ -1211,18 +1210,18 @@ void MainWindow::readConfig()
     minuteTimer->setInterval(60000);
     connect(minuteTimer, &QTimer::timeout, this, [=]{
         // 直播间人气
-        if (ac->currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
+        if (currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
         {
-            sumPopul += ac->currentPopul;
+            sumPopul += currentPopul;
             countPopul++;
 
             dailyAvePopul = int(sumPopul / countPopul);
             if (dailySettings)
                 dailySettings->setValue("average_popularity", dailyAvePopul);
         }
-        if (dailyMaxPopul < ac->currentPopul)
+        if (dailyMaxPopul < currentPopul)
         {
-            dailyMaxPopul = ac->currentPopul;
+            dailyMaxPopul = currentPopul;
             if (dailySettings)
                 dailySettings->setValue("max_popularity", dailyMaxPopul);
         }
@@ -1256,7 +1255,7 @@ void MainWindow::readConfig()
         }
 
         // 版权声明
-        if (isLiving() && !us->value("danmaku/copyright", false).toBool()
+        if (isLiving() && !settings->value("danmaku/copyright", false).toBool()
                 && qrand() % 3 == 0)
         {
             /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
@@ -1342,7 +1341,7 @@ qDebug() << "--------NEW_DAY";
             startCalculateDailyData();
         if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
-        us->userComeTimes.clear();
+        userComeTimes.clear();
         sumPopul = 0;
         countPopul = 0;
 
@@ -1350,72 +1349,72 @@ qDebug() << "--------NEW_DAY";
         const QDate currDate = QDate::currentDate();
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_day", currDate.day());
+        settings->setValue("runtime/open_day", currDate.day());
         updatePermission();
 
         processNewDay();
-
+qDebug() << "--------current day:" << currDate.day();
         // 判断每一月初
         if (currDate.day() == 1)
         {
             triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
             triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-            us->setValue("runtime/open_month", currDate.month());
-
+            settings->setValue("runtime/open_month", currDate.month());
+qDebug() << "--------current month:" << currDate.month();
             // 判断每一年初
             if (currDate.month() == 1)
             {
                 triggerCmdEvent("NEW_YEAR", LiveDanmaku(), true);
                 triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
                 triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku(), true);
-                us->setValue("runtime/open_year", currDate.year());
+                settings->setValue("runtime/open_year", currDate.year());
             }
         }
-
+qDebug() << "--------current week:" << currDate.dayOfWeek();
         // 判断每周一
         if (currDate.dayOfWeek() == 1)
         {
             triggerCmdEvent("NEW_WEEK", LiveDanmaku(), true);
             triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-            us->setValue("runtime/open_week_number", currDate.weekNumber());
+            settings->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
     dayTimer->start();
 
     // 判断第一次打开
     QDate currDate = QDate::currentDate();
-    int prevYear = us->value("runtime/open_year", -1).toInt();
-    int prevMonth = us->value("runtime/open_month", -1).toInt();
-    int prevDay = us->value("runtime/open_day", -1).toInt();
-    int prevWeekNumber = us->value("runtime/open_week_number", -1).toInt();
+    int prevYear = settings->value("runtime/open_year", -1).toInt();
+    int prevMonth = settings->value("runtime/open_month", -1).toInt();
+    int prevDay = settings->value("runtime/open_day", -1).toInt();
+    int prevWeekNumber = settings->value("runtime/open_week_number", -1).toInt();
     if (prevYear != currDate.year())
     {
         prevMonth = prevDay = -1; // 避免是不同年的同一月
         triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_year", currDate.year());
+        settings->setValue("runtime/open_year", currDate.year());
     }
     if (prevMonth != currDate.month())
     {
         prevDay = -1; // 避免不同月的同一天
         triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_month", currDate.month());
+        settings->setValue("runtime/open_month", currDate.month());
     }
     if (prevDay != currDate.day())
     {
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_day", currDate.day());
+        settings->setValue("runtime/open_day", currDate.day());
     }
     if (prevWeekNumber != currDate.weekNumber())
     {
         triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_week_number", currDate.weekNumber());
+        settings->setValue("runtime/open_week_number", currDate.weekNumber());
     }
 
     // sync
     syncTimer = new QTimer(this);
     syncTimer->setSingleShot(true);
     connect(syncTimer, &QTimer::timeout, this, [=]{
-        if (ac->roomId.isEmpty() || !isLiving()) // 使用一段时间后才算真正用上
+        if (roomId.isEmpty() || !isLiving()) // 使用一段时间后才算真正用上
             return ;
         syncMagicalRooms();
     });
@@ -1427,23 +1426,23 @@ qDebug() << "--------NEW_DAY";
     });
 
     // 数据清理
-    ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
+    ui->autoClearComeIntervalSpin->setValue(settings->value("danmaku/clearDidntComeInterval", 7).toInt());
 
     // 调试模式
-    localDebug = us->value("debug/localDebug", false).toBool();
+    localDebug = settings->value("debug/localDebug", false).toBool();
     ui->actionLocal_Mode->setChecked(localDebug);
-    debugPrint = us->value("debug/debugPrint", false).toBool();
+    debugPrint = settings->value("debug/debugPrint", false).toBool();
     ui->actionDebug_Mode->setChecked(debugPrint);
-    saveRecvCmds = us->value("debug/saveRecvCmds", false).toBool();
+    saveRecvCmds = settings->value("debug/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
     if (saveRecvCmds)
         on_saveRecvCmdsCheck_clicked();
 
     // 模拟CMDS
-    ui->timerPushCmdCheck->setChecked(us->value("debug/pushCmdsTimer", false).toBool());
-    ui->timerPushCmdSpin->setValue(us->value("debug/pushCmdsInterval", 10).toInt());
+    ui->timerPushCmdCheck->setChecked(settings->value("debug/pushCmdsTimer", false).toBool());
+    ui->timerPushCmdSpin->setValue(settings->value("debug/pushCmdsInterval", 10).toInt());
 
-    if (!us->value("danmaku/copyright", false).toBool())
+    if (!settings->value("danmaku/copyright", false).toBool())
     {
         /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
         {
@@ -1454,14 +1453,14 @@ qDebug() << "--------NEW_DAY";
     }
 
     // 开启服务端
-    bool enableServer = us->value("server/enabled", false).toBool();
+    bool enableServer = settings->value("server/enabled", false).toBool();
     ui->serverCheck->setChecked(enableServer);
-    int port = us->value("server/port", 5520).toInt();
+    int port = settings->value("server/port", 5520).toInt();
     ui->serverPortSpin->setValue(port);
-    serverDomain = us->value("server/domain", "localhost").toString();
-    ui->allowWebControlCheck->setChecked(us->value("server/allowWebControl", false).toBool());
-    ui->allowRemoteControlCheck->setChecked(remoteControl = us->value("danmaku/remoteControl", true).toBool());
-    ui->allowAdminControlCheck->setChecked(us->value("danmaku/adminControl", false).toBool());
+    serverDomain = settings->value("server/domain", "localhost").toString();
+    ui->allowWebControlCheck->setChecked(settings->value("server/allowWebControl", false).toBool());
+    ui->allowRemoteControlCheck->setChecked(remoteControl = settings->value("danmaku/remoteControl", true).toBool());
+    ui->allowAdminControlCheck->setChecked(settings->value("danmaku/adminControl", false).toBool());
     ui->domainEdit->setText(serverDomain);
     if (enableServer)
     {
@@ -1469,7 +1468,7 @@ qDebug() << "--------NEW_DAY";
     }
 
     // 加载网页
-    loadWebExtensionList();
+    loadWebExtensinList();
 
     // 设置默认配置
     if (firstOpen)
@@ -1482,8 +1481,8 @@ qDebug() << "--------NEW_DAY";
     restoreGameTexts();
 
     // 回复统计数据
-    int appOpenCount = us->value("mainwindow/appOpenCount", 0).toInt();
-    us->setValue("mainwindow/appOpenCount", ++appOpenCount);
+    int appOpenCount = settings->value("mainwindow/appOpenCount", 0).toInt();
+    settings->setValue("mainwindow/appOpenCount", ++appOpenCount);
     ui->robotSendCountTextLabel->setToolTip("累计启动 " + snum(appOpenCount) + " 次");
 }
 
@@ -1766,7 +1765,7 @@ MainWindow::~MainWindow()
     triggerCmdEvent("SHUT_DOWN", LiveDanmaku(), true);
 
     // 清理过期备份
-    auto files = QDir(rt->dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
+    auto files = QDir(dataPath + "backup").entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
     qint64 overdue = QDateTime::currentSecsSinceEpoch() - 3600 * 24 * qMax(ui->autoClearComeIntervalSpin->value(), 7); // 至少备份7天
     foreach (auto info, files)
     {
@@ -1798,7 +1797,7 @@ MainWindow::~MainWindow()
 
 const QSettings* MainWindow::getSettings() const
 {
-    return us;
+    return settings;
 }
 
 void MainWindow::showEvent(QShowEvent *event)
@@ -1811,7 +1810,7 @@ void MainWindow::showEvent(QShowEvent *event)
         firstShow = false;
 
         // 恢复窗口位置
-        restoreGeometry(us->value("mainwindow/geometry").toByteArray());
+        restoreGeometry(settings->value("mainwindow/geometry").toByteArray());
 
         // 显示启动动画
         startSplash();
@@ -1821,7 +1820,7 @@ void MainWindow::showEvent(QShowEvent *event)
         if (ui->stackedWidget->currentIndex() != 0)
             roomIdBgWidget->hide();
     }
-    us->setValue("mainwindow/autoShow", true);
+    settings->setValue("mainwindow/autoShow", true);
 
     if (!roomCover.isNull())
         adjustCoverSizeByRoomCover(roomCover);
@@ -1829,8 +1828,8 @@ void MainWindow::showEvent(QShowEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    us->setValue("mainwindow/geometry", this->saveGeometry());
-    us->sync();
+    settings->setValue("mainwindow/geometry", this->saveGeometry());
+    settings->sync();
 
 #if defined(ENABLE_TRAY)
 
@@ -1845,7 +1844,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QTimer::singleShot(5000, [=]{
         if (!this->isHidden())
             return ;
-        us->setValue("mainwindow/autoShow", false);
+        settings->setValue("mainwindow/autoShow", false);
     });
 #else
     QMainWindow::closeEvent(event);
@@ -1890,10 +1889,10 @@ void MainWindow::paintEvent(QPaintEvent *event)
 /// 恢复之前的弹幕
 void MainWindow::pullLiveDanmaku()
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
     QString url = "https://api.live.bilibili.com/ajax/msg";
-    QStringList param{"roomid", ac->roomId};
+    QStringList param{"roomid", roomId};
     connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
@@ -1968,14 +1967,14 @@ void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
 {
     // 添加到队列
     roomDanmakus.append(danmakus);
-    rt->allDanmakus.append(danmakus);
+    allDanmakus.append(danmakus);
 }
 
 void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
 {
     roomDanmakus.append(danmaku);
     lastDanmaku = danmaku;
-    rt->allDanmakus.append(danmaku);
+    allDanmakus.append(danmaku);
     newLiveDanmakuAdded(danmaku);
 }
 
@@ -2007,7 +2006,7 @@ void MainWindow::addNoReplyDanmakuText(QString text)
 
 bool MainWindow::isLiving() const
 {
-    return ac->liveStatus == 1;
+    return liveStatus == 1;
 }
 
 void MainWindow::localNotify(QString text)
@@ -2032,18 +2031,12 @@ void MainWindow::localNotify(QString text, qint64 uid)
  */
 void MainWindow::sendMsg(QString msg)
 {
-    if (localDebug)
-    {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
-    }
-
-    sendRoomMsg(ac->roomId, msg);
+    sendRoomMsg(roomId, msg);
 }
 
 void MainWindow::sendRoomMsg(QString roomId, QString msg)
 {
-    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
+    if (browserCookie.isEmpty() || browserData.isEmpty())
     {
         showError("未设置Cookie信息");
         return ;
@@ -2051,8 +2044,14 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     if (msg.isEmpty() || roomId.isEmpty())
         return ;
 
+    if (localDebug)
+    {
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
+
     // 设置数据（JSON的ByteArray）
-    QString s = ac->browserData;
+    QString s = browserData;
     int posl = s.indexOf("msg=")+4;
     int posr = s.indexOf("&", posl);
     if (posr == -1)
@@ -2079,15 +2078,17 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
             if (!ui->retryFailedDanmuCheck->isChecked())
                 return ;
 
+            if (roomId != this->roomId) // 不是这个房间的弹幕，发送失败就算了
+                return ;
             if (errorMsg.contains("msg in 1s"))
             {
                 localNotify("[5s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+                sendAutoMsgInFirst(msg, LiveDanmaku(), 5000);
             }
             else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {
                 localNotify("[4s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
+                sendAutoMsgInFirst(msg, LiveDanmaku(), 4200);
             }
             else if (errorMsg.contains("超出限制长度"))
             {
@@ -2098,7 +2099,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
                 else
                 {
                     localNotify("[自动分割长度]");
-                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
+                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), LiveDanmaku(), 1000);
                 }
             }
             else if (errorMsg == "f") // 系统敏感词
@@ -2126,7 +2127,7 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     }
 
     // 发送前替换
-    for (auto it = us->replaceVariant.begin(); it != us->replaceVariant.end(); ++it)
+    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
     {
         msgs.replace(QRegularExpression(it->first), it->second);
     }
@@ -2212,16 +2213,13 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     int resVal = 0;
     bool exec = execFunc(msg, *danmaku, res, resVal);
 
-    if (!exec) // 如果是发送弹幕
+    if (!exec) // 先判断能否执行命令，如果是发送弹幕
     {    
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
-        if (danmaku->isRetry())
-            sendRoomMsg(danmaku->getRoomId(), msg);
-        else
-            sendMsg(msg);
+        sendMsg(msg);
         inDanmakuCd = true;
-        us->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
+        settings->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
         ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
         ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
     }
@@ -2249,12 +2247,10 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     }
 
     // 如果后面是命令的话，尝试立刻执行
-    // 可以取消间隔，大大加快速度
-    // 因为大部分复杂的代码，也就是一条弹幕+一堆命令
     if (!inDanmakuDelay && autoMsgQueues.size())
     {
         const QString& nextMsg = autoMsgQueues.first().first.first();
-        QRegularExpression re("^\\s*(>.+\\)|\\{.+\\}.*[=\\+\\-].*)\\s*$");
+        QRegularExpression re("^\\s*>");
         if (nextMsg.indexOf(re) > -1) // 下一条是命令，直接执行
         {
             slotSendAutoMsg(false); // 递归
@@ -2422,7 +2418,7 @@ void MainWindow::slotComboSend()
         {
             int r = qrand() % words.size();
             QString msg = words.at(r);
-            if (us->strongNotifyUsers.contains(danmaku.getUid()))
+            if (strongNotifyUsers.contains(danmaku.getUid()))
             {
                 if (debugPrint)
                     localNotify("[强提醒]");
@@ -2502,7 +2498,7 @@ void MainWindow::slotComboSend()
 
 void MainWindow::on_DiangeAutoCopyCheck_stateChanged(int)
 {
-    us->setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
+    settings->setValue("danmaku/diangeAutoCopy", diangeAutoCopy = ui->DiangeAutoCopyCheck->isChecked());
 }
 
 void MainWindow::on_testDanmakuButton_clicked()
@@ -2517,7 +2513,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     if (text.startsWith("$"))
     {
         text.replace(0, 1, "");
-        uid = ac->cookieUid.toLongLong();
+        uid = cookieUid.toLongLong();
     }
     else
     {
@@ -2580,7 +2576,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         LiveDanmaku danmaku(qrand() % 3 + 1, uname, uid, QDateTime::currentDateTime());
         appendNewLiveDanmaku(danmaku);
 
-        if (ui->autoSendWelcomeCheck->isChecked() && !us->notWelcomeUsers.contains(uid))
+        if (ui->autoSendWelcomeCheck->isChecked() && !notWelcomeUsers.contains(uid))
         {
             sendWelcome(danmaku);
         }
@@ -2645,7 +2641,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty())
             sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已开播");
-        ac->liveStatus = 1;
+        liveStatus = 1;
         if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
             connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
@@ -3095,28 +3091,28 @@ void MainWindow::on_testDanmakuButton_clicked()
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuInterval = arg1 * 1000;
-    us->setValue("danmaku/removeInterval", arg1);
+    settings->setValue("danmaku/removeInterval", arg1);
 }
 
 void MainWindow::on_roomIdEdit_editingFinished()
 {
-    if (ac->roomId == ui->roomIdEdit->text() || ac->shortId == ui->roomIdEdit->text())
+    if (roomId == ui->roomIdEdit->text() || shortId == ui->roomIdEdit->text())
         return ;
 
     // 关闭旧的
     if (socket)
     {
-        ac->liveStatus = 0;
+        liveStatus = 0;
         if (socket->state() != QAbstractSocket::UnconnectedState)
             socket->abort();
     }
-    ac->roomId = ui->roomIdEdit->text();
-    ac->upUid = "";
-    us->setValue("danmaku/roomId", ac->roomId);
+    roomId = ui->roomIdEdit->text();
+    upUid = "";
+    settings->setValue("danmaku/roomId", roomId);
 
     releaseLiveData();
 
-    emit signalRoomChanged(ac->roomId);
+    emit signalRoomChanged(roomId);
 
     // 开启新的
     if (socket)
@@ -3129,14 +3125,14 @@ void MainWindow::on_roomIdEdit_editingFinished()
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
 {
     auto trans = ui->languageAutoTranslateCheck->isChecked();
-    us->setValue("danmaku/autoTrans", trans);
+    settings->setValue("danmaku/autoTrans", trans);
     if (danmakuWindow)
         danmakuWindow->setAutoTranslate(trans);
 }
 
 void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
-    us->setValue("mainwindow/tabIndex", index);
+    settings->setValue("mainwindow/tabIndex", index);
     if (index > 2)
         appendListItemButton->hide();
     else
@@ -3156,7 +3152,7 @@ void MainWindow::on_SendMsgButton_clicked()
 void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
     bool reply = ui->AIReplyCheck->isChecked();
-    us->setValue("danmaku/aiReply", reply);
+    settings->setValue("danmaku/aiReply", reply);
     if (danmakuWindow)
         danmakuWindow->setAIReply(reply);
 
@@ -3201,7 +3197,7 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     // 连接信号
     connectTimerTaskEvent(tw, item);
 
-    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     tw->check->setChecked(enable);
@@ -3226,12 +3222,12 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
     connect(tw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = tw->check->isChecked();
         int row = ui->taskListWidget->row(item);
-        us->setValue("task/r"+QString::number(row)+"Enable", enable);
+        settings->setValue("task/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(tw, &TaskWidget::spinChanged, this, [=](int val){
         int row = ui->taskListWidget->row(item);
-        us->setValue("task/r"+QString::number(row)+"Interval", val);
+        settings->setValue("task/r"+QString::number(row)+"Interval", val);
     });
 
     connect(tw->edit, &ConditionEditor::textChanged, this, [=]{
@@ -3239,7 +3235,7 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
 
         QString content = tw->edit->toPlainText();
         int row = ui->taskListWidget->row(item);
-        us->setValue("task/r"+QString::number(row)+"Msg", content);
+        settings->setValue("task/r"+QString::number(row)+"Msg", content);
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
@@ -3275,25 +3271,25 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
 
 void MainWindow::saveTaskList()
 {
-    us->setValue("task/count", ui->taskListWidget->count());
+    settings->setValue("task/count", ui->taskListWidget->count());
     for (int row = 0; row < ui->taskListWidget->count(); row++)
     {
         auto widget = ui->taskListWidget->itemWidget(ui->taskListWidget->item(row));
         auto tw = static_cast<TaskWidget*>(widget);
-        us->setValue("task/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        us->setValue("task/r"+QString::number(row)+"Interval", tw->spin->value());
-        us->setValue("task/r"+QString::number(row)+"Msg", tw->edit->toPlainText());
+        settings->setValue("task/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings->setValue("task/r"+QString::number(row)+"Interval", tw->spin->value());
+        settings->setValue("task/r"+QString::number(row)+"Msg", tw->edit->toPlainText());
     }
 }
 
 void MainWindow::restoreTaskList()
 {
-    int count = us->value("task/count", 0).toInt();
+    int count = settings->value("task/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = us->value("task/r"+QString::number(row)+"Enable", false).toBool();
-        int interval = us->value("task/r"+QString::number(row)+"Interval", 1800).toInt();
-        QString msg = us->value("task/r"+QString::number(row)+"Msg", "").toString();
+        bool enable = settings->value("task/r"+QString::number(row)+"Enable", false).toBool();
+        int interval = settings->value("task/r"+QString::number(row)+"Interval", 1800).toInt();
+        QString msg = settings->value("task/r"+QString::number(row)+"Msg", "").toString();
         addTimerTask(enable, interval, msg);
     }
 }
@@ -3321,7 +3317,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     // 连接信号
     connectAutoReplyEvent(rw, item);
 
-    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     rw->check->setChecked(enable);
@@ -3346,12 +3342,12 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->replyListWidget->row(item);
-        us->setValue("reply/r"+QString::number(row)+"Enable", enable);
+        settings->setValue("reply/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(rw->keyEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->replyListWidget->row(item);
-        us->setValue("reply/r"+QString::number(row)+"Key", text);
+        settings->setValue("reply/r"+QString::number(row)+"Key", text);
     });
 
     connect(rw->replyEdit, &ConditionEditor::textChanged, this, [=]{
@@ -3359,7 +3355,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
 
         QString content = rw->replyEdit->toPlainText();
         int row = ui->replyListWidget->row(item);
-        us->setValue("reply/r"+QString::number(row)+"Reply", content);
+        settings->setValue("reply/r"+QString::number(row)+"Reply", content);
     });
 
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
@@ -3384,7 +3380,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
             QString s = msgs.at(r);
             if (!s.trimmed().isEmpty())
             {
-                if (QString::number(danmaku.getUid()) == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
+                if (QString::number(danmaku.getUid()) == this->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
                 {
                     if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
                         autoMsgTimer->start(); // 先启动，避免立即发送
@@ -3407,25 +3403,25 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
 
 void MainWindow::saveReplyList()
 {
-    us->setValue("reply/count", ui->replyListWidget->count());
+    settings->setValue("reply/count", ui->replyListWidget->count());
     for (int row = 0; row < ui->replyListWidget->count(); row++)
     {
         auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
         auto tw = static_cast<ReplyWidget*>(widget);
-        us->setValue("reply/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        us->setValue("reply/r"+QString::number(row)+"Key", tw->keyEdit->text());
-        us->setValue("reply/r"+QString::number(row)+"Reply", tw->replyEdit->toPlainText());
+        settings->setValue("reply/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings->setValue("reply/r"+QString::number(row)+"Key", tw->keyEdit->text());
+        settings->setValue("reply/r"+QString::number(row)+"Reply", tw->replyEdit->toPlainText());
     }
 }
 
 void MainWindow::restoreReplyList()
 {
-    int count = us->value("reply/count", 0).toInt();
+    int count = settings->value("reply/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = us->value("reply/r"+QString::number(row)+"Enable", false).toBool();
-        QString key = us->value("reply/r"+QString::number(row)+"Key").toString();
-        QString reply = us->value("reply/r"+QString::number(row)+"Reply").toString();
+        bool enable = settings->value("reply/r"+QString::number(row)+"Enable", false).toBool();
+        QString key = settings->value("reply/r"+QString::number(row)+"Key").toString();
+        QString reply = settings->value("reply/r"+QString::number(row)+"Reply").toString();
         addAutoReply(enable, key, reply);
     }
 }
@@ -3491,7 +3487,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     // 连接信号
     connectEventActionEvent(rw, item);
 
-    remoteControl = us->value("danmaku/remoteControl", remoteControl).toBool();
+    remoteControl = settings->value("danmaku/remoteControl", remoteControl).toBool();
 
     // 设置属性
     rw->check->setChecked(enable);
@@ -3516,12 +3512,12 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
     connect(rw->check, &QCheckBox::stateChanged, this, [=](int){
         bool enable = rw->check->isChecked();
         int row = ui->eventListWidget->row(item);
-        us->setValue("event/r"+QString::number(row)+"Enable", enable);
+        settings->setValue("event/r"+QString::number(row)+"Enable", enable);
     });
 
     connect(rw->eventEdit, &QLineEdit::textChanged, this, [=](const QString& text){
         int row = ui->eventListWidget->row(item);
-        us->setValue("event/r"+QString::number(row)+"Cmd", text);
+        settings->setValue("event/r"+QString::number(row)+"Cmd", text);
     });
 
     connect(rw->actionEdit, &ConditionEditor::textChanged, this, [=]{
@@ -3529,7 +3525,7 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
 
         QString content = rw->actionEdit->toPlainText();
         int row = ui->eventListWidget->row(item);
-        us->setValue("event/r"+QString::number(row)+"Action", content);
+        settings->setValue("event/r"+QString::number(row)+"Action", content);
 
         /* // 处理特殊操作，比如过滤器
         QString event = rw->title();
@@ -3577,25 +3573,25 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
 
 void MainWindow::saveEventList()
 {
-    us->setValue("event/count", ui->eventListWidget->count());
+    settings->setValue("event/count", ui->eventListWidget->count());
     for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
         auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
         auto tw = static_cast<EventWidget*>(widget);
-        us->setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
-        us->setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
-        us->setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
+        settings->setValue("event/r"+QString::number(row)+"Enable", tw->check->isChecked());
+        settings->setValue("event/r"+QString::number(row)+"Cmd", tw->eventEdit->text());
+        settings->setValue("event/r"+QString::number(row)+"Action", tw->actionEdit->toPlainText());
     }
 }
 
 void MainWindow::restoreEventList()
 {
-    int count = us->value("event/count", 0).toInt();
+    int count = settings->value("event/count", 0).toInt();
     for (int row = 0; row < count; row++)
     {
-        bool enable = us->value("event/r"+QString::number(row)+"Enable", false).toBool();
-        QString key = us->value("event/r"+QString::number(row)+"Cmd").toString();
-        QString event = us->value("event/r"+QString::number(row)+"Action").toString();
+        bool enable = settings->value("event/r"+QString::number(row)+"Enable", false).toBool();
+        QString key = settings->value("event/r"+QString::number(row)+"Cmd").toString();
+        QString event = settings->value("event/r"+QString::number(row)+"Action").toString();
         addEventAction(enable, key, event);
     }
 }
@@ -3614,28 +3610,28 @@ bool MainWindow::hasEvent(QString cmd) const
 
 void MainWindow::autoSetCookie(QString s)
 {
-    us->setValue("danmaku/browserCookie", ac->browserCookie = s);
-    if (ac->browserCookie.isEmpty())
+    settings->setValue("danmaku/browserCookie", browserCookie = s);
+    if (browserCookie.isEmpty())
         return ;
 
-    ac->userCookies = getCookies();
+    userCookies = getCookies();
     getCookieAccount();
 
     // 自动设置弹幕格式
-    int posl = ac->browserCookie.indexOf("bili_jct=") + 9;
+    int posl = browserCookie.indexOf("bili_jct=") + 9;
     if (posl == -1)
         return ;
-    int posr = ac->browserCookie.indexOf(";", posl);
-    if (posr == -1) posr = ac->browserCookie.length();
-    ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
-    qInfo() << "检测到csrf_token:" << ac->csrf_token;
+    int posr = browserCookie.indexOf(";", posl);
+    if (posr == -1) posr = browserCookie.length();
+    csrf_token = browserCookie.mid(posl, posr - posl);
+    qInfo() << "检测到csrf_token:" << csrf_token;
 
-    if (ac->browserData.isEmpty())
-        ac->browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
-    ac->browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + ac->csrf_token);
-    ac->browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + ac->csrf_token);
-    us->setValue("danmaku/browserData", ac->browserData);
-    qInfo() << "设置弹幕格式：" << ac->browserData;
+    if (browserData.isEmpty())
+        browserData = "color=4546550&fontsize=25&mode=4&msg=&rnd=1605156247&roomid=&bubble=5&csrf_token=&csrf=";
+    browserData.replace(QRegularExpression("csrf_token=[^&]*"), "csrf_token=" + csrf_token);
+    browserData.replace(QRegularExpression("csrf=[^&]*"), "csrf=" + csrf_token);
+    settings->setValue("danmaku/browserData", browserData);
+    qInfo() << "设置弹幕格式：" << browserData;
 }
 
 QVariant MainWindow::getCookies() const
@@ -3643,7 +3639,7 @@ QVariant MainWindow::getCookies() const
     QList<QNetworkCookie> cookies;
 
     // 设置cookie
-    QString cookieText = ac->browserCookie;
+    QString cookieText = browserCookie;
     QStringList sl = cookieText.split(";");
     foreach (auto s, sl)
     {
@@ -3665,7 +3661,7 @@ QVariant MainWindow::getCookies() const
  */
 void MainWindow::getCookieAccount()
 {
-    if (ac->browserCookie.isEmpty())
+    if (browserCookie.isEmpty())
         return ;
     gettingUser = true;
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
@@ -3681,10 +3677,10 @@ void MainWindow::getCookieAccount()
 
         // 获取用户信息
         QJsonObject dataObj = json.value("data").toObject();
-        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
-        ac->cookieUname = dataObj.value("uname").toString();
-        qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
-        ui->robotNameButton->setText(ac->cookieUname);
+        cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        cookieUname = dataObj.value("uname").toString();
+        qInfo() << "当前账号：" << cookieUid << cookieUname;
+        ui->robotNameButton->setText(cookieUname);
         ui->robotNameButton->adjustMinimumSize();
         ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
 
@@ -3709,7 +3705,7 @@ QString MainWindow::getDomainPort() const
 
 void MainWindow::getRobotInfo()
 {
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + ac->cookieUid;
+    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + cookieUid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -3751,7 +3747,7 @@ void MainWindow::getRobotInfo()
     if (!ui->adjustDanmakuLongestCheck->isChecked())
         return ;
 
-    url = "http://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
+    url = "http://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
     get(url, [=](MyJson json) {
         /*{
             "code": 0,
@@ -3787,7 +3783,7 @@ void MainWindow::getRobotInfo()
             }
         }*/
         MyJson data = json.data();
-        ac->cookieULevel = data.o("user").i("user_level");
+        this->cookieULevel = data.o("user").i("user_level");
         if (ui->adjustDanmakuLongestCheck->isChecked())
             adjustDanmakuLongest();
     });
@@ -3936,9 +3932,9 @@ void MainWindow::getRoomUserInfo()
         }
     }*/
 
-    if (ac->browserCookie.isEmpty())
+    if (browserCookie.isEmpty())
         return ;
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + ac->roomId;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + roomId;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -3948,10 +3944,10 @@ void MainWindow::getRoomUserInfo()
 
         // 获取用户在这个房间信息
         QJsonObject info = json.value("data").toObject().value("info").toObject();
-        ac->cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
-        ac->cookieUname = info.value("uname").toString();
+        cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
+        cookieUname = info.value("uname").toString();
         QString uface = info.value("uface").toString(); // 头像地址
-        qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
+        qInfo() << "当前cookie用户：" << cookieUid << cookieUname;
     });
 }
 
@@ -4115,9 +4111,9 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
     }
     if (ui->diangeNeedMedalCheck->isChecked())
     {
-        if (danmaku.getAnchorRoomid() != ac->roomId) // 不是对应的粉丝牌
+        if (danmaku.getAnchorRoomid() != roomId) // 不是对应的粉丝牌
         {
-            qWarning() << "点歌未戴粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << ac->roomId;
+            qWarning() << "点歌未戴粉丝勋章：" << danmaku.getNickname() << danmaku.getAnchorRoomid() << "!=" << roomId;
             localNotify("点歌未戴粉丝勋章");
             triggerCmdEvent("ORDER_SONG_NO_MEDAL", danmaku, true);
             return ;
@@ -4194,7 +4190,7 @@ void MainWindow::initWS()
         ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
-        sendVeriPacket(socket, ac->roomId, ac->cookieToken);
+        sendVeriPacket(socket, roomId, token);
 
         // 定时发送心跳包
         heartTimer->start();
@@ -4207,7 +4203,7 @@ void MainWindow::initWS()
         {
             qWarning() << "正在直播的时候突然断开，5秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
             localNotify("[连接断开，重连...]");
-            ac->liveStatus = false;
+            liveStatus = false;
             // 尝试5秒钟后重连
             connectServerTimer->setInterval(5000);
         }
@@ -4311,20 +4307,20 @@ void MainWindow::initWS()
 
 void MainWindow::startConnectRoom()
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
 
     // 初始化主播数据
-    ac->currentFans = 0;
-    ac->currentFansClub = 0;
-    this->popularVal = 2;
+    currentFans = 0;
+    currentFansClub = 0;
+    popularVal = 2;
 
     // 准备房间数据
-    if (us->danmakuCounts)
-        us->danmakuCounts->deleteLater();
+    if (danmakuCounts)
+        danmakuCounts->deleteLater();
     QDir dir;
-    dir.mkdir(rt->dataPath+"danmaku_counts");
-    us->danmakuCounts = new QSettings(rt->dataPath+"danmaku_counts/" + ac->roomId + ".ini", QSettings::Format::IniFormat);
+    dir.mkdir(dataPath+"danmaku_counts");
+    danmakuCounts = new QSettings(dataPath+"danmaku_counts/" + roomId + ".ini", QSettings::Format::IniFormat);
     if (ui->calculateDailyDataCheck->isChecked())
         startCalculateDailyData();
 
@@ -4336,7 +4332,7 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::sendXliveHeartBeatE()
 {
-    if (ac->roomId.isEmpty() || ac->cookieUid.isEmpty() || !isLiving())
+    if (roomId.isEmpty() || cookieUid.isEmpty() || !isLiving())
         return ;
     if (todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
     {
@@ -4351,14 +4347,14 @@ void MainWindow::sendXliveHeartBeatE()
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "id=" + QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(xliveHeartBeatIndex).arg(ac->roomId);
+    datas << "id=" + QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
     datas << "is_patch=0";
     datas << "heart_beat=[]";
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
-    datas << "csrf_token=" + ac->csrf_token;
-    datas << "csrf=" + ac->csrf_token;
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -4406,15 +4402,15 @@ void MainWindow::sendXliveHeartBeatX()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
-    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(++xliveHeartBeatIndex).arg(ac->roomId));
+    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(parentAreaId).arg(areaId).arg(++xliveHeartBeatIndex).arg(roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
     postData.insert("ts", timestamp);
     postData.insert("ets", xliveHeartBeatEts);
     postData.insert("benchmark", xliveHeartBeatBenchmark);
     postData.insert("time", xliveHeartBeatInterval);
     postData.insert("ua", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36");
-    postData.insert("csrf_token", ac->csrf_token);
-    postData.insert("csrf", ac->csrf_token);
+    postData.insert("csrf_token", csrf_token);
+    postData.insert("csrf", csrf_token);
     QJsonObject calcText;
     calcText.insert("t", postData);
     calcText.insert("r", xliveHeartBeatSecretRule);
@@ -4435,15 +4431,15 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     QStringList datas;
     datas << "s=" + s; // 生成的签名
     datas << "id=" + QString("[%1,%2,%3,%4]")
-             .arg(ac->parentAreaId).arg(ac->areaId).arg(xliveHeartBeatIndex).arg(ac->roomId);
+             .arg(parentAreaId).arg(areaId).arg(xliveHeartBeatIndex).arg(roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ets=" + snum(xliveHeartBeatEts);
     datas << "benchmark=" + xliveHeartBeatBenchmark;
     datas << "time=" + snum(xliveHeartBeatInterval);
     datas << "ts=" + snum(timestamp);
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
-    datas << "csrf_token=" + ac->csrf_token;
-    datas << "csrf=" + ac->csrf_token;
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -4475,7 +4471,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
         xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
         xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
         xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
-        us->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
+        settings->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
         ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
         if (todayHeartMinite >= ui->heartTimeSpin->value())
             if (xliveHeartBeatTimer)
@@ -4489,7 +4485,7 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
  */
 void MainWindow::getRoomInit()
 {
-    QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + ac->roomId;
+    QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + roomId;
     connect(new NetUtil(roomInitUrl), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
@@ -4517,207 +4513,200 @@ void MainWindow::getRoomInit()
  */
 void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 {
-    switch (rt->livePlatform)
-    {
-    case Bilibili:
-    {
-        gettingRoom = true;
-        QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
-        get(url, [=](QJsonObject json) {
-            if (json.value("code").toInt() != 0)
-            {
-                qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
-                setRoomCover(QPixmap(":/bg/bg"));
-                ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
+    gettingRoom = true;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
+    get(url, [=](QJsonObject json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
+            setRoomCover(QPixmap(":/bg/bg"));
+            ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
 
-                if (reconnectCount >= 5)
-                {
-                    ui->connectStateLabel->setText("无法连接");
-                    return ;
-                }
-                qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
-                QTimer::singleShot(5000, [=]{
-                    getRoomInfo(reconnect, reconnectCount + 1);
-                });
+            if (reconnectCount >= 5)
+            {
+                ui->connectStateLabel->setText("无法连接");
                 return ;
             }
+            qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
+            QTimer::singleShot(5000, [=]{
+                getRoomInfo(reconnect, reconnectCount + 1);
+            });
+            return ;
+        }
 
-            QJsonObject dataObj = json.value("data").toObject();
-            QJsonObject roomInfo = dataObj.value("room_info").toObject();
-            QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
+        QJsonObject dataObj = json.value("data").toObject();
+        QJsonObject roomInfo = dataObj.value("room_info").toObject();
+        QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
 
-            // 获取房间信息
-            ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
-            ui->roomIdEdit->setText(ac->roomId);
-            ac->shortId = QString::number(roomInfo.value("short_id").toInt());
-            ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
-            ac->liveStatus = roomInfo.value("live_status").toInt();
-            int pkStatus = roomInfo.value("pk_status").toInt();
-            if (danmakuWindow)
-                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
-            ac->roomTitle = roomInfo.value("title").toString();
-            ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-            ac->roomDescription = roomInfo.value("description").toString();
-            ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
-            setWindowTitle(ac->roomTitle + " - " + ac->upName);
-            tray->setToolTip(ac->roomTitle + " - " + ac->upName);
-            if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
-                ui->roomNameLabel->setText(ac->roomTitle);
-            ui->upNameLabel->setText(ac->upName);
-            ac->roomNews = dataObj.value("news_info").toObject().value("content").toString();
+        // 获取房间信息
+        roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
+        ui->roomIdEdit->setText(roomId);
+        shortId = QString::number(roomInfo.value("short_id").toInt());
+        upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
+        liveStatus = roomInfo.value("live_status").toInt();
+        int pkStatus = roomInfo.value("pk_status").toInt();
+        if (danmakuWindow)
+            danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
+        roomTitle = roomInfo.value("title").toString();
+        upName = anchorInfo.value("base_info").toObject().value("uname").toString();
+        roomDescription = roomInfo.value("description").toString();
+        roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+        setWindowTitle(roomTitle + " - " + upName);
+        tray->setToolTip(roomTitle + " - " + upName);
+        if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
+            ui->roomNameLabel->setText(roomTitle);
+        ui->upNameLabel->setText(upName);
+        roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
-            // 设置房间描述
-            setRoomDescription(ac->roomDescription);
+        // 设置房间描述
+        setRoomDescription(roomDescription);
 
-            // 设置直播状态
-            if (ac->liveStatus == 0)
+        // 设置直播状态
+        if (liveStatus == 0)
+        {
+            ui->liveStatusButton->setText("未开播");
+            if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
+                connectServerTimer->start();
+        }
+        else if (liveStatus == 1)
+        {
+            ui->liveStatusButton->setText("已开播");
+        }
+        else if (liveStatus == 2)
+        {
+            ui->liveStatusButton->setText("轮播中");
+        }
+        else
+        {
+            ui->liveStatusButton->setText("未知状态" + snum(liveStatus));
+        }
+
+        qInfo() << "房间信息: roomid=" << roomId
+                 << "  shortid=" << shortId
+                 << "  upName=" << upName
+                 << "  uid=" << upUid;
+
+        // 设置PK状态
+        if (pkStatus)
+        {
+            QJsonObject battleInfo = dataObj.value("battle_info").toObject();
+            QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
+            if (pkId.toLongLong() > 0 && reconnect)
             {
-                ui->liveStatusButton->setText("未开播");
-                if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
-                    connectServerTimer->start();
+                // 这个 pk_status 不是 battle_type
+                pking = true;
+                // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
+                setPkInfoById(roomId, pkId);
+                qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
             }
-            else if (ac->liveStatus == 1)
-            {
-                ui->liveStatusButton->setText("已开播");
-            }
-            else if (ac->liveStatus == 2)
-            {
-                ui->liveStatusButton->setText("轮播中");
-            }
-            else
-            {
-                ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
-            }
+        }
+        else
+        {
+            QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
+                if (cookieUid == upUid)
+                    ui->actionJoin_Battle->setEnabled(true);
+            });
+        }
 
-            qInfo() << "房间信息: roomid=" << ac->roomId
-                     << "  shortid=" << ac->shortId
-                     << "  upName=" << ac->upName
-                     << "  uid=" << ac->upUid;
+        // 发送心跳要用到的直播信息
+        areaId = snum(roomInfo.value("area_id").toInt());
+        areaName = roomInfo.value("area_name").toString();
+        parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
+        parentAreaName = roomInfo.value("parent_area_name").toString();
+        ui->roomAreaLabel->setText(areaName);
 
-            // 设置PK状态
-            if (pkStatus)
-            {
-                QJsonObject battleInfo = dataObj.value("battle_info").toObject();
-                QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
-                if (pkId.toLongLong() > 0 && reconnect)
-                {
-                    // 这个 pk_status 不是 battle_type
-                    pking = true;
-                    // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
-                    setPkInfoById(ac->roomId, pkId);
-                    qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
-                }
-            }
-            else
-            {
-                QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
-                    if (ac->cookieUid == ac->upUid)
-                        ui->actionJoin_Battle->setEnabled(true);
-                });
-            }
+        // 疑似在线人数
+        int online = roomInfo.value("online").toInt();
+        ui->popularityLabel->setText(snum(online));
 
-            // 发送心跳要用到的直播信息
-            ac->areaId = snum(roomInfo.value("area_id").toInt());
-            ac->areaName = roomInfo.value("area_name").toString();
-            ac->parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
-            ac->parentAreaName = roomInfo.value("parent_area_name").toString();
-            ui->roomAreaLabel->setText(ac->areaName);
+        // 获取主播信息
+        currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
+        currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
+//        qInfo() << s8("粉丝数：") << currentFans << s8("    粉丝团：") << currentFansClub;
+        ui->fansCountLabel->setText(snum(currentFans));
+        ui->fansClubCountLabel->setText(snum(currentFansClub));
+        // getFansAndUpdate();
 
-            // 疑似在线人数
-            int online = roomInfo.value("online").toInt();
-            ui->popularityLabel->setText(snum(online));
+        // 获取主播等级
+        QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
+        anchorLiveLevel = liveInfo.value("level").toInt();
+        anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
+        anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
+        // TODO: 显示主播等级和积分
 
-            // 获取主播信息
-            ac->currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
-            ac->currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-    //        qInfo() << s8("粉丝数：") << ac->currentFans << s8("    粉丝团：") << ac->currentFansClub;
-            ui->fansCountLabel->setText(snum(ac->currentFans));
-            ui->fansClubCountLabel->setText(snum(ac->currentFansClub));
-            // getFansAndUpdate();
+        // 设置标签
+        ui->tagsButtonGroup->initStringList(roomTags);
 
-            // 获取主播等级
-            QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
-            ac->anchorLiveLevel = liveInfo.value("level").toInt();
-            ac->anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
-            ac->anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
-            // TODO: 显示主播等级和积分
+        // 获取热门榜信息
+        QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
+        int rank = hotRankInfo.value("rank").toInt();
+        QString rankArea = hotRankInfo.value("area_name").toString();
+        int countdown = hotRankInfo.value("countdown").toInt();
+        if (!rankArea.isEmpty())
+        {
+            ui->roomRankLabel->setText(snum(rank));
+            if (!rankArea.endsWith("榜"))
+                rankArea += "榜";
+            ui->roomRankTextLabel->setText(rankArea);
+            ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
+        }
 
-            // 设置标签
-            ui->tagsButtonGroup->initStringList(ac->roomTags);
+        // 获取直播排行榜
+        QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
+        areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
+        liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
+        // TODO: 显示直播排行榜
 
-            // 获取热门榜信息
-            QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
-            int rank = hotRankInfo.value("rank").toInt();
-            QString rankArea = hotRankInfo.value("area_name").toString();
-            int countdown = hotRankInfo.value("countdown").toInt();
-            if (!rankArea.isEmpty())
-            {
-                ui->roomRankLabel->setText(snum(rank));
-                if (!rankArea.endsWith("榜"))
-                    rankArea += "榜";
-                ui->roomRankTextLabel->setText(rankArea);
-                ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
-            }
+        // 获取大乱斗段位
+        QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
+        battleRankName = battleRankEntryInfo.value("rank_name").toString();
+        QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
+        ui->battleRankNameLabel->setText(battleRankName);
+        if (!battleRankName.isEmpty())
+        {
+            ui->battleInfoWidget->show();
+            get(battleRankUrl, [=](QNetworkReply* reply1){
+                QPixmap pixmap;
+                pixmap.loadFromData(reply1->readAll());
+                if (!pixmap.isNull())
+                    pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+                ui->battleRankIconLabel->setPixmap(pixmap);
+            });
+            upgradeWinningStreak(false);
+        }
+        else
+        {
+            ui->battleInfoWidget->hide();
+        }
 
-            // 获取直播排行榜
-            QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
-            ac->areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
-            ac->liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
-            // TODO: 显示直播排行榜
+        // 异步获取房间封面
+        getRoomCover(roomInfo.value("cover").toString());
 
-            // 获取大乱斗段位
-            QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
-            ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
-            QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
-            ui->battleRankNameLabel->setText(ac->battleRankName);
-            if (!ac->battleRankName.isEmpty())
-            {
-                ui->battleInfoWidget->show();
-                get(battleRankUrl, [=](QNetworkReply* reply1){
-                    QPixmap pixmap;
-                    pixmap.loadFromData(reply1->readAll());
-                    if (!pixmap.isNull())
-                        pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
-                    ui->battleRankIconLabel->setPixmap(pixmap);
-                });
-                upgradeWinningStreak(false);
-            }
-            else
-            {
-                ui->battleInfoWidget->hide();
-            }
+        // 获取主播头像
+        getUpInfo(upUid);
+        gettingRoom = false;
+        if (!gettingUser)
+            triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
+        updatePermission();
 
-            // 异步获取房间封面
-            getRoomCover(roomInfo.value("cover").toString());
+        // 判断房间，未开播则暂停连接，等待开播
+        if (!isLivingOrMayliving())
+            return ;
 
-            // 获取主播头像
-            getUpInfo(ac->upUid);
-            gettingRoom = false;
-            if (!gettingUser)
-                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
-            updatePermission();
+        // 开始工作
+        if (isLiving())
+            slotStartWork();
 
-            // 判断房间，未开播则暂停连接，等待开播
-            if (!isLivingOrMayliving())
-                return ;
+        if (!reconnect)
+            return ;
 
-            // 开始工作
-            if (isLiving())
-                slotStartWork();
+        // 获取弹幕信息
+        getDanmuInfo();
 
-            if (!reconnect)
-                return ;
-
-            // 获取弹幕信息
-            getDanmuInfo();
-
-            // 录播
-            if (ui->recordCheck->isChecked() && isLiving())
-                startLiveRecord();
-        });
-    }
-        break;
-    }
+        // 录播
+        if (ui->recordCheck->isChecked() && isLiving())
+            startLiveRecord();
+    });
 
     if (reconnect)
         ui->connectStateLabel->setText("获取房间信息...");
@@ -4816,8 +4805,8 @@ void MainWindow::updatePermission()
     permissionLevel = 0;
     if (gettingRoom || gettingUser)
         return ;
-    QString userId = ac->cookieUid;
-    get(serverPath + "pay/isVip", {"room_id", ac->roomId, "user_id", userId}, [=](MyJson json) {
+    QString userId = cookieUid;
+    get(serverPath + "pay/isVip", {"room_id", roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         qint64 deadline = 0;
@@ -4900,7 +4889,7 @@ int MainWindow::hasPermission()
  */
 void MainWindow::processNewDay()
 {
-    us->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
+    settings->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -5019,7 +5008,7 @@ void MainWindow::setRoomThemeByCover(double val)
                  / 9 / 255;
     alpha = 16 + alpha / 4; // 16~80
     bgTrans.setAlpha(alpha);
-    QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(rt->fluentRadius) + " }";
+    QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(fluentRadius) + " }";
     ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
     ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
     ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
@@ -5052,7 +5041,7 @@ void MainWindow::adjustCoverSizeByRoomCover(QPixmap pixmap)
     int suitH = ui->upNameLabel->y() - 6; // 最适合的高度
     if (suitH < p.height())
         p = p.copy(0, (p.height() - suitH) / 2, p.width(), suitH);
-    roomCoverLabel->setPixmap(getTopRoundedPixmap(p, rt->fluentRadius));
+    roomCoverLabel->setPixmap(getTopRoundedPixmap(p, fluentRadius));
     roomCoverLabel->resize(p.size());
     roomCoverLabel->lower();
 }
@@ -5222,7 +5211,7 @@ QPixmap MainWindow::toLivingPixmap(QPixmap pixmap) const
  */
 void MainWindow::getDanmuInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+ac->roomId+"&type=0";
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+roomId+"&type=0";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -5246,7 +5235,7 @@ void MainWindow::getDanmuInfo()
         }
 
         QJsonObject data = json.value("data").toObject();
-        ac->cookieToken = data.value("token").toString();
+        token = data.value("token").toString();
         QJsonArray hostArray = data.value("host_list").toArray();
         hostList.clear();
         foreach (auto val, hostArray)
@@ -5259,7 +5248,7 @@ void MainWindow::getDanmuInfo()
                                 o.value("ws_port").toInt(),
                             });
         }
-        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
+        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << token;
 
         startMsgLoop();
 
@@ -5272,7 +5261,7 @@ void MainWindow::getDanmuInfo()
 
 void MainWindow::getFansAndUpdate()
 {
-    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + ac->upUid;
+    QString url = "http://api.bilibili.com/x/relation/followers?vmid=" + upUid;
     get(url, [=](QJsonObject json){
         QJsonArray list = json.value("data").toObject().value("list").toArray();
         QList<FanBean> newFans;
@@ -5589,8 +5578,8 @@ void MainWindow::sendHeartPacket()
 
 QString MainWindow::getLocalNickname(qint64 uid) const
 {
-    if (us->localNicknames.contains(uid))
-        return us->localNicknames.value(uid);
+    if (localNicknames.contains(uid))
+        return localNicknames.value(uid);
     return "";
 }
 
@@ -5832,13 +5821,13 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     }
 
     // 自定义变量
-    for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
+    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
     {
         msg.replace(it->first, it->second);
     }
 
     // 翻译
-    for (auto it = us->variantTranslation.begin(); it != us->variantTranslation.end(); ++it)
+    for (auto it = variantTranslation.begin(); it != variantTranslation.end(); ++it)
     {
         msg.replace(it->first, it->second);
     }
@@ -5847,7 +5836,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     msg = processTimeVariants(msg);
 
     // 弹幕变量、环境变量（固定文字）
-    re = QRegularExpression("%[\\w_]+%");
+    re = QRegularExpression("%[\\w_]+?%");
     int matchPos = 0;
     bool ok;
     while ((matchPos = msg.indexOf(re, matchPos, &match)) > -1)
@@ -5920,7 +5909,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         {
             QString _var = match.captured(0);
             QString text = match.captured(1);
-            text = snum(ConditionUtil::calcIntExpression(text));
+            text = snum(calcIntExpression(text));
             msg.replace(_var, text); // 默认使用变量类型吧
             find = true;
         }
@@ -6007,16 +5996,13 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%text%")
         return toSingleLine(danmaku.getText());
 
-    else if (key == "%url_text%")
-        return QString::fromUtf8(danmaku.getText().toUtf8().toPercentEncoding());
-
     // 进来次数
     else if (key == "%come_count%")
     {
         if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
             return snum(danmaku.getNumber());
         else
-            return snum(us->danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
+            return snum(danmakuCounts->value("come/"+snum(danmaku.getUid())).toInt());
     }
 
     // 上次进来
@@ -6024,7 +6010,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return snum(danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                                         ? danmaku.getPrevTimestamp()
-                                        : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
+                                        : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong());
     }
 
     // 和现在的时间差
@@ -6032,7 +6018,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         qint64 prevTime = danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD)
                 ? danmaku.getPrevTimestamp()
-                : us->danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
+                : danmakuCounts->value("comeTime/"+snum(danmaku.getUid())).toLongLong();
         return snum(QDateTime::currentSecsSinceEpoch() - prevTime);
     }
 
@@ -6059,7 +6045,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 本次送礼名字
     else if (key == "%gift_name%")
-        return us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName();
+        return giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName();
 
     // 原始礼物名字
     else if (key == "%origin_gift_name%")
@@ -6104,18 +6090,18 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 总共赠送金瓜子
     else if (key == "%total_gold%")
-        return snum(us->danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
+        return snum(danmakuCounts->value("gold/"+snum(danmaku.getUid())).toLongLong());
 
     // 总共赠送银瓜子
     else if (key == "%total_silver%")
-        return snum(us->danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
+        return snum(danmakuCounts->value("silver/"+snum(danmaku.getUid())).toLongLong());
 
     // 购买舰长
     else if (key == "%guard_buy%")
         return danmaku.is(MSG_GUARD_BUY) ? "1" : "0";
 
     else if (key == "%guard_buy_count%")
-        return snum(us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
+        return snum(danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt());
 
     // 0续费，1第一次上船，2重新上船
     else if (key == "%guard_first%" || key == "%first%")
@@ -6146,7 +6132,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房管
     else if (key == "%admin%")
-        return danmaku.isAdmin() ? "1" : (!ac->upUid.isEmpty() && snum(danmaku.getUid())==ac->upUid ? "1" : "0");
+        return danmaku.isAdmin() ? "1" : (!upUid.isEmpty() && snum(danmaku.getUid())==upUid ? "1" : "0");
 
     // 舰长
     else if (key == "%guard%" || key == "%guard_level%")
@@ -6168,7 +6154,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房管或舰长
     else if (key == "%admin_or_guard%")
-        return (danmaku.isGuard() || danmaku.isAdmin() || (!ac->upUid.isEmpty() && snum(danmaku.getUid()) == ac->upUid)) ? "1" : "0";
+        return (danmaku.isGuard() || danmaku.isAdmin() || (!upUid.isEmpty() && snum(danmaku.getUid()) == upUid)) ? "1" : "0";
 
     // 高能榜
     else if (key == "%online_rank%")
@@ -6210,11 +6196,11 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 礼物名字长度
     else if (key == "%giftname_len%")
-        return snum((us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum((giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     // 昵称+礼物名字长度
     else if (key == "%name_sum_len%")
-        return snum(danmaku.getNickname().length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum(danmaku.getNickname().length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
 
     else if (key == "%ainame_sum_len%")
     {
@@ -6223,7 +6209,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
             local = nicknameSimplify(danmaku.getNickname());
         if (local.isEmpty())
             local = danmaku.getNickname();
-        return snum(local.length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
+        return snum(local.length() + (giftNames.contains(danmaku.getGiftId()) ? giftNames.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
     }
 
     // 是否新关注
@@ -6270,9 +6256,9 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 当前粉丝数量
     else if (key == "%fans_count%")
-        return snum(ac->currentFans);
+        return snum(currentFans);
     else if (key == "%fans_club%")
-        return snum(ac->currentFansClub);
+        return snum(currentFansClub);
 
     // 今天金瓜子总数
     else if (key == "%today_gold%")
@@ -6292,7 +6278,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 当前人气
     else if (key == "%popularity%")
-        return snum(ac->currentPopul);
+        return snum(currentPopul);
 
     // 当前时间
     else if (key == "%time_hour%")
@@ -6328,14 +6314,14 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%pk_uname%")
         return pkUname;
     else if (key == "%pk_count%")
-        return snum(!pkRoomId.isEmpty() ? us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
+        return snum(!pkRoomId.isEmpty() ? danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
     else if (key == "%pk_touta_prob%")
     {
         int prob = 0;
         if (pking && !pkRoomId.isEmpty())
         {
-            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             if (totalCount > 1)
                 prob = toutaCount * 100 / totalCount;
         }
@@ -6358,54 +6344,54 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 房间属性
     else if (key == "%living%")
-        return snum(ac->liveStatus);
+        return snum(liveStatus);
     else if (key == "%room_id%")
-        return ac->roomId;
+        return roomId;
     else if (key == "%room_name%")
-        return ac->roomTitle;
+        return roomTitle;
     else if (key == "%up_name%" || key == "%up_uname%")
-        return ac->upName;
+        return upName;
     else if (key == "%up_uid%")
-        return ac->upUid;
+        return upUid;
     else if (key == "%my_uid%")
-        return ac->cookieUid;
+        return cookieUid;
     else if (key == "%my_uname%")
-        return ac->cookieUname;
+        return cookieUname;
     else if (key == "%area_id%")
-        return ac->areaId;
+        return areaId;
     else if (key == "%area_name%")
-        return ac->areaName;
+        return areaName;
     else if (key == "%parent_area_id%")
-        return ac->parentAreaId;
+        return parentAreaId;
     else if (key == "%parent_area_name%")
-        return ac->parentAreaName;
+        return parentAreaName;
 
     // 是主播
     else if (key == "%is_up%")
-        return danmaku.getUid() == ac->upUid.toLongLong() ? "1" : "0";
+        return danmaku.getUid() == upUid.toLongLong() ? "1" : "0";
     // 是机器人
     else if (key == "%is_me%")
-        return danmaku.getUid() == ac->cookieUid.toLongLong() ? "1" : "0";
+        return danmaku.getUid() == cookieUid.toLongLong() ? "1" : "0";
     // 戴房间勋章
     else if (key == "%is_room_medal%")
-        return danmaku.getAnchorRoomid() == ac->roomId ? "1" : "0";
+        return danmaku.getAnchorRoomid() == roomId ? "1" : "0";
 
     // 本地设置
     // 特别关心
     else if (key == "%care%")
-        return us->careUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return careUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 强提醒
     else if (key == "%strong_notify%")
-        return us->strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return strongNotifyUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 是否被禁言
     else if (key == "%blocked%")
-        return us->userBlockIds.contains(danmaku.getUid()) ? "1" : "0";
+        return userBlockIds.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_welcome%")
-        return us->notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return notWelcomeUsers.contains(danmaku.getUid()) ? "1" : "0";
     // 不自动欢迎
     else if (key == "%not_reply%")
-        return us->notReplyUsers.contains(danmaku.getUid()) ? "1" : "0";
+        return notReplyUsers.contains(danmaku.getUid()) ? "1" : "0";
 
     // 弹幕人气
     else if (key == "%danmu_popularity%")
@@ -6421,10 +6407,10 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 程序文件、路径
     else if (key == "%app_name%")
-        return rt->appFileName;
+        return appFileName;
 
     else if (key == "%app_path%")
-        return QDir(rt->dataPath).absolutePath();
+        return QDir(dataPath).absolutePath();
 
     else if (key == "%www_path%")
         return wwwDir.absolutePath();
@@ -6440,7 +6426,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // cookie
     else if (key == "%csrf%")
-        return ac->csrf_token;
+        return csrf_token;
 
     // 工作状态
     else if (key == "%working%")
@@ -6448,13 +6434,13 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 用户备注
     else if (key == "%umark%")
-        return us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
+        return userMarks->value("base/" + snum(danmaku.getUid()), "").toString();
 
     // 对面直播间也在用神奇弹幕
     else if (key == "%pk_magical_room%")
         return !pkRoomId.isEmpty() && magicalRooms.contains(pkRoomId) ? "1" : "0";
 
-    // 正在播放的音乐
+    // 正则播放的音乐
     else if (key == "%playing_song%")
     {
         QString name = "";
@@ -6602,7 +6588,7 @@ QString MainWindow::replaceDanmakuJson(const QJsonObject &json, const QString& k
     if (obj.isNull() || obj.isUndefined())
         return "";
     if (obj.isString())
-        return toSingleLine(obj.toString());
+        return obj.toString();
     if (obj.isBool())
         return obj.toBool(false) ? "1" : "0";
     if (obj.isDouble())
@@ -7091,9 +7077,228 @@ QString MainWindow::processMsgHeaderConditions(QString msg) const
     QString totalExp = match.capturedTexts().first(); // 整个表达式，带括号
     QString exprs = match.capturedTexts().at(1);
 
-    if (!ConditionUtil::judgeCondition(exprs))
+    if (!processVariantConditions(exprs))
         return "";
     return msg.right(msg.length() - totalExp.length());
+}
+
+/**
+ * 判断逻辑条件是否成立
+ * exp1, exp2; exp3
+ */
+bool MainWindow::processVariantConditions(QString exprs) const
+{
+    QStringList orExps = exprs.split(QRegularExpression("(;|\\|\\|)"), QString::SkipEmptyParts);
+    bool isTrue = false;
+    QRegularExpression compRe("^\\s*([^<>=!]*?)\\s*([<>=!~]{1,2})\\s*([^<>=!]*?)\\s*$");
+    QRegularExpression intRe("^[\\d\\+\\-\\*\\/%]+$");
+    // QRegularExpression overlayIntRe("\\d{11,}");
+    QRegularExpressionMatch match;
+    foreach (QString orExp, orExps)
+    {
+        isTrue = true;
+        QStringList andExps = orExp.split(QRegularExpression("(,|&&)"), QString::SkipEmptyParts);
+        CALC_DEB << "表达式or内：" << andExps;
+        foreach (QString exp, andExps)
+        {
+            CALC_DEB << "表达式and内：" << exp;
+            exp = exp.trimmed();
+            if (exp.indexOf(compRe, 0, &match) == -1         // 非比较
+                    || (match.captured(1).isEmpty() && match.captured(2) == "!"))    // 取反类型
+            {
+                bool notTrue = exp.startsWith("!"); // 与否取反
+                if (notTrue) // 取反……
+                {
+                    exp = exp.right(exp.length() - 1);
+                }
+                if (exp.isEmpty() || exp == "0" || exp.toLower() == "false") // false
+                {
+                    if (!notTrue)
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                    else // 取反
+                    {
+                        isTrue = true;
+                        break;
+                    }
+                }
+                else // true
+                {
+                    if (notTrue)
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                continue;
+            }
+
+            // 比较类型
+            QStringList caps = match.capturedTexts();
+            QString s1 = caps.at(1);
+            QString op = caps.at(2);
+            QString s2 = caps.at(3);
+            CALC_DEB << "比较：" << s1 << op << s2;
+            if (s1.contains(intRe) && s2.contains(intRe) // 都是整数
+                    && QStringList{">", "<", "=", ">=", "<=", "==", "!="}.contains(op)) // 是这个运算符
+                    // && !s1.contains(overlayIntRe) && !s2.contains(overlayIntRe)) // 没有溢出
+            {
+                qint64 i1 = calcIntExpression(s1);
+                qint64 i2 = calcIntExpression(s2);
+                CALC_DEB << "比较整数" << i1 << op << i2;
+                if (!isConditionTrue<qint64>(i1, i2, op))
+                {
+                    isTrue = false;
+                    break;
+                }
+            }
+            else/* if (s1.startsWith("\"") || s1.endsWith("\"") || s1.startsWith("'") || s1.endsWith("'")
+                    || s2.startsWith("\"") || s2.startsWith("\"") || s2.startsWith("'") || s2.startsWith("'")) // 都是字符串*/
+            {
+                auto removeQuote = [=](QString s) -> QString{
+                    if (s.startsWith("\"") && s.endsWith("\""))
+                        return s.mid(1, s.length()-2);
+                    if (s.startsWith("'") && s.endsWith("'"))
+                        return s.mid(1, s.length()-2);
+                    return s;
+                };
+                s1 = removeQuote(s1);
+                s2 = removeQuote(s2);
+                CALC_DEB << "比较字符串" << s1 << op << s2;
+                if (op == "~")
+                {
+                    if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
+                    {
+                        QString full = caps.at(0);
+                        if (full.indexOf(QRegularExpression("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$"), 0, &match) == -1)
+                        {
+                            qWarning() << "错误的~运算：" << full;
+                            isTrue = false;
+                            break;
+                        }
+                        caps = match.capturedTexts();
+                        s1 = caps.at(1);
+                        s2 = caps.at(3);
+                        CALC_DEB << "纠正运算：" << s1 << "~" << s2;
+                    }
+
+                    // 预定义的一个集合
+                    translateUnicode(s2);
+
+                    QRegularExpression re(s2);
+                    if (!re.isValid())
+                        showError("错误的~表达式", s2);
+                    if (!s1.contains(QRegularExpression(s2)))
+                    {
+                        isTrue = false;
+                        break;
+                    }
+                }
+                else if (!isConditionTrue<QString>(s1, s2, op))
+                {
+                    isTrue = false;
+                    break;
+                }
+            }
+            /*else
+            {
+                qCritical() << "error: 无法比较的表达式:" << match.capturedTexts().first();
+                qCritical() << "    原始语句：" << msg;
+            }*/
+        }
+        if (isTrue)
+            break;
+    }
+    return isTrue;
+}
+
+/**
+ * 计算纯int、运算符组成的表达式
+ */
+qint64 MainWindow::calcIntExpression(QString exp) const
+{
+    exp = exp.replace(QRegularExpression("\\s*"), ""); // 去掉所有空白
+    QRegularExpression opRe("[\\+\\-\\*/%]");
+
+    // 获取所有整型数值
+    QStringList valss = exp.split(opRe); // 如果是-开头，那么会当做 0-x
+    if (valss.size() == 0)
+        return 0;
+    QList<qint64> vals;
+    foreach (QString val, valss)
+    {
+        bool ok = true;
+        qint64 ll = val.toLongLong(&ok);
+        if (!ok && !val.isEmpty())
+        {
+            showError("转换整数值失败", exp);
+            qDebug() << "exp:" << exp << exp.startsWith("\"") << ll;
+            if (val.length() > 18) // 19位数字，超出了ll的范围
+                ll = val.right(18).toLongLong();
+        }
+        vals << ll;
+    }
+
+    // 获取所有运算符
+    QStringList ops;
+    QRegularExpressionMatchIterator i = opRe.globalMatch(exp);
+    while (i.hasNext())
+    {
+        ops << i.next().captured(0);
+    }
+    if (valss.size() != ops.size() + 1)
+    {
+        qCritical() << "错误的表达式：" << valss << ops << exp;
+        return 0;
+    }
+
+    // 入栈：* / %
+    for (int i = 0; i < ops.size(); i++)
+    {
+        // op[i] 操作 vals[i] x vals[i+1]
+        if (ops[i] == "*")
+        {
+            vals[i] *= vals[i+1];
+        }
+        else if (ops[i] == "/")
+        {
+            // qDebug() << "除法" << ops << vals;
+            if (vals[i+1] == 0)
+            {
+                qWarning() << "!!!被除数是0 ：" << exp;
+                vals[i+1] = 1;
+            }
+            vals[i] /= vals[i+1];
+        }
+        else if (ops[i] == "%")
+        {
+            if (vals[i+1] == 0)
+            {
+                qWarning() << "!!!被模数是0 ：" << exp;
+                vals[i+1] = 1;
+            }
+            vals[i] %= vals[i+1];
+        }
+        else
+            continue;
+        vals.removeAt(i+1);
+        ops.removeAt(i);
+        i--;
+    }
+
+    // 顺序计算：+ -
+    qint64 val = vals.first();
+    for (int i = 0; i < ops.size(); i++)
+    {
+        if (ops[i] == "-")
+            val -= vals[i+1];
+        else if (ops[i] == "+")
+            val += vals[i+1];
+    }
+
+    return val;
 }
 
 bool MainWindow::isFilterRejected(QString filterName, const LiveDanmaku &danmaku)
@@ -7189,9 +7394,9 @@ qint64 MainWindow::unameToUid(QString text)
         if (!danmaku.is(MSG_DANMAKU) && !danmaku.is(MSG_GIFT))
             continue;
         qint64 uid = danmaku.getUid();
-        if (hadMatches.contains(uid) || !us->localNicknames.contains(uid))
+        if (hadMatches.contains(uid) || !localNicknames.contains(uid))
             continue;
-        QString nick = us->localNicknames.value(uid);
+        QString nick = localNicknames.value(uid);
         if (nick.contains(text))
         {
             // 就是这个人
@@ -7455,11 +7660,11 @@ void MainWindow::startSaveDanmakuToFile()
         finishSaveDanmuToFile();
 
     QDir dir;
-    dir.mkdir(rt->dataPath+"danmaku_histories");
+    dir.mkdir(dataPath+"danmaku_histories");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
 
-    qInfo() << "开启弹幕记录：" << rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log";
-    danmuLogFile = new QFile(rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log");
+    qInfo() << "开启弹幕记录：" << dataPath+"danmaku_histories/" + roomId + "_" + date + ".log";
+    danmuLogFile = new QFile(dataPath+"danmaku_histories/" + roomId + "_" + date + ".log");
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
     danmuLogStream->setGenerateByteOrderMark(true);
@@ -7488,9 +7693,9 @@ void MainWindow::startCalculateDailyData()
     }
 
     QDir dir;
-    dir.mkdir(rt->dataPath+"live_daily");
+    dir.mkdir(dataPath+"live_daily");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    dailySettings = new QSettings(rt->dataPath+"live_daily/" + ac->roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
+    dailySettings = new QSettings(dataPath+"live_daily/" + roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
 
     dailyCome = dailySettings->value("come", 0).toInt();
     dailyPeopleNum = dailySettings->value("people_num", 0).toInt();
@@ -7503,8 +7708,8 @@ void MainWindow::startCalculateDailyData()
     dailyGuard = dailySettings->value("guard", 0).toInt();
     dailyMaxPopul = dailySettings->value("max_popularity", 0).toInt();
     dailyAvePopul = 0;
-    if (us->currentGuards.size())
-        dailySettings->setValue("guard_count", us->currentGuards.size());
+    if (currentGuards.size())
+        dailySettings->setValue("guard_count", currentGuards.size());
     else
         updateExistGuards(0);
 }
@@ -7514,24 +7719,24 @@ void MainWindow::saveCalculateDailyData()
     if (dailySettings)
     {
         dailySettings->setValue("come", dailyCome);
-        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), us->userComeTimes.size()));
+        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), userComeTimes.size()));
         dailySettings->setValue("danmaku", dailyDanmaku);
         dailySettings->setValue("newbie_msg", dailyNewbieMsg);
         dailySettings->setValue("new_fans", dailyNewFans);
-        dailySettings->setValue("total_fans", ac->currentFans);
+        dailySettings->setValue("total_fans", currentFans);
         dailySettings->setValue("gift_silver", dailyGiftSilver);
         dailySettings->setValue("gift_gold", dailyGiftGold);
         dailySettings->setValue("guard", dailyGuard);
-        if (us->currentGuards.size())
-            dailySettings->setValue("guard_count", us->currentGuards.size());
+        if (currentGuards.size())
+            dailySettings->setValue("guard_count", currentGuards.size());
     }
 }
 
 void MainWindow::saveTouta()
 {
-    us->setValue("pk/toutaCount", toutaCount);
-    us->setValue("pk/chiguaCount", chiguaCount);
-    us->setValue("pk/toutaGold", toutaGold);
+    settings->setValue("pk/toutaCount", toutaCount);
+    settings->setValue("pk/chiguaCount", chiguaCount);
+    settings->setValue("pk/toutaGold", toutaGold);
     ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
 }
 
@@ -7555,7 +7760,7 @@ void MainWindow::restoreToutaGifts(QString text)
 void MainWindow::startLiveRecord()
 {
     finishLiveRecord();
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
 
     getRoomLiveVideoUrl([=](QString url){
@@ -7608,11 +7813,11 @@ void MainWindow::startLiveRecord()
 
 void MainWindow::startRecordUrl(QString url)
 {
-    QDir dir(rt->dataPath);
+    QDir dir(dataPath);
     dir.mkpath("record");
     dir.cd("record");
     QString path = QFileInfo(dir.absoluteFilePath(
-                                 ac->roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
+                                 roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
             .absoluteFilePath();
 
     ui->recordCheck->setText("录制中...");
@@ -7846,9 +8051,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
         delBlockUser(danmaku.getUid());
-        if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+        if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
         {
-            us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+            eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
             saveEternalBlockUsers();
         }
         if (response)
@@ -7885,9 +8090,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -7908,9 +8113,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+                if (eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), roomId.toLongLong())))
                 {
-                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+                    eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), roomId.toLongLong()));
                     saveEternalBlockUsers();
                 }
 
@@ -7957,7 +8162,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     {
         ui->AIReplyMsgCheck->setChecked(Qt::CheckState::Unchecked);
         on_AIReplyMsgCheck_clicked();
-        if (us->value("danmaku/aiReply", false).toBool())
+        if (settings->value("danmaku/aiReply", false).toBool())
             ui->AIReplyCheck->setChecked(false);
         if (response)
             sendNotifyMsg(">已关闭弹幕回复");
@@ -7969,80 +8174,8 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
 bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, int &resVal)
 {
-    // 语法糖
-    QRegularExpressionMatch match;
-    if (ui->syntacticSugarCheck->isChecked())
-    {
-        // {key} = val
-        // {key} += val
-        QRegularExpression re("^\\s*\\{(.+?)\\}\\s*(.?)=\\s*(.*)\\s*$");
-        if (msg.indexOf(re, 0, &match) > -1)
-        {
-            QString key = match.captured(1);
-            QString ope = match.captured(2); // 操作符
-            QString val = match.captured(3);
-            if (!key.contains("/"))
-                key = "heaps/" + key;
-            if (ope.isEmpty())
-            {
-                heaps->setValue(key, val);
-                qInfo() << "set value" << key << "=" << val;
-            }
-            else // 数值运算
-            {
-                qint64 v = heaps->value(key).toLongLong();
-                qint64 x = val.toLongLong();
-                if (ope == "+")
-                    v += x;
-                else if (ope == "-")
-                    v -= x;
-                else if (ope == "*")
-                    v *= x;
-                else if (ope == "/")
-                {
-                    if (x == 0)
-                    {
-                        showError("错误的/运算", msg);
-                        x = 1;
-                    }
-                    v /= x;
-                }
-                else if (ope == "%")
-                {
-                    if (x == 0)
-                    {
-                        showError("错误的%运算", msg);
-                        x = 1;
-                    }
-                    v /= x;
-                }
-                heaps->setValue(key, v);
-                qInfo() << "set value" << key << "=" << v;
-            }
-            return true;
-        }
-
-        // {key}++  {key}--
-        re = QRegularExpression("^\\s*\\{(.+)\\}\\s*(\\+\\+|\\-\\-)\\s*$");
-        if (msg.indexOf(re, 0, &match) > -1)
-        {
-            QString key = match.captured(1);
-            QString ope = match.captured(2);
-            if (!key.contains("/"))
-                key = "heaps/" + key;
-            qint64 v = heaps->value(key).toLongLong();
-            if (ope == "++")
-                v++;
-            else if (ope == "--")
-                v--;
-            heaps->setValue(key, v);
-            qInfo() << "set value" << key << "=" << v;
-            return true;
-        }
-    }
-
-    // 总体判断判断是不是 >func() 格式的命令
     QRegularExpression re("^\\s*>");
+    QRegularExpressionMatch match;
     if (msg.indexOf(re) == -1)
         return false;
 
@@ -8059,6 +8192,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             return true;
         }
+        return false;
     }
 
     // 禁言
@@ -8473,16 +8607,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             msTTS->speakSSML(text);
             return true;
         }
-
-        re = RE("speakTextUrl\\s*\\(\\s*(.+?)\\s*\\)");
-        if (msg.indexOf(re, 0, &match) > -1)
-        {
-            QStringList caps = match.capturedTexts();
-            QString link = caps.at(1).trimmed();
-            qInfo() << "执行命令：" << caps;
-            playNetAudio(link);
-            return true;
-        }
     }
 
     if (msg.contains("setVoice"))
@@ -8495,7 +8619,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
             ui->voiceNameEdit->setText(text);
-            on_voiceNameEdit_editingFinished();
             return true;
         }
 
@@ -8513,7 +8636,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voiceSpeedSlider->setValue(val);
-            on_voiceSpeedSlider_valueChanged(val);
             return true;
         }
 
@@ -8531,7 +8653,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voicePitchSlider->setValue(val);
-            on_voicePitchSlider_valueChanged(val);
             return true;
         }
 
@@ -8549,7 +8670,6 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             qInfo() << "执行命令：" << caps;
             ui->voiceVolumeSlider->setValue(val);
-            on_voiceVolumeSlider_valueChanged(val);
             return true;
         }
     }
@@ -9036,7 +9156,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 key = "heaps/" + key;
             QString value = caps.at(2);
             qInfo() << "执行命令：" << caps;
-            us->setValue(key, value);
+            settings->setValue(key, value);
             return true;
         }
     }
@@ -9053,7 +9173,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 key = "heaps/" + key;
             qInfo() << "执行命令：" << caps;
 
-            us->remove(key);
+            settings->remove(key);
             return true;
         }
     }
@@ -9189,7 +9309,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                             exp.replace(_var, var.toString());
                         }
                     }
-                    if (ConditionUtil::judgeCondition(exp))
+                    if (processVariantConditions(exp))
                     {
                         // 处理 newValue
                         if (newValue.contains("_VALUE_"))
@@ -9205,7 +9325,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                                 {
                                     QString _var = match2.captured(0);
                                     QString text = match2.captured(1);
-                                    text = snum(ConditionUtil::calcIntExpression(text));
+                                    text = snum(calcIntExpression(text));
                                     newValue.replace(_var, text); // 默认使用变量类型吧
                                 }
                             }
@@ -9265,7 +9385,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                         }
                     }
 
-                    if (ConditionUtil::judgeCondition(exp))
+                    if (processVariantConditions(exp))
                     {
                         heaps->setValue(keys.at(i), heaps->value(keys.at(i)).toLongLong() + modify);
                     }
@@ -9359,7 +9479,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                             exp.replace(_var, var.toString());
                         }
                     }
-                    if (ConditionUtil::judgeCondition(exp))
+                    if (processVariantConditions(exp))
                     {
                         heaps->remove(keys.takeAt(i--));
                     }
@@ -9645,14 +9765,14 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             qInfo() << "执行命令：" << caps;
 
-            if (!us->notWelcomeUsers.contains(uid))
+            if (!notWelcomeUsers.contains(uid))
             {
-                us->notWelcomeUsers.append(uid);
+                notWelcomeUsers.append(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, us->notWelcomeUsers)
+                foreach (qint64 uid, notWelcomeUsers)
                     ress << QString::number(uid);
-                us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
+                settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
             return true;
@@ -9669,14 +9789,14 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qint64 uid = caps.at(1).toLongLong();
             qInfo() << "执行命令：" << caps;
 
-            if (us->notWelcomeUsers.contains(uid))
+            if (notWelcomeUsers.contains(uid))
             {
-                us->notWelcomeUsers.removeOne(uid);
+                notWelcomeUsers.removeOne(uid);
 
                 QStringList ress;
-                foreach (qint64 uid, us->notWelcomeUsers)
+                foreach (qint64 uid, notWelcomeUsers)
                     ress << QString::number(uid);
-                us->setValue("danmaku/notWelcomeUsers", ress.join(";"));
+                settings->setValue("danmaku/notWelcomeUsers", ress.join(";"));
             }
 
             return true;
@@ -9699,21 +9819,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             }
             else if (name.isEmpty()) // 移除
             {
-                if (us->localNicknames.contains(uid))
-                    us->localNicknames.remove(uid);
+                if (localNicknames.contains(uid))
+                    localNicknames.remove(uid);
             }
             else // 添加
             {
-                us->localNicknames[uid] = name;
+                localNicknames[uid] = name;
 
                 QStringList ress;
-                auto it = us->localNicknames.begin();
-                while (it != us->localNicknames.end())
+                auto it = localNicknames.begin();
+                while (it != localNicknames.end())
                 {
                     ress << QString("%1=>%2").arg(it.key()).arg(it.value());
                     it++;
                 }
-                us->setValue("danmaku/localNicknames", ress.join(";"));
+                settings->setValue("danmaku/localNicknames", ress.join(";"));
             }
             return true;
         }
@@ -9923,7 +10043,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             QString path;
-            if (isFileExist(path = rt->dataPath + "control/" + text + ".bat"))
+            if (isFileExist(path = dataPath + "control/" + text + ".bat"))
             {
                 qInfo() << "执行bat脚本：" << path;
                 QProcess p(nullptr);
@@ -9931,7 +10051,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 if (!p.waitForFinished())
                     qWarning() << "执行bat脚本失败：" << path << p.errorString();
             }
-            else if (isFileExist(path = rt->dataPath + "control/" + text + ".vbs"))
+            else if (isFileExist(path = dataPath + "control/" + text + ".vbs"))
             {
                 qInfo() << "执行vbs脚本：" << path;
                 QDesktopServices::openUrl("file:///" + path);
@@ -9999,15 +10119,15 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             if (loopKeyStr.startsWith(COUNTS_PREFIX))
             {
                 loopKeyStr.remove(0, COUNTS_PREFIX.length());
-                sts = us->danmakuCounts;
+                sts = danmakuCounts;
             }
             else if (loopKeyStr.startsWith(SETTINGS_PREFIX))
             {
                 loopKeyStr.remove(0, SETTINGS_PREFIX.length());
-                sts = us;
+                sts = settings;
             }
 
-            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, us->danmakuCounts, heaps, this);
+            auto viewer = new VariantViewer(caption, sts, loopKeyStr, tableFileds, danmakuCounts, heaps, this);
             viewer->setGeometry(this->geometry());
             viewer->show();
             return true;
@@ -10029,9 +10149,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             {
                 showCSV(path);
             }
-            else if (isFileExist(rt->dataPath + path))
+            else if (isFileExist(this->dataPath + path))
             {
-                showCSV(rt->dataPath + path);
+                showCSV(this->dataPath + path);
             }
             return true;
         }
@@ -10058,7 +10178,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             int val = caps.at(1).toInt();
-            us->setValue("pk/maxGold", pkMaxGold = val);
+            settings->setValue("pk/maxGold", pkMaxGold = val);
             return true;
         }
     }
@@ -10212,7 +10332,7 @@ QString MainWindow::getExecutionResult(QStringList& msgs, const LiveDanmaku &_da
     }
 
     // 返回的弹幕内容
-    return toSingleLine(dms.join("\\n"));
+    return dms.join("\\n");
 }
 
 void MainWindow::simulateKeys(QString seq, bool press, bool release)
@@ -10355,7 +10475,7 @@ void MainWindow::sendLongText(QString text)
 
 void MainWindow::restoreCustomVariant(QString text)
 {
-    us->customVariant.clear();
+    customVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     bool settedUpname = true;
     foreach (QString s, sl)
@@ -10366,7 +10486,7 @@ void MainWindow::restoreCustomVariant(QString text)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            us->customVariant.append(QPair<QString, QString>(key, val));
+            customVariant.append(QPair<QString, QString>(key, val));
             if ((key == "%upname%") && val.trimmed().isEmpty())
             {
                 settedUpname = false;
@@ -10385,7 +10505,7 @@ void MainWindow::restoreCustomVariant(QString text)
 QString MainWindow::saveCustomVariant()
 {
     QStringList sl;
-    for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
+    for (auto it = customVariant.begin(); it != customVariant.end(); ++it)
     {
         sl << it->first + " = " + it->second;
     }
@@ -10394,7 +10514,7 @@ QString MainWindow::saveCustomVariant()
 
 void MainWindow::restoreVariantTranslation()
 {
-    us->variantTranslation.clear();
+    variantTranslation.clear();
     QStringList allVariants;
 
     // 变量
@@ -10410,7 +10530,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = "%" + key + "%";
             val = "%" + val + "%";
-            us->variantTranslation.append(QPair<QString, QString>(key, val));
+            variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10430,7 +10550,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = ">" + key + "(";
             val = ">" + val + "(";
-            us->variantTranslation.append(QPair<QString, QString>(key, val));
+            variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10450,7 +10570,7 @@ void MainWindow::restoreVariantTranslation()
             QString val = match.captured(2);
             key = "%>" + key + "(";
             val = "%>" + val + "(";
-            us->variantTranslation.append(QPair<QString, QString>(key, val));
+            variantTranslation.append(QPair<QString, QString>(key, val));
             allVariants.append(key);
             allVariants.append(val);
         }
@@ -10466,7 +10586,7 @@ void MainWindow::restoreVariantTranslation()
 
 void MainWindow::restoreReplaceVariant(QString text)
 {
-    us->replaceVariant.clear();
+    replaceVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     foreach (QString s, sl)
     {
@@ -10476,7 +10596,7 @@ void MainWindow::restoreReplaceVariant(QString text)
         {
             QString key = match.captured(1);
             QString val = match.captured(2);
-            us->replaceVariant.append(QPair<QString, QString>(key, val));
+            replaceVariant.append(QPair<QString, QString>(key, val));
         }
         else
             qCritical() << "替换变量读取失败：" << s;
@@ -10486,7 +10606,7 @@ void MainWindow::restoreReplaceVariant(QString text)
 QString MainWindow::saveReplaceVariant()
 {
     QStringList sl;
-    for (auto it = us->replaceVariant.begin(); it != us->replaceVariant.end(); ++it)
+    for (auto it = replaceVariant.begin(); it != replaceVariant.end(); ++it)
     {
         sl << it->first + " = " + it->second;
     }
@@ -10626,7 +10746,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
-        this->popularVal = ac->currentPopul = popularity;
+        this->popularVal = this->currentPopul = popularity;
         if (isLiving())
             ui->popularityLabel->setText(QString::number(popularity));
     }
@@ -10710,13 +10830,13 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     int fans = data.value("fans").toInt();
                     int fans_club = data.value("fans_club").toInt();
                     int delta_fans = 0, delta_club = 0;
-                    if (ac->currentFans || ac->currentFansClub)
+                    if (currentFans || currentFansClub)
                     {
-                        delta_fans = fans - ac->currentFans;
-                        delta_club = fans_club - ac->currentFansClub;
+                        delta_fans = fans - currentFans;
+                        delta_club = fans_club - currentFansClub;
                     }
-                    ac->currentFans = fans;
-                    ac->currentFansClub = fans_club;
+                    currentFans = fans;
+                    currentFansClub = fans_club;
                     qInfo() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
                     // appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
 
@@ -10724,7 +10844,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     if (dailySettings)
                     {
                         dailySettings->setValue("new_fans", dailyNewFans);
-                        dailySettings->setValue("total_fans", ac->currentFans);
+                        dailySettings->setValue("total_fans", currentFans);
                     }
 
 //                    if (delta_fans) // 如果有变动，实时更新
@@ -10789,28 +10909,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 }
                 else if (handlePK(json))
                 {
-                }
-                else if (cmd == "HOT_RANK_CHANGED_V2")
-                {
-                    /*{
-                        "cmd": "HOT_RANK_CHANGED_V2",
-                        "data": {
-                            "rank": 0,
-                            "trend": 0,
-                            "countdown": 1070,
-                            "timestamp": 1652929930,
-                            "web_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=2\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145",
-                            "live_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=1\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,12,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,12,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0",
-                            "blink_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=3\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026is_cling_player=1\\u0026hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,0,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,0,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0",
-                            "live_link_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=5\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026is_live_half_webview=1\\u0026hybrid_rotate_d=1\\u0026is_cling_player=1\\u0026hybrid_half_ui=1,3,100p,70p,f4eefa,0,30,100,0,0;2,2,375,100p,f4eefa,0,30,100,0,0;3,3,100p,70p,f4eefa,0,30,100,0,0;4,2,375,100p,f4eefa,0,30,100,0,0;5,3,100p,70p,f4eefa,0,30,100,0,0;6,3,100p,70p,f4eefa,0,30,100,0,0;7,3,100p,70p,f4eefa,0,30,100,0,0;8,3,100p,70p,f4eefa,0,30,100,0,0",
-                            "pc_link_url": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=4\\u0026is_live_half_webview=1\\u0026area_id=1\\u0026parent_area_id=1\\u0026second_area_id=145\\u0026pc_ui=338,465,f4eefa,0",
-                            "icon": "https://i0.hdslb.com/bfs/live/cb2e160ac4f562b347bb5ae6e635688ebc69580f.png",
-                            "area_name": "视频聊天",
-                            "rank_desc": ""
-                        }
-                    }*/
-                    QJsonObject data = json.value("data").toObject();
-                    int countdown = data.value("countdown").toInt();
+
                 }
                 else
                 {
@@ -10905,7 +11004,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         if (ui->recordCheck->isChecked())
             startLiveRecord();
-        emit signalLiveStart(ac->roomId);
+        emit signalLiveStart(roomId);
 
         if (isLiving() || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
@@ -10927,7 +11026,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 60000) // 起码是上次下播10秒钟后
                 sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已开播");
-            ac->liveStatus = 1;
+            liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
                 connectServerTimer->stop();
             slotStartWork(); // 每个房间第一次开始工作
@@ -10948,7 +11047,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已下播");
-            ac->liveStatus = 0;
+            liveStatus = 0;
 
             if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
                 connectServerTimer->start();
@@ -11011,14 +11110,14 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
 
         // 统计弹幕次数
-        int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
-        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+        int danmuCount = danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+        danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
         dailyDanmaku++;
         if (dailySettings)
             dailySettings->setValue("danmaku", dailyDanmaku);
 
         // 等待通道
-        if (uid != ac->cookieUid.toLongLong())
+        if (uid != cookieUid.toLongLong())
         {
             for (int i = 0; i < CHANNEL_COUNT; i++)
                 msgWaits[i]++;
@@ -11037,7 +11136,7 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        if (snum(uid) == ac->cookieUid && noReplyMsgs.contains(msg))
+        if (snum(uid) == cookieUid && noReplyMsgs.contains(msg))
         {
             danmaku.setNoReply();
             noReplyMsgs.removeOne(msg);
@@ -11073,7 +11172,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (!debugPrint && (snum(uid) == ac->upUid || snum(uid) == ac->cookieUid)) // 是自己或UP主的，不屏蔽
+        if (!debugPrint && (snum(uid) == upUid || snum(uid) == cookieUid)) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
@@ -11098,7 +11197,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 QRegularExpressionMatch match;
                 if (msg.indexOf(re, 0, &match) > -1 // 自动拉黑
                         && (ui->blockNotOnlyNewbieCheck->isChecked()
-                            || (danmaku.getAnchorRoomid() != ac->roomId // 不带有本房间粉丝牌
+                            || (danmaku.getAnchorRoomid() != roomId // 不带有本房间粉丝牌
                                 && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
                                 && medal_level <= 2))) // 勋章不到3级
                 {
@@ -11119,9 +11218,9 @@ void MainWindow::handleMessage(QJsonObject json)
                         if (ui->autoBlockNewbieNotifyCheck->isChecked())
                         {
                             static int prevNotifyInCount = -20; // 上次发送通知时的弹幕数量
-                            if (rt->allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
+                            if (allDanmakus.size() - prevNotifyInCount >= 20) // 最低每20条发一遍
                             {
-                                prevNotifyInCount = rt->allDanmakus.size();
+                                prevNotifyInCount = allDanmakus.size();
 
                                 QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
                                 if (words.size())
@@ -11375,7 +11474,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     {
                         int r = qrand() % words.size();
                         QString msg = words.at(r);
-                        if (us->strongNotifyUsers.contains(uid))
+                        if (strongNotifyUsers.contains(uid))
                         {
                             if (debugPrint)
                                 localNotify("[强提醒]");
@@ -11413,9 +11512,9 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (coinType == "silver")
         {
-            qint64 userSilver = us->danmakuCounts->value("silver/" + snum(uid)).toLongLong();
+            qint64 userSilver = danmakuCounts->value("silver/" + snum(uid)).toLongLong();
             userSilver += totalCoin;
-            us->danmakuCounts->setValue("silver/"+snum(uid), userSilver);
+            danmakuCounts->setValue("silver/"+snum(uid), userSilver);
 
             dailyGiftSilver += totalCoin;
             if (dailySettings)
@@ -11423,9 +11522,9 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         if (coinType == "gold")
         {
-            qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+            qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
             userGold += totalCoin;
-            us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
+            danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
             dailyGiftGold += totalCoin;
             if (dailySettings)
@@ -11440,7 +11539,7 @@ void MainWindow::handleMessage(QJsonObject json)
             appendLiveGift(danmaku);
 
             // 正在偷塔阶段
-            if (pkEnding && uid == ac->cookieUid.toLongLong()) // 机器人账号
+            if (pkEnding && uid == cookieUid.toLongLong()) // 机器人账号
             {
 //                pkVoting -= totalCoin;
 //                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
@@ -11871,8 +11970,8 @@ void MainWindow::handleMessage(QJsonObject json)
 
             QString gd = results.at(1);
             QString uname = results.at(2); // 这个昵称会被系统自动省略（太长后面会是两个点）
-            if (us->currentGuards.contains(uid))
-                uname = us->currentGuards[uid];
+            if (currentGuards.contains(uid))
+                uname = currentGuards[uid];
             int guardLevel = 0;
             if (gd == "总督")
                 guardLevel = 1;
@@ -11969,9 +12068,9 @@ void MainWindow::handleMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         danmaku.setOpposite(opposite);
 
-        if (roomId != "0" && roomId != ac->roomId) // 关注对面主播，也会引发关注事件
+        if (roomId != "0" && roomId != this->roomId) // 关注对面主播，也会引发关注事件
         {
-            qInfo() << "不是本房间，已忽略：" << roomId << "!=" << ac->roomId;
+            qInfo() << "不是本房间，已忽略：" << roomId << "!=" << this->roomId;
             return ;
         }
 
@@ -12062,10 +12161,10 @@ void MainWindow::handleMessage(QJsonObject json)
         int guard_level = data.value("guard_level").toInt();
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
-        int guardCount = us->danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int guardCount = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         qInfo() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
-                            guardCount == 0 ? 1 : us->currentGuards.contains(uid) ? 0 : 2);
+                            guardCount == 0 ? 1 : currentGuards.contains(uid) ? 0 : 2);
         appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
         addGuiGiftList(danmaku);
@@ -12074,14 +12173,14 @@ void MainWindow::handleMessage(QJsonObject json)
             saveEveryGuard(danmaku);
 
         // 新船员数量事件
-        if (!us->currentGuards.contains(uid))
+        if (!currentGuards.contains(uid))
             newGuardUpdate(danmaku);
 
         if (!guardCount)
         {
             triggerCmdEvent("FIRST_GUARD", danmaku.with(data), true);
         }
-        us->currentGuards[uid] = username;
+        currentGuards[uid] = username;
         guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
@@ -12100,9 +12199,9 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }
 
-        qint64 userGold = us->danmakuCounts->value("gold/" + snum(uid)).toLongLong();
+        qint64 userGold = danmakuCounts->value("gold/" + snum(uid)).toLongLong();
         userGold += price;
-        us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
+        danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
         int addition = 1;
         if (giftName == "舰长")
@@ -12112,7 +12211,7 @@ void MainWindow::handleMessage(QJsonObject json)
         else if (giftName == "总督")
             addition = 100;
         guardCount += addition;
-        us->danmakuCounts->setValue("guard/" + snum(uid), guardCount);
+        danmakuCounts->setValue("guard/" + snum(uid), guardCount);
 
         dailyGuard += num;
         if (dailySettings)
@@ -12551,7 +12650,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QString msg = json.value("msg").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
-        if (snum(uid) == ac->cookieUid) // 不是自己的话，不用理会
+        if (snum(uid) == cookieUid) // 不是自己的话，不用理会
         {
             localNotify(msg, uid);
             triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
@@ -12669,21 +12768,6 @@ void MainWindow::handleMessage(QJsonObject json)
         QString invitedUname = data.s("invited_uname"); // 连接名字
         qint64 startAt = data.i("start_at"); // 10位
         qint64 roomId = json.value("roomid").toDouble(); // 10位
-    }
-    else if (cmd == "WATCHED_CHANGE")
-    {
-        /*{
-            "cmd": "WATCHED_CHANGE",
-            "data": {
-                "num": 83,
-                "text_large": "83人看过",
-                "text_small": "83"
-            }
-        }*/
-        MyJson data = json.value("data").toObject();
-        QString textLarge = data.s("text_large");
-        ui->popularityLabel->setToolTip(textLarge);
-        ui->popularityTextLabel->setToolTip(textLarge);
     }
     else
     {
@@ -12848,7 +12932,7 @@ void MainWindow::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, 
 
 void MainWindow::sendWelcome(LiveDanmaku danmaku)
 {
-    if (us->notWelcomeUsers.contains(danmaku.getUid())
+    if (notWelcomeUsers.contains(danmaku.getUid())
             || (!ui->sendWelcomeTextCheck->isChecked()
             && !ui->sendWelcomeVoiceCheck->isChecked())) // 不自动欢迎
         return ;
@@ -12863,7 +12947,7 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     if (debugPrint && !(words.size() == 1 && words.first().trimmed().isEmpty()))
         localNotify("[rand " + snum(r) + " in " + snum(words.size()) + "]");
     QString msg = words.at(r);
-    if (us->strongNotifyUsers.contains(danmaku.getUid()))
+    if (strongNotifyUsers.contains(danmaku.getUid()))
     {
         if (debugPrint)
             localNotify("[强提醒]");
@@ -12920,9 +13004,9 @@ void MainWindow::initTTS()
         {
             qInfo() << "初始化TTS语音模块";
             tts = new QTextToSpeech(this);
-            tts->setRate( (voiceSpeed = us->value("voice/speed", 50).toInt() - 50) / 50.0 );
-            tts->setPitch( (voicePitch = us->value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            tts->setVolume( (voiceVolume = us->value("voice/volume", 50).toInt()) / 100.0 );
+            tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
             connect(tts, &QTextToSpeech::stateChanged, this, [=](QTextToSpeech::State state){
                 if (state == QTextToSpeech::Ready)
                     speakTextQueueNext();
@@ -12934,34 +13018,34 @@ void MainWindow::initTTS()
         if (!xfyTTS)
         {
             qInfo() << "初始化讯飞语音模块";
-            xfyTTS = new XfyTTS(rt->dataPath,
-                                us->value("xfytts/appid").toString(),
-                                us->value("xfytts/apikey").toString(),
-                                us->value("xfytts/apisecret").toString(),
+            xfyTTS = new XfyTTS(dataPath,
+                                settings->value("xfytts/appid").toString(),
+                                settings->value("xfytts/apikey").toString(),
+                                settings->value("xfytts/apisecret").toString(),
                                 this);
-            ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
-            ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
-            ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
-            xfyTTS->setName( voiceName = us->value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = us->value("voice/pitch", 50).toInt() );
-            xfyTTS->setSpeed( voiceSpeed = us->value("voice/speed", 50).toInt() );
-            xfyTTS->setVolume( voiceSpeed = us->value("voice/speed", 50).toInt() );
+            ui->xfyAppIdEdit->setText(settings->value("xfytts/appid").toString());
+            ui->xfyApiKeyEdit->setText(settings->value("xfytts/apikey").toString());
+            ui->xfyApiSecretEdit->setText(settings->value("xfytts/apisecret").toString());
+            xfyTTS->setName( voiceName = settings->value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings->value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings->value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
         }
         break;
     case VoiceMS:
         if (!msTTS)
         {
             qInfo() << "初始化微软语音模块";
-            msTTS = new MicrosoftTTS(rt->dataPath,
-                                     us->value("mstts/areaCode").toString(),
-                                     us->value("mstts/subscriptionKey").toString(),
+            msTTS = new MicrosoftTTS(dataPath,
+                                     settings->value("mstts/areaCode").toString(),
+                                     settings->value("mstts/subscriptionKey").toString(),
                                      this);
             connect(msTTS, &MicrosoftTTS::signalError, this, [=](QString err) {
                 showError("微软语音", err);
             });
-            ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
-            ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
-            msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+            ui->MSAreaCodeEdit->setText(settings->value("mstts/areaCode").toString());
+            ui->MSSubscriptionKeyEdit->setText(settings->value("mstts/subscriptionKey").toString());
+            msTTSFormat = settings->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
             // TODO: 设置音调等内容
         }
         break;
@@ -13082,13 +13166,8 @@ void MainWindow::voiceDownloadAndSpeak(QString text)
         return ;
     url = url.replace("%1", text).replace("%text%", text);
     url = url.replace("%url_text%", QString::fromUtf8(text.toUtf8().toPercentEncoding()));
-    playNetAudio(url);
-}
-
-void MainWindow::playNetAudio(QString url)
-{
-    qInfo() << "播放网络音频：" << url;
-    const QString filePath = rt->dataPath + "tts";
+    qInfo() << url;
+    const QString filePath = dataPath + "tts";
     QDir dir(filePath);
     dir.mkpath(filePath);
 
@@ -13120,7 +13199,6 @@ void MainWindow::playNetAudio(QString url)
             else
             {
                 qWarning() << "无法解析的语音返回：" << json;
-                showError("在线音频", json.errOrMsg());
                 return ;
             }
         }
@@ -13691,15 +13769,15 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
 
     // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
     // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
+    int userCome = danmakuCounts->value("come/" + snum(uid)).toInt();
     danmaku.setNumber(userCome);
-    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+    danmaku.setPrevTimestamp(danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
 
     appendNewLiveDanmaku(danmaku);
 
     userCome++;
-    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
-    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+    danmakuCounts->setValue("come/"+snum(uid), userCome);
+    danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
 
     dailyCome++;
     if (dailySettings)
@@ -13724,12 +13802,12 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
     if (!justStart && ui->autoSendWelcomeCheck->isChecked()) // 发送欢迎
     {
-        us->userComeTimes[uid] = currentTime;
+        userComeTimes[uid] = currentTime;
         sendWelcomeIfNotRobot(danmaku);
     }
     else // 不发送欢迎，只是查看
     {
-        us->userComeTimes[uid] = currentTime; // 直接更新了
+        userComeTimes[uid] = currentTime; // 直接更新了
         if (judgeRobot == 2)
         {
             judgeRobotAndMark(danmaku);
@@ -13739,14 +13817,14 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
 
 void MainWindow::refreshBlockList()
 {
-    if (ac->browserData.isEmpty())
+    if (browserData.isEmpty())
     {
         showError("请先设置用户数据");
         return ;
     }
 
     // 刷新被禁言的列表
-    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+ac->roomId+"&page=1";
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+roomId+"&page=1";
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
@@ -13759,14 +13837,14 @@ void MainWindow::refreshBlockList()
             return ;
         }
         QJsonArray list = json.value("data").toArray();
-        us->userBlockIds.clear();
+        userBlockIds.clear();
         foreach (QJsonValue val, list)
         {
             QJsonObject obj = val.toObject();
             qint64 id = static_cast<qint64>(obj.value("id").toDouble());
             qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
             QString uname = obj.value("uname").toString();
-            us->userBlockIds.insert(uid, id);
+            userBlockIds.insert(uid, id);
 //            qInfo() << "已屏蔽:" << id << uname << uid;
         }
 
@@ -13785,7 +13863,7 @@ bool MainWindow::isInFans(qint64 uid)
 
 void MainWindow::sendGift(int giftId, int giftNum)
 {
-    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    if (roomId.isEmpty() || browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -13800,22 +13878,22 @@ void MainWindow::sendGift(int giftId, int giftNum)
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "uid=" + ac->cookieUid;
+    datas << "uid=" + cookieUid;
     datas << "gift_id=" + snum(giftId);
-    datas << "ruid=" + ac->upUid;
+    datas << "ruid=" + upUid;
     datas << "send_ruid=0";
     datas << "gift_num=" + snum(giftNum);
     datas << "coin_type=gold";
     datas << "bag_id=0";
     datas << "platform=pc";
     datas << "biz_code=live";
-    datas << "biz_id=" + ac->roomId;
+    datas << "biz_id=" + roomId;
     datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
     datas << "storm_beat_id=0";
     datas << "metadata=";
     datas << "price=0";
-    datas << "csrf_token=" + ac->csrf_token;
-    datas << "csrf=" + ac->csrf_token;
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
     datas << "visit_id=";
 
     QByteArray ba(datas.join("&").toStdString().data());
@@ -13834,7 +13912,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
 
 void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 {
-    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    if (roomId.isEmpty() || browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -13848,21 +13926,21 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "uid=" + ac->cookieUid;
+    datas << "uid=" + cookieUid;
     datas << "gift_id=" + snum(giftId);
-    datas << "ruid=" + ac->upUid;
+    datas << "ruid=" + upUid;
     datas << "send_ruid=0";
     datas << "gift_num=" + snum(giftNum);
     datas << "bag_id=" + snum(bagId);
     datas << "platform=pc";
     datas << "biz_code=live";
-    datas << "biz_id=" + ac->roomId;
+    datas << "biz_id=" + roomId;
     datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
     datas << "storm_beat_id=0";
     datas << "metadata=";
     datas << "price=0";
-    datas << "csrf_token=" + ac->csrf_token;
-    datas << "csrf=" + ac->csrf_token;
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
     datas << "visit_id=";
 
     QByteArray ba(datas.join("&").toStdString().data());
@@ -13881,9 +13959,9 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
 
 void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
-    QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
+    QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -13912,7 +13990,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 void MainWindow::roomEntryAction()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction?room_id="
-            + ac->roomId + "&platform=pc&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=";
+            + roomId + "&platform=pc&csrf_token=" + csrf_token + "&csrf=" + csrf_token + "&visit_id=";
     post(url, QByteArray(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -13929,7 +14007,7 @@ void MainWindow::sendExpireGift()
 
 void MainWindow::getBagList(qint64 sendExpire)
 {
-    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    if (roomId.isEmpty() || browserCookie.isEmpty())
     {
         qWarning() << "房间为空，或未登录";
         return ;
@@ -13971,7 +14049,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                 ......
     }*/
 
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + ac->roomId;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + roomId;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -14030,12 +14108,12 @@ void MainWindow::updateExistGuards(int page)
             return ;
 
         page = 1;
-        us->currentGuards.clear();
+        currentGuards.clear();
         guardInfos.clear();
         updateGuarding = true;
 
         // 参数是0的话，自动判断是否需要
-        if (ac->browserCookie.isEmpty())
+        if (browserCookie.isEmpty())
             return ;
     }
 
@@ -14063,16 +14141,16 @@ void MainWindow::updateExistGuards(int page)
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
         guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
-        us->currentGuards[uid] = username;
+        currentGuards[uid] = username;
 
-        if (uid == ac->cookieUid.toLongLong())
+        if (uid == this->cookieUid.toLongLong())
         {
-            ac->cookieGuardLevel = guardLevel;
+            this->cookieGuardLevel = guardLevel;
             if (ui->adjustDanmakuLongestCheck->isChecked())
                 adjustDanmakuLongest();
         }
 
-        int count = us->danmakuCounts->value("guard/" + snum(uid), 0).toInt();
+        int count = danmakuCounts->value("guard/" + snum(uid), 0).toInt();
         if (!count)
         {
             int count = 1;
@@ -14084,16 +14162,16 @@ void MainWindow::updateExistGuards(int page)
                 count = 100;
             else
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
-            us->danmakuCounts->setValue("guard/" + snum(uid), count);
+            danmakuCounts->setValue("guard/" + snum(uid), count);
             // qInfo() << "设置舰长：" << username << uid << count;
         }
     };
 
-    QString _upUid = ac->upUid;
+    QString _upUid = upUid;
     QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
-            +ac->roomId+"&page="+snum(page)+"&ruid="+ac->upUid+"&page_size="+snum(pageSize);
+            +roomId+"&page="+snum(page)+"&ruid="+upUid+"&page_size="+snum(pageSize);
     get(url, [=](QJsonObject json){
-        if (_upUid != ac->upUid)
+        if (_upUid != upUid)
         {
             updateGuarding = false;
             return ;
@@ -14127,9 +14205,9 @@ void MainWindow::updateExistGuards(int page)
                 saveMonthGuard();
 
             if (dailySettings)
-                dailySettings->setValue("guard_count", us->currentGuards.size());
+                dailySettings->setValue("guard_count", currentGuards.size());
             updateGuarding = false;
-            ui->guardCountLabel->setText(snum(us->currentGuards.size()));
+            ui->guardCountLabel->setText(snum(currentGuards.size()));
         }
     });
 }
@@ -14142,7 +14220,7 @@ void MainWindow::newGuardUpdate(const LiveDanmaku& danmaku)
 {
     if (!hasEvent("NEW_GUARD_COUNT"))
         return ;
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + roomId;
     get(url, [=](MyJson json) {
         int count = json.data().o("guard_info").i("count");
         LiveDanmaku ld = danmaku;
@@ -14203,13 +14281,13 @@ void MainWindow::updateOnlineGoldRank()
             }
         }
     }*/
-    QString _upUid = ac->upUid;
+    QString _upUid = upUid;
     QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?roomId="
-            +pkRoomId+"&page="+snum(1)+"&ruid="+ac->upUid+"&pageSize="+snum(50);
+            +pkRoomId+"&page="+snum(1)+"&ruid="+upUid+"&pageSize="+snum(50);
     onlineGoldRank.clear();
 
     get(url, [=](QJsonObject json){
-        if (_upUid != ac->upUid)
+        if (_upUid != upUid)
             return ;
 
         QStringList names;
@@ -14238,7 +14316,7 @@ void MainWindow::updateOnlineGoldRank()
                 QJsonObject medalInfo = item.value("medalInfo").toObject();
 
                 QString anchorId = snum(qint64(medalInfo.value("targetId").toDouble()));
-                if (medalInfo.contains("guardLevel") && anchorId == ac->roomId)
+                if (medalInfo.contains("guardLevel") && anchorId == roomId)
                     danmaku.setGuardLevel(medalInfo.value("guardLevel").toInt());
 
                 qint64 medalColor = qint64(medalInfo.value("medalColorStart").toDouble());
@@ -14434,7 +14512,7 @@ void MainWindow::setRoomDescription(QString roomDescription)
 
 void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
 {
-    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + ac->upUid + "&room_id=" + ac->roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "winning streak:" << url;
     get(url, [=](MyJson json) {
         JO(json, data);
@@ -14491,83 +14569,83 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
         JO(data, last_pk_info);
         JO(last_pk_info, match_info);
         JL(match_info, room_id); // 最后匹配的主播
-        ac->lastMatchRoomId = room_id;
+        lastMatchRoomId = room_id;
 
-        if (emitWinningStreak && ac->winningStreak > 0 && ac->winningStreak == win_count - 1)
+        if (emitWinningStreak && this->winningStreak > 0 && this->winningStreak == win_count - 1)
         {
             LiveDanmaku danmaku;
             danmaku.setNumber(win_count);
             danmaku.with(match_info);
             triggerCmdEvent("PK_WINNING_STREAK", danmaku);
         }
-        ac->winningStreak = win_count;
+        this->winningStreak = win_count;
     });
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
-    us->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
+    settings->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
     ui->sendWelcomeTextCheck->setEnabled(arg1);
     ui->sendWelcomeVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoSendGiftCheck_stateChanged(int arg1)
 {
-    us->setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
+    settings->setValue("danmaku/sendGift", ui->autoSendGiftCheck->isChecked());
     ui->sendGiftTextCheck->setEnabled(arg1);
     ui->sendGiftVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoWelcomeWordsEdit_textChanged()
 {
-    us->setValue("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText());
+    settings->setValue("danmaku/autoWelcomeWords", ui->autoWelcomeWordsEdit->toPlainText());
 }
 
 void MainWindow::on_autoThankWordsEdit_textChanged()
 {
-    us->setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
+    settings->setValue("danmaku/autoThankWords", ui->autoThankWordsEdit->toPlainText());
 }
 
 void MainWindow::on_startLiveWordsEdit_editingFinished()
 {
-    us->setValue("live/startWords", ui->startLiveWordsEdit->text());
+    settings->setValue("live/startWords", ui->startLiveWordsEdit->text());
 }
 
 void MainWindow::on_endLiveWordsEdit_editingFinished()
 {
-    us->setValue("live/endWords", ui->endLiveWordsEdit->text());
+    settings->setValue("live/endWords", ui->endLiveWordsEdit->text());
 }
 
 void MainWindow::on_startLiveSendCheck_stateChanged(int arg1)
 {
-    us->setValue("live/startSend", ui->startLiveSendCheck->isChecked());
+    settings->setValue("live/startSend", ui->startLiveSendCheck->isChecked());
 }
 
 void MainWindow::on_autoSendAttentionCheck_stateChanged(int arg1)
 {
-    us->setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
+    settings->setValue("danmaku/sendAttention", ui->autoSendAttentionCheck->isChecked());
     ui->sendAttentionTextCheck->setEnabled(arg1);
     ui->sendAttentionVoiceCheck->setEnabled(arg1);
 }
 
 void MainWindow::on_autoAttentionWordsEdit_textChanged()
 {
-    us->setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
+    settings->setValue("danmaku/autoAttentionWords", ui->autoAttentionWordsEdit->toPlainText());
 }
 
 void MainWindow::on_sendWelcomeCDSpin_valueChanged(int arg1)
 {
-    us->setValue("danmaku/sendWelcomeCD", arg1);
+    settings->setValue("danmaku/sendWelcomeCD", arg1);
 }
 
 void MainWindow::on_sendGiftCDSpin_valueChanged(int arg1)
 {
-    us->setValue("danmaku/sendGiftCD", arg1);
+    settings->setValue("danmaku/sendGiftCD", arg1);
 }
 
 void MainWindow::on_sendAttentionCDSpin_valueChanged(int arg1)
 {
-    us->setValue("danmaku/sendAttentionCD", arg1);
+    settings->setValue("danmaku/sendAttentionCD", arg1);
 }
 
 void MainWindow::showDiangeHistory()
@@ -14585,12 +14663,12 @@ void MainWindow::showDiangeHistory()
 
 void MainWindow::addBlockUser(qint64 uid, int hour)
 {
-    addBlockUser(uid, ac->roomId.toLongLong(), hour);
+    addBlockUser(uid, roomId.toLongLong(), hour);
 }
 
 void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
 {
-    if(ac->browserData.isEmpty())
+    if(browserData.isEmpty())
     {
         showError("请先设置登录信息");
         return ;
@@ -14604,7 +14682,7 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
 
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
     QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token);
+                    .arg(roomId).arg(uid).arg(hour).arg(csrf_token).arg(csrf_token);
     qInfo() << "禁言：" << uid << hour;
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14614,18 +14692,18 @@ void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
         }
         QJsonObject d = json.value("data").toObject();
         qint64 id = static_cast<qint64>(d.value("id").toDouble());
-        us->userBlockIds[uid] = id;
+        userBlockIds[uid] = id;
     });
 }
 
 void MainWindow::delBlockUser(qint64 uid)
 {
-    delBlockUser(uid, ac->roomId.toLongLong());
+    delBlockUser(uid, roomId.toLongLong());
 }
 
 void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
 {
-    if(ac->browserData.isEmpty())
+    if(browserData.isEmpty())
     {
         showError("请先设置登录信息");
         return ;
@@ -14637,11 +14715,11 @@ void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
         return ;
     }
 
-    if (us->userBlockIds.contains(uid))
+    if (userBlockIds.contains(uid))
     {
-        qInfo() << "取消禁言：" << uid << "  id =" << us->userBlockIds.value(uid);
-        delRoomBlockUser(us->userBlockIds.value(uid));
-        us->userBlockIds.remove(uid);
+        qInfo() << "取消禁言：" << uid << "  id =" << userBlockIds.value(uid);
+        delRoomBlockUser(userBlockIds.value(uid));
+        userBlockIds.remove(uid);
         return ;
     }
 
@@ -14675,7 +14753,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 {
     QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
     QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(ac->roomId).arg(ac->csrf_token).arg(ac->csrf_token);
+                    .arg(id).arg(roomId).arg(csrf_token).arg(csrf_token);
 
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14691,7 +14769,7 @@ void MainWindow::delRoomBlockUser(qint64 id)
 
 void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 {
-    if (us->eternalBlockUsers.contains(EternalBlockUser(uid, ac->roomId.toLongLong())))
+    if (eternalBlockUsers.contains(EternalBlockUser(uid, roomId.toLongLong())))
     {
         localNotify("该用户已经在永久禁言中");
         return ;
@@ -14699,30 +14777,30 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 
     addBlockUser(uid, 720);
 
-    us->eternalBlockUsers.append(EternalBlockUser(uid, ac->roomId.toLongLong(), uname, ac->upName, ac->roomTitle, QDateTime::currentSecsSinceEpoch()));
+    eternalBlockUsers.append(EternalBlockUser(uid, roomId.toLongLong(), uname, upName, roomTitle, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
-    qInfo() << "添加永久禁言：" << uname << "    当前人数：" << us->eternalBlockUsers.size();
+    qInfo() << "添加永久禁言：" << uname << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid)
 {
-    cancelEternalBlockUser(uid, ac->roomId.toLongLong());
+    cancelEternalBlockUser(uid, this->roomId.toLongLong());
 }
 
 void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
 {
     EternalBlockUser user(uid, roomId);
-    if (!us->eternalBlockUsers.contains(user))
+    if (!eternalBlockUsers.contains(user))
         return ;
 
-    us->eternalBlockUsers.removeOne(user);
+    eternalBlockUsers.removeOne(user);
     saveEternalBlockUsers();
-    qInfo() << "移除永久禁言：" << uid << "    当前人数：" << us->eternalBlockUsers.size();
+    qInfo() << "移除永久禁言：" << uid << "    当前人数：" << eternalBlockUsers.size();
 }
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid)
 {
-    cancelEternalBlockUserAndUnblock(uid, ac->roomId.toLongLong());
+    cancelEternalBlockUserAndUnblock(uid, this->roomId.toLongLong());
 }
 
 void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
@@ -14735,11 +14813,11 @@ void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
 void MainWindow::saveEternalBlockUsers()
 {
     QJsonArray array;
-    int size = us->eternalBlockUsers.size();
+    int size = eternalBlockUsers.size();
     for (int i = 0; i < size; i++)
-        array.append(us->eternalBlockUsers.at(i).toJson());
-    us->setValue("danmaku/eternalBlockUsers", array);
-    qInfo() << "保存永久禁言，当前人数：" << us->eternalBlockUsers.size();
+        array.append(eternalBlockUsers.at(i).toJson());
+    settings->setValue("danmaku/eternalBlockUsers", array);
+    qInfo() << "保存永久禁言，当前人数：" << eternalBlockUsers.size();
 }
 
 /**
@@ -14752,9 +14830,9 @@ void MainWindow::detectEternalBlockUsers()
     qint64 maxBlockSecond = MAX_BLOCK_HOUR * 3600;
     const int netDelay = 5; // 5秒的屏蔽时长
     bool blocked = false;
-    for (int i = 0; i < us->eternalBlockUsers.size(); i++)
+    for (int i = 0; i < eternalBlockUsers.size(); i++)
     {
-        EternalBlockUser user = us->eternalBlockUsers.first();
+        EternalBlockUser user = eternalBlockUsers.first();
         if (user.time + maxBlockSecond + netDelay >= currentSecond) // 仍在冷却中
             break;
 
@@ -14764,8 +14842,8 @@ void MainWindow::detectEternalBlockUsers()
         addBlockUser(user.uid, user.roomId, MAX_BLOCK_HOUR);
 
         user.time = currentSecond;
-        us->eternalBlockUsers.removeFirst();
-        us->eternalBlockUsers.append(user);
+        eternalBlockUsers.removeFirst();
+        eternalBlockUsers.append(user);
     }
     if (blocked)
         saveEternalBlockUsers();
@@ -14774,7 +14852,7 @@ void MainWindow::detectEternalBlockUsers()
 void MainWindow::on_enableBlockCheck_clicked()
 {
     bool enable = ui->enableBlockCheck->isChecked();
-    us->setValue("block/enableBlock", enable);
+    settings->setValue("block/enableBlock", enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
 
@@ -14786,36 +14864,36 @@ void MainWindow::on_enableBlockCheck_clicked()
 void MainWindow::on_newbieTipCheck_clicked()
 {
     bool enable = ui->newbieTipCheck->isChecked();
-    us->setValue("block/newbieTip", enable);
+    settings->setValue("block/newbieTip", enable);
     if (danmakuWindow)
         danmakuWindow->setNewbieTip(enable);
 }
 
 void MainWindow::on_autoBlockNewbieCheck_clicked()
 {
-    us->setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
+    settings->setValue("block/autoBlockNewbie", ui->autoBlockNewbieCheck->isChecked());
     ui->autoBlockNewbieNotifyCheck->setEnabled(ui->autoBlockNewbieCheck->isChecked());
 }
 
 void MainWindow::on_autoBlockNewbieKeysEdit_textChanged()
 {
-    us->setValue("block/autoBlockNewbieKeys", ui->autoBlockNewbieKeysEdit->toPlainText());
+    settings->setValue("block/autoBlockNewbieKeys", ui->autoBlockNewbieKeysEdit->toPlainText());
 }
 
 void MainWindow::on_autoBlockNewbieNotifyCheck_clicked()
 {
-    us->setValue("block/autoBlockNewbieNotify", ui->autoBlockNewbieNotifyCheck->isChecked());
+    settings->setValue("block/autoBlockNewbieNotify", ui->autoBlockNewbieNotifyCheck->isChecked());
 }
 
 void MainWindow::on_autoBlockNewbieNotifyWordsEdit_textChanged()
 {
-    us->setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
+    settings->setValue("block/autoBlockNewbieNotifyWords", ui->autoBlockNewbieNotifyWordsEdit->toPlainText());
 }
 
 void MainWindow::on_saveDanmakuToFileCheck_clicked()
 {
     bool enabled = ui->saveDanmakuToFileCheck->isChecked();
-    us->setValue("danmaku/saveDanmakuToFile", enabled);
+    settings->setValue("danmaku/saveDanmakuToFile", enabled);
     if (enabled)
         startSaveDanmakuToFile();
     else
@@ -14824,18 +14902,18 @@ void MainWindow::on_saveDanmakuToFileCheck_clicked()
 
 void MainWindow::on_promptBlockNewbieCheck_clicked()
 {
-    us->setValue("block/promptBlockNewbie", ui->promptBlockNewbieCheck->isChecked());
+    settings->setValue("block/promptBlockNewbie", ui->promptBlockNewbieCheck->isChecked());
 }
 
 void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 {
-    us->setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
+    settings->setValue("block/promptBlockNewbieKeys", ui->promptBlockNewbieKeysEdit->toPlainText());
 }
 
 void MainWindow::on_timerConnectServerCheck_clicked()
 {
     bool enable = ui->timerConnectServerCheck->isChecked();
-    us->setValue("live/timerConnectServer", enable);
+    settings->setValue("live/timerConnectServer", enable);
     if (!isLiving() && enable)
         startConnectRoom();
     else if (!enable && (!socket || socket->state() == QAbstractSocket::UnconnectedState))
@@ -14844,14 +14922,14 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
-    us->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
+    settings->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
     if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
-    us->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
+    settings->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
     if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
         connectServerTimer->start();
 }
@@ -14859,7 +14937,7 @@ void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 void MainWindow::on_calculateDailyDataCheck_clicked()
 {
     bool enable = ui->calculateDailyDataCheck->isChecked();
-    us->setValue("live/calculateDaliyData", enable);
+    settings->setValue("live/calculateDaliyData", enable);
     if (enable)
         startCalculateDailyData();
 }
@@ -14868,7 +14946,7 @@ void MainWindow::on_pushButton_clicked()
 {
     QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd\n");
     text += "\n进来人次：" + snum(dailyCome);
-    text += "\n观众人数：" + snum(us->userComeTimes.count());
+    text += "\n观众人数：" + snum(userComeTimes.count());
     text += "\n弹幕数量：" + snum(dailyDanmaku);
     text += "\n新人弹幕：" + snum(dailyNewbieMsg);
     text += "\n新增关注：" + snum(dailyNewFans);
@@ -14878,14 +14956,14 @@ void MainWindow::on_pushButton_clicked()
     text += "\n最高人气：" + snum(dailyMaxPopul);
     text += "\n平均人气：" + snum(dailyAvePopul);
 
-    text += "\n\n累计粉丝：" + snum(ac->currentFans);
+    text += "\n\n累计粉丝：" + snum(currentFans);
     QMessageBox::information(this, "今日数据", text);
 }
 
 void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 {
     this->removeDanmakuTipInterval = arg1 * 1000;
-    us->setValue("danmaku/removeTipInterval", arg1);
+    settings->setValue("danmaku/removeTipInterval", arg1);
 }
 
 void MainWindow::on_doveCheck_clicked()
@@ -14896,13 +14974,13 @@ void MainWindow::on_doveCheck_clicked()
 void MainWindow::on_notOnlyNewbieCheck_clicked()
 {
     bool enable = ui->notOnlyNewbieCheck->isChecked();
-    us->setValue("block/notOnlyNewbie", enable);
+    settings->setValue("block/notOnlyNewbie", enable);
 }
 
 void MainWindow::on_pkAutoMelonCheck_clicked()
 {
     bool enable = ui->pkAutoMelonCheck->isChecked();
-    us->setValue("pk/autoMelon", enable);
+    settings->setValue("pk/autoMelon", enable);
 }
 
 void MainWindow::on_pkMaxGoldButton_clicked()
@@ -14913,7 +14991,7 @@ void MainWindow::on_pkMaxGoldButton_clicked()
     if (!ok)
         return ;
 
-    us->setValue("pk/maxGold", pkMaxGold = v);
+    settings->setValue("pk/maxGold", pkMaxGold = v);
 }
 
 void MainWindow::on_pkJudgeEarlyButton_clicked()
@@ -14923,7 +15001,7 @@ void MainWindow::on_pkJudgeEarlyButton_clicked()
     if (!ok)
         return ;
 
-    us->setValue("pk/judgeEarly", pkJudgeEarly = v);
+    settings->setValue("pk/judgeEarly", pkJudgeEarly = v);
 }
 
 template<typename T>
@@ -14955,7 +15033,7 @@ void MainWindow::on_roomIdEdit_returnPressed()
 
 void MainWindow::on_actionData_Path_triggered()
 {
-    QDesktopServices::openUrl(QUrl("file:///" + rt->dataPath, QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("file:///" + dataPath, QUrl::TolerantMode));
 }
 
 /**
@@ -14965,7 +15043,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 {
     if (!danmakuWindow)
     {
-        danmakuWindow = new LiveDanmakuWindow(this);
+        danmakuWindow = new LiveDanmakuWindow(settings, dataPath, this);
 
         connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](LiveDanmaku danmaku) {
             if (danmaku.is(MSG_DANMAKU))
@@ -15024,7 +15102,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
-        danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+        danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
         danmakuWindow->setWindowIcon(this->windowIcon());
         danmakuWindow->setWindowTitle(this->windowTitle());
         danmakuWindow->hide();
@@ -15052,7 +15130,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 
             if (pking)
             {
-                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+                danmakuWindow->setIds(upUid.toLongLong(), roomId.toLongLong());
             }
         });
     }
@@ -15067,13 +15145,13 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     {
         danmakuWindow->hide();
     }
-    us->setValue("danmaku/liveWindow", hidding);
+    settings->setValue("danmaku/liveWindow", hidding);
 }
 
 void MainWindow::on_actionSet_Cookie_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, ac->browserCookie, &ok);
+    QString s = QInputDialog::getText(this, "设置Cookie", "设置用户登录的cookie", QLineEdit::Normal, browserCookie, &ok);
     if (!ok)
         return ;
 
@@ -15092,15 +15170,15 @@ void MainWindow::on_actionSet_Cookie_triggered()
 void MainWindow::on_actionSet_Danmaku_Data_Format_triggered()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "设置Data", "设置弹幕的data\n自动从cookie中提取，可不用设置", QLineEdit::Normal, ac->browserData, &ok);
+    QString s = QInputDialog::getText(this, "设置Data", "设置弹幕的data\n自动从cookie中提取，可不用设置", QLineEdit::Normal, browserData, &ok);
     if (!ok)
         return ;
 
-    us->setValue("danmaku/browserData", ac->browserData = s);
-    int posl = ac->browserData.indexOf("csrf_token=") + 9;
-    int posr = ac->browserData.indexOf("&", posl);
-    if (posr == -1) posr = ac->browserData.length();
-    ac->csrf_token = ac->browserData.mid(posl, posr - posl);
+    settings->setValue("danmaku/browserData", browserData = s);
+    int posl = browserData.indexOf("csrf_token=") + 9;
+    int posr = browserData.indexOf("&", posl);
+    if (posr == -1) posr = browserData.length();
+    csrf_token = browserData.mid(posl, posr - posl);
 }
 
 void MainWindow::on_actionCookie_Help_triggered()
@@ -15126,7 +15204,7 @@ void MainWindow::on_actionCookie_Help_triggered()
 
 void MainWindow::on_actionCreate_Video_LRC_triggered()
 {
-    VideoLyricsCreator* vlc = new VideoLyricsCreator(us, nullptr);
+    VideoLyricsCreator* vlc = new VideoLyricsCreator(settings, nullptr);
     vlc->show();
 }
 
@@ -15134,7 +15212,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
 {
     if (!musicWindow)
     {
-        musicWindow = new OrderPlayerWindow(rt->dataPath, nullptr);
+        musicWindow = new OrderPlayerWindow(dataPath, nullptr);
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongSucceed, this, [=](Song song, qint64 latency, int waiting){
             qInfo() << "点歌成功" << song.simpleString() << latency;
 
@@ -15264,7 +15342,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
         });
         connect(musicWindow, &OrderPlayerWindow::signalWindowClosed, this, [=]{
             QTimer::singleShot(5000, this, [=]{ // 延迟5秒，避免程序关闭时先把点歌姬关了，但下次还是需要显示的
-                us->setValue("danmaku/playerWindow", false);
+                settings->setValue("danmaku/playerWindow", false);
             });
         });
     }
@@ -15279,12 +15357,12 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
     {
         musicWindow->hide();
     }
-    us->setValue("danmaku/playerWindow", hidding);
+    settings->setValue("danmaku/playerWindow", hidding);
 }
 
 void MainWindow::on_diangeReplyCheck_clicked()
 {
-    us->setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
+    settings->setValue("danmaku/diangeReply", ui->diangeReplyCheck->isChecked());
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -15313,7 +15391,7 @@ void MainWindow::on_actionCustom_Variant_triggered()
     text = TextInputDialog::getText(this, "自定义变量", "请输入自定义变量，可在答谢、定时中使用：\n示例格式：%var%=val", text, &ok);
     if (!ok)
         return ;
-    us->setValue("danmaku/customVariant", text);
+    settings->setValue("danmaku/customVariant", text);
 
     restoreCustomVariant(text);
 }
@@ -15352,7 +15430,7 @@ void MainWindow::on_actionGet_Play_Url_triggered()
 
 void MainWindow::on_actionShow_Live_Video_triggered()
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
     if (!hasPermission())
     {
@@ -15360,12 +15438,12 @@ void MainWindow::on_actionShow_Live_Video_triggered()
         return ;
     }
 
-    LiveVideoPlayer* player = new LiveVideoPlayer(us, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
     connect(this, SIGNAL(signalLiveStart(QString)), player, SLOT(slotLiveStart(QString))); // 重新开播，需要刷新URL
     connect(player, SIGNAL(signalRestart()), this, SLOT(on_actionShow_Live_Video_triggered()));
     player->setAttribute(Qt::WA_DeleteOnClose, true);
-    player->setRoomId(ac->roomId);
-    player->setWindowTitle(ac->roomTitle + " - " + ac->upName);
+    player->setRoomId(roomId);
+    player->setWindowTitle(roomTitle + " - " + upName);
     player->setWindowIcon(upFace);
     player->show();
 }
@@ -15375,7 +15453,7 @@ void MainWindow::on_actionShow_PK_Video_triggered()
     if (pkRoomId.isEmpty())
         return ;
 
-    LiveVideoPlayer* player = new LiveVideoPlayer(us, nullptr);
+    LiveVideoPlayer* player = new LiveVideoPlayer(settings, nullptr);
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(pkRoomId);
     player->show();
@@ -15384,7 +15462,7 @@ void MainWindow::on_actionShow_PK_Video_triggered()
 void MainWindow::on_pkChuanmenCheck_clicked()
 {
     pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
-    us->setValue("pk/chuanmen", pkChuanmenEnable);
+    settings->setValue("pk/chuanmen", pkChuanmenEnable);
 
     if (pkChuanmenEnable)
     {
@@ -15410,7 +15488,7 @@ void MainWindow::on_pkMsgSyncCheck_clicked()
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
     }
     ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
-    us->setValue("pk/msgSync", pkMsgSync);
+    settings->setValue("pk/msgSync", pkMsgSync);
 }
 
 void MainWindow::pkPre(QJsonObject json)
@@ -15478,7 +15556,7 @@ void MainWindow::pkPre(QJsonObject json)
             danmakuWindow->setStatusText("大乱斗匹配中...");
         else if (!pkRoomId.isEmpty())
         {
-            int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
             QString text = "匹配：" + uname;
             if(pkCount > 0)
                 text += "[" + QString::number(pkCount) + "]";
@@ -15530,7 +15608,7 @@ void MainWindow::pkStart(QJsonObject json)
     pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
     qint64 deltaEnd = pkEndTime - currentTime;
-    QString roomId = ac->roomId;
+    QString roomId = this->roomId;
     oppositeTouta = 0;
     cmAudience.clear();
     pkBattleType = data.value("battle_type").toInt();
@@ -15559,8 +15637,8 @@ void MainWindow::pkStart(QJsonObject json)
     qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << pkBattleType;
 
     // 保存PK信息
-    int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-    us->danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+    int pkCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+    danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
     qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
 
     // PK提示
@@ -15602,7 +15680,7 @@ void MainWindow::pkProcess(QJsonObject json)
     QJsonObject data = json.value("data").toObject();
     int prevMyVotes = myVotes;
     int prevMatchVotes = matchVotes;
-    if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == ac->roomId)
+    if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == roomId)
     {
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
@@ -15701,7 +15779,7 @@ void MainWindow::pkEnd(QJsonObject json)
     }
     QString bestName = "";
     int winnerType = 0;
-    if (snum(thisRoomId) == ac->roomId) // init是自己
+    if (snum(thisRoomId) == roomId) // init是自己
     {
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
@@ -15752,8 +15830,8 @@ void MainWindow::pkEnd(QJsonObject json)
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
-        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
@@ -15770,7 +15848,7 @@ void MainWindow::pkEnd(QJsonObject json)
     ui->actionShow_PK_Video->setEnabled(false);
     pkBattleType = 0;
 
-    if (ac->cookieUid == ac->upUid)
+    if (cookieUid == upUid)
         ui->actionJoin_Battle->setEnabled(true);
 
     if (pkSocket)
@@ -15842,7 +15920,7 @@ void MainWindow::pkSettle(QJsonObject json)
     }
     QString bestName = "";
     int winCode = 0;
-    if (snum(thisRoomId) == ac->roomId) // init是自己
+    if (snum(thisRoomId) == roomId) // init是自己
     {
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
@@ -15887,8 +15965,8 @@ void MainWindow::pkSettle(QJsonObject json)
     // 保存对面偷塔次数
     if (oppositeTouta && !pkUname.isEmpty())
     {
-        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        danmakuCounts->setValue("touta/" + pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
@@ -15904,7 +15982,7 @@ void MainWindow::pkSettle(QJsonObject json)
     pkVideo = false;
     ui->actionShow_PK_Video->setEnabled(false);
 
-    if (ac->cookieUid == ac->upUid)
+    if (cookieUid == upUid)
         ui->actionJoin_Battle->setEnabled(true);
 
     if (pkSocket)
@@ -15924,7 +16002,7 @@ void MainWindow::slotPkEndingTimeout()
 {
     if (!pking) // 比如换房间了
     {
-        qInfo() << "大乱斗结束前，逻辑不正确" << pking << ac->roomId
+        qInfo() << "大乱斗结束前，逻辑不正确" << pking << roomId
                  << QDateTime::currentSecsSinceEpoch() << pkEndTime;
         return ;
     }
@@ -16077,7 +16155,7 @@ void MainWindow::connectPkRoom()
     myAudience.clear();
     oppositeAudience.clear();
 
-    getRoomCurrentAudiences(ac->roomId, myAudience);
+    getRoomCurrentAudiences(roomId, myAudience);
     getRoomCurrentAudiences(pkRoomId, oppositeAudience);
 
     // 额外保存的许多本地弹幕消息
@@ -16089,7 +16167,7 @@ void MainWindow::connectPkRoom()
     }
 
     // 保存自己主播、对面主播（带头串门？？？）
-    myAudience.insert(ac->upUid.toLongLong());
+    myAudience.insert(upUid.toLongLong());
     oppositeAudience.insert(pkUid.toLongLong());
 
     // 连接socket
@@ -16348,7 +16426,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         bool toView = pkBattleType &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
-                     snum(static_cast<qint64>(medal[3].toDouble())) == ac->roomId));
+                     snum(static_cast<qint64>(medal[3].toDouble())) == roomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
         qInfo() << s8("pk接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
@@ -16427,7 +16505,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
         // 是否是串门的
         bool toView = pkBattleType &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && anchorRoomId == ac->roomId));
+                 || (!pkRoomId.isEmpty() && anchorRoomId == roomId));
 
         danmaku.setPkLink(true);
 
@@ -16455,11 +16533,11 @@ void MainWindow::handlePkMessage(QJsonObject json)
         bool toView = pkBattleType &&
                 ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
                  || (!pkRoomId.isEmpty() &&
-                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == ac->roomId));
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == this->roomId));
         bool attentionToMyRoom = false;
         if (!toView) // 不是自己方过去串门的
         {
-            if (roomId == ac->roomId && msgType == 2) // 在对面关注当前主播
+            if (roomId == this->roomId && msgType == 2) // 在对面关注当前主播
                 attentionToMyRoom = true;
             else
                 if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
@@ -16597,10 +16675,10 @@ void MainWindow::addBannedWord(QString word, QString anchor)
 
 void MainWindow::saveMonthGuard()
 {
-    QDir dir(rt->dataPath + "guard_month");
+    QDir dir(dataPath + "guard_month");
     dir.mkpath(dir.absolutePath());
     QDate date = QDate::currentDate();
-    QString fileName = QString("%1_%2-%3.csv").arg(ac->roomId).arg(date.year()).arg(date.month());
+    QString fileName = QString("%1_%2-%3.csv").arg(roomId).arg(date.year()).arg(date.month());
     QString filePath = dir.absoluteFilePath(dir.absoluteFilePath(fileName));
 
     QFile file(filePath);
@@ -16631,9 +16709,9 @@ void MainWindow::saveMonthGuard()
 
 void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
 {
-    QDir dir(rt->dataPath + "guard_histories");
+    QDir dir(dataPath + "guard_histories");
     dir.mkpath(dir.absolutePath());
-    QString filePath = dir.absoluteFilePath(ac->roomId + ".csv");
+    QString filePath = dir.absoluteFilePath(roomId + ".csv");
 
     QFile file(filePath);
     bool exists = file.exists();
@@ -16652,19 +16730,19 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
            << danmaku.getNickname() << ","
            << danmaku.getGiftName() << ","
            << danmaku.getNumber() << ","
-           << us->danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
+           << danmakuCounts->value("guard/" + snum(danmaku.getUid()), 0).toInt() << ","
            << danmaku.getUid() << ","
-           << us->userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
+           << userMarks->value("base/" + snum(danmaku.getUid()), "").toString() << "\n";
 
     file.close();
 }
 
 void MainWindow::saveEveryGift(LiveDanmaku danmaku)
 {
-    QDir dir(rt->dataPath + "gift_histories");
+    QDir dir(dataPath + "gift_histories");
     dir.mkpath(dir.absolutePath());
     QDate date = QDate::currentDate();
-    QString fileName = QString("%1_%2-%3.csv").arg(ac->roomId).arg(date.year()).arg(date.month());
+    QString fileName = QString("%1_%2-%3.csv").arg(roomId).arg(date.year()).arg(date.month());
     QString filePath = dir.absoluteFilePath(fileName);
 
     QFile file(filePath);
@@ -16730,10 +16808,10 @@ void MainWindow::releaseLiveData(bool prepare)
         myAudience.clear();
         oppositeAudience.clear();
         fansList.clear();
-        us->currentGuards.clear();
+        currentGuards.clear();
         guardInfos.clear();
-        ac->currentFans = 0;
-        ac->currentFansClub = 0;
+        currentFans = 0;
+        currentFansClub = 0;
 
         autoMsgQueues.clear();
         for (int i = 0; i < CHANNEL_COUNT; i++)
@@ -16756,7 +16834,7 @@ void MainWindow::releaseLiveData(bool prepare)
             on_pushRecvCmdsButton_clicked();
         }
 
-        ac->cookieGuardLevel = 0;
+        cookieGuardLevel = 0;
         if (ui->adjustDanmakuLongestCheck->isChecked())
             adjustDanmakuLongest();
 
@@ -16781,7 +16859,7 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->diangeHistoryListWidget->clear();
 
     statusLabel->setText("");
-    this->popularVal = 0;
+    popularVal = 0;
 
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
@@ -16811,40 +16889,40 @@ void MainWindow::releaseLiveData(bool prepare)
     finishLiveRecord();
     saveCalculateDailyData();
 
-    QPixmap face = ac->roomId.isEmpty() ? QPixmap() : toCirclePixmap(upFace);
+    QPixmap face = roomId.isEmpty() ? QPixmap() : toCirclePixmap(upFace);
     setWindowIcon(face);
     tray->setIcon(face);
 
     // 清理一周没来的用户
     int day = ui->autoClearComeIntervalSpin->value();
-    us->danmakuCounts->beginGroup("comeTime");
+    danmakuCounts->beginGroup("comeTime");
     QStringList removedKeys;
-    auto keys = us->danmakuCounts->allKeys();
+    auto keys = danmakuCounts->allKeys();
     qint64 week = QDateTime::currentSecsSinceEpoch() - day * 24 * 3600;
     foreach (auto key, keys)
     {
-        qint64 value = us->danmakuCounts->value(key).toLongLong();
+        qint64 value = danmakuCounts->value(key).toLongLong();
         if (value < week)
         {
             removedKeys.append(key);
         }
     }
-    us->danmakuCounts->endGroup();
+    danmakuCounts->endGroup();
 
-    us->danmakuCounts->beginGroup("comeTime");
+    danmakuCounts->beginGroup("comeTime");
     foreach (auto key, removedKeys)
     {
-        us->danmakuCounts->remove(key);
+        danmakuCounts->remove(key);
     }
-    us->danmakuCounts->endGroup();
+    danmakuCounts->endGroup();
 
-    us->danmakuCounts->beginGroup("come");
+    danmakuCounts->beginGroup("come");
     foreach (auto key, removedKeys)
     {
-        us->danmakuCounts->remove(key);
+        danmakuCounts->remove(key);
     }
-    us->danmakuCounts->endGroup();
-    us->danmakuCounts->sync();
+    danmakuCounts->endGroup();
+    danmakuCounts->sync();
 }
 
 QRect MainWindow::getScreenRect()
@@ -16960,7 +17038,7 @@ void MainWindow::switchMedalToRoom(qint64 targetRoomId)
 void MainWindow::switchMedalToUp(qint64 upId, int page)
 {
     qInfo() << "自动切换勋章：upId=" << upId;
-    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + ac->cookieUid + "&source=2&need_rank=false&master_status=0&page=" + snum(page);
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + cookieUid + "&source=2&need_rank=false&master_status=0&page=" + snum(page);
     get(url, [=](MyJson json){
         if (json.value("code").toInt() != 0)
         {
@@ -17055,8 +17133,8 @@ void MainWindow::wearMedal(qint64 medalId)
     QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
     QStringList datas;
     datas << "medal_id=" + QString::number(medalId);
-    datas << "csrf_token=" + ac->csrf_token;
-    datas << "csrf=" + ac->csrf_token;
+    datas << "csrf_token=" + csrf_token;
+    datas << "csrf=" + csrf_token;
     datas << "visit_id=";
     QByteArray ba(datas.join("&").toStdString().data());
 
@@ -17076,7 +17154,7 @@ void MainWindow::wearMedal(qint64 medalId)
  */
 void MainWindow::doSign()
 {
-    if (ac->csrf_token.isEmpty())
+    if (csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17110,7 +17188,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
 {
     if (!id )
         return ;
-    if (ac->csrf_token.isEmpty())
+    if (csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17120,7 +17198,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
     }
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
-             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
+             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
     qInfo() << "参与天选：" << id << follow << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
@@ -17147,7 +17225,7 @@ void MainWindow::joinStorm(qint64 id)
 {
     if (!id )
         return ;
-    if (ac->csrf_token.isEmpty())
+    if (csrf_token.isEmpty())
     {
         ui->autoDoSignCheck->setText("未设置Cookie");
         QTimer::singleShot(10000, [=]{
@@ -17157,7 +17235,7 @@ void MainWindow::joinStorm(qint64 id)
     }
 
     QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
-             "?id="+QString::number(id)+"&color=5566168&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
+             "?id="+QString::number(id)+"&color=5566168&csrf_token="+csrf_token+"&csrf="+csrf_token+"&visit_id=");
     qInfo() << "参与节奏风暴：" << id << url;
 
     post(url, QByteArray(), [=](QJsonObject json){
@@ -17185,7 +17263,7 @@ void MainWindow::joinStorm(qint64 id)
 
 void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 {
-    if (ac->csrf_token.isEmpty())
+    if (csrf_token.isEmpty())
     {
         return ;
     }
@@ -17193,7 +17271,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     QString url("https://api.vc.bilibili.com/web_im/v1/web_im/send_msg");
 
     QStringList params;
-    params << "msg%5Bsender_uid%5D=" + ac->cookieUid;
+    params << "msg%5Bsender_uid%5D=" + cookieUid;
     params << "msg%5Breceiver_id%5D=" + snum(uid);
     params << "msg%5Breceiver_type%5D=1";
     params << "msg%5Bmsg_type%5D=1";
@@ -17205,8 +17283,8 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
     params << "from_firework=0";
     params << "build=0";
     params << "mobi_app=web";
-    params << "csrf_token=" + ac->csrf_token;
-    params << "csrf=" + ac->csrf_token;
+    params << "csrf_token=" + csrf_token;
+    params << "csrf=" + csrf_token;
     QByteArray ba(params.join("&").toStdString().data());
 
     // 连接槽
@@ -17222,18 +17300,18 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 
 void MainWindow::joinBattle(int type)
 {
-    if (!isLiving() || ac->cookieUid != ac->upUid)
+    if (!isLiving() || cookieUid != upUid)
     {
         showError("大乱斗", "未开播或不是主播本人");
         return ;
     }
 
     QStringList params{
-        "room_id", ac->roomId,
+        "room_id", roomId,
         "platform", "pc",
         "battle_type", snum(type),
-        "csrf_token", ac->csrf_token,
-        "csrf", ac->csrf_token
+        "csrf_token", csrf_token,
+        "csrf", csrf_token
     };
     post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -17244,11 +17322,6 @@ void MainWindow::joinBattle(int type)
     });
 }
 
-/**
- * 监听勋章升级
- * 一个小问题：如果用户一点一点的点击送礼物，那么升级那段时间获取到的亲密度刚好在送礼物边缘
- * 可能会多播报几次，或者压根就不播报
- */
 void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
 {
     /* {
@@ -17292,22 +17365,21 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             "can_delete": false
         }
     } */
-    // 如果是一点一点的点过去，则会出问题
-    qint64 uid = danmaku.getUid();
-    if (medalUpgradeWaiting.contains(uid)) // 只计算第一次
-        return ;
 
-    QList<int> specialGifts { 30607 };
-    if (ac->upUid.isEmpty() || (!danmaku.getTotalCoin() && !specialGifts.contains(danmaku.getGiftId()))) // 亲密度为0，不需要判断
+    if (upUid.isEmpty() || !danmaku.getTotalCoin()) // 亲密度为0，不需要判断
     {
         if (debugPrint)
             localNotify("[勋章升级：免费礼物]");
         return ;
     }
     int giftIntimacy = danmaku.getTotalCoin() / 100;
+    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
+    {
+        return ;
+    }
     if (danmaku.getGiftId() == 30607)
     {
-        if ((danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21) || !danmaku.isGuard())
+        if (danmaku.getAnchorRoomid() == roomId && danmaku.getMedalLevel() < 21 && !danmaku.isGuard())
         {
             giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
         }
@@ -17318,57 +17390,36 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             return ;
         }
     }
-    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
-    {
-        if (debugPrint)
-            localNotify("[勋章升级：0电池礼物]");
-        return ;
-    }
-
-    QString currentAnchorRoom = danmaku.getAnchorRoomid();
-    int currentMedalLevel = danmaku.getMedalLevel();
-    if (debugPrint)
-        localNotify("[当前勋章：房间" + currentAnchorRoom + "，等级" + snum(currentMedalLevel) + "]");
-
-    // 获取新的等级
     QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
-            + snum(danmaku.getUid()) + "&target_id=" + ac->upUid;
-
-    medalUpgradeWaiting.append(uid);
-    QTimer::singleShot(0, [=]{
-        medalUpgradeWaiting.removeOne(uid);
-        get(url, [=](MyJson json){
-            MyJson medalObject = json.data();
-            if (medalObject.isEmpty())
-            {
-                if (debugPrint)
-                    localNotify("[勋章升级：无勋章]");
-                return ; // 没有勋章，更没有亲密度
-            }
-            int intimacy = medalObject.i("intimacy"); // 当前亲密度
-            int nextIntimacy = medalObject.i("next_intimacy"); // 下一级亲密度
+            + snum(danmaku.getUid()) + "&target_id=" + upUid;
+    get(url, [=](MyJson json){
+        MyJson medalObject = json.data();
+        if (medalObject.isEmpty())
+        {
             if (debugPrint)
-                localNotify("[亲密度：" + snum(intimacy) + "/" + snum(nextIntimacy) + "]");
-            if (intimacy >= giftIntimacy) // 没有升级，或者刚拿到粉丝牌升到1级
-            {
-                if (debugPrint)
-                    localNotify("[勋章升级：未升级，已有" + snum(intimacy) + ">=礼物" + snum(giftIntimacy) + "]");
-                return ;
-            }
-            LiveDanmaku ld = danmaku;
-            int level = medalObject.i("level");
+                localNotify("[勋章升级：无勋章]");
+            return ; // 没有勋章，更没有亲密度
+        }
+        int intimacy = medalObject.i("intimacy");
+        if (intimacy >= giftIntimacy) // 没有升级
+        {
             if (debugPrint)
-            {
-                localNotify("[勋章升级：" + snum(level) + "级]");
-            }
-            if (ld.getAnchorRoomid() != ac->roomId && (!ac->shortId.isEmpty() && ld.getAnchorRoomid() != ac->shortId)) // 没有戴本房间的牌子
-            {
-                if (debugPrint)
-                    localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
-            }
+                localNotify("[勋章升级：未升级]");
+            return ;
+        }
+        LiveDanmaku ld = danmaku;
+        int level = medalObject.i("level");
+        if (debugPrint)
+        {
+            localNotify("[勋章升级：" + snum(level) + "级]");
+        }
+        if (ld.getAnchorRoomid() != roomId && (!shortId.isEmpty() && ld.getAnchorRoomid() != shortId)) // 没有戴本房间的牌子
+        {
+            if (debugPrint)
+                localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
             ld.setMedalLevel(level); // 设置为本房间的牌子
-            triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
-        });
+        }
+        triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
     });
 }
 
@@ -17377,11 +17428,11 @@ void MainWindow::adjustDanmakuLongest()
 {
     int longest = 20;
     // UL等级：20级30字
-    if (ac->cookieULevel >= 20)
+    if (cookieULevel >= 20)
         longest = qMax(longest, 30);
 
     // 大航海：舰长20，提督/总督40
-    if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
+    if (cookieGuardLevel == 1 || cookieGuardLevel == 2)
         longest = qMax(longest, 40);
 
     ui->danmuLongestSpin->setValue(longest);
@@ -17407,16 +17458,16 @@ void MainWindow::myLiveSelectArea(bool update)
                 QString id = json.s("id"); // 这个是字符串的
                 QString name = json.s("name");
                 parentMenu->addAction(name, [=]{
-                    ac->areaId = id;
-                    ac->areaName = name;
-                    ac->parentAreaId = parentId;
-                    ac->parentAreaName = parentName;
-                    us->setValue("myLive/areaId", ac->areaId);
-                    us->setValue("myLive/parentAreaId", ac->parentAreaId);
-                    qInfo() << "选择分区：" << parentName << parentId << ac->areaName << ac->areaId;
+                    areaId = id;
+                    areaName = name;
+                    parentAreaId = parentId;
+                    parentAreaName = parentName;
+                    settings->setValue("myLive/areaId", areaId);
+                    settings->setValue("myLive/parentAreaId", parentAreaId);
+                    qInfo() << "选择分区：" << parentName << parentId << areaName << areaId;
                     if (update)
                     {
-                        myLiveUpdateArea(ac->areaId);
+                        myLiveUpdateArea(areaId);
                     }
                 });
             });
@@ -17430,8 +17481,8 @@ void MainWindow::myLiveUpdateArea(QString area)
 {
     qInfo() << "更新AreaId:" << area;
     post("https://api.live.bilibili.com/room/v1/Room/update",
-    {"room_id", ac->roomId, "area_id", area,
-         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+    {"room_id", roomId, "area_id", area,
+         "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
         if (json.code() != 0)
             return showError("修改分区失败", json.msg());
@@ -17440,15 +17491,15 @@ void MainWindow::myLiveUpdateArea(QString area)
 
 void MainWindow::myLiveStartLive()
 {
-    int lastAreaId = us->value("myLive/areaId", 0).toInt();
+    int lastAreaId = settings->value("myLive/areaId", 0).toInt();
     if (!lastAreaId)
     {
         showError("一键开播", "必须选择分类才能开播");
         return ;
     }
     post("https://api.live.bilibili.com/room/v1/Room/startLive",
-    {"room_id", ac->roomId, "platform", "pc", "area_v2", snum(lastAreaId),
-         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+    {"room_id", roomId, "platform", "pc", "area_v2", snum(lastAreaId),
+         "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
         qInfo() << "开播：" << json;
         if (json.code() != 0)
@@ -17462,8 +17513,8 @@ void MainWindow::myLiveStartLive()
 void MainWindow::myLiveStopLive()
 {
     post("https://api.live.bilibili.com/room/v1/Room/stopLive",
-    {"room_id", ac->roomId, "platform", "pc",
-         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+    {"room_id", roomId, "platform", "pc",
+         "csrf_token", csrf_token, "csrf", csrf_token},
          [=](MyJson json) {
         qInfo() << "下播：" << json;
         if (json.code() != 0)
@@ -17473,11 +17524,11 @@ void MainWindow::myLiveStopLive()
 
 void MainWindow::myLiveSetTitle(QString newTitle)
 {
-    if (ac->upUid != ac->cookieUid)
+    if (upUid != cookieUid)
         return showError("只有主播才能操作");
     if (newTitle.isEmpty())
     {
-        QString title = ac->roomTitle;
+        QString title = roomTitle;
         bool ok = false;
         newTitle = QInputDialog::getText(this, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
         if (!ok)
@@ -17486,22 +17537,22 @@ void MainWindow::myLiveSetTitle(QString newTitle)
 
     post("https://api.live.bilibili.com/room/v1/Room/update",
          QStringList{
-             "room_id", ac->roomId,
+             "room_id", roomId,
              "title", newTitle,
-             "csrf_token", ac->csrf_token,
-             "csrf", ac->csrf_token
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置直播间标题：" << json;
         if (json.code() != 0)
             return showError(json.msg());
-        ac->roomTitle = newTitle;
+        roomTitle = newTitle;
         ui->roomNameLabel->setText(newTitle);
     });
 }
 
 void MainWindow::myLiveSetNews()
 {
-    QString content = ac->roomNews;
+    QString content = roomNews;
     bool ok = false;
     content = TextInputDialog::getText(this, "修改主播公告", "修改主播公告，立刻生效", content, &ok);
     if (!ok)
@@ -17509,22 +17560,22 @@ void MainWindow::myLiveSetNews()
 
     post("https://api.live.bilibili.com/room_ex/v1/RoomNews/update",
          QStringList{
-             "room_id", ac->roomId,
-             "uid", ac->cookieUid,
+             "room_id", roomId,
+             "uid", cookieUid,
              "content", content,
-             "csrf_token", ac->csrf_token,
-             "csrf", ac->csrf_token
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置主播公告：" << json;
         if (json.code() != 0)
             return showError(json.msg());
-        ac->roomNews = content;
+        roomNews = content;
     });
 }
 
 void MainWindow::myLiveSetDescription()
 {
-    QString content = ac->roomDescription;
+    QString content = roomDescription;
     bool ok = false;
     content = TextInputDialog::getText(this, "修改个人简介", "修改主播的个人简介，立刻生效", content, &ok);
     if (!ok)
@@ -17532,31 +17583,31 @@ void MainWindow::myLiveSetDescription()
 
     post("https://api.live.bilibili.com/room/v1/Room/update",
          QStringList{
-             "room_id", ac->roomId,
+             "room_id", roomId,
              "description", content,
-             "csrf_token", ac->csrf_token,
-             "csrf", ac->csrf_token
+             "csrf_token", csrf_token,
+             "csrf", csrf_token
          }, [=](MyJson json) {
         qInfo() << "设置个人简介：" << json;
         if (json.code() != 0)
             return showError(json.msg());
-        ac->roomDescription = content;
-        ui->roomDescriptionBrowser->setPlainText(ac->roomDescription);
+        roomDescription = content;
+        ui->roomDescriptionBrowser->setPlainText(roomDescription);
     });
 }
 
 void MainWindow::myLiveSetCover(QString path)
 {
-    if (ac->upUid != ac->cookieUid)
+    if (upUid != cookieUid)
         return showError("只有主播才能操作");
     if (path.isEmpty())
     {
         // 选择封面
-        QString oldPath = us->value("recent/coverPath", "").toString();
+        QString oldPath = settings->value("recent/coverPath", "").toString();
         path = QFileDialog::getOpenFileName(this, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
         if (path.isEmpty())
             return ;
-        us->setValue("recent/coverPath", path);
+        settings->setValue("recent/coverPath", path);
     }
     else
     {
@@ -17571,13 +17622,13 @@ void MainWindow::myLiveSetCover(QString path)
 
     // 压缩图片
     const int width = 470;
-    const QString clipPath = rt->dataPath + "temp_cover.jpeg";
+    const QString clipPath = dataPath + "temp_cover.jpeg";
     pixmap = pixmap.scaledToWidth(width, Qt::SmoothTransformation);
     pixmap.save(clipPath);
 
     // 开始上传
-    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + ac->csrf_token);
-    uploader->setCookies(ac->userCookies);
+    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + csrf_token);
+    uploader->setCookies(userCookies);
     uploader->addTextField("bucket", "live");
     uploader->addTextField("dir", "new_room_cover");
     uploader->addFileField("file", "blob", clipPath, "image/jpeg");
@@ -17595,11 +17646,11 @@ void MainWindow::myLiveSetCover(QString path)
         if (roomCover.isNull()) // 仅第一次上传封面，调用 add
         {
             post("https://api.live.bilibili.com/room/v1/Cover/add",
-            {"room_id", ac->roomId,
+            {"room_id", roomId,
              "url", location,
              "type", "cover",
-             "csrf_token", ac->csrf_token,
-             "csrf", ac->csrf_token,
+             "csrf_token", csrf_token,
+             "csrf", csrf_token,
              "visit_id", getRandomKey(12)
                  }, [=](MyJson json) {
                 qInfo() << "添加封面：" << json;
@@ -17610,7 +17661,7 @@ void MainWindow::myLiveSetCover(QString path)
         else // 后面就要调用替换的API了，需要参数 pic_id
         {
             // 获取 pic_id
-            get("https://api.live.bilibili.com/room/v1/Cover/new_get_list?room_id=" +ac->roomId, [=](MyJson json) {
+            get("https://api.live.bilibili.com/room/v1/Cover/new_get_list?room_id=" +roomId, [=](MyJson json) {
                 qInfo() << "获取封面ID：" << json;
                 if (json.code() != 0)
                     return showError("设置封面失败", "无法获取封面ID");
@@ -17620,12 +17671,12 @@ void MainWindow::myLiveSetCover(QString path)
                 const qint64 picId = (long long)(array.first().toObject().value("id").toDouble());
 
                 post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
-                {"room_id", ac->roomId,
+                {"room_id", roomId,
                  "url", location,
                  "pic_id", snum(picId),
                  "type", "cover",
-                 "csrf_token", ac->csrf_token,
-                 "csrf", ac->csrf_token,
+                 "csrf_token", csrf_token,
+                 "csrf", csrf_token,
                  "visit_id", getRandomKey(12)
                      }, [=](MyJson json) {
                     qInfo() << "设置封面：" << json;
@@ -17640,31 +17691,31 @@ void MainWindow::myLiveSetCover(QString path)
 
 void MainWindow::myLiveSetTags()
 {
-    QString content = ac->roomTags.join(" ");
+    QString content = roomTags.join(" ");
     bool ok = false;
     content = QInputDialog::getText(this, "修改我的个人标签", "多个标签之间使用空格分隔\n短时间修改太多标签可能会被临时屏蔽", QLineEdit::Normal, content, &ok);
     if (!ok)
         return ;
 
-    QStringList oldTags = ac->roomTags;
+    QStringList oldTags = roomTags;
     QStringList newTags = content.split(" ", QString::SkipEmptyParts);
 
     auto toPost = [=](QString action, QString tag){
         QString rst = NetUtil::postWebData("https://api.live.bilibili.com/room/v1/Room/update",
                              QStringList{
-                                 "room_id", ac->roomId,
+                                 "room_id", roomId,
                                  action, tag,
-                                 "csrf_token", ac->csrf_token,
-                                 "csrf", ac->csrf_token
-                             }, ac->userCookies);
+                                 "csrf_token", csrf_token,
+                                 "csrf", csrf_token
+                             }, userCookies);
         MyJson json(rst.toUtf8());
         qInfo() << "修改个人标签：" << json;
         if (json.code() != 0)
             return showError(json.msg());
         if (action == "add_tag")
-            ac->roomTags.append(tag);
+            roomTags.append(tag);
         else
-            ac->roomTags.removeOne(tag);
+            roomTags.removeOne(tag);
     };
 
     // 对比新旧
@@ -17687,7 +17738,7 @@ void MainWindow::myLiveSetTags()
     }
 
     // 刷新界面
-    ui->tagsButtonGroup->initStringList(ac->roomTags);
+    ui->tagsButtonGroup->initStringList(roomTags);
 }
 
 void MainWindow::showPkMenu()
@@ -17709,9 +17760,9 @@ void MainWindow::showPkMenu()
     });
 
     menu->addAction("最后匹配的直播间", [=]{
-        if (!ac->lastMatchRoomId)
+        if (!lastMatchRoomId)
             return ;
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(ac->lastMatchRoomId)));
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(lastMatchRoomId)));
     });
 
     menu->exec();
@@ -17719,7 +17770,7 @@ void MainWindow::showPkMenu()
 
 void MainWindow::showPkAssists()
 {
-    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + ac->upUid + "&room_id=" + ac->roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + upUid + "&room_id=" + roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "pk assists:" << url;
     get(url, [=](MyJson json) {
         JO(json, data);
@@ -17800,7 +17851,7 @@ void MainWindow::showPkAssists()
 void MainWindow::showPkHistories()
 {
     QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
-                  "ruid=" + ac->upUid + "&room_id=" + ac->roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+                  "ruid=" + upUid + "&room_id=" + roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "pk histories" << url;
     get(url, [=](MyJson json) {
         if (json.code())
@@ -17896,7 +17947,7 @@ void MainWindow::showPkHistories()
 
 void MainWindow::refreshPrivateMsg()
 {
-    if (ac->cookieUid.isEmpty())
+    if (cookieUid.isEmpty())
         return ;
 
     qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
@@ -17965,7 +18016,7 @@ void MainWindow::receivedPrivateMsg(MyJson session)
         if (senderUid != talkerId) // 自己已经回复了
             return ;
         qint64 receiverId = lastMsg.l("receiver_id");
-        Q_ASSERT(receiverId == ac->cookieUid.toLongLong());
+        Q_ASSERT(receiverId == cookieUid.toLongLong());
         content = lastMsg.s("content");
         MyJson lastContent = MyJson::from(content.toUtf8());
         if (lastContent.contains("content"))
@@ -18040,7 +18091,7 @@ void MainWindow::startSplash()
 #endif
 }
 
-void MainWindow::loadWebExtensionList()
+void MainWindow::loadWebExtensinList()
 {
     // 清空旧的列表
     for (int i = 0; i < ui->extensionListWidget->count(); i++)
@@ -18051,37 +18102,23 @@ void MainWindow::loadWebExtensionList()
     }
     ui->extensionListWidget->clear();
 
-    // 设置界面值
-    QFontMetrics fm(font());
-    const int lineHeight = fm.lineSpacing();
-    const int btnSize = lineHeight * 3 / 2;
-    QFont titleFont;
-    titleFont.setPointSize(titleFont.pointSize() * 5 / 4);
-    titleFont.setBold(true);
-
     // 加载url列表，允许一键复制
     QList<QFileInfo> dirs = QDir(wwwDir).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
     foreach (auto info, dirs)
     {
-        QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("package.json");
-        if (!isFileExist(infoPath))
-            infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
+        QString infoPath = QDir(info.absoluteFilePath()).absoluteFilePath("info.json");
         if (!isFileExist(infoPath))
             continue;
         QString str = readTextFileAutoCodec(infoPath);
         MyJson json(str.toUtf8());
         QString extName = json.s("name");
-        QString authorAll = json.s("author");
-        QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
-        if (!minVersion.isEmpty() && rt->appVersion < minVersion)
+        if (!minVersion.isEmpty() && appVersion < minVersion)
         {
             showError("扩展不可用", "【" + extName + "】要求版本：v" + minVersion);
         }
         json.each("list", [=](MyJson inf){
-            /// 读取数值
             QString name = inf.s("name");
-            QString author= inf.s("author");
             QString urlR = inf.s("url"); // 如果是 /开头，则是相对于www的路径，否则相对于当前文件夹的路径
             QString stsR = inf.s("config");
             QString cssR = inf.s("css");
@@ -18091,28 +18128,9 @@ void MainWindow::loadWebExtensionList()
             QString desc = inf.s("desc");
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
-            QString coverPath = inf.s("cover");
-            if (coverPath.isEmpty())
-            {
-                if (isFileExist(QDir(info.absoluteFilePath()).absoluteFilePath(coverPath = "cover.png"))
-                        || isFileExist(QDir(info.absoluteFilePath()).absoluteFilePath(coverPath = "cover.jpg")))
-                    coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath);
-                else
-                    coverPath = ":/icons/gray_cover";
-            }
-            else
-            {
-                if (isFileExist(coverPath = QDir(info.absoluteFilePath()).absoluteFilePath(coverPath)))
-                    ;
-                else
-                    coverPath = ":/icons/gray_cover";
-            }
+
             if (name.isEmpty())
                 name = extName;
-            if (author.isEmpty())
-                author = authorAll;
-            if (desc.isEmpty())
-                desc = descAll;
             QString dirName = info.fileName();
             if (!urlR.isEmpty() && !urlR.startsWith("/"))
                 urlR = "/" + dirName + "/" + urlR;
@@ -18132,75 +18150,19 @@ void MainWindow::loadWebExtensionList()
             if (name.isEmpty() && urlR.isEmpty())
                 return;
 
-            /// 创建控件
-            const int labelCount = 4;
-            const int cardHeight = (lineHeight + 9) * labelCount;
-            const int coverSize = lineHeight * 4;
-            // 主卡片
-            auto widget = new InteractiveButtonBase(ui->serverUrlsCard);
+            auto widget = new InteractiveButtonBase(name + "  " + urlR, ui->serverUrlsCard);
+            auto layout = new QHBoxLayout(widget);
+            layout->addStretch(1);
+            layout->setSpacing(0);
+            layout->setMargin(0);
+            widget->setLayout(layout);
             widget->setPaddings(8);
             widget->setAlign(Qt::AlignLeft);
-            widget->setRadius(rt->fluentRadius);
+            widget->setRadius(fluentRadius);
             widget->setFixedForePos();
             if (!desc.isEmpty())
                 widget->setToolTip(desc);
             widget->setCursor(Qt::PointingHandCursor);
-
-            // 封面
-            auto coverVLayout = new QVBoxLayout;
-            QLabel* coverLabel = new RoundedPixmapLabel(widget);
-            coverLabel->setFixedSize(coverSize, coverSize);
-            coverVLayout->addWidget(coverLabel);
-            coverLabel->setPixmap(QPixmap(coverPath));
-            coverLabel->setScaledContents(true);
-
-            if (!author.isEmpty())
-            {
-                QLabel* label = new QLabel("by " + author, widget);
-                label->setAlignment(Qt::AlignCenter);
-                label->setStyleSheet("color: grey;");
-                coverVLayout->addWidget(label);
-            }
-
-            // 信息
-            auto infoVLayout = new QVBoxLayout;
-            QLabel* nameLabel = new QLabel(name, widget);
-            nameLabel->setFont(titleFont);
-            infoVLayout->addWidget(nameLabel);
-            if (!desc.isEmpty())
-            {
-                QLabel* label = new QLabel(desc, widget);
-                label->setStyleSheet("color: grey;");
-                infoVLayout->addWidget(label);
-            }
-            if (!urlR.isEmpty())
-            {
-                QLabel* label = new QLabel(urlR, widget);
-                label->setStyleSheet("color: grey;");
-                infoVLayout->addWidget(label);
-            }
-            infoVLayout->setSpacing(4);
-
-            // 布局
-            auto mainHLayout = new QHBoxLayout(widget);
-            widget->setLayout(mainHLayout);
-            mainHLayout->addLayout(coverVLayout);
-            mainHLayout->addLayout(infoVLayout);
-            mainHLayout->setSpacing(12);
-            mainHLayout->setMargin(9);
-            mainHLayout->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-            mainHLayout->setStretch(0, 0);
-            mainHLayout->setStretch(1, 1);
-            widget->setFixedHeight(cardHeight);
-
-            /// 交互按钮
-            auto btnHLayout = new QHBoxLayout;
-            infoVLayout->addLayout(btnHLayout);
-
-            // 占位符
-            auto placehold = new QWidget(widget);
-            placehold->setFixedSize(1, btnSize);
-            btnHLayout->addWidget(placehold);
 
             // URL
             if (!urlR.isEmpty())
@@ -18215,15 +18177,14 @@ void MainWindow::loadWebExtensionList()
                 });
 
                 auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QApplication::clipboard()->setText(getDomainPort() + urlR);
                 });
@@ -18233,15 +18194,14 @@ void MainWindow::loadWebExtensionList()
             if (!stsR.isEmpty())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/generate"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展的基础配置\n更深层次的设置需要修改源代码");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QDesktopServices::openUrl(getDomainPort() + stsR);
                 });
@@ -18251,15 +18211,14 @@ void MainWindow::loadWebExtensionList()
             if (inf.contains("code") && code.isArray())
             {
                 auto btn = new WaterCircleButton(QIcon(":/icons/code"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("一键导入要用到的代码\n如果已经存在，可能会重复导入");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     qInfo() << "导入网页小程序代码";
                     QApplication::clipboard()->setText(QJsonDocument(code.toArray()).toJson());
@@ -18275,15 +18234,14 @@ void MainWindow::loadWebExtensionList()
                 if (cssC.startsWith("/"))
                     cssC = cssC.right(cssC.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/modify"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("修改或者导入CSS样式");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(cssR);
                     QString pathC = wwwDir.absoluteFilePath(cssC);
@@ -18307,15 +18265,14 @@ void MainWindow::loadWebExtensionList()
                 if (dirR.startsWith("/"))
                     dirR = dirR.right(dirR.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/dir"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展指定目录，修改相关资源");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(dirR);
                     QDesktopServices::openUrl(QUrl(path));
@@ -18328,22 +18285,19 @@ void MainWindow::loadWebExtensionList()
                 if (fileR.startsWith("/"))
                     fileR = fileR.right(fileR.length() - 1);
                 auto btn = new WaterCircleButton(QIcon(":/icons/file"), widget);
-                btnHLayout->addWidget(btn);
-                btn->setFixedSize(btnSize, btnSize);
+                layout->addWidget(btn);
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
                 btn->setToolTip("打开扩展指定文件，如抽奖结果");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
+                btn->hide();
+                connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
+                connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
                 connect(btn, &InteractiveButtonBase::clicked, this, [=]{
                     QString path = wwwDir.absoluteFilePath(fileR);
                     QDesktopServices::openUrl(QUrl(path));
                 });
             }
-
-            btnHLayout->addStretch(1);
 
             auto item = new QListWidgetItem(ui->extensionListWidget);
             ui->extensionListWidget->setItemWidget(item, widget);
@@ -18430,8 +18384,8 @@ void MainWindow::restoreGameTexts()
 
 void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
-    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
+    if (url.contains("bilibili.com") && !browserCookie.isEmpty())
+        request->setHeader(QNetworkRequest::CookieHeader, userCookies);
     if (url.contains("cloud.baidu.com"))
         request->setRawHeader("Referer", "https://ai.baidu.com/tech/speech/tts_online");
 }
@@ -18542,7 +18496,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         layout->setSpacing(1);
         layout->setMargin(3);
         card->setObjectName("giftCard");
-        imgLabel->setFixedHeight(rt->giftImgSize);
+        imgLabel->setFixedHeight(giftImgSize);
         imgLabel->setAlignment(Qt::AlignCenter);
         giftNameLabel->setAlignment(Qt::AlignCenter);
         userNameLabel->setAlignment(Qt::AlignCenter);
@@ -18554,7 +18508,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         card->setToolTip("价值：" + snum(danmaku.getTotalCoin() / 1000) + "元");
 
         // 获取图片
-        imgLabel->setPixmap(pixmap.scaled(rt->giftImgSize, rt->giftImgSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        imgLabel->setPixmap(pixmap.scaled(giftImgSize, giftImgSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         // 添加到列表
         auto item = new QListWidgetItem();
@@ -18564,7 +18518,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         // 设置样式
         card->setStyleSheet("#giftCard { background: transparent;"
                             "border: 0px solid lightgray; "
-                            "border-radius: " + snum(rt->fluentRadius) + "px; }"
+                            "border-radius: " + snum(fluentRadius) + "px; }"
                             "#giftCard:hover { border: 1px solid lightgray; }");
         giftNameLabel->setStyleSheet("font-size: 14px;");
         userNameLabel->setStyleSheet("color: gray;");
@@ -18586,14 +18540,13 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 
     // 本地已有，直接设置
     qint64 id = danmaku.getGiftId();
-    if (pl->giftPixmaps.contains(id))
+    if (giftImages.contains(id))
     {
-        addToList(pl->giftPixmaps[id]);
+        addToList(giftImages[id]);
         return ;
     }
 
     // 先下载图片，然后进行设置
-    // TODO: 这个URL的图片有些是不准确的
     QString url = "http://openapi.zbmate.com/gift_icons/b/";
     if (danmaku.isGuard()) // 舰长礼物的话，是静态的图片
     {
@@ -18620,7 +18573,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
             return ;
         }
 
-        pl->giftPixmaps[id] = pixmap;
+        giftImages[id] = pixmap;
         addToList(pixmap);
     });
 }
@@ -18707,7 +18660,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         oldVersion.replace(0, 1, "");
     QStringList versions = {
         "3.6.3",
-        rt->appVersion // 最后一个一定是最新版本
+        appVersion // 最后一个一定是最新版本
     };
     int index = 0;
     while (index < versions.size())
@@ -18729,17 +18682,17 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
 {
     if (beforeVersion == "3.6.3")
     {
-        us->beginGroup("heaps");
+        settings->beginGroup("heaps");
         heaps->beginGroup("heaps");
-        auto keys = us->allKeys();
+        auto keys = settings->allKeys();
         for (int i = 0; i < keys.size(); i++)
         {
             QString key = keys.at(i);
-            heaps->setValue(key, us->value(key));
-            us->remove(key);
+            heaps->setValue(key, settings->value(key));
+            settings->remove(key);
         }
         heaps->endGroup();
-        us->endGroup();
+        settings->endGroup();
     }
 }
 
@@ -18903,7 +18856,7 @@ void MainWindow::showNotify(QString s) const
 QString MainWindow::toFilePath(const QString &fileName) const
 {
     if (QFileInfo(fileName).isRelative())
-        return rt->dataPath + fileName;
+        return dataPath + fileName;
     return fileName;
 }
 
@@ -18970,15 +18923,15 @@ void MainWindow::on_judgeRobotCheck_clicked()
         ui->judgeRobotCheck->setCheckState(Qt::Checked);
     ui->judgeRobotCheck->setText(judgeRobot == 1 ? "机器人判断(仅关注)" : "机器人判断");
 
-    us->setValue("danmaku/judgeRobot", judgeRobot);
+    settings->setValue("danmaku/judgeRobot", judgeRobot);
 }
 
 void MainWindow::on_actionAdd_Room_To_List_triggered()
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
 
-    QStringList list = us->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
+    QStringList list = settings->value("custom/rooms", "").toString().split(";", QString::SkipEmptyParts);
     for (int i = 0; i < list.size(); i++)
     {
         QStringList texts = list.at(i).split(",", QString::SkipEmptyParts);
@@ -18986,20 +18939,20 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
             continue ;
         QString id = texts.first();
         QString name = texts.size() >= 2 ? texts.at(1) : id;
-        if (id == ac->roomId) // 找到这个
+        if (id == roomId) // 找到这个
         {
             ui->menu_3->removeAction(ui->menu_3->actions().at(ui->menu_3->actions().size() - (list.size() - i)));
             list.removeAt(i);
-            us->setValue("custom/rooms", list.join(";"));
+            settings->setValue("custom/rooms", list.join(";"));
             return ;
         }
     }
 
-    QString id = ac->roomId; // 不能用成员变量，否则无效（lambda中值会变，自己试试就知道了）
-    QString name = ac->upName;
+    QString id = roomId; // 不能用成员变量，否则无效（lambda中值会变，自己试试就知道了）
+    QString name = upName;
 
     list.append(id + "," + name.replace(";","").replace(",",""));
-    us->setValue("custom/rooms", list.join(";"));
+    settings->setValue("custom/rooms", list.join(";"));
 
     QAction* action = new QAction(name, this);
     ui->menu_3->addAction(action);
@@ -19012,11 +18965,11 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
 void MainWindow::on_recordCheck_clicked()
 {
     bool check = ui->recordCheck->isChecked();
-    us->setValue("danmaku/record", check);
+    settings->setValue("danmaku/record", check);
 
     if (check)
     {
-        if (!ac->roomId.isEmpty() && isLiving())
+        if (!roomId.isEmpty() && isLiving())
             startLiveRecord();
     }
     else
@@ -19025,19 +18978,19 @@ void MainWindow::on_recordCheck_clicked()
 
 void MainWindow::on_recordSplitSpin_valueChanged(int arg1)
 {
-    us->setValue("danmaku/recordSplit", arg1);
+    settings->setValue("danmaku/recordSplit", arg1);
     if (recordTimer)
         recordTimer->setInterval(arg1 * 60000);
 }
 
 void MainWindow::on_sendWelcomeTextCheck_clicked()
 {
-    us->setValue("danmaku/sendWelcomeText", ui->sendWelcomeTextCheck->isChecked());
+    settings->setValue("danmaku/sendWelcomeText", ui->sendWelcomeTextCheck->isChecked());
 }
 
 void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 {
-    us->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
+    settings->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendWelcomeVoiceCheck->isChecked())
         initTTS();
@@ -19046,12 +18999,12 @@ void MainWindow::on_sendWelcomeVoiceCheck_clicked()
 
 void MainWindow::on_sendGiftTextCheck_clicked()
 {
-    us->setValue("danmaku/sendGiftText", ui->sendGiftTextCheck->isChecked());
+    settings->setValue("danmaku/sendGiftText", ui->sendGiftTextCheck->isChecked());
 }
 
 void MainWindow::on_sendGiftVoiceCheck_clicked()
 {
-    us->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
+    settings->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendGiftVoiceCheck->isChecked())
         initTTS();
@@ -19060,12 +19013,12 @@ void MainWindow::on_sendGiftVoiceCheck_clicked()
 
 void MainWindow::on_sendAttentionTextCheck_clicked()
 {
-    us->setValue("danmaku/sendAttentionText", ui->sendAttentionTextCheck->isChecked());
+    settings->setValue("danmaku/sendAttentionText", ui->sendAttentionTextCheck->isChecked());
 }
 
 void MainWindow::on_sendAttentionVoiceCheck_clicked()
 {
-    us->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
+    settings->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->sendAttentionVoiceCheck->isChecked())
         initTTS();
@@ -19074,38 +19027,38 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
 
 void MainWindow::on_enableScreenDanmakuCheck_clicked()
 {
-    us->setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
+    settings->setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
 }
 
 void MainWindow::on_enableScreenMsgCheck_clicked()
 {
-    us->setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
+    settings->setValue("screendanmaku/enableMsg", ui->enableScreenMsgCheck->isChecked());
 }
 
 void MainWindow::on_screenDanmakuLeftSpin_valueChanged(int arg1)
 {
-    us->setValue("screendanmaku/left", arg1);
+    settings->setValue("screendanmaku/left", arg1);
 }
 
 void MainWindow::on_screenDanmakuRightSpin_valueChanged(int arg1)
 {
-    us->setValue("screendanmaku/right", arg1);
+    settings->setValue("screendanmaku/right", arg1);
 }
 
 void MainWindow::on_screenDanmakuTopSpin_valueChanged(int arg1)
 {
-    us->setValue("screendanmaku/top", arg1);
+    settings->setValue("screendanmaku/top", arg1);
 }
 
 void MainWindow::on_screenDanmakuBottomSpin_valueChanged(int arg1)
 {
-    us->setValue("screendanmaku/bottom", arg1);
+    settings->setValue("screendanmaku/bottom", arg1);
 }
 
 void MainWindow::on_screenDanmakuSpeedSpin_valueChanged(int arg1)
 {
-    us->setValue("screendanmaku/speed", arg1);
+    settings->setValue("screendanmaku/speed", arg1);
 }
 
 void MainWindow::on_screenDanmakuFontButton_clicked()
@@ -19116,7 +19069,7 @@ void MainWindow::on_screenDanmakuFontButton_clicked()
         return ;
     this->screenDanmakuFont = font;
     this->setFont(font);
-    us->setValue("screendanmaku/font", screenDanmakuFont.toString());
+    settings->setValue("screendanmaku/font", screenDanmakuFont.toString());
 }
 
 void MainWindow::on_screenDanmakuColorButton_clicked()
@@ -19126,13 +19079,13 @@ void MainWindow::on_screenDanmakuColorButton_clicked()
         return ;
     if (c != screenDanmakuColor)
     {
-        us->setValue("screendanmaku/color", screenDanmakuColor = c);
+        settings->setValue("screendanmaku/color", screenDanmakuColor = c);
     }
 }
 
 void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 {
-    us->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
+    settings->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!tts && ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
@@ -19142,12 +19095,12 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)
 {
     diangeFormatString = text;
-    us->setValue("danmaku/diangeFormat", diangeFormatString);
+    settings->setValue("danmaku/diangeFormat", diangeFormatString);
 }
 
 void MainWindow::on_diangeNeedMedalCheck_clicked()
 {
-    us->setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
+    settings->setValue("danmaku/diangeNeedMedal", ui->diangeNeedMedalCheck->isChecked());
 }
 
 void MainWindow::on_showOrderPlayerButton_clicked()
@@ -19157,12 +19110,12 @@ void MainWindow::on_showOrderPlayerButton_clicked()
 
 void MainWindow::on_diangeShuaCheck_clicked()
 {
-    us->setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
+    settings->setValue("danmaku/diangeShua", ui->diangeShuaCheck->isChecked());
 }
 
 void MainWindow::on_orderSongShuaSpin_editingFinished()
 {
-    us->setValue("danmaku/diangeShuaCount", ui->orderSongShuaSpin->value());
+    settings->setValue("danmaku/diangeShuaCount", ui->orderSongShuaSpin->value());
 }
 
 void MainWindow::on_pkMelonValButton_clicked()
@@ -19172,7 +19125,7 @@ void MainWindow::on_pkMelonValButton_clicked()
     if (!ok)
         return ;
     goldTransPk = val;
-    us->setValue("pk/goldTransPk", goldTransPk);
+    settings->setValue("pk/goldTransPk", goldTransPk);
 }
 
 void MainWindow::slotPkEnding()
@@ -19189,8 +19142,8 @@ void MainWindow::slotPkEnding()
                 .arg(myVotes).arg(matchVotes);
         if (!pkRoomId.isEmpty())
         {
-            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
             if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                 text += QString("  偷塔概率:%1/%2")
                                 .arg(toutaCount).arg(totalCount);
@@ -19217,7 +19170,7 @@ void MainWindow::slotStartWork()
     if (ui->autoSwitchMedalCheck->isChecked())
     {
         // switchMedalToRoom(roomId.toLongLong());
-        switchMedalToUp(ac->upUid.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 
     ui->actionShow_Live_Video->setEnabled(true);
@@ -19229,9 +19182,9 @@ void MainWindow::slotStartWork()
     }
 
     // 延迟操作（好像是有bug）
-    QString ri = ac->roomId;
+    QString ri = roomId;
     QTimer::singleShot(5000, [=]{
-        if (ri != ac->roomId)
+        if (ri != roomId)
             return ;
 
         // 挂小心心
@@ -19251,7 +19204,7 @@ void MainWindow::slotStartWork()
         startSaveDanmakuToFile();
 
     // 同步所有的使用房间，避免使用神奇弹幕的偷塔误杀
-    QString usedRoom = ac->roomId;
+    QString usedRoom = roomId;
     syncTimer->start((qrand() % 3 + 5) * 1000);
 
     // 本次直播数据
@@ -19268,44 +19221,44 @@ void MainWindow::slotStartWork()
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
 {
-    us->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
-    if (!ac->roomId.isEmpty() && isLiving())
+    settings->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
+    if (!roomId.isEmpty() && isLiving())
     {
         // switchMedalToRoom(roomId.toLongLong());
-        switchMedalToUp(ac->upUid.toLongLong());
+        switchMedalToUp(upUid.toLongLong());
     }
 }
 
 void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
 {
-    us->setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
+    settings->setValue("danmaku/sendAutoOnlyLive", ui->sendAutoOnlyLiveCheck->isChecked());
 }
 
 void MainWindow::on_autoDoSignCheck_clicked()
 {
-    us->setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
+    settings->setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
 }
 
 void MainWindow::on_actionRoom_Status_triggered()
 {
-    RoomStatusDialog* rsd = new RoomStatusDialog(us, rt->dataPath, nullptr);
+    RoomStatusDialog* rsd = new RoomStatusDialog(settings, dataPath, nullptr);
     rsd->show();
 }
 
 void MainWindow::on_autoLOTCheck_clicked()
 {
-    us->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
+    settings->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
 }
 
 void MainWindow::on_blockNotOnlyNewbieCheck_clicked()
 {
     bool enable = ui->blockNotOnlyNewbieCheck->isChecked();
-    us->setValue("block/blockNotOnlyNewbieCheck", enable);
+    settings->setValue("block/blockNotOnlyNewbieCheck", enable);
 }
 
 void MainWindow::on_autoBlockTimeSpin_editingFinished()
 {
-    us->setValue("block/autoTime", ui->autoBlockTimeSpin->value());
+    settings->setValue("block/autoTime", ui->autoBlockTimeSpin->value());
 }
 
 /**
@@ -19325,8 +19278,8 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceLocal;
-        us->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(us->value("voice/localName").toString());
+        settings->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(settings->value("voice/localName").toString());
 
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
@@ -19341,8 +19294,8 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceXfy;
-        us->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
+        settings->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
 
         ui->voiceXfySettingsCard->show();
         ui->voiceMSSettingsCard->hide();
@@ -19357,8 +19310,8 @@ void MainWindow::on_voiceMSRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceMS;
-        us->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
+        settings->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(settings->value("xfytts/name", "xiaoyan").toString());
 
         ui->voiceMSSettingsCard->show();
         ui->voiceXfySettingsCard->hide();
@@ -19374,8 +19327,8 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
     if (checked)
     {
         voicePlatform = VoiceCustom;
-        us->setValue("voice/platform", voicePlatform);
-        ui->voiceNameEdit->setText(us->value("voice/customName").toString());
+        settings->setValue("voice/platform", voicePlatform);
+        ui->voiceNameEdit->setText(settings->value("voice/customName").toString());
 
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
@@ -19388,20 +19341,19 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
 void MainWindow::on_voiceNameEdit_editingFinished()
 {
     voiceName = ui->voiceNameEdit->text();
-    qInfo() << "设置发音人：" << voiceName;
     switch (voicePlatform) {
     case VoiceLocal:
-        us->setValue("voice/localName", voiceName);
+        settings->setValue("voice/localName", voiceName);
         break;
     case VoiceXfy:
-        us->setValue("xfytts/name", voiceName);
+        settings->setValue("xfytts/name", voiceName);
         if (xfyTTS)
         {
             xfyTTS->setName(voiceName);
         }
         break;
     case VoiceCustom:
-        us->setValue("voice/customName", voiceName);
+        settings->setValue("voice/customName", voiceName);
         break;
     case VoiceMS:
     {
@@ -19445,7 +19397,7 @@ void MainWindow::on_voiceNameSelectButton_clicked()
 
 void MainWindow::on_voicePitchSlider_valueChanged(int value)
 {
-    us->setValue("voice/pitch", voicePitch = value);
+    settings->setValue("voice/pitch", voicePitch = value);
     ui->voicePitchLabel->setText("音调" + snum(value));
 
     switch (voicePlatform) {
@@ -19480,7 +19432,7 @@ void MainWindow::on_voicePitchSlider_valueChanged(int value)
 
 void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 {
-    us->setValue("voice/speed", voiceSpeed = value);
+    settings->setValue("voice/speed", voiceSpeed = value);
     ui->voiceSpeedLabel->setText("音速" + snum(value));
 
     switch (voicePlatform) {
@@ -19515,7 +19467,7 @@ void MainWindow::on_voiceSpeedSlider_valueChanged(int value)
 
 void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 {
-    us->setValue("voice/volume", voiceVolume = value);
+    settings->setValue("voice/volume", voiceVolume = value);
     ui->voiceVolumeLabel->setText("音量" + snum(value));
 
     switch (voicePlatform) {
@@ -19563,9 +19515,9 @@ void MainWindow::on_voiceLocalRadio_clicked()
         }
         else
         {
-            tts->setRate( (voiceSpeed = us->value("voice/speed", 50).toInt() - 50) / 50.0 );
-            tts->setPitch( (voicePitch = us->value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            tts->setVolume( (voiceVolume = us->value("voice/volume", 50).toInt()) / 100.0 );
+            tts->setRate( (voiceSpeed = settings->value("voice/speed", 50).toInt() - 50) / 50.0 );
+            tts->setPitch( (voicePitch = settings->value("voice/pitch", 50).toInt() - 50) / 50.0 );
+            tts->setVolume( (voiceVolume = settings->value("voice/volume", 50).toInt()) / 100.0 );
         }
     });
 #endif
@@ -19580,10 +19532,10 @@ void MainWindow::on_voiceXfyRadio_clicked()
         }
         else
         {
-            xfyTTS->setName( voiceName = us->value("xfytts/name", "xiaoyan").toString() );
-            xfyTTS->setPitch( voicePitch = us->value("voice/pitch", 50).toInt() );
-            xfyTTS->setSpeed( voiceSpeed = us->value("voice/speed", 50).toInt() );
-            xfyTTS->setVolume( voiceSpeed = us->value("voice/speed", 50).toInt() );
+            xfyTTS->setName( voiceName = settings->value("xfytts/name", "xiaoyan").toString() );
+            xfyTTS->setPitch( voicePitch = settings->value("voice/pitch", 50).toInt() );
+            xfyTTS->setSpeed( voiceSpeed = settings->value("voice/speed", 50).toInt() );
+            xfyTTS->setVolume( voiceSpeed = settings->value("voice/speed", 50).toInt() );
         }
     });
 }
@@ -19618,7 +19570,7 @@ void MainWindow::on_label_10_linkActivated(const QString &link)
 
 void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 {
-    us->setValue("xfytts/appid", text);
+    settings->setValue("xfytts/appid", text);
     if (xfyTTS)
     {
         xfyTTS->setAppId(text);
@@ -19627,7 +19579,7 @@ void MainWindow::on_xfyAppIdEdit_textEdited(const QString &text)
 
 void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 {
-    us->setValue("xfytts/apisecret", text);
+    settings->setValue("xfytts/apisecret", text);
     if (xfyTTS)
     {
         xfyTTS->setApiSecret(text);
@@ -19636,7 +19588,7 @@ void MainWindow::on_xfyApiSecretEdit_textEdited(const QString &text)
 
 void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 {
-    us->setValue("xfytts/apikey", text);
+    settings->setValue("xfytts/apikey", text);
     if (xfyTTS)
     {
         xfyTTS->setApiKey(text);
@@ -19645,13 +19597,13 @@ void MainWindow::on_xfyApiKeyEdit_textEdited(const QString &text)
 
 void MainWindow::on_voiceCustomUrlEdit_editingFinished()
 {
-    us->setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
+    settings->setValue("voice/customUrl", ui->voiceCustomUrlEdit->text());
 }
 
 
 void MainWindow::on_eternalBlockListButton_clicked()
 {
-    EternalBlockDialog* dialog = new EternalBlockDialog(&us->eternalBlockUsers, this);
+    EternalBlockDialog* dialog = new EternalBlockDialog(&eternalBlockUsers, this);
     connect(dialog, SIGNAL(signalCancelEternalBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUser(qint64, qint64)));
     connect(dialog, SIGNAL(signalCancelBlock(qint64, qint64)), this, SLOT(cancelEternalBlockUserAndUnblock(qint64, qint64)));
     dialog->exec();
@@ -19660,7 +19612,7 @@ void MainWindow::on_eternalBlockListButton_clicked()
 void MainWindow::on_AIReplyMsgCheck_clicked()
 {
     Qt::CheckState state = ui->AIReplyMsgCheck->checkState();
-    us->setValue("danmaku/aiReplyMsg", state);
+    settings->setValue("danmaku/aiReplyMsg", state);
     if (state != Qt::PartiallyChecked)
         ui->AIReplyMsgCheck->setText("回复弹幕");
     else
@@ -19672,7 +19624,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
     if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
     {
         // 机器人自己的不回复（不然自己和自己打起来了）
-        if (snum(uid) == ac->cookieUid)
+        if (snum(uid) == cookieUid)
             return ;
 
         // AI回复长度上限，以及过滤
@@ -19696,19 +19648,19 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 void MainWindow::on_danmuLongestSpin_editingFinished()
 {
     danmuLongest = ui->danmuLongestSpin->value();
-    us->setValue("danmaku/danmuLongest", danmuLongest);
+    settings->setValue("danmaku/danmuLongest", danmuLongest);
 }
 
 
 void MainWindow::on_startupAnimationCheck_clicked()
 {
-    us->setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
+    settings->setValue("mainwindow/splash", ui->startupAnimationCheck->isChecked());
 }
 
 void MainWindow::on_serverCheck_clicked()
 {
     bool enabled = ui->serverCheck->isChecked();
-    us->setValue("server/enabled", enabled);
+    settings->setValue("server/enabled", enabled);
     if (enabled)
         openServer();
     else
@@ -19717,7 +19669,7 @@ void MainWindow::on_serverCheck_clicked()
 
 void MainWindow::on_serverPortSpin_editingFinished()
 {
-    us->setValue("server/port", ui->serverPortSpin->value());
+    settings->setValue("server/port", ui->serverPortSpin->value());
 #if defined(ENABLE_HTTP_SERVER)
     if (server)
     {
@@ -19731,17 +19683,17 @@ void MainWindow::on_serverPortSpin_editingFinished()
 
 void MainWindow::on_autoPauseOuterMusicCheck_clicked()
 {
-    us->setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
+    settings->setValue("danmaku/autoPauseOuterMusic", ui->autoPauseOuterMusicCheck->isChecked());
 }
 
 void MainWindow::on_outerMusicKeyEdit_textEdited(const QString &arg1)
 {
-    us->setValue("danmaku/outerMusicPauseKey", arg1);
+    settings->setValue("danmaku/outerMusicPauseKey", arg1);
 }
 
 void MainWindow::on_acquireHeartCheck_clicked()
 {
-    us->setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
+    settings->setValue("danmaku/acquireHeart", ui->acquireHeartCheck->isChecked());
 
     if (ui->acquireHeartCheck->isChecked())
     {
@@ -19758,7 +19710,7 @@ void MainWindow::on_acquireHeartCheck_clicked()
 void MainWindow::on_sendExpireGiftCheck_clicked()
 {
     bool enable = ui->sendExpireGiftCheck->isChecked();
-    us->setValue("danmaku/sendExpireGift", enable);
+    settings->setValue("danmaku/sendExpireGift", enable);
 
     if (enable)
     {
@@ -19770,15 +19722,15 @@ void MainWindow::on_actionPicture_Browser_triggered()
 {
     if (!pictureBrowser)
     {
-        pictureBrowser = new PictureBrowser(us, nullptr);
+        pictureBrowser = new PictureBrowser(settings, nullptr);
     }
     pictureBrowser->show();
-    pictureBrowser->readDirectory(rt->dataPath + "captures");
+    pictureBrowser->readDirectory(dataPath + "captures");
 }
 
 void MainWindow::on_orderSongsToFileCheck_clicked()
 {
-    us->setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
+    settings->setValue("danmaku/orderSongsToFile", ui->orderSongsToFileCheck->isChecked());
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19788,7 +19740,7 @@ void MainWindow::on_orderSongsToFileCheck_clicked()
 
 void MainWindow::on_orderSongsToFileFormatEdit_textEdited(const QString &arg1)
 {
-    us->setValue("danmaku/orderSongsToFileFormat", arg1);
+    settings->setValue("danmaku/orderSongsToFileFormat", arg1);
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19798,7 +19750,7 @@ void MainWindow::on_orderSongsToFileFormatEdit_textEdited(const QString &arg1)
 
 void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
 {
-    us->setValue("danmaku/orderSongsToFileMax", ui->orderSongsToFileMaxSpin->value());
+    settings->setValue("danmaku/orderSongsToFileMax", ui->orderSongsToFileMaxSpin->value());
 
     if (musicWindow && ui->orderSongsToFileCheck->isChecked())
     {
@@ -19808,7 +19760,7 @@ void MainWindow::on_orderSongsToFileMaxSpin_editingFinished()
 
 void MainWindow::on_playingSongToFileCheck_clicked()
 {
-    us->setValue("danmaku/playingSongToFile", ui->playingSongToFileCheck->isChecked());
+    settings->setValue("danmaku/playingSongToFile", ui->playingSongToFileCheck->isChecked());
 
     if (musicWindow && ui->playingSongToFileCheck->isChecked())
     {
@@ -19818,7 +19770,7 @@ void MainWindow::on_playingSongToFileCheck_clicked()
 
 void MainWindow::on_playingSongToFileFormatEdit_textEdited(const QString &arg1)
 {
-    us->setValue("danmaku/playingSongToFileFormat", arg1);
+    settings->setValue("danmaku/playingSongToFileFormat", arg1);
 
     if (musicWindow && ui->playingSongToFileCheck->isChecked())
     {
@@ -19828,10 +19780,10 @@ void MainWindow::on_playingSongToFileFormatEdit_textEdited(const QString &arg1)
 
 void MainWindow::on_actionCatch_You_Online_triggered()
 {
-    CatchYouWidget* cyw = new CatchYouWidget(us, rt->dataPath, nullptr);
+    CatchYouWidget* cyw = new CatchYouWidget(settings, dataPath, nullptr);
     cyw->show();
     // cyw->catchUser(upUid);
-    cyw->setDefaultUser(ac->upUid);
+    cyw->setDefaultUser(upUid);
 }
 
 void MainWindow::on_pkBlankButton_clicked()
@@ -19842,14 +19794,14 @@ void MainWindow::on_pkBlankButton_clicked()
     if (!ok)
         return ;
     toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
-    us->setValue("pk/blankList", toutaBlankList.join(";"));
+    settings->setValue("pk/blankList", toutaBlankList.join(";"));
 }
 
 void MainWindow::on_actionUpdate_New_Version_triggered()
 {
-    if (!rt->appDownloadUrl.isEmpty())
+    if (!appDownloadUrl.isEmpty())
     {
-        QDesktopServices::openUrl(QUrl(rt->appDownloadUrl));
+        QDesktopServices::openUrl(QUrl(appDownloadUrl));
     }
     else
     {
@@ -19860,7 +19812,7 @@ void MainWindow::on_actionUpdate_New_Version_triggered()
 void MainWindow::on_startOnRebootCheck_clicked()
 {
     bool enable = ui->startOnRebootCheck->isChecked();
-    us->setValue("runtime/startOnReboot", enable);
+    settings->setValue("runtime/startOnReboot", enable);
 
     QString appName = QApplication::applicationName();
     QString appPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
@@ -19878,7 +19830,7 @@ void MainWindow::on_domainEdit_editingFinished()
     serverDomain = ui->domainEdit->text().trimmed();
     if (serverDomain.isEmpty())
         serverDomain = "localhost";
-    us->setValue("server/domain", serverDomain);
+    settings->setValue("server/domain", serverDomain);
 }
 
 void MainWindow::prepareQuit()
@@ -19889,22 +19841,22 @@ void MainWindow::prepareQuit()
 
 void MainWindow::on_giftComboSendCheck_clicked()
 {
-    us->setValue("danmaku/giftComboSend", ui->giftComboSendCheck->isChecked());
+    settings->setValue("danmaku/giftComboSend", ui->giftComboSendCheck->isChecked());
 }
 
 void MainWindow::on_giftComboDelaySpin_editingFinished()
 {
-    us->setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
+    settings->setValue("danmaku/giftComboDelay", ui->giftComboDelaySpin->value());
 }
 
 void MainWindow::on_retryFailedDanmuCheck_clicked()
 {
-    us->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
+    settings->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
 }
 
 void MainWindow::on_songLyricsToFileCheck_clicked()
 {
-    us->setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
+    settings->setValue("danmaku/songLyricsToFile", ui->songLyricsToFileCheck->isChecked());
 
     if (musicWindow && ui->songLyricsToFileCheck->isChecked())
     {
@@ -19918,7 +19870,7 @@ void MainWindow::on_songLyricsToFileCheck_clicked()
 
 void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
 {
-    us->setValue("danmaku/songLyricsToFileMax", ui->songLyricsToFileMaxSpin->value());
+    settings->setValue("danmaku/songLyricsToFileMax", ui->songLyricsToFileMaxSpin->value());
 
     if (musicWindow && ui->songLyricsToFileCheck->isChecked())
     {
@@ -19932,34 +19884,34 @@ void MainWindow::on_songLyricsToFileMaxSpin_editingFinished()
 
 void MainWindow::on_allowWebControlCheck_clicked()
 {
-    us->setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
+    settings->setValue("server/allowWebControl", ui->allowWebControlCheck->isChecked());
 }
 
 void MainWindow::on_saveEveryGuardCheck_clicked()
 {
-    us->setValue("danmaku/saveEveryGuard", ui->saveEveryGuardCheck->isChecked());
+    settings->setValue("danmaku/saveEveryGuard", ui->saveEveryGuardCheck->isChecked());
 }
 
 void MainWindow::on_saveMonthGuardCheck_clicked()
 {
-    us->setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
+    settings->setValue("danmaku/saveMonthGuard", ui->saveMonthGuardCheck->isChecked());
 }
 
 void MainWindow::on_saveEveryGiftCheck_clicked()
 {
-    us->setValue("danmaku/saveEveryGift", ui->saveEveryGiftCheck->isChecked());
+    settings->setValue("danmaku/saveEveryGift", ui->saveEveryGiftCheck->isChecked());
 }
 
 void MainWindow::on_exportDailyButton_clicked()
 {
-    if (ac->roomId.isEmpty())
+    if (roomId.isEmpty())
         return ;
 
-    QString oldPath = us->value("danmaku/exportPath", "").toString();
+    QString oldPath = settings->value("danmaku/exportPath", "").toString();
     QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv *.txt)");
     if (path.isEmpty())
         return ;
-    us->setValue("danmaku/exportPath", path);
+    settings->setValue("danmaku/exportPath", path);
     QFile file(path);
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
@@ -19968,16 +19920,16 @@ void MainWindow::on_exportDailyButton_clicked()
         stream.setCodec(recordFileCodec.toUtf8());
 
     // 拼接数据
-    QString dirPath = rt->dataPath + "live_daily";
+    QString dirPath = dataPath + "live_daily";
     QDir dir(dirPath);
-    auto files = dir.entryList(QStringList{ac->roomId + "_*.ini"}, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    auto files = dir.entryList(QStringList{roomId + "_*.ini"}, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
     stream << QString("日期,进入人次,进入人数,弹幕数量,新人弹幕,新增关注,关注总数,总金瓜子,总银瓜子,上船人数,船员总数,平均人气,最高人气\n").toUtf8();
     for (int i = 0; i < files.size(); i++)
     {
         QStringList sl;
         QSettings st(dirPath + "/" + files.at(i), QSettings::Format::IniFormat);
         QString day = files.at(i);
-        day.replace(ac->roomId + "_", "").replace(".ini", "");
+        day.replace(roomId + "_", "").replace(".ini", "");
         stream << day << ","
                << st.value("come", 0).toInt() << ","
                << st.value("people_num", 0).toInt() << ","
@@ -20005,22 +19957,22 @@ void MainWindow::on_closeTransMouseButton_clicked()
 
 void MainWindow::on_pkAutoMaxGoldCheck_clicked()
 {
-    us->setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
+    settings->setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
 }
 
 void MainWindow::on_saveRecvCmdsCheck_clicked()
 {
     saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
-    us->setValue("debug/saveRecvCmds", saveRecvCmds);
+    settings->setValue("debug/saveRecvCmds", saveRecvCmds);
 
     if (saveRecvCmds)
     {
         QDir dir;
-        dir.mkdir(rt->dataPath+"websocket_cmds");
+        dir.mkdir(dataPath+"websocket_cmds");
         QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
-        saveCmdsFile = new QFile(rt->dataPath+"websocket_cmds/" + ac->roomId + "_" + date + ".txt");
+        saveCmdsFile = new QFile(dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt");
         saveCmdsFile->open(QIODevice::WriteOnly | QIODevice::Append);
-        qInfo() << "开始保存cmds：" << rt->dataPath+"websocket_cmds/" + ac->roomId + "_" + date + ".txt";
+        qInfo() << "开始保存cmds：" << dataPath+"websocket_cmds/" + roomId + "_" + date + ".txt";
     }
     else if (saveCmdsFile)
     {
@@ -20033,7 +19985,7 @@ void MainWindow::on_saveRecvCmdsCheck_clicked()
 
 void MainWindow::on_allowRemoteControlCheck_clicked()
 {
-    us->setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
+    settings->setValue("danmaku/remoteControl", remoteControl = ui->allowRemoteControlCheck->isChecked());
 }
 
 void MainWindow::on_actionJoin_Battle_triggered()
@@ -20052,7 +20004,7 @@ void MainWindow::on_actionQRCode_Login_triggered()
 
 void MainWindow::on_allowAdminControlCheck_clicked()
 {
-    us->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
+    settings->setValue("danmaku/adminControl", ui->allowAdminControlCheck->isChecked());
 }
 
 void MainWindow::on_actionSponsor_triggered()
@@ -20094,7 +20046,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->taskListWidget->scrollToBottom();
                 });
             }
-            us->setValue("task/count", ui->taskListWidget->count());
+            settings->setValue("task/count", ui->taskListWidget->count());
         }
         else if (anchor_key == CODE_AUTO_REPLY_KEY)
         {
@@ -20107,7 +20059,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->replyListWidget->scrollToBottom();
                 });
             }
-            us->setValue("reply/count", ui->replyListWidget->count());
+            settings->setValue("reply/count", ui->replyListWidget->count());
         }
         else if (anchor_key == CODE_EVENT_ACTION_KEY)
         {
@@ -20120,7 +20072,7 @@ void MainWindow::on_actionPaste_Code_triggered()
                     ui->eventListWidget->scrollToBottom();
                 });
             }
-            us->setValue("event/count", ui->eventListWidget->count());
+            settings->setValue("event/count", ui->eventListWidget->count());
         }
         else
         {
@@ -20193,39 +20145,39 @@ void MainWindow::on_actionPaste_Code_triggered()
 
 void MainWindow::on_actionGenerate_Default_Code_triggered()
 {
-    QString oldPath = us->value("danmaku/codePath", "").toString();
+    QString oldPath = settings->value("danmaku/codePath", "").toString();
     QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Json (*.json *.txt)");
     if (path.isEmpty())
         return ;
-    us->setValue("danmaku/codePath", path);
+    settings->setValue("danmaku/codePath", path);
 
     generateDefaultCode(path);
 }
 
 void MainWindow::on_actionRead_Default_Code_triggered()
 {
-    QString oldPath = us->value("danmaku/codePath", "").toString();
+    QString oldPath = settings->value("danmaku/codePath", "").toString();
     QString path = QFileDialog::getOpenFileName(this, "选择读取位置", oldPath, "Json (*.json *.txt)");
     if (path.isEmpty())
         return ;
-    us->setValue("danmaku/codePath", path);
+    settings->setValue("danmaku/codePath", path);
 
     readDefaultCode(path);
 }
 
 void MainWindow::on_giftComboTopCheck_clicked()
 {
-    us->setValue("danmaku/giftComboTop", ui->giftComboTopCheck->isChecked());
+    settings->setValue("danmaku/giftComboTop", ui->giftComboTopCheck->isChecked());
 }
 
 void MainWindow::on_giftComboMergeCheck_clicked()
 {
-    us->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
+    settings->setValue("danmaku/giftComboMerge", ui->giftComboMergeCheck->isChecked());
 }
 
 void MainWindow::on_listenMedalUpgradeCheck_clicked()
 {
-    us->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
+    settings->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
 }
 
 void MainWindow::on_pushRecvCmdsButton_clicked()
@@ -20233,11 +20185,11 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     if (!pushCmdsFile) // 开启模拟输入
     {
         // 输入文件
-        QString oldPath = us->value("debug/cmdsPath", "").toString();
+        QString oldPath = settings->value("debug/cmdsPath", "").toString();
         QString path = QFileDialog::getOpenFileName(this, "选择模拟输入的CMDS文件位置", oldPath, "Text (*.txt)");
         if (path.isEmpty())
             return ;
-        us->setValue("debug/cmdsPath", path);
+        settings->setValue("debug/cmdsPath", path);
 
         // 创建文件对象
         pushCmdsFile = new QFile(path);
@@ -20274,10 +20226,10 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     }
     else // 关闭模拟输入
     {
-        if (ui->actionLocal_Mode->isChecked() && us->value("debug/localDebug", false).toBool())
+        if (ui->actionLocal_Mode->isChecked() && settings->value("debug/localDebug", false).toBool())
             ui->actionLocal_Mode->setChecked(localDebug = false);
 
-        if (us->value("debug/saveRecvCmds", false).toBool())
+        if (settings->value("debug/saveRecvCmds", false).toBool())
             ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
 
         if (pushCmdsTimer)
@@ -20315,7 +20267,7 @@ void MainWindow::on_pushNextCmdButton_clicked()
 void MainWindow::on_timerPushCmdCheck_clicked()
 {
     bool enable = ui->timerPushCmdCheck->isChecked();
-    us->setValue("debug/pushCmdsTimer", enable);
+    settings->setValue("debug/pushCmdsTimer", enable);
 
     if (pushCmdsFile && pushCmdsTimer)
     {
@@ -20329,7 +20281,7 @@ void MainWindow::on_timerPushCmdCheck_clicked()
 void MainWindow::on_timerPushCmdSpin_editingFinished()
 {
     int val = ui->timerPushCmdSpin->value();
-    us->setValue("debug/pushCmdsInterval", val);
+    settings->setValue("debug/pushCmdsInterval", val);
 
     if (pushCmdsTimer)
         pushCmdsTimer->setInterval(val * 100);
@@ -20368,19 +20320,19 @@ void MainWindow::on_actionLast_Candidate_triggered()
 
 void MainWindow::on_actionLocal_Mode_triggered()
 {
-    us->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
+    settings->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
     qInfo() << "本地模式：" << localDebug;
 }
 
 void MainWindow::on_actionDebug_Mode_triggered()
 {
-    us->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
+    settings->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
     qInfo() << "调试模式：" << debugPrint;
 }
 
 void MainWindow::on_actionGuard_Online_triggered()
 {
-    GuardOnlineDialog* god = new GuardOnlineDialog(us, ac->roomId, ac->upUid, this);
+    GuardOnlineDialog* god = new GuardOnlineDialog(settings, roomId, upUid, this);
     god->show();
 }
 
@@ -20406,7 +20358,7 @@ void MainWindow::on_robotNameButton_clicked()
 void MainWindow::on_thankWelcomeTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(0);
-    us->setValue("mainwindow/thankStackIndex", 0);
+    settings->setValue("mainwindow/thankStackIndex", 0);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20420,7 +20372,7 @@ void MainWindow::on_thankWelcomeTabButton_clicked()
 void MainWindow::on_thankGiftTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(1);
-    us->setValue("mainwindow/thankStackIndex", 1);
+    settings->setValue("mainwindow/thankStackIndex", 1);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20434,7 +20386,7 @@ void MainWindow::on_thankGiftTabButton_clicked()
 void MainWindow::on_thankAttentionTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(2);
-    us->setValue("mainwindow/thankStackIndex", 2);
+    settings->setValue("mainwindow/thankStackIndex", 2);
 
     foreach (auto btn, thankTabButtons)
     {
@@ -20461,7 +20413,7 @@ void MainWindow::on_showLiveDanmakuWindowButton_clicked()
 
 void MainWindow::on_liveStatusButton_clicked()
 {
-    if (!ac->liveStatus)
+    if (!liveStatus)
         return ;
     on_actionShow_Live_Video_triggered();
 }
@@ -20495,7 +20447,7 @@ void MainWindow::on_musicBlackListButton_clicked()
     if (!ok)
         return ;
     orderSongBlackList = blackList.split(" ", QString::SkipEmptyParts);
-    us->setValue("music/blackListKeys", blackList);
+    settings->setValue("music/blackListKeys", blackList);
 }
 
 /// 添加或者删除过滤器
@@ -20526,13 +20478,13 @@ void MainWindow::setFilter(QString filterName, QString content)
     }
     else // 不是系统过滤器
         return ;
-    us->setValue(filterKey, content);
+    settings->setValue(filterKey, content);
     qInfo() << "设置过滤器：" << filterKey << content;
 }
 
 void MainWindow::on_enableFilterCheck_clicked()
 {
-    us->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
+    settings->setValue("danmaku/enableFilter", enableFilter = ui->enableFilterCheck->isChecked());
 }
 
 void MainWindow::on_actionReplace_Variant_triggered()
@@ -20542,14 +20494,14 @@ void MainWindow::on_actionReplace_Variant_triggered()
     text = TextInputDialog::getText(this, "替换变量", "请输入发送前的替换内容，支持正则表达式：\n示例格式：发送前内容=发送后内容\n仅影响自动发送的弹幕", text, &ok);
     if (!ok)
         return ;
-    us->setValue("danmaku/replaceVariant", text);
+    settings->setValue("danmaku/replaceVariant", text);
 
     restoreReplaceVariant(text);
 }
 
 void MainWindow::on_autoClearComeIntervalSpin_editingFinished()
 {
-    us->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
+    settings->setValue("danmaku/clearDidntComeInterval", ui->autoClearComeIntervalSpin->value());
 }
 
 void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
@@ -20560,7 +20512,7 @@ void MainWindow::on_roomDescriptionBrowser_anchorClicked(const QUrl &arg1)
 void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 {
     bool en = ui->adjustDanmakuLongestCheck->isChecked();
-    us->setValue("danmaku/adjustDanmakuLongest", en);
+    settings->setValue("danmaku/adjustDanmakuLongest", en);
     if (en)
     {
         adjustDanmakuLongest();
@@ -20569,7 +20521,7 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
 
 void MainWindow::on_actionBuy_VIP_triggered()
 {
-    BuyVIPDialog* bvd = new BuyVIPDialog(rt->dataPath, ac->roomId, ac->upUid, ac->cookieUid, ac->roomTitle, ac->upName, ac->cookieUname, permissionDeadline, this);
+    BuyVIPDialog* bvd = new BuyVIPDialog(dataPath, roomId, upUid, cookieUid, roomTitle, upName, cookieUname, permissionDeadline, this);
     connect(bvd, &BuyVIPDialog::refreshVIP, this, [=]{
         updatePermission();
     });
@@ -20589,7 +20541,7 @@ void MainWindow::on_vipExtensionButton_clicked()
 void MainWindow::on_enableTrayCheck_clicked()
 {
     bool en = ui->enableTrayCheck->isChecked();
-    us->setValue("mainwindow/enableTray", en);
+    settings->setValue("mainwindow/enableTray", en);
     if (en)
     {
         tray->show();
@@ -20602,7 +20554,7 @@ void MainWindow::on_enableTrayCheck_clicked()
 
 void MainWindow::on_toutaGiftCheck_clicked()
 {
-    us->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
+    settings->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
 
     // 设置默认值
     if (!toutaGiftCounts.size())
@@ -20626,7 +20578,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
                 30072 疯狂打call 52000\n\
                 30087 天空之翼 100000\n\
                 30924 机车娘 200000";
-        us->setValue("danmaku/toutaGifts", s);
+        settings->setValue("danmaku/toutaGifts", s);
         restoreToutaGifts(s);
     }
 }
@@ -20634,7 +20586,7 @@ void MainWindow::on_toutaGiftCheck_clicked()
 void MainWindow::on_toutaGiftCountsEdit_textEdited(const QString &arg1)
 {
     // 允许的数量，如：1 2 3 4 5 10 11 100 101
-    us->setValue("danmaku/toutaGiftCounts", arg1);
+    settings->setValue("danmaku/toutaGiftCounts", arg1);
     QStringList sl = arg1.split(" ", QString::SkipEmptyParts);
     toutaGiftCounts.clear();
     foreach (QString s, sl)
@@ -20656,25 +20608,25 @@ void MainWindow::on_toutaGiftListButton_clicked()
     QString totalText = TextInputDialog::getText(this, "允许赠送的礼物列表", "一行一个礼物，格式：\n礼物ID 礼物名字 金瓜子数量", sl.join("\n"), &ok);
     if (!ok)
         return ;
-    us->setValue("danmaku/toutaGifts", totalText);
+    settings->setValue("danmaku/toutaGifts", totalText);
     restoreToutaGifts(totalText);
 }
 
 void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 {
-    us->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
+    settings->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
     connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
 }
 
 void MainWindow::on_heartTimeSpin_editingFinished()
 {
-    us->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
+    settings->setValue("danmaku/acquireHeartTime", ui->heartTimeSpin->value());
 }
 
 void MainWindow::on_syncShieldKeywordCheck_clicked()
 {
     bool enabled = ui->syncShieldKeywordCheck->isChecked();
-    us->setValue("block/syncShieldKeyword", enabled);
+    settings->setValue("block/syncShieldKeyword", enabled);
     if (enabled)
         pullRoomShieldKeyword();
 }
@@ -20684,7 +20636,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
     newFacileMenu;
 
     // 主播专属操作
-    if (ac->cookieUid == ac->upUid)
+    if (cookieUid == upUid)
     {
         menu->addTitle("直播设置", 0);
         menu->addAction(QIcon(":/icons/title"), "修改直播标题", [=]{
@@ -20733,7 +20685,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
 
     // 普通操作
     menu->addAction(QIcon(":/icons/save"), "保存直播间封面", [=]{
-        QString oldPath = us->value("danmaku/exportPath", "").toString();
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
         {
             QFileInfo info(oldPath);
@@ -20743,7 +20695,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
         QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
         if (path.isEmpty())
             return ;
-        us->setValue("danmaku/exportPath", path);
+        settings->setValue("danmaku/exportPath", path);
 
         roomCover.save(path);
     })->disable(roomCover.isNull());
@@ -20755,7 +20707,7 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
 {
     newFacileMenu;
     menu->addAction(QIcon(":/icons/save"), "保存主播头像", [=]{
-        QString oldPath = us->value("danmaku/exportPath", "").toString();
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
         if (!oldPath.isEmpty())
         {
             QFileInfo info(oldPath);
@@ -20765,7 +20717,7 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
         QString path = QFileDialog::getSaveFileName(this, "选择保存位置", oldPath, "Images (*.jpg *.png)");
         if (path.isEmpty())
             return ;
-        us->setValue("danmaku/exportPath", path);
+        settings->setValue("danmaku/exportPath", path);
 
         upFace.save(path);
     })->disable(upFace.isNull());
@@ -20775,19 +20727,19 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_saveEveryGiftButton_clicked()
 {
-    QDir dir(rt->dataPath + "gift_histories");
+    QDir dir(dataPath + "gift_histories");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
 void MainWindow::on_saveEveryGuardButton_clicked()
 {
-    QDir dir(rt->dataPath + "guard_histories");
+    QDir dir(dataPath + "guard_histories");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
 void MainWindow::on_saveMonthGuardButton_clicked()
 {
-    QDir dir(rt->dataPath + "guard_month");
+    QDir dir(dataPath + "guard_month");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
@@ -20806,7 +20758,7 @@ void MainWindow::on_musicConfigButton_clicked()
 
 void MainWindow::on_musicConfigStack_currentChanged(int arg1)
 {
-    us->setValue("mainwindow/musicStackIndex", arg1);
+    settings->setValue("mainwindow/musicStackIndex", arg1);
 }
 
 void MainWindow::on_addMusicToLiveButton_clicked()
@@ -20818,7 +20770,7 @@ void MainWindow::on_addMusicToLiveButton_clicked()
 
 void MainWindow::on_roomNameLabel_customContextMenuRequested(const QPoint &)
 {
-    if (ac->cookieUid != ac->upUid)
+    if (cookieUid != upUid)
         return ;
 
     newFacileMenu;
@@ -20835,10 +20787,10 @@ void MainWindow::on_upNameLabel_customContextMenuRequested(const QPoint &)
     newFacileMenu;
 
     menu->addAction(QIcon(":/icons/copy"), "复制昵称", [=]{
-        QApplication::clipboard()->setText(ac->upName);
+        QApplication::clipboard()->setText(upName);
     });
 
-    if (ac->cookieUid == ac->upUid)
+    if (cookieUid == upUid)
     {
         menu->addAction(QIcon(":/icons/modify"), "修改昵称", [=]{
 
@@ -20850,7 +20802,7 @@ void MainWindow::on_upNameLabel_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_roomAreaLabel_customContextMenuRequested(const QPoint &)
 {
-    if (ac->cookieUid != ac->upUid)
+    if (cookieUid != upUid)
         return ;
 
     newFacileMenu;
@@ -20864,7 +20816,7 @@ void MainWindow::on_roomAreaLabel_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_tagsButtonGroup_customContextMenuRequested(const QPoint &)
 {
-    if (ac->cookieUid != ac->upUid)
+    if (cookieUid != upUid)
         return ;
 
     newFacileMenu;
@@ -20878,7 +20830,7 @@ void MainWindow::on_tagsButtonGroup_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_roomDescriptionBrowser_customContextMenuRequested(const QPoint &)
 {
-    if (ac->cookieUid != ac->upUid)
+    if (cookieUid != upUid)
         return ;
 
     newFacileMenu;
@@ -20892,7 +20844,7 @@ void MainWindow::on_roomDescriptionBrowser_customContextMenuRequested(const QPoi
 
 void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
 {
-    if (ac->cookieUid != ac->upUid)
+    if (cookieUid != upUid)
         return ;
 
     newFacileMenu;
@@ -20906,7 +20858,7 @@ void MainWindow::on_upLevelLabel_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_refreshExtensionListButton_clicked()
 {
-    loadWebExtensionList();
+    loadWebExtensinList();
     qInfo() << "网页扩展数量：" << ui->extensionListWidget->count();
 }
 
@@ -20919,7 +20871,7 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
         QString s = QInputDialog::getText(this, "自定义文字", "高度自定义捐赠版的显示文字", QLineEdit::Normal, permissionText, &ok);
         if (!ok)
             return ;
-        us->setValue("mainwindow/permissionText", permissionText = s);
+        settings->setValue("mainwindow/permissionText", permissionText = s);
         ui->droplight->setText(permissionText);
         ui->droplight->adjustMinimumSize();
     })->disable(!hasPermission());
@@ -20929,12 +20881,12 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
 
 void MainWindow::on_autoUpdateCheck_clicked()
 {
-    us->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
+    settings->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
 }
 
 void MainWindow::on_dontSpeakOnPlayingSongCheck_clicked()
 {
-    us->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
+    settings->setValue("danmaku/dontSpeakOnPlayingSong", ui->dontSpeakOnPlayingSongCheck->isChecked());
 }
 
 void MainWindow::on_shieldKeywordListButton_clicked()
@@ -20947,11 +20899,11 @@ void MainWindow::on_saveEveryGuardButton_customContextMenuRequested(const QPoint
     newFacileMenu;
 
     menu->addAction("导出每月表格", [=]{
-        QString oldPath = us->value("danmaku/exportPath", "").toString();
+        QString oldPath = settings->value("danmaku/exportPath", "").toString();
         QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv)");
         if (path.isEmpty())
             return ;
-        us->setValue("danmaku/exportPath", path);
+        settings->setValue("danmaku/exportPath", path);
 
         exportAllGuardsByMonth(path);
     });
@@ -20966,7 +20918,7 @@ void MainWindow::on_saveEveryGuardButton_customContextMenuRequested(const QPoint
  */
 void MainWindow::exportAllGuardsByMonth(QString exportPath)
 {
-    QString readPath = rt->dataPath + "guard_histories/" + ac->roomId + ".csv";
+    QString readPath = dataPath + "guard_histories/" + roomId + ".csv";
     if (!isFileExist(readPath))
     {
         showError("不存在舰长记录", readPath);
@@ -21082,7 +21034,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
 
 void MainWindow::on_MSAreaCodeEdit_editingFinished()
 {
-    us->setValue("mstts/areaCode", ui->MSAreaCodeEdit->text());
+    settings->setValue("mstts/areaCode", ui->MSAreaCodeEdit->text());
     if (msTTS)
     {
         msTTS->setAreaCode(ui->MSAreaCodeEdit->text());
@@ -21091,7 +21043,7 @@ void MainWindow::on_MSAreaCodeEdit_editingFinished()
 
 void MainWindow::on_MSSubscriptionKeyEdit_editingFinished()
 {
-    us->setValue("mstts/subscriptionKey", ui->MSSubscriptionKeyEdit->text());
+    settings->setValue("mstts/subscriptionKey", ui->MSSubscriptionKeyEdit->text());
     if (msTTS)
     {
         msTTS->setSubscriptionKey(ui->MSSubscriptionKeyEdit->text());
@@ -21106,12 +21058,12 @@ void MainWindow::on_MS_TTS__SSML_Btn_clicked()
         return ;
     if (fmt.trimmed().isEmpty())
         fmt = DEFAULT_MS_TTS_SSML_FORMAT;
-    us->setValue("mstts/format", msTTSFormat = fmt);
+    settings->setValue("mstts/format", msTTSFormat = fmt);
 }
 
 void MainWindow::on_receivePrivateMsgCheck_clicked()
 {
-    us->setValue("privateMsg/enabled", ui->receivePrivateMsgCheck->isChecked());
+    settings->setValue("privateMsg/enabled", ui->receivePrivateMsgCheck->isChecked());
 }
 
 void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
@@ -21140,41 +21092,19 @@ void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
 
 void MainWindow::on_processUnreadMsgCheck_clicked()
 {
-    us->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
+    settings->setValue("privateMsg/processUnread", ui->processUnreadMsgCheck->isChecked());
 }
 
 void MainWindow::on_TXSecretIdEdit_editingFinished()
 {
     QString text = ui->TXSecretIdEdit->text();
-    us->setValue("tx_nlp/secretId", text);
+    settings->setValue("tx_nlp/secretId", text);
     TxNlp::instance()->setSecretId(text);
 }
 
 void MainWindow::on_TXSecretKeyEdit_editingFinished()
 {
     QString text = ui->TXSecretKeyEdit->text();
-    us->setValue("tx_nlp/secretKey", text);
+    settings->setValue("tx_nlp/secretKey", text);
     TxNlp::instance()->setSecretKey(text);
-}
-
-void MainWindow::on_saveDanmakuToFileButton_clicked()
-{
-    QDir dir(rt->dataPath + "danmaku_histories");
-    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
-}
-
-void MainWindow::on_calculateDailyDataButton_clicked()
-{
-    QDir dir(rt->dataPath + "live_daily");
-    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
-}
-
-void MainWindow::on_syntacticSugarCheck_clicked()
-{
-    us->setValue("programming/syntacticSugar", ui->syntacticSugarCheck->isChecked());
-}
-
-void MainWindow::on_forumButton_clicked()
-{
-    QDesktopServices::openUrl(QUrl("http://live.lyixi.com"));
 }

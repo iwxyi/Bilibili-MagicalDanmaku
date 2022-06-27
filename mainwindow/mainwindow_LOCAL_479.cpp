@@ -1327,7 +1327,7 @@ void MainWindow::readConfig()
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
-qDebug() << "--------NEW_DAY";
+
         {
             // 当前时间必定是 0:0:1，误差0.2秒内
             QDate tomorrowDate = QDate::currentDate();
