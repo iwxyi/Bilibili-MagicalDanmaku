@@ -14053,7 +14053,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
     if (ac->roomId.isEmpty())
         return ;
-    QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
+    QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
