@@ -3079,7 +3079,7 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
 
 void OrderPlayerWindow::restoreSourceQueue()
 {
-    sourceQueueString = settings.value("music/sourceQueue", "网易云 QQ 咪咕 酷狗").toString();
+    sourceQueueString = settings.value("music/sourceQueue", "网易云 QQ 咪咕").toString();
     qInfo() << "点歌顺序：" << sourceQueueString;
     QStringList list = sourceQueueString.split(" ", QString::SkipEmptyParts);
     musicSourceQueue.clear();
@@ -4386,8 +4386,10 @@ void OrderPlayerWindow::startOrderSearching()
 
 void OrderPlayerWindow::stopOrderSearching()
 {
+    // 结束本次搜索
     if (userOrderSongQueue.size())
         userOrderSongQueue.removeFirst();
+    // 进行下一次的搜索
     if (userOrderSongQueue.size())
     {
         QString key = userOrderSongQueue.first().first;
