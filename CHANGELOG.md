@@ -1,7 +1,5 @@
-### v4.6.2 [算法优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
+### v4.6.2 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
 
-- 新增重复弹幕的相似度过滤算法
-- 新增全屏滚动弹幕显示昵称开关
 - 新增弹幕姬菜单直接任命与取消房管，并显示任命情况
 - 新增任命房管的命令：`appointAdmin(uid)`
 - 新增撤销房管的命令：`dismissAdmin(uid)`
@@ -9,6 +7,8 @@
 - 新增点歌姬恢复网易云ID点歌
 - 新增歌手与歌名的黑名单，可排除翻唱、伴奏
 - 新增点歌姬排除一分钟以下的试听音乐开关
+- 新增全屏滚动弹幕显示昵称开关
+- 新增重复弹幕的相似度过滤算法
 - 添加QQ音乐绿钻可能失效的说明
 - 显示网易云音乐登录不上的真实报错
 - 修复直播视频无法播放的问题

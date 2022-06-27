@@ -1254,7 +1254,10 @@ void LiveDanmakuWindow::showMenu()
         }
 
         if (ac->cookieUid != ac->upUid)
+        {
             actionSetAdmin->setEnabled(false);
+            actionSetAdmin->setVisible(false);
+        }
         if (danmaku.isAdmin())
         {
             actionSetAdmin->setText("撤销房管资格");
