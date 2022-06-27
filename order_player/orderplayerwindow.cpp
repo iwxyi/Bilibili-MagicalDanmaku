@@ -797,6 +797,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         {
             if (!song.isValid()) // 历史中没找到，就从搜索结果中找
                 song = getSuitableSongOnResults(key, true);
+            MUSIC_DEB << "点歌搜索的最佳结果：" << song.simpleString() << " add by: " << addBy;
             if (!song.isValid())
             {
                 if (autoSwitchSource)
@@ -3163,6 +3164,8 @@ bool OrderPlayerWindow::switchNextSource(QString key, MusicSource ms, QString ad
     if (index == -1 || index >= musicSourceQueue.size() - 1)
     {
         qWarning() << "所有平台都不支持，已结束：" << playAfterDownloaded.simpleString();
+        MUSIC_DEB << "当前点歌队列：" << userOrderSongQueue;
+        insertOrderOnce = false;
         if (!addBy.isEmpty() && addBy != "[动态添加]")
         {
             Song song;
@@ -4395,6 +4398,8 @@ void OrderPlayerWindow::stopOrderSearching()
     // 结束本次搜索
     if (userOrderSongQueue.size())
         userOrderSongQueue.removeFirst();
+    insertOrderOnce = false;
+
     // 进行下一次的搜索
     if (userOrderSongQueue.size())
     {
