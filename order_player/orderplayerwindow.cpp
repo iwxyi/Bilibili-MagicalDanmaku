@@ -958,7 +958,7 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
         table->setItem(row, titleCol, createItem(song.name));
         table->setItem(row, artistCol, createItem(song.artistNames));
         table->setItem(row, albumCol, createItem(song.album.name));
-        table->setItem(row, durationCol, createItem(msecondToString(song.duration)));
+        table->setItem(row, durationCol, createItem(song.duration ? msecondToString(song.duration) : ""));
     }
     table->verticalScrollBar()->setSliderPosition(0); // 置顶
 
@@ -1230,6 +1230,13 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     MUSIC_DEB << "智能获取最合适的结果：" << key << "   严格：" << strict;
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
+
+    if (key.contains(QRegularExpression("^\\d+$"))) // ID点歌
+    {
+        if (searchResultSongs.empty())
+            return Song();
+        return searchResultSongs.first();
+    }
 
     // 歌名 - 歌手
     if (key.indexOf("-"))
@@ -3155,7 +3162,7 @@ bool OrderPlayerWindow::switchNextSource(QString key, MusicSource ms, QString ad
     // 轮了一圈，又回来了
     if (index == -1 || index >= musicSourceQueue.size() - 1)
     {
-        qWarning() << "所有平台都不支持，已结束";
+        qWarning() << "所有平台都不支持，已结束：" << playAfterDownloaded.simpleString();
         if (play)
             playNext();
         return false;

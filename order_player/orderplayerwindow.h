@@ -387,6 +387,7 @@ private:
     // 点歌
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
     Song prevOrderSong;
+    Song mostSuitableSong;        // 查找到的最合适的歌曲（包括源）
     bool autoSwitchSource = true; // 自动切换音源
     bool validMusicTime = false;  // 验证歌曲时间
     bool insertOrderOnce = false; // 插入到前面
