@@ -288,6 +288,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
     validMusicTime = settings.value("music/validMusicTime", false).toBool();
+    blackList = settings.value("music/blackList", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 读取cookie
     songBr = settings.value("music/br", 320000).toInt();
@@ -709,6 +710,21 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
 
         MUSIC_DEB << "搜索到数量：" << searchResultSongs.size() << "条";
+        if (blackList.size())
+        {
+            for (int i = 0; i < searchResultSongs.size(); i++)
+            {
+                for (int j = 0; j < blackList.size(); j++)
+                {
+                    if (searchResultSongs.at(i).name.toLower().contains(blackList.at(j))
+                            || searchResultSongs.at(i).artistNames.toLower().contains(blackList.at(j)))
+                    {
+                        searchResultSongs.removeAt(i--);
+                        break;
+                    }
+                }
+            }
+        }
         setSearchResultTable(searchResultSongs);
 
         // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
@@ -4231,9 +4247,19 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/accompanyMode", accompanyMode = !accompanyMode);
     })->check(accompanyMode)->tooltip("外部点歌，自动搜索伴奏（搜索词带“伴奏”二字）");
 
-    playMenu->addAction("双击播放", [=]{
-        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
-    })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
+    playMenu->addAction("歌曲黑名单", [=]{
+        menu->close();
+        QString text = blackList.join(" ");
+        bool ok;
+        QString newText = QInputDialog::getText(this, "黑名单", "请输入黑名单关键词，字母小写，多个关键词使用空格隔开\n歌名或歌手包含任一关键词就不会显示在列表中\n例如屏蔽“翻唱 翻自 cover”可避免播放翻唱歌曲", QLineEdit::Normal, text, &ok);
+        if (!ok || newText == text)
+            return ;
+        blackList = newText.trimmed().split(" ", QString::SkipEmptyParts);
+        for (int i = 0; i < blackList.size(); i++) // 转换为小写
+            blackList[i] = blackList[i].toLower();
+        settings.setValue("music/blackList", blackList.join(" "));
+        searchMusic(ui->searchEdit->text());
+    })->check(!blackList.isEmpty())->tooltip("设置搜索黑名单，包含任一关键词的歌曲不会显示在列表中");
 
     playMenu->addAction("音乐品质", [=]{
         menu->close();
@@ -4246,7 +4272,11 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/br", songBr = br);
     })->check(songBr >= 320000)->tooltip("越高的码率可能带来更好地聆听效果，但下载时间较长");
 
-    playMenu->split()->addAction("自动换源", [=]{
+    playMenu->split()->addAction("双击播放", [=]{
+        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
+    })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
+
+    playMenu->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
     })->setChecked(autoSwitchSource)->tooltip("无法播放的歌曲自动切换到其他平台，能播放绝大部分歌曲");
 
@@ -4265,7 +4295,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         clearDownloadFiles();
     })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间");
 
-    FacileMenu* stMenu = menu->addMenu("设置");
+    FacileMenu* stMenu = menu->addMenu("显示");
 
     bool h = settings.value("music/hideTab", false).toBool();
 

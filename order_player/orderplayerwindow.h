@@ -392,6 +392,7 @@ private:
     Song mostSuitableSong;        // 查找到的最合适的歌曲（包括源）
     bool autoSwitchSource = true; // 自动切换音源
     bool validMusicTime = false;  // 验证歌曲时间
+    QStringList blackList;        // 点歌黑名单
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;
