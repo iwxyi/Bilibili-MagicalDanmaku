@@ -3163,6 +3163,12 @@ bool OrderPlayerWindow::switchNextSource(QString key, MusicSource ms, QString ad
     if (index == -1 || index >= musicSourceQueue.size() - 1)
     {
         qWarning() << "所有平台都不支持，已结束：" << playAfterDownloaded.simpleString();
+        if (!addBy.isEmpty() && addBy != "[动态添加]")
+        {
+            Song song;
+            song.name = key;
+            emit signalOrderSongNoCopyright(song);
+        }
         if (play)
             playNext();
         return false;

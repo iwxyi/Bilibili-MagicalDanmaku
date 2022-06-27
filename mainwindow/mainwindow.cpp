@@ -9530,6 +9530,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 切歌
     if (msg.contains("cutOrderSong") || msg.contains("cutMusic"))
     {
+        // 指定用户昵称的切歌
         re = RE("cut(?:OrderSong|Music)\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
@@ -9538,27 +9539,25 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
-                if (musicWindow->cutSongIfUser(uname))
-                    localNotify(uname + " 切歌成功");
-                else
+                if (!musicWindow->cutSongIfUser(uname))
                 {
                     const Song &song = musicWindow->getPlayingSong();
                     if (!song.isValid())
-                        localNotify("未在播放歌曲");
+                        showError("切歌失败", "未在播放歌曲");
                     else if (song.addBy.isEmpty())
-                        localNotify("用户不能切手动播放的歌");
+                        showError("切歌失败", "用户不能切手动播放的歌");
                     else
-                        localNotify("“" + uname + "”无法切“" + song.addBy + "”的歌");
+                        showError("切歌失败", "“" + uname + "”无法切“" + song.addBy + "”的歌");
                 }
             }
             else
             {
-                localNotify("未开启点歌姬");
-                qWarning() << "未开启点歌姬";
+                showError("切歌失败", "未开启点歌姬");
             }
             return true;
         }
 
+        // 强制切歌
         re = RE("cut(?:OrderSong|Music)\\s*\\(\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
@@ -9566,15 +9565,12 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             if (musicWindow)
             {
-                if (musicWindow->cutSong())
-                    localNotify("切歌成功");
-                else
-                    localNotify("切歌失败，未在播放歌曲");
+                if (!musicWindow->cutSong())
+                    showError("切歌失败，未在播放歌曲");
             }
             else
             {
-                localNotify("未开启点歌姬");
-                qWarning() << "未开启点歌姬";
+                showError("未开启点歌姬");
             }
             return true;
         }
@@ -15503,7 +15499,7 @@ void MainWindow::on_actionShow_Order_Player_Window_triggered()
             triggerCmdEvent("ORDER_SONG_IMPROVED", danmaku);
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongCutted, this, [=](Song song){
-            localNotify("已切歌");
+            // localNotify("已切歌");
             triggerCmdEvent("ORDER_SONG_CUTTED", LiveDanmaku(song.id, song.addBy, song.name).with(song.toJson()));
         });
         connect(musicWindow, &OrderPlayerWindow::signalOrderSongNotFound, this, [=](QString key){
