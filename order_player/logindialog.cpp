@@ -116,11 +116,13 @@ void LoginDialog::on_cookieHelpButton_clicked()
 void LoginDialog::on_neteaseCookieRadio_clicked()
 {
     ui->stackedWidget->setCurrentIndex(1);
+    ui->label_3->setText("");
 }
 
 void LoginDialog::on_qqmusicCookieRadio_clicked()
 {
     ui->stackedWidget->setCurrentIndex(1);
+    ui->label_3->setText("绿钻可能失效，无法播放会员歌曲");
 }
 
 void LoginDialog::on_testButton_clicked()
