@@ -44,6 +44,8 @@ QT_END_NAMESPACE
 
 #define MUSIC_DEB if (0) qDebug()
 
+#define SHORT_MUSIC_DURATION 60000
+
 enum MusicQuality
 {
     NormalQuality, // MP3普通品质

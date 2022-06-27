@@ -1232,10 +1232,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
 
-    if (key.contains(QRegularExpression("^\\d+$"))) // ID点歌
+    if (key.contains(QRegularExpression("^\\d+$")) && searchResultSongs.size() == 1) // ID点歌
     {
-        if (searchResultSongs.empty())
-            return Song();
         return searchResultSongs.first();
     }
 
@@ -1252,6 +1250,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
             }
@@ -1259,6 +1259,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
             }
@@ -1266,6 +1268,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
             }
@@ -1273,6 +1277,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
             }
@@ -1291,6 +1297,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
             }
@@ -1298,6 +1306,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
             }
@@ -1305,6 +1315,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含(cover)、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
             }
@@ -1312,6 +1324,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
             }
@@ -1341,12 +1355,14 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     for (int i = 0; i < key.size(); i++)
     {
         QChar c = key.at(i);
-        if (c == " " || c == "-")
+        if (QString(" -()（）“”\"'[]<>!?！？。，.~、").contains(c)) // 排除停用词
             continue;
         chars.append(c);
     }
     foreach (Song song, searchResultSongs)
     {
+        if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+            continue;
         bool find = true;
         for (int i = 0; i < chars.size(); i++)
             if (!song.name.contains(chars.at(i)) && !song.artistNames.contains(chars.at(i)))
@@ -1366,6 +1382,17 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     else
     {
         // 没指定歌手，随便来一个就行
+        // 验证时间，排除试听
+        if (validMusicTime)
+        {
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.duration > SHORT_MUSIC_DURATION)
+                    return song;
+            }
+            return Song();
+        }
+        // 真的就随便来一个
         return searchResultSongs.first();
     }
 }
@@ -1880,7 +1907,7 @@ void OrderPlayerWindow::downloadSong(Song song)
         if (unblockQQMusic)
             url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
         else
-            url = QQMUSIC_SERVER + "/song/url?id=" + song.mid;
+            url = QQMUSIC_SERVER + "/song/url?id=" + song.mid + "&mediaId=" + song.mediaId;
         break;
     case MiguMusic:
         if (!song.url.isEmpty())
@@ -4222,7 +4249,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     playMenu->split()->addAction("验证时间", [=]{
         settings.setValue("music/validMusicTime", validMusicTime = !validMusicTime);
-    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果少于应有的时间（如试听只有1分钟或30秒）则自动换源");
+    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果没超过1分钟或少于应有的时间（如试听只有1分钟或30秒）则自动换源");
 
     playMenu->addAction("试听接口", [=]{
         menu->close();

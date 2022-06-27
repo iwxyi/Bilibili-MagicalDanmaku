@@ -158,13 +158,14 @@ struct Song
     qint64 id = 0;
     QString mid;
     QString name;
-    int duration = 0;
+    int duration = 0; // 毫秒
     int mark = 0;
     QList<Artist> artists;
     Album album;
     QString artistNames;
     QString url;
     qint64 addTime;
+    QString mediaId;
     QString addBy;
     MusicSource source = NeteaseCloudMusic;
     char m_padding2[4];
@@ -188,9 +189,11 @@ struct Song
         song.artistNames = artistNameList.join("/");
 
         song.album = Album::fromJson(json.value("album").toObject());
-        song.duration = JVAL_INT(duration); // 毫秒
+        song.duration = JVAL_INT(duration);
         song.mark = JVAL_INT(mark);
 
+        if (json.contains("mediaId"))
+            song.mediaId = JVAL_STR(mediaId);
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
         if (json.contains("addBy"))
@@ -222,6 +225,7 @@ struct Song
 
         song.album = Album::fromQQMusicJson(json);
         song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
+        song.mediaId = JVAL_STR(media_mid);
 
         if (json.contains("addTime"))
             song.addTime = JVAL_LONG(addTime);
@@ -349,6 +353,8 @@ struct Song
             array.append(artist.toJson());
         json.insert("artists", array);
         json.insert("album", album.toJson());
+        if (!mediaId.isEmpty())
+            json.insert("mediaId", mediaId);
         if (addTime)
             json.insert("addTime", addTime);
         if (!addBy.isEmpty())
