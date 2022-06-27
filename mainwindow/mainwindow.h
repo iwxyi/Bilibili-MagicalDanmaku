@@ -331,28 +331,20 @@ private slots:
 
     void showDiangeHistory();
 
+    void appointAdmin(qint64 uid);
+    void dismissAdmin(qint64 uid);
+
     void addBlockUser(qint64 uid, int hour);
-
     void addBlockUser(qint64 uid, qint64 roomId, int hour);
-
     void delBlockUser(qint64 uid);
-
     void delBlockUser(qint64 uid, qint64 roomId);
-
     void delRoomBlockUser(qint64 id);
-
     void eternalBlockUser(qint64 uid, QString uname);
-
     void cancelEternalBlockUser(qint64 uid);
-
     void cancelEternalBlockUser(qint64 uid, qint64 roomId);
-
     void cancelEternalBlockUserAndUnblock(qint64 uid);
-
     void cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId);
-
     void saveEternalBlockUsers();
-
     void detectEternalBlockUsers();
 
     void on_enableBlockCheck_clicked();
@@ -464,6 +456,8 @@ private slots:
     void on_enableScreenDanmakuCheck_clicked();
 
     void on_enableScreenMsgCheck_clicked();
+
+    void on_screenDanmakuWithNameCheck_clicked();
 
     void on_screenDanmakuLeftSpin_valueChanged(int arg1);
 
@@ -797,6 +791,16 @@ private slots:
 
     void on_forumButton_clicked();
 
+    void on_complexCalcCheck_clicked();
+
+    void on_positiveVoteCheck_clicked();
+
+    void on_saveLogCheck_clicked();
+
+    void on_stringSimilarCheck_clicked();
+
+    void on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     void initView();
     void initStyle();
@@ -893,6 +897,7 @@ private:
     void updateExistGuards(int page);
     void newGuardUpdate(const LiveDanmaku &danmaku);
     void updateOnlineGoldRank();
+    void updateOnlineRankGUI();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
     void getPkMatchInfo();
@@ -1025,6 +1030,9 @@ private:
     void showPkHistories();
     void refreshPrivateMsg();
     void receivedPrivateMsg(MyJson session);
+    void getPositiveVote();
+    void positiveVote();
+    void positiveVoteLogin();
 
     void startSplash();
     void loadWebExtensionList();
@@ -1214,6 +1222,7 @@ private:
     QString SERVER_DOMAIN = LOCAL_MODE ? "http://localhost:8102" : "http://iwxyi.com:8102";
     QString serverPath = SERVER_DOMAIN + "/server/";
     int permissionLevel = 0;
+    bool permissionType[20] = {};
     QTimer* permissionTimer = nullptr;
     QString permissionText = "捐赠版";
     qint64 permissionDeadline = 0;
@@ -1245,6 +1254,7 @@ private:
     // 高能榜
     QList<LiveDanmaku> onlineGoldRank;
     QList<LiveDanmaku> onlineGuards;
+    QList<qint64> onlineRankGuiIds;
 
     // 录播
     qint64 startRecordTime = 0;
@@ -1387,6 +1397,8 @@ private:
 
     // flag
     bool _loadingOldDanmakus = false;
+    short _hasPositiveVote = 0; // 是否好评，0未知，1好评，-1未好评
+    int _fanfanLikeCount = 0; // 饭贩好评数量
 };
 
 class RequestBodyHelper : public QObject

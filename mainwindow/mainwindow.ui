@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>850</width>
-    <height>624</height>
+    <width>847</width>
+    <height>852</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -943,6 +943,79 @@ background-repeat:none;</string>
               </layout>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_70">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="onlineRankDescLabel">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QListWidget" name="onlineRankListWidget">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>64</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>64</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">#onlineRankListWidget
+{
+	background: transparent;
+	border: none;
+}</string>
+                 </property>
+                 <property name="verticalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="horizontalScrollBarPolicy">
+                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="editTriggers">
+                  <set>QAbstractItemView::EditKeyPressed</set>
+                 </property>
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::NoSelection</enum>
+                 </property>
+                 <property name="verticalScrollMode">
+                  <enum>QAbstractItemView::ScrollPerPixel</enum>
+                 </property>
+                 <property name="horizontalScrollMode">
+                  <enum>QAbstractItemView::ScrollPerPixel</enum>
+                 </property>
+                 <property name="flow">
+                  <enum>QListView::LeftToRight</enum>
+                 </property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
+                 <property name="viewMode">
+                  <enum>QListView::ListMode</enum>
+                 </property>
+                 <property name="selectionRectVisible">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QListWidget" name="giftListWidget">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -1006,7 +1079,7 @@ background-repeat:none;</string>
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>1</width>
-                 <height>20</height>
+                 <height>2</height>
                 </size>
                </property>
               </spacer>
@@ -1561,8 +1634,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>770</width>
-             <height>504</height>
+             <width>767</width>
+             <height>732</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3383,7 +3456,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：&lt;/p&gt;&lt;p&gt;安装目录/records/&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：安装目录/records/&lt;/p&gt;&lt;p&gt;保存 flv 原始数据，未进行编解码，可能需要使用 PotPlayer 等自带解码功能的播放器才能打开，Windows 自带的 Media Player 无法打开录播&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>原画录播</string>
@@ -3782,7 +3855,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>660</y>
               <width>161</width>
-              <height>161</height>
+              <height>181</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3831,6 +3904,20 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="saveLogCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>打印所有输出日志到 安卓目录/debug.log
+遇到问题可以将此文件发给开发者，用以确定问题</string>
+               </property>
+               <property name="text">
+                <string>打印日志</string>
                </property>
               </widget>
              </item>
@@ -4122,14 +4209,31 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="CheckBox1" name="enableScreenDanmakuCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>全屏滚动弹幕</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_71">
+               <item>
+                <widget class="CheckBox1" name="enableScreenDanmakuCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>显示弹幕</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="CheckBox1" name="screenDanmakuWithNameCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>显示发送者的昵称</string>
+                 </property>
+                 <property name="text">
+                  <string>包含昵称</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="CheckBox1" name="enableScreenMsgCheck">
@@ -4137,7 +4241,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
-                <string>全屏滚动信息</string>
+                <string>显示信息</string>
                </property>
               </widget>
              </item>
@@ -5548,7 +5652,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>980</y>
               <width>161</width>
-              <height>71</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5619,6 +5723,118 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>语法糖</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="complexCalcCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>在表达式 %[...]% 中，允许使用更加复杂的计算方式。
+但无法保证稳定性，可能导致程序崩溃。
+最终结果同样将会变成整数，四舍五入。
+例如：
+1+2+3+4
+1+(2*3/4)
+1+log(2)*sin(3)/cos(4)</string>
+               </property>
+               <property name="text">
+                <string>复杂计算</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="stringSimilarCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>影响智能闲聊功能与变量%repeat_10%的判断方式，
+如果开启此功能，则会以字符串编辑距离算法来判断是否为重复弹幕，可过滤一些故意重复的弹幕。
+目前阈值为 80% 及以上则判定为重复弹幕。
+可能会在一定程度上影响相关功能的运行速度。</string>
+               </property>
+               <property name="text">
+                <string>字符串相似度算法</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="feedbackCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>189</x>
+              <y>1000</y>
+              <width>162</width>
+              <height>71</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#feedbackCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_76">
+             <item>
+              <widget class="QLabel" name="label_63">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>反馈</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_38" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="positiveVoteCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>针对应用页面（饭贩）上一键好评
+简单点一下此处的开关即可</string>
+               </property>
+               <property name="text">
+                <string>好评</string>
                </property>
               </widget>
              </item>
@@ -8684,7 +8900,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>850</width>
+     <width>847</width>
      <height>23</height>
     </rect>
    </property>

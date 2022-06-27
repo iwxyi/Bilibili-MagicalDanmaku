@@ -186,44 +186,57 @@ void LiveVideoPlayer::refreshPlayUrl()
 {
     if (roomId.isEmpty())
         return ;
-    QString url = "http://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
+    QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
             + "&quality=" + QString::number(qn) + "&qn=10000&platform=web&otype=json";
+    qWarning() << "视频流链接：" << url;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
     request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QString redi = reply->rawHeader("location");
+        if (!redi.isEmpty() && redi != url)
+        {
+            qInfo() << "播放链接重定向：" << redi;
+        }
+
         QByteArray data = reply->readAll();
         manager->deleteLater();
         delete request;
         reply->deleteLater();
 
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qWarning() << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-        if (json.value("code").toInt() != 0)
-        {
-            qWarning() << ("返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-
-        // 获取链接
-        QJsonArray array = json.value("data").toObject().value("durl").toArray();
-        if (!array.size())
-        {
-            QMessageBox::warning(this, "播放视频", "未找到可用的链接\n" + data);
-            return ;
-        }
-        QString url = array.first().toObject().value("url").toString(); // 第一个链接
-        qInfo() << "playUrl:" << url;
-        setPlayUrl(url);
+        // if (!redi.isEmpty())
+            parsePlayUrl(data);
     });
     manager->get(*request);
+}
+
+void LiveVideoPlayer::parsePlayUrl(const QByteArray &data)
+{
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(data, &error);
+    if (error.error != QJsonParseError::NoError)
+    {
+        qWarning() << "无法播放：" << error.errorString() << data;
+        return ;
+    }
+    QJsonObject json = document.object();
+    if (json.value("code").toInt() != 0)
+    {
+        qWarning() << ("返回结果不为0：") << json.value("message").toString();
+        return ;
+    }
+
+    // 获取链接
+    QJsonArray array = json.value("data").toObject().value("durl").toArray();
+    if (!array.size())
+    {
+        QMessageBox::warning(this, "播放视频", "未找到可用的链接\n" + data);
+        return ;
+    }
+    QString url = array.first().toObject().value("url").toString(); // 第一个链接
+    qInfo() << "playUrl:" << url;
+    setPlayUrl(url);
 }
 
 void LiveVideoPlayer::showEvent(QShowEvent *e)

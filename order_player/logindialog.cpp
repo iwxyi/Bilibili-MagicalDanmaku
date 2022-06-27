@@ -70,7 +70,7 @@ void LoginDialog::loginNetease(QString username, QString password)
         int code = json.value("code").toInt();
         if (code != 200)
         {
-            QMessageBox::warning(this, "登录错误", "账号或密码错误，请重试\n错误码：" + QString::number(code));
+            QMessageBox::warning(this, "登录错误", json.value("message").toString() + "\n错误码：" + QString::number(code));
             return ;
         }
 
@@ -116,11 +116,13 @@ void LoginDialog::on_cookieHelpButton_clicked()
 void LoginDialog::on_neteaseCookieRadio_clicked()
 {
     ui->stackedWidget->setCurrentIndex(1);
+    ui->label_3->setText("");
 }
 
 void LoginDialog::on_qqmusicCookieRadio_clicked()
 {
     ui->stackedWidget->setCurrentIndex(1);
+    ui->label_3->setText("绿钻可能失效，无法播放会员歌曲");
 }
 
 void LoginDialog::on_testButton_clicked()
@@ -158,7 +160,14 @@ void LoginDialog::on_testButton_clicked()
                 return ;
             }
             QString nickname = json.data().o("creator").s("nick");
-            QMessageBox::information(this, "测试账号", nickname + "\n检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）");
+            QString mymusictype = json.data().s("mymusictype");
+            QString msg = "检测成功，可以使用！\n若后续失效，大概率是过期了\n（从几小时到几天都有可能）";
+            if (mymusictype == "TA的音乐")
+            {
+                msg = "检测到账号，但是似乎无法使用";
+                qWarning() << "检测到：" << mymusictype;
+            }
+            QMessageBox::information(this, "测试账号", nickname + "\n" + msg);
         }, getCookies(cookieString));
     }
 }

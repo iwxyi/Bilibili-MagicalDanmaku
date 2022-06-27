@@ -1,3 +1,41 @@
+### v4.6.2 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
+
+- 新增弹幕姬菜单直接任命与取消房管，并显示任命情况
+- 新增任命房管的命令：`appointAdmin(uid)`
+- 新增撤销房管的命令：`dismissAdmin(uid)`
+- 新增显示在线高能榜列表
+- 新增点歌姬恢复网易云ID点歌
+- 新增歌手与歌名的黑名单，可排除翻唱、伴奏
+- 新增点歌姬排除一分钟以下的试听音乐开关
+- 新增全屏滚动弹幕显示昵称开关
+- 新增重复弹幕的相似度过滤算法
+- 添加QQ音乐绿钻可能失效的说明
+- 显示网易云音乐登录不上的真实报错
+- 修复直播视频无法播放的问题
+- 修复点歌失败后重新搜索的一个小问题
+
+
+
+
+
+### v4.6.1 [优化点歌姬、自定义机器人](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.1)
+
+- 新增点歌姬设置音源开关和顺序
+- 新增音乐无版权的文字提示
+- 新增AI回复过滤重复弹幕（抽奖、天选等）
+- 新增重启软件后已添加到直播姬/OBS的音乐插件自动重连
+- 新增与最近10条弹幕的判断变量 `%repeat_10%`
+- 新增 `>postHeaderData(url, headers, data, event)` 命令，可用于上传带 Header 的 post
+- 调整 `NEW_HOUR` 为整点触发，而不是从程序启动开始
+- 显示打印日志到文件的显式开关
+- 更新扩展的自带代码
+- 默认关闭翻译、新观众提醒等影响性能的功能
+- 修复QQ音乐强制换源的问题
+
+
+
+
+
 ### v4.6.0 [添加命令、优化点歌姬、修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.0)
 
 - 新增播放在线语音命令：`speakTextUrl(url)`

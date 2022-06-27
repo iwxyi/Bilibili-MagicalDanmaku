@@ -37,6 +37,7 @@ public slots:
     void slotLiveStart(QString roomId);
     void setPlayUrl(QString url);
     void refreshPlayUrl();
+    void parsePlayUrl(const QByteArray& data);
 
 protected:
     void showEvent(QShowEvent *e) override;

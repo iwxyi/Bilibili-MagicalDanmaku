@@ -42,7 +42,9 @@ QT_END_NAMESPACE
 #define LISTTAB_PLAYLIST 3
 #define LISTTAB_HISTORY 3
 
-#define MUSIC_DEB if (0) qDebug()
+#define MUSIC_DEB if (1) qDebug()
+
+#define SHORT_MUSIC_DURATION 60000
 
 enum MusicQuality
 {
@@ -146,8 +148,8 @@ public slots:
 
     void slotSearchAndAutoAppend(QString key, QString by = "");
     void improveUserSongByOrder(QString username, int promote);
-    void cutSongIfUser(QString username);
-    void cutSong();
+    bool cutSongIfUser(QString username);
+    bool cutSong();
 
 private slots:
     void on_searchEdit_returnPressed();
@@ -267,6 +269,7 @@ private:
 
     void readMp3Data(const QByteArray& array);
 
+    void restoreSourceQueue();
     void setMusicLogicBySource();
     bool switchNextSource(Song song, bool play = false);
     bool switchNextSource(QString key, MusicSource ms, QString addBy, bool play = false);
@@ -283,6 +286,8 @@ private:
 
     void importSongs(const QStringList& lines);
     void importNextSongByName();
+
+    void notify(const QString& text);
 
 protected:
     void showEvent(QShowEvent*e) override;
@@ -333,6 +338,7 @@ private:
     QDir localMusicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
     QList<MusicSource> musicSourceQueue;
+    QString sourceQueueString;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
 
@@ -383,11 +389,14 @@ private:
     // 点歌
     QString currentResultOrderBy; // 当前搜索结果是谁点的歌，用作替换
     Song prevOrderSong;
+    Song mostSuitableSong;        // 查找到的最合适的歌曲（包括源）
     bool autoSwitchSource = true; // 自动切换音源
     bool validMusicTime = false;  // 验证歌曲时间
+    QStringList blackList;        // 点歌黑名单
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;
+    QTimer* notifyTimer;
 
     // 音乐账号
     int songBr = 320000; // 码率，单位bps

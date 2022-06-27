@@ -5,6 +5,7 @@
 #include "facilemenu.h"
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
+#include "string_distance_util.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
@@ -525,7 +526,41 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             // AI回复
             if (aiReply)
             {
-                startReply(item);
+                // 过滤重复消息
+                bool repeat = false;
+                QString msg = danmaku.getText();
+                int count = us->danmuSimilarJudgeCount;
+                for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+                {
+                    const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+                    if (!danmaku.is(MessageType::MSG_DANMAKU))
+                        continue;
+                    if (!us->useStringSimilar)
+                    {
+                        if (danmaku.getText() == msg)
+                        {
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+                        if (similar >= us->stringSimilarThreshold)
+                        {
+                            qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    if (--count <= 0)
+                        break;
+                }
+
+                if (!repeat)
+                    startReply(item);
+                else
+                    qInfo() << "AI回复：忽略重复的弹幕";
             }
         }
     }
@@ -1078,6 +1113,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionSetName = new QAction(QIcon(":/danmaku/nick"), "设置专属昵称", this);
     QAction* actionUserMark = new QAction(QIcon(":/danmaku/mark"), "设置用户备注", this);
     QAction* actionSetGiftName = new QAction(QIcon(":/danmaku/gift"), "设置礼物别名", this);
+    QAction* actionSetAdmin = new QAction(QIcon(":/danmaku/admin"), "任命为房管", this);
 
     QAction* actionAddBlockTemp = new QAction(QIcon(":/danmaku/block2"), "禁言1小时", this);
     QAction* actionAddBlock = new QAction(QIcon(":/danmaku/block2"), "禁言720小时", this);
@@ -1217,6 +1253,16 @@ void LiveDanmakuWindow::showMenu()
                 actionSetGiftName->setText("礼物别名：" + us->giftAlias.value(danmaku.getGiftId()));
         }
 
+        if (ac->cookieUid != ac->upUid)
+        {
+            actionSetAdmin->setEnabled(false);
+            actionSetAdmin->setVisible(false);
+        }
+        if (danmaku.isAdmin())
+        {
+            actionSetAdmin->setText("撤销房管资格");
+        }
+
         if (us->careUsers.contains(uid))
             actionAddCare->setText("移除特别关心");
         if (us->strongNotifyUsers.contains(uid))
@@ -1250,6 +1296,7 @@ void LiveDanmakuWindow::showMenu()
         actionDelBlock->setEnabled(false);
         actionEternalBlock->setEnabled(false);
         actionCancelEternalBlock->setEnabled(false);
+        actionSetAdmin->setEnabled(false);
         actionMedal->setEnabled(false);
         actionValue->setEnabled(false);
         actionAddCare->setEnabled(false);
@@ -1316,6 +1363,7 @@ void LiveDanmakuWindow::showMenu()
     menu->addAction(actionAddCare);
     menu->addAction(actionStrongNotify);
     menu->addAction(actionSetName);
+    menu->addAction(actionSetAdmin);
     menu->addAction(actionUserMark);
     menu->addAction(actionNotWelcome);
     menu->addAction(actionNotReply);
@@ -1539,6 +1587,14 @@ void LiveDanmakuWindow::showMenu()
             it++;
         }
         us->setValue("danmaku/localNicknames", ress.join(";"));
+    });
+    connect(actionSetAdmin, &QAction::triggered, this, [=]{
+        if (listWidget->currentItem() != item) // 当前项变更
+            return ;
+        if (danmaku.isAdmin())
+            emit signalDismissAdmin(uid);
+        else
+            emit signalAppointAdmin(uid);
     });
     connect(actionUserMark, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -2108,8 +2164,9 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
+
     // 优化消息文本
-    msg.replace(QRegularExpression("\\s+"), "，");
+    // msg.replace(QRegularExpression("\\s+"), "，");
 
     TxNlp::instance()->chat(msg, [=](QString answer){
         if (answer.isEmpty())

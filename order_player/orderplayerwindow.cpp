@@ -226,6 +226,13 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     searchingOverTimeTimer->setSingleShot(true);
     connect(searchingOverTimeTimer, SIGNAL(timeout()), this, SLOT(stopLoading()));
 
+    notifyTimer = new QTimer(this);
+    notifyTimer->setInterval(10000);
+    notifyTimer->setSingleShot(true);
+    connect(notifyTimer, &QTimer::timeout, this, [=]{
+        ui->notifyLabel->setText("");
+    });
+
     bool lyricStack = settings.value("music/lyricStream", false).toBool();
     if (lyricStack)
         ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
@@ -246,6 +253,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     setSongModelToView(favoriteSongs, ui->favoriteSongsListView);
     setSongModelToView(normalSongs, ui->normalSongsListView);
     setSongModelToView(historySongs, ui->historySongsListView);
+    restoreSourceQueue();
 
     int volume = settings.value("music/volume", 50).toInt();
     bool mute = settings.value("music/mute", false).toBool();
@@ -280,6 +288,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
 
     autoSwitchSource = settings.value("music/autoSwitchSource", true).toBool();
     validMusicTime = settings.value("music/validMusicTime", false).toBool();
+    blackList = settings.value("music/blackList", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 读取cookie
     songBr = settings.value("music/br", 320000).toInt();
@@ -536,22 +545,24 @@ void OrderPlayerWindow::improveUserSongByOrder(QString username, int promote)
     }
 }
 
-void OrderPlayerWindow::cutSongIfUser(QString username)
+bool OrderPlayerWindow::cutSongIfUser(QString username)
 {
     if (!playingSong.isValid())
-        return ;
+        return false;
     if (playingSong.addBy != username)
-        return ;
+        return false;
     emit signalOrderSongCutted(playingSong);
     on_nextSongButton_clicked();
+    return true;
 }
 
-void OrderPlayerWindow::cutSong()
+bool OrderPlayerWindow::cutSong()
 {
     if (!playingSong.isValid())
-        return ;
+        return false;
     emit signalOrderSongCutted(playingSong);
     on_nextSongButton_clicked();
+    return true;
 }
 
 /**
@@ -699,6 +710,21 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         }
 
         MUSIC_DEB << "搜索到数量：" << searchResultSongs.size() << "条";
+        if (blackList.size())
+        {
+            for (int i = 0; i < searchResultSongs.size(); i++)
+            {
+                for (int j = 0; j < blackList.size(); j++)
+                {
+                    if (searchResultSongs.at(i).name.toLower().contains(blackList.at(j))
+                            || searchResultSongs.at(i).artistNames.toLower().contains(blackList.at(j)))
+                    {
+                        searchResultSongs.removeAt(i--);
+                        break;
+                    }
+                }
+            }
+        }
         setSearchResultTable(searchResultSongs);
 
         // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
@@ -787,6 +813,7 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
         {
             if (!song.isValid()) // 历史中没找到，就从搜索结果中找
                 song = getSuitableSongOnResults(key, true);
+            MUSIC_DEB << "点歌搜索的最佳结果：" << song.simpleString() << " add by: " << addBy;
             if (!song.isValid())
             {
                 if (autoSwitchSource)
@@ -948,7 +975,7 @@ void OrderPlayerWindow::setSearchResultTable(SongList songs)
         table->setItem(row, titleCol, createItem(song.name));
         table->setItem(row, artistCol, createItem(song.artistNames));
         table->setItem(row, albumCol, createItem(song.album.name));
-        table->setItem(row, durationCol, createItem(msecondToString(song.duration)));
+        table->setItem(row, durationCol, createItem(song.duration ? msecondToString(song.duration) : ""));
     }
     table->verticalScrollBar()->setSliderPosition(0); // 置顶
 
@@ -1221,6 +1248,11 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     Q_ASSERT(searchResultSongs.size());
     key = key.trimmed();
 
+    if (key.contains(QRegularExpression("^\\d+$")) && searchResultSongs.size() == 1) // ID点歌
+    {
+        return searchResultSongs.first();
+    }
+
     // 歌名 - 歌手
     if (key.indexOf("-"))
     {
@@ -1234,6 +1266,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
             }
@@ -1241,6 +1275,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
             }
@@ -1248,6 +1284,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
             }
@@ -1255,6 +1293,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
             }
@@ -1273,6 +1313,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
             }
@@ -1280,6 +1322,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
             }
@@ -1287,6 +1331,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含(cover)、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
             }
@@ -1294,6 +1340,8 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
+                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                    continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
             }
@@ -1323,12 +1371,14 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     for (int i = 0; i < key.size(); i++)
     {
         QChar c = key.at(i);
-        if (c == " " || c == "-")
+        if (QString(" -()（）“”\"'[]<>!?！？。，.~、").contains(c)) // 排除停用词
             continue;
         chars.append(c);
     }
     foreach (Song song, searchResultSongs)
     {
+        if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+            continue;
         bool find = true;
         for (int i = 0; i < chars.size(); i++)
             if (!song.name.contains(chars.at(i)) && !song.artistNames.contains(chars.at(i)))
@@ -1348,6 +1398,17 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     else
     {
         // 没指定歌手，随便来一个就行
+        // 验证时间，排除试听
+        if (validMusicTime)
+        {
+            foreach (Song song, searchResultSongs)
+            {
+                if (song.duration > SHORT_MUSIC_DURATION)
+                    return song;
+            }
+            return Song();
+        }
+        // 真的就随便来一个
         return searchResultSongs.first();
     }
 }
@@ -1862,7 +1923,10 @@ void OrderPlayerWindow::downloadSong(Song song)
         if (unblockQQMusic)
             url = "http://www.douqq.com/qqmusic/qqapi.php?mid=" + song.mid;
         else
-            url = QQMUSIC_SERVER + "/song/url?id=" + song.mid;
+        {
+            // TODO: 根据比特率，设置最近的选项。还要记录每首歌支持哪些比特率
+            url = QQMUSIC_SERVER + "/song/url?id=" + song.mid + "&mediaId=" + song.mediaId;
+        }
         break;
     case MiguMusic:
         if (!song.url.isEmpty())
@@ -1978,7 +2042,7 @@ void OrderPlayerWindow::downloadSong(Song song)
                 if (json.value("result").toInt() != 100)
                 {
                     qWarning() << "QQ歌曲链接返回结果不为100：" << json;
-                    switchNextSource(song);
+                    downloadSongFailed(song);
                     return ;
                 }
 
@@ -1994,19 +2058,26 @@ void OrderPlayerWindow::downloadSong(Song song)
             break;
         }
         case MiguMusic:
+        {
             if (json.value("result").toInt() != 100)
             {
                 qWarning() << "咪咕歌曲链接返回结果不为100：" << json << url;
                 switchNextSource(song);
                 return ;
             }
-            fileUrl = json.value("data").toObject().value("url").toString();
+            QJsonObject miguData = json.value("data").toObject();
+            fileUrl = miguData.value("url").toString();
+            if (fileUrl.isEmpty())
+                fileUrl = miguData.value("128").toString();
+            if (fileUrl.isEmpty())
+                fileUrl = miguData.value("320").toString();
             if (fileUrl.isEmpty())
             {
                 downloadSongFailed(song);
                 return ;
             }
             break;
+        }
         case KugouMusic:
             if (json.value("err_code").toInt() != 0)
             {
@@ -2032,6 +2103,9 @@ void OrderPlayerWindow::downloadSong(Song song)
     downloadSongCover(song);
 }
 
+/**
+ * 无法获取
+ */
 void OrderPlayerWindow::downloadSongFailed(Song song)
 {
     if (!song.addBy.isEmpty()) // 是有人点歌，不是手动点播放，那就报个错误事件
@@ -2043,7 +2117,8 @@ void OrderPlayerWindow::downloadSongFailed(Song song)
             emit signalOrderSongNoCopyright(song);
         }
     }
-    qWarning() << "无法下载，可能没有版权" << song.simpleString() ;
+    qWarning() << "无法下载，可能没有版权" << song.simpleString();
+    notify("无法播放：" + song.simpleString());
     if (playAfterDownloaded == song) // 立即播放才尝试换源
     {
         if (orderSongs.contains(song))
@@ -2128,14 +2203,14 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
             if (delta > 3)
             {
                 qWarning() << "下载的音乐文件时间不对：" << song.duration << "!=" << realDuration;
+                // deleteFile(songPath(song));
                 downloadSongFailed(song);
                 return ;
             }
         }
 
-
         emit signalSongDownloadFinished(song);
-        MUSIC_DEB << "歌曲mp3下载完成：" << song.simpleString();
+        qInfo() << "歌曲mp3下载完成：" << song.simpleString();
 
         if (playAfterDownloaded == song)
             playLocalSong(song);
@@ -3056,6 +3131,30 @@ void OrderPlayerWindow::readMp3Data(const QByteArray &array)
 
 }
 
+void OrderPlayerWindow::restoreSourceQueue()
+{
+    sourceQueueString = settings.value("music/sourceQueue", "网易云 QQ 咪咕").toString();
+    qInfo() << "点歌顺序：" << sourceQueueString;
+    QStringList list = sourceQueueString.split(" ", QString::SkipEmptyParts);
+    musicSourceQueue.clear();
+    for (int i = 0; i < list.size(); i++)
+    {
+        QString s = list.at(i);
+        if (s.contains("网") || s.contains("易") || s.contains("云"))
+            musicSourceQueue.append(NeteaseCloudMusic);
+        else if (s.contains("Q") || s.contains("q"))
+            musicSourceQueue.append(QQMusic);
+        else if (s.contains("酷") || s.contains("狗"))
+            musicSourceQueue.append(KugouMusic);
+        else if (s.contains("咪") || s.contains("咕"))
+            musicSourceQueue.append(MiguMusic);
+        else
+            qWarning() << "无法识别的音源：" << s;
+    }
+    if (!musicSourceQueue.size())
+        setMusicLogicBySource();
+}
+
 /**
  * 设置音源
  * 网易云：=> QQ音乐 => 咪咕 => 酷狗
@@ -3117,7 +3216,15 @@ bool OrderPlayerWindow::switchNextSource(QString key, MusicSource ms, QString ad
     // 轮了一圈，又回来了
     if (index == -1 || index >= musicSourceQueue.size() - 1)
     {
-        qWarning() << "所有平台都不支持，已结束";
+        qWarning() << "所有平台都不支持，已结束：" << playAfterDownloaded.simpleString();
+        MUSIC_DEB << "当前点歌队列：" << userOrderSongQueue;
+        insertOrderOnce = false;
+        if (!addBy.isEmpty() && addBy != "[动态添加]")
+        {
+            Song song;
+            song.name = key;
+            emit signalOrderSongNoCopyright(song);
+        }
         if (play)
             playNext();
         return false;
@@ -3502,6 +3609,12 @@ void OrderPlayerWindow::importNextSongByName()
         return ;
 
     searchMusic(importingSongNames.takeFirst().simpleString());
+}
+
+void OrderPlayerWindow::notify(const QString &text)
+{
+    ui->notifyLabel->setText(text);
+    notifyTimer->start();
 }
 
 /**
@@ -4141,11 +4254,22 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/accompanyMode", accompanyMode = !accompanyMode);
     })->check(accompanyMode)->tooltip("外部点歌，自动搜索伴奏（搜索词带“伴奏”二字）");
 
-    playMenu->addAction("双击播放", [=]{
-        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
-    })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
+    playMenu->addAction("歌曲黑名单", [=]{
+        menu->close();
+        QString text = blackList.join(" ");
+        bool ok;
+        QString newText = QInputDialog::getText(this, "黑名单", "请输入黑名单关键词，字母小写，多个关键词使用空格隔开\n歌名或歌手包含任一关键词就不会显示在列表中\n例如屏蔽“翻唱 翻自 cover”可避免播放翻唱歌曲", QLineEdit::Normal, text, &ok);
+        if (!ok || newText == text)
+            return ;
+        blackList = newText.trimmed().split(" ", QString::SkipEmptyParts);
+        for (int i = 0; i < blackList.size(); i++) // 转换为小写
+            blackList[i] = blackList[i].toLower();
+        settings.setValue("music/blackList", blackList.join(" "));
+        searchMusic(ui->searchEdit->text());
+    })->check(!blackList.isEmpty())->tooltip("设置搜索黑名单，包含任一关键词的歌曲不会显示在列表中");
 
     playMenu->addAction("音乐品质", [=]{
+        menu->close();
         bool ok = false;
         int br = QInputDialog::getInt(this, "设置码率", "请输入音乐码率，越高越清晰，体积也更大\n修改后将清理所有缓存，重新下载歌曲文件", songBr, 128000, 1280000, 10000, &ok);
         if (!ok)
@@ -4155,15 +4279,20 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/br", songBr = br);
     })->check(songBr >= 320000)->tooltip("越高的码率可能带来更好地聆听效果，但下载时间较长");
 
-    playMenu->split()->addAction("自动换源", [=]{
+    playMenu->split()->addAction("双击播放", [=]{
+        settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
+    })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
+
+    playMenu->addAction("自动换源", [=]{
         settings.setValue("music/autoSwitchSource", autoSwitchSource = !autoSwitchSource);
     })->setChecked(autoSwitchSource)->tooltip("无法播放的歌曲自动切换到其他平台，能播放绝大部分歌曲");
 
     playMenu->split()->addAction("验证时间", [=]{
         settings.setValue("music/validMusicTime", validMusicTime = !validMusicTime);
-    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果少于应有的时间（如试听只有1分钟或30秒）则自动换源");
+    })->setChecked(validMusicTime)->tooltip("验证音乐文件的播放时间，如果没超过1分钟或少于应有的时间（如试听只有1分钟或30秒）则自动换源");
 
     playMenu->addAction("试听接口", [=]{
+        menu->close();
         settings.setValue("music/unblockQQMusic", unblockQQMusic = !unblockQQMusic);
         if (unblockQQMusic)
             QMessageBox::information(this, "试听接口", "可在不登录的情况下试听QQ音乐的VIP歌曲1分钟\n若已登录QQ音乐的会员用户，十分建议关掉");
@@ -4173,7 +4302,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         clearDownloadFiles();
     })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间");
 
-    FacileMenu* stMenu = menu->addMenu("设置");
+    FacileMenu* stMenu = menu->addMenu("显示");
 
     bool h = settings.value("music/hideTab", false).toBool();
 
@@ -4233,7 +4362,7 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
         musicSource = MusicSource(s);
         settings.setValue("music/source", musicSource);
 
-        setMusicLogicBySource();
+        // setMusicLogicBySource();
 
         QString text = ui->searchEdit->text();
         if (!text.isEmpty())
@@ -4252,27 +4381,59 @@ void OrderPlayerWindow::on_musicSourceButton_clicked()
 
     auto menu = new FacileMenu(this);
 
-    menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
-        changeSource(NeteaseCloudMusic);
-    });
+    for (int i = 0; i < musicSourceQueue.size(); i++)
+    {
+        MusicSource source = musicSourceQueue.at(i);
+        switch (source)
+        {
+        case UnknowMusic:
+            menu->addAction(QIcon(":/musics/"), "未知音源", [=]{
+                changeSource(NeteaseCloudMusic);
+            })->check(musicSource == source);
+            break;
+        case NeteaseCloudMusic:
+            menu->addAction(QIcon(":/musics/netease"), "网易云音乐", [=]{
+                changeSource(NeteaseCloudMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/netease"));
+            })->check(musicSource == source);
+            break;
+        case QQMusic:
+            menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
+                changeSource(QQMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/qq"));
+            })->check(musicSource == source);
+            break;
+        case MiguMusic:
+            menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
+                changeSource(MiguMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/migu"));
+            })->check(musicSource == source);
+            break;
+        case KugouMusic:
+            menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
+                changeSource(KugouMusic);
+                ui->musicSourceButton->setIcon(QIcon(":/musics/kugou"));
+            })->check(musicSource == source);
+            break;
+        case LocalMusic:
+            menu->addAction(QIcon(":/musics/"), "本地音源", [=]{
+                changeSource(NeteaseCloudMusic);
+            })->check(musicSource == source);
+            break;
+        }
+    }
 
-    menu->addAction(QIcon(":/musics/qq"), "QQ音乐", [=]{
-        changeSource(QQMusic);
+    menu->addAction(QIcon(":/music/custom"), "自定义顺序", [=]{
+        menu->close();
+        bool ok = false;
+        QString s = QInputDialog::getText(this, "播放顺序", "请依次输入音源名称，使用空格分隔\n目前支持：网易云 QQ 咪咕 酷狗", QLineEdit::Normal, sourceQueueString, &ok);
+        if (!ok)
+            return ;
+        settings.setValue("music/sourceQueue", s);
+        restoreSourceQueue();
     });
-
-    menu->addAction(QIcon(":/musics/migu"), "咪咕音乐", [=]{
-        changeSource(MiguMusic);
-    });
-
-    menu->addAction(QIcon(":/musics/kugou"), "酷狗音乐", [=]{
-        changeSource(KugouMusic);
-    });
-
-    if (musicSource >= NeteaseCloudMusic && musicSource <= KugouMusic)
-        menu->at(musicSource)->check();
 
     menu->exec();
-
 }
 
 void OrderPlayerWindow::on_nextSongButton_clicked()
@@ -4301,8 +4462,12 @@ void OrderPlayerWindow::startOrderSearching()
 
 void OrderPlayerWindow::stopOrderSearching()
 {
+    // 结束本次搜索
     if (userOrderSongQueue.size())
         userOrderSongQueue.removeFirst();
+    insertOrderOnce = false;
+
+    // 进行下一次的搜索
     if (userOrderSongQueue.size())
     {
         QString key = userOrderSongQueue.first().first;

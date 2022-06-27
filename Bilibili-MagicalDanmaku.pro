@@ -158,6 +158,10 @@ HEADERS += \
     global/runtimeinfo.h \
     global/usersettings.h \
     order_player/importsongsdialog.h \
+    third_party/calculator/Digit.h \
+    third_party/calculator/calculator_util.h \
+    third_party/calculator/func_define.h \
+    third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
     third_party/color_octree/imageutil.h \
     third_party/facile_menu/facilemenu.h \
@@ -196,6 +200,8 @@ HEADERS += \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
     third_party/utils/mysettings.h \
+    third_party/utils/simplecalculatorutil.h \
+    third_party/utils/string_distance_util.h \
     third_party/utils/tx_nlp.h \
     third_party/utils/warmwishutil.h \
     widgets/buy_vip/buyvipdialog.h \

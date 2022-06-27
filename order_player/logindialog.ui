@@ -164,7 +164,7 @@
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>输入浏览器Cookies</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -198,7 +198,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QPlainTextEdit" name="cookieEdit"/>
+        <widget class="QPlainTextEdit" name="cookieEdit">
+         <property name="placeholderText">
+          <string>输入浏览器Cookies</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
