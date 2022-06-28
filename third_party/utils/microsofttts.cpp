@@ -16,7 +16,7 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     fmt.setByteOrder(QAudioFormat::LittleEndian); //设定字节序，以小端模式播放音频文件
     fmt.setSampleType(QAudioFormat::UnSignedInt); //设定采样类型。根据采样位数来设定。采样位数为8或16位则设置为QAudioFormat::UnSignedInt
 
-    QTimer* refreshTimer = new QTimer(this);
+    refreshTimer = new QTimer(this);
     refreshTimer->setInterval(9 * 60 * 1000); // 9分钟
     connect(refreshTimer, &QTimer::timeout, this, &MicrosoftTTS::refreshToken);
     refreshTimer->start();
@@ -100,9 +100,7 @@ void MicrosoftTTS::speakNext()
     QByteArray ba = reply->readAll();
     reply->deleteLater();
     if (ba.isEmpty())
-    {
         return ;
-    }
 
     // 保存文件
     QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
@@ -163,6 +161,14 @@ void MicrosoftTTS::refreshToken()
         return ;
     }
 
+    if (subscriptionKey == "试听")
+    {
+        // 有效时间5分钟，每4分半获取一次
+        refreshTimer->setInterval(270*1000);
+        getWhitePiaoToken();
+        return ;
+    }
+
     QUrl url("https://" + areaCode + ".api.cognitive.microsoft.com/sts/v1.0/issuetoken");
     QNetworkAccessManager manager;
     QEventLoop loop;
@@ -191,6 +197,36 @@ void MicrosoftTTS::refreshToken()
         emit signalError("无法获取 AccessToken");
     }
 
+}
+
+void MicrosoftTTS::getWhitePiaoToken()
+{
+    QUrl url("https://azure.microsoft.com/zh-cn/services/cognitive-services/text-to-speech/");
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *reply;
+    QNetworkRequest request(url);
+
+    reply = manager.get(request);
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+    loop.exec(); //开启子事件循环
+
+    accessToken.clear();
+    QString content = reply->readAll();
+    if (content.isEmpty())
+        qWarning() << "MicrosoftTTS can't get TextToSpeech HTML";
+    int start = content.indexOf("token: \"");
+    if (start > -1)
+    {
+        start += 8;
+        int end = content.indexOf("\"", start);
+        if (end > -1)
+        {
+            accessToken = content.mid(start, end - start).toLatin1();
+            qInfo() << "get free AccessToken：" << accessToken;
+        }
+    }
+    reply->deleteLater();
 }
 
 void MicrosoftTTS::clearQueue()

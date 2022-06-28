@@ -27,6 +27,7 @@ signals:
 
 public slots:
     void refreshToken();
+    void getWhitePiaoToken();
     void clearQueue();
 
 private:
@@ -42,6 +43,7 @@ private:
     QAudioOutput *audio = nullptr;
     QAudioFormat fmt;
     // bool getting = false; // 是否正在获取语音或正在播放
+    QTimer* refreshTimer = nullptr; // 刷新token时间
     QTimer* timeoutTimer = nullptr; // 连接超时
     QEventLoop connectLoop;
 

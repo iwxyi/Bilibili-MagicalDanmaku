@@ -5,6 +5,7 @@
 SmoothListWidget::SmoothListWidget(QWidget *parent) : QListWidget(parent)
 {
     setVerticalScrollMode(QListWidget::ScrollPerPixel);
+    setHorizontalScrollMode(QListWidget::ScrollPerPixel);
 }
 
 void SmoothListWidget::setSmoothScrollEnabled(bool e)
@@ -24,25 +25,25 @@ void SmoothListWidget::setSmoothScrollDuration(int duration)
 
 void SmoothListWidget::scrollToTop()
 {
-    scrollTo(verticalScrollBar()->minimum());
+    scrollTo(getScrollBar()->minimum());
 }
 
 void SmoothListWidget::scrollTo(int pos)
 {
     if (!enabledSmoothScroll)
-        return verticalScrollBar()->setSliderPosition(pos);
+        return getScrollBar()->setSliderPosition(pos);
 
-    auto scrollBar = verticalScrollBar();
+    auto scrollBar = getScrollBar();
     int delta = pos - scrollBar->sliderPosition();
     if (qAbs(delta) <= 1)
-        return verticalScrollBar()->setSliderPosition(pos);
+        return getScrollBar()->setSliderPosition(pos);
     addSmoothScrollThread(delta, smoothScrollDuration);
 }
 
 void SmoothListWidget::scrollToBottom()
 {
     int count = smooth_scrolls.size();
-    scrollTo(verticalScrollBar()->maximum());
+    scrollTo(getScrollBar()->maximum());
     if (!count || count >= smooth_scrolls.size()) // 理论上来说size会+1
         return ;
 
@@ -72,19 +73,19 @@ void SmoothListWidget::addSmoothScrollThread(int distance, int duration)
 
 void SmoothListWidget::slotSmoothScrollDistance(SmoothScrollBean *bean, int dis)
 {
-    int slide = verticalScrollBar()->sliderPosition();
+    int slide = getScrollBar()->sliderPosition();
     slide += dis;
     if (slide < 0)
     {
         slide = 0;
         smooth_scrolls.removeOne(bean);
     }
-    else if (slide > verticalScrollBar()->maximum())
+    else if (slide > getScrollBar()->maximum())
     {
-        slide = verticalScrollBar()->maximum();
+        slide = getScrollBar()->maximum();
         smooth_scrolls.removeOne(bean);
     }
-    verticalScrollBar()->setSliderPosition(slide);
+    getScrollBar()->setSliderPosition(slide);
 }
 
 void SmoothListWidget::wheelEvent(QWheelEvent *event)
@@ -93,14 +94,14 @@ void SmoothListWidget::wheelEvent(QWheelEvent *event)
     {
         if (event->delta() > 0) // 上滚
         {
-            if (verticalScrollBar()->sliderPosition() == verticalScrollBar()->minimum() && !smooth_scrolls.size()) // 到顶部了
+            if (getScrollBar()->sliderPosition() == getScrollBar()->minimum() && !smooth_scrolls.size()) // 到顶部了
                 emit signalLoadTop();
             addSmoothScrollThread(-smoothScrollSpeed, smoothScrollDuration);
             toBottoming = 0;
         }
         else if (event->delta() < 0) // 下滚
         {
-            if (verticalScrollBar()->sliderPosition() == verticalScrollBar()->maximum() && !smooth_scrolls.size()) // 到顶部了
+            if (getScrollBar()->sliderPosition() == getScrollBar()->maximum() && !smooth_scrolls.size()) // 到顶部了
                 emit signalLoadBottom();
             addSmoothScrollThread(smoothScrollSpeed, smoothScrollDuration);
         }
@@ -109,4 +110,11 @@ void SmoothListWidget::wheelEvent(QWheelEvent *event)
     {
         QListView::wheelEvent(event);
     }
+}
+
+QScrollBar *SmoothListWidget::getScrollBar()
+{
+    if (this->flow() == QListWidget::Flow::LeftToRight)
+        return horizontalScrollBar();
+    return verticalScrollBar();
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
-    <height>852</height>
+    <width>835</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -944,6 +944,9 @@ background-repeat:none;</string>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_70">
+               <property name="spacing">
+                <number>6</number>
+               </property>
                <property name="topMargin">
                 <number>0</number>
                </property>
@@ -952,10 +955,13 @@ background-repeat:none;</string>
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="scaledContents">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item>
-                <widget class="QListWidget" name="onlineRankListWidget">
+                <widget class="SmoothListWidget" name="onlineRankListWidget">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                    <horstretch>0</horstretch>
@@ -1016,7 +1022,7 @@ background-repeat:none;</string>
               </layout>
              </item>
              <item>
-              <widget class="QListWidget" name="giftListWidget">
+              <widget class="SmoothListWidget" name="giftListWidget">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                  <horstretch>0</horstretch>
@@ -1634,8 +1640,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>767</width>
-             <height>726</height>
+             <width>755</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5543,7 +5549,7 @@ QPushButton:pressed
                <item row="0" column="1">
                 <widget class="QLabel" name="label_11">
                  <property name="text">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azure.microsoft.com/zh-cn/services/cognitive-services/text-to-speech/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;申请微软语音转文本&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azure.microsoft.com/zh-cn/services/cognitive-services/text-to-speech/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;申请微软文本转语音&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="openExternalLinks">
                   <bool>true</bool>
@@ -8900,8 +8906,13 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
+<<<<<<< HEAD
      <width>847</width>
      <height>26</height>
+=======
+     <width>835</width>
+     <height>23</height>
+>>>>>>> 98a1e5e120682144e249215f3a846c723c28175d
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
