@@ -3204,6 +3204,9 @@ bool OrderPlayerWindow::switchNextSource(Song song, bool play)
     }
 
     QString searchKey = song.name + " " + song.artistNames;
+    QString userKey = ui->searchEdit->text();
+    if (!userKey.isEmpty() && searchKey.contains(userKey))
+        searchKey = userKey;
     // searchKey.replace(QRegularExpression("[（\\(].+[）\\)]"), ""); // 删除备注
 
     return switchNextSource(searchKey, song.source, song.addBy, play);

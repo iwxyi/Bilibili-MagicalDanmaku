@@ -12849,6 +12849,26 @@ void MainWindow::handleMessage(QJsonObject json)
         ui->popularityLabel->setToolTip(textLarge);
         ui->popularityTextLabel->setToolTip(textLarge);
     }
+    else if (cmd == "DANMU_AGGREGATION") // 弹幕居合
+    {
+        /*{
+            "cmd": "DANMU_AGGREGATION",
+            "data": {
+                "activity_identity": "2806688",
+                "activity_source": 1,
+                "aggregation_cycle": 1,
+                "aggregation_icon": "https://i0.hdslb.com/bfs/live/c8fbaa863bf9099c26b491d06f9efe0c20777721.png",
+                "aggregation_num": 20,
+                "dmscore": 144,
+                "msg": "给粗粗写情书",
+                "show_rows": 1,
+                "show_time": 2,
+                "timestamp": 1656331099
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        QString msg = data.s("msg");
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
