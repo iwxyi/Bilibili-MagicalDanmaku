@@ -1024,6 +1024,7 @@ void MainWindow::readConfig()
     }
     else if (voicePlatform == VoiceMS)
     {
+        ui->voiceConfigSettingsCard->hide();
         ui->voiceMSRadio->setChecked(true);
         ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
         ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
@@ -1159,6 +1160,7 @@ void MainWindow::readConfig()
     ui->screenDanmakuBottomSpin->setValue(us->value("screendanmaku/bottom", 60).toInt());
     ui->screenDanmakuSpeedSpin->setValue(us->value("screendanmaku/speed", 10).toInt());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
+    ui->screenDanmakuWithNameCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
     QString danmakuFontString = us->value("screendanmaku/font").toString();
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
@@ -13334,6 +13336,8 @@ void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
         return ;
     if (!ui->enableScreenMsgCheck->isChecked() && danmaku.getMsgType() != MSG_DANMAKU) // 不显示所有msg
         return ;
+    if (_loadingOldDanmakus) // 正在加载旧弹幕
+        return ;
     if (danmaku.isPkLink()) // 对面同步过来的弹幕
         return ;
 
@@ -19694,6 +19698,7 @@ void MainWindow::on_voiceLocalRadio_toggled(bool checked)
         us->setValue("voice/platform", voicePlatform);
         ui->voiceNameEdit->setText(us->value("voice/localName").toString());
 
+        ui->voiceConfigSettingsCard->show();
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
@@ -19710,6 +19715,7 @@ void MainWindow::on_voiceXfyRadio_toggled(bool checked)
         us->setValue("voice/platform", voicePlatform);
         ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
 
+        ui->voiceConfigSettingsCard->show();
         ui->voiceXfySettingsCard->show();
         ui->voiceMSSettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
@@ -19726,6 +19732,7 @@ void MainWindow::on_voiceMSRadio_toggled(bool checked)
         us->setValue("voice/platform", voicePlatform);
         ui->voiceNameEdit->setText(us->value("xfytts/name", "xiaoyan").toString());
 
+        ui->voiceConfigSettingsCard->hide();
         ui->voiceMSSettingsCard->show();
         ui->voiceXfySettingsCard->hide();
         ui->voiceCustomSettingsCard->hide();
@@ -19743,6 +19750,7 @@ void MainWindow::on_voiceCustomRadio_toggled(bool checked)
         us->setValue("voice/platform", voicePlatform);
         ui->voiceNameEdit->setText(us->value("voice/customName").toString());
 
+        ui->voiceConfigSettingsCard->show();
         ui->voiceXfySettingsCard->hide();
         ui->voiceMSSettingsCard->hide();
         ui->voiceCustomSettingsCard->show();
