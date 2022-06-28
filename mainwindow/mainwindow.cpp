@@ -19436,6 +19436,7 @@ void MainWindow::on_enableScreenDanmakuCheck_clicked()
 {
     us->setValue("screendanmaku/enableDanmaku", ui->enableScreenDanmakuCheck->isChecked());
     ui->enableScreenMsgCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
+    ui->screenDanmakuWithNameCheck->setEnabled(ui->enableScreenDanmakuCheck->isChecked());
 }
 
 void MainWindow::on_enableScreenMsgCheck_clicked()
