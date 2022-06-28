@@ -14500,7 +14500,9 @@ void MainWindow::updateOnlineRankGUI()
             ui->onlineRankListWidget->setItemWidget(item, label);
         }
     }
-    ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高能榜" : "");
+    // ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高\n能\n榜" : "");
+    ui->onlineRankDescLabel->setPixmap(onlineGoldRank.size() ? QPixmap(":/icons/rank") : QPixmap());
+    ui->onlineRankDescLabel->setMaximumSize(headerRadius * 4 / 3, headerRadius * 2);
 }
 
 /**

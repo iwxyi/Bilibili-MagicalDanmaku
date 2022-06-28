@@ -25,7 +25,8 @@ protected:
         if (!pixmap)
             return QLabel::paintEvent(e);
         QPainter painter(this);
-        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        painter.setRenderHint(QPainter::Antialiasing);
+        // painter.setRenderHint(QPainter::SmoothPixmapTransform);
         QPainterPath path;
         path.addRoundedRect(rect(), radius, radius);
         painter.setClipPath(path);

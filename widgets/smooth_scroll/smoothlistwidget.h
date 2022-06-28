@@ -33,6 +33,7 @@ public slots:
 
 protected:
     void wheelEvent(QWheelEvent *event) override;
+    QScrollBar* getScrollBar();
 
 private:
     bool enabledSmoothScroll = true;
