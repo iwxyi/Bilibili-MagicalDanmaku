@@ -1178,6 +1178,8 @@ void MainWindow::readConfig()
         if (!_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
                 && shallSpeakText())
         {
+            if (hasSimilarOldDanmaku(danmaku.getText()))
+                return ;
             speakText(danmaku.getText());
         }
     });
@@ -2023,6 +2025,30 @@ void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
 void MainWindow::addNoReplyDanmakuText(QString text)
 {
     noReplyMsgs.append(text);
+}
+
+bool MainWindow::hasSimilarOldDanmaku(const QString& s) const
+{
+    int count = us->danmuSimilarJudgeCount;
+    for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+    {
+        const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+        if (!danmaku.is(MessageType::MSG_DANMAKU))
+            continue;
+        if (!us->useStringSimilar)
+        {
+            if (danmaku.getText() == s)
+                return true;
+        }
+        else
+        {
+            if (StringDistanceUtil::getSimilarity(danmaku.getText(), s) >= us->stringSimilarThreshold)
+                return true;
+        }
+        if (--count <= 0)
+            break;
+    }
+    return false;
 }
 
 bool MainWindow::isLiving() const
@@ -6543,27 +6569,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
     else if (key == "%repeat_10%")
     {
-        int count = us->danmuSimilarJudgeCount;
-        const QString& s = danmaku.getText();
-        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
-        {
-            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
-            if (!danmaku.is(MessageType::MSG_DANMAKU))
-                continue;
-            if (!us->useStringSimilar)
-            {
-                if (danmaku.getText() == s)
-                    return "0";
-            }
-            else
-            {
-                if (StringDistanceUtil::getSimilarity(danmaku.getText(), s) >= us->stringSimilarThreshold)
-                    return "0";
-            }
-            if (--count <= 0)
-                break;
-        }
-        return "1";
+        return hasSimilarOldDanmaku(danmaku.getText()) ? "1" : "0";
     }
     else if (key == "%playing_tts%")
     {

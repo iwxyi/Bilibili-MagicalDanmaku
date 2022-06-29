@@ -1,8 +1,9 @@
-### v4.6.2 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.6.2)
+### v4.7 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7)
 
 - 新增弹幕姬菜单直接任命与取消房管，并显示任命情况
 - 新增任命房管的命令：`appointAdmin(uid)`
 - 新增撤销房管的命令：`dismissAdmin(uid)`
+- 新增`KEY:`开头的事件变为全局快捷键
 - 新增显示在线高能榜列表
 - 新增点歌姬恢复网易云ID点歌
 - 新增歌手与歌名的黑名单，可排除翻唱、伴奏
@@ -13,6 +14,7 @@
 - 新增显示所有可送出的礼物信息
 - 新增TTS播放状态变量：`%playing_tts%`
 - 新增获取鼠标XY坐标变量
+- 优化自带的弹幕朗读忽视重复弹幕
 - 优化一部分控件的显示与交互
 - 优化展开歌词时立即跳转到当前行
 - 优化托盘菜单中显示更新状态
