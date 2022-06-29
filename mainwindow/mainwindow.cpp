@@ -14023,7 +14023,6 @@ void MainWindow::sendGift(int giftId, int giftNum)
         if (message != "success")
         {
             showError("赠送礼物", message);
-            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
         }
     });
 }
@@ -21683,7 +21682,7 @@ void MainWindow::on_actionShow_Gift_List_triggered()
     QStandardItemModel* model = new QStandardItemModel(view);
     view->setModel(model);
     view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    view->setAttribute(Qt::WA_ShowModal, true);
+    // view->setAttribute(Qt::WA_ShowModal, true);
     view->setAttribute(Qt::WA_DeleteOnClose, true);
     view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
     view->setWordWrap(true);
@@ -21707,7 +21706,7 @@ void MainWindow::on_actionShow_Gift_List_triggered()
             auto item = new QStandardItem(snum(info.getTotalCoin()));
             if (info.isGoldCoin())
                 item->setForeground(goldColor);
-            else
+            else if (info.isSilverCoin())
                 item->setForeground(silverColor);
             model->setItem(row, 2, item);
         }

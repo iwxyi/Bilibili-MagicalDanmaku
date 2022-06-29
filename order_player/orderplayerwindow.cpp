@@ -4125,6 +4125,9 @@ void OrderPlayerWindow::slotExpandPlayingButtonClicked()
             ui->bodyStackWidget->setCurrentWidget(ui->lyricsPage);
             ani->deleteLater();
             label->deleteLater();
+
+            // 立即滚动歌词
+            ui->lyricWidget->setPosition(player->position());
         });
         label->show();
         ani->start();

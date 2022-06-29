@@ -628,7 +628,12 @@ public:
 
     bool isGoldCoin() const
     {
-        return coin_type != "silver";
+        return coin_type == "gold";
+    }
+
+    bool isSilverCoin() const
+    {
+        return coin_type == "silver";
     }
 
     qint64 getTotalCoin() const
