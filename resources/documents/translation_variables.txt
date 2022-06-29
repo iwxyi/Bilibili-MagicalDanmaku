@@ -114,3 +114,5 @@ URL编码的弹幕消息=url_text
 本地模式=local_mode
 重复弹幕10=repeat_10
 正在播放TTS=playing_tts
+鼠标X=mouse_x
+鼠标Y=mouse_y

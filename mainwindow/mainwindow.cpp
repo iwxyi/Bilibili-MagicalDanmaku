@@ -6565,7 +6565,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         }
         return "1";
     }
-    else if (key == "playing_tts")
+    else if (key == "%playing_tts%")
     {
         switch (voicePlatform) {
         case VoiceLocal:
@@ -6581,6 +6581,14 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         case VoiceCustom:
             return (ttsDownloading || (ttsPlayer && ttsPlayer->state() == QMediaPlayer::State::PlayingState)) ? "1" : "0";
         }
+    }
+    else if (key == "%mouse_x%")
+    {
+        return snum(QCursor().pos().x());
+    }
+    else if (key == "%mouse_y%")
+    {
+        return snum(QCursor().pos().y());
     }
     else
     {

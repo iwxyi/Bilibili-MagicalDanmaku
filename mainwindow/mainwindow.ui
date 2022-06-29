@@ -3919,7 +3919,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>打印所有输出日志到 安卓目录/debug.log
+                <string>打印所有输出日志到 安装目录/debug.log
 遇到问题可以将此文件发给开发者，用以确定问题</string>
                </property>
                <property name="text">

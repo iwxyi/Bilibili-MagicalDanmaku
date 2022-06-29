@@ -845,6 +845,8 @@ border-image: url(C:/Path/To/Image.png)
 | local_mode       | 本地模式          | 是：1，否：0                                                 |
 | repeat_10        | 重复弹幕10        | 最后一条与最近10条弹幕是否重复，是：1，否：0                 |
 | playing_tts      | 播放TTS           | 是否正在朗读弹幕/文字，是：1，否：0                          |
+| mouse_x          | 鼠标X             | 获取当前鼠标的全局X坐标，相对于主屏幕左上角，若在左边副屏则 x 可能是负数 |
+| mouse_y          | 鼠标Y             | 同上                                                         |
 
 
 
