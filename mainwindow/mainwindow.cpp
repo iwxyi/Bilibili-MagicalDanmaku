@@ -6,6 +6,7 @@
 #include <QStandardItemModel>
 #include <QHeaderView>
 #include <QDataStream>
+#include <QTableWidget>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -3771,7 +3772,8 @@ void MainWindow::getRobotInfo()
     if (!ui->adjustDanmakuLongestCheck->isChecked())
         return ;
 
-    url = "http://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
+    // 获取弹幕字数
+    url = "https://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
     get(url, [=](MyJson json) {
         /*{
             "code": 0,
@@ -14773,6 +14775,37 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
     });
 }
 
+void MainWindow::getGiftList()
+{
+    get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            showError("获取礼物", json.err());
+            return ;
+        }
+
+        pl->allGiftMap.clear();
+        auto list = json.data().a("list");
+        for (QJsonValue val: list)
+        {
+            MyJson info = val.toObject();
+            int id = info.i("id");
+            int bag = info.i("bag_gift");
+            if (!bag)
+                continue;
+            QString name = info.s("name");
+            QString coinType = info.s("coin_type");
+            int coin = info.i("price");
+            QString desc = info.s("desc");
+
+            LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
+            gift.with(info);
+            pl->allGiftMap[id] = gift;
+        }
+        qInfo() << "直播间礼物数量：" << pl->allGiftMap.size();
+    });
+}
+
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
 {
     us->setValue("danmaku/sendWelcome", ui->autoSendWelcomeCheck->isChecked());
@@ -17080,6 +17113,7 @@ void MainWindow::releaseLiveData(bool prepare)
         }
         ui->giftListWidget->clear();
         ui->onlineRankListWidget->clear();
+        pl->allGiftMap.clear();
     }
     else // 下播，依旧保持连接
     {
@@ -18891,6 +18925,10 @@ void MainWindow::openLink(QString link)
         ui->label_39->setStyleSheet("border-image:url(:/documents/qq_qrcode);\
                                     background-position:center;\
                                     background-repeat:none;");
+    }
+    else if (link == "gift_list")
+    {
+        on_actionShow_Gift_List_triggered();
     }
 }
 
@@ -21626,4 +21664,58 @@ void MainWindow::on_stringSimilarCheck_clicked()
 void MainWindow::on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     openLink("https://space.bilibili.com/" + snum(item->data(Qt::UserRole).toLongLong()));
+}
+
+void MainWindow::on_actionShow_Gift_List_triggered()
+{
+    if (pl->allGiftMap.empty())
+    {
+        getGiftList();
+        QTimer::singleShot(2000, [=]{
+            if (pl->allGiftMap.size())
+                on_actionShow_Gift_List_triggered();
+        });
+        return ;
+    }
+
+    // 创建MV
+    QTableView* view = new QTableView(nullptr);
+    QStandardItemModel* model = new QStandardItemModel(view);
+    view->setModel(model);
+    view->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    view->setAttribute(Qt::WA_ShowModal, true);
+    view->setAttribute(Qt::WA_DeleteOnClose, true);
+    view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+    view->setWordWrap(true);
+    view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    view->setWindowTitle("当前直播间的礼物");
+
+    // 读取数据
+    model->setColumnCount(4);
+    model->setRowCount(pl->allGiftMap.size());
+    model->setHorizontalHeaderLabels({"ID", "名称", "价格", "描述"});
+    QColor goldColor("#CD7F32");
+    QColor silverColor("#C0C0C0");
+    int row = 0;
+    for (auto it = pl->allGiftMap.begin(); it != pl->allGiftMap.end(); it++)
+    {
+        const LiveDanmaku& info = it.value();
+        model->setItem(row, 0, new QStandardItem(snum(info.getGiftId())));
+        model->setItem(row, 1, new QStandardItem(info.getGiftName()));
+        if (info.getTotalCoin() > 0)
+        {
+            auto item = new QStandardItem(snum(info.getTotalCoin()));
+            if (info.isGoldCoin())
+                item->setForeground(goldColor);
+            else
+                item->setForeground(silverColor);
+            model->setItem(row, 2, item);
+        }
+        model->setItem(row, 3, new QStandardItem(info.extraJson.value("desc").toString()));
+        row++;
+    }
+
+    // 显示控件
+    view->setGeometry(this->geometry());
+    view->show();
 }

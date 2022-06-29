@@ -801,6 +801,8 @@ private slots:
 
     void on_onlineRankListWidget_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_actionShow_Gift_List_triggered();
+
 private:
     void initView();
     void initStyle();
@@ -904,6 +906,7 @@ private:
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
     void upgradeWinningStreak(bool emitWinningStreak);
+    void getGiftList();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

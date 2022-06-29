@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1640,8 +1640,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>755</width>
-             <height>504</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -8877,7 +8877,7 @@ font-weight: 500;</string>
              <item>
               <widget class="QLabel" name="tenCardLabel4">
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;this://capture_manager&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;视频截图管理&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://start_pk&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;开启大乱斗&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://guard_catch&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;黑听舰长捕捉&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://catch_you&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;跑骚抓人检测&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://live_status&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;直播状态查询&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://lyrics&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;歌词字幕投稿&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;this://gift_list&quot;&gt;&lt;span style=&quot;text-decoration: none; color:#8cc2d4;&quot;&gt;礼物ID查看&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://capture_manager&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;视频截图管理&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://start_pk&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;开启大乱斗&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://guard_catch&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;黑听舰长捕捉&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://catch_you&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;跑骚抓人检测&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;this://live_status&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;直播状态查询&lt;/span&gt;&lt;/a&gt;&amp;nbsp;&lt;a href=&quot;this://lyrics&quot;&gt;&lt;span style=&quot; text-decoration: none; color:#8cc2d4;&quot;&gt;歌词字幕投稿&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -8906,13 +8906,8 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-<<<<<<< HEAD
-     <width>847</width>
-     <height>26</height>
-=======
      <width>835</width>
      <height>23</height>
->>>>>>> 98a1e5e120682144e249215f3a846c723c28175d
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
@@ -8949,6 +8944,7 @@ font-weight: 500;</string>
     <addaction name="actionGet_Play_Url"/>
     <addaction name="separator"/>
     <addaction name="actionCreate_Video_LRC"/>
+    <addaction name="actionShow_Gift_List"/>
    </widget>
    <widget class="QMenu" name="menu">
     <property name="title">
@@ -9360,6 +9356,15 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>购买会员</string>
+   </property>
+  </action>
+  <action name="actionShow_Gift_List">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/bowknot</normaloff>:/icons/bowknot</iconset>
+   </property>
+   <property name="text">
+    <string>显示礼物列表</string>
    </property>
   </action>
  </widget>
