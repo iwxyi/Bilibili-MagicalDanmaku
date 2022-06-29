@@ -21660,9 +21660,11 @@ void MainWindow::on_positiveVoteCheck_clicked()
 
     if (_hasPositiveVote > 0) // 取消好评
     {
-        if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，确定要取消吗？", QMessageBox::Yes | QMessageBox::No, 1) != QMessageBox::Yes)
+        if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，要残忍地取消吗？", QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes)
         {
-            ui->positiveVoteCheck->setChecked(true);
+            QTimer::singleShot(200, [=]{
+                ui->positiveVoteCheck->setChecked(true);
+            });
             return ;
         }
     }
