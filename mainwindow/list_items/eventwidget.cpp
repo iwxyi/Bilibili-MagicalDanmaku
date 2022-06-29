@@ -25,19 +25,33 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
         triggered();
     };
 
+    connect(check, &QCheckBox::stateChanged, this, [=]{
+        if (isEnabled())
+            configShortcut();
+        else if (shortcut)
+            deleteShortcut();
+    });
+
     connect(btn, &QPushButton::clicked, this, [=]{
         sendMsgs(true);
     });
 
+    // 启动时读取设置就会触发一次事件
     connect(eventEdit, &QLineEdit::textChanged, this, [=]{
         cmdKey = eventEdit->text().trimmed();
+        configShortcut();
     });
+
+    /*connect(eventEdit, &QLineEdit::editingFinished, this, [=]{
+        configShortcut();
+    });*/
 
     connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
 }
 
+/// 仅在粘贴时生效
 void EventWidget::fromJson(MyJson json)
 {
     check->setChecked(json.b("enabled"));
@@ -45,6 +59,7 @@ void EventWidget::fromJson(MyJson json)
     actionEdit->setPlainText(json.s("action"));
 
     cmdKey = eventEdit->text();
+    // configShortcut();
 }
 
 MyJson EventWidget::toJson() const
@@ -98,4 +113,40 @@ void EventWidget::autoResizeEdit()
     this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     actionEdit->setFixedHeight(he);
     emit signalResized();
+}
+
+void EventWidget::configShortcut()
+{
+#if defined(ENABLE_SHORTCUT)
+        // 判断快捷键
+        if (isEnabled() && cmdKey.startsWith("KEY:"))
+        {
+            QString key = cmdKey.right(cmdKey.length() - 4).trimmed();
+            if (key.isEmpty())
+                return deleteShortcut();
+            if (!shortcut)
+            {
+                shortcut = new QxtGlobalShortcut(this);
+                connect(shortcut, &QxtGlobalShortcut::activated, this, [=](){
+                    triggerAction(LiveDanmaku());
+                });
+            }
+            shortcut->setShortcut(QKeySequence(key));
+            shortcut->setEnabled(isEnabled());
+            qInfo() << "注册快捷键：" << shortcut->shortcut();
+        }
+        else if (shortcut)
+        {
+            deleteShortcut();
+        }
+#endif
+}
+
+void EventWidget::deleteShortcut()
+{
+#if defined(ENABLE_SHORTCUT)
+    qInfo() << "删除快捷键：" << shortcut->shortcut();
+    shortcut->deleteLater();
+    shortcut = nullptr;
+#endif
 }

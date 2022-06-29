@@ -13,6 +13,10 @@
 #include <QDebug>
 #include "livedanmaku.h"
 #include "listiteminterface.h"
+#include "freecopyedit.h"
+#if defined(ENABLE_SHORTCUT)
+#include "qxtglobalshortcut.h"
+#endif
 
 #define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
 
@@ -36,12 +40,17 @@ public slots:
     void triggerCmdEvent(QString cmd, LiveDanmaku danmaku);
     void triggerAction(LiveDanmaku danmaku);
     void autoResizeEdit() override;
+    void configShortcut();
+    void deleteShortcut();
 
 public:
     QLineEdit* eventEdit;
     QPlainTextEdit* actionEdit;
 
     QString cmdKey;
+#if defined(ENABLE_SHORTCUT)
+    QxtGlobalShortcut* shortcut = nullptr;
+#endif
 };
 
 #endif // EVENTWIDGET_H
