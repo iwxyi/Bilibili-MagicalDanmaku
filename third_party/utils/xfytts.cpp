@@ -48,6 +48,7 @@ void XfyTTS::startConnect()
     if (socket)
         return ;
 
+    playing = true;
     socket = new QWebSocket();
     QByteArray* receivedBytes = new QByteArray;
     connect(socket, &QWebSocket::connected, this, [=]{
@@ -210,6 +211,7 @@ void XfyTTS::playFile(QString filePath, bool deleteAfterPlay)
 
             speakNext();
         }
+        playing = false;
     });
     audio->start(inputFile);
 }
@@ -247,4 +249,9 @@ void XfyTTS::setSpeed(int speed)
 void XfyTTS::setVolume(int volume)
 {
     this->volume = volume;
+}
+
+bool XfyTTS::isPlaying() const
+{
+    return playing;
 }

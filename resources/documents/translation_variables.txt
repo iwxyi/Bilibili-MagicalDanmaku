@@ -113,3 +113,4 @@ URL编码的弹幕消息=url_text
 对面也用神奇弹幕=pk_magical_room
 本地模式=local_mode
 重复弹幕10=repeat_10
+正在播放TTS=playing_tts

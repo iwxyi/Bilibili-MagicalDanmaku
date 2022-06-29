@@ -6565,6 +6565,23 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         }
         return "1";
     }
+    else if (key == "playing_tts")
+    {
+        switch (voicePlatform) {
+        case VoiceLocal:
+    #if defined(ENABLE_TEXTTOSPEECH)
+            return (tts && tts->state() == QTextToSpeech::Speaking) ? "1" : "0";
+    #else
+            return "0";
+    #endif
+        case VoiceXfy:
+            return (xfyTTS && xfyTTS->isPlaying()) ? "1" : "0";
+        case VoiceMS:
+            return (msTTS && msTTS->isPlaying()) ? "1" : "0";
+        case VoiceCustom:
+            return (ttsDownloading || (ttsPlayer && ttsPlayer->state() == QMediaPlayer::State::PlayingState)) ? "1" : "0";
+        }
+    }
     else
     {
         *ok = false;

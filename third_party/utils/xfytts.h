@@ -30,6 +30,8 @@ public:
     void setSpeed(int speed);
     void setVolume(int volume);
 
+    bool isPlaying() const;
+
 private:
     void startConnect();
     QString getAuthorization() const;
@@ -58,6 +60,7 @@ private:
 
     QAudioFormat fmt;
     QStringList speakQueue;
+    bool playing = false;
 };
 
 #endif // XFYTTS_H

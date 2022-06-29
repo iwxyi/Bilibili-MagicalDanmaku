@@ -844,6 +844,7 @@ border-image: url(C:/Path/To/Image.png)
 | wait0~wait99     |                   | 等待通道，等同于 `%>wait(X)%`                                |
 | local_mode       | 本地模式          | 是：1，否：0                                                 |
 | repeat_10        | 重复弹幕10        | 最后一条与最近10条弹幕是否重复，是：1，否：0                 |
+| playing_tts      | 播放TTS           | 是否正在朗读弹幕/文字，是：1，否：0                          |
 
 
 

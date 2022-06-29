@@ -46,6 +46,7 @@ void MicrosoftTTS::speakSSML(QString ssml)
 
 void MicrosoftTTS::speakNext()
 {
+    playing = false;
     if (speakQueue.isEmpty())
         return ;
     if (accessToken.isEmpty())
@@ -53,6 +54,8 @@ void MicrosoftTTS::speakNext()
         qWarning() << "MicrosoftTTS not get AccessToken";
         return ;
     }
+
+    playing = true;
     QString ssml = speakQueue.takeFirst();
     // getting = true;
 
@@ -100,7 +103,10 @@ void MicrosoftTTS::speakNext()
     QByteArray ba = reply->readAll();
     reply->deleteLater();
     if (ba.isEmpty())
+    {
+        speakNext();
         return ;
+    }
 
     // 保存文件
     QString filePath = savedDir + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
@@ -118,6 +124,7 @@ void MicrosoftTTS::speakNext()
 
 void MicrosoftTTS::playFile(QString filePath, bool deleteAfterPlay)
 {
+    playing = true;
     QFile *inputFile = new QFile(filePath);
     inputFile->open(QIODevice::ReadOnly);
 
@@ -151,6 +158,11 @@ void MicrosoftTTS::setSubscriptionKey(QString key)
 {
     this->subscriptionKey = key;
     refreshToken();
+}
+
+bool MicrosoftTTS::isPlaying() const
+{
+
 }
 
 void MicrosoftTTS::refreshToken()

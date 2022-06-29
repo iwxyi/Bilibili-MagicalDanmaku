@@ -21,6 +21,7 @@ public:
 
     void setAreaCode(QString area);
     void setSubscriptionKey(QString key);
+    bool isPlaying() const;
 
 signals:
     void signalError(QString err);
@@ -46,6 +47,7 @@ private:
     QTimer* refreshTimer = nullptr; // 刷新token时间
     QTimer* timeoutTimer = nullptr; // 连接超时
     QEventLoop connectLoop;
+    bool playing = false;
 
 };
 
