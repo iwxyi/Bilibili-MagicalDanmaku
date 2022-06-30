@@ -526,7 +526,6 @@ void MainWindow::initStyle()
 void MainWindow::initPath()
 {
     rt->appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
-    qDebug() << rt->appFileName;
     if (rt->appFileName.contains("start"))
         rt->asPlugin = true;
     rt->dataPath = QApplication::applicationDirPath() + "/";
@@ -1511,6 +1510,15 @@ qDebug() << "--------NEW_DAY";
     // 恢复游戏数据
     restoreGameNumbers();
     restoreGameTexts();
+
+    // Lite版
+    if (rt->asPlugin)
+    {
+        ui->droplight->setText("Lite版");
+        ui->label_52->setText("<html><head/><body><p>暂</p><p>且</p><p>留</p><p>空</p></body></html>");
+        ui->vipExtensionButton->setText("Lite版不支持回复、事件等功能");
+        ui->existExtensionsLabel->setText("Lite版不支持插件系统");
+    }
 
     // 回复统计数据
     int appOpenCount = us->value("mainwindow/appOpenCount", 0).toInt();
@@ -21112,6 +21120,12 @@ void MainWindow::on_droplight_clicked()
 
 void MainWindow::on_vipExtensionButton_clicked()
 {
+    if (rt->asPlugin)
+    {
+        QMessageBox::warning(this, "作为插件的Lite版说明", "Lite版不支持部分功能，请前往官网下载完整版");
+        openLink("http://lyixi.com/?type=newsinfo&S_id=126");
+        return ;
+    }
     on_actionBuy_VIP_triggered();
 }
 
@@ -21451,7 +21465,7 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
         us->setValue("mainwindow/permissionText", permissionText = s);
         ui->droplight->setText(permissionText);
         ui->droplight->adjustMinimumSize();
-    })->disable(!hasPermission());
+    })->disable(!hasPermission() && !rt->asPlugin);
 
     menu->exec();
 }
