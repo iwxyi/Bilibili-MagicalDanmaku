@@ -12888,10 +12888,10 @@ void MainWindow::handleMessage(QJsonObject json)
         QString gameCode = data.s("game_code"); // APP_ID，用来判断是不是本应用的
         QString gameId = data.s("game_id"); // 场次ID
 
-        if (liveOpenService && gameCode == snum(liveOpenService->getAppId()))
+        /* if (liveOpenService && gameCode == snum(liveOpenService->getAppId()))
         {
             liveOpenService->startGame(gameId);
-        }
+        } */
     }
     else if (cmd == "LIVE_PANEL_CHANGE") // 直播面板改变，已知开启互动玩法后会触发
     {

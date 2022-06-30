@@ -8,7 +8,7 @@
 #include "bili_api_util.h"
 
 #define LIVE_OPEN_DEB if (1) qDebug()
-#define LIVE_OPEN_SOCKET_DEB if (1) qDebug()
+#define LIVE_OPEN_SOCKET_DEB if (0) qDebug()
 
 class LiveOpenService : public QObject
 {
@@ -29,6 +29,7 @@ public slots:
 
     void startGame(const QString& gameId);
     void connectWS(const QString& url, const QByteArray &authBody);
+    void sendWSHeart();
 
 protected:
     void post(QString url, MyJson json, NetJsonFunc func);

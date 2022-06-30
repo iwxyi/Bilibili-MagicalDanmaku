@@ -39,7 +39,7 @@ void LiveOpenService::start()
         auto data = json.data();
 
         // 游戏（不一定有）
-        auto info = json.o("game_info");
+        auto info = data.o("game_info");
         gameId = info.s("game_id");
         startGame(gameId);
 
@@ -95,6 +95,7 @@ void LiveOpenService::end()
             return ;
         }
         gameId = "";
+        heartTimer->stop();
         qInfo() << "关闭互动玩法";
     });
     heartTimer->stop();
@@ -128,6 +129,11 @@ void LiveOpenService::startGame(const QString &gameId)
         qWarning() << "互动玩法 跳过空白的 game id";
         return ;
     }
+
+    // 已经从返回获取了，就忽略掉
+    if (gameId == this->gameId)
+        return ;
+
     this->gameId = gameId;
     qInfo() << "互动玩法开始，场次ID：" << gameId;
     heartTimer->start();
@@ -156,6 +162,15 @@ void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
     }
 
     websocket->open(url);
+}
+
+void LiveOpenService::sendWSHeart()
+{
+    QByteArray ba;
+    ba.append("[object Object]");
+    ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
+    websocket->sendBinaryMessage(ba);
+    LIVE_OPEN_SOCKET_DEB << "互动玩法发送心跳包：" << ba;
 }
 
 void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
