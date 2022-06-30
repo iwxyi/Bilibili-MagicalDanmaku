@@ -526,6 +526,9 @@ void MainWindow::initStyle()
 void MainWindow::initPath()
 {
     rt->appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
+    qDebug() << rt->appFileName;
+    if (rt->appFileName.contains("start"))
+        rt->asPlugin = true;
     rt->dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -18526,6 +18529,9 @@ void MainWindow::startSplash()
 
 void MainWindow::loadWebExtensionList()
 {
+    if (rt->asPlugin)
+        return ;
+
     // 清空旧的列表
     for (int i = 0; i < ui->extensionListWidget->count(); i++)
     {
@@ -21096,6 +21102,11 @@ void MainWindow::on_actionBuy_VIP_triggered()
 
 void MainWindow::on_droplight_clicked()
 {
+    if (rt->asPlugin)
+    {
+        showNotify("小提示", "右键可以修改文字");
+        return ;
+    }
     on_actionBuy_VIP_triggered();
 }
 

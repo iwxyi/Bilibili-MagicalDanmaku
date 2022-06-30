@@ -28,6 +28,7 @@ class RuntimeInfo
 {
 public:
     LivePlatform livePlatform = Bilibili;
+    bool asPlugin = false;
 
     QHash<QString, QString> pinyinMap; // 拼音
     QList<LiveDanmaku> allDanmakus;
