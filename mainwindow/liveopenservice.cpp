@@ -37,9 +37,18 @@ void LiveOpenService::start()
         }
 
         auto data = json.data();
+
+        // 游戏（不一定有）
         auto info = json.o("game_info");
         gameId = info.s("game_id");
-        started(gameId);
+        startGame(gameId);
+
+        // 长链
+        auto wsInfo = data.o("websocket_info");
+        auto authBody = wsInfo.s("auth_body").toLatin1();
+        auto links = wsInfo.a("wss_link");
+        auto link = links.size() ? links.first().toString() : "";
+        // connectWS(link, authBody);
     });
 
     /* {
@@ -112,7 +121,7 @@ void LiveOpenService::sendHeart()
     });
 }
 
-void LiveOpenService::started(const QString &gameId)
+void LiveOpenService::startGame(const QString &gameId)
 {
     if (gameId.isEmpty())
     {
@@ -124,12 +133,37 @@ void LiveOpenService::started(const QString &gameId)
     heartTimer->start();
 }
 
+void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
+{
+    if (!websocket)
+    {
+        websocket = new QWebSocket;
+
+        connect(websocket, &QWebSocket::connected, this, [=]{
+            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：connected";
+            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：发送认证" << authBody;
+            QByteArray ba = BiliApiUtil::makePack(authBody, OP_AUTH);
+            websocket->sendBinaryMessage(ba);
+        });
+
+        connect(websocket, &QWebSocket::disconnected, this, [=]{
+            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：disconnected";
+        });
+
+        connect(websocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：接收" << message;
+        });
+    }
+
+    websocket->open(url);
+}
+
 void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
 {
     // 秘钥
-    QStringList sl = readTextFile(":/documents/kk").split("\n");
-    const QByteArray accessKeyId = QByteArray::fromBase64(sl.at(0).toLatin1());
-    const QByteArray accessKeySecret = QByteArray::fromBase64(sl.at(1).toLatin1());
+    static QStringList sl = readTextFile(":/documents/kk").split("\n");
+    static const QByteArray accessKeyId = QByteArray::fromBase64(sl.at(0).toLatin1());
+    static const QByteArray accessKeySecret = QByteArray::fromBase64(sl.at(1).toLatin1());
 
     // 变量
     const QByteArray data = json.toBa();
@@ -165,8 +199,7 @@ void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
     QObject::connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray ba = reply->readAll();
         MyJson json(ba);
-        if (LIVE_OPEN_DEB)
-            qInfo() << url << json;
+        LIVE_OPEN_DEB << "互动玩法POST:" << url << json;
         func(json);
 
         manager->deleteLater();

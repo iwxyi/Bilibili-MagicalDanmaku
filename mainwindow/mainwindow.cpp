@@ -33,6 +33,7 @@
 #include "conditionutil.h"
 #include "order_player/roundedpixmaplabel.h"
 #include "string_distance_util.h"
+#include "bili_api_util.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -4345,7 +4346,7 @@ void MainWindow::initWS()
         {
             QByteArray ba;
             ba.append("[object Object]");
-            ba = makePack(ba, HEARTBEAT);
+            ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
             pkSocket->sendBinaryMessage(ba);
         }
 
@@ -4357,7 +4358,7 @@ void MainWindow::initWS()
             {
                 QByteArray ba;
                 ba.append("[object Object]");
-                ba = makePack(ba, HEARTBEAT);
+                ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
                 socket->sendBinaryMessage(ba);
             }
         }
@@ -5285,6 +5286,7 @@ QPixmap MainWindow::toLivingPixmap(QPixmap pixmap) const
 
 /**
  * 这是真正开始连接的
+ * 获取到长链的信息
  */
 void MainWindow::getDanmuInfo()
 {
@@ -5577,66 +5579,11 @@ void MainWindow::startMsgLoop()
     socket->open(host);
 }
 
-/**
- * 给body加上头部信息
-偏移量	长度	类型	含义
-0	4	uint32	封包总大小（头部大小+正文大小）
-4	2	uint16	头部大小（一般为0x0010，16字节）
-6	2	uint16	协议版本:0普通包正文不使用压缩，1心跳及认证包正文不使用压缩，2普通包正文使用zlib压缩
-8	4	uint32	操作码（封包类型）
-12	4	uint32	sequence，可以取常数1
- */
-QByteArray MainWindow::makePack(QByteArray body, qint32 operation)
-{
-    // 因为是大端，所以要一个个复制
-    qint32 totalSize = 16 + body.size();
-    short headerSize = 16;
-    short protover = 1;
-    qint32 seqId = 1;
-
-    auto byte4 = [=](qint32 i) -> QByteArray{
-        QByteArray ba(4, 0);
-        ba[3] = (uchar)(0x000000ff & i);
-        ba[2] = (uchar)((0x0000ff00 & i) >> 8);
-        ba[1] = (uchar)((0x00ff0000 & i) >> 16);
-        ba[0] = (uchar)((0xff000000 & i) >> 24);
-        return ba;
-    };
-
-    auto byte2 = [=](short i) -> QByteArray{
-        QByteArray ba(2, 0);
-        ba[1] = (uchar)(0x00ff & i);
-        ba[0] = (uchar)((0xff00 & i) >> 8);
-        return ba;
-    };
-
-    QByteArray header;
-    header += byte4(totalSize);
-    header += byte2(headerSize);
-    header += byte2(protover);
-    header += byte4(operation);
-    header += byte4(seqId);
-
-    return header + body;
-
-
-    /* // 小端算法，直接上结构体
-    int totalSize = 16 + body.size();
-    short headerSize = 16;
-    short protover = 1;
-    int seqId = 1;
-
-    HeaderStruct header{totalSize, headerSize, protover, operation, seqId};
-
-    QByteArray ba((char*)&header, sizeof(header));
-    return ba + body;*/
-}
-
 void MainWindow::sendVeriPacket(QWebSocket* socket, QString roomId, QString token)
 {
     QByteArray ba;
     ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    ba = makePack(ba, AUTH);
+    ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);
 }
@@ -5648,7 +5595,7 @@ void MainWindow::sendHeartPacket()
 {
     QByteArray ba;
     ba.append("[object Object]");
-    ba = makePack(ba, HEARTBEAT);
+    ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
 //    SOCKET_DEB << "发送心跳包：" << ba;
     socket->sendBinaryMessage(ba);
 }
@@ -10806,14 +10753,14 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     if (error.error == QJsonParseError::NoError)
         json = document.object();
 
-    if (operation == AUTH_REPLY) // 认证包回复
+    if (operation == OP_AUTH_REPLY) // 认证包回复
     {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("认证出错");
         }
     }
-    else if (operation == HEARTBEAT_REPLY) // 心跳包回复（人气值）
+    else if (operation == OP_HEARTBEAT_REPLY) // 心跳包回复（人气值）
     {
         qint32 popularity = ((uchar)body[0] << 24)
                 + ((uchar)body[1] << 16)
@@ -10824,7 +10771,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         if (isLiving())
             ui->popularityLabel->setText(QString::number(popularity));
     }
-    else if (operation == SEND_MSG_REPLY) // 普通包
+    else if (operation == OP_SEND_MSG_REPLY) // 普通包
     {
         QString cmd;
         if (!json.isEmpty())
@@ -12920,8 +12867,7 @@ void MainWindow::handleMessage(QJsonObject json)
     }
     else if (cmd == "LIVE_OPEN_PLATFORM_GAME") // 开启互动玩法
     {
-        if (LIVE_OPEN_DEB)
-            qInfo() << "互动玩法" << json;
+        LIVE_OPEN_DEB << "互动玩法" << json;
         /*{
             "cmd": "LIVE_OPEN_PLATFORM_GAME",
             "data": {
@@ -12944,13 +12890,12 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (liveOpenService && gameCode == snum(liveOpenService->getAppId()))
         {
-            liveOpenService->started(gameId);
+            liveOpenService->startGame(gameId);
         }
     }
     else if (cmd == "LIVE_PANEL_CHANGE") // 直播面板改变，已知开启互动玩法后会触发
     {
-        if (LIVE_OPEN_DEB)
-            qInfo() << "互动玩法" << json;
+        LIVE_OPEN_DEB << "互动玩法" << json;
         /*{
             "cmd": "LIVE_PANEL_CHANGE",
             "data": {
@@ -16628,7 +16573,7 @@ void MainWindow::slotPkBinaryMessageReceived(const QByteArray &message)
     if (error.error == QJsonParseError::NoError)
         json = document.object();
 
-    if (operation == SEND_MSG_REPLY) // 普通包
+    if (operation == OP_SEND_MSG_REPLY) // 普通包
     {
         QString cmd;
         if (!json.isEmpty())

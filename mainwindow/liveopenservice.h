@@ -3,9 +3,12 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QWebSocket>
 #include "netinterface.h"
+#include "bili_api_util.h"
 
-#define LIVE_OPEN_DEB 0
+#define LIVE_OPEN_DEB if (1) qDebug()
+#define LIVE_OPEN_SOCKET_DEB if (1) qDebug()
 
 class LiveOpenService : public QObject
 {
@@ -24,7 +27,8 @@ public slots:
     void end();
     void sendHeart();
 
-    void started(const QString& gameId);
+    void startGame(const QString& gameId);
+    void connectWS(const QString& url, const QByteArray &authBody);
 
 protected:
     void post(QString url, MyJson json, NetJsonFunc func);
@@ -35,6 +39,7 @@ private:
     const qint64 APP_ID = 1658282676661;
     QString gameId;
     QTimer* heartTimer = nullptr;
+    QWebSocket* websocket = nullptr;
 };
 
 #endif // LIVEOPENSERVICE_H
