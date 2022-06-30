@@ -13,7 +13,7 @@ LiveOpenService::LiveOpenService(QObject *parent) : QObject(parent)
 
 qint64 LiveOpenService::getAppId() const
 {
-    return APP_ID;
+    return BILI_APP_ID;
 }
 
 bool LiveOpenService::isPlaying() const
@@ -28,11 +28,11 @@ void LiveOpenService::start()
 
     MyJson json;
     json.insert("code", ac->identityCode); // 主播身份码
-    json.insert("app_id", APP_ID);
-    post(API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+    json.insert("app_id", BILI_APP_ID);
+    post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
         if (json.code() != 0)
         {
-            qCritical() << "互动玩法开启出错：" << json.code() <<json.msg();
+            qCritical() << "互动玩法开启出错：" << json.code() << json.msg();
             return ;
         }
 
@@ -92,9 +92,9 @@ void LiveOpenService::end()
     }
 
     MyJson json;
-    json.insert("app_id", APP_ID);
+    json.insert("app_id", BILI_APP_ID);
     json.insert("game_id", gameId);
-    post(API_DOMAIN + "/v2/app/end", json, [=](MyJson json){
+    post(BILI_API_DOMAIN + "/v2/app/end", json, [=](MyJson json){
         if (json.code() != 0)
         {
             qCritical() << "互动玩法关闭失败：" << json.code() << json.msg() << gameId;
@@ -117,7 +117,7 @@ void LiveOpenService::sendHeart()
 
     MyJson json;
     json.insert("game_id", gameId);
-    post(API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
+    post(BILI_API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
         if (json.code() != 0)
         {
             qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
@@ -167,8 +167,8 @@ void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
 {
     // 秘钥
     static QStringList sl = readTextFile(":/documents/kk").split("\n");
-    static const QByteArray accessKeyId = QByteArray::fromBase64(sl.at(0).toLatin1());
-    static const QByteArray accessKeySecret = QByteArray::fromBase64(sl.at(1).toLatin1());
+    static const QByteArray accessKeyId = sl.size() > 0 ? QByteArray::fromBase64(sl.at(0).toLatin1()) : "";
+    static const QByteArray accessKeySecret = sl.size() > 1 ? QByteArray::fromBase64(sl.at(1).toLatin1()) : "";
 
     // 变量
     const QByteArray data = json.toBa();

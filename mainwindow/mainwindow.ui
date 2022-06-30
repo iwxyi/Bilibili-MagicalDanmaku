@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>839</width>
-    <height>1271</height>
+    <width>833</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -277,7 +277,7 @@
                <set>Qt::AlignCenter</set>
               </property>
               <property name="placeholderText">
-               <string>请输入房间号</string>
+               <string>身份码/房间号</string>
               </property>
              </widget>
             </item>
@@ -1640,8 +1640,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>759</width>
-             <height>1151</height>
+             <width>753</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9017,7 +9017,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>839</width>
+     <width>833</width>
      <height>23</height>
     </rect>
    </property>

@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     initPath();
     readConfig();
     initEvent();
+    initLiveOpenService();
 
 #ifdef Q_OS_ANDROID
     ui->sideBarWidget->hide();
@@ -218,7 +219,7 @@ void MainWindow::initView()
     ui->roomInfoMainWidget->setMinimumSize(ui->roomInfoMainWidget->sizeHint());
 
     // 限制
-    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("[0-9]+$")));
+    ui->roomIdEdit->setValidator(new QRegExpValidator(QRegExp("^\\w+$")));
 
     // 切换房间
     roomSelectorBtn->show();
@@ -3137,12 +3138,10 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "开启互动玩法")
     {
-        initLiveOpenService();
         liveOpenService->start();
     }
     else if (text == "关闭互动玩法")
     {
-        initLiveOpenService();
         liveOpenService->end();
     }
     else
@@ -3177,6 +3176,20 @@ void MainWindow::on_roomIdEdit_editingFinished()
 
     releaseLiveData();
 
+    // 判断是身份码还是房间号
+    bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
+
+    // 先解析身份码
+    if (!isPureRoomId)
+    {
+        ac->identityCode = ac->roomId;
+        ui->identityCodeEdit->setText(ac->identityCode);
+        us->set("live-open/identityCode", ac->identityCode);
+        startConnectIdentityCode();
+        return ;
+    }
+
+    // 直接继续
     emit signalRoomChanged(ac->roomId);
 
     // 开启新的
@@ -4369,6 +4382,28 @@ void MainWindow::initWS()
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         if (isLiving())
             sendXliveHeartBeatX();
+    });
+}
+
+void MainWindow::startConnectIdentityCode()
+{
+    MyJson json;
+    json.insert("code", ac->identityCode); // 主播身份码
+    json.insert("app_id", BILI_APP_ID);
+    liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            qCritical() << "解析身份码出错：" << json.code() << json.msg();
+            return ;
+        }
+
+        auto data = json.data();
+        auto anchor = data.o("anchor_info");
+        qint64 roomId = anchor.l("room_id");
+
+        // 通过房间号连接
+        ui->roomIdEdit->setText(snum(roomId));
+        on_roomIdEdit_editingFinished();
     });
 }
 
@@ -19741,7 +19776,6 @@ void MainWindow::slotStartWork()
     // 开始工作
     if (ui->liveOpenCheck->isChecked())
     {
-        initLiveOpenService();
         liveOpenService->start();
     }
 }
@@ -21779,7 +21813,6 @@ void MainWindow::on_liveOpenCheck_clicked()
     us->set("live-open/enabled", ui->liveOpenCheck->isChecked());
     if (ui->liveOpenCheck->isChecked())
     {
-        initLiveOpenService();
         if (isLiving())
             liveOpenService->start();
     }

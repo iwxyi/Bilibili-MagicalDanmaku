@@ -835,6 +835,7 @@ private:
     void getRobotInfo();
     void getRoomUserInfo();
     void initWS();
+    void startConnectIdentityCode();
     void startConnectRoom();
     void sendXliveHeartBeatE();
     void sendXliveHeartBeatX();

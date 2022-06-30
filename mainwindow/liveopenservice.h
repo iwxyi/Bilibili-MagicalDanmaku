@@ -7,6 +7,9 @@
 #include "netinterface.h"
 #include "bili_api_util.h"
 
+#define BILI_API_DOMAIN QString("https://live-open.biliapi.com")
+#define BILI_APP_ID 1658282676661
+
 #define LIVE_OPEN_DEB if (1) qDebug()
 #define LIVE_OPEN_SOCKET_DEB if (0) qDebug()
 
@@ -30,13 +33,11 @@ public slots:
     void connectWS(const QString& url, const QByteArray &authBody);
     void sendWSHeart();
 
-protected:
+public:
     void post(QString url, MyJson json, NetJsonFunc func);
     bool isValid();
 
 private:
-    const QString API_DOMAIN = "https://live-open.biliapi.com";
-    const qint64 APP_ID = 1658282676661;
     QString gameId;
     QTimer* heartTimer = nullptr;
     QWebSocket* websocket = nullptr;
