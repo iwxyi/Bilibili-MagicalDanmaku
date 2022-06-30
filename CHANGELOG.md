@@ -1,4 +1,4 @@
-### v4.7 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7)
+### v4.7.0 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.0)
 
 - 新增弹幕姬菜单直接任命与取消房管，并显示任命情况
 - 新增任命房管的命令：`appointAdmin(uid)`

@@ -73,6 +73,7 @@ INCLUDEPATH += \
     third_party/linear_check_box/
 
 SOURCES += \
+    mainwindow/liveopenservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
@@ -157,6 +158,7 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    mainwindow/liveopenservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \

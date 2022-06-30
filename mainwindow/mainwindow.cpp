@@ -1446,6 +1446,10 @@ qDebug() << "--------NEW_DAY";
         updatePermission();
     });
 
+    // 互动玩法
+    ui->identityCodeEdit->setText(ac->identityCode = us->value("live-open/identityCode").toString());
+    ui->liveOpenCheck->setChecked(us->value("live-open/enabled").toBool());
+
     // 数据清理
     ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
 
@@ -3129,6 +3133,16 @@ void MainWindow::on_testDanmakuButton_clicked()
                         }\
                     }";
         sendTextToSockets("COMBO_SEND", ba);
+    }
+    else if (text == "开启互动玩法")
+    {
+        initLiveOpenService();
+        liveOpenService->start();
+    }
+    else if (text == "关闭互动玩法")
+    {
+        initLiveOpenService();
+        liveOpenService->end();
     }
     else
     {
@@ -12884,7 +12898,7 @@ void MainWindow::handleMessage(QJsonObject json)
         ui->popularityLabel->setToolTip(textLarge);
         ui->popularityTextLabel->setToolTip(textLarge);
     }
-    else if (cmd == "DANMU_AGGREGATION") // 弹幕居合
+    else if (cmd == "DANMU_AGGREGATION") // 弹幕聚合，就是天选之类的弹幕
     {
         /*{
             "cmd": "DANMU_AGGREGATION",
@@ -12904,9 +12918,53 @@ void MainWindow::handleMessage(QJsonObject json)
         MyJson data = json.value("data").toObject();
         QString msg = data.s("msg");
     }
+    else if (cmd == "LIVE_OPEN_PLATFORM_GAME") // 开启互动玩法
+    {
+        if (LIVE_OPEN_DEB)
+            qInfo() << "互动玩法" << json;
+        /*{
+            "cmd": "LIVE_OPEN_PLATFORM_GAME",
+            "data": {
+                "block_uids": null,
+                "game_code": "1658282676661",
+                "game_conf": "",
+                "game_id": "e40cf1c4-ff25-4f60-90a4-9af24ed221c3",
+                "game_msg": "",
+                "game_name": "神奇弹幕互动版",
+                "game_status": "",
+                "interactive_panel_conf": "",
+                "msg_sub_type": "game_end",
+                "msg_type": "game_end",
+                "timestamp": 0
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        QString gameCode = data.s("game_code"); // APP_ID，用来判断是不是本应用的
+        QString gameId = data.s("game_id"); // 场次ID
+
+        if (liveOpenService && gameCode == snum(liveOpenService->getAppId()))
+        {
+            liveOpenService->started(gameId);
+        }
+    }
+    else if (cmd == "LIVE_PANEL_CHANGE") // 直播面板改变，已知开启互动玩法后会触发
+    {
+        if (LIVE_OPEN_DEB)
+            qInfo() << "互动玩法" << json;
+        /*{
+            "cmd": "LIVE_PANEL_CHANGE",
+            "data": {
+                "scatter": {
+                    "max": 150,
+                    "min": 5
+                },
+                "type": 2
+            }
+        }*/
+    }
     else
     {
-        qWarning() << "未处理的命令：" << cmd << QString(QJsonDocument(json).toJson(QJsonDocument::Compact));
+        qWarning() << "未处理的命令：" << cmd << json;
         triggerCmdEvent(cmd, LiveDanmaku().with(json));
     }
 }
@@ -17181,6 +17239,9 @@ void MainWindow::releaseLiveData(bool prepare)
         pkSocket = nullptr;
     }
 
+    if (liveOpenService)
+        liveOpenService->end();
+
     ui->actionShow_Live_Video->setEnabled(false);
     ui->actionShow_PK_Video->setEnabled(false);
     ui->actionJoin_Battle->setEnabled(false);
@@ -19381,6 +19442,15 @@ QString MainWindow::toRunableCode(QString text) const
     return text.replace("\\%", "%");
 }
 
+void MainWindow::initLiveOpenService()
+{
+    if (liveOpenService)
+        return ;
+
+    // 初始化
+    liveOpenService = new LiveOpenService(this);
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -19722,6 +19792,13 @@ void MainWindow::slotStartWork()
 
     // 云同步
     pullRoomShieldKeyword();
+
+    // 开始工作
+    if (ui->liveOpenCheck->isChecked())
+    {
+        initLiveOpenService();
+        liveOpenService->start();
+    }
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -21750,4 +21827,26 @@ void MainWindow::on_actionShow_Gift_List_triggered()
     // 显示控件
     view->setGeometry(this->geometry());
     view->show();
+}
+
+void MainWindow::on_liveOpenCheck_clicked()
+{
+    us->set("live-open/enabled", ui->liveOpenCheck->isChecked());
+    if (ui->liveOpenCheck->isChecked())
+    {
+        initLiveOpenService();
+        if (isLiving())
+            liveOpenService->start();
+    }
+    else
+    {
+        if (liveOpenService)
+            liveOpenService->end();
+    }
+}
+
+void MainWindow::on_identityCodeEdit_editingFinished()
+{
+    ac->identityCode = ui->identityCodeEdit->text();
+    us->set("live-open/identityCode", ac->identityCode);
 }

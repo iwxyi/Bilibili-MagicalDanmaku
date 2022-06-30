@@ -51,6 +51,7 @@
 #include "appendbutton.h"
 #include "waterzoombutton.h"
 #include "tipbox.h"
+#include "liveopenservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -803,6 +804,10 @@ private slots:
 
     void on_actionShow_Gift_List_triggered();
 
+    void on_liveOpenCheck_clicked();
+
+    void on_identityCodeEdit_editingFinished();
+
 private:
     void initView();
     void initStyle();
@@ -1086,6 +1091,8 @@ private:
     QString toSingleLine(QString text) const;
     QString toMultiLine(QString text) const;
     QString toRunableCode(QString text) const;
+
+    void initLiveOpenService();
 
 private:
     // 应用信息
@@ -1403,6 +1410,9 @@ private:
     bool _loadingOldDanmakus = false;
     short _hasPositiveVote = 0; // 是否好评，0未知，1好评，-1未好评
     int _fanfanLikeCount = 0; // 饭贩好评数量
+
+    // 互动
+    LiveOpenService* liveOpenService = nullptr;
 };
 
 class RequestBodyHelper : public QObject

@@ -40,7 +40,8 @@ public:
 
     // 主播信息
     QString upUid; // 主播的UID
-    QString upName;
+    QString upName; // 主播昵称
+    QString identityCode; // 身份码，获取一次应用后才有
     int anchorLiveLevel = 0; // 主播等级
     qint64 anchorLiveScore = 0; // 主播积分（金瓜子）
     qint64 anchorUpgradeScore = 0; // 升级剩余积分
