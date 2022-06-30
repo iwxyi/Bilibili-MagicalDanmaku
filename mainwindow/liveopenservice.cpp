@@ -41,14 +41,20 @@ void LiveOpenService::start()
         // 游戏（不一定有）
         auto info = data.o("game_info");
         gameId = info.s("game_id");
-        startGame(gameId);
+        if (gameId.isEmpty())
+        {
+            qWarning() << "互动玩法 跳过空白的 game id";
+            return ;
+        }
+        qInfo() << "互动玩法开始，场次ID：" << gameId;
+        heartTimer->start();
 
         // 长链
-        auto wsInfo = data.o("websocket_info");
+        /* auto wsInfo = data.o("websocket_info");
         auto authBody = wsInfo.s("auth_body").toLatin1();
         auto links = wsInfo.a("wss_link");
         auto link = links.size() ? links.first().toString() : "";
-        // connectWS(link, authBody);
+        connectWS(link, authBody); */
     });
 
     /* {
@@ -98,7 +104,6 @@ void LiveOpenService::end()
         heartTimer->stop();
         qInfo() << "关闭互动玩法";
     });
-    heartTimer->stop();
 }
 
 void LiveOpenService::sendHeart()
@@ -116,27 +121,12 @@ void LiveOpenService::sendHeart()
         if (json.code() != 0)
         {
             qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
+            if (json.code() == 7003) // 心跳过期或者gameId出错，都没必要继续了
+                heartTimer->stop();
             return ;
         }
         qInfo() << "互动玩法：心跳发送成功";
     });
-}
-
-void LiveOpenService::startGame(const QString &gameId)
-{
-    if (gameId.isEmpty())
-    {
-        qWarning() << "互动玩法 跳过空白的 game id";
-        return ;
-    }
-
-    // 已经从返回获取了，就忽略掉
-    if (gameId == this->gameId)
-        return ;
-
-    this->gameId = gameId;
-    qInfo() << "互动玩法开始，场次ID：" << gameId;
-    heartTimer->start();
 }
 
 void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)

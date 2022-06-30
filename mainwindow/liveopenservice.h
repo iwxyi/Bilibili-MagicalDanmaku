@@ -27,7 +27,6 @@ public slots:
     void end();
     void sendHeart();
 
-    void startGame(const QString& gameId);
     void connectWS(const QString& url, const QByteArray &authBody);
     void sendWSHeart();
 
