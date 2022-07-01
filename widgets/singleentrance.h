@@ -16,6 +16,7 @@ public:
     virtual ~SingleEntrance();
 
     void setRoomId(QString roomId);
+    void setRoomName(QString roomName);
     void setRobotName(QString name);
 
 signals:

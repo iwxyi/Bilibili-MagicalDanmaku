@@ -33,6 +33,7 @@ void LiveOpenService::start()
         if (json.code() != 0)
         {
             qCritical() << "互动玩法开启出错：" << json.code() << json.msg();
+            emit signalStart(false);
             return ;
         }
 
@@ -44,10 +45,12 @@ void LiveOpenService::start()
         if (gameId.isEmpty())
         {
             qWarning() << "互动玩法 跳过空白的 game id";
+            emit signalStart(false);
             return ;
         }
         qInfo() << "互动玩法开始，场次ID：" << gameId;
         heartTimer->start();
+        emit signalStart(true);
 
         // 长链
         /* auto wsInfo = data.o("websocket_info");
@@ -98,11 +101,13 @@ void LiveOpenService::end()
         if (json.code() != 0)
         {
             qCritical() << "互动玩法关闭失败：" << json.code() << json.msg() << gameId;
+            emit signalEnd(false);
             return ;
         }
         gameId = "";
         heartTimer->stop();
         qInfo() << "关闭互动玩法";
+        emit signalEnd(true);
     });
 }
 

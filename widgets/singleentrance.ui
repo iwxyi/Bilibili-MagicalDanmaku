@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>510</width>
-    <height>369</height>
+    <width>518</width>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
 	background: white;
 }</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,1">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0">
      <item>
@@ -32,7 +32,7 @@
      <item>
       <widget class="QLineEdit" name="lineEdit">
        <property name="placeholderText">
-        <string>请输入身份码/房间号</string>
+        <string>请输入身份码</string>
        </property>
       </widget>
      </item>
@@ -46,7 +46,28 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>直播间</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>尚未连接</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0">
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -61,12 +82,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_2">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-       <property name="placeholderText">
-        <string>请点击右边登录</string>
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>尚未登录</string>
        </property>
       </widget>
      </item>

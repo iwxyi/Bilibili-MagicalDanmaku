@@ -20,9 +20,14 @@ void SingleEntrance::setRoomId(QString roomId)
     ui->lineEdit->setText(roomId);
 }
 
+void SingleEntrance::setRoomName(QString roomName)
+{
+    ui->label_6->setText(roomName);
+}
+
 void SingleEntrance::setRobotName(QString name)
 {
-    ui->lineEdit_2->setText(name);
+    ui->label_7->setText(name);
 }
 
 void SingleEntrance::on_pushButton_clicked()

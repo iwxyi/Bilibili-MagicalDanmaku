@@ -492,16 +492,8 @@ void MainWindow::initView()
     ui->eternalBlockListButton->setBgColor(Qt::white);
     ui->eternalBlockListButton->setRadius(rt->fluentRadius);
 
-    // 通知
-    tip_box = new TipBox(this);
-    connect(tip_box, &TipBox::signalCardClicked, [=](NotificationEntry* n){
-        qInfo() << "卡片点击：" << n->toString();
-    });
-    connect(tip_box, &TipBox::signalBtnClicked, [=](NotificationEntry* n){
-        qInfo() << "卡片按钮点击：" << n->toString();
-    });
-
 #ifdef ZUOQI_ENTRANCE
+    // 坐骑
     fakeEntrance = new SingleEntrance(this);
     fakeEntrance->setGeometry(this->rect());
     connect(fakeEntrance, &SingleEntrance::signalRoomIdChanged, this, [=](QString roomId){
@@ -517,7 +509,18 @@ void MainWindow::initView()
         on_robotNameButton_clicked();
     });
     this->setWindowTitle("进场坐骑系统");
+    if (!ac->identityCode.isEmpty())
+        fakeEntrance->setRoomId(ac->identityCode);
 #endif
+
+    // 通知
+    tip_box = new TipBox(this);
+    connect(tip_box, &TipBox::signalCardClicked, [=](NotificationEntry* n){
+        qInfo() << "卡片点击：" << n->toString();
+    });
+    connect(tip_box, &TipBox::signalBtnClicked, [=](NotificationEntry* n){
+        qInfo() << "卡片按钮点击：" << n->toString();
+    });
 }
 
 void MainWindow::initStyle()
@@ -651,7 +654,7 @@ void MainWindow::readConfig()
     {
         ui->roomIdEdit->setText(ac->roomId);
 #ifdef ZUOQI_ENTRANCE
-        fakeEntrance->setRoomId(ac->roomId);
+        fakeEntrance->setRoomId(ac->identityCode);
 #endif
     }
     else // 设置为默认界面
@@ -1907,7 +1910,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     us->sync();
 
 #if defined(ENABLE_TRAY)
-
     if (!tray->isVisible())
     {
         qApp->quit();
@@ -2149,6 +2151,9 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
         showError("未设置Cookie信息");
+#ifdef ZUOQI_ENTRANCE
+        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
+#endif
         return ;
     }
     if (msg.isEmpty() || roomId.isEmpty())
@@ -4452,7 +4457,7 @@ void MainWindow::startConnectIdentityCode()
     liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
         if (json.code() != 0)
         {
-            qCritical() << "解析身份码出错：" << json.code() << json.msg();
+            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
             return ;
         }
 
@@ -4470,6 +4475,16 @@ void MainWindow::startConnectRoom()
 {
     if (ac->roomId.isEmpty())
         return ;
+
+    // 判断是身份码还是房间号
+    bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
+    if (!isPureRoomId)
+    {
+        QTimer::singleShot(100, [=]{
+            startConnectIdentityCode();
+        });
+        return ;
+    }
 
     // 初始化主播数据
     ac->currentFans = 0;
@@ -4720,6 +4735,9 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
             tray->setToolTip(ac->roomTitle + " - " + ac->upName);
             if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
                 ui->roomNameLabel->setText(ac->roomTitle);
+#ifdef ZUOQI_ENTRANCE
+            fakeEntrance->setRoomName(ac->roomTitle);
+#endif
             ui->upNameLabel->setText(ac->upName);
             ac->roomNews = dataObj.value("news_info").toObject().value("content").toString();
 
@@ -17278,8 +17296,15 @@ void MainWindow::releaseLiveData(bool prepare)
         pkSocket = nullptr;
     }
 
-    if (liveOpenService)
-        liveOpenService->endIfStarted();
+    // 结束游戏
+    if (liveOpenService->isPlaying())
+    {
+        qInfo() << "退出前结束互动玩法...";
+        QEventLoop loop;
+        connect(liveOpenService, SIGNAL(signalEnd(bool)), &loop, SLOT(quit()));
+        liveOpenService->end();
+        loop.exec();
+    }
 
     ui->actionShow_Live_Video->setEnabled(false);
     ui->actionShow_PK_Video->setEnabled(false);
@@ -17973,6 +17998,9 @@ void MainWindow::myLiveSetTitle(QString newTitle)
             return showError(json.msg());
         ac->roomTitle = newTitle;
         ui->roomNameLabel->setText(newTitle);
+#ifdef ZUOQI_ENTRANCE
+        fakeEntrance->setRoomName(newTitle);
+#endif
     });
 }
 
