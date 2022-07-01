@@ -2177,6 +2177,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         if (!errorMsg.isEmpty())
         {
             showError("发送弹幕失败", errorMsg);
+            qWarning() << msg;
             localNotify(errorMsg + " -> " + msg);
 
             if (!ui->retryFailedDanmuCheck->isChecked())
@@ -6022,7 +6023,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
 
         // 进行数学计算的变量
         if (!ui->complexCalcCheck->isChecked())
-            re = QRegularExpression("%\\[([\\d\\+\\-\\*/% \\(\\)]+)\\]%"); // 纯数字+运算符+括号
+            re = QRegularExpression("%\\[([\\d\\+\\-\\*/% \\(\\)]*?)\\]%"); // 纯数字+运算符+括号
         else
             re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%"); // 允许里面带点字母，用来扩展函数
         while (msg.indexOf(re, 0, &match) > -1)
@@ -17278,7 +17279,7 @@ void MainWindow::releaseLiveData(bool prepare)
     }
 
     if (liveOpenService)
-        liveOpenService->end();
+        liveOpenService->endIfStarted();
 
     ui->actionShow_Live_Video->setEnabled(false);
     ui->actionShow_PK_Video->setEnabled(false);
@@ -21891,7 +21892,7 @@ void MainWindow::on_liveOpenCheck_clicked()
     else
     {
         if (liveOpenService)
-            liveOpenService->end();
+            liveOpenService->endIfStarted();
     }
 }
 

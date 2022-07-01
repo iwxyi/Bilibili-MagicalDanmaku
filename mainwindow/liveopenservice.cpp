@@ -129,6 +129,12 @@ void LiveOpenService::sendHeart()
     });
 }
 
+void LiveOpenService::endIfStarted()
+{
+    if (isPlaying())
+        end();
+}
+
 void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
 {
     if (!websocket)

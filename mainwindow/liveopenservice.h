@@ -29,6 +29,7 @@ public slots:
     void start();
     void end();
     void sendHeart();
+    void endIfStarted();
 
     void connectWS(const QString& url, const QByteArray &authBody);
     void sendWSHeart();
