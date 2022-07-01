@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SingleEntrance</class>
+ <widget class="QWidget" name="SingleEntrance">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>510</width>
+    <height>369</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#SingleEntrance
+{
+	background: white;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,1">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,0">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>身份码</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="placeholderText">
+        <string>请输入身份码/房间号</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>连接</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>机器人</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEdit_2">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="placeholderText">
+        <string>请点击右边登录</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="text">
+        <string>登录</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>内置“进场坐骑系统”的神奇弹幕互动版，抽到坐骑的观众在进入直播间时享有专属欢迎语。
+通过发送弹幕，抽取坐骑/食物/表情/动作，可保留或再次抽取。
+机器人欢迎语句由大众的“欢迎xxx”变为“xxx骑着xxx快乐地进入直播间”。</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>每次抽取均需要10000积分，打卡签到、送礼物可获得积分，1电池=1000积分。
+这些功能均可以在“扩展”中打开与关闭，或者单独开关与修改。
+
+以下为弹幕命令：
+打卡/签到：每天打卡
+打卡查询：查看自己的打卡状态
+积分查询：查看自己当前的积分
+坐骑：查看坐骑命令功能菜单
+抽坐骑/抽食物/抽表情/抽动作：消耗积分随机抽取一项
+我的坐骑：查看现在的坐骑
+坐骑效果：预览进入直播间的弹幕
+不要坐骑/吃掉食物：取消坐骑，恢复默认的欢迎语
+积分查询：查看现在的积分
+
+关于坐骑/食物的共存：
+一共三项属性：坐骑、动作、表情。
+“抽坐骑”后，默认动作会变为“骑着”；抽食物会覆盖掉坐骑；抽动作会覆盖掉“骑着”。</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

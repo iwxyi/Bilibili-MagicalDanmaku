@@ -5,55 +5,127 @@
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "别这么热情",
-            "reply": "/// 关闭自己的自动欢迎\n>ignoreWelcome(%uid%)\\n>已关闭您的自动欢迎"
+            "reply": "/// <关闭自己的自动欢迎>\n>ignoreWelcome(%uid%)\\n>已关闭您的自动欢迎"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^请?叫我\\s+(.*)$",
-            "reply": "/// 设置自己专属昵称：叫我 小明\n>setNickname(%uid%, %$1%)\\n>设置您的专属昵称为：%$1%"
+            "reply": "/// <设置自己专属昵称> 叫我 小明\n>setNickname(%uid%, %$1%)\\n>设置您的专属昵称为：%$1%"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "叫\\s+(\\S+)\\s+(.*)",
-            "reply": "/// 房管修改别人的专属昵称：叫张三 小张\n[%admin%]>setNickname(%(%$1%)%, %$2%)\\n>修改专属昵称成功"
+            "reply": "/// <房管修改别人专属昵称>：叫张三 小张\n[%admin%]>setNickname(%(%$1%)%, %$2%)\\n>修改专属昵称成功"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^(签到|打卡)$",
-            "reply": "/// 记录每位用户是第几个打卡以及累计天数\n/// 若要使用，事件中的“NEW_DAY_FIRST”也需开启\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+1000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
+            "reply": "///<打卡·弹幕打卡> 记录每位用户是第几个打卡以及累计天数\n/// 若要使用，事件中的“NEW_DAY_FIRST”也需开启\n[%{daka_today_%uid%}%]*>您已打过卡\n[%living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，累计%[%{daka_sum_%uid%}%]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+1000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^(查询(打卡|签到)|(打卡|签到)查询)$",
-            "reply": "[%living%+1]>连续%[%{daka_keep_%uid%}%]%天，本月%[%{daka_month_%uid%}%]%天，累计%[%{daka_sum_%uid%}%]%天"
+            "reply": "/// <打卡·打卡查询>\n[%living%+1]>连续%[%{daka_keep_%uid%}%]%天，本月%[%{daka_month_%uid%}%]%天，累计%[%{daka_sum_%uid%}%]%天"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^查询积分|积分查询|我的积分|积分$",
-            "reply": "[%living%+1]>您的积分：%[%{integral_%uid%}%+0]%"
+            "reply": "/// <打卡·积分查询>\n[%living%+1]>您的积分：%[%{integral_%uid%}%+0]%"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "开启礼物打卡",
-            "reply": "[%{daka_today_%uid%}%!=1]>setValue(daka_auto_%uid%, 1)\\n>开启赠送礼物打卡\n[%{daka_today_%uid%}%=1]>您已开启赠送礼物自动打卡"
+            "reply": "/// <打卡·开启礼物打卡>开启后，每天第一次赠送礼物则等同于弹幕打卡\n[%{daka_today_%uid%}%!=1]>setValue(daka_auto_%uid%, 1)\\n>开启赠送礼物打卡\n[%{daka_today_%uid%}%=1]>您已开启赠送礼物自动打卡"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "关闭礼物打卡",
-            "reply": "[%{daka_auto_%uid%}%=1]>setValue(daka_auto_%uid%, 0)\\n>关闭赠送礼物打卡\n[%{daka_auto_%uid%}%!=1]>您未开启赠送礼物自动打卡"
+            "reply": "/// <打卡·关闭礼物打卡>\n[%{daka_auto_%uid%}%=1]>setValue(daka_auto_%uid%, 0)\\n>关闭赠送礼物打卡\n[%{daka_auto_%uid%}%!=1]>您未开启赠送礼物自动打卡"
         },
         {
             "anchor_key": "神奇弹幕:AutoReply",
             "enabled": false,
             "key": "^切歌$",
-            "reply": "/// 弹幕切歌\n[%admin%]*>cutOrderSong() // 房管可以切所有人的歌\n>cutOrderSong(%username%) // 普通用户只能切自己点的歌"
+            "reply": "/// <点歌·弹幕切歌>\n[%admin%]*>cutOrderSong() // 房管可以切所有人的歌\n>cutOrderSong(%username%) // 普通用户只能切自己点的歌"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^坐骑$",
+            "reply": "/// <坐骑·显示坐骑命令>\n[%living%+1]抽坐骑/抽动作/抽食物/抽表情/放生坐骑"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^抽坐骑$",
+            "reply": "/// <坐骑·抽坐骑>通过弹幕随机抽取一个坐骑\n// [\"%text%\" != \"\"]*** // 后期禁止弹幕抽坐骑，只允许送礼物抽取\n[%living%+1, %{integral_%uid%}%<10000]*积分不足一万，签到、送礼可获得积分\n[%random100%<2]>triggerReply(_抽到坐骑(%uid%, 龙, %ai_name%))\n[%random100%>=2, %random100%<4]>triggerReply(_抽到坐骑(%uid%, 赤兔马, %ai_name%, 恭喜))\n[%random100%>=4, %random100%<6]>triggerReply(_抽到坐骑(%uid%, 老虎, %ai_name%, 恭喜))\n[%random100%>=7, %random100%<8]>triggerReply(_抽到坐骑(%uid%, 猛龙, %ai_name%, 恭喜))\n[%random100%>=8, %random100%<9]>triggerReply(_抽到坐骑(%uid%, 巨象, %ai_name%, 恭喜))\n[%random100%>=9, %random100%<10]>triggerReply(_抽到坐骑(%uid%, 乘黄, %ai_name%, 恭喜))\n[%random100%>=10, %random100%<11]>triggerReply(_抽到坐骑(%uid%, 霸下, %ai_name%, 恭喜))\n[%random100%>=11, %random100%<12]>triggerReply(_抽到坐骑(%uid%, 食铁兽, %ai_name%, 恭喜))\n[%random100%>=12, %random100%<13]>triggerReply(_抽到坐骑(%uid%, 开明兽, %ai_name%, 恭喜))\n[%random100%>=13, %random100%<14]>triggerReply(_抽到坐骑(%uid%, 青鸾, %ai_name%, 恭喜))\n[%random100%>=14, %random100%<15]>triggerReply(_抽到坐骑(%uid%, 白螭, %ai_name%, 恭喜))\n[%random100%>=15, %random100%<20]>triggerReply(_抽到坐骑(%uid%, 汗血宝马, %ai_name%, 恭喜))\n[%random100%>=20, %random100%<40]>很遗憾，没抽中，请再接再厉！\\n>setValue(integral_%uid%, %[%{integral_%uid%}%-10000]%)\n[%random100%>=40, %random100%<44]>triggerReply(_抽到坐骑(%uid%,陆行鸟, %ai_name%, ))\n[%random100%>=44, %random100%<50]>triggerReply(_抽到坐骑(%uid%, 骡子, %ai_name%, ))\n[%random100%>=50, %random100%<60]>triggerReply(_抽到坐骑(%uid%, 马, %ai_name%, ))\n[%random100%>=60, %random100%<70]>triggerReply(_抽到坐骑(%uid%,山羊, %ai_name%, ))\n[%random100%>=70, %random100%<80]>triggerReply(_抽到坐骑(%uid%, 猪, %ai_name%, ))\n[%random100%>=80, %random100%<=100]>triggerReply(_抽到坐骑(%uid%, 驴, %ai_name%, ))"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^抽食物$",
+            "reply": "/// <坐骑·抽食物>随机抽取一个食物，会覆盖坐骑\n[%living%+1, %{integral_%uid%}%<10000]*积分不足一万，签到、送礼可获得积分\n>triggerReply(_抽到食物(%uid%, 巨胜奴, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 婆罗门轻高面, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 汉宫棋, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 长生粥, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 甜雪, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 单笼金乳酥, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 曼陀样夹饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 通花软牛肠, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 光明虾炙, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 白龙曜, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 羊皮花丝, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 雪婴儿, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 仙人脔, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 小天酥, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 箸头春, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 过门香, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 啤酒鸭, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 水牛花粑粑, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 紫苏, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 释迦, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 水信玄饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 樱饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 姑娘果, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 芥末, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 秋刀鱼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 雪媚娘, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 桃酥, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 云吞, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 玛奇朵, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 天妇罗, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 杨枝甘露, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 仰望星空派, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 相思豆, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 虞美人, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 恋爱豆腐果, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 甜爱豆沙窝, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 美味小河魚, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 桂花馍, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 状元腊鹅, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 薄饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 冰棍, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 冰沙, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 布丁, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 草饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 草莓, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 肠粉, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 陈皮, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 春卷, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 脆饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 蛋花, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 蛋挞, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 蛋筒, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 豆奶, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 粉果, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 橄榄, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 果冻, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 红豆, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 话梅, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 焦糖, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 可可, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 麦豆, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 米饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 摩卡, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 抹茶, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 慕斯, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 拿铁, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶茶, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶酪, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶绿, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶糖, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶昔, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 奶油, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 年糕, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 牛奶, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 糯米, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 刨冰, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 泡芙, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 苹果, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 起司, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 切糕, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 曲奇, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 肉松, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 软糖, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 山楂, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 圣代, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 寿司, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 松露, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 苏打, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 酥糖, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 糖豆, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 糖果, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 桃酥, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 桃子, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 吐司, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 丸子, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 西瓜, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 虾饺, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 馅饼, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 雪糕, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 羊羹, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 洋芋, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 椰蓉, %ai_name%))\n>triggerReply(_抽到食物(%uid%, 芝士, %ai_name%))\n>很遗憾，没抽中，请再接再厉！\\n>setValue(integral_%uid%, %[%{integral_%uid%}%-10000]%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^抽动作$",
+            "reply": "/// <坐骑·抽动作>坐骑、食物的动作，进行混搭\n[%living%+1, %{integral_%uid%}%<10000]*积分不足一万，签到、送礼可获得积分\n>triggerReply(_抽到动作(%uid%, 骑着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 抱着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 顶着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 扛着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 拎着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 背着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 嘬着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 抱着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 挑着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 推着, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 拾起, %ai_name%))\n>triggerReply(_抽到动作(%uid%, 举着, %ai_name%))\n>很遗憾，没抽中，请再接再厉！\\n>setValue(integral_%uid%, %[%{integral_%uid%}%-10000]%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^抽表情$",
+            "reply": "/// <坐骑·抽表情>随机抽一个表情，可与坐骑动作兼容\n[%living%+1, %{integral_%uid%}%<10000]*积分不足一万，签到、送礼可获得积分\n>triggerReply(_抽到表情(%uid%, 哭着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 笑着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 跪着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 趴着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 偷偷, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 悄悄, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 躺着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 奶凶地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 傻傻的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 蹦蹦跳跳地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 蹦跶着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 开心的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 高兴的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 含着泪水, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 凶巴巴地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 怡怡然, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 阔步, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 踉跄地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 一溜烟儿, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 从容, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 仰天大笑, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 激动地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 甜丝丝的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 乐呵呵的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 悠哉悠哉地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 乐不开支地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 激动不已地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 心满意足地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 颓丧地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 脸色铁青地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 消沉的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 麻木的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 落魄地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 寂寞的, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 自责地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 愧疚地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 悲恸地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 苦笑着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 惆怅着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 揪心地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 朝思暮想地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 思慕地, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 心心念念着, %ai_name%))\n>triggerReply(_抽到表情(%uid%, 满面春风地, %ai_name%))\n>很遗憾，没抽中，请再接再厉！\\n>setValue(integral_%uid%, %[%{integral_%uid%}%-10000]%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^_抽到坐骑\\((\\d+),\\s*(.+?),\\s*(.+),\\s*(.*?)\\)$",
+            "reply": "/// <坐骑·抽到坐骑>\n[%living%+1]>%$4%%$3%抽到了：%$2%\\n\\\n\t>setValue(integral_%$1%, %[%{integral_%$1%}%-10000]%)\\n\\\n\t>setValue(mount_%$1%, %$2%)\\n\\\n\t>setValue(action_%$1%, 骑着)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^_抽到食物\\((\\d+),\\s*(.+?),\\s*(.+)\\)$",
+            "reply": "/// <坐骑·抽到食物>\n[%living%+1]>恭喜%$3%抽到了：%$2%\\n\\\n\t>setValue(integral_%$1%, %[%{integral_%$1%}%-10000]%)\\n\\\n\t>setValue(mount_%$1%, %$2%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^_抽到动作\\((\\d+),\\s*(.+?),\\s*(.+)\\)$",
+            "reply": "/// <坐骑·抽到动作>\n[%living%+1]>恭喜%$3%抽到了：%$2%\\n\\\n\t>setValue(integral_%$1%, %[%{integral_%$1%}%-10000]%)\\n\\\n\t>setValue(action_%$1%, %$2%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^_抽到表情\\((\\d+),\\s*(.+?),\\s*(.+)\\)$",
+            "reply": "/// <坐骑·抽到表情>\n[%living%+1]>恭喜%$3%抽到了：%$2%\\n\\\n\t>setValue(integral_%$1%, %[%{integral_%$1%}%-10000]%)\\n\\\n\t>setValue(face_%$1%, %$2%)"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^我的(坐骑|食物)$",
+            "reply": "/// <坐骑·我的坐骑>\n[%{mount_%uid%}%]*>%ai_name%的%$1%：%{mount_%uid%}%\n[%living%+1]>您还没有%$1%"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^(不要|放生|吃掉|恰掉)(坐骑|食物)$",
+            "reply": "/// <坐骑·放弃坐骑>\n[%living%+1]>已%$1%您的%$2%%{mount_%uid%}%\\n>setValue(mount_%uid%, )\\n>setValue(action_%uid%, )\n[!%{mount_%uid%}%]*>您还没有%$2%"
+        },
+        {
+            "anchor_key": "神奇弹幕:AutoReply",
+            "enabled": true,
+            "key": "^(坐骑|食物|表情)(特效|效果)$",
+            "reply": "/// <坐骑·效果预览>\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进来\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进入\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进入直播间\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%光临\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%来临\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进来\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进入\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进入直播间\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%光临\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%来临\n[%living%+1]%ai_name%进入了直播间"
         }
     ],
     "block_keys": "",
@@ -61,142 +133,148 @@
     "block_tip": "",
     "event_action": [
         {
-            "action": "/// 感谢用户分享直播间\n感谢%ai_name%分享%up_name%的直播间！",
+            "action": "/// <感谢用户分享直播间>\n感谢%ai_name%分享%up_name%的直播间！",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "SHARE"
         },
         {
-            "action": "/// 大乱斗最佳助攻：胜利并且超过1000积分\n[%level%>0, %gift_coin% >= 1000]感谢本场最佳助攻：%ai_name%\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%帮%up_name%打大乱斗！\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%的最佳助攻！",
+            "action": "/// <大乱斗·最佳助攻答谢>胜利并且超过1000积分\n[%level%>0, %gift_coin% >= 1000]感谢本场最佳助攻：%ai_name%\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%帮%up_name%打大乱斗！\n[%level%>0, %gift_coin% >= 1000]感谢%ai_name%的最佳助攻！",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_BEST_UNAME"
         },
         {
-            "action": "/// （点歌姬）点歌未戴粉丝牌\n(cd35:300)戴粉丝勋章才能点歌\n(cd35:300)点歌戴粉丝牌！丝牌！牌！重要的事情说三遍\n(cd35:300)点歌未戴粉丝勋章",
+            "action": "/// <点歌·未戴粉丝牌>\n(cd35:300)戴粉丝勋章才能点歌\n(cd35:300)点歌戴粉丝牌！丝牌！牌！重要的事情说三遍\n(cd35:300)点歌未戴粉丝勋章",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "ORDER_SONG_NO_MEDAL"
         },
         {
-            "action": "/// （点歌姬）赠送一个喵娘点歌优先播放\n[%gift_name%=喵娘]>improveSongOrder(%username%, 99)",
+            "action": "/// <点歌·送礼物优先点歌>赠送一个喵娘点歌优先播放\n[%gift_name%=喵娘]>improveSongOrder(%username%, 99)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "SEND_GIFT"
         },
         {
-            "action": "/// 送礼物后恭喜勋章升级\n[%medal_level%>=5]恭喜%ai_name%勋章升级至%medal_level%~",
+            "action": "/// <勋章升级>送礼物后恭喜勋章升级\n[%medal_level%>=5]恭喜%ai_name%勋章升级至%medal_level%~",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "MEDAL_UPGRADE"
         },
         {
-            "action": "/// 重置每天打卡的人数\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡",
+            "action": "/// <打卡·重置每天打卡人数>\n[%living%+1]>setValue(daka, 0)\\n\\ // 重置今日打卡人数\n\t>removeValuesIf(^daka_keep_(\\d+)$, [!_{daka_today__$1_}_])\\n\\ // 未连续签到断开\n\t>removeValues(daka_today_\\d+) // 重置每人是否打卡",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "NEW_DAY_FIRST"
         },
         {
-            "action": "/// 重置每月打卡天数\n[%living%+1]>setValues(daka_month_\\d+, 0)",
+            "action": "/// <打卡·重置每月打卡天数>\n[%living%+1]>setValues(daka_month_\\d+, 0)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "NEW_MONTH_FIRST"
         },
         {
-            "action": "/// 开播QQ群通知（需配置），详见文档\n>connectNet(https://push.xuthus.cc/group/[skey]?c=[开播消息])",
+            "action": "/// <开播接口>开播QQ群通知（需配置），详见文档\n>connectNet(https://push.xuthus.cc/group/[skey]?c=[开播消息])",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "LIVE"
         },
         {
-            "action": "/// 第一次上船，发送私信\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)",
+            "action": "/// <初次上舰发送私信>\n>sendPrivateMsg(%uid%, 感谢开通大航海，可加入粉丝群：xxx)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "FIRST_GUARD"
         },
         {
-            "action": "/// 有人上船播放声音（需自己找声音文件）\n>playSound([音频文件路径])",
+            "action": "/// <上舰·播放声音>需自己找声音文件\n>playSound([音频文件路径])",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "GUARD_BUY"
         },
         {
-            "action": "/// （主播号专用）循环开启大乱斗，需Web版开播\n>timerShot(5000, >joinBattle(1))",
+            "action": "/// <大乱斗·循环开启>，需Web版开播（主播专用）\n>timerShot(5000, >joinBattle(1))",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_BATTLE_SETTLE"
         },
         {
-            "action": "/// （非主播可用）大乱斗尊严票：被碾压时送个吃瓜……\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
+            "action": "/// <大乱斗·尊严票>：被碾压时送个吃瓜……（非主播可用）\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_FINAL"
         },
         {
-            "action": "/// 大乱斗对面主播来串门，自己也过去\n[%pking%, %uid%=%pk_uid%]>sendRoomMsg(%pk_room_id%, 我也来串门啦~)",
+            "action": "/// <大乱斗·对面主播来串门发送弹幕>\n[%pking%, %uid%=%pk_uid%]>sendRoomMsg(%pk_room_id%, 我也来串门啦~)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "INTERACT_WORD"
         },
         {
-            "action": "/// 初次点歌后立即切歌播放\n[\"%playing_song%\" != \"\", \"%song_order_uname%\" = \"\"]>cutOrderSong()",
+            "action": "/// <点歌·空闲播放时点歌立即切歌>\n[\"%playing_song%\" != \"\", \"%song_order_uname%\" = \"\"]>cutOrderSong()",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "ORDER_SONG_SUCCEED"
         },
         {
-            "action": "/// 送礼物增加积分\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)",
+            "action": "/// <积分·送礼物增加积分>\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "SEND_GIFT"
         },
         {
-            "action": "/// 上船增加积分\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)",
+            "action": "/// <积分·上船增加积分>\n[%living%+1]>setValue(integral_%uid%, %[%{integral_%uid%}%+%gift_gold%]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "GUARD_BUY"
         },
         {
-            "action": "/// 大乱斗结束前提醒\n>timerShot(265000, 离大乱斗结束还有30秒)",
+            "action": "/// <积分·大乱斗结束前提醒>\n>timerShot(265000, 离大乱斗结束还有30秒)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_BATTLE_START"
         },
         {
-            "action": "/// 送礼物自动签到（需要先开启礼物签到）\n[%{daka_auto_%uid%}%=1, %{daka_today_%uid%}%!=1, %living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+10000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)",
+            "action": "/// <打卡·送礼物自动打卡>（需要先开启礼物签到）\n[%{daka_auto_%uid%}%=1, %{daka_today_%uid%}%!=1, %living%+1]>签到成功，您是今天第%[%{daka}%+1]%个，本月%[%{daka_month_%uid%}%+1]%天\\n\\\n\t>setValue(daka, %[%{daka}%+1]%)\\n\\\n\t>setValue(uname_%uid%, %uname%)\\n\\\n\t>setValue(daka_today_%uid%, 1)\\n\\\n\t>setValue(daka_sum_%uid%, %[%{daka_sum_%uid%}%+1]%)\\n\\\n\t>setValue(daka_month_%uid%, %[%{daka_month_%uid%}%+1]%)\\n\\\n\t>setValue(daka_keep_%uid%, %[%{daka_keep_%uid%}%+1]%)\\n\\\n\t>setValue(integral_%uid%, %[%{integral_%uid%}%+10000]%)\\n\\\n\t>triggerEvent(DAKA_MONTH_%[%{daka_month_%uid%}%+1]%)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "SEND_GIFT"
         },
         {
-            "action": "/// PK播报对面直播间信息\n第%[%pk_count%+1]%次匹配：%>simpleName(%.anchor_info.base_info.uname%)%，%>simpleNum(%.guard_info.count%)%船，%>simpleNum(%.anchor_info.relation_info.attention%)%粉，%>replaceReg(%.battle_rank_entry_info.rank_name%, ×.*, )%\\n\\\n\t>setValue(online_rank_gold, %gift_coin%)\\n\\ // 保存下来，等舰长数量提示\n\t>setValue(online_rank_num, %number%)",
+            "action": "/// <大乱斗·播报对面直播间信息>\n第%[%pk_count%+1]%次匹配：%>simpleName(%.anchor_info.base_info.uname%)%，%>simpleNum(%.guard_info.count%)%船，%>simpleNum(%.anchor_info.relation_info.attention%)%粉，%>replaceReg(%.battle_rank_entry_info.rank_name%, ×.*, )%\\n\\\n\t>setValue(online_rank_gold, %gift_coin%)\\n\\ // 保存下来，等舰长数量提示\n\t>setValue(online_rank_num, %number%)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_MATCH_INFO"
         },
         {
-            "action": "/// PK播报对面舰长信息\n[%number%>10, %{online_rank_num}% = 0]*对面有%number%名舰长在线，但没人送礼物！\n[%number%>2, %.guard1%>0, %{online_rank_num}% = 0]**对面在线%.guard3%名舰长，%.guard1%名提督，%.guard1%名总督\n[%number%=0, %{online_rank_num}% = 0]对面很惨，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面好欺负，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面很可怜，没人！\n[%number%>0, %{online_rank_num}% = 0]对面有%number%名舰长在线！\n[%number%=0, %{online_rank_gold}% > 1000]*对面没有舰长在线，但高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%=0, %{online_rank_num}% > 0]对面高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_num}%)%分\n[%number%>0, %{online_rank_num}% > 0]对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%>10, %{online_rank_gold}% > 10000]*危！对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分",
+            "action": "/// <大乱斗·播报对面舰长信息>\n[%number%>10, %{online_rank_num}% = 0]*对面有%number%名舰长在线，但没人送礼物！\n[%number%>2, %.guard1%>0, %{online_rank_num}% = 0]**对面在线%.guard3%名舰长，%.guard1%名提督，%.guard1%名总督\n[%number%=0, %{online_rank_num}% = 0]对面很惨，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面好欺负，没有舰长在线，高能榜也没人\n[%number%=0, %{online_rank_num}% = 0]对面很可怜，没人！\n[%number%>0, %{online_rank_num}% = 0]对面有%number%名舰长在线！\n[%number%=0, %{online_rank_gold}% > 1000]*对面没有舰长在线，但高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%=0, %{online_rank_num}% > 0]对面高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_num}%)%分\n[%number%>0, %{online_rank_num}% > 0]对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分\n[%number%>10, %{online_rank_gold}% > 10000]*危！对面有%number%名舰长在线，高能榜%{online_rank_num}%人，贡献%>simpleNum(%{online_rank_gold}%)%分",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "PK_MATCH_ONLINE_GUARD"
         },
         {
-            "action": "/// 勋章升级提示\n[%medal_level%>=5, %anchor_room_id% == %room_id%]恭喜%ai_name%勋章升级至%medal_level%~",
+            "action": "/// <勋章升级提示>\n[%medal_level%>=5, %anchor_room_id% == %room_id%]恭喜%ai_name%勋章升级至%medal_level%~",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "MEDAL_UPGRADE"
         },
         {
-            "action": "/// 新舰长发弹幕\n恭喜%uname%成为%upname%的第%number%名舰长！",
+            "action": "/// <上舰·第X名舰长答谢>\n恭喜%uname%成为%upname%的第%number%名舰长！",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "NEW_GUARD_COUNT"
         },
         {
-            "action": "/// 进来就补充/更新昵称\n[%{integral_%uid%}% > 0]>setValue(uname_%uid%, %uname%)",
+            "action": "/// <积分·进来就补充/更新昵称>\n[%{integral_%uid%}% > 0]>setValue(uname_%uid%, %uname%)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
             "event": "INTERACT_WORD"
+        },
+        {
+            "action": "/// <坐骑·抽坐骑卡>使用礼物“抽坐骑卡”来触发抽取坐骑（暂时还没开通这礼物）\n[%origin_gift_name% = 抽坐骑卡]>triggerReply(抽坐骑)",
+            "anchor_key": "神奇弹幕:EventAction",
+            "enabled": false,
+            "event": "SEND_GIFT"
         }
     ],
     "gift": "// ---------- 小礼物不答谢 ----------\n[%gift_gold%=0, %gift_silver%<1000, %gift_num% < 6]*\n// ---------- 普通的答谢 ----------\n感谢%ai_name%赠送的%gift_name%%punc%\n十分感谢%ai_name%相赠的%gift_name%%punc%\n谢谢%ai_name%的%gift_multi_num%%gift_name% ~~~\n感谢%ai_name%的%gift_multi_num%%gift_name%，么么哒~\n感谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n多谢%ai_name%的%gift_multi_num%%gift_name%，mua~\n多谢%ai_name%的%gift_multi_num%%gift_name%，啾咪~\n// ---------- 50元以上的 ----------\n[%gift_gold%>50000]*(cd13:0)哇噢！感谢%ai_name%的%gift_multi_num%%gift_name%！\\n老板大气！\n// ---------- 指定礼物 ----------\n[%gift_name%=小电视飞船]**哇！谢谢%ai_name%带大家上太空~\n// ---------- 上船通知 ----------\n[%guard_buy%, %guard_first%!=0]**(cd13:0)哇塞！感谢%ai_name%开通%gift_name%！\\n老板大气！！！\n[%guard_buy%, %guard_first%=0]**(cd13:0)哇塞！感谢%ai_name%续费%gift_name%！\\n老板大气！！！\n// 屏蔽自动送的吃瓜\n[%uid%=%my_uid%,%gift_name%=吃瓜]**",
@@ -205,32 +283,32 @@
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": false,
             "interval": 1800,
-            "text": "/// 定时发送的弹幕\n喜欢%up_name%的小伙伴可以动动小手点个关注~\n喜欢%up_name%的小伙伴，点点关注不迷路~\n赠送一个B坷拉，领取主播专属勋章哦~\n你已经是成熟的观众了，该学会自己上船了~\n[%today_guard%=0]今天%up_name%等到新的舰长了吗？\\n老板们救救可怜的%up_name%吧~\n[%today_guard%>0]今天%up_name%等到新的舰长，还有老板想上船嘛~\n小礼物和弹幕都是对%up_name%的支持哦，比心心~\n有一种关心叫关注，有一种惦记叫入粉\\n还有一种陪伴叫：加入大航海~\nIOS端可关注公众号哔哩哔哩直播姬充值~\n万水千山总是情，点个关注行不行~"
+            "text": "/// <定时发送的弹幕>\n喜欢%up_name%的小伙伴可以动动小手点个关注~\n喜欢%up_name%的小伙伴，点点关注不迷路~\n赠送一个B坷拉，领取主播专属勋章哦~\n你已经是成熟的观众了，该学会自己上船了~\n[%today_guard%=0]今天%up_name%等到新的舰长了吗？\\n老板们救救可怜的%up_name%吧~\n[%today_guard%>0]今天%up_name%等到新的舰长，还有老板想上船嘛~\n小礼物和弹幕都是对%up_name%的支持哦，比心心~\n有一种关心叫关注，有一种惦记叫入粉\\n还有一种陪伴叫：加入大航海~\nIOS端可关注公众号哔哩哔哩直播姬充值~\n万水千山总是情，点个关注行不行~"
         },
         {
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": false,
             "interval": 86400,
-            "text": "/// 每天在其他直播间打卡\n[%living%+1]>sendRoomMsg([直播间房号], 打卡)"
+            "text": "/// <每天在其他直播间打卡>\n[%living%+1]>sendRoomMsg([直播间房号], 打卡)"
         },
         {
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": false,
             "interval": 1800,
-            "text": "/// 显示所有用户积分\n>showValueTable(积分查询, integral_(\\d+), ID:\"_ID_\", 昵称:uname__ID_, 积分:integral__ID_:>, 动作:action__ID_, 坐骑:mount__ID_)"
+            "text": "/// <积分·显示所有用户积分>\n>showValueTable(积分查询, integral_(\\d+), ID:\"_ID_\", 昵称:uname__ID_, 积分:integral__ID_:>, 动作:action__ID_, 坐骑:mount__ID_)"
         },
         {
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": false,
             "interval": 1800,
-            "text": "/// 显示所有打卡记录\n>showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\\d+), ID:\"_ID_\", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)"
+            "text": "/// <打卡·显示所有打卡记录>\n>showValueTable(今天共第%[%{daka}%+0]%人打卡, daka_sum_(\\d+), ID:\"_ID_\", 累计:daka_sum__ID_:>, 昵称:uname__ID_, 积分:integral__ID_, 连续:daka_keep__ID_, 本月:daka_month__ID_, 今日:daka_today__ID_)"
         },
         {
             "anchor_key": "神奇弹幕:TimerTask",
             "enabled": true,
             "interval": 7200,
-            "text": "/// 这是个理直气壮的广告！\n[%working%]答谢姬【神奇弹幕】为您服务~"
+            "text": "/// <这是个理直气壮的宣传！>\n[%working%]答谢姬【神奇弹幕】为您服务~"
         }
     ],
-    "welcome": "// 只欢迎戴勋章的用户。如果要全部欢迎，只需把下面一行去掉\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~"
+    "welcome": "// 只欢迎戴勋章的用户。如果要全部欢迎，只需把下面一行去掉\n[%guard% = 0, %anchor_roomid%!=%room_id%, %strong_notify%=0]**\n// ---------- 正常欢迎 ----------\n欢迎%ai_name%~\n欢迎%ai_name%来看%up_name%~\n欢迎%ai_name%光临~\n%ai_name%，你来了呀！\n欢迎 %ai_name%，你终于来啦~\n欢迎 %ai_name%，终于等到你~\n嗨，%ai_name%~\n哈喽，%ai_name%~\n%ai_name%，哈喽~\n[%medal_level% > 20]欢迎 %ai_name%，请多多关照~\n欢迎 %ai_name%，捕捉一只小可爱~\n欢迎小可爱 %ai_name% ~\n%ai_name%，%all_greet%~\n%all_greet%，%ai_name% ~\n%ai_name%，%greet%%tone/punc%\n// ---------- 欢迎舰长 ----------\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 大驾光临！\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 回家~\n[%guard%]*(cd10:4)欢迎%guard_name% %ai_name% 归来~\n// ---------- 对面串门 ----------\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎串门哦~\n[%pk_opposite%]***(cd11:2)%ai_name%，欢迎来串门~\n[%pk_opposite%]***(cd11:2)欢迎%ai_name%串门~\n[%pk_opposite%]***(cd11:2)欢迎对面的%ai_name%来看%up_name%~\n[%pk_opposite%]***(cd11:2)谢谢%ai_name%百忙之中串门看%up_name%~\n[%pk_opposite%,%uid%=%pk_uid%]****(cd12:0)谢谢主播%ai_name%百忙之中来串门~\n// ---------- 串门回来 ----------\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回来~\n[%pk_view_return%]***(cd11:1)欢迎%ai_name%串门回家~\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进来\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进入\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%进入直播间\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%光临\n[%{mount_%uid%}%]**%ai_name%%>getValue(action_%uid%, 骑着)%%{mount_%uid%}%%{face_%uid%}%来临\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进来\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进入\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%进入直播间\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%光临\n[\"%{face_%uid%}%\"!=\"\", \"%{mount_%uid%}%\"=\"\"]**%ai_name%%{face_%uid%}%来临"
 }

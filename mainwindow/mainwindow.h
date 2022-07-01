@@ -52,6 +52,7 @@
 #include "waterzoombutton.h"
 #include "tipbox.h"
 #include "liveopenservice.h"
+#include "singleentrance.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -1091,6 +1092,7 @@ private:
     QLabel* statusLabel;
     TipBox* tip_box;
     InteractiveButtonBase* droplight;
+    SingleEntrance* fakeEntrance = nullptr;
 
     // 房间信息
     QPixmap roomCover; // 直播间封面原图

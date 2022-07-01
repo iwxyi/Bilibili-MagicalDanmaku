@@ -500,6 +500,24 @@ void MainWindow::initView()
     connect(tip_box, &TipBox::signalBtnClicked, [=](NotificationEntry* n){
         qInfo() << "卡片按钮点击：" << n->toString();
     });
+
+#ifdef ZUOQI_ENTRANCE
+    fakeEntrance = new SingleEntrance(this);
+    fakeEntrance->setGeometry(this->rect());
+    connect(fakeEntrance, &SingleEntrance::signalRoomIdChanged, this, [=](QString roomId){
+        if (roomId == "esc")
+        {
+            fakeEntrance->deleteLater();
+            return ;
+        }
+        ui->roomIdEdit->setText(roomId);
+        on_roomIdEdit_editingFinished();
+    });
+    connect(fakeEntrance, &SingleEntrance::signalLogin, this, [=]{
+        on_robotNameButton_clicked();
+    });
+    this->setWindowTitle("进场坐骑系统");
+#endif
 }
 
 void MainWindow::initStyle()
@@ -526,8 +544,11 @@ void MainWindow::initStyle()
 void MainWindow::initPath()
 {
     rt->appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
-    if (rt->appFileName.contains("start"))
+    /* if (rt->appFileName.contains("start"))
+    {
         rt->asPlugin = true;
+        rt->asFreeOnly = false;
+    } */
     rt->dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -627,7 +648,12 @@ void MainWindow::readConfig()
     // 房间号
     ac->roomId = us->value("danmaku/roomId", "").toString();
     if (!ac->roomId.isEmpty())
+    {
         ui->roomIdEdit->setText(ac->roomId);
+#ifdef ZUOQI_ENTRANCE
+        fakeEntrance->setRoomId(ac->roomId);
+#endif
+    }
     else // 设置为默认界面
     {
         QTimer::singleShot(0, [=]{
@@ -1069,7 +1095,11 @@ void MainWindow::readConfig()
     ui->startLiveSendCheck->setChecked(us->value("live/startSend").toBool());
 
     // 启动动画
+#ifdef ZUOQI_ENTRANCE
+    ui->startupAnimationCheck->setChecked(us->value("mainwindow/splash", false).toBool());
+#else
     ui->startupAnimationCheck->setChecked(us->value("mainwindow/splash", firstOpen).toBool());
+#endif
     ui->enableTrayCheck->setChecked(us->value("mainwindow/enableTray", false).toBool());
     if (ui->enableTrayCheck->isChecked())
         tray->show(); // 让托盘图标显示在系统托盘上
@@ -1216,12 +1246,14 @@ void MainWindow::readConfig()
             us->eternalBlockUsers.append(eb);
     }
 
+#ifndef ZUOQI_ENTRANCE
     // 开机自启
     if (us->value("runtime/startOnReboot", false).toBool())
         ui->startOnRebootCheck->setChecked(true);
     // 自动更新
     if (us->value("runtime/autoUpdate", true).toBool())
         ui->autoUpdateCheck->setChecked(true);
+#endif
 
     // 每分钟定时
     minuteTimer = new QTimer(this);
@@ -1516,6 +1548,9 @@ qDebug() << "--------NEW_DAY";
     {
         ui->droplight->setText("Lite版");
         ui->label_52->setText("<html><head/><body><p>暂</p><p>且</p><p>留</p><p>空</p></body></html>");
+    }
+    if (rt->asFreeOnly)
+    {
         ui->vipExtensionButton->setText("Lite版不支持回复、事件等功能");
         ui->existExtensionsLabel->setText("Lite版不支持插件系统");
     }
@@ -1897,6 +1932,11 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
     adjustPageSize(ui->stackedWidget->currentIndex());
     tip_box->adjustPosition();
+
+    if (fakeEntrance)
+    {
+        fakeEntrance->setGeometry(this->rect());
+    }
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -3450,8 +3490,10 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+#ifndef ZUOQI_ENTRANCE
         if (!hasPermission())
             return ;
+#endif
         if (isFilterRejected("FILTER_AUTO_REPLY", danmaku))
             return ;
         if ((!manual && !shallAutoMsg(sl, manual)) || danmaku.isPkLink()) // 没有开播，不进行自动回复
@@ -3627,8 +3669,10 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
     connect(this, SIGNAL(signalCmdEvent(QString, LiveDanmaku)), rw, SLOT(triggerCmdEvent(QString,LiveDanmaku)));
 
     connect(rw, &EventWidget::signalEventMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
+#ifndef ZUOQI_ENTRANCE
         if (!hasPermission())
             return ;
+#endif
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
             qInfo() << "未开播，不做操作(event)" << sl;
@@ -3772,6 +3816,9 @@ void MainWindow::getCookieAccount()
         ui->robotNameButton->setText(ac->cookieUname);
         ui->robotNameButton->adjustMinimumSize();
         ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
+#ifdef ZUOQI_ENTRANCE
+        fakeEntrance->setRobotName(ac->cookieUname);
+#endif
 
         getRobotInfo();
         gettingUser = false;
@@ -5974,7 +6021,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 进行数学计算的变量
-        if (ui->complexCalcCheck->isChecked())
+        if (!ui->complexCalcCheck->isChecked())
             re = QRegularExpression("%\\[([\\d\\+\\-\\*/% \\(\\)]+)\\]%"); // 纯数字+运算符+括号
         else
             re = QRegularExpression("%\\[([^(%(\\{|\\[|>))]*?)\\]%"); // 允许里面带点字母，用来扩展函数
@@ -5982,7 +6029,7 @@ QString MainWindow::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         {
             QString _var = match.captured(0);
             QString text = match.captured(1);
-            if (ui->complexCalcCheck->isChecked())
+            if (!ui->complexCalcCheck->isChecked())
                 text = QString::number(ConditionUtil::calcIntExpression(text));
             else
                 text = QString::number(CalculatorUtil::calculate(text.toStdString().c_str()));
@@ -21110,7 +21157,7 @@ void MainWindow::on_actionBuy_VIP_triggered()
 
 void MainWindow::on_droplight_clicked()
 {
-    if (rt->asPlugin)
+    if (rt->asFreeOnly)
     {
         showNotify("小提示", "右键可以修改文字");
         return ;
@@ -21120,7 +21167,7 @@ void MainWindow::on_droplight_clicked()
 
 void MainWindow::on_vipExtensionButton_clicked()
 {
-    if (rt->asPlugin)
+    if (rt->asFreeOnly)
     {
         QMessageBox::warning(this, "作为插件的Lite版说明", "Lite版不支持部分功能，请前往官网下载完整版");
         openLink("http://lyixi.com/?type=newsinfo&S_id=126");

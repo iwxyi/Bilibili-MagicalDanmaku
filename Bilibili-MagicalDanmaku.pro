@@ -12,6 +12,7 @@ CONFIG += c++11
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
 DEFINES += ENABLE_TEXTTOSPEECH
+#DEFINES += ZUOQI_ENTRANCE
 
 RC_FILE += resources/resource.rc
 
@@ -131,6 +132,7 @@ SOURCES += \
     third_party/qrencode/split.c \
     mainwindow/server.cpp \
     third_party/utils/xfytts.cpp \
+    widgets/singleentrance.cpp \
     widgets/smooth_scroll/smoothlistwidget.cpp \
     widgets/smooth_scroll/waterfallscrollarea.cpp \
     widgets/variantviewer.cpp \
@@ -243,6 +245,7 @@ HEADERS += \
     third_party/utils/myjson.h \
     third_party/utils/xfytts.h \
     widgets/partimagewidget.h \
+    widgets/singleentrance.h \
     widgets/smooth_scroll/smoothlistwidget.h \
     widgets/smooth_scroll/smoothscrollbean.h \
     widgets/smooth_scroll/waterfallscrollarea.h \
@@ -282,6 +285,7 @@ FORMS += \
     order_player/orderplayerwindow.ui \
     third_party/picture_browser/picturebrowser.ui \
     third_party/utils/textinputdialog.ui \
+    widgets/singleentrance.ui \
     widgets/video_player/livevideoplayer.ui \
     widgets/catch_you_dialog/catchyouwidget.ui \
     widgets/eternal_block_dialog/eternalblockdialog.ui \
