@@ -2150,7 +2150,7 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
-        showError("未设置Cookie信息");
+        showError("发送弹幕", "机器人账号未登录");
 #ifdef ZUOQI_ENTRANCE
         QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
 #endif
@@ -17580,7 +17580,7 @@ void MainWindow::doSign()
 {
     if (ac->csrf_token.isEmpty())
     {
-        ui->autoDoSignCheck->setText("未设置Cookie");
+        ui->autoDoSignCheck->setText("机器人账号未登录");
         QTimer::singleShot(10000, [=]{
             ui->autoDoSignCheck->setText("每日自动签到");
         });
@@ -17614,7 +17614,7 @@ void MainWindow::joinLOT(qint64 id, bool follow)
         return ;
     if (ac->csrf_token.isEmpty())
     {
-        ui->autoDoSignCheck->setText("未设置Cookie");
+        ui->autoDoSignCheck->setText("机器人账号未登录");
         QTimer::singleShot(10000, [=]{
             ui->autoDoSignCheck->setText("自动参与活动");
         });
@@ -17651,7 +17651,7 @@ void MainWindow::joinStorm(qint64 id)
         return ;
     if (ac->csrf_token.isEmpty())
     {
-        ui->autoDoSignCheck->setText("未设置Cookie");
+        ui->autoDoSignCheck->setText("机器人账号未登录");
         QTimer::singleShot(10000, [=]{
             ui->autoDoSignCheck->setText("自动参与活动");
         });
@@ -18666,6 +18666,8 @@ void MainWindow::loadWebExtensionList()
             QStringList cmds = inf.ss("cmds");
             QJsonValue code = inf.value("code");
             QString coverPath = inf.s("cover");
+            QString homepage = inf.s("homepage"); // TODO
+            QString reward = inf.s("reward"); // TODO
             if (coverPath.isEmpty())
             {
                 if (isFileExist(QDir(info.absoluteFilePath()).absoluteFilePath(coverPath = "cover.png"))

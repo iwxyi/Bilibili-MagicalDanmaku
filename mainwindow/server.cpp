@@ -231,16 +231,35 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         if (!ui->allowWebControlCheck->isChecked()) // 允许网页控制
             return showError("未开启解锁安全限制", "无法执行：" + cmd);
         QJsonObject data = json.value("data").toObject();
-        QString key = data.value("key").toString();
-        QJsonValue val = data.value("value");
-        if (val.isString())
-            us->setValue(key, val.toString());
-        else if (val.isBool())
-            us->setValue(key, val.toBool());
-        else if (val.isDouble())
-            us->setValue(key, val.toDouble());
+        if (data.size() == 2 && data.contains("key") && data.contains("value"))
+        {
+            // 单独设置： data:{}
+            QString key = data.value("key").toString();
+            QJsonValue val = data.value("value");
+            if (val.isString())
+                us->setValue(key, val.toString());
+            else if (val.isBool())
+                us->setValue(key, val.toBool());
+            else if (val.isDouble())
+                us->setValue(key, val.toDouble());
+            else
+                us->setValue(key, val.toVariant());
+        }
         else
-            us->setValue(key, val.toVariant());
+        {
+            foreach (auto key, data.keys())
+            {
+                QJsonValue val = data.value(key);
+                if (val.isString())
+                    us->setValue(key, val.toString());
+                else if (val.isBool())
+                    us->setValue(key, val.toBool());
+                else if (val.isDouble())
+                    us->setValue(key, val.toDouble());
+                else
+                    us->setValue(key, val.toVariant());
+            }
+        }
     }
     else if (cmd == "SEND_MSG") // 直接发送弹幕（允许多行，但不含变量）
     {
@@ -326,7 +345,7 @@ void MainWindow::sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku)
 
     foreach (QWebSocket* socket, danmakuSockets)
     {
-        if (!danmakuCmdsMaps.contains(socket) || !danmakuCmdsMaps[socket].contains(cmd))
+        if (!danmakuCmdsMaps.contains(socket) || (!danmakuCmdsMaps[socket].isEmpty() && !danmakuCmdsMaps[socket].contains(cmd)))
             continue;
        socket->sendTextMessage(ba);
     }

@@ -2728,13 +2728,13 @@ tips：
 
 以下皆需开启设置中的**网络服务**方可生效。
 
-程序目录下的`www`文件夹为网站根目录，所有`html`文件可放入该位置，浏览器地址栏输入`域名:端口`（默认为`localhost:5520`）即可访问，效果同`Apache`一致。
+程序目录下的 `www` 文件夹为网站根目录，所有 `html` 文件可放入该位置，浏览器地址栏输入 `域名:端口`（默认为 `localhost:5520`）即可访问，效果同 `Apache` 一致。
 
 
 
 ### Socket通讯
 
-支持JavaScript的WebSocket通讯，示例如下：
+支持 JavaScript 的 WebSocket 通讯，示例如下：
 
 ```js
 var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
@@ -2743,11 +2743,11 @@ ws.onopen = function() {
 };
 ```
 
-其中，`__DOMAIN__::__WS_PORT__`会自动替换为用户设置的`域名:端口+1`，若未设置，则默认为`localhost:5521`。
+其中，`__DOMAIN__::__WS_PORT__` 会自动替换为用户设置的 `域名:端口+1`，若未设置，则默认为 `localhost:5521`。
 
-在`onopen`方法中，必须向服务端发送格式为`{"cmd": "cmds","data":[需要接收的cmd列表]}`的JSON数据，其中`cmd列表`为接收服务端的哪些类型，可用**事件**中的命令。
+在`onopen`方法中，必须向服务端发送格式为`{"cmd": "cmds","data":[需要接收的cmd列表]}`的 JSON 数据，其中 `cmd列表` 为接收服务端的哪些命令的字符串数组（相当于白名单），可用**事件**中的部分命令。
 
-另外，有专门的其他CMD，如下：
+另外，有专用的特殊 CMD，如下：
 
 - `SONG_LIST`：点歌列表
 - `LYRIC_LIST`：歌词
@@ -2756,21 +2756,23 @@ ws.onopen = function() {
 
 通过WebSocket，在网页中可接收几乎所有的弹幕消息，显示各种动画特效。
 
+> 为什么要先发一个白名单 cmds：程序运行过程中的命令很多，socket 可能也很多，如果每个命令给每个 socket 都发一遍，会非常影响性能
+
 
 
 ### 主程序发送消息
 
-发送给网页WS使用，使用 `sendToSockets(cmd, data)` 命令。示例如下：
+发送给网页 WS 使用，使用 `>sendToSockets(cmd, data)` 命令。示例如下：
 
 ```
-sendToSockets(SOME_CMD, \
+>sendToSockets(SOME_CMD, \
 	{\
 		"action": "SOME_ACTION",\
 		"data": {"key1": "value1", "key2": 222}\
 	})
 ```
 
-第一个参数的 `SOME_CMD` 用于**过滤 socket**，即在 onopen 发送过来的 cmd 类型才会接收，不会把接收弹幕消息发到只接收礼物消息的 socket 对象上，也**不会真正发送出去**。
+第一个参数的 `SOME_CMD` 为 cmd 字符串用于**过滤 socket**，即为 onopen 发送过来的 cmds 中的某一类型才会接收，不会把接收弹幕消息发到只接收礼物消息的 socket 对象上。
 
 第二个参数是一个 JSON 字符串，即网页端接收到的 data，具体格式要和网页一致。
 
@@ -2778,7 +2780,7 @@ sendToSockets(SOME_CMD, \
 
 ### 接收主程序消息
 
-以点歌姬的点歌列表为例，接收到`SONG_LIST`并显示在DOM节点中：
+以点歌姬的点歌列表为例，接收到 `SONG_LIST` 并显示在 DOM 节点中：
 
 ```html
 <ol id="songs" class="live numbers"> </ol> <!-- 被修改的ul -->
@@ -2803,9 +2805,7 @@ ws.onmessage = function(e) {
 };
 ```
 
-> 注意：本处代码中有个 `cmd` 变量，这个 `cmd` 不是 `sendToSockets` 的参数一（不过恰好也是 `"SONG_LIST"`），而是参数二中的 `action`。
-
-
+> 注意：本处代码中有个 `cmd` 变量，这个 `cmd` 不是 `cmds` 命令中 `sendToSockets` 的参数一（不过恰好也是 `"SONG_LIST"`），而是参数二的 `action` 中的元素，相当于白名单。
 
 
 
@@ -2813,11 +2813,11 @@ ws.onmessage = function(e) {
 
 #### 通用消息接收事件
 
-在Web端向服务端（神奇弹幕主程序，以下统称“主程序”）发送 socket 数据，除了一些内置CMD类型外，都会触发 `SOCKET_MSG_RECEIVE` 事件，通过解析 json 的方式（如 `%.cmd%`），可获取其中的信息，进行一系列的操作。
+在 Web 端向服务端（神奇弹幕主程序，以下统称“主程序”）发送 socket 数据，除了一些内置 CMD 类型外，都会触发 `SOCKET_MSG_RECEIVE` 事件，通过解析 json 的方式（如 `%.cmd%`），可获取其中的信息，进行一系列的操作。
 
-内置cmd，即[持久化配置](#持久化配置)、[反向控制主程序](#反向控制主程序)中的cmd，不会触发 `SOCKET_MSG_RECEIVE` 事件。简单来说，就是**只响应用户自定义的socket消息**。
+内置 cmd，即[持久化配置](#持久化配置)、[反向控制主程序](#反向控制主程序)中的 cmd，不会触发 `SOCKET_MSG_RECEIVE` 事件。简单来说，就是**只响应用户自定义的 socket 消息**。
 
-`SOCKET_MSG_RECEIVE` 事件的动作示例：
+`SOCKET_MSG_RECEIVE` 事件的代码示例：
 
 ```
 [%.cmd% == ONE_CMD]执行ONE_CMD动作
@@ -2841,6 +2841,8 @@ ws.onmessage = function(e) {
 
 会触发 `SOCKET:CLICKED` 事件，可在事件中响应收到的 json，如 `%.data.name%`。
 
+与上面的 `SOCKET_MSG_RECEIVE` 相比，这个可以将不同的 cmd 响应放到不同的代码块中，更加简洁明了。
+
 
 
 ### 持久化配置
@@ -2849,7 +2851,8 @@ ws.onmessage = function(e) {
 
 用户在网页程序中自定义配置，永久保存在安装路径下的 `ext_settings.ini` 中。使用相应的 cmd 实现功能，无需“解锁安全限制”。
 
-- `SET_CONFIG`：在网页中发送该cmd的json，将会保存配置
+- `SET_CONFIG`：在网页中发送该 cmd 的 json，将会保存配置。
+  `group` 为保存的分组，读取时传入该参数可获取该分组下的所有配置。建议一个应用的配置都保存到同一个分组下。
 
   ```json
   {
@@ -2866,7 +2869,7 @@ ws.onmessage = function(e) {
 
   该命令无返回。
 
-- `GET_CONFIG`：返回同样的cmd，但是data中会包含配置
+- `GET_CONFIG`：返回同样的 cmd，data 中会包含配置的键值对
 
   ```json
   {
@@ -2875,12 +2878,12 @@ ws.onmessage = function(e) {
       "data": ["key1", "key2", "key3", "key4", "key5"]
   }
   ```
+  
+  可以不添加 `data` 或留空 `"data": []`，会返回该 group 下的所有配置。
+  
+  若是 JS 并且使用了默认的 `magical_danmaku.js`，添加 `function readConfig(data)`，其中的形参 `data` 就是返回的 JSON 的 data，可直接读取里面的数值。
 
-可以不加入 `data` 或留空 `"data": []`，会返回该 `prefix` 下的所有配置。
-
-然后添加 `function readConfig(data)`，其中的形参 `data` 就是返回的 JSON 的 data，可直接读取里面的数值。
-
-以上面的`SET_CONFIG`为例，可能会返回 JSON：
+以上面的 `SET_CONFIG` 为例，可能会返回 JSON：
 
   ```json
 {
@@ -2929,6 +2932,8 @@ function socketInited() {
 
 function readInfo(data) {
     roomId = data['room_id']; // 获取到的房间ID
+    title  = data['title'];   // 房间标题
+    pking  = data['pking'];   // 是否正在PK
 }
 ```
 
@@ -2947,15 +2952,11 @@ function readInfo(data) {
 
 
 
-
-
-
-
 ### 反向控制主程序
 
-在上述“主程序接收消息”的基础上，指定CMD类型，可反向控制主程序。需要在设置中开启`远程-解锁安全限制`方有效（默认关闭）。
+在上述“主程序接收消息”的基础上，指定 CMD 类型，可反向控制主程序。一部分 CMD 需要在扩展中开启 `扩展-远程-解锁安全限制` 方有效（默认关闭）。
 
-JSON格式：
+JSON 格式：
 
 ```json
 {
@@ -2966,11 +2967,15 @@ JSON格式：
 
 服务端可接收 `cmd类型` 如下（不分大小写）：
 
-> 下述 cmd，都会跳过 `SOCKET_MSG_RECEIVE` 事件。
+> 下述 cmd，都会跳过 `SOCKET_MSG_RECEIVE` 事件。前三项在上面都有详细说明，且无需解锁安全限制。
 
-- `cmds`：指定ws需要接收的类型，不在其中的不会发送，可提高性能
+- `cmds`
 
-- `forward`：将`data`中的数据发送给其他socket，`data`中要同样再包含一层`cmd`和`data`。整体JSON示例如下：
+- `get_config`
+
+- `set_config`
+
+- `forward`：将 `data` 中的数据发送给其他 socket，`data` 中要同样再包含一层 `cmd` 和 `data`。完整 JSON 如下：
 
   ```json
   {
@@ -2982,19 +2987,32 @@ JSON格式：
   }
   ```
 
-- `set_value`：修改主程序的配置，不是用 `%{key}%` 读取的需要重启生效。`data`部分如下：
+- `set_value`：修改主程序的原始配置，重启主程序生效。可以有两种形式：
 
   ```json
+  // 单独修改一项设置
   {
       "cmd": "set_value",
       "data": {
           "key": "[key]",
-          "value": "[value]" // 可以是字符串，也可以是整数
+          "value": [value] // 可以是字符串，也可以是整数
       }   
   }
   ```
 
-- `send_msg`：使主程序发送弹幕，`data`为弹幕字符串，允许使用`\\n`来分隔多条弹幕；不会解析变量，而是直接发送出去
+  ```json
+  // V4.7.2新增，同时修改多项设置
+  {
+      "cmd": "set_value",
+      "data": {
+          "key1": [value1],
+          "key2": [value2],
+          "key3": [value3]
+      }   
+  }
+  ```
+
+- `send_msg`：使主程序发送弹幕，`data`为弹幕字符串，使用 `\\n` 来分隔多条弹幕；**不会解析变量**，而是直接发送出去
 
   ```json
   {
@@ -3024,7 +3042,7 @@ JSON格式：
   <img src="http://__DOMAIN__:__PORT__/api/header?uid=123456" />
   ```
 
-- 网络代理：`/api/netProxy?url=网址`，可解决本地请求无法跨域问题；其中 `网址` 若带有参数，则需进行URL编码。请求时使用 GET、POST 等不同方法、设置不同 content-type，都会响应转移到代理中，并自动设置当前登录账号的 Cookies。
+- 网络代理：`/api/netProxy?url=网址`，可解决本地请求无法**跨域**问题；其中 `网址` 若带有参数，则建议进行 **URL 编码**。请求时使用 GET、POST 等不同方法、设置不同 content-type，都会响应转移到代理中，并自动设置当前登录账号的 Cookies。
 
   ```js
   $.ajax({
@@ -3037,27 +3055,34 @@ JSON格式：
   });
   ```
 
-  
+- 触发事件：`/api/event?event=事件名&data=url编码(json)`，会触发指定事件如 `SEND_GIFT`。若使用 post 方式，data 部分可直接使用 json 来发送而不需要 url 编码。
 
 
 
 ### 网页程序打包
 
-所有的网页小程序都是以文件夹的形式放在 `www` 中，**每一套小程序（可以是多个网页）对应 www 中一个文件夹**，并带有 `info.json` 文件，可被神奇弹幕识别，添加到“远程”的“已安装扩展”中，并添加一些快捷按钮。
+所有的网页小程序都是以文件夹的形式放在 `www` 中，**每一套小程序（可以是多个网页）对应 www 中一个文件夹**，并带有 `package.json` 文件（旧版为 `info.json`），可被神奇弹幕识别，添加到“远程”的“已安装扩展”中，并添加一些快捷按钮。
 
 以点歌姬为例：
 
 ```json
 {
     "name": "点歌姬",			  // 扩展整体名字
-    "min_version": "4.4.0",		// 能用的神奇弹幕最低版本
+    "min_version": "4.4.0",		// 能用的神奇弹幕最低版本，过低会报警告
 	"list": [					// 允许多个网页，list中一项一个
 		{
-			"name": "弹幕点歌列表",       // 这是名字
-			"url": "/music/index.html", // 相对于主机地址的URL相对路径
-			"css": "/music/list.css",   // 便于用户修改的CSS文件相对于www文件夹的路径
+			"name": "弹幕点歌列表",       // 这是显示出来的名字
+			"url": "index.html", // 相对于主机地址的URL路径
 			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除", // 简单描述与说明
-            "code": [], 	// 有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
+			"css": "list.css",   // （可空）便于用户修改的CSS文件相对于www文件夹的路径
+            "css_custom": "list_custom.css", // （可空）用户自定义CSS，修改后会覆盖上面一项
+            "cover": "cover.png",		// （可空）扩展封面图片，默认为 cover.png
+            "code": [], 	// （可空）有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
+            "config": "config.html",	// （可空）扩展的配置页面
+            "homepage": "http://xxx",   // （可空）主页链接
+            "reward": "http://xxx",     // （可空）打赏链接
+            "dir": "images",			// （可空）打开某一文件夹，比如图片资源，用于用户替换
+            "file": "result.txt"		// （可空）打开某一文件，比如保存的抽奖结果
 		},
 		{
 			"name": "当前歌曲名字",
