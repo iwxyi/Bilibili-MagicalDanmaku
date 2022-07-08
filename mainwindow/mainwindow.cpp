@@ -7586,14 +7586,14 @@ QString MainWindow::msgToShort(QString msg) const
     if (msg.contains(" "))
     {
         msg = msg.replace(" ", "");
-        if (msg.length() <= 20)
+        if (msg.length() <= danmuLongest)
             return msg;
     }
     if (msg.contains("“"))
     {
         msg = msg.replace("“", "");
         msg = msg.replace("”", "");
-        if (msg.length() <= 20)
+        if (msg.length() <= danmuLongest)
             return msg;
     }
     return msg;
