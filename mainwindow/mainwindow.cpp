@@ -12140,7 +12140,7 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         }
 
-        userComeEvent(danmaku);
+        // userComeEvent(danmaku);
         triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
