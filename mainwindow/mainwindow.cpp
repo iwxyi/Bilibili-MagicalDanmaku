@@ -10603,6 +10603,15 @@ QStringList MainWindow::splitLongDanmu(QString text) const
 
 void MainWindow::sendLongText(QString text)
 {
+    if (text.contains("%n%"))
+    {
+        text.replace("%n%", "\n");
+        for (auto s : text.split("\n", QString::SkipEmptyParts))
+        {
+            sendLongText(s);
+        }
+        return ;
+    }
     sendAutoMsg(splitLongDanmu(text).join("\\n"), LiveDanmaku());
 }
 
