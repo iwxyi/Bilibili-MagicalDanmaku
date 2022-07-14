@@ -828,6 +828,7 @@ private:
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
+    void addCodeSnippets(const QJsonDocument &doc);
 
     void autoSetCookie(QString s);
     QVariant getCookies() const;

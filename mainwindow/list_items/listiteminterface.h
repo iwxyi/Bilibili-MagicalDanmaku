@@ -46,6 +46,7 @@ public:
 
 signals:
     void signalResized();
+    void signalInsertCodeSnippets(const QJsonDocument& doc);
 
 public slots:
     virtual void autoResizeEdit()

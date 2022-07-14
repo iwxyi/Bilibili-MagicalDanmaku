@@ -1,5 +1,4 @@
 #include "eventwidget.h"
-#include "conditioneditor.h"
 
 EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 {
@@ -41,6 +40,8 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
         cmdKey = eventEdit->text().trimmed();
         configShortcut();
     });
+
+    connect(actionEdit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
 
     /*connect(eventEdit, &QLineEdit::editingFinished, this, [=]{
         configShortcut();

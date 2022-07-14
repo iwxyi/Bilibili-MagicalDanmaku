@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QAbstractItemView>
 #include <QStringListModel>
+#include <QMimeData>
 #include "conditioneditor.h"
 
 QStringList ConditionEditor::allCompletes;
@@ -227,6 +228,22 @@ void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
 
     // 开始提示
     showCompleter(word);
+}
+
+void ConditionEditor::insertFromMimeData(const QMimeData *source)
+{
+    if (this->toPlainText().trimmed().isEmpty() && source->hasText() && source->text().contains("神奇弹幕:"))
+    {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(source->text().toUtf8(), &error);
+        if (error.error == QJsonParseError::NoError)
+        {
+            emit signalInsertCodeSnippets(doc);
+            qInfo() << "检测到JSON数据，粘贴代码片段";
+            return ;
+        }
+    }
+    QPlainTextEdit::insertFromMimeData(source);
 }
 
 void ConditionEditor::showCompleter(QString prefix)

@@ -17,6 +17,7 @@
 #if defined(ENABLE_SHORTCUT)
 #include "qxtglobalshortcut.h"
 #endif
+#include "conditioneditor.h"
 
 #define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
 
@@ -45,7 +46,7 @@ public slots:
 
 public:
     QLineEdit* eventEdit;
-    QPlainTextEdit* actionEdit;
+    ConditionEditor* actionEdit;
 
     QString cmdKey;
 #if defined(ENABLE_SHORTCUT)

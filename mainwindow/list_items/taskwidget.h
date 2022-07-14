@@ -16,6 +16,7 @@
 #include "listiteminterface.h"
 #include "livedanmaku.h"
 #include "interactivebuttonbase.h"
+#include "conditioneditor.h"
 
 #define CODE_TIMER_TASK_KEY (QApplication::applicationName() + ":TimerTask")
 
@@ -43,7 +44,7 @@ public slots:
 public:
     QTimer* timer;
     QSpinBox* spin;
-    QPlainTextEdit* edit;
+    ConditionEditor* edit;
 };
 
 #endif // TASKWIDGET_H

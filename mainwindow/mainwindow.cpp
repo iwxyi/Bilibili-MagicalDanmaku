@@ -3402,6 +3402,10 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
     connect(tw, &TaskWidget::signalResized, tw, [=]{
         item->setSizeHint(tw->size());
     });
+
+    connect(tw, &TaskWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        addCodeSnippets(doc);
+    });
 }
 
 void MainWindow::saveTaskList()
@@ -3535,6 +3539,10 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
 
     connect(rw, &ReplyWidget::signalResized, rw, [=]{
         item->setSizeHint(rw->size());
+    });
+
+    connect(rw, &ReplyWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        addCodeSnippets(doc);
     });
 }
 
@@ -3708,6 +3716,10 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
     connect(rw, &EventWidget::signalResized, rw, [=]{
         item->setSizeHint(rw->size());
     });
+
+    connect(rw, &EventWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        addCodeSnippets(doc);
+    });
 }
 
 void MainWindow::saveEventList()
@@ -3745,6 +3757,121 @@ bool MainWindow::hasEvent(QString cmd) const
             return true;
     }
     return false;
+}
+
+void MainWindow::addCodeSnippets(const QJsonDocument &doc)
+{
+    bool scrolled[3] = {};
+
+    auto pasteFromJson = [&](QJsonObject json) {
+        QString anchor_key = json.value("anchor_key").toString();
+        ListItemInterface* item = nullptr;
+        if (anchor_key == CODE_TIMER_TASK_KEY)
+        {
+            item = addTimerTask(false, 1800, "");
+            ui->tabWidget->setCurrentWidget(ui->tabTimer);
+            if (!scrolled[0])
+            {
+                scrolled[0] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->taskListWidget->scrollToBottom();
+                });
+            }
+            us->setValue("task/count", ui->taskListWidget->count());
+        }
+        else if (anchor_key == CODE_AUTO_REPLY_KEY)
+        {
+            item = addAutoReply(false, "","");
+            ui->tabWidget->setCurrentWidget(ui->tabReply);
+            if (!scrolled[1])
+            {
+                scrolled[1] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->replyListWidget->scrollToBottom();
+                });
+            }
+            us->setValue("reply/count", ui->replyListWidget->count());
+        }
+        else if (anchor_key == CODE_EVENT_ACTION_KEY)
+        {
+            item = addEventAction(false, "", "");
+            ui->tabWidget->setCurrentWidget(ui->tabEvent);
+            if (!scrolled[2])
+            {
+                scrolled[2] = true;
+                QTimer::singleShot(0, [=]{
+                    ui->eventListWidget->scrollToBottom();
+                });
+            }
+            us->setValue("event/count", ui->eventListWidget->count());
+        }
+        else
+        {
+            qWarning() << "未知格式：" << json;
+            return ;
+        }
+
+        item->fromJson(json);
+        item->autoResizeEdit();
+
+        // 检查重复
+        if (anchor_key == CODE_AUTO_REPLY_KEY)
+        {
+            for (int row = 0; row < ui->replyListWidget->count() - 1; row++)
+            {
+                auto rowItem = ui->replyListWidget->item(row);
+                auto widget = ui->replyListWidget->itemWidget(rowItem);
+                if (!widget)
+                    continue;
+                QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
+                auto replyWidget = static_cast<ReplyWidget*>(widget);
+
+                auto rw = static_cast<ReplyWidget*>(item);
+                if (rw->keyEdit->text() == replyWidget->keyEdit->text()
+                        && rw->replyEdit->toPlainText() == replyWidget->replyEdit->toPlainText())
+                {
+                    rw->check->setChecked(false);
+                    rw->keyEdit->setText(rw->keyEdit->text() + "_重复");
+                    break;
+                }
+            }
+        }
+        else if (anchor_key == CODE_EVENT_ACTION_KEY)
+        {
+            for (int row = 0; row < ui->eventListWidget->count() - 1; row++)
+            {
+                auto rowItem = ui->eventListWidget->item(row);
+                auto widget = ui->eventListWidget->itemWidget(rowItem);
+                if (!widget)
+                    continue;
+                QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+                auto eventWidget = static_cast<EventWidget*>(widget);
+
+                auto rw = static_cast<EventWidget*>(item);
+                if (rw->eventEdit->text() == eventWidget->eventEdit->text()
+                        && rw->actionEdit->toPlainText() == eventWidget->actionEdit->toPlainText())
+                {
+                    rw->check->setChecked(false);
+                    rw->eventEdit->setText(rw->eventEdit->text() + "_重复");
+                    break;
+                }
+            }
+        }
+    };
+
+    if (doc.isObject())
+    {
+        pasteFromJson(doc.object());
+    }
+    else if (doc.isArray())
+    {
+        QJsonArray array = doc.array();
+        foreach (QJsonValue val, array)
+        {
+            pasteFromJson(val.toObject());
+        }
+    }
+    adjustPageSize(PAGE_EXTENSION);
 }
 
 void MainWindow::autoSetCookie(QString s)
@@ -20745,117 +20872,7 @@ void MainWindow::on_actionPaste_Code_triggered()
         return ;
     }
 
-    bool scrolled[3] = {};
-
-    auto pasteFromJson = [&](QJsonObject json) {
-        QString anchor_key = json.value("anchor_key").toString();
-        ListItemInterface* item = nullptr;
-        if (anchor_key == CODE_TIMER_TASK_KEY)
-        {
-            item = addTimerTask(false, 1800, "");
-            ui->tabWidget->setCurrentWidget(ui->tabTimer);
-            if (!scrolled[0])
-            {
-                scrolled[0] = true;
-                QTimer::singleShot(0, [=]{
-                    ui->taskListWidget->scrollToBottom();
-                });
-            }
-            us->setValue("task/count", ui->taskListWidget->count());
-        }
-        else if (anchor_key == CODE_AUTO_REPLY_KEY)
-        {
-            item = addAutoReply(false, "","");
-            ui->tabWidget->setCurrentWidget(ui->tabReply);
-            if (!scrolled[1])
-            {
-                scrolled[1] = true;
-                QTimer::singleShot(0, [=]{
-                    ui->replyListWidget->scrollToBottom();
-                });
-            }
-            us->setValue("reply/count", ui->replyListWidget->count());
-        }
-        else if (anchor_key == CODE_EVENT_ACTION_KEY)
-        {
-            item = addEventAction(false, "", "");
-            ui->tabWidget->setCurrentWidget(ui->tabEvent);
-            if (!scrolled[2])
-            {
-                scrolled[2] = true;
-                QTimer::singleShot(0, [=]{
-                    ui->eventListWidget->scrollToBottom();
-                });
-            }
-            us->setValue("event/count", ui->eventListWidget->count());
-        }
-        else
-        {
-            qWarning() << "未知格式：" << json;
-            return ;
-        }
-
-        item->fromJson(json);
-        item->autoResizeEdit();
-
-        // 检查重复
-        if (anchor_key == CODE_AUTO_REPLY_KEY)
-        {
-            for (int row = 0; row < ui->replyListWidget->count() - 1; row++)
-            {
-                auto rowItem = ui->replyListWidget->item(row);
-                auto widget = ui->replyListWidget->itemWidget(rowItem);
-                if (!widget)
-                    continue;
-                QSize size(ui->replyListWidget->contentsRect().width() - ui->replyListWidget->verticalScrollBar()->width(), widget->height());
-                auto replyWidget = static_cast<ReplyWidget*>(widget);
-
-                auto rw = static_cast<ReplyWidget*>(item);
-                if (rw->keyEdit->text() == replyWidget->keyEdit->text()
-                        && rw->replyEdit->toPlainText() == replyWidget->replyEdit->toPlainText())
-                {
-                    rw->check->setChecked(false);
-                    rw->keyEdit->setText(rw->keyEdit->text() + "_重复");
-                    break;
-                }
-            }
-        }
-        else if (anchor_key == CODE_EVENT_ACTION_KEY)
-        {
-            for (int row = 0; row < ui->eventListWidget->count() - 1; row++)
-            {
-                auto rowItem = ui->eventListWidget->item(row);
-                auto widget = ui->eventListWidget->itemWidget(rowItem);
-                if (!widget)
-                    continue;
-                QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
-                auto eventWidget = static_cast<EventWidget*>(widget);
-
-                auto rw = static_cast<EventWidget*>(item);
-                if (rw->eventEdit->text() == eventWidget->eventEdit->text()
-                        && rw->actionEdit->toPlainText() == eventWidget->actionEdit->toPlainText())
-                {
-                    rw->check->setChecked(false);
-                    rw->eventEdit->setText(rw->eventEdit->text() + "_重复");
-                    break;
-                }
-            }
-        }
-    };
-
-    if (doc.isObject())
-    {
-        pasteFromJson(doc.object());
-    }
-    else if (doc.isArray())
-    {
-        QJsonArray array = doc.array();
-        foreach (QJsonValue val, array)
-        {
-            pasteFromJson(val.toObject());
-        }
-    }
-    adjustPageSize(PAGE_EXTENSION);
+    addCodeSnippets(doc);
 }
 
 void MainWindow::on_actionGenerate_Default_Code_triggered()
