@@ -655,6 +655,8 @@ private slots:
 
     void on_thankAttentionTabButton_clicked();
 
+    void on_blockTabButton_clicked();
+
     void on_sendMsgMoreButton_clicked();
 
     void on_showLiveDanmakuWindowButton_clicked();

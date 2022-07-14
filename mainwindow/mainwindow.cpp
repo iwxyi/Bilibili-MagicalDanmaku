@@ -356,7 +356,8 @@ void MainWindow::initView()
     thankTabButtons = {
         ui->thankWelcomeTabButton,
         ui->thankGiftTabButton,
-        ui->thankAttentionTabButton
+        ui->thankAttentionTabButton,
+        ui->blockTabButton
     };
     foreach (auto btn, thankTabButtons)
     {
@@ -384,6 +385,12 @@ void MainWindow::initView()
         menu->exec();
     });
 
+    // 禁言
+    ui->eternalBlockListButton->adjustMinimumSize();
+    ui->eternalBlockListButton->setBorderColor(Qt::lightGray);
+    ui->eternalBlockListButton->setBgColor(Qt::white);
+    ui->eternalBlockListButton->setRadius(rt->fluentRadius);
+    ui->eternalBlockListButton->setFixedForePos();
 
     // 点歌页面
     ui->showOrderPlayerButton->setFixedForeSize(true, 12);
@@ -483,14 +490,9 @@ void MainWindow::initView()
 
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(rt->fluentRadius);
-    ui->eternalBlockListButton->adjustMinimumSize();
 
     // 网页
     ui->refreshExtensionListButton->setSquareSize();
-
-    // 禁言
-    ui->eternalBlockListButton->setBgColor(Qt::white);
-    ui->eternalBlockListButton->setRadius(rt->fluentRadius);
 
 #ifdef ZUOQI_ENTRANCE
     // 坐骑
@@ -8900,6 +8902,21 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             ui->voiceVolumeSlider->setValue(val);
             on_voiceVolumeSlider_valueChanged(val);
+            return true;
+        }
+    }
+
+    // 连接直播间
+    if (msg.contains("connectRoom"))
+    {
+        re = RE("connectRoom\\s*\\(\\s*(\\w+?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString rm = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            ui->roomIdEdit->setText(rm);
+            on_roomIdEdit_editingFinished();
             return true;
         }
     }
@@ -18384,7 +18401,10 @@ void MainWindow::showPkMenu()
 
     menu->addAction("大乱斗规则", [=]{
         if (pkRuleUrl.isEmpty())
+        {
+            showError("大乱斗规则", "未找到规则说明");
             return ;
+        }
         QDesktopServices::openUrl(QUrl(pkRuleUrl));
     });
 
@@ -18398,7 +18418,10 @@ void MainWindow::showPkMenu()
 
     menu->addAction("最后匹配的直播间", [=]{
         if (!ac->lastMatchRoomId)
+        {
+            showError("匹配记录", "没有最后匹配的直播间");
             return ;
+        }
         QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(ac->lastMatchRoomId)));
     });
 
@@ -21154,6 +21177,20 @@ void MainWindow::on_thankAttentionTabButton_clicked()
 {
     ui->thankStackedWidget->setCurrentIndex(2);
     us->setValue("mainwindow/thankStackIndex", 2);
+
+    foreach (auto btn, thankTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
+    }
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(themeSfg);
+}
+
+void MainWindow::on_blockTabButton_clicked()
+{
+    ui->thankStackedWidget->setCurrentIndex(3);
+    us->setValue("mainwindow/thankStackIndex", 3);
 
     foreach (auto btn, thankTabButtons)
     {

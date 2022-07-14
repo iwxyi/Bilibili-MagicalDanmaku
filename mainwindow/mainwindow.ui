@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -6064,6 +6064,16 @@ margin: 40px;</string>
               <number>0</number>
              </property>
              <item>
+              <widget class="WaterFloatButton" name="thankAttentionTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>关注</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="WaterFloatButton" name="thankWelcomeTabButton">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -6084,12 +6094,12 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="WaterFloatButton" name="thankAttentionTabButton">
+              <widget class="WaterFloatButton" name="blockTabButton">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="text">
-                <string>关注</string>
+                <string>禁言</string>
                </property>
               </widget>
              </item>
@@ -6130,14 +6140,14 @@ margin: 40px;</string>
         <item>
          <widget class="QStackedWidget" name="thankStackedWidget">
           <property name="styleSheet">
-           <string notr="true">#thankStackedWidget, #page, #page_2, #page_3
+           <string notr="true">#thankStackedWidget, #page, #page_2, #page_3, #page_6
 {
 	background: white;
 	border-radius: 5px;
 }</string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="page">
            <layout class="QVBoxLayout" name="verticalLayout_35">
@@ -6598,6 +6608,328 @@ margin: 40px;</string>
                <string>谢谢 %ai_name% 的关注%punc%</string>
               </property>
              </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_6">
+           <layout class="QVBoxLayout" name="verticalLayout_78">
+            <item>
+             <widget class="QWidget" name="autoBlockNewbieCard" native="true">
+              <property name="styleSheet">
+               <string notr="true">#autoBlockNewbieCard
+{
+	background: #ffffff;
+	border: none;
+	border-radius: 5px;
+}</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_65">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_19">
+                 <item>
+                  <widget class="QCheckBox" name="autoBlockNewbieCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;发送的内容包含关键词，自动禁言1个月&lt;/p&gt;&lt;p&gt;多个关键词用“|”分隔（支持正则表达式）&lt;/p&gt;&lt;p&gt;新人规则：&lt;/p&gt;&lt;p&gt;等级=0：前三句话&lt;/p&gt;&lt;p&gt;等级&amp;gt;0：第一句话&lt;/p&gt;&lt;p&gt;可以在实时弹幕的右键菜单中设置禁言时长&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>新人关键词禁言</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_18">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="autoBlockTimeSpin">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;禁言时长，到时间后系统会自动解禁&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                   </property>
+                   <property name="frame">
+                    <bool>false</bool>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                   <property name="suffix">
+                    <string>小时</string>
+                   </property>
+                   <property name="minimum">
+                    <number>1</number>
+                   </property>
+                   <property name="maximum">
+                    <number>720</number>
+                   </property>
+                   <property name="singleStep">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="blockNotOnlyNewbieCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不只是新人，所有触发敏感词的发言都直接禁言&lt;/p&gt;&lt;p&gt;房管只能禁言非房管；主播可以禁言房管&lt;/p&gt;&lt;p&gt;若要使用当前登录账号进行测试，可开启[调试模式]、关闭远程的[允许房管控制]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>非新人</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QPlainTextEdit" name="autoBlockNewbieKeysEdit">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>18</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>正则表达式简单规则：
+多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
+部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Sunken</enum>
+                 </property>
+                 <property name="maximumBlockCount">
+                  <number>0</number>
+                 </property>
+                 <property name="placeholderText">
+                  <string>触发禁言关键字，多个用“|”分隔，支持正则表达式</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="autoBlockNewbieNotifyCard" native="true">
+              <property name="styleSheet">
+               <string notr="true">#autoBlockNewbieNotifyCard
+{
+	background: #ffffff;
+	border: none;
+	border-radius: 5px;
+}</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_66">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_20">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QCheckBox" name="autoBlockNewbieNotifyCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;检测到关键词后，发送对应通知/警告/规则等&lt;/p&gt;&lt;p&gt;多行则随机发送一行&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>自动禁言后发送通知</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="ConditionEditor" name="autoBlockNewbieNotifyWordsEdit">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>18</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="maximumBlockCount">
+                  <number>0</number>
+                 </property>
+                 <property name="placeholderText">
+                  <string>新人禁言后发送禁言通知/提示/规则等自定义内容，多行则随机发送一行</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="promptBlockNewbieCard" native="true">
+              <property name="styleSheet">
+               <string notr="true">#promptBlockNewbieCard
+{
+	background: #ffffff;
+	border: none;
+	border-radius: 5px;
+}</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_67">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_22">
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QCheckBox" name="promptBlockNewbieCheck">
+                   <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;触发以下关键词时弹出快速禁言按钮，多个用“|”分隔&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;此功能不是自动禁言，两者关键词可不同&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="text">
+                    <string>新人关键词快速禁言提示</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="notOnlyNewbieCheck">
+                   <property name="toolTip">
+                    <string>不只是新人，所有触发敏感词的发言都提示禁言</string>
+                   </property>
+                   <property name="text">
+                    <string>非新人</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="QPlainTextEdit" name="promptBlockNewbieKeysEdit">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>18</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>正则表达式简单规则：
+多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
+部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPlainTextEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="maximumBlockCount">
+                  <number>0</number>
+                 </property>
+                 <property name="placeholderText">
+                  <string>触发以下关键词时弹出快速禁言按钮，多个用“|”分隔</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_32">
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <spacer name="horizontalSpacer_20">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="InteractiveButtonBase" name="eternalBlockListButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>永久禁言列表</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>
@@ -8011,7 +8343,7 @@ QTabBar::tab:selected
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
-            <string>定时</string>
+            <string>定时任务</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
@@ -8044,7 +8376,7 @@ QTabBar::tab:selected
           </widget>
           <widget class="QWidget" name="tabReply">
            <attribute name="title">
-            <string>回复</string>
+            <string> 自动回复</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
@@ -8074,7 +8406,7 @@ QTabBar::tab:selected
           </widget>
           <widget class="QWidget" name="tabEvent">
            <attribute name="title">
-            <string>事件</string>
+            <string>事件动作</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_13">
             <item>
@@ -8104,7 +8436,7 @@ QTabBar::tab:selected
           </widget>
           <widget class="QWidget" name="tabRemote">
            <attribute name="title">
-            <string>远程</string>
+            <string>网络服务</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0">
             <property name="spacing">
@@ -8395,298 +8727,6 @@ QTabBar::tab:selected
                 </property>
                 <property name="text">
                  <string>测试弹幕</string>
-                </property>
-                <property name="flat">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tabBlock">
-           <attribute name="title">
-            <string>禁言</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_7">
-            <property name="spacing">
-             <number>12</number>
-            </property>
-            <item>
-             <widget class="QWidget" name="autoBlockNewbieCard" native="true">
-              <property name="styleSheet">
-               <string notr="true">#autoBlockNewbieCard
-{
-	background: #ffffff;
-	border: none;
-	border-radius: 5px;
-}</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_65">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_19">
-                 <item>
-                  <widget class="QCheckBox" name="autoBlockNewbieCheck">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;发送的内容包含关键词，自动禁言1个月&lt;/p&gt;&lt;p&gt;多个关键词用“|”分隔（支持正则表达式）&lt;/p&gt;&lt;p&gt;新人规则：&lt;/p&gt;&lt;p&gt;等级=0：前三句话&lt;/p&gt;&lt;p&gt;等级&amp;gt;0：第一句话&lt;/p&gt;&lt;p&gt;可以在实时弹幕的右键菜单中设置禁言时长&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>新人关键词禁言</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_18">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QSpinBox" name="autoBlockTimeSpin">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;禁言时长，到时间后系统会自动解禁&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="suffix">
-                    <string>小时</string>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>720</number>
-                   </property>
-                   <property name="singleStep">
-                    <number>1</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QCheckBox" name="blockNotOnlyNewbieCheck">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不只是新人，所有触发敏感词的发言都直接禁言&lt;/p&gt;&lt;p&gt;房管只能禁言非房管；主播可以禁言房管&lt;/p&gt;&lt;p&gt;若要使用当前登录账号进行测试，可开启[调试模式]、关闭远程的[允许房管控制]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>非新人</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QPlainTextEdit" name="autoBlockNewbieKeysEdit">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>18</height>
-                  </size>
-                 </property>
-                 <property name="toolTip">
-                  <string>正则表达式简单规则：
-多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
-部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPlainTextEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Sunken</enum>
-                 </property>
-                 <property name="maximumBlockCount">
-                  <number>0</number>
-                 </property>
-                 <property name="placeholderText">
-                  <string>触发禁言关键字，多个用“|”分隔，支持正则表达式</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QWidget" name="autoBlockNewbieNotifyCard" native="true">
-              <property name="styleSheet">
-               <string notr="true">#autoBlockNewbieNotifyCard
-{
-	background: #ffffff;
-	border: none;
-	border-radius: 5px;
-}</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_66">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_20">
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QCheckBox" name="autoBlockNewbieNotifyCheck">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;检测到关键词后，发送对应通知/警告/规则等&lt;/p&gt;&lt;p&gt;多行则随机发送一行&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>自动禁言后发送通知</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="ConditionEditor" name="autoBlockNewbieNotifyWordsEdit">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>18</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPlainTextEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="maximumBlockCount">
-                  <number>0</number>
-                 </property>
-                 <property name="placeholderText">
-                  <string>新人禁言后发送禁言通知/提示/规则等自定义内容，多行则随机发送一行</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <widget class="QWidget" name="promptBlockNewbieCard" native="true">
-              <property name="styleSheet">
-               <string notr="true">#promptBlockNewbieCard
-{
-	background: #ffffff;
-	border: none;
-	border-radius: 5px;
-}</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_67">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_22">
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QCheckBox" name="promptBlockNewbieCheck">
-                   <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;触发以下关键词时弹出快速禁言按钮，多个用“|”分隔&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; color:#008000;&quot;&gt;此功能不是自动禁言，两者关键词可不同&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="text">
-                    <string>新人关键词快速禁言提示</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_8">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QCheckBox" name="notOnlyNewbieCheck">
-                   <property name="toolTip">
-                    <string>不只是新人，所有触发敏感词的发言都提示禁言</string>
-                   </property>
-                   <property name="text">
-                    <string>非新人</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QPlainTextEdit" name="promptBlockNewbieKeysEdit">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>18</height>
-                  </size>
-                 </property>
-                 <property name="toolTip">
-                  <string>正则表达式简单规则：
-多个关键词用“|”隔开，例如：关键词1|关键词2|关键词3
-部分符号前需加“\”转义，如：.+*?()[]{}^$</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPlainTextEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="maximumBlockCount">
-                  <number>0</number>
-                 </property>
-                 <property name="placeholderText">
-                  <string>触发以下关键词时弹出快速禁言按钮，多个用“|”分隔</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_32">
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <spacer name="horizontalSpacer_20">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="InteractiveButtonBase" name="eternalBlockListButton">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="cursor">
-                 <cursorShape>PointingHandCursor</cursorShape>
-                </property>
-                <property name="text">
-                 <string>永久禁言列表</string>
                 </property>
                 <property name="flat">
                  <bool>true</bool>
