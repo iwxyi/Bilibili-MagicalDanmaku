@@ -1262,7 +1262,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     }
 
     // 歌名 - 歌手
-    if (key.indexOf("-"))
+    if (key.contains("-"))
     {
         QRegularExpression re("^\\s*(.+?)\\s*-\\s*(.+?)\\s*$");
         QRegularExpressionMatch match;
@@ -1274,7 +1274,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
@@ -1283,7 +1283,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
@@ -1292,7 +1292,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
@@ -1301,7 +1301,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
@@ -1321,7 +1321,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name == name && song.artistNames == author)
                     return song;
@@ -1330,7 +1330,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名全匹配、歌手包含
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name == name && song.artistNames.contains(author))
                     return song;
@@ -1339,7 +1339,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含(cover)、歌手全匹配
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name.contains(name) && song.artistNames == author)
                     return song;
@@ -1348,7 +1348,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             // 歌名包含、歌手包含
             foreach (Song song, searchResultSongs)
             {
-                if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+                if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
                 if (song.name.contains(name) && song.artistNames.contains(author))
                     return song;
@@ -1357,8 +1357,21 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             pos = key.lastIndexOf(" ", pos-1);
         }
     }
+    // 纯歌名
+    else
+    {
+        // 歌名全匹配
+        QString name = key;
+        foreach (Song song, searchResultSongs)
+        {
+            if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
+                continue;
+            if (song.name == name)
+                return song;
+        }
+    }
 
-    // 判断每个词
+    // 每个词组都要包含
     QStringList words;
     words = key.split(QRegularExpression("[ \\-\\(\\)（）]+"), QString::SkipEmptyParts);
     foreach (Song song, searchResultSongs)
@@ -1385,7 +1398,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
     }
     foreach (Song song, searchResultSongs)
     {
-        if (validMusicTime && song.duration <= SHORT_MUSIC_DURATION)
+        if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
             continue;
         bool find = true;
         for (int i = 0; i < chars.size(); i++)
@@ -2199,7 +2212,7 @@ void OrderPlayerWindow::downloadSongMp3(Song song, QString url)
         file.close();
 
         // 判断时长
-        if (validMusicTime && song.duration > 1000)
+        if (validMusicTime && song.duration && song.duration > 1000)
         {
             QMediaPlayer player;
             player.setMedia(QUrl::fromLocalFile(songPath(song)));
