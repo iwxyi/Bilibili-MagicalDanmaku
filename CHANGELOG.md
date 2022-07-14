@@ -1,7 +1,9 @@
 ### v4.7.2 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
 
-- 修复舰长进场提示两次的问题
+- 新增“智能点歌”开关：点歌播放第一条结果还是按关键词匹配程度筛选
+- 新增`>sendLongText()`支持发送`%n%`分隔多条弹幕
 - 优化通知卡片的显示
+- 修复舰长进场提示两次的问题
 
 
 

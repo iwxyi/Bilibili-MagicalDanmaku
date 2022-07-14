@@ -393,6 +393,7 @@ private:
     bool autoSwitchSource = true; // 自动切换音源
     bool validMusicTime = false;  // 验证歌曲时间
     QStringList blackList;        // 点歌黑名单
+    bool intelliPlayer = true;    // 自动选择匹配度最高的应用
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;
