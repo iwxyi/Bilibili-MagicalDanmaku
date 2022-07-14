@@ -1282,11 +1282,11 @@ tips：
 | setVoiceVolume(volume)                             | 设置语音音量     | 0~100                                                        |
 | openUrl(url)                                       | 打开网址         | 浏览器打开网址                                               |
 | connectNet(url)                                    | 连接网址         | 用于连接其他API，不管返回结果                                |
-| getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
+| getData(url, [callback])                           | get数据          | 后台连接网址（GET），返回JSON数据，callback详见“获取网络数据回调”示例。回调中的`%text%` 为纯文本结果 |
 | postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
 | postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送（仅Content-Type区别）                   |
-| postHeaderData(url, headers, data, [callback])     | post头数据       | 同上。headers多个之间用`&`分隔，格式：key1=value1&key2=value2&key3=value3 |
-| downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件                     |
+| postHeaderData(url, headers, data, [callback])     | post头数据       | 同上。headers多个之间用`&`分隔，格式：header1=value1&header2=value2&header3=value3 |
+| downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件。回调中的`%text%`为文件路径 |
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）     |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |

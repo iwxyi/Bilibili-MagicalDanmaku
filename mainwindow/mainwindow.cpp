@@ -8791,7 +8791,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
-                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                    LiveDanmaku dmk;
+                    dmk.with(MyJson(ba));
+                    dmk.setText(ba);
+                    triggerCmdEvent(callback, dmk);
                 }
             });
             return true;
@@ -8818,7 +8821,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
-                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                    LiveDanmaku dmk;
+                    dmk.with(MyJson(ba));
+                    dmk.setText(ba);
+                    triggerCmdEvent(callback, dmk);
                 }
             });
             return true;
@@ -8867,7 +8873,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
-                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                    LiveDanmaku dmk;
+                    dmk.with(MyJson(ba));
+                    dmk.setText(ba);
+                    triggerCmdEvent(callback, dmk);
                 }
 
                 manager->deleteLater();
@@ -8900,7 +8909,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 qInfo() << QString(ba);
                 if (!callback.isEmpty())
                 {
-                    triggerCmdEvent(callback, LiveDanmaku(MyJson(ba)));
+                    LiveDanmaku dmk;
+                    dmk.with(MyJson(ba));
+                    dmk.setText(ba);
+                    triggerCmdEvent(callback, dmk);
                 }
             });
             return true;
@@ -18539,7 +18551,8 @@ void MainWindow::getPositiveVote()
 
         // 没有评价过的老用户进行提示好评
         if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 7 * 24 * 3600)
-                && !us->value("ask/positiveVote").toBool())
+                && !us->value("ask/positiveVote").toBool()
+                && qrand() % 5 == 0)
         {
             QTimer::singleShot(5000, [=]{
                 if (!ac->cookieUid.isEmpty() && !_hasPositiveVote)
@@ -18552,9 +18565,12 @@ void MainWindow::getPositiveVote()
                         positiveVote();
                     });
                     connect(noti, &NotificationEntry::signalBtnClicked, this, [=](int i) {
-                        qDebug() << "点击好评按钮" << i;
+                        qDebug() << "点击评价按钮" << i;
                         if (i != 2)
+                        {
+                            us->setValue("ask/positiveVote", true);
                             positiveVote();
+                        }
                         else
                             openLink("http://live.lyixi.com/");
                     });
