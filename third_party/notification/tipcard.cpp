@@ -118,7 +118,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     close_timer = new QTimer(this);
     close_timer->setSingleShot(true);
     connect(close_timer, &QTimer::timeout, this, [=]{
-        if (noti->click_at == -1)
+        if (noti->click_at == NotificationEntry::ClickAtButton::CAB_NONE)
             emit noti->signalTimeout();
         slotClosed();
     });

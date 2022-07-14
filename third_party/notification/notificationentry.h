@@ -8,7 +8,7 @@ class NotificationEntry : public QObject
 {
     Q_OBJECT
 public:
-    NotificationEntry() : time(5000), click_hide(false), click_at(CAB_CARD), default_btn(CAB_NONE)
+    NotificationEntry() : time(5000), click_hide(false), click_at(CAB_NONE), default_btn(CAB_NONE)
     {
     }
 

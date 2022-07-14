@@ -1,6 +1,6 @@
 ### v4.7.2 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
 
-- 新增代码框中粘贴代码片段自动识别
+- 新增空代码框中粘贴代码片段自动识别并添加
 - 新增“智能点歌”开关：点歌播放第一条结果还是按关键词匹配程度筛选
 - 新增`>sendLongText()`支持发送`%n%`分隔多条弹幕
 - 新增`>getData()`等网络函数的回调事件使用`%text%`获取返回的原始文本

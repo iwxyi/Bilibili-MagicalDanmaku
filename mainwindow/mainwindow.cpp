@@ -3404,6 +3404,14 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
     });
 
     connect(tw, &TaskWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        if (tw->isEmpty())
+        {
+            int row = ui->taskListWidget->row(item);
+            ui->taskListWidget->removeItemWidget(item);
+            ui->taskListWidget->takeItem(row);
+            tw->deleteLater();
+            saveTaskList();
+        }
         addCodeSnippets(doc);
     });
 }
@@ -3542,6 +3550,14 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
     });
 
     connect(rw, &ReplyWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        if (rw->isEmpty())
+        {
+            int row = ui->replyListWidget->row(item);
+            ui->replyListWidget->removeItemWidget(item);
+            ui->replyListWidget->takeItem(row);
+            rw->deleteLater();
+            saveReplyList();
+        }
         addCodeSnippets(doc);
     });
 }
@@ -3718,6 +3734,14 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
     });
 
     connect(rw, &EventWidget::signalInsertCodeSnippets, this, [=](const QJsonDocument& doc) {
+        if (rw->isEmpty())
+        {
+            int row = ui->eventListWidget->row(item);
+            ui->eventListWidget->removeItemWidget(item);
+            ui->eventListWidget->takeItem(row);
+            rw->deleteLater();
+            saveEventList();
+        }
         addCodeSnippets(doc);
     });
 }
@@ -18681,7 +18705,7 @@ void MainWindow::getPositiveVote()
                 && !us->value("ask/positiveVote").toBool()
                 && qrand() % 5 == 0)
         {
-            QTimer::singleShot(5000, [=]{
+            QTimer::singleShot(3000, [=]{
                 if (!ac->cookieUid.isEmpty() && !_hasPositiveVote)
                 {
                     auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
@@ -18692,7 +18716,7 @@ void MainWindow::getPositiveVote()
                         positiveVote();
                     });
                     connect(noti, &NotificationEntry::signalBtnClicked, this, [=](int i) {
-                        qDebug() << "点击评价按钮" << i;
+                        qInfo() << "点击评价按钮" << i;
                         if (i != 2)
                         {
                             us->setValue("ask/positiveVote", true);
@@ -18702,7 +18726,7 @@ void MainWindow::getPositiveVote()
                             openLink("http://live.lyixi.com/");
                     });
                     connect(noti, &NotificationEntry::signalTimeout, this, [=] {
-                        qDebug() << "默认好评";
+                        qInfo() << "默认好评";
                         positiveVote();
                     });
                     noti->setDefaultBtn(1);

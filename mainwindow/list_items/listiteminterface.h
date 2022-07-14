@@ -44,6 +44,11 @@ public:
 
     virtual void triggered();
 
+    virtual bool isEmpty() const
+    {
+        return title().isEmpty() && body().isEmpty();
+    }
+
 signals:
     void signalResized();
     void signalInsertCodeSnippets(const QJsonDocument& doc);
