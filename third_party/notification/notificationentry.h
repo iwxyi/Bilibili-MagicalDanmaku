@@ -8,7 +8,7 @@ class NotificationEntry : public QObject
 {
     Q_OBJECT
 public:
-    NotificationEntry() : time(5000), click_hide(false), click_at(CAB_CARD)
+    NotificationEntry() : time(5000), click_hide(false), click_at(CAB_CARD), default_btn(CAB_NONE)
     {
     }
 
@@ -58,6 +58,16 @@ public:
         }
     }
 
+    void setDisplayTime(int ms)
+    {
+        this->time = ms;
+    }
+
+    void setDefaultBtn(int i)
+    {
+        default_btn = ClickAtButton(i);
+    }
+
     void addFilter(QString f, QString v)
     {
         filters << f;
@@ -98,11 +108,12 @@ public:
     }
 
 signals:
-    void signalCardClicked();
-    void signalBtnClicked(int i);
+    void signalCardClicked();       // 点击卡片
+    void signalBtnClicked(int i);   // 点击按钮，0/1/2
+    void signalTimeout();           // 超时关闭
+    void signalClosed();            // 关闭，可能超时、点击卡片、点击按钮
 
 public:
-
     QString key;
     QString title;
     QString content;
@@ -119,6 +130,7 @@ public:
     QStringList filters;
     QStringList values;
     ClickAtButton click_at;
+    ClickAtButton default_btn;
 };
 
 #endif // NOTIFICATIONENTRY_H

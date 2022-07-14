@@ -1,3 +1,20 @@
+### v4.7.2 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
+
+- 修复舰长进场提示两次的问题
+- 优化通知卡片的显示
+
+
+
+
+
+### v4.7.1 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.0)
+
+- 紧急修复计算表达式不规范时的错误
+
+
+
+
+
 ### v4.7.0 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.0)
 
 - 新增弹幕姬菜单直接任命与取消房管，并显示任命情况

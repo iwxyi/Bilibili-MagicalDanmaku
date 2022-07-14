@@ -1,7 +1,7 @@
 #include "tipbox.h"
 
 TipBox::TipBox(QWidget *parent) : QWidget(parent), suitable_width(CARD_FIXED_WIDTH),
-    bg_color(Qt::white), font_color(Qt::black), btn_color(Qt::blue)
+    bg_color(Qt::white), font_color(Qt::black), btn_color("#4169e1")
 {
     setAttribute(Qt::WA_TransparentForMouseEvents, true);
     setMinimumSize(CARD_FIXED_WIDTH, 0);

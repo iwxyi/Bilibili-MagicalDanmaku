@@ -18527,6 +18527,38 @@ void MainWindow::getPositiveVote()
         _fanfanLikeCount = data.i("like_count");
         ui->positiveVoteCheck->setChecked(_hasPositiveVote);
         ui->positiveVoteCheck->setText("好评(" + snum(_fanfanLikeCount) + ")");
+
+        // 没有评价过的老用户进行提示好评
+        if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 7 * 24 * 3600)
+                && !us->value("ask/positiveVote").toBool())
+        {
+            QTimer::singleShot(5000, [=]{
+                if (!ac->cookieUid.isEmpty() && !_hasPositiveVote)
+                {
+                    auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
+                    noti->setBtn(1, "好评", "god");
+                    noti->setBtn(2, "吐槽", "bad");
+                    connect(noti, &NotificationEntry::signalCardClicked, this, [=] {
+                        qInfo() << "点击好评卡片";
+                        positiveVote();
+                    });
+                    connect(noti, &NotificationEntry::signalBtnClicked, this, [=](int i) {
+                        qDebug() << "点击好评按钮" << i;
+                        if (i != 2)
+                            positiveVote();
+                        else
+                            openLink("http://live.lyixi.com/");
+                    });
+                    connect(noti, &NotificationEntry::signalTimeout, this, [=] {
+                        qDebug() << "默认好评";
+                        positiveVote();
+                    });
+                    noti->setDefaultBtn(1);
+                    tip_box->createTipCard(noti);
+                }
+            });
+        }
+
     });
 }
 
@@ -21817,6 +21849,7 @@ void MainWindow::on_positiveVoteCheck_clicked()
         return ;
     }
 
+    us->setValue("ask/positiveVote", true);
     if (_hasPositiveVote > 0) // 取消好评
     {
         if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，要残忍地取消吗？", QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes)
