@@ -2181,10 +2181,21 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
         statusLabel->setText("");
         if (!errorMsg.isEmpty())
         {
-            showError("发送弹幕失败", errorMsg);
-            qWarning() << msg;
-            localNotify(errorMsg + " -> " + msg);
+            QString errorDesc = errorMsg;
+            if (errorMsg == "f")
+            {
+                errorDesc = "包含屏蔽词";
+            }
+            else if (errorMsg == "k")
+            {
+                errorDesc = "包含直播间屏蔽词";
+            }
 
+            showError("发送弹幕失败", errorDesc);
+            qWarning() << msg;
+            localNotify(errorDesc + " -> " + msg);
+
+            // 重试
             if (!ui->retryFailedDanmuCheck->isChecked())
                 return ;
 
