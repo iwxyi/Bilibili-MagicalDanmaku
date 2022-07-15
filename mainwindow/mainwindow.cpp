@@ -778,6 +778,7 @@ void MainWindow::readConfig()
         if (!recordLoop) // 没有正在录制
             return ;
 
+        qInfo() << "定时停止录播";
         recordLoop->quit(); // 这个就是停止录制了
         // 停止之后，录播会检测是否还需要重新录播
         // 如果是，则继续录
@@ -7929,40 +7930,32 @@ void MainWindow::startLiveRecord()
     getRoomLiveVideoUrl([=](QString url){
         recordUrl = "";
 
-        qInfo() << "开始录播：" << url;
+        qInfo() << "准备录播：" << url;
         QNetworkAccessManager manager;
         QNetworkRequest* request = new QNetworkRequest(QUrl(url));
         QEventLoop* loop = new QEventLoop();
         QNetworkReply *reply = manager.get(*request);
 
-        QObject::connect(reply, SIGNAL(finished()), loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
-        connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 bytesReceived, qint64 bytesTotal){
+        connect(reply, SIGNAL(finished()), loop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+        connect(reply, &QNetworkReply::downloadProgress, loop, [=](qint64 bytesReceived, qint64 bytesTotal){
             if (bytesReceived > 0)
             {
-                qInfo() << "原始地址可直接下载";
+                // qInfo() << "原始地址可直接下载";
                 recordUrl = url;
                 loop->quit();
-                reply->deleteLater();
             }
         });
         loop->exec(); //开启子事件循环
         loop->deleteLater();
 
         // B站下载会有302重定向的，需要获取headers里面的Location值
-        if (recordUrl.isEmpty())
+        if (recordUrl.isEmpty() || !reply->rawHeader("location").isEmpty())
         {
             recordUrl = reply->rawHeader("location");
-            /*auto headers = reply->rawHeaderPairs();
-            for (int i = 0; i < headers.size(); i++)
-                if (headers.at(i).first.toLower() == "location")
-                {
-                    recordUrl = headers.at(i).second;
-                    qInfo() << "重定向下载地址：" << recordUrl;
-                    break;
-                }*/
-            reply->deleteLater();
+            qInfo() << "录播实际地址：" << recordUrl;
         }
         delete request;
+        reply->deleteLater();
         if (recordUrl.isEmpty())
         {
             qWarning() << "无法获取下载地址";
@@ -7976,6 +7969,7 @@ void MainWindow::startLiveRecord()
 
 void MainWindow::startRecordUrl(QString url)
 {
+    qInfo() << "开始录播";
     QDir dir(rt->dataPath);
     dir.mkpath("record");
     dir.cd("record");
