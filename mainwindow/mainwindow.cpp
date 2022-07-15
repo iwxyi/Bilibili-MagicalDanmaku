@@ -305,7 +305,6 @@ void MainWindow::initView()
     int listHeight = giftImgSize + ui->guardCountLabel->height() + ui->guardCountTextLabel->height();
     ui->giftListWidget->setFixedHeight(listHeight);
 
-
     // 弹幕设置瀑布流
     ui->showLiveDanmakuWindowButton->setAutoTextColor(false);
     ui->showLiveDanmakuWindowButton->setFontSize(12);
@@ -626,11 +625,6 @@ void MainWindow::readConfig()
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
 
-    // 页面
-    int stackIndex = us->value("mainwindow/stackIndex", 0).toInt();
-    if (stackIndex >= 0 && stackIndex < ui->stackedWidget->count())
-        ui->stackedWidget->setCurrentIndex(stackIndex);
-
     // 标签组
     int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
@@ -639,6 +633,15 @@ void MainWindow::readConfig()
         appendListItemButton->hide();
     else
         appendListItemButton->show();
+
+    // 页面
+    int stackIndex = us->value("mainwindow/stackIndex", 0).toInt();
+    if (stackIndex >= 0 && stackIndex < ui->stackedWidget->count())
+    {
+        ui->stackedWidget->setCurrentIndex(stackIndex);
+        adjustPageSize(stackIndex);
+        switchPageAnimation(stackIndex);
+    }
 
     // 答谢标签
     int thankStackIndex = us->value("mainwindow/thankStackIndex", 0).toInt();
@@ -1388,7 +1391,7 @@ void MainWindow::readConfig()
     // 判断新的一天
     connect(dayTimer, &QTimer::timeout, this, [=]{
         todayIsEnding = false;
-qDebug() << "--------NEW_DAY";
+        qInfo() << "--------NEW_DAY" << QDateTime::currentDateTime();
         {
             // 当前时间必定是 0:0:1，误差0.2秒内
             QDate tomorrowDate = QDate::currentDate();
@@ -1614,6 +1617,14 @@ void MainWindow::adjustPageSize(int page)
         int tabIndex = ui->tabWidget->currentIndex();
         if (tabIndex == TAB_TIMER_TASK)
         {
+            static bool first = false;
+            if (!first)
+            {
+                first = true;
+                QTimer::singleShot(0, [=]{
+                    ui->taskListWidget->verticalScrollBar()->setSliderPosition(us->i("mainwindow/timerTaskScroll"));
+                });
+            }
             for (int row = 0; row < ui->taskListWidget->count(); row++)
             {
                 auto item = ui->taskListWidget->item(row);
@@ -1628,6 +1639,14 @@ void MainWindow::adjustPageSize(int page)
         }
         else if (tabIndex == TAB_AUTO_REPLY)
         {
+            static bool first = false;
+            if (!first)
+            {
+                first = true;
+                QTimer::singleShot(0, [=]{
+                    ui->replyListWidget->verticalScrollBar()->setSliderPosition(us->i("mainwindow/autoReplyScroll"));
+                });
+            }
             for (int row = 0; row < ui->replyListWidget->count(); row++)
             {
                 auto item = ui->replyListWidget->item(row);
@@ -1642,6 +1661,14 @@ void MainWindow::adjustPageSize(int page)
         }
         else if (tabIndex == TAB_EVENT_ACTION)
         {
+            static bool first = false;
+            if (!first)
+            {
+                first = true;
+                QTimer::singleShot(0, [=]{
+                    ui->eventListWidget->verticalScrollBar()->setSliderPosition(us->i("mainwindow/eventActionScroll"));
+                });
+            }
             for (int row = 0; row < ui->eventListWidget->count(); row++)
             {
                 auto item = ui->eventListWidget->item(row);
@@ -1729,6 +1756,15 @@ void MainWindow::switchPageAnimation(int page)
     }
     else if (page == PAGE_DANMAKU)
     {
+        static bool restored = false;
+        if (!restored)
+        {
+            restored = true;
+            QTimer::singleShot(0, [=]{
+                ui->scrollArea->verticalScrollBar()->setSliderPosition(us->i("mainwindow/configFlowScroll"));
+            });
+        }
+
         QRect g(ui->danmakuTitleSplitWidget1->geometry());
         startGeometryAni(ui->danmakuTitleSplitWidget1,
                          QRect(g.right()-1, g.top(), 1, 1), g);
@@ -1813,6 +1849,7 @@ void MainWindow::switchPageAnimation(int page)
 
 MainWindow::~MainWindow()
 {
+    // 保存配置
     if (danmuLogFile)
     {
         finishSaveDanmuToFile();
@@ -1821,7 +1858,13 @@ MainWindow::~MainWindow()
     {
         saveCalculateDailyData();
     }
+    us->setValue("mainwindow/configFlowScroll", ui->scrollArea->verticalScrollBar()->sliderPosition());
+    us->setValue("mainwindow/timerTaskScroll", ui->taskListWidget->verticalScrollBar()->sliderPosition());
+    us->setValue("mainwindow/autoReplyScroll", ui->replyListWidget->verticalScrollBar()->sliderPosition());
+    us->setValue("mainwindow/eventActionScroll", ui->eventListWidget->verticalScrollBar()->sliderPosition());
+    us->sync();
 
+    // 关闭窗口
     if (danmakuWindow)
     {
         danmakuWindow->close();
@@ -1860,6 +1903,7 @@ MainWindow::~MainWindow()
     if (isFileExist(webCache("")))
         deleteDir(webCache(""));
 
+    // 删除界面
     delete ui;
     tray->deleteLater();
 
