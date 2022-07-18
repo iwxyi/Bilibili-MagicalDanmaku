@@ -739,6 +739,10 @@ private slots:
 
     void on_autoUpdateCheck_clicked();
 
+    void on_showChangelogCheck_clicked();
+
+    void on_updateBetaCheck_clicked();
+
     void on_dontSpeakOnPlayingSongCheck_clicked();
 
     void on_shieldKeywordListButton_clicked();

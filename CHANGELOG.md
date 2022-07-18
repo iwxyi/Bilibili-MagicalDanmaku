@@ -1,4 +1,13 @@
-### v4.7.2 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
+### v4.7.2 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.3)
+
+- 新增升级后显示更新内容
+- 新增扩展的主页、打赏、联系作者等
+
+
+
+
+
+### v4.7.2 [优化与修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
 
 - 新增空代码框中粘贴代码片段自动识别并添加
 - 新增“智能点歌”开关：点歌播放第一条结果还是按关键词匹配程度筛选

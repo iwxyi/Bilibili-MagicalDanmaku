@@ -462,11 +462,11 @@ void MainWindow::initView()
         newFacileMenu;
         menu->addAction(ui->actionCustom_Variant);
         menu->addAction(ui->actionReplace_Variant);
-        menu->addAction(ui->actionData_Path);
         menu->split()->addAction(ui->actionPaste_Code);
         menu->addAction(ui->actionGenerate_Default_Code);
         menu->addAction(ui->actionRead_Default_Code);
         menu->split()->addAction(ui->actionLocal_Mode);
+        menu->addAction(ui->actionData_Path);
         menu->addAction(ui->actionDebug_Mode);
         menu->addAction(ui->actionLast_Candidate);
         menu->exec();
@@ -619,6 +619,14 @@ void MainWindow::readConfig()
     {
         upgradeVersionToLastest(us->value("runtime/appVersion").toString());
         us->setValue("runtime/appVersion", rt->appVersion);
+        QTimer::singleShot(1000, [=]{
+            QString ch = QApplication::applicationDirPath() + "/CHANGELOG.md";
+            if (ui->showChangelogCheck->isChecked()
+                    && isFileExist(ch))
+            {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(ch));
+            }
+        });
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
 
@@ -640,7 +648,9 @@ void MainWindow::readConfig()
     {
         ui->stackedWidget->setCurrentIndex(stackIndex);
         adjustPageSize(stackIndex);
-        switchPageAnimation(stackIndex);
+        QTimer::singleShot(0, [=]{
+            switchPageAnimation(stackIndex);
+        });
     }
 
     // 答谢标签
@@ -1257,11 +1267,11 @@ void MainWindow::readConfig()
 
 #ifndef ZUOQI_ENTRANCE
     // 开机自启
-    if (us->value("runtime/startOnReboot", false).toBool())
-        ui->startOnRebootCheck->setChecked(true);
+    ui->startOnRebootCheck->setChecked(us->value("runtime/startOnReboot", false).toBool());
     // 自动更新
-    if (us->value("runtime/autoUpdate", true).toBool())
-        ui->autoUpdateCheck->setChecked(true);
+    ui->autoUpdateCheck->setChecked(us->value("runtime/autoUpdate", true).toBool());
+    ui->showChangelogCheck->setChecked(us->value("runtime/showChangelog", true).toBool());
+    ui->updateBetaCheck->setChecked(us->value("runtime/updateBeta", false).toBool());
 #endif
 
     // 每分钟定时
@@ -19058,6 +19068,30 @@ void MainWindow::loadWebExtensionList()
             placehold->setFixedSize(1, btnSize);
             btnHLayout->addWidget(placehold);
 
+            // 右键菜单
+            connect(widget, &InteractiveButtonBase::rightClicked, this, [=]{
+                newFacileMenu;
+                menu->addAction(QIcon(":/icons/directory"), "打开文件夹", [=]{
+                    QDesktopServices::openUrl(QUrl::fromLocalFile(info.absoluteFilePath()));
+                });
+
+                QString url = inf.s("homepage");
+                menu->split()->addAction(QIcon(":/icons/room"), "插件主页", [=]{
+                    openLink(url);
+                })->disable(url.isEmpty());
+
+                url = inf.s("contact");
+                menu->addAction(QIcon(":/icons/music_reply"), "联系作者", [=]{
+                    openLink(url);
+                })->disable(url.isEmpty());
+
+                url = inf.s("reward");
+                menu->addAction(QIcon(":/icons/candy"), "打赏", [=]{
+                    openLink(url);
+                })->disable(url.isEmpty());
+                menu->exec();
+            });
+
             // URL
             if (!urlR.isEmpty())
             {
@@ -19581,7 +19615,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
     for (int i = index; i < versions.size() - 1; i++)
     {
         QString ver = versions.at(i);
-        qInfo() << "从旧版升级：" << ver << " -> " << versions.at(i+1);
+        qInfo() << "数据升级：" << ver << " -> " << versions.at(i+1);
         upgradeOneVersionData(ver);
     }
 }
@@ -21735,6 +21769,16 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
 void MainWindow::on_autoUpdateCheck_clicked()
 {
     us->setValue("runtime/autoUpdate", ui->autoUpdateCheck->isChecked());
+}
+
+void MainWindow::on_showChangelogCheck_clicked()
+{
+    us->setValue("runtime/showChangelog", ui->showChangelogCheck->isChecked());
+}
+
+void MainWindow::on_updateBetaCheck_clicked()
+{
+    us->setValue("runtime/updateBeta", ui->updateBetaCheck->isChecked());
 }
 
 void MainWindow::on_dontSpeakOnPlayingSongCheck_clicked()

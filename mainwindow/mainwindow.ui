@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>833</width>
+    <width>840</width>
     <height>624</height>
    </rect>
   </property>
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1640,7 +1640,7 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>753</width>
+             <width>760</width>
              <height>504</height>
             </rect>
            </property>
@@ -4050,7 +4050,7 @@ QPushButton:pressed
               <x>10</x>
               <y>820</y>
               <width>161</width>
-              <height>141</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4138,19 +4138,6 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>系统托盘</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="CheckBox1" name="autoUpdateCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>自动下载与安装新版安装包</string>
-               </property>
-               <property name="text">
-                <string>自动更新</string>
                </property>
               </widget>
              </item>
@@ -5954,6 +5941,108 @@ margin: 40px;</string>
                 </widget>
                </item>
               </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="upgradeSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>190</x>
+              <y>1090</y>
+              <width>161</width>
+              <height>111</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>每次更新后显示更新了什么</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#upgradeSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_79">
+             <item>
+              <widget class="QLabel" name="label_66">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>更新</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_40" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="autoUpdateCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>自动下载与安装新版安装包</string>
+               </property>
+               <property name="text">
+                <string>自动更新</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="showChangelogCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>自动下载与安装新版安装包</string>
+               </property>
+               <property name="text">
+                <string>显示更新内容</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="updateBetaCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>提前体验新版特性，可能会有未预料的问题</string>
+               </property>
+               <property name="text">
+                <string>Beta版更新</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -8339,7 +8428,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -9057,7 +9146,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>833</width>
+     <width>840</width>
      <height>23</height>
     </rect>
    </property>

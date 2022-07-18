@@ -3078,17 +3078,20 @@ JSON 格式：
 {
     "name": "点歌姬",			  // 扩展整体名字
     "min_version": "4.4.0",		// 能用的神奇弹幕最低版本，过低会报警告
+    "author": "小乂",			   // 作者名字
 	"list": [					// 允许多个网页，list中一项一个
 		{
 			"name": "弹幕点歌列表",       // 这是显示出来的名字
 			"url": "index.html", // 相对于主机地址的URL路径
 			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除", // 简单描述与说明
+            "author": "作者名",   // （可空）单独的作者名字
 			"css": "list.css",   // （可空）便于用户修改的CSS文件相对于www文件夹的路径
             "css_custom": "list_custom.css", // （可空）用户自定义CSS，修改后会覆盖上面一项
             "cover": "cover.png",		// （可空）扩展封面图片，默认为 cover.png
             "code": [], 	// （可空）有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
             "config": "config.html",	// （可空）扩展的配置页面
             "homepage": "http://xxx",   // （可空）主页链接
+            "contact": "http://xxx",    // （可空）联系作者
             "reward": "http://xxx",     // （可空）打赏链接
             "dir": "images",			// （可空）打开某一文件夹，比如图片资源，用于用户替换
             "file": "result.txt"		// （可空）打开某一文件，比如保存的抽奖结果
