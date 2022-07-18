@@ -794,6 +794,8 @@ private slots:
 
     void on_identityCodeEdit_editingFinished();
 
+    void on_recordDataButton_clicked();
+
 private:
     void initView();
     void initStyle();

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>840</width>
-    <height>624</height>
+    <width>833</width>
+    <height>1132</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1640,8 +1640,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>504</height>
+             <width>753</width>
+             <height>1012</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3457,17 +3457,41 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="CheckBox1" name="recordCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
+              <layout class="QHBoxLayout" name="horizontalLayout_73" stretch="1,0">
+               <property name="topMargin">
+                <number>0</number>
                </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：安装目录/records/&lt;/p&gt;&lt;p&gt;保存 flv 原始数据，未进行编解码，可能需要使用 PotPlayer 等自带解码功能的播放器才能打开，Windows 自带的 Media Player 无法打开录播&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>原画录播</string>
-               </property>
-              </widget>
+               <item>
+                <widget class="CheckBox1" name="recordCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;录制文件位置：安装目录/records/&lt;/p&gt;&lt;p&gt;保存 flv 原始数据，未进行编解码，可能需要使用 PotPlayer 等自带解码功能的播放器才能打开，Windows 自带的 Media Player 无法打开录播&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>原画录播</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="recordDataButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>打开录播视频所在的位置</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <widget class="QSpinBox" name="recordSplitSpin">
@@ -9146,7 +9170,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>840</width>
+     <width>833</width>
      <height>23</height>
     </rect>
    </property>

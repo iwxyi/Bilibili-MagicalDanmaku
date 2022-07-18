@@ -350,6 +350,8 @@ void MainWindow::initView()
     ui->saveDanmakuToFileButton->setRadius(rt->fluentRadius);
     ui->calculateDailyDataButton->setSquareSize();
     ui->calculateDailyDataButton->setRadius(rt->fluentRadius);
+    ui->recordDataButton->setSquareSize();
+    ui->recordDataButton->setRadius(rt->fluentRadius);
 
     // 答谢页面
     thankTabButtons = {
@@ -778,8 +780,7 @@ void MainWindow::readConfig()
     orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
-    if (us->value("danmaku/record", false).toBool())
-        ui->recordCheck->setChecked(true);
+    ui->recordCheck->setChecked(us->value("danmaku/record", false).toBool());
     int recordSplit = us->value("danmaku/recordSplit", 30).toInt();
     ui->recordSplitSpin->setValue(recordSplit);
     recordTimer = new QTimer(this);
@@ -793,7 +794,6 @@ void MainWindow::readConfig()
         // 停止之后，录播会检测是否还需要重新录播
         // 如果是，则继续录
     });
-    ui->recordCheck->setToolTip("保存地址：" + rt->dataPath + "record/房间名_时间.mp4");
 
     // 发送弹幕
     ac->browserCookie = us->value("danmaku/browserCookie", "").toString();
@@ -22189,4 +22189,10 @@ void MainWindow::on_identityCodeEdit_editingFinished()
 {
     ac->identityCode = ui->identityCodeEdit->text();
     us->set("live-open/identityCode", ac->identityCode);
+}
+
+void MainWindow::on_recordDataButton_clicked()
+{
+    QDir dir(rt->dataPath + "record");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
