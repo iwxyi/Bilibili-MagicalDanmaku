@@ -265,6 +265,7 @@ private slots:
 
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
+    bool sendVariantMsg(QString msg, const LiveDanmaku& danmaku, int channel = NOTIFY_CD_CN, bool manual = false, bool delayMine = false);
     void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
     void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
     void slotSendAutoMsg(bool timeout);

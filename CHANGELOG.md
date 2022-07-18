@@ -1,7 +1,8 @@
 ### v4.7.2 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.3)
 
 - 新增升级后显示更新内容
-- 新增扩展的主页、打赏、联系作者等
+- 新增扩展的主页、打赏、联系作者
+- 新增扩展自定义菜单
 
 
 

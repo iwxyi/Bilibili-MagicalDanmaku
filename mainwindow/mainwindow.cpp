@@ -2289,6 +2289,37 @@ void MainWindow::sendRoomMsg(QString roomId, QString msg)
 }
 
 /**
+ * 发送带有变量的弹幕或者执行代码
+ * @param msg       多行，带变量
+ * @param danmaku   参数
+ * @param channel   通道
+ * @param manual    是否手动
+ * @param delayMine 自己通过弹幕触发的，执行需要晚一点
+ * @return          是否有发送弹幕或执行代码
+ */
+bool MainWindow::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
+{
+    QStringList msgs = getEditConditionStringList(msg, danmaku);
+    if (!msgs.size())
+        return false;
+
+    int r = qrand() % msgs.size();
+    QString s = msgs.at(r);
+    if (!s.trimmed().isEmpty())
+    {
+        if (delayMine && QString::number(danmaku.getUid()) == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
+        {
+            if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
+                autoMsgTimer->start(); // 先启动，避免立即发送
+            else
+                s = "\\n" + s; // 延迟一次发送的时间
+        }
+        sendCdMsg(s, danmaku, 0, channel, true, false, manual);
+    }
+    return true;
+}
+
+/**
  * 发送多条消息
  * 不允许包含变量
  * 使用“\n”进行多行换行
@@ -2441,6 +2472,7 @@ void MainWindow::slotSendAutoMsg(bool timeout)
 
 /**
  * 发送前确保没有需要调整的变量了
+ * 若有变量，请改用：sendVariantMsg
  * 而且已经不需要在意条件了
  * 一般解析后的弹幕列表都随机执行一行，以cd=0来发送cd弹幕
  * 带有cd channel，但实际上不一定有cd
@@ -3451,15 +3483,9 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
                 localNotify("[未开播，不做回复]");
             return ;
         }
-        QStringList msgs = getEditConditionStringList(sl, LiveDanmaku());
-        if (msgs.size())
+
+        if (sendVariantMsg(sl, LiveDanmaku(), TASK_CD_CN, manual))
         {
-            int r = qrand() % msgs.size();
-            QString s = msgs.at(r);
-            if (!s.trimmed().isEmpty())
-            {
-                sendCdMsg(s, LiveDanmaku(), 0, TASK_CD_CN, true, false, manual);
-            }
         }
         else if (debugPrint)
         {
@@ -3590,22 +3616,9 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
                 localNotify("[未开播，不做回复]");
             return ;
         }
-        QStringList msgs = getEditConditionStringList(sl, danmaku);
-        if (msgs.size())
+
+        if (sendVariantMsg(sl, danmaku, REPLY_CD_CN, manual, true))
         {
-            int r = qrand() % msgs.size();
-            QString s = msgs.at(r);
-            if (!s.trimmed().isEmpty())
-            {
-                if (QString::number(danmaku.getUid()) == ac->cookieUid) // 自己发的，自己回复，必须要延迟一会儿
-                {
-                    if (s.contains(QRegExp("cd\\d+\\s*:\\s*\\d+"))) // 带冷却通道，不能放前面
-                        autoMsgTimer->start(); // 先启动，避免立即发送
-                    else
-                        s = "\\n" + s; // 延迟一次发送的时间
-                }
-                sendCdMsg(s, danmaku, 0, REPLY_CD_CN, true, false, manual);
-            }
         }
         else if (debugPrint)
         {
@@ -3781,15 +3794,8 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
         if (!isLiving() && !manual)
             manual = true;
 
-        QStringList msgs = getEditConditionStringList(sl, danmaku);
-        if (msgs.size())
+        if (sendVariantMsg(sl, danmaku, EVENT_CD_CN, manual))
         {
-            int r = qrand() % msgs.size();
-            QString s = msgs.at(r);
-            if (!s.trimmed().isEmpty())
-            {
-                sendCdMsg(s, danmaku, 0, EVENT_CD_CN, true, false, manual);
-            }
         }
         else if (debugPrint)
         {
@@ -19089,6 +19095,30 @@ void MainWindow::loadWebExtensionList()
                 menu->addAction(QIcon(":/icons/candy"), "打赏", [=]{
                     openLink(url);
                 })->disable(url.isEmpty());
+
+                // 自定义菜单
+                QJsonArray customMenus = inf.a("menus");
+                if (customMenus.size())
+                    menu->split();
+                for (QJsonValue cm: customMenus)
+                {
+                    MyJson mn = cm.toObject();
+                    QString name = mn.s("name");
+                    QString url = mn.s("url");
+                    QString icon = mn.s("icon");
+                    QString code = mn.s("code");
+                    if (!icon.startsWith(":"))
+                        icon = QDir(info.absoluteFilePath()).absoluteFilePath(icon);
+                    menu->addAction(QIcon(icon), name, [=]{
+                        if (!code.isEmpty())
+                        {
+                            sendVariantMsg(code, LiveDanmaku(), NOTIFY_CD_CN, true);
+                        }
+                        if (!url.isEmpty())
+                            openLink(url);
+                    });
+                }
+
                 menu->exec();
             });
 
