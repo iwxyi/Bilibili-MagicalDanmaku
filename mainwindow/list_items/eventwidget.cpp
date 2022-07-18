@@ -54,6 +54,7 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
         autoResizeEdit();
     });
 
+    // 设置下拉框
     if (completer == nullptr)
     {
         auto model = new QStandardItemModel(this);
