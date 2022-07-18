@@ -11,6 +11,8 @@
 #include <QHBoxLayout>
 #include <QTextDocument>
 #include <QDebug>
+#include <QCompleter>
+#include <QStandardItemModel>
 #include "livedanmaku.h"
 #include "listiteminterface.h"
 #include "freecopyedit.h"
@@ -47,6 +49,7 @@ public slots:
 public:
     QLineEdit* eventEdit;
     ConditionEditor* actionEdit;
+    static QCompleter* completer;
 
     QString cmdKey;
 #if defined(ENABLE_SHORTCUT)

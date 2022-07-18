@@ -1,4 +1,7 @@
 #include "eventwidget.h"
+#include "fileutil.h"
+
+QCompleter* EventWidget::completer = nullptr;
 
 EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 {
@@ -50,6 +53,21 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
+
+    if (completer == nullptr)
+    {
+        auto model = new QStandardItemModel(this);
+        auto sl = readTextFile(":/documents/translation_events").split("\n", QString::SkipEmptyParts);
+        QList<QStandardItem*> items;
+        for (auto s: sl)
+            model->appendRow(new QStandardItem(s));
+
+        completer = new QCompleter(model, this);
+        completer->setCaseSensitivity(Qt::CaseInsensitive);
+        completer->setFilterMode(Qt::MatchContains);
+    }
+
+    eventEdit->setCompleter(completer);
 }
 
 /// 仅在粘贴时生效

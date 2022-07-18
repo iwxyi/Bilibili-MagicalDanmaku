@@ -8025,7 +8025,7 @@ void MainWindow::startRecordUrl(QString url)
     reply->deleteLater();
     delete request;
     startRecordTime = 0;
-    ui->recordCheck->setText("录播");
+    ui->recordCheck->setText("原画录播");
     recordTimer->stop();
 
     // 可能是超时结束了，重新下载

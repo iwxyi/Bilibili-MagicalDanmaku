@@ -2088,9 +2088,9 @@ tips：
 | PK_BATTLE_SETTLE              |                                                              |
 | PK_BATTLE_START               | 大乱斗开始                                                   |
 | PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
-| **PK_ENDING**            | 大乱斗尾声，最后几秒                                         |
+| **PK_ENDING**                 | 大乱斗尾声，最后几秒                                         |
 | PK_BATTLE_END                 | 大乱斗结束                                                   |
-| **PK_END** | %level%判断胜负，-1输，0平，1赢，可用来计算连胜 |
+| **PK_END**                    | %level%判断胜负，-1输，0平，1赢，可用来计算连胜 |
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
@@ -2099,9 +2099,9 @@ tips：
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
-| PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分(=金瓜子数/100)，%number%获取高能榜人数 |
-| PK_MATCH_ONLINE_GUARD | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
-| PK_WINNING_STREAK | 大乱斗连胜事件，%number%获取次数，至少为2 |
+| PK_MATCH_INFO                 | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分(=金瓜子数/100)，%number%获取高能榜人数 |
+| PK_MATCH_ONLINE_GUARD         | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
+| PK_WINNING_STREAK             | 大乱斗连胜事件，%number%获取次数，至少为2 |
 
 
 
