@@ -265,6 +265,7 @@ private slots:
 
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
+    bool sendVariantMsg(QString msg, const LiveDanmaku& danmaku, int channel = NOTIFY_CD_CN, bool manual = false, bool delayMine = false);
     void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
     void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
     void slotSendAutoMsg(bool timeout);
@@ -655,6 +656,8 @@ private slots:
 
     void on_thankAttentionTabButton_clicked();
 
+    void on_blockTabButton_clicked();
+
     void on_sendMsgMoreButton_clicked();
 
     void on_showLiveDanmakuWindowButton_clicked();
@@ -737,6 +740,10 @@ private slots:
 
     void on_autoUpdateCheck_clicked();
 
+    void on_showChangelogCheck_clicked();
+
+    void on_updateBetaCheck_clicked();
+
     void on_dontSpeakOnPlayingSongCheck_clicked();
 
     void on_shieldKeywordListButton_clicked();
@@ -787,6 +794,8 @@ private slots:
 
     void on_identityCodeEdit_editingFinished();
 
+    void on_recordDataButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -828,6 +837,7 @@ private:
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
+    void addCodeSnippets(const QJsonDocument &doc);
 
     void autoSetCookie(QString s);
     QVariant getCookies() const;

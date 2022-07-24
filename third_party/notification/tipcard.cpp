@@ -50,6 +50,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     if (!noti->btn1.isEmpty())
     {
         btn_layout->addWidget(operator1_button = new InteractiveButtonBase(noti->btn1, this));
+        operator1_button->setRadius(5);
         connect(operator1_button, &InteractiveButtonBase::clicked, [=]{
             emit noti->signalBtnClicked(1);
             emit signalButton1Clicked(noti);
@@ -61,6 +62,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     if (!noti->btn2.isEmpty())
     {
         btn_layout->addWidget(operator2_button = new InteractiveButtonBase(noti->btn2, this));
+        operator2_button->setRadius(5);
         connect(operator2_button, &InteractiveButtonBase::clicked, [=]{
             emit noti->signalBtnClicked(2);
             emit signalButton2Clicked(noti);
@@ -71,6 +73,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     if (!noti->btn3.isEmpty())
     {
         btn_layout->addWidget(operator3_button = new InteractiveButtonBase(noti->btn3, this));
+        operator3_button->setRadius(5);
         connect(operator3_button, &InteractiveButtonBase::clicked, [=]{
             emit noti->signalBtnClicked(3);
             emit signalButton3Clicked(noti);
@@ -111,17 +114,20 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     is_closing = false;
     has_leaved = false;
 
-
-
     // 定时器
     close_timer = new QTimer(this);
     close_timer->setSingleShot(true);
-    connect(close_timer, SIGNAL(timeout()), this, SLOT(slotClosed()));
+    connect(close_timer, &QTimer::timeout, this, [=]{
+        if (noti->click_at == NotificationEntry::ClickAtButton::CAB_NONE)
+            emit noti->signalTimeout();
+        slotClosed();
+    });
 }
 
 void TipCard::slotClosed()
 {
     if (is_closing) return ;
+    emit noti->signalClosed();
     emit signalClosed(this);
     is_closing = true;
 }
@@ -150,11 +156,11 @@ void TipCard::setFontColor(QColor c)
 
 void TipCard::setBtnColor(QColor c)
 {
-    if (operator1_button != nullptr)
+    if (operator1_button != nullptr && (noti->default_btn == -1 || noti->default_btn == 1))
         operator1_button->setTextColor(c);
-    if (operator2_button != nullptr)
+    if (operator2_button != nullptr && (noti->default_btn == -1 || noti->default_btn == 2))
         operator2_button->setTextColor(c);
-    if (operator3_button != nullptr)
+    if (operator3_button != nullptr && (noti->default_btn == -1 || noti->default_btn == 3))
         operator3_button->setTextColor(c);
 }
 

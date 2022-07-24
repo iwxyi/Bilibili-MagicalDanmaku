@@ -15,6 +15,7 @@
 #include "livedanmaku.h"
 #include "listiteminterface.h"
 #include "interactivebuttonbase.h"
+#include "conditioneditor.h"
 
 #define CODE_AUTO_REPLY_KEY (QApplication::applicationName() + ":AutoReply")
 
@@ -42,7 +43,7 @@ public slots:
 
 public:
     QLineEdit* keyEdit;
-    QPlainTextEdit* replyEdit;
+    ConditionEditor* replyEdit;
 
     bool keyEmpty = true;
     QRegularExpression keyRe;

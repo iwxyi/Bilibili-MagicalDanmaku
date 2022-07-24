@@ -1,4 +1,3 @@
-#include "conditioneditor.h"
 #include "taskwidget.h"
 
 TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
@@ -46,6 +45,8 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     connect(btn, &QPushButton::clicked, this, [=]{
         sendMsgs(true);
     });
+
+    connect(edit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
 
     connect(edit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();

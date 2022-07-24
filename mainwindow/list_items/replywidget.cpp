@@ -1,4 +1,3 @@
-#include "conditioneditor.h"
 #include "replywidget.h"
 
 ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
@@ -39,6 +38,8 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
         keyEmpty = keyEdit->text().trimmed().isEmpty();
         keyRe = QRegularExpression(keyEdit->text());
     });
+
+    connect(replyEdit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
 
     connect(replyEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();

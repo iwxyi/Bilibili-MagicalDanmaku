@@ -1,3 +1,46 @@
+### v4.7.3 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.3)
+
+- 新增升级后显示更新内容
+- 新增扩展的主页、打赏、联系作者
+- 新增扩展自定义菜单
+- 新增打开录播存储位置的按钮
+- 新增自动填充事件名字的候选框
+- 优化代码符号的自动补全
+
+
+
+
+
+### v4.7.2 [优化与修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.2)
+
+- 新增空代码框中粘贴代码片段自动识别并添加
+- 新增“智能点歌”开关：点歌播放第一条结果还是按关键词匹配程度筛选
+- 新增包含屏蔽词的错误说明
+- 新增切换直播间命令`connectRoom(roomId)`
+- 新增`>sendLongText()`支持发送`%n%`分隔多条弹幕
+- 新增`>getData()`等网络函数的回调事件使用`%text%`获取返回的原始文本
+- 优化通知卡片的显示
+- 优化重启后列表恢复之前的位置
+- 调整禁言页面到欢迎这一栏中
+- 调整README中Web接口的一些说明
+- 调整回复、事件等功能的标签名字
+- 修复舰长进场提示两次的问题
+- 修复录播失效的问题
+- 修复咪咕开启验证时间下选择歌曲问题
+- 修复发送长文本的弹幕分割长度问题
+
+
+
+
+
+### v4.7.1 [修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.0)
+
+- 紧急修复计算表达式不规范时的错误
+
+
+
+
+
 ### v4.7.0 [点歌姬优化、任命房管](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.0)
 
 - 新增弹幕姬菜单直接任命与取消房管，并显示任命情况

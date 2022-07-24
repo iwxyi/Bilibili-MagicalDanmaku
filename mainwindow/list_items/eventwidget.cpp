@@ -1,5 +1,7 @@
 #include "eventwidget.h"
-#include "conditioneditor.h"
+#include "fileutil.h"
+
+QCompleter* EventWidget::completer = nullptr;
 
 EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 {
@@ -42,6 +44,8 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
         configShortcut();
     });
 
+    connect(actionEdit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
+
     /*connect(eventEdit, &QLineEdit::editingFinished, this, [=]{
         configShortcut();
     });*/
@@ -49,6 +53,22 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
+
+    // 设置下拉框
+    if (completer == nullptr)
+    {
+        auto model = new QStandardItemModel(this);
+        auto sl = readTextFile(":/documents/translation_events").split("\n", QString::SkipEmptyParts);
+        QList<QStandardItem*> items;
+        for (auto s: sl)
+            model->appendRow(new QStandardItem(s));
+
+        completer = new QCompleter(model, this);
+        completer->setCaseSensitivity(Qt::CaseInsensitive);
+        completer->setFilterMode(Qt::MatchContains);
+    }
+
+    eventEdit->setCompleter(completer);
 }
 
 /// 仅在粘贴时生效

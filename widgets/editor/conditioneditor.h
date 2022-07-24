@@ -5,6 +5,7 @@
 #include <QSyntaxHighlighter>
 #include <QRegularExpression>
 #include <QCompleter>
+#include "myjson.h"
 
 class ConditionEditor : public QPlainTextEdit
 {
@@ -17,10 +18,14 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *e) override;
     void inputMethodEvent(QInputMethodEvent *e) override;
+    virtual void insertFromMimeData(const QMimeData *source) override;
 
 private slots:
     void showCompleter(QString prefix);
     void onCompleterActivated(const QString &completion);
+
+signals:
+    void signalInsertCodeSnippets(const QJsonDocument& doc);
 
 public:
     static QStringList allCompletes; // 所有默认填充的

@@ -29,12 +29,13 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 - 粉丝变化、热门榜、大乱斗、船员变化、新人发言等种种数据
 - 大乱斗查看双方串门的粉丝、同步视频PK对面消息、跑骚抓人
 - 私信处理、感谢分享、最佳助攻、打卡回复、语音播报等
-- 点歌姬自动切换网易云/QQ/咪咕/酷狗，支持会员与本地导入
 - 全自动点歌、弹幕切歌、自动暂停其它音乐、排队时长提示
+- 点歌姬自动切换网易云/QQ/咪咕/酷狗，支持会员与本地导入
 - 完全无人值守，远程控制，开播QQ群播报、自动录播
 - 播放各音乐平台会员歌曲，没有版权的歌曲自动更换播放源
 - 单个粉丝设置特别关心、强制提醒、专属昵称、永久禁言等
 - 查看每名观众进来次数、礼物总计、弹幕记录、判断机器人等
+- 弹幕语音播放与回复，百度/讯飞/微软语音等多个接口
 - 小窗闲聊、迷你视频、快速截图，上班摸鱼挂后台听直播必备
 - 自动签到、参与天选、领取小心心、赠送到期礼物
 - 大量可编程运算、网页访问，超高自由度的弹幕机器人
@@ -111,19 +112,24 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 - 发送对面弹幕
 - 显示船员数量
 - 屏蔽用户进入
+- 屏幕天选弹幕
+- 发弹幕表情包
 
 
 ### 点歌姬
 
 - 音源自动切换
 - 播放会员歌曲
+- 网易云ID点歌
 - 点歌自动播放
-- 智能分析歌名
+- 智能匹配歌曲
 - 暂停其余音乐
 - 点歌历史记录
 - 自由显示格式
 - 自动点歌队列
 - 点歌防止刷屏
+- 关键词黑名单
+- 伴奏优先播放
 - 预计时长回复
 - 支持弹幕切歌
 - 送礼立即播放
@@ -142,6 +148,7 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 - 直播数据展示
 - 实时人气查看
 - 每日平均人气
+- 一键任命房管
 
 ### 录播姬
 
@@ -194,6 +201,7 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 ### 其他
 
 - 开启大乱斗
+- 全局快捷键
 - 保存头像封面
 - 配置导入导出
 - 数据自动备份
@@ -517,7 +525,7 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 
 ### 浏览器插件
 
-开启“远程—网络服务”，之后于直播姬中添加浏览器并访问网址，即可打开插件页面，无缝嵌入直播界面。
+开启“扩展—网络服务”，之后于直播姬中添加浏览器并访问网址，即可打开插件页面，无缝嵌入直播界面。
 
 网址为：`http://localhost:5520` + 路径。
 
@@ -908,7 +916,7 @@ border-image: url(C:/Path/To/Image.png)
 
 | 常量 | 描述                                                         |
 | ---- | ------------------------------------------------------------ |
-| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets()`、`sendToLastSocket()`、`runCommandLine()` |
+| %n%  | 替换为换行符`\n`，目前仅支持：`postData()`、`postJson()`、`writeTextFile()`、`appendFileLine()`、`sendToSockets()`、`sendToLastSocket()`、`runCommandLine()`、`sendLongText()` |
 
 
 
@@ -1282,11 +1290,11 @@ tips：
 | setVoiceVolume(volume)                             | 设置语音音量     | 0~100                                                        |
 | openUrl(url)                                       | 打开网址         | 浏览器打开网址                                               |
 | connectNet(url)                                    | 连接网址         | 用于连接其他API，不管返回结果                                |
-| getData(url, [callback])                           | get数据          | 后台连接网址（GET），callback详见“获取网络数据回调”示例      |
+| getData(url, [callback])                           | get数据          | 后台连接网址（GET），返回JSON数据，callback详见“获取网络数据回调”示例。回调中的`%text%` 为纯文本结果 |
 | postData(url, data, [callback])                    | post数据         | 同上（POST）                                                 |
 | postJson(url, data, [callback])                    | postJson         | 同上，以JSON格式发送（仅Content-Type区别）                   |
-| postHeaderData(url, headers, data, [callback])     | post头数据       | 同上。headers多个之间用`&`分隔，格式：key1=value1&key2=value2&key3=value3 |
-| downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件                     |
+| postHeaderData(url, headers, data, [callback])     | post头数据       | 同上。headers多个之间用`&`分隔，格式：header1=value1&header2=value2&header3=value3 |
+| downloadFile(url, path, [callback])                | 下载文件         | 下载网络文件至本地，成功后触发自定义事件。回调中的`%text%`为文件路径 |
 | sendToSockets(cmd, data)                           | 发送至socket     | 发送给所有包含cmd的已连接的WebSocket，如果cmd为空，则发送给所有WebSocket |
 | sendToLastSocket(cmd, data)                        | 发送至最后socket | 发送给最后连上的WebSocket，无视cmd（甚至没收到cmds也行）     |
 | runCommandLine(cmd)                                | 运行命令行       | 运行操作系统的命令行                                         |
@@ -1349,6 +1357,7 @@ tips：
 | setRoomCover(path)                                 | 设置直播封面     | 主播设置直播间的封面图片，path为图片路径（不会裁剪，只是压缩上传） |
 | setLocalMode(true/false)                           | 设置本地模式     | 可通过回复、定时等开关本地模式，不发送弹幕                   |
 | reconnectRoom()                                    | 重新连接直播间   | 强制重连直播间                                               |
+| connectRoom(roomId)                                | 连接直播间       | 切换到任意直播间，支持房间号或身份码                         |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。
@@ -2079,9 +2088,9 @@ tips：
 | PK_BATTLE_SETTLE              |                                                              |
 | PK_BATTLE_START               | 大乱斗开始                                                   |
 | PK_BATTLE_PROCESS             | 大乱斗双方送礼                                               |
-| **PK_ENDING**            | 大乱斗尾声，最后几秒                                         |
+| **PK_ENDING**                 | 大乱斗尾声，最后几秒                                         |
 | PK_BATTLE_END                 | 大乱斗结束                                                   |
-| **PK_END** | %level%判断胜负，-1输，0平，1赢，可用来计算连胜 |
+| **PK_END**                    | %level%判断胜负，-1输，0平，1赢，可用来计算连胜 |
 | PK_BATTLE_SETTLE_USER         |                                                              |
 | PK_BATTLE_SETTLE_V2           |                                                              |
 | PK_LOTTERY_START              | 大乱斗胜利后的抽奖                                           |
@@ -2090,9 +2099,9 @@ tips：
 | **ATTENTION_OPPOSITE**        | 本直播间观众关注了对面主播                                   |
 | **SHARE_OPPOSITE**            | 本直播间观众分享了对面直播间                                 |
 | **ATTENTION_ON_OPPOSITE**     | 对面观众关注了本直播间                                       |
-| PK_MATCH_INFO | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分(=金瓜子数/100)，%number%获取高能榜人数 |
-| PK_MATCH_ONLINE_GUARD | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
-| PK_WINNING_STREAK | 大乱斗连胜事件，%number%获取次数，至少为2 |
+| PK_MATCH_INFO                 | 获取对面直播间信息，详见“大乱斗匹配信息”示例，%gift_coin%获取高能榜总积分(=金瓜子数/100)，%number%获取高能榜人数 |
+| PK_MATCH_ONLINE_GUARD         | 获取对面直播间舰长在线人数，详见“对面在线舰长播报”示例 |
+| PK_WINNING_STREAK             | 大乱斗连胜事件，%number%获取次数，至少为2 |
 
 
 
@@ -2954,7 +2963,7 @@ function readInfo(data) {
 
 ### 反向控制主程序
 
-在上述“主程序接收消息”的基础上，指定 CMD 类型，可反向控制主程序。一部分 CMD 需要在扩展中开启 `扩展-远程-解锁安全限制` 方有效（默认关闭）。
+在上述“主程序接收消息”的基础上，指定 CMD 类型，可反向控制主程序。一部分 CMD 需要在扩展中开启 `扩展-网络服务-解锁安全限制` 方有效（默认关闭）。
 
 JSON 格式：
 
@@ -3061,7 +3070,7 @@ JSON 格式：
 
 ### 网页程序打包
 
-所有的网页小程序都是以文件夹的形式放在 `www` 中，**每一套小程序（可以是多个网页）对应 www 中一个文件夹**，并带有 `package.json` 文件（旧版为 `info.json`），可被神奇弹幕识别，添加到“远程”的“已安装扩展”中，并添加一些快捷按钮。
+所有的网页小程序都是以文件夹的形式放在 `www` 中，**每一套小程序（可以是多个网页）对应 www 中一个文件夹**，并带有 `package.json` 文件（旧版为 `info.json`），可被神奇弹幕识别，添加到“网络服务”的“已安装扩展”中，并添加一些快捷按钮。
 
 以点歌姬为例：
 
@@ -3069,20 +3078,30 @@ JSON 格式：
 {
     "name": "点歌姬",			  // 扩展整体名字
     "min_version": "4.4.0",		// 能用的神奇弹幕最低版本，过低会报警告
+    "author": "小乂",			   // 作者名字
 	"list": [					// 允许多个网页，list中一项一个
 		{
 			"name": "弹幕点歌列表",       // 这是显示出来的名字
 			"url": "index.html", // 相对于主机地址的URL路径
 			"desc": "显示弹幕点歌的实时列表，播放完毕后自动移除", // 简单描述与说明
+            "author": "作者名",   // （可空）单独的作者名字
 			"css": "list.css",   // （可空）便于用户修改的CSS文件相对于www文件夹的路径
             "css_custom": "list_custom.css", // （可空）用户自定义CSS，修改后会覆盖上面一项
             "cover": "cover.png",		// （可空）扩展封面图片，默认为 cover.png
             "code": [], 	// （可空）有些弹幕交互程序需要添加的代码，代码块菜单“复制+继续复制”后粘贴到此处
             "config": "config.html",	// （可空）扩展的配置页面
             "homepage": "http://xxx",   // （可空）主页链接
+            "contact": "http://xxx",    // （可空）联系作者
             "reward": "http://xxx",     // （可空）打赏链接
             "dir": "images",			// （可空）打开某一文件夹，比如图片资源，用于用户替换
-            "file": "result.txt"		// （可空）打开某一文件，比如保存的抽奖结果
+            "file": "result.txt",		// （可空）打开某一文件，比如保存的抽奖结果
+            "menus": [					// （可空）自定义扩展的右键菜单
+                {
+                    "name": "自定义菜单",
+                    "url": "http://xxx",
+                    "code": ""			// 点击这个菜单项要执行的代码/弹幕
+                }
+            ]
 		},
 		{
 			"name": "当前歌曲名字",
@@ -3166,7 +3185,7 @@ JSON 格式：
 
 ### 怎么添加弹幕窗口到OBS？
 
-扩展-远程，选择已安装的“弹幕”扩展。
+扩展-网络服务，选择已安装的“弹幕”扩展。
 
 
 

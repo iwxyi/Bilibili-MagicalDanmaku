@@ -84,3 +84,4 @@ AI聊天=aiChat
 复制文字=copyText
 设置本地模式=setLocalMode
 重新连接直播间=reconnectRoom
+链接直播间=connectRoom

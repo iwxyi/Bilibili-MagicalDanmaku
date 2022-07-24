@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QAbstractItemView>
 #include <QStringListModel>
+#include <QMimeData>
 #include "conditioneditor.h"
 
 QStringList ConditionEditor::allCompletes;
@@ -59,7 +60,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     // Tab跳转
     if (fullText.length() > cursorPos)
     {
-        if (key == Qt::Key_Tab)
+        if (key == Qt::Key_Tab && mod == Qt::NoModifier)
         {
             QString rightChar = fullText.mid(cursorPos, 1);
             if (rightPairs.contains(rightChar))
@@ -116,7 +117,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
     }
 
     // 字母数字键
-    else if ((key >= Qt::Key_A &&key <= Qt::Key_Z) || key == Qt::Key_Minus) // 变量或函数
+    else if ((key >= Qt::Key_A && key <= Qt::Key_Z) || key == Qt::Key_Minus || key == Qt::Key_Underscore) // 变量或函数
     {
         // 获取当前单词
         QRegularExpressionMatch match;
@@ -148,13 +149,19 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
 
     // ========== 括号补全 ==========
     auto judgeAndInsert = [&](QString lp, QString rp) {
-        if (fullText.length() > cursorPos && fullText.mid(cursorPos, 1) == rp) // 正好是右边的括号
+        if (fullText.length() > cursorPos && fullText.mid(cursorPos, rp.length()) == rp) // 正好是右边的括号
             return ;
 
         auto insertRight = [&]{
+            // 判断是否需要补全%
+            if (lp != rp)
+            {
+                if (left.length() >= 2 && left.mid(left.length() - 2, 1) == "%")
+                    rp = rp + "%";
+            }
             QTextCursor cursor = textCursor();
             cursor.insertText(rp);
-            cursor.setPosition(cursor.position() - 1);
+            cursor.setPosition(cursor.position() - rp.length());
             setTextCursor(cursor);
         };
 
@@ -229,6 +236,22 @@ void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
     showCompleter(word);
 }
 
+void ConditionEditor::insertFromMimeData(const QMimeData *source)
+{
+    if (this->toPlainText().trimmed().isEmpty() && source->hasText() && source->text().contains("神奇弹幕:"))
+    {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(source->text().toUtf8(), &error);
+        if (error.error == QJsonParseError::NoError)
+        {
+            emit signalInsertCodeSnippets(doc);
+            qInfo() << "检测到JSON数据，粘贴代码片段";
+            return ;
+        }
+    }
+    QPlainTextEdit::insertFromMimeData(source);
+}
+
 void ConditionEditor::showCompleter(QString prefix)
 {
     completer->setCompletionPrefix(prefix);
@@ -250,6 +273,7 @@ void ConditionEditor::onCompleterActivated(const QString &completion)
     QString completionPrefix = completer->completionPrefix(),
             shouldInertText = completion;
     QTextCursor cursor = this->textCursor();
+    QString right = this->toPlainText().mid(cursor.position());
     if (!completion.contains(completionPrefix))
     {
         cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, completionPrefix.size());
@@ -272,6 +296,16 @@ void ConditionEditor::onCompleterActivated(const QString &completion)
 
     if (!suffixStr.isEmpty())
     {
+        while (suffixStr.size() && right.size())
+        {
+            if (right.at(0) == suffixStr.at(0))
+            {
+                suffixStr.remove(0, 1);
+                right.remove(0, 1);
+            }
+            else
+                break;
+        }
         cursor.insertText(suffixStr);
         cursor.setPosition(cursor.position() - suffixStr.length());
         setTextCursor(cursor);

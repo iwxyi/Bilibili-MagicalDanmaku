@@ -11,12 +11,15 @@
 #include <QHBoxLayout>
 #include <QTextDocument>
 #include <QDebug>
+#include <QCompleter>
+#include <QStandardItemModel>
 #include "livedanmaku.h"
 #include "listiteminterface.h"
 #include "freecopyedit.h"
 #if defined(ENABLE_SHORTCUT)
 #include "qxtglobalshortcut.h"
 #endif
+#include "conditioneditor.h"
 
 #define CODE_EVENT_ACTION_KEY (QApplication::applicationName() + ":EventAction")
 
@@ -45,7 +48,8 @@ public slots:
 
 public:
     QLineEdit* eventEdit;
-    QPlainTextEdit* actionEdit;
+    ConditionEditor* actionEdit;
+    static QCompleter* completer;
 
     QString cmdKey;
 #if defined(ENABLE_SHORTCUT)
