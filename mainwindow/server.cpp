@@ -739,8 +739,6 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
     else if (url == "netProxy") // 网络代理，解决跨域问题 /api/netProxy?url=https://www.baidu.com(urlEncode)&referer=
     {
         QString url = params.value("url", "");
-        QString referer = params.value("referer", "");
-        QString userAgent = params.value("user-agent", "");
         auto method = req->method();
         qInfo() << "代理URL：" << url;
 
@@ -750,30 +748,30 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         QNetworkAccessManager manager;
         QNetworkRequest request(url);
 
+        // 转发headers
         const auto& headers = req->headers();
-        // qInfo() << headers;
-        QStringList igns {
-            "host", "accept-encoding"
-        };
+        QStringList igns { "host", "accept-encoding" };
         for (auto it = headers.begin(); it != headers.end(); it++)
         {
             if (igns.contains(it.key()))
                 continue;
              request.setRawHeader(it.key().toUtf8(), it.value().toUtf8());
-             // qDebug() << "----set:" << it.key().toUtf8() << it.value().toUtf8();
         }
-        if (!headers.contains("content-type"))
-            request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
+
+        // 读取cookies
         if (!headers.contains("cookies"))
             setUrlCookie(url, &request);
-        if (!referer.isEmpty())
-            request.setRawHeader("referer", referer.toUtf8());
-        if (!userAgent.isEmpty())
-            request.setRawHeader("user-agent", referer.toUtf8());
 
+        // 遍历所有未知的参数，设置到header
+        params.remove("url");
+        for (auto key: params)
+        {
+            request.setRawHeader(key.toUtf8(), QByteArray::fromPercentEncoding(params.value(key).toUtf8()));
+        }
+
+        // 异步返回
         QNetworkReply *reply = nullptr;
         QEventLoop loop;
-
         if (method == QHttpRequest::HttpMethod::HTTP_GET) // get
         {
             reply = manager.get(request);
