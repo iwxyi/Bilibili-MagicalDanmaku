@@ -82,31 +82,92 @@ void SqlService::initTables()
     // 弹幕
     if (!hasTable("danmu"))
     {
-        createTable("");
+        createTable("CREATE TABLE danmu(\
+id INT PRIMARY KEY NOT NULL,\
+uname TEXT NOT NULL,\
+uid TEXT NOT NULL,\
+msg TEXT NOT NULL,\
+ulevel INTEGER,\
+admin BOOLEAN,\
+uguard INTEGER,\
+uname_color TEXT,\
+text_color TEXT,\
+anchor_room_id TEXT,\
+medal_name TEXT,\
+medal_level INTEGER,\
+medal_up TEXT,\
+create_time time NOT NULL)");
     }
 
     // 送礼（不包括舰长）
     if (!hasTable("gift"))
     {
-
+        createTable("CREATE TABLE gift(\
+id INT PRIMARY KEY NOT NULL,\
+uname TEXT NOT NULL,\
+uid TEXT NOT NULL,\
+gift_name TEXT NOT NULL,\
+gift_id INTEGER NOT NULL,\
+gift_type INTEGER,\
+coin_type TEXT,\
+total_coin INTEGER,\
+number INTEGER,\
+ulevel INTEGER,\
+admin BOOLEAN,\
+anchor_room_id TEXT,\
+medal_name TEXT,\
+medal_level INTEGER,\
+medal_up TEXT,\
+create_time time NOT NULL)");
     }
 
     // 舰长
     if (!hasTable("guard"))
     {
-
+        createTable("CREATE TABLE guard(\
+id INT PRIMARY KEY NOT NULL,\
+uname TEXT NOT NULL,\
+uid TEXT NOT NULL,\
+uguard INTEGER,\
+gift_name TEXT NOT NULL,\
+gift_id INTEGER NOT NULL,\
+guard_level INTEGER NOT NULL,\
+price INTEGER,\
+number INTEGER,\
+start_time TIMESTAMP,\
+end_time TIMESTAMP,\
+create_time time NOT NULL)");
     }
 
-    // 进入
-    if (!hasTable("welcome"))
+    // 进入/关注
+    if (!hasTable("interact"))
     {
-
+        createTable("CREATE TABLE interact(\
+id INT PRIMARY KEY NOT NULL,\
+uname TEXT NOT NULL,\
+uid TEXT NOT NULL,\
+msg_type INTEGER NOT NULL,\
+admin BOOLEAN,\
+anchor_room_id TEXT,\
+medal_name TEXT,\
+medal_level INTEGER,\
+medal_up TEXT,\
+special TEXT,\
+special_desc TEXT,\
+special_info TEXT,\
+create_time time NOT NULL)");
     }
 
-    // 关注
-    if (!hasTable("follow"))
+    // 勋章
+    if (!hasTable("medal"))
     {
-
+        createTable("CREATE TABLE medal(\
+id INT PRIMARY KEY NOT NULL,\
+anchor_room_id TEXT,\
+medal_name TEXT,\
+medal_level INTEGER,\
+medal_up TEXT,\
+create_time time NOT NULL)");
     }
 }
 

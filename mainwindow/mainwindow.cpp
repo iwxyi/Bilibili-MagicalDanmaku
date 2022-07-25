@@ -13293,6 +13293,52 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
     }
+    else if (cmd == "PLAY_TOGETHER")
+    {
+        /*{
+            "cmd": "PLAY_TOGETHER",
+            "data": {
+                "action": "switch_on",
+                "apply_number": 0,
+                "cur_fleet_num": 0,
+                "jump_url": "",
+                "max_fleet_num": 0,
+                "message": "",
+                "message_type": 0,
+                "refresh_tool": false,
+                "roomid": 24733392,
+                "ruid": 1592628332,
+                "timestamp": 1658747488,
+                "uid": 0,
+                "web_url": ""
+            } */
+
+        /*{
+            "cmd": "PLAY_TOGETHER",
+            "data": {
+                "action": "switch_on",
+                "apply_number": 0,
+                "cur_fleet_num": 0,
+                "jump_url": "",
+                "max_fleet_num": 0,
+                "message": "系统提示：主播已切换分区",
+                "message_type": 3,
+                "refresh_tool": true,
+                "roomid": 24733392,
+                "ruid": 1592628332,
+                "timestamp": 1658747491,
+                "uid": 0,
+                "web_url": ""
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        int type = data.i("message_type");
+        QString action = data.s("action");
+        if (action == "switch_on")
+        {
+            // TODO:切换分区
+        }
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << json;
