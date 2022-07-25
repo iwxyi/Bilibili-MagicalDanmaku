@@ -393,6 +393,11 @@ OrderPlayerWindow::~OrderPlayerWindow()
     desktopLyric->deleteLater();
 }
 
+void OrderPlayerWindow::setTitleIcon(const QPixmap &pixmap)
+{
+    ui->titleButton->setIcon(QIcon(pixmap));
+}
+
 const Song &OrderPlayerWindow::getPlayingSong() const
 {
     return playingSong;

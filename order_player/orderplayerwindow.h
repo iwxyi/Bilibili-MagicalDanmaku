@@ -133,6 +133,7 @@ public:
         SingleCircle
     };
 
+    void setTitleIcon(const QPixmap& pixmap);
     const Song& getPlayingSong() const;
     const SongList& getOrderSongs() const;
     const QStringList getSongLyrics(int rowCount) const;

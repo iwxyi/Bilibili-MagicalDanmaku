@@ -5585,7 +5585,12 @@ void MainWindow::downloadUpFace(QString faceUrl)
 
         // 设置到UP头像
         face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        ui->upHeaderLabel->setPixmap(toCirclePixmap(face));
+        QPixmap circle = toCirclePixmap(face);
+        ui->upHeaderLabel->setPixmap(circle);
+        if (musicWindow)
+        {
+            musicWindow->setTitleIcon(circle);
+        }
     });
 }
 
