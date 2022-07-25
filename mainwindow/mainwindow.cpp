@@ -40,7 +40,8 @@ TxNlp* TxNlp::txNlp = nullptr;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       NetInterface(this),
-      ui(new Ui::MainWindow)
+      ui(new Ui::MainWindow),
+      sqlService(this)
 {
     ui->setupUi(this);
 
@@ -52,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     readConfig();
     initEvent();
     initLiveOpenService();
+    initDbService();
 
 #ifdef Q_OS_ANDROID
     ui->sideBarWidget->hide();
@@ -97,7 +99,8 @@ MainWindow::MainWindow(QWidget *parent)
     // 检查更新
     syncTimer->start((qrand() % 10 + 10) * 1000);
 
-    // 测试
+    // ========== 测试 ==========
+    // 测试微软语音
     /* MicrosoftTTS* mtts = new MicrosoftTTS(dataPath, "[地区]", "[订阅码]", this);
     QTimer::singleShot(3000, [=]{
         QString ssml =
@@ -815,6 +818,10 @@ void MainWindow::readConfig()
     ui->calculateDailyDataCheck->setChecked(calcDaliy);
     if (calcDaliy)
         startCalculateDailyData();
+
+    // 数据库
+    saveToSqlite = us->value("db/sqlite").toBool();
+    ui->saveToSqliteCheck->setChecked(saveToSqlite);
 
     // PK串门提示
     pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
@@ -19949,6 +19956,18 @@ void MainWindow::initLiveOpenService()
     liveOpenService = new LiveOpenService(this);
 }
 
+void MainWindow::initDbService()
+{
+    if (saveToSqlite)
+        sqlService.open();
+
+    // TODO: 信号与相关槽改成 const& 的形式以增强性能
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+        if (saveToSqlite)
+            sqlService.insertDanmaku(danmaku);
+    });
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!hostList.size()) // 未连接
@@ -22299,4 +22318,17 @@ void MainWindow::on_actionLogout_triggered()
     ui->robotNameButton->setText("点此重新登录");
     ui->robotNameButton->adjustMinimumSize();
     ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
+}
+
+void MainWindow::on_saveToSqliteCheck_clicked()
+{
+    us->set("db/sqlite", saveToSqlite = ui->saveToSqliteCheck->isChecked());
+    if (saveToSqlite)
+    {
+        sqlService.open();
+    }
+    else
+    {
+        sqlService.close();
+    }
 }

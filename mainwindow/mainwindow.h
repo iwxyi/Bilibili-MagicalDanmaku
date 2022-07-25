@@ -53,6 +53,7 @@
 #include "tipbox.h"
 #include "liveopenservice.h"
 #include "singleentrance.h"
+#include "sqlservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -798,6 +799,8 @@ private slots:
 
     void on_actionLogout_triggered();
 
+    void on_saveToSqliteCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -1084,6 +1087,7 @@ private:
     QString toRunableCode(QString text) const;
 
     void initLiveOpenService();
+    void initDbService();
 
 private:
     // 应用信息
@@ -1405,6 +1409,10 @@ private:
 
     // 互动
     LiveOpenService* liveOpenService = nullptr;
+
+    // 数据库
+    bool saveToSqlite = false;
+    SqlService sqlService;
 };
 
 class RequestBodyHelper : public QObject

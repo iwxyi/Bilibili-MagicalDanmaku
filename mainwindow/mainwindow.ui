@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>842</width>
-    <height>624</height>
+    <width>840</width>
+    <height>1368</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>65</width>
-             <height>16</height>
+             <width>760</width>
+             <height>1248</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -6270,6 +6270,121 @@ margin: 40px;</string>
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="databaseSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>370</x>
+              <y>1090</y>
+              <width>161</width>
+              <height>111</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>每次更新后显示更新了什么</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#databaseSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_84">
+             <item>
+              <widget class="QLabel" name="label_68">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>数据库</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_41" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="saveToSqliteCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>自动下载与安装新版安装包</string>
+               </property>
+               <property name="text">
+                <string>保存Sqlite数据库</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="databaseQueryButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>查询数据</string>
+               </property>
+               <property name="autoDefault">
+                <bool>true</bool>
+               </property>
+               <property name="default">
+                <bool>false</bool>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -9370,7 +9485,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>842</width>
+     <width>840</width>
      <height>23</height>
     </rect>
    </property>

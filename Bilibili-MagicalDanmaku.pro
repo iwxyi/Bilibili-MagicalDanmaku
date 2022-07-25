@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets
+QT       += core gui network websockets multimedia multimediawidgets sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -75,6 +75,7 @@ INCLUDEPATH += \
 
 SOURCES += \
     mainwindow/liveopenservice.cpp \
+    mainwindow/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
@@ -161,6 +162,7 @@ HEADERS += \
     global/runtimeinfo.h \
     global/usersettings.h \
     mainwindow/liveopenservice.h \
+    mainwindow/sqlservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
