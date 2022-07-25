@@ -213,6 +213,9 @@ private slots:
     void startOrderSearching();
     void stopOrderSearching();
 
+    void selectOutputDevice(FacileMenu* menu);
+    void setOutputDevice(QString name);
+
 private:
     void searchMusic(QString key, QString addBy = QString(), bool notify = false);
     void searchMusicBySource(QString key, MusicSource source, QString addBy = QString());
@@ -341,6 +344,11 @@ private:
     QString sourceQueueString;
     SongList searchResultSongs;
     PlayListList searchResultPlayLists;
+    bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
+    qint64 setPlayPositionAfterLoad = 0; // 加载后跳转到时间
+    bool accompanyMode = false; // 伴奏模式
+    bool unblockQQMusic = false; // 试听QQ音乐
+    QString outputDevice;
 
     // 列表
     SongList orderSongs;
@@ -357,12 +365,6 @@ private:
     PlayCircleMode circleMode = OrderList;
     Song playingSong;
     int lyricScroll;
-
-    // 开关设置
-    bool doubleClickToPlay = false; // 双击是立即播放，还是添加到列表
-    qint64 setPlayPositionAfterLoad = 0; // 加载后跳转到时间
-    bool accompanyMode = false; // 伴奏模式
-    bool unblockQQMusic = false; // 试听QQ音乐
 
     // 控件
     DesktopLyricWidget* desktopLyric;

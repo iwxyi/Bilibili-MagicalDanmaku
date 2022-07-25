@@ -1,4 +1,7 @@
 #include <QColorDialog>
+#include <QAudioDeviceInfo>
+#include <QMediaService>
+#include <QAudioOutputSelectorControl>
 #include "orderplayerwindow.h"
 #include "ui_orderplayerwindow.h"
 #include "stringutil.h"
@@ -311,6 +314,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     prevBlurBg.fill(QColor(240, 248, 255)); // 窗口背景颜色
     usePureColor = settings.value("music/usePureColor", false).toBool();
     pureColor = QColor(settings.value("music/pureColor", "#fffafa").toString());
+
+    // 播放设备
+    outputDevice = settings.value("music/outputDevice").toString();
+    setOutputDevice(outputDevice);
+    player->setAudioRole(QAudio::MusicRole);
 
     // 还原上次播放的歌曲
     Song currentSong = Song::fromJson(settings.value("music/currentSong").toJsonObject());
@@ -4306,6 +4314,10 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         settings.setValue("music/br", songBr = br);
     })->check(songBr >= 320000)->tooltip("越高的码率可能带来更好地聆听效果，但下载时间较长");
 
+    FacileMenu* devicesMenu = playMenu->addMenu("播放设备");
+    playMenu->lastAddedItem()->check(!outputDevice.isEmpty());
+    selectOutputDevice(devicesMenu);
+
     playMenu->split()->addAction("双击播放", [=]{
         settings.setValue("music/doubleClickToPlay", doubleClickToPlay = !doubleClickToPlay);
     })->check(doubleClickToPlay)->tooltip("在搜索结果双击歌曲，是立刻播放还是添加到播放列表");
@@ -4505,4 +4517,54 @@ void OrderPlayerWindow::stopOrderSearching()
         QString by = userOrderSongQueue.first().second;
         searchMusic(key, by, true);
     }
+}
+
+void OrderPlayerWindow::selectOutputDevice(FacileMenu *menu)
+{
+    // 设置为默认播放设备
+    menu->addAction("默认音频设备", [=]{
+        setOutputDevice("");
+    })->check(outputDevice.isEmpty());
+    menu->split();
+
+    // 遍历输出设备
+    QVector<QString> deviceNames;
+    QList<QAudioDeviceInfo> deviceInfos = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    foreach (QAudioDeviceInfo info, deviceInfos)
+    {
+        if (info.isNull())
+            continue;
+        QString name = info.deviceName();
+        if (name[0] == 65533)
+            continue;
+
+        menu->addAction(name, [=]{
+            setOutputDevice(name);
+        })->check(name == outputDevice);
+    }
+}
+
+void OrderPlayerWindow::setOutputDevice(QString name)
+{
+    if (outputDevice != name)
+        settings.setValue("music/outputDevice", outputDevice = name);
+    QMediaService* service = player->service();
+    if (service == nullptr)
+    {
+        qWarning() << "无法设置输出设备";
+        return ;
+    }
+
+    QAudioOutputSelectorControl* output = qobject_cast<QAudioOutputSelectorControl *>(service->requestControl(QAudioOutputSelectorControl_iid));
+    if (output == nullptr)
+    {
+        qWarning() << "无法找到输出设备";
+        return ;
+    }
+
+    output->setActiveOutput(outputDevice);
+    service->releaseControl(output);
+
+    if (!outputDevice.isEmpty())
+        qInfo() << "音乐输出设备：" << outputDevice;
 }
