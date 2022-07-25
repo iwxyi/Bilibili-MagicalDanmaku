@@ -54,6 +54,7 @@ void SqlService::initTables()
     }
 
     // 判断数据库存不存在
+    // 判断表格存不存在
     auto hasTable = [=](const QString& name) ->bool {
         QSqlQuery query;
         query.exec(QString("select count(*) from sqlite_master where type='table' and name='%1'").arg(name));
@@ -64,10 +65,24 @@ void SqlService::initTables()
         return false;
     };
 
-    // 弹幕
-    if (!hasTable("danmu_msg"))
-    {
+    // 创建表格
+    auto createTable = [=](const QString& sql) {
+        QSqlQuery query;
+        query.prepare(sql);
+        if (!query.exec())
+        {
+            qWarning() << "创建Table失败：" << sql;
+        }
+        else
+        {
+            qInfo() << "创建Table：" << (sql.left(sql.indexOf("(")));
+        }
+    };
 
+    // 弹幕
+    if (!hasTable("danmu"))
+    {
+        createTable("");
     }
 
     // 送礼（不包括舰长）
