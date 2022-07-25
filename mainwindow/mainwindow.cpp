@@ -5118,6 +5118,9 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
             // 录播
             if (ui->recordCheck->isChecked() && isLiving())
                 startLiveRecord();
+
+            // 获取礼物
+            getGiftList();
         });
     }
         break;
@@ -15244,7 +15247,7 @@ void MainWindow::getGiftList()
     get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId, [=](MyJson json){
         if (json.code() != 0)
         {
-            showError("获取礼物", json.err());
+            showError("获取直播间礼物", json.err());
             return ;
         }
 
@@ -15266,7 +15269,7 @@ void MainWindow::getGiftList()
             gift.with(info);
             pl->allGiftMap[id] = gift;
         }
-        qInfo() << "直播间礼物数量：" << pl->allGiftMap.size();
+        // qInfo() << "直播间礼物数量：" << pl->allGiftMap.size();
     });
 }
 
@@ -19507,9 +19510,9 @@ void MainWindow::openLink(QString link)
 /// 只显示超过一定金额的礼物
 void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 {
-    // 设置上限
-    if (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000)
-       return ;
+    // 设置下限
+    if (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000) // 超过1元才算
+        return ;
 
     // 测试代码：
     // addGuiGiftList(LiveDanmaku("测试用户", 30607, "测试心心", qrand() % 20, 123456, QDateTime::currentDateTime(), "gold", 10000));
@@ -19557,7 +19560,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         giftNameLabel->setStyleSheet("font-size: 14px;");
         userNameLabel->setStyleSheet("color: gray;");
 
-        layout->activate();
+        // layout->activate();
         card->setRadius(rt->fluentRadius);
         // card->setFixedSize(card->sizeHint());
         imgLabel->adjustSize();
@@ -19566,9 +19569,9 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         int height = imgLabel->height() + giftNameLabel->height() + userNameLabel->height() + layout->spacing() * 2 + layout->margin() * 2;
         card->setFixedSize(imgLabel->width() + layout->margin() * 2, height);
         item->setSizeHint(card->size());
-        if (giftNameLabel->width() > imgLabel->width())
+        if (giftNameLabel->sizeHint().width() > imgLabel->width())
             giftNameLabel->setAlignment(Qt::AlignLeft);
-        if (userNameLabel->width() > imgLabel->width())
+        if (userNameLabel->sizeHint().width() > imgLabel->width())
             userNameLabel->setAlignment(Qt::AlignLeft);
         if (ui->giftListWidget->height() < card->height())
             ui->giftListWidget->setFixedHeight(card->height());
@@ -19607,7 +19610,10 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
     }
     else
     {
-        url += snum(id) + ".gif";
+        if (pl->allGiftMap.contains(id))
+            url = pl->allGiftMap.value(id).extraJson.value("img_basic").toString();
+        else
+            url += snum(id) + ".gif";
     }
     get(url, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
