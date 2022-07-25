@@ -1154,13 +1154,13 @@ background-repeat:none;</string>
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
-                   <height>64</height>
+                   <height>96</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
-                   <height>64</height>
+                   <height>96</height>
                   </size>
                  </property>
                  <property name="styleSheet">
@@ -1192,7 +1192,7 @@ background-repeat:none;</string>
                   <enum>QListView::LeftToRight</enum>
                  </property>
                  <property name="spacing">
-                  <number>6</number>
+                  <number>2</number>
                  </property>
                  <property name="viewMode">
                   <enum>QListView::ListMode</enum>

@@ -14922,25 +14922,69 @@ void MainWindow::updateOnlineRankGUI()
 
     // 放到GUI
     const int headerRadius = 24;
+    int miniHeight = 0;
     for (int i = diff; i < onlineGoldRank.size(); i++)
     {
         auto& danmaku = onlineGoldRank.at(i);
         qint64 uid = danmaku.getUid();
         if (pl->userHeaders.contains(uid))
         {
+            // 创建widget
+            InteractiveButtonBase* card = new InteractiveButtonBase(ui->onlineRankListWidget);
+            card->show();
+            card->setRadius(rt->fluentRadius);
+            card->setCursor(Qt::PointingHandCursor);
+
+            RoundedPixmapLabel* imgLabel = new RoundedPixmapLabel(card);
+            imgLabel->setRadius(headerRadius);
+            imgLabel->setFixedSize(headerRadius * 2, headerRadius * 2);
+            imgLabel->show();
+            imgLabel->setPixmap(pl->userHeaders.value(uid));
+            card->setToolTip(danmaku.getNickname() + "  " + snum(danmaku.getTotalCoin()));
+
+            QLabel* unameLabel = new QLabel(danmaku.getNickname(), card);
+            unameLabel->show();
+            // unameLabel->setFixedWidth(unameLabel->sizeHint().width());
+            unameLabel->setAlignment(Qt::AlignHCenter);
+            QLabel* scoreLabel = new QLabel(snum(danmaku.getTotalCoin()), card);
+            scoreLabel->show();
+            scoreLabel->setAlignment(Qt::AlignHCenter);
+
+            QVBoxLayout* vlayout = new QVBoxLayout(card);
+            vlayout->setAlignment(Qt::AlignHCenter);
+            vlayout->addWidget(imgLabel);
+            vlayout->addWidget(unameLabel);
+            vlayout->addWidget(scoreLabel);
+            vlayout->setSpacing(vlayout->spacing() / 2);
+            // vlayout->setMargin(vlayout->margin() / 2);
+            card->setLayout(vlayout);
+            card->setFixedSize(imgLabel->width() + vlayout->margin() * 2, imgLabel->height() + unameLabel->height() + scoreLabel->height() + vlayout->spacing()*2 + vlayout->margin() * 2);
+
+            if (unameLabel->sizeHint().width() > imgLabel->width()) // 超出长度的
+                unameLabel->setAlignment(Qt::AlignLeft);
+            if (scoreLabel->sizeHint().width() > imgLabel->width())
+                scoreLabel->setAlignment(Qt::AlignLeft);
+            if (!miniHeight)
+                miniHeight = card->height();
+
+            // 创建item
             auto item = new QListWidgetItem();
             item->setData(Qt::UserRole, uid);
             ui->onlineRankListWidget->addItem(item);
-            RoundedPixmapLabel* label = new RoundedPixmapLabel(ui->onlineRankListWidget);
-            label->setRadius(headerRadius);
-            label->setFixedSize(headerRadius * 2, headerRadius * 2);
-            label->show();
-            label->setPixmap(pl->userHeaders.value(uid));
-            label->setToolTip(danmaku.getNickname() + "  " + snum(danmaku.getTotalCoin()));
-            item->setSizeHint(label->size());
-            ui->onlineRankListWidget->setItemWidget(item, label);
+            item->setSizeHint(card->size());
+            ui->onlineRankListWidget->setItemWidget(item, card);
+
+            // 点击事件
+            connect(card, &InteractiveButtonBase::clicked, card, [=]{
+
+            });
+            connect(card, &InteractiveButtonBase::rightClicked, card, [=]{
+
+            });
         }
     }
+    if (miniHeight)
+        ui->onlineRankListWidget->setFixedHeight(miniHeight);
     // ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高\n能\n榜" : "");
     ui->onlineRankDescLabel->setPixmap(onlineGoldRank.size() ? QPixmap(":/icons/rank") : QPixmap());
     ui->onlineRankDescLabel->setMaximumSize(headerRadius * 4 / 3, headerRadius * 2);
