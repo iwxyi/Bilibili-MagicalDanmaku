@@ -35,6 +35,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QNetworkCookie>
 #include <QFontDialog>
+#include <QTextBrowser>
 #include "runtimeinfo.h"
 #include "usersettings.h"
 #include "accountinfo.h"
@@ -144,7 +145,7 @@ public slots:
 private:
     bool isItemExist(QListWidgetItem *item);
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
-    QLabel* getItemWidgetLabel(QListWidgetItem *item);
+    QLabel *getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
     void getUserInfo(qint64 uid, QListWidgetItem *item);
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
@@ -178,6 +179,7 @@ private:
     qint64 upUid = 0; // 当前主播的UID，用来显示主播标志
 
     bool enableAnimation = true;
+    bool unameMsgWrap = false; // 名字和弹幕都单独一行
     QColor nameColor;
     QColor msgColor;
     QColor bgColor;

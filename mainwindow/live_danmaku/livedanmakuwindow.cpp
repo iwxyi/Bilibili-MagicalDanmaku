@@ -186,6 +186,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     simpleMode = us->value("livedanmakuwindow/simpleMode", simpleMode).toBool();
     chatMode = us->value("livedanmakuwindow/chatMode", chatMode).toBool();
     allowH5 = us->value("livedanmakuwindow/allowH5", allowH5).toBool();
+    unameMsgWrap = us->value("livedanmakuwindow/unameMsgWrap", unameMsgWrap).toBool();
     blockComingMsg = us->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
     blockSpecialGift = us->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
     blockCommonNotice = us->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
@@ -694,7 +695,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     QString text;
     MessageType msgType = danmaku.getMsgType();
-    if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT)
+    if (msgType == MSG_DANMAKU || msgType == MSG_SUPER_CHAT) // 弹幕
     {
         // 新人：0级，3次以内
         if (msgType == MSG_DANMAKU && newbieTip && !danmaku.isPkLink())
@@ -721,7 +722,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
             msg = filterH5(msg);
         // 彩色消息
         QString colorfulMsg = msg;
-        if (simpleMode)
+        if (simpleMode) // 简洁模式，不管颜色
         {}
         else if (danmaku.isNoReply() || danmaku.isPkLink()) // 灰色
         {
@@ -729,13 +730,16 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
                     + msg + "</font> ";
         }
         else if (!isBlankColor(danmaku.getTextColor())
-                 && !ignoreDanmakuColors.contains(danmaku.getTextColor()))
+                 && !ignoreDanmakuColors.contains(danmaku.getTextColor())) // 弹幕自带颜色
         {
             colorfulMsg = "<font color='" + danmaku.getTextColor() + "'>"
                     + msg + "</font> ";
         }
 
-        text = nameText + " " + colorfulMsg;
+        if (unameMsgWrap) // 弹幕单独一行
+            text = nameText + "<br />" + colorfulMsg;
+        else
+            text = nameText + " " + colorfulMsg;
 
         // 翻译
         if (!trans.isEmpty() && trans != msg)
@@ -1144,6 +1148,7 @@ void LiveDanmakuWindow::showMenu()
     QAction* actionFont = new QAction("弹幕字体", this);
     QAction* actionLabelStyleSheet = new QAction("标签样式", this);
     QAction* actionAllowH5 = new QAction("允许H5标签", this);
+    QAction* actionUnameMsgWrap = new QAction("单行弹幕", this);
 
     QMenu* pictureMenu = new QMenu("背景图片", settingMenu);
     QAction* actionPictureSelect = new QAction("选择图片", this);
@@ -1202,6 +1207,8 @@ void LiveDanmakuWindow::showMenu()
     actionPictureBlur->setChecked(pictureBlur);
     actionAllowH5->setCheckable(true);
     actionAllowH5->setChecked(allowH5);
+    actionUnameMsgWrap->setCheckable(true);
+    actionUnameMsgWrap->setChecked(unameMsgWrap);
     actionBlockComing->setCheckable(true);
     actionBlockComing->setChecked(blockComingMsg);
     actionBlockSpecialGift->setCheckable(true);
@@ -1405,6 +1412,7 @@ void LiveDanmakuWindow::showMenu()
     settingMenu->addAction(actionFont);
     settingMenu->addAction(actionLabelStyleSheet);
     settingMenu->addAction(actionAllowH5);
+    settingMenu->addAction(actionUnameMsgWrap);
     settingMenu->addMenu(pictureMenu);
     settingMenu->addSeparator();
     settingMenu->addAction(actionSendMsg);
@@ -1489,6 +1497,10 @@ void LiveDanmakuWindow::showMenu()
     connect(actionAllowH5, &QAction::triggered, this, [=]{
         allowH5 = !allowH5;
         us->setValue("livedanmakuwindow/allowH5", allowH5);
+    });
+    connect(actionUnameMsgWrap, &QAction::triggered, this, [=]{
+        unameMsgWrap = !unameMsgWrap;
+        us->setValue("livedanmakuwindow/unameMsgWrap", unameMsgWrap);
     });
     connect(actionBlockComing, &QAction::triggered, this, [=]{
         blockComingMsg = !blockComingMsg;
