@@ -5063,7 +5063,11 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
             QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
             ac->areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
             ac->liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
-            // TODO: 显示直播排行榜
+            ui->liveRankLabel->setText(ac->liveRank); // 直播榜（主播榜）
+            ui->liveRankLabel->setToolTip("分区榜：" + ac->areaRank);
+
+            // 看过
+            ui->watchedLabel->setText(dataObj.value("watched_show").toObject().value("text_small").toString());
 
             // 获取大乱斗段位
             QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
@@ -5426,6 +5430,7 @@ void MainWindow::setRoomThemeByCover(double val)
     QString cardStyleSheet = "{ background: " + QVariant(bgTrans).toString() + "; border: none; border-radius: " + snum(rt->fluentRadius) + " }";
     ui->guardCountCard->setStyleSheet("#guardCountCard" + cardStyleSheet);
     ui->hotCountCard->setStyleSheet("#hotCountCard" + cardStyleSheet);
+    ui->watchedCountCard->setStyleSheet("#watchedCountCard" + cardStyleSheet);
     ui->robotSendCountCard->setStyleSheet("#robotSendCountCard" + cardStyleSheet);
 
     alpha = (3 * ( themeGradient.red()) * (themeGradient.red())

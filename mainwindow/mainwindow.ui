@@ -860,7 +860,187 @@ background-repeat:none;</string>
                      </layout>
                     </item>
                     <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_27">
+                      <item>
+                       <widget class="QLabel" name="hourRankLabel">
+                        <property name="styleSheet">
+                         <string notr="true">QLabel
+{
+	font-size: 16px;
+}</string>
+                        </property>
+                        <property name="text">
+                         <string>0</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="hourRankTextLabel">
+                        <property name="styleSheet">
+                         <string notr="true">color: gray;</string>
+                        </property>
+                        <property name="text">
+                         <string>小时榜</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
                      <layout class="QVBoxLayout" name="verticalLayout_26">
+                      <item>
+                       <widget class="QLabel" name="liveRankLabel">
+                        <property name="toolTip">
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;直播排行榜（主播榜）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">font-size: 16px;</string>
+                        </property>
+                        <property name="text">
+                         <string>0</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="liveRankTextLabel">
+                        <property name="styleSheet">
+                         <string notr="true">color: gray;</string>
+                        </property>
+                        <property name="text">
+                         <string>直播榜</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_35">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>2</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QWidget" name="watchedCountCard" native="true">
+                 <property name="minimumSize">
+                  <size>
+                   <width>140</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">#watchedCountCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_80">
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_74">
+                    <item>
+                     <widget class="QLabel" name="label_67">
+                      <property name="minimumSize">
+                       <size>
+                        <width>16</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>24</width>
+                        <height>24</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">border-image:url(:/icons/watched);
+background-position:center;
+background-repeat:none;</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="scaledContents">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_42">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_75">
+                    <property name="spacing">
+                     <number>9</number>
+                    </property>
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_81">
+                      <item>
+                       <widget class="QLabel" name="watchedLabel">
+                        <property name="styleSheet">
+                         <string notr="true">font-size: 16px;</string>
+                        </property>
+                        <property name="text">
+                         <string>0</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="watchedTextLabel">
+                        <property name="styleSheet">
+                         <string notr="true">color: gray;</string>
+                        </property>
+                        <property name="text">
+                         <string>看过</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_82">
                       <item>
                        <widget class="QLabel" name="popularityLabel">
                         <property name="styleSheet">
@@ -890,9 +1070,12 @@ background-repeat:none;</string>
                      </layout>
                     </item>
                     <item>
-                     <layout class="QVBoxLayout" name="verticalLayout_27">
+                     <layout class="QVBoxLayout" name="verticalLayout_83">
                       <item>
                        <widget class="QLabel" name="danmuCountLabel">
+                        <property name="toolTip">
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本次启动后的弹幕数量&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                        </property>
                         <property name="styleSheet">
                          <string notr="true">QLabel
 {
@@ -928,7 +1111,7 @@ background-repeat:none;</string>
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_35">
+                <spacer name="horizontalSpacer_43">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
@@ -1640,8 +1823,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>762</width>
-             <height>504</height>
+             <width>65</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -5922,7 +6105,8 @@ margin: 40px;</string>
                </property>
                <property name="toolTip">
                 <string>在直播间开启哔哩哔哩互动玩法
-开启后，可以通过送礼物等形式，增加互动的趣味性，以及主播的收益</string>
+开启后，可以通过送礼物等形式，增加互动的趣味性，以及主播的收益
+（目前没有任何作用，请等待后续更新）</string>
                </property>
                <property name="text">
                 <string>启用互动玩法</string>
@@ -6048,7 +6232,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>自动下载与安装新版安装包</string>
+                <string>更新安装后显示更新内容文件</string>
                </property>
                <property name="text">
                 <string>显示更新内容</string>
