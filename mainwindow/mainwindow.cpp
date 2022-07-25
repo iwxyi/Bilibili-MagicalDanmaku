@@ -14933,14 +14933,13 @@ void MainWindow::updateOnlineRankGUI()
             InteractiveButtonBase* card = new InteractiveButtonBase(ui->onlineRankListWidget);
             card->show();
             card->setRadius(rt->fluentRadius);
-            card->setCursor(Qt::PointingHandCursor);
+            // card->setCursor(Qt::PointingHandCursor);
 
             RoundedPixmapLabel* imgLabel = new RoundedPixmapLabel(card);
             imgLabel->setRadius(headerRadius);
             imgLabel->setFixedSize(headerRadius * 2, headerRadius * 2);
             imgLabel->show();
             imgLabel->setPixmap(pl->userHeaders.value(uid));
-            card->setToolTip(danmaku.getNickname() + "  " + snum(danmaku.getTotalCoin()));
 
             QLabel* unameLabel = new QLabel(danmaku.getNickname(), card);
             unameLabel->show();
@@ -14949,6 +14948,7 @@ void MainWindow::updateOnlineRankGUI()
             QLabel* scoreLabel = new QLabel(snum(danmaku.getTotalCoin()), card);
             scoreLabel->show();
             scoreLabel->setAlignment(Qt::AlignHCenter);
+            unameLabel->setToolTip(danmaku.getNickname() + "  " + snum(danmaku.getTotalCoin()));
 
             QVBoxLayout* vlayout = new QVBoxLayout(card);
             vlayout->setAlignment(Qt::AlignHCenter);
@@ -14958,7 +14958,8 @@ void MainWindow::updateOnlineRankGUI()
             vlayout->setSpacing(vlayout->spacing() / 2);
             // vlayout->setMargin(vlayout->margin() / 2);
             card->setLayout(vlayout);
-            card->setFixedSize(imgLabel->width() + vlayout->margin() * 2, imgLabel->height() + unameLabel->height() + scoreLabel->height() + vlayout->spacing()*2 + vlayout->margin() * 2);
+            card->setFixedSize(imgLabel->width() + vlayout->margin() * 2,
+                               imgLabel->height() + unameLabel->height() + scoreLabel->height() + vlayout->spacing()*2 + vlayout->margin() * 2);
 
             if (unameLabel->sizeHint().width() > imgLabel->width()) // 超出长度的
                 unameLabel->setAlignment(Qt::AlignLeft);
@@ -14976,10 +14977,14 @@ void MainWindow::updateOnlineRankGUI()
 
             // 点击事件
             connect(card, &InteractiveButtonBase::clicked, card, [=]{
-
+                // TODO: 点击查看信息
             });
             connect(card, &InteractiveButtonBase::rightClicked, card, [=]{
-
+                newFacileMenu;
+                menu->addAction("打开首页", [=]{
+                    QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
+                });
+                menu->exec();
             });
         }
     }
@@ -17576,7 +17581,6 @@ void MainWindow::releaseLiveData(bool prepare)
     }
     else // 下播，依旧保持连接
     {
-
     }
 
     danmuPopulQueue.clear();
@@ -19505,14 +19509,14 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 {
     // 设置上限
     if (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000)
-        return ;
+       return ;
 
     // 测试代码：
     // addGuiGiftList(LiveDanmaku("测试用户", 30607, "测试心心", qrand() % 20, 123456, QDateTime::currentDateTime(), "gold", 10000));
 
     auto addToList = [=](const QPixmap& pixmap){
         // 创建控件
-        QWidget* card = new QWidget(this);
+        InteractiveButtonBase* card = new InteractiveButtonBase(this);
         QVBoxLayout* layout = new QVBoxLayout(card);
         QLabel* imgLabel = new QLabel(card);
         QLabel* giftNameLabel = new QLabel(danmaku.getGiftName(), card);
@@ -19546,16 +19550,28 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         ui->giftListWidget->setItemWidget(item, card);
 
         // 设置样式
-        card->setStyleSheet("#giftCard { background: transparent;"
+        /* card->setStyleSheet("#giftCard { background: transparent;"
                             "border: 0px solid lightgray; "
                             "border-radius: " + snum(rt->fluentRadius) + "px; }"
-                            "#giftCard:hover { border: 1px solid lightgray; }");
+                            "#giftCard:hover { border: 1px solid lightgray; }"); */
         giftNameLabel->setStyleSheet("font-size: 14px;");
         userNameLabel->setStyleSheet("color: gray;");
 
         layout->activate();
-        card->setFixedSize(card->sizeHint());
+        card->setRadius(rt->fluentRadius);
+        // card->setFixedSize(card->sizeHint());
+        imgLabel->adjustSize();
+        giftNameLabel->adjustSize();
+        userNameLabel->adjustSize();
+        int height = imgLabel->height() + giftNameLabel->height() + userNameLabel->height() + layout->spacing() * 2 + layout->margin() * 2;
+        card->setFixedSize(imgLabel->width() + layout->margin() * 2, height);
         item->setSizeHint(card->size());
+        if (giftNameLabel->width() > imgLabel->width())
+            giftNameLabel->setAlignment(Qt::AlignLeft);
+        if (userNameLabel->width() > imgLabel->width())
+            userNameLabel->setAlignment(Qt::AlignLeft);
+        if (ui->giftListWidget->height() < card->height())
+            ui->giftListWidget->setFixedHeight(card->height());
     };
 
     // 移除过多的
@@ -19599,7 +19615,7 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
         pixmap.loadFromData(jpegData);
         if (pixmap.isNull())
         {
-            showError("获取礼物图片出错");
+            showError("获取礼物图片出错", danmaku.getGiftName() + " " + snum(danmaku.getGiftId()));
             qWarning() << "礼物地址：" << url;
             return ;
         }

@@ -463,6 +463,19 @@ background-repeat:none;</string>
                      </property>
                     </widget>
                    </item>
+                   <item>
+                    <spacer name="horizontalSpacer_21">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
                   </layout>
                  </item>
                  <item>
@@ -897,7 +910,7 @@ background-repeat:none;</string>
                       <item>
                        <widget class="QLabel" name="liveRankLabel">
                         <property name="toolTip">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;直播排行榜（主播榜）&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                         <string>直播排行榜（主播榜）</string>
                         </property>
                         <property name="styleSheet">
                          <string notr="true">font-size: 16px;</string>
@@ -1135,6 +1148,9 @@ background-repeat:none;</string>
                </property>
                <item>
                 <widget class="QLabel" name="onlineRankDescLabel">
+                 <property name="toolTip">
+                  <string>高能榜</string>
+                 </property>
                  <property name="text">
                   <string/>
                  </property>
@@ -1215,13 +1231,13 @@ background-repeat:none;</string>
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>80</height>
+                 <height>100</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>80</height>
+                 <height>100</height>
                 </size>
                </property>
                <property name="styleSheet">
@@ -1250,7 +1266,7 @@ background-repeat:none;</string>
                 <enum>QListView::LeftToRight</enum>
                </property>
                <property name="spacing">
-                <number>6</number>
+                <number>2</number>
                </property>
                <property name="viewMode">
                 <enum>QListView::ListMode</enum>
