@@ -21250,6 +21250,7 @@ void MainWindow::on_robotNameButton_clicked()
     menu->addAction(ui->actionQRCode_Login);
     menu->addAction(ui->actionSet_Cookie);
     menu->addAction(ui->actionSet_Danmaku_Data_Format);
+    menu->split()->addAction(ui->actionLogout)->disable(ac->cookieUid.isEmpty());
     menu->exec();
 }
 
@@ -22201,4 +22202,25 @@ void MainWindow::on_recordDataButton_clicked()
 {
     QDir dir(rt->dataPath + "record");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_actionLogout_triggered()
+{
+    if (QMessageBox::question(this, "退出登录", "是否退出登录？\n这将清除该账号cookie，需要重新登录方可使用",
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) != QMessageBox::Yes)
+        return ;
+
+    us->setValue("danmaku/browserCookie", ac->browserCookie = "");
+    us->setValue("danmaku/browserData", ac->browserData = "");
+    ac->userCookies = QVariant();
+    ac->csrf_token = "";
+    ac->cookieUid = "";
+    ac->cookieUname = "";
+    ac->cookieToken = "";
+    ac->cookieULevel = 0;
+    ac->cookieGuardLevel = 0;
+
+    ui->robotNameButton->setText("点此重新登录");
+    ui->robotNameButton->adjustMinimumSize();
+    ui->robotInfoWidget->setMinimumWidth(ui->robotNameButton->width());
 }

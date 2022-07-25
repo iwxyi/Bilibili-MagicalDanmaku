@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -9196,6 +9196,7 @@ font-weight: 500;</string>
     <addaction name="separator"/>
     <addaction name="actionAdd_Room_To_List"/>
     <addaction name="separator"/>
+    <addaction name="actionLogout"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -9629,6 +9630,15 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>显示礼物列表</string>
+   </property>
+  </action>
+  <action name="actionLogout">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/logout</normaloff>:/icons/logout</iconset>
+   </property>
+   <property name="text">
+    <string>退出登录</string>
    </property>
   </action>
  </widget>

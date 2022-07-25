@@ -796,6 +796,8 @@ private slots:
 
     void on_recordDataButton_clicked();
 
+    void on_actionLogout_triggered();
+
 private:
     void initView();
     void initStyle();
