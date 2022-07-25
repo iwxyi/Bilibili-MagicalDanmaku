@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>833</width>
-    <height>1132</height>
+    <width>842</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1640,8 +1640,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>753</width>
-             <height>1012</height>
+             <width>762</width>
+             <height>504</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9170,7 +9170,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>833</width>
+     <width>842</width>
      <height>23</height>
     </rect>
    </property>

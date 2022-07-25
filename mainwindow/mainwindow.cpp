@@ -713,16 +713,16 @@ void MainWindow::readConfig()
         slotSendAutoMsg(true);
     });
 
-    // 点歌自动复制
+    // 点歌
     diangeAutoCopy = us->value("danmaku/diangeAutoCopy", true).toBool();
     ui->DiangeAutoCopyCheck->setChecked(diangeAutoCopy);
-    ui->diangeNeedMedalCheck->setChecked(us->value("danmaku/diangeNeedMedal", true).toBool());
+    ui->diangeNeedMedalCheck->setChecked(us->value("danmaku/diangeNeedMedal", false).toBool());
     QString defaultDiangeFormat = "^[点點]歌[ :：,，]+(.+)";
     diangeFormatString = us->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
     connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
     ui->diangeReplyCheck->setChecked(us->value("danmaku/diangeReply", false).toBool());
-    ui->diangeShuaCheck->setChecked(us->value("danmaku/diangeShua", true).toBool());
+    ui->diangeShuaCheck->setChecked(us->value("danmaku/diangeShua", false).toBool());
     ui->autoPauseOuterMusicCheck->setChecked(us->value("danmaku/autoPauseOuterMusic", false).toBool());
     ui->outerMusicKeyEdit->setText(us->value("danmaku/outerMusicPauseKey").toString());
     ui->orderSongsToFileCheck->setChecked(us->value("danmaku/orderSongsToFile", false).toBool());
@@ -13995,16 +13995,16 @@ bool MainWindow::handlePK(QJsonObject json)
             }
         }*/
     }
-    else if (cmd == "PK_BATTLE_FINAL_PROCESS") // 绝杀时刻？
+    else if (cmd == "PK_BATTLE_FINAL_PROCESS") // 绝杀时刻开始：3分钟~4分钟
     {
         /*{
             "cmd": "PK_BATTLE_FINAL_PROCESS",
             "data": {
-                "battle_type": 2,
+                "battle_type": 2, // 1
                 "pk_frozen_time": 1628089118
             },
             "pk_id": 205052526,
-            "pk_status": 301,
+            "pk_status": 301,     // 201
             "timestamp": 1628088939
         }*/
 
@@ -14013,6 +14013,12 @@ bool MainWindow::handlePK(QJsonObject json)
     }
     else if (cmd == "PK_BATTLE_END") // 结束信息
     {
+        /**
+         * 结束事件依次是：
+         * 1. PK_BATTLE_END（触发 PK_BEST_UNAME & PK_END）
+         * 2. PK_BATTLE_SETTLE_USER
+         * 3. PK_BATTLE_SETTLE_V2
+         */
         pkEnd(json);
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 这个才是真正的PK结束消息！
