@@ -91,8 +91,8 @@ gift_name TEXT NOT NULL,\
 gift_id INTEGER NOT NULL,\
 gift_type INTEGER,\
 coin_type TEXT,\
-total_coin INTEGER,\
-number INTEGER,\
+total_coin INTEGER NOT NULL,\
+number INTEGER NOT NULL,\
 ulevel INTEGER,\
 admin BOOLEAN,\
 anchor_room_id TEXT,\
@@ -110,7 +110,6 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,\
 room_id TEXT NOT NULL,\
 uname TEXT NOT NULL,\
 uid TEXT NOT NULL,\
-uguard INTEGER,\
 gift_name TEXT NOT NULL,\
 gift_id INTEGER NOT NULL,\
 guard_level INTEGER NOT NULL,\
@@ -135,9 +134,9 @@ anchor_room_id TEXT,\
 medal_name TEXT,\
 medal_level INTEGER,\
 medal_up TEXT,\
-special TEXT,\
-special_desc TEXT,\
-special_info TEXT,\
+special INTEGER,\
+spread_desc TEXT,\
+spread_info TEXT,\
 create_time time NOT NULL)");
     }
 
@@ -191,16 +190,15 @@ void SqlService::insertDanmaku(LiveDanmaku danmaku)
     }
     qDebug() << ">>插入数据库：" << danmaku.getMsgType() << danmaku.toString();
 
+    QSqlQuery query;
     switch (danmaku.getMsgType())
     {
     case MessageType::MSG_DANMAKU:
     case MessageType::MSG_SUPER_CHAT:
     {
-        QSqlQuery query;
-        query.prepare("INSERT INTO danmu\
-(room_id, uname, uid, msg, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time)\
- VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
-
+        query.prepare("INSERT INTO \
+danmu(room_id, uname, uid, msg, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
         query.addBindValue(danmaku.getNickname());
         query.addBindValue(danmaku.getUid());
@@ -214,35 +212,77 @@ void SqlService::insertDanmaku(LiveDanmaku danmaku)
         query.addBindValue(danmaku.getMedalUp());
         query.addBindValue(danmaku.getTotalCoin());
         query.addBindValue(danmaku.getTimeline());
-
-        if (!query.exec())
-        {
-            qWarning() << "执行SQL语句失败：" << query.lastError() << query.lastQuery();
-        }
     }
         break;
     case MessageType::MSG_GIFT:
     {
-
+        query.prepare("INSERT INTO \
+gift(room_id, uname, uid, gift_name, gift_id, coin_type, total_coin, number, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
+        query.addBindValue(danmaku.getNickname());
+        query.addBindValue(danmaku.getUid());
+        query.addBindValue(danmaku.getGiftName());
+        query.addBindValue(danmaku.getGiftId());
+        query.addBindValue(danmaku.getCoinType());
+        query.addBindValue(danmaku.getTotalCoin());
+        query.addBindValue(danmaku.getNumber());
+        query.addBindValue(danmaku.getLevel());
+        query.addBindValue(danmaku.isAdmin());
+        query.addBindValue(danmaku.getGuard());
+        query.addBindValue(danmaku.getAnchorRoomid());
+        query.addBindValue(danmaku.getMedalName());
+        query.addBindValue(danmaku.getMedalLevel());
+        query.addBindValue(danmaku.getMedalUp());
+        query.addBindValue(danmaku.getTotalCoin());
+        query.addBindValue(danmaku.getTimeline());
     }
         break;
     case MessageType::MSG_GUARD_BUY:
     {
-
+        query.prepare("INSERT INTO \
+guard(room_id, uname, uid, gift_name, gift_id, guard_level, price, number, start_time, end_time, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?)");
+        query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
+        query.addBindValue(danmaku.getNickname());
+        query.addBindValue(danmaku.getUid());
+        query.addBindValue(danmaku.getGiftName());
+        query.addBindValue(danmaku.getGiftId());
+        query.addBindValue(danmaku.getGuard());
+        query.addBindValue(danmaku.getTotalCoin());
+        query.addBindValue(danmaku.getNumber());
+        query.addBindValue(QDateTime::fromSecsSinceEpoch(static_cast<qint64>(danmaku.extraJson.value("start_time").toDouble())));
+        query.addBindValue(QDateTime::fromSecsSinceEpoch(static_cast<qint64>(danmaku.extraJson.value("end_time").toDouble())));
+        query.addBindValue(danmaku.getTimeline());
     }
         break;
     case MessageType::MSG_WELCOME:
-    {
-
-    }
-        break;
     case MessageType::MSG_ATTENTION:
+    case MessageType::MSG_SHARE:
     {
-
+        query.prepare("INSERT INTO \
+interact(room_id, uname, uid, msg_type, anchor_room_id, medal_name, medal_level, medal_up, special, spread_desc, spread_info, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+        query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
+        query.addBindValue(danmaku.getNickname());
+        query.addBindValue(danmaku.getUid());
+        query.addBindValue(danmaku.extraJson.value("msg_type").toInt());
+        query.addBindValue(danmaku.getAnchorRoomid());
+        query.addBindValue(danmaku.getMedalName());
+        query.addBindValue(danmaku.getMedalLevel());
+        query.addBindValue(danmaku.getMedalUp());
+        query.addBindValue(danmaku.getSpecial());
+        query.addBindValue(danmaku.getSpreadDesc());
+        query.addBindValue(danmaku.getSpreadInfo());
+        query.addBindValue(danmaku.getTimeline());
     }
         break;
     default:
-        break;
+        return ;
+    }
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
     }
 }
 
@@ -252,7 +292,6 @@ void SqlService::insertMusic(LiveDanmaku danmaku)
     query.prepare("INSERT INTO music\
 (room_id, uname, uid, music_name, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, create_time)\
 VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
-
     query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
     query.addBindValue(danmaku.getNickname());
     query.addBindValue(danmaku.getUid());
@@ -268,7 +307,7 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
 
     if (!query.exec())
     {
-        qWarning() << "执行SQL语句失败：" << query.lastError() << query.lastQuery();
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
     }
 }
 

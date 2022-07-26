@@ -626,6 +626,11 @@ public:
         return number;
     }
 
+    QString getCoinType() const
+    {
+        return coin_type;
+    }
+
     bool isGoldCoin() const
     {
         return coin_type == "gold";

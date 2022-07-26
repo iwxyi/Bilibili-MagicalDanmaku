@@ -12481,7 +12481,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         QString username = data.value("uname").toString();
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
-        bool isadmin = data.value("isadmin").toBool(); // 一般房管都是舰长吧？
+        bool isadmin = data.value("isadmin").toBool(); // TODO:这里没法判断房管？
         QString unameColor = data.value("uname_color").toString();
         bool isSpread = data.value("is_spread").toBool();
         QString spreadDesc = data.value("spread_desc").toString();
@@ -12506,6 +12506,7 @@ void MainWindow::handleMessage(QJsonObject json)
                  || (!pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         danmaku.setOpposite(opposite);
+        danmaku.with(data);
 
         if (roomId != "0" && roomId != ac->roomId) // 关注对面主播，也会引发关注事件
         {
@@ -12604,6 +12605,7 @@ void MainWindow::handleMessage(QJsonObject json)
         qInfo() << username << s8("购买") << giftName << num << guardCount;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : us->currentGuards.contains(uid) ? 0 : 2);
+        danmaku.with(data);
         appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
         addGuiGiftList(danmaku);
