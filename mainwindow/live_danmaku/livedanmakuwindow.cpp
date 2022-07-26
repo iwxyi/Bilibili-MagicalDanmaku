@@ -2666,6 +2666,8 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
 void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
+    if (headerApiIsBanned) // 请求已经被拦截了
+        return ;
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -2678,7 +2680,15 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qDebug() << "用户信息返回结果不为0：" << json.value("message").toString();
+            qWarning() << "用户信息返回结果不为0：" << json.value("message").toString();
+            if (json.value("message").toString().contains("拦截"))
+            {
+                // 一分钟后再试
+                headerApiIsBanned = true;
+                QTimer::singleShot(60000, [=]{
+                    headerApiIsBanned = false;
+                });
+            }
             return ;
         }
 

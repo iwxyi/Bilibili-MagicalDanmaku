@@ -185,7 +185,7 @@ private:
     QColor bgColor;
     QColor hlColor;
     QFont danmakuFont;
-    bool autoTrans = true;
+    bool autoTrans = false;
     bool aiReply = false;
     bool enableBlock = false;
     bool simpleMode = false; // 简约模式：不显示头像
@@ -199,6 +199,7 @@ private:
     QStringList blockedTexts;
 
     QString headDir; // 头像保存的路径/ (带/)
+    bool headerApiIsBanned = false;
 
     int fontHeight;
     int lineSpacing;
