@@ -43,7 +43,11 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="SQLEditor" name="queryEdit"/>
+     <widget class="SQLEditor" name="queryEdit">
+      <property name="placeholderText">
+       <string>SQL语句</string>
+      </property>
+     </widget>
      <widget class="QTableView" name="resultTable"/>
     </widget>
    </item>

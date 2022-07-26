@@ -222,8 +222,8 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
     case MessageType::MSG_GIFT:
     {
         query.prepare("INSERT INTO \
-gift(room_id, uname, uid, gift_name, gift_id, coin_type, total_coin, number, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time) \
-VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+gift(room_id, uname, uid, gift_name, gift_id, coin_type, total_coin, number, ulevel, admin, anchor_room_id, medal_name, medal_level, medal_up, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
         query.addBindValue(danmaku.getNickname());
         query.addBindValue(danmaku.getUid());
@@ -234,12 +234,10 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getNumber());
         query.addBindValue(danmaku.getLevel());
         query.addBindValue(danmaku.isAdmin());
-        query.addBindValue(danmaku.getGuard());
         query.addBindValue(danmaku.getAnchorRoomid());
         query.addBindValue(danmaku.getMedalName());
         query.addBindValue(danmaku.getMedalLevel());
         query.addBindValue(danmaku.getMedalUp());
-        query.addBindValue(danmaku.getTotalCoin());
         query.addBindValue(danmaku.getTimeline());
     }
         break;

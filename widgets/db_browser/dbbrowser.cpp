@@ -42,12 +42,18 @@ void DBBrowser::on_execButton_clicked()
     }
     else // 当前行
     {
-        int block = cursor.blockNumber();
-        code = ui->queryEdit->document()->findBlockByLineNumber(block).text();
+        int pos = cursor.position();
+        int left = full.lastIndexOf("\n", pos - 1) + 1;
+        int right = full.indexOf("\n", pos);
+        if (right == -1)
+            right = full.length();
+        code = full.mid(left, right - left);
     }
 
+    code = code.trimmed();
     if (code.trimmed().isEmpty())
         return ;
+    emit signalProcessVariant(code);
     qInfo() << "SQL查询：" << code;
 
     if (model)

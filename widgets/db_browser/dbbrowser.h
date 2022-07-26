@@ -18,6 +18,9 @@ public:
     explicit DBBrowser(SqlService* service, QSettings* settings, QWidget *parent = nullptr);
     ~DBBrowser();
 
+signals:
+    void signalProcessVariant(QString& code);
+
 private slots:
     void on_execButton_clicked();
 

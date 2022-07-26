@@ -18,7 +18,7 @@ SQLHighlighter::SQLHighlighter(QTextDocument *parent) : QSyntaxHighlighter(paren
 void SQLHighlighter::highlightBlock(const QString &text)
 {
     static QStringList keywords {
-        "select",
+        "select", "as",
         "create", "table",
         "insert", "into", "values",
         "delete", "from",
@@ -38,6 +38,8 @@ void SQLHighlighter::highlightBlock(const QString &text)
         QSSRule(QRegularExpression("\\b(" + keywords.join("|") + "|\\*)\\b"), getTCF(QColor(62, 106, 198))),
         // 常数
         QSSRule(QRegularExpression("\\d+"), getTCF(QColor(204, 85, 0))),
+        // 变量
+        QSSRule(QRegularExpression("%\\w+%"), getTCF(QColor(151, 49, 197))),
         // 注释
         QSSRule(QRegularExpression("--.*"), getTCF(QColor(119, 136, 153))),
         // "字符串"
