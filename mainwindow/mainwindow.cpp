@@ -4521,8 +4521,17 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         }
     }
 
+    // 判断过滤器
     if (isFilterRejected("FILTER_MUSIC_ORDER", danmaku))
         return ;
+
+    // 成功点歌
+    if (saveToSqlite)
+    {
+        LiveDanmaku md = danmaku;
+        md.setText(text);
+        sqlService.insertMusic(md);
+    }
 
     if (musicWindow && !musicWindow->isHidden()) // 自动播放
     {
@@ -4549,7 +4558,6 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
             appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
         });
     }
-//    ui->DiangeAutoCopyCheck->setText("点歌（" + text + "）");
 }
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
@@ -19782,6 +19790,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         QString ver = versions.at(i);
         qInfo() << "数据升级：" << ver << " -> " << versions.at(i+1);
         upgradeOneVersionData(ver);
+        sqlService.upgradeDb(versions.at(i+1));
     }
 }
 
@@ -20004,11 +20013,15 @@ void MainWindow::initLiveOpenService()
 
 void MainWindow::initDbService()
 {
+    // TODO: 可更换路径
+    sqlService.setDbPath(rt->dataPath + "/database.db");
     if (saveToSqlite)
         sqlService.open();
 
     // TODO: 信号与相关槽改成 const& 的形式以增强性能
     connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+        if (danmaku.isNoReply())
+            return ;
         if (saveToSqlite)
             sqlService.insertDanmaku(danmaku);
     });

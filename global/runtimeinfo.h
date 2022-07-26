@@ -38,7 +38,7 @@ public:
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
     const int giftImgSize = 60;
 
-    QString dataPath;
+    QString dataPath;   // 末尾带/
     QString appVersion; // 不带v
     QString appFileName; // 应用程序文件名（不带exe）
     QString appNewVersion;
