@@ -31,7 +31,7 @@ void QSSHighlighter::highlightBlock(const QString &text)
         return f;
     };
     static QList<QSSRule> qss_rules = {
-        // ID；
+        // ID
         // QSSRule{QRegularExpression("^\\s*[#\\.]\\w+"), getTCF(QColor(222, 49, 99))},
         QSSRule{QRegularExpression("^\\s*[\\w#\\.>:\\-, ]+\\{"), getTCF(QColor(222, 49, 99))},
         // QSSRule{QRegularExpression("^\\s*[\\w#\\.>, ]+\\s*[:\\w+]?\\s*\\{"), getTCF(QColor(222, 49, 99))},

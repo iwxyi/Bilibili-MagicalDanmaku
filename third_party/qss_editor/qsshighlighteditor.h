@@ -1,7 +1,6 @@
 #ifndef QSSHIGHLIGHTEDITOR_H
 #define QSSHIGHLIGHTEDITOR_H
 
-#include <QObject>
 #include <QPlainTextEdit>
 #include <QSyntaxHighlighter>
 #include <QRegularExpression>

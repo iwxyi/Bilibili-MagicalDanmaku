@@ -68,6 +68,7 @@ INCLUDEPATH += \
     widgets/ \
     third_party/ \
     widgets/editor/ \
+    widgets/db_browser/ \
     third_party/gif/ \
     third_party/picture_browser/ \
     third_party/notification/ \
@@ -112,7 +113,8 @@ SOURCES += \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
     widgets/csvviewer.cpp \
-    widgets/dbbrowser.cpp \
+    widgets/db_browser/dbbrowser.cpp \
+    widgets/db_browser/sqleditor.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
@@ -217,7 +219,8 @@ HEADERS += \
     widgets/clickablewidget.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
-    widgets/dbbrowser.h \
+    widgets/db_browser/dbbrowser.h \
+    widgets/db_browser/sqleditor.h \
     widgets/eternal_block_dialog/externalblockdialog.h \
     widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
@@ -282,7 +285,7 @@ FORMS += \
     order_player/importsongsdialog.ui \
     third_party/qss_editor/qsseditdialog.ui \
     widgets/buy_vip/buyvipdialog.ui \
-    widgets/dbbrowser.ui \
+    widgets/db_browser/dbbrowser.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
     mainwindow/mainwindow.ui \

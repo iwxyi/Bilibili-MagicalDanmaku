@@ -55,6 +55,7 @@ void DBBrowser::on_execButton_clicked()
     model = new QSqlQueryModel(this);
     model->setQuery(code);
     ui->resultTable->setModel(model);
+    ui->resultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
 void DBBrowser::on_resultTable_customContextMenuRequested(const QPoint &pos)
