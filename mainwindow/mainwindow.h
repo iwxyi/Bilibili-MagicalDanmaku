@@ -54,6 +54,7 @@
 #include "liveopenservice.h"
 #include "singleentrance.h"
 #include "sqlservice.h"
+#include "dbbrowser.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -800,6 +801,10 @@ private slots:
     void on_actionLogout_triggered();
 
     void on_saveToSqliteCheck_clicked();
+
+    void on_databaseQueryButton_clicked();
+
+    void on_actionQueryDatabase_triggered();
 
 private:
     void initView();

@@ -15,6 +15,7 @@ public:
     virtual ~SqlService();
 
     void setDbPath(const QString& dbDir);
+    QString getDbPath() const;
 
 signals:
 

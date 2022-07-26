@@ -125,6 +125,7 @@
         <file alias="rank">icons/rank.png</file>
         <file alias="logout">icons/logout.png</file>
         <file alias="watched">icons/eye.png</file>
+        <file alias="database">icons/database.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

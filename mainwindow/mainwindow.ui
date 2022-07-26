@@ -6337,10 +6337,17 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>自动下载与安装新版安装包</string>
+                <string>保存以下交互操作到数据库，随时查询与统计：
+- 弹幕
+- 礼物
+- 舰长
+- 进入
+- 点歌
+
+数据库默认位置：安装目录/database.db</string>
                </property>
                <property name="text">
-                <string>保存Sqlite数据库</string>
+                <string>保存所有记录</string>
                </property>
               </widget>
              </item>
@@ -6348,6 +6355,10 @@ margin: 40px;</string>
               <widget class="QPushButton" name="databaseQueryButton">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>使用内置查询工具来查看所有保存的记录
+也可以通过如“DB Browser for SQLite”之类的工具</string>
                </property>
                <property name="styleSheet">
                 <string notr="true">QPushButton
@@ -9500,6 +9511,7 @@ font-weight: 500;</string>
     <addaction name="actionSend_Long_Text"/>
     <addaction name="actionShow_PK_Video"/>
     <addaction name="actionJoin_Battle"/>
+    <addaction name="actionQueryDatabase"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -9954,6 +9966,15 @@ font-weight: 500;</string>
    </property>
    <property name="text">
     <string>退出登录</string>
+   </property>
+  </action>
+  <action name="actionQueryDatabase">
+   <property name="icon">
+    <iconset resource="../resources/resource.qrc">
+     <normaloff>:/icons/database</normaloff>:/icons/database</iconset>
+   </property>
+   <property name="text">
+    <string>查询数据库</string>
    </property>
   </action>
  </widget>

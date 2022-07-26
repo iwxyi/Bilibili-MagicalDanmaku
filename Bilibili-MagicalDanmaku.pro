@@ -112,6 +112,7 @@ SOURCES += \
     third_party/utils/warmwishtutil.cpp \
     widgets/buy_vip/buyvipdialog.cpp \
     widgets/csvviewer.cpp \
+    widgets/dbbrowser.cpp \
     widgets/guard_online/guardonlinedialog.cpp \
     widgets/lucky_draw/luckydrawwindow.cpp \
     mainwindow/main.cpp \
@@ -216,6 +217,7 @@ HEADERS += \
     widgets/clickablewidget.h \
     widgets/csvviewer.h \
     widgets/custompaintwidget.h \
+    widgets/dbbrowser.h \
     widgets/eternal_block_dialog/externalblockdialog.h \
     widgets/eternal_block_dialog/externalblockuser.h \
     widgets/guard_online/guardonlinedialog.h \
@@ -280,6 +282,7 @@ FORMS += \
     order_player/importsongsdialog.ui \
     third_party/qss_editor/qsseditdialog.ui \
     widgets/buy_vip/buyvipdialog.ui \
+    widgets/dbbrowser.ui \
     widgets/guard_online/guardonlinedialog.ui \
     widgets/lucky_draw/luckydrawwindow.ui \
     mainwindow/mainwindow.ui \

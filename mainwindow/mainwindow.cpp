@@ -14932,7 +14932,7 @@ void MainWindow::updateOnlineGoldRank()
 
             onlineGoldRank.append(danmaku);
         }
-        qInfo() << "高能榜：" << names;
+        // qInfo() << "高能榜：" << names;
         updateOnlineRankGUI();
     });
 }
@@ -20016,7 +20016,7 @@ void MainWindow::initLiveOpenService()
 void MainWindow::initDbService()
 {
     // TODO: 可更换路径
-    sqlService.setDbPath(rt->dataPath + "/database.db");
+    sqlService.setDbPath(rt->dataPath + "database.db");
     if (saveToSqlite)
         sqlService.open();
 
@@ -22392,4 +22392,16 @@ void MainWindow::on_saveToSqliteCheck_clicked()
     {
         sqlService.close();
     }
+}
+
+void MainWindow::on_databaseQueryButton_clicked()
+{
+    on_actionQueryDatabase_triggered();
+}
+
+void MainWindow::on_actionQueryDatabase_triggered()
+{
+    DBBrowser* dbb = new DBBrowser(&sqlService, us, this);
+    dbb->setGeometry(this->geometry());
+    dbb->show();
 }

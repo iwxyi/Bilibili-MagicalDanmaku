@@ -17,6 +17,11 @@ void SqlService::setDbPath(const QString &path)
     this->dbPath = path;
 }
 
+QString SqlService::getDbPath() const
+{
+    return dbPath;
+}
+
 void SqlService::open()
 {
     if (db.isOpen())
@@ -188,7 +193,7 @@ void SqlService::insertDanmaku(LiveDanmaku danmaku)
         qCritical() << "未打开数据库";
         return ;
     }
-    qDebug() << ">>插入数据库：" << danmaku.getMsgType() << danmaku.toString();
+    // qInfo() << ">>插入数据库：" << danmaku.getMsgType() << danmaku.toString();
 
     QSqlQuery query;
     switch (danmaku.getMsgType())
