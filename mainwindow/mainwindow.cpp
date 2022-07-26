@@ -11303,7 +11303,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                         "cmd": "HOT_RANK_SETTLEMENT",
                         "data": {
                             "rank": 9,
-                            "uname": "丸嘻嘻",
+                            "uname": "xxx",
                             "face": "http://i2.hdslb.com/bfs/face/17f1f3994cb4b2bba97f1557ffc7eb34a05e119b.jpg",
                             "timestamp": 1610173800,
                             "icon": "https://i0.hdslb.com/bfs/live/3f833451003cca16a284119b8174227808d8f936.png",
@@ -11318,9 +11318,16 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     QString uname = data.value("uname").toString();
                     QString area_name = data.value("area_name").toString();
                     QString msg = QString("恭喜荣登热门榜" + area_name + "榜 top" + snum(rank) + "!");
+                    // 还没想好这个分区榜要放到总榜还是小时榜里？
+                    ui->roomRankLabel->setText(snum(rank));
+                    ui->roomRankTextLabel->setText(area_name + "榜");
                     qInfo() << "rank:" << msg;
                     triggerCmdEvent("HOT_RANK", LiveDanmaku(area_name + "榜 top" + snum(rank)).with(data), true);
                     localNotify(msg);
+                }
+                else if (cmd == "HOT_RANK_SETTLEMENT_V2")
+                {
+                    // 和上面的V1一样，不管了
                 }
                 else if (handlePK(json))
                 {
@@ -22401,7 +22408,10 @@ void MainWindow::on_databaseQueryButton_clicked()
 
 void MainWindow::on_actionQueryDatabase_triggered()
 {
-    DBBrowser* dbb = new DBBrowser(&sqlService, us, this);
+    DBBrowser* dbb = new DBBrowser(&sqlService, us, nullptr);
     dbb->setGeometry(this->geometry());
+    connect(dbb, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
+        code = processDanmakuVariants(code, LiveDanmaku());
+    });
     dbb->show();
 }
