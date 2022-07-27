@@ -1093,6 +1093,7 @@ private:
 
     void initLiveOpenService();
     void initDbService();
+    void showSqlQueryResult(QString sql);
 
 private:
     // 应用信息

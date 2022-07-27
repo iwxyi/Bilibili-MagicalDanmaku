@@ -29,6 +29,21 @@ DBBrowser::~DBBrowser()
     delete ui;
 }
 
+void DBBrowser::showQueryResult(QString sql)
+{
+    sql = sql.trimmed();
+    if (sql.trimmed().isEmpty())
+        return ;
+    qInfo() << "SQL查询：" << sql;
+
+    if (model)
+        delete model;
+    model = new QSqlQueryModel(this);
+    model->setQuery(sql);
+    ui->resultTable->setModel(model);
+    ui->resultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+}
+
 void DBBrowser::on_execButton_clicked()
 {
     QString full = ui->queryEdit->toPlainText();
@@ -49,19 +64,9 @@ void DBBrowser::on_execButton_clicked()
             right = full.length();
         code = full.mid(left, right - left);
     }
-
-    code = code.trimmed();
-    if (code.trimmed().isEmpty())
-        return ;
     emit signalProcessVariant(code);
-    qInfo() << "SQL查询：" << code;
 
-    if (model)
-        delete model;
-    model = new QSqlQueryModel(this);
-    model->setQuery(code);
-    ui->resultTable->setModel(model);
-    ui->resultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    showQueryResult(code);
 }
 
 void DBBrowser::on_resultTable_customContextMenuRequested(const QPoint &pos)

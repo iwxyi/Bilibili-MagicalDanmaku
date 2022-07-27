@@ -314,6 +314,26 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
     }
 }
 
+bool SqlService::exec(const QString &sql)
+{
+    if (!db.isOpen())
+    {
+        emit signalError("SQL.EXEC失败：未打开数据库");
+        return false;
+    }
+
+    qInfo() << "SQL.exec" << sql;
+
+    QSqlQuery query;
+    query.prepare(sql);
+    if (!query.exec())
+    {
+        emit signalError("执行失败：" + query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
 bool SqlService::hasTable(const QString &name) const
 {
     if (!db.isOpen())

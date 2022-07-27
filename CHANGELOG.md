@@ -1,12 +1,18 @@
-### v4.7.3 [增加功能](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.7.3)
+### v4.8.0 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.0)
 
+- 新增保存所有记录到SQLite数据库
+- 新增SQL语句的批量编辑与运行
+- 新增SQL命令：`SQLQuery`、`SQLExec`
+- 新增显示数据库查询结果
 - 新增显示直播总榜和看过人数
+- 新增显示分区榜的排名
 - 新增打开录播存储位置的按钮
 - 新增自动填充事件名字的候选框
 - 新增弹幕姬的弹幕单独一行开关
 - 新增代理支持动态header参数
 - 新增点歌姬设置音频输出设备
 - 新增点歌姬图标设置为用户头像
+- 新增弹幕姬获取头像的冷却机制
 - 新增升级后显示更新内容
 - 新增扩展的打赏、联系作者
 - 新增扩展自定义菜单

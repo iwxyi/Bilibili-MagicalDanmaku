@@ -38,3 +38,5 @@
 获取文本文件行数=getTextFileLineCount
 url编码=urlEncode
 url解码=urlDecode
+SQL执行=SQLExec
+SQL查询=SQLQuery

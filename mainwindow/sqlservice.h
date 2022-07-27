@@ -18,6 +18,7 @@ public:
     QString getDbPath() const;
 
 signals:
+    void signalError(const QString& err);
 
 public slots:
     void open();
@@ -26,6 +27,7 @@ public slots:
     void upgradeDb(const QString& newVersion);
     void insertDanmaku(LiveDanmaku danmaku);
     void insertMusic(LiveDanmaku danmaku);
+    bool exec(const QString& sql);
 
 private:
     bool hasTable(const QString& name) const;

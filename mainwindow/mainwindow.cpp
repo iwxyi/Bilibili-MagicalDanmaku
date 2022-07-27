@@ -10660,6 +10660,37 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    // 执行数据库
+    if (msg.contains("sqlExec") || msg.contains("SQLExec"))
+    {
+        re = RE("(?:sql|SQL)Exec\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString sql = caps[1];
+            sql = toMultiLine(sql);
+            qInfo() << "执行命令：" << caps;
+            if (sqlService.exec(sql))
+                localNotify("数据库执行成功：" + sql);
+            return true;
+        }
+    }
+
+    // 显示数据库查询结果
+    if (msg.contains("sqlQuery") || msg.contains("SQLQuery"))
+    {
+        re = RE("(?:sql|SQL)Query\\s*\\((.+?)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString sql = caps[1];
+            sql = toMultiLine(sql);
+            qInfo() << "执行命令：" << caps;
+            showSqlQueryResult(sql);
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -20034,6 +20065,23 @@ void MainWindow::initDbService()
         if (saveToSqlite)
             sqlService.insertDanmaku(danmaku);
     });
+    connect(&sqlService, &SqlService::signalError, this, [=](const QString& err) {
+        showError("数据库", err);
+    });
+}
+
+void MainWindow::showSqlQueryResult(QString sql)
+{
+    DBBrowser* dbb = new DBBrowser(&sqlService, us, nullptr);
+    dbb->setGeometry(this->geometry());
+    connect(dbb, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
+        code = processDanmakuVariants(code, LiveDanmaku());
+    });
+    if (!sql.isEmpty())
+    {
+        dbb->showQueryResult(sql);
+    }
+    dbb->show();
 }
 
 void MainWindow::on_actionMany_Robots_triggered()
@@ -22408,10 +22456,5 @@ void MainWindow::on_databaseQueryButton_clicked()
 
 void MainWindow::on_actionQueryDatabase_triggered()
 {
-    DBBrowser* dbb = new DBBrowser(&sqlService, us, nullptr);
-    dbb->setGeometry(this->geometry());
-    connect(dbb, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
-        code = processDanmakuVariants(code, LiveDanmaku());
-    });
-    dbb->show();
+    showSqlQueryResult("");
 }

@@ -18,6 +18,8 @@ public:
     explicit DBBrowser(SqlService* service, QSettings* settings, QWidget *parent = nullptr);
     ~DBBrowser();
 
+    void showQueryResult(QString sql);
+
 signals:
     void signalProcessVariant(QString& code);
 
