@@ -553,11 +553,11 @@ void MainWindow::initStyle()
 void MainWindow::initPath()
 {
     rt->appFileName = QFileInfo(QApplication::applicationFilePath()).baseName();
-    /* if (rt->appFileName.contains("start"))
+    if (rt->appFileName == "start" || rt->appFileName == "start.exe")
     {
         rt->asPlugin = true;
-        rt->asFreeOnly = false;
-    } */
+        rt->asFreeOnly = true;
+    }
     rt->dataPath = QApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     // 如果没有设置通用目录，则选择安装文件夹
@@ -620,13 +620,15 @@ void MainWindow::readConfig()
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
-    if (rt->appVersion != us->value("runtime/appVersion").toString())
+    QString oldValue = us->value("runtime/appVersion").toString();
+    if (rt->appVersion != oldValue)
     {
-        upgradeVersionToLastest(us->value("runtime/appVersion").toString());
+        upgradeVersionToLastest(oldValue);
         us->setValue("runtime/appVersion", rt->appVersion);
         QTimer::singleShot(1000, [=]{
             QString ch = QApplication::applicationDirPath() + "/CHANGELOG.md";
-            if (ui->showChangelogCheck->isChecked()
+            if (!oldValue.isEmpty()
+                    && ui->showChangelogCheck->isChecked()
                     && isFileExist(ch))
             {
                 QDesktopServices::openUrl(QUrl::fromLocalFile(ch));
@@ -1276,7 +1278,8 @@ void MainWindow::readConfig()
     // 开机自启
     ui->startOnRebootCheck->setChecked(us->value("runtime/startOnReboot", false).toBool());
     // 自动更新
-    ui->autoUpdateCheck->setChecked(us->value("runtime/autoUpdate", true).toBool());
+    ui->autoUpdateCheck->setChecked(us->value("runtime/autoUpdate", !rt->asPlugin).toBool());
+    ui->autoUpdateCheck->setEnabled(!rt->asPlugin);
     ui->showChangelogCheck->setChecked(us->value("runtime/showChangelog", true).toBool());
     ui->updateBetaCheck->setChecked(us->value("runtime/updateBeta", false).toBool());
 #endif
@@ -19077,8 +19080,8 @@ void MainWindow::startSplash()
 
 void MainWindow::loadWebExtensionList()
 {
-    if (rt->asPlugin)
-        return ;
+    /* if (rt->asPlugin)
+        return ; */
 
     // 清空旧的列表
     for (int i = 0; i < ui->extensionListWidget->count(); i++)
