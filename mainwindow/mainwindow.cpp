@@ -12463,7 +12463,7 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         }
 
-        userComeEvent(danmaku);
+        // userComeEvent(danmaku); // 用户进入就有提示了（舰长提示会更频繁）
         triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
@@ -15006,7 +15006,7 @@ void MainWindow::updateOnlineRankGUI()
                 {
                     showError("获取头像图片出错");
                     qWarning() << "头像地址：" << url;
-                    return ;
+                    pixmap = QPixmap(":/icons/header1");
                 }
 
                 pl->userHeaders[uid] = pixmap;

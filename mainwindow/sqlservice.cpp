@@ -75,13 +75,17 @@ uid TEXT NOT NULL,\
 msg TEXT NOT NULL,\
 ulevel INTEGER,\
 admin BOOLEAN,\
-uguard INTEGER,\
+guard INTEGER,\
 anchor_room_id TEXT,\
 medal_name TEXT,\
 medal_level INTEGER,\
 medal_up TEXT,\
 price INTEGER,\
 create_time time NOT NULL)");
+    }
+    else
+    {
+        tryExec("alter table danmu add guard INTERGER");
     }
 
     // 送礼（不包括舰长）
@@ -135,6 +139,7 @@ uname TEXT NOT NULL,\
 uid TEXT NOT NULL,\
 msg_type INTEGER NOT NULL,\
 admin BOOLEAN,\
+guard INTEGER,\
 anchor_room_id TEXT,\
 medal_name TEXT,\
 medal_level INTEGER,\
@@ -143,6 +148,10 @@ special INTEGER,\
 spread_desc TEXT,\
 spread_info TEXT,\
 create_time time NOT NULL)");
+    }
+    else
+    {
+        tryExec("alter table interact add guard INTERGER");
     }
 
     // 勋章
@@ -168,12 +177,16 @@ uid TEXT NOT NULL,\
 music_name TEXT NOT NULL,\
 ulevel INTEGER,\
 admin BOOLEAN,\
-uguard INTEGER,\
+guard INTEGER,\
 anchor_room_id TEXT,\
 medal_name TEXT,\
 medal_level INTEGER,\
 medal_up TEXT,\
 create_time time NOT NULL)");
+    }
+    else
+    {
+        tryExec("alter table interact add guard INTERGER");
     }
 }
 
@@ -202,7 +215,7 @@ void SqlService::insertDanmaku(LiveDanmaku danmaku)
     case MessageType::MSG_SUPER_CHAT:
     {
         query.prepare("INSERT INTO \
-danmu(room_id, uname, uid, msg, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time) \
+danmu(room_id, uname, uid, msg, ulevel, admin, guard, anchor_room_id, medal_name, medal_level, medal_up, price, create_time) \
 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
         query.addBindValue(danmaku.getNickname());
@@ -264,12 +277,14 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?)");
     case MessageType::MSG_SHARE:
     {
         query.prepare("INSERT INTO \
-interact(room_id, uname, uid, msg_type, anchor_room_id, medal_name, medal_level, medal_up, special, spread_desc, spread_info, create_time) \
-VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+interact(room_id, uname, uid, msg_type, admin, guard, anchor_room_id, medal_name, medal_level, medal_up, special, spread_desc, spread_info, create_time) \
+VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
         query.addBindValue(danmaku.getNickname());
         query.addBindValue(danmaku.getUid());
         query.addBindValue(danmaku.extraJson.value("msg_type").toInt());
+        query.addBindValue(danmaku.isAdmin());
+        query.addBindValue(danmaku.getGuard());
         query.addBindValue(danmaku.getAnchorRoomid());
         query.addBindValue(danmaku.getMedalName());
         query.addBindValue(danmaku.getMedalLevel());
@@ -293,7 +308,7 @@ void SqlService::insertMusic(LiveDanmaku danmaku)
 {
     QSqlQuery query;
     query.prepare("INSERT INTO music\
-(room_id, uname, uid, music_name, ulevel, admin, uguard, anchor_room_id, medal_name, medal_level, medal_up, create_time)\
+(room_id, uname, uid, music_name, ulevel, admin, guard, anchor_room_id, medal_name, medal_level, medal_up, create_time)\
 VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
     query.addBindValue(danmaku.getRoomId().isEmpty() ? ac->roomId : danmaku.getRoomId());
     query.addBindValue(danmaku.getNickname());
@@ -332,6 +347,21 @@ bool SqlService::exec(const QString &sql)
         return false;
     }
     return true;
+}
+
+/**
+ * 不报错的执行SQL
+ * 可能是补充字段、修改字段等等，大概率会运行失败
+ */
+bool SqlService::tryExec(const QString &sql)
+{
+    if (!db.isOpen())
+    {
+        return false;
+    }
+
+    QSqlQuery query;
+    return query.exec(sql);
 }
 
 bool SqlService::hasTable(const QString &name) const

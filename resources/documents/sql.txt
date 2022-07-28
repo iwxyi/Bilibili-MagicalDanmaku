@@ -1,9 +1,9 @@
--- 用法：鼠标点到要执行的代码行中任意位置（灰色注释的下面一行），点击最上方的“执行”按钮
--- 清空代码并重启窗口可恢复默认
+-- 用法：鼠标点到在执行的代码行中任意位置（灰色注释的下面一行），点击最上方的“执行”按钮
+-- 清空代码并重开窗口可恢复默认
 
 -------------------------------------- 弹幕 --------------------------------------
 -- 查看当前直播间历史弹幕
-select uid, uname, msg, ulevel, uguard, admin, create_time from danmu where room_id = %room_id% order by create_time desc limit 10000
+select uid, uname, msg, ulevel, admin, guard, create_time from danmu where room_id = %room_id% order by create_time desc limit 10000
 
 -- 查看某人所有弹幕
 select uid, uname, msg, create_time as last_time from danmu where room_id = %room_id% and uid = "要查询的UID" order by create_time desc
@@ -25,7 +25,10 @@ select count(*) from danmu where room_id = %room_id% and create_time between dat
 
 -------------------------------------- 进入 --------------------------------------
 -- 查看进入直播间记录
-select uid, uname, medal_name, medal_level, create_time as time from interact where room_id = %room_id% and msg_type = 1 order by create_time desc limit 10000
+select uid, uname, guard, medal_name, medal_level, create_time as time from interact where room_id = %room_id% and msg_type = 1 order by create_time desc limit 10000
+
+-- 查看舰长进入
+select uid, uname, medal_name, medal_level, create_time as time from interact where room_id = %room_id% and msg_type = 1 and guard > 0 order by create_time desc limit 10000
 
 -- 按进入次数排序
 select uid, uname, count(*) as count, create_time as last_time from interact where room_id = %room_id% and msg_type = 1 group by uid order by count , create_time desc limit 10000

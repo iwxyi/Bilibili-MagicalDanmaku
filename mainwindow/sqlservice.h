@@ -28,6 +28,7 @@ public slots:
     void insertDanmaku(LiveDanmaku danmaku);
     void insertMusic(LiveDanmaku danmaku);
     bool exec(const QString& sql);
+    bool tryExec(const QString& sql);
 
 private:
     bool hasTable(const QString& name) const;
