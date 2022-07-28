@@ -12635,7 +12635,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString username = data.value("username").toString();
         QString giftName = data.value("gift_name").toString();
         int price = data.value("price").toInt();
-        int gift_id = data.value("guard_id").toInt();
+        int gift_id = data.value("gift_id").toInt();
         int guard_level = data.value("guard_level").toInt();
         int num = data.value("num").toInt();
         // start_time和end_time都是当前时间？
