@@ -1580,7 +1580,7 @@ void MainWindow::readConfig()
     }
     if (rt->asFreeOnly)
     {
-        ui->vipExtensionButton->setText("Lite版不支持回复、事件等功能");
+        ui->vipExtensionButton->setText("Lite版未安装回复、事件等功能");
         ui->existExtensionsLabel->setText("Lite版不支持插件系统");
     }
 
@@ -18962,7 +18962,8 @@ void MainWindow::getPositiveVote()
         // 没有评价过的老用户进行提示好评
         if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 7 * 24 * 3600)
                 && !us->value("ask/positiveVote").toBool()
-                && qrand() % 5 == 0)
+                && qrand() % 5 == 0
+                && _fanfanLikeCount > 0)
         {
             QTimer::singleShot(3000, [=]{
                 if (!ac->cookieUid.isEmpty() && !_hasPositiveVote)
@@ -21669,7 +21670,7 @@ void MainWindow::on_vipExtensionButton_clicked()
 {
     if (rt->asFreeOnly)
     {
-        QMessageBox::warning(this, "作为插件的Lite版说明", "Lite版不支持部分功能，请前往官网下载完整版");
+        QMessageBox::warning(this, "作为插件的Lite版说明", "Lite版未安装部分功能，请前往官网下载完整版");
         openLink("http://lyixi.com/?type=newsinfo&S_id=126");
         return ;
     }

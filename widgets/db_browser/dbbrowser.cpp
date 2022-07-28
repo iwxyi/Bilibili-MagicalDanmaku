@@ -1,6 +1,7 @@
 #include <QTextBlock>
 #include "dbbrowser.h"
 #include "ui_dbbrowser.h"
+#include "fileutil.h"
 
 DBBrowser::DBBrowser(SqlService *service, QSettings* settings, QWidget *parent) :
     QWidget(parent),
@@ -17,13 +18,19 @@ DBBrowser::DBBrowser(SqlService *service, QSettings* settings, QWidget *parent) 
     QString codes = settings->value("sql/codes").toString();
     if (codes.isEmpty())
     {
-        // TODO: 设置一些示例
+        // 设置一些示例
+        codes = readTextFile(":/documents/sql");
     }
     ui->queryEdit->setPlainText(codes);
 }
 
 DBBrowser::~DBBrowser()
 {
+    // 保存代码
+    QString full = ui->queryEdit->toPlainText();
+    settings->setValue("sql/codes", full);
+
+    // 保存状态
     settings->setValue("sql/view_splitter_state", ui->splitter->saveState());
     settings->setValue("sql/view_splitter_geometry", ui->splitter->saveGeometry());
     delete ui;

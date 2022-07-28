@@ -179,6 +179,7 @@
         <file alias="server_urls">documents/server_urls.txt</file>
         <file alias="kk">documents/k.key</file>
         <file alias="translation_events">documents/translation_events.txt</file>
+        <file alias="sql">documents/sql.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
