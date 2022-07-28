@@ -104,11 +104,16 @@ total_coin INTEGER NOT NULL,\
 number INTEGER NOT NULL,\
 ulevel INTEGER,\
 admin BOOLEAN,\
+guard INTEGER,\
 anchor_room_id TEXT,\
 medal_name TEXT,\
 medal_level INTEGER,\
 medal_up TEXT,\
 create_time time NOT NULL)");
+    }
+    else
+    {
+        tryExec("alter table gift add guard INTERGER");
     }
 
     // 舰长
@@ -186,7 +191,7 @@ create_time time NOT NULL)");
     }
     else
     {
-        tryExec("alter table interact add guard INTERGER");
+        tryExec("alter table music add guard INTERGER");
     }
 }
 

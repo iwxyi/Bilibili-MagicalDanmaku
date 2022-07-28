@@ -1131,7 +1131,7 @@ void MainWindow::readConfig()
     ui->enableTrayCheck->setChecked(us->value("mainwindow/enableTray", false).toBool());
     if (ui->enableTrayCheck->isChecked())
         tray->show(); // 让托盘图标显示在系统托盘上
-    permissionText = us->value("mainwindow/permissionText", permissionText).toString();
+    permissionText = us->value("mainwindow/permissionText", rt->asPlugin ? "Lite版" : permissionText).toString();
 
     // 定时连接
     ui->timerConnectServerCheck->setChecked(us->value("live/timerConnectServer", false).toBool());
@@ -22014,7 +22014,7 @@ void MainWindow::on_droplight_customContextMenuRequested(const QPoint &)
 
     menu->addAction(QIcon(":/icons/heart2"), "自定义文字", [=]{
         bool ok;
-        QString s = QInputDialog::getText(this, "自定义文字", "高度自定义捐赠版的显示文字", QLineEdit::Normal, permissionText, &ok);
+        QString s = QInputDialog::getText(this, "自定义文字", "高度自定义显示文字", QLineEdit::Normal, permissionText, &ok);
         if (!ok)
             return ;
         us->setValue("mainwindow/permissionText", permissionText = s);
