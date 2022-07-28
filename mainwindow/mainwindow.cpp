@@ -12463,7 +12463,7 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku = LiveDanmaku(guardLevel, uname, uid, QDateTime::currentDateTime());
         }
 
-        // userComeEvent(danmaku);
+        userComeEvent(danmaku);
         triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "WELCOME") // 欢迎老爷，通过vip和svip区分月费和年费老爷
@@ -12548,6 +12548,13 @@ void MainWindow::handleMessage(QJsonObject json)
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
         danmaku.setOpposite(opposite);
         danmaku.with(data);
+
+        for (const auto& guard: guardInfos)
+            if (guard.getUid() == uid)
+            {
+                danmaku.setGuardLevel(guard.getGuard());
+                break;
+            }
 
         if (roomId != "0" && roomId != ac->roomId) // 关注对面主播，也会引发关注事件
         {
