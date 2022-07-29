@@ -764,9 +764,9 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
 
         // 遍历所有未知的参数，设置到header
         params.remove("url");
-        for (auto key: params)
+        for (auto it = params.begin(); it != params.end(); it++)
         {
-            request.setRawHeader(key.toUtf8(), QByteArray::fromPercentEncoding(params.value(key).toUtf8()));
+            request.setRawHeader(it.key().toUtf8(), QByteArray::fromPercentEncoding(it.value().toUtf8()));
         }
 
         // 异步返回
