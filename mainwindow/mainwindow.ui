@@ -6187,7 +6187,7 @@ margin: 40px;</string>
               <x>190</x>
               <y>1090</y>
               <width>161</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="toolTip">
@@ -6289,7 +6289,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>1090</y>
               <width>161</width>
-              <height>111</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="toolTip">
@@ -6361,6 +6361,20 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>保存所有记录</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="saveCmdToSqliteCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>保存所有cmd、data到数据库
+可用于日志分析</string>
+               </property>
+               <property name="text">
+                <string>保存所有Cmd</string>
                </property>
               </widget>
              </item>

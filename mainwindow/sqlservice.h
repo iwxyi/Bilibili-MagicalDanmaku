@@ -28,6 +28,7 @@ public slots:
     void upgradeDb(const QString& newVersion);
     void insertDanmaku(LiveDanmaku danmaku);
     void insertMusic(LiveDanmaku danmaku);
+    void insertCmd(const QString& cmd, const QString &data);
     bool exec(const QString& sql);
     bool tryExec(const QString& sql);
 

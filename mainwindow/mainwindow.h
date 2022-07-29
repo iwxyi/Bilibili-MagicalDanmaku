@@ -806,6 +806,8 @@ private slots:
 
     void on_actionQueryDatabase_triggered();
 
+    void on_saveCmdToSqliteCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -1418,6 +1420,7 @@ private:
 
     // 数据库
     bool saveToSqlite = false;
+    bool saveCmdToSqlite = false;
     SqlService sqlService;
 };
 

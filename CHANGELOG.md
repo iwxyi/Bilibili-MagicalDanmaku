@@ -1,3 +1,12 @@
+### v4.8.1 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.1)
+
+- 新增存储所有CMD
+- 优化昵称简化
+
+
+
+
+
 ### v4.8.0 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.0)
 
 - 新增保存所有记录到SQLite数据库

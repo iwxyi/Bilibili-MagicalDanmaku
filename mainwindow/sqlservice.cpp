@@ -200,6 +200,16 @@ create_time time NOT NULL)");
     {
         tryExec("alter table music add guard INTERGER");
     }
+
+    // cmd
+    if (!hasTable("cmd"))
+    {
+        createTable("CREATE TABLE cmd(\
+id INTEGER PRIMARY KEY AUTOINCREMENT,\
+cmd TEXT,\
+data TEXT,\
+create_time time NOT NULL)");
+    }
 }
 
 /**
@@ -334,6 +344,21 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
     query.addBindValue(danmaku.getMedalLevel());
     query.addBindValue(danmaku.getMedalUp());
     query.addBindValue(danmaku.getTimeline());
+
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+    }
+}
+
+void SqlService::insertCmd(const QString &cmd, const QString &data)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO cmd\
+(cmd, data, create_time) VALUES(?,?,?)");
+    query.addBindValue(cmd);
+    query.addBindValue(data);
+    query.addBindValue(QDateTime::currentDateTime());
 
     if (!query.exec())
     {

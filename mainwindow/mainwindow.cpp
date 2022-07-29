@@ -804,8 +804,10 @@ void MainWindow::readConfig()
         startCalculateDailyData();
 
     // 数据库
-    saveToSqlite = us->value("db/sqlite").toBool();
-    ui->saveToSqliteCheck->setChecked(saveToSqlite);
+    ui->saveToSqliteCheck->setChecked(saveToSqlite = us->value("db/sqlite").toBool());
+    ui->saveCmdToSqliteCheck->setChecked(saveCmdToSqlite = us->value("db/cmd").toBool());
+    ui->saveCmdToSqliteCheck->setEnabled(saveToSqlite);
+
 
     // PK串门提示
     pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
@@ -11285,6 +11287,11 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 QJsonObject json = document.object();
                 QString cmd = json.value("cmd").toString();
 
+                if (saveToSqlite && saveCmdToSqlite)
+                {
+                    sqlService.insertCmd(cmd, body);
+                }
+
                 if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "WIDGET_BANNER")
                     return ;
 
@@ -11481,6 +11488,10 @@ void MainWindow::splitUncompressedBody(const QByteArray &unc)
         QJsonObject json = document.object();
         QString cmd = json.value("cmd").toString();
         SOCKET_INF << "解压后获取到CMD：" << cmd;
+        if (saveToSqlite && saveCmdToSqlite)
+        {
+            sqlService.insertCmd(cmd, jsonBa);
+        }
         if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
                 && cmd != "ONLINERANK")
             SOCKET_INF << "单个JSON消息：" << offset << packSize << QString(jsonBa);
@@ -22471,6 +22482,7 @@ void MainWindow::on_actionLogout_triggered()
 void MainWindow::on_saveToSqliteCheck_clicked()
 {
     us->set("db/sqlite", saveToSqlite = ui->saveToSqliteCheck->isChecked());
+    ui->saveCmdToSqliteCheck->setEnabled(saveToSqlite);
     if (saveToSqlite)
     {
         sqlService.open();
@@ -22489,4 +22501,9 @@ void MainWindow::on_databaseQueryButton_clicked()
 void MainWindow::on_actionQueryDatabase_triggered()
 {
     showSqlQueryResult("");
+}
+
+void MainWindow::on_saveCmdToSqliteCheck_clicked()
+{
+    us->set("db/cmd", saveCmdToSqlite = ui->saveCmdToSqliteCheck->isChecked());
 }
