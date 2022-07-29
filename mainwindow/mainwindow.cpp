@@ -8894,7 +8894,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString text = caps.at(1);
+            QString text = toMultiLine(caps.at(1));
             qInfo() << "执行命令：" << caps;
             speakText(text);
             return true;
@@ -8921,7 +8921,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString text = caps.at(1);
+            QString text = toMultiLine(caps.at(1));
             qInfo() << "执行命令：" << caps;
             if (!msTTS)
             {
@@ -10034,13 +10034,13 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 提醒框
-    if (msg.contains("messageBox"))
+    if (msg.contains("msgBox") || msg.contains("messageBox"))
     {
-        re = RE("messageBox\\s*\\(\\s*(.*?)\\s*\\)");
+        re = RE("(?:msgBox|messageBox)\\s*\\(\\s*(.*?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
-            QString text = caps.at(1);
+            QString text = toMultiLine(caps.at(1));
             qInfo() << "执行命令：" << caps;
             QMessageBox::information(this, "神奇弹幕", text);
             return true;
@@ -10622,7 +10622,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
-            QApplication::clipboard()->setText(caps.at(1));
+            QApplication::clipboard()->setText(toMultiLine(caps.at(1)));
             return true;
         }
     }
@@ -11266,7 +11266,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         }
         else if (handlePK(json))
         {
-
+            qWarning() << "未压缩的HandleJson信息";
         }
         else // 压缩弹幕消息
         {
@@ -11435,7 +11435,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     }
     else
     {
-
+        qWarning() << "未处理的包类型：operation =" << operation;
     }
 //    delete[] body.data();
 //    delete[] message.data();
@@ -21607,7 +21607,7 @@ void MainWindow::on_tenCardLabel4_linkActivated(const QString &link)
 
 void MainWindow::on_musicBlackListButton_clicked()
 {
-    QString blackList = orderSongBlackList.join(",");
+    QString blackList = orderSongBlackList.join(" ");
     bool ok;
     blackList = TextInputDialog::getText(this, "点歌黑名单", "带有关键词的点歌都将被阻止，并触发“ORDER_SONG_BLOCKED”事件"
                                                         "\n多个关键词用空格隔开，英文字母均使用小写", blackList, &ok);

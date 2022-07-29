@@ -1,8 +1,9 @@
 ### v4.8.1 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.1)
 
 - 新增存储所有CMD
-- 优化昵称简化
-
+- 优化copyText、speakText、messageBox命令支持%n%换行
+- 优化昵称简化算法
+- 修复点歌姬黑名单的问题
 
 
 
