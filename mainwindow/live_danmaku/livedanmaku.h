@@ -397,6 +397,11 @@ public:
         this->msgType = MSG_SHARE;
     }
 
+    void setNickname(const QString& name)
+    {
+        this->nickname = name;
+    }
+
     void setMedal(QString roomId, QString name, int level, QString color, QString up = "")
     {
         this->anchor_roomid = roomId;

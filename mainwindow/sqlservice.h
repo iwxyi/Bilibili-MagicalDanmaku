@@ -16,6 +16,7 @@ public:
 
     void setDbPath(const QString& dbDir);
     QString getDbPath() const;
+    QSqlQuery getQuery(const QString& sql) const;
 
 signals:
     void signalError(const QString& err);

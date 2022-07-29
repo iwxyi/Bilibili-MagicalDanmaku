@@ -24,7 +24,7 @@ void SQLHighlighter::highlightBlock(const QString &text)
         "delete", "from",
         "update", "set", "where",
         "alter", "add", "drop",
-        "order", "by", "desc", "aesc",
+        "order", "by", "desc", "aesc", "having",
         "group", "limit", "distinct"
         "inner", "left", "right", "full", "join"
     };

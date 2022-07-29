@@ -22,6 +22,13 @@ QString SqlService::getDbPath() const
     return dbPath;
 }
 
+QSqlQuery SqlService::getQuery(const QString &sql) const
+{
+    QSqlQuery query;
+    query.exec(sql);
+    return query;
+}
+
 void SqlService::open()
 {
     if (db.isOpen())

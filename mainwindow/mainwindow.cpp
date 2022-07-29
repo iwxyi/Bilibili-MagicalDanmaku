@@ -7,6 +7,7 @@
 #include <QHeaderView>
 #include <QDataStream>
 #include <QTableWidget>
+#include <QSqlQuery>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "videolyricscreator.h"
@@ -100,25 +101,6 @@ MainWindow::MainWindow(QWidget *parent)
     syncTimer->start((qrand() % 10 + 10) * 1000);
 
     // ========== 测试 ==========
-    // 测试微软语音
-    /* MicrosoftTTS* mtts = new MicrosoftTTS(dataPath, "[地区]", "[订阅码]", this);
-    QTimer::singleShot(3000, [=]{
-        QString ssml =
-                "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\
-                xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\">\
-             <voice name=\"zh-CN-XiaomoNeural\">\
-                 女儿看见父亲走了进来，问道：\
-                 <mstts:express-as role=\"YoungAdultFemale\" style=\"calm\">\
-                     “您来的挺快的，怎么过来的？”\
-                 </mstts:express-as>\
-                 父亲放下手提包，说：\
-                 <mstts:express-as role=\"OlderAdultMale\" style=\"calm\">\
-                     “刚打车过来的，路上还挺顺畅。”\
-                 </mstts:express-as>\
-             </voice>\
-         </speak>";
-        mtts->speakText(ssml);
-    }); */
 }
 
 void MainWindow::initView()
@@ -3311,6 +3293,18 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         liveOpenService->end();
     }
+    else if (text == "昵称简化测试")
+    {
+        auto query = sqlService.getQuery("select distinct uname from interact where msg_type = 1");
+        QStringList sl;
+        while (query.next())
+        {
+            QString uname = query.value(0).toString();
+            QString ainame = nicknameSimplify(LiveDanmaku(uname, 0));
+            sl.append(uname + "," +ainame);
+        }
+        writeTextFile("昵称简化测试.csv", sl.join("\n"));
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -6366,7 +6360,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         QString name = getLocalNickname(danmaku.getUid());
         if (name.isEmpty())
-            name = nicknameSimplify(danmaku.getNickname());
+            name = nicknameSimplify(danmaku);
         if (name.isEmpty())
             name = danmaku.getNickname();
         return name;
@@ -6384,7 +6378,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     // 昵称简化
     else if (key == "%simple_name%")
     {
-        return nicknameSimplify(danmaku.getNickname());
+        return nicknameSimplify(danmaku);
     }
 
     // 用户等级
@@ -6607,7 +6601,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         QString local = getLocalNickname(danmaku.getUid());
         if (local.isEmpty())
-            local = nicknameSimplify(danmaku.getNickname());
+            local = nicknameSimplify(danmaku);
         if (local.isEmpty())
             local = danmaku.getNickname();
         return snum(local.length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
@@ -7048,7 +7042,9 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
     // 替换时间
     if (funcName == "simpleName")
     {
-        return nicknameSimplify(args);
+        LiveDanmaku ld = danmaku;
+        ld.setNickname(args);
+        return nicknameSimplify(ld);
     }
     else if (funcName == "simpleNum")
     {
@@ -7663,9 +7659,10 @@ QString MainWindow::uidToName(qint64 uid)
 /**
  * 一个智能的用户昵称转简单称呼
  */
-QString MainWindow::nicknameSimplify(QString nickname) const
+QString MainWindow::nicknameSimplify(const LiveDanmaku &danmaku) const
 {
-    QString simp = nickname;
+    QString name = danmaku.getNickname();
+    QString simp = name;
 
     // 没有取名字的，就不需要欢迎了
     /*QRegularExpression defaultRe("^([bB]ili_\\d+|\\d+_[bB]ili)$");
@@ -7675,8 +7672,9 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     }*/
 
     // 去掉前缀后缀
-    QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ"};
-    QStringList starts{"我叫", "我是", "我就是", "可是", "一只", "是个", "是", "原来", "但是", "但", "在下", "做", "隔壁", "的"};
+    QStringList special{"~", "丶", "°", "゛", "-", "_", "ヽ", "丿", "'"};
+    QStringList starts{"我叫", "叫我", "我是", "我就是", "可是", "一只", "一个", "是个", "是", "原来", "但是", "但",
+                       "在下", "做", "隔壁", "的", "寻找", "为什么"};
     QStringList ends{"啊", "呢", "呀", "哦", "呐", "巨凶", "吧", "呦", "诶", "哦", "噢", "吖", "Official"};
     starts += special;
     ends += special;
@@ -7685,7 +7683,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         QString start = starts.at(i);
         if (simp.startsWith(start))
         {
-            simp.remove(0, start.length());
+            simp = simp.remove(0, start.length());
             i = 0; // 从头开始
         }
     }
@@ -7694,7 +7692,7 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         QString end = ends.at(i);
         if (simp.endsWith(end))
         {
-            simp.remove(simp.length() - end.length(), end.length());
+            simp = simp.remove(simp.length() - end.length(), end.length());
             i = 0; // 从头开始
         }
     }
@@ -7722,16 +7720,6 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         simp = match.capturedTexts().at(1);
     }
 
-    // xxx的xxx
-    QRegularExpression deRe("^(.{2,})[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
-    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
-    {
-        QRegularExpression blankL("(我$)"), blankR("(名字|^确|最)");
-        if (match.captured(1).indexOf(blankL) == -1
-                && match.captured(2).indexOf(blankR) == -1) // 不包含黑名单
-            simp = match.capturedTexts().at(2);
-    }
-
     // 一大串 中文enen
     // 注：日语正则 [\u0800-\u4e00] ，实测“一”也会算在里面……？
     QRegularExpression ceRe("([\u4e00-\u9fa5]{2,})([-_\\w\\d_\u0800-\u4dff]+)$");
@@ -7754,18 +7742,40 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         }
     }
 
-    QStringList extraExp{"^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
-                         "^.+(?:我就是|叫我)(.+)$", "^.*还.+就(.{2})$",
+    // xxx的xxx
+    QRegularExpression deRe("^(.{2,})[的の]([\\w\\d_\\-\u4e00-\u9fa5]{2,})$");
+    if (simp.indexOf(deRe, 0, &match) > -1 && match.capturedTexts().at(1).length() <= match.capturedTexts().at(2).length()*2)
+    {
+        QRegularExpression blankL("(我$)"), blankR("(名字|^确|最)");
+        if (match.captured(1).indexOf(blankL) == -1
+                && match.captured(2).indexOf(blankR) == -1) // 不包含黑名单
+            simp = match.capturedTexts().at(2);
+    }
+
+    // 固定格式1
+    QStringList extraExp{"^(.{2,}?)[-_]\\w{2,}$",
+                        "^这个(.+)不太.+$", "^(.{3,})今天.+$", "最.+的(.{2,})$",
+                         "^.*还.+就(.{2})$",
                          "^(.{2,})(.)不\\2.*",
-                         "^(.{2,}?)(永不|有点|才是|敲|很|能有|想|要|从不|才不|不|跟你|和你).+",
-                        "^(.{2,})-(.{2,})$",
-                        "^(.{2,}?)[最很超特别是没不想好可以能要]*有.+$"};
+                         "我不是(.{2,})$",
+                         "^(.{2,}?)(永不|有点|才是|敲|很|能有|都|想|要|需|真的|从不|才不|不|跟你|和你|这\
+|超好|是我|来自|是只|今天|我是).+",
+                         "^(.{2,})-(.{2,})$",
+                         "^(.{2,}?)[最很超特别是没不想好可以能要]*有.+$",
+                         "^.*?(?:是个|看我)(.{2,})$"
+                         "^(不做|只因)(.{2,})$",
+                        "^x+(.{2,}x+)$",
+                        "^(.{2,})(.+)\\1$",
+                        "^不要(.{2,})"};
     for (int i = 0; i < extraExp.size(); i++)
     {
         QRegularExpression re(extraExp.at(i));
         if (simp.indexOf(re, 0, &match) > -1)
         {
-            simp = match.capturedTexts().at(1);
+            QString partName = match.capturedTexts().at(1);
+            if (partName.contains(QRegularExpression("我|你|很|想|是|不")))
+                continue;
+            simp = partName;
             break;
         }
     }
@@ -7773,15 +7783,15 @@ QString MainWindow::nicknameSimplify(QString nickname) const
     // 特殊字符
     simp = simp.replace(QRegularExpression("_|丨|丶|灬|ミ|丷|I"), "");
 
-    // xxx哥哥
-    QRegularExpression gegeRe("^(.{2,}?)(大|小|老)?(公|婆|鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上)$");
+    // 身份后缀：xxx哥哥
+    QRegularExpression gegeRe("^(.{2,}?)(大|小|老)?(公|婆|鸽鸽|哥哥|爸爸|爷爷|奶奶|妈妈|朋友|盆友|魔王|可爱|参上|大大|大人)$");
     if (simp.indexOf(gegeRe, 0, &match) > -1)
     {
         QString tmp = match.capturedTexts().at(1);
         simp = tmp;
     }
 
-    // AAAA
+    // 重复词：AAAA
     QRegularExpression aaRe("(.)\\1{2,}");
     if (simp.indexOf(aaRe, 0, &match) > -1)
     {
@@ -7822,8 +7832,19 @@ QString MainWindow::nicknameSimplify(QString nickname) const
         simp = simp.replace(match.captured(0), match.captured(1) + "…");
     }
 
+    // 固定搭配替换
+    QHash<QString, QString>repl;
+    repl.insert("奈子", "奈X");
+    repl.insert("走召", "超");
+    repl.insert("リ巾", "帅");
+    repl.insert("白勺", "的");
+    for (auto it = repl.begin(); it != repl.end(); it++)
+    {
+        simp = simp.replace(it.key(), it.value());
+    }
+
     if (simp.isEmpty())
-        return nickname;
+        return name;
     return simp;
 }
 
