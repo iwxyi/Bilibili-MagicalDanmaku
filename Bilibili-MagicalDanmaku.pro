@@ -374,5 +374,10 @@ include($$PWD/third_party/qBreakpad/qBreakpad.pri)
 QMAKE_LIBDIR += $$PWD/third_party/qBreakpad/handler
 LIBS += -lqBreakpad
 
-QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
-QMAKE_LFLAGS_RELEASE += /MAP /INCREMENTAL:NO /DEBUG
+# 生成pdb文件
+QMAKE_LFLAGS_RELEASE += /MAP
+QMAKE_CFLAGS_RELEASE += /Zi
+QMAKE_LFLAGS_RELEASE += /debug /opt:ref
+
+# 管理员权限
+# QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
