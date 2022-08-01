@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QBreakpadHandler.h>
 #include "dlog.h"
 
 #ifdef Q_OS_WIN32
@@ -51,7 +52,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("LanYiXi");
     QCoreApplication::setOrganizationDomain("iwxyi.com");
     QCoreApplication::setApplicationName("神奇弹幕");
+
     // SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler); // 注册异常捕获程序
+    QBreakpadInstance.setDumpPath(QLatin1String("crashes"));
 
     QFont font(a.font());
     font.setFamily("微软雅黑");

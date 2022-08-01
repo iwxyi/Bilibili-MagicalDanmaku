@@ -370,3 +370,9 @@ contains(ANDROID_TARGET_ARCH,x86) {
         $$PWD/android
 }
 
+include($$PWD/third_party/qBreakpad/qBreakpad.pri)
+QMAKE_LIBDIR += $$PWD/third_party/qBreakpad/handler
+LIBS += -lqBreakpad
+
+QMAKE_CXXFLAGS_RELEASE += $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+QMAKE_LFLAGS_RELEASE += /MAP /INCREMENTAL:NO /DEBUG

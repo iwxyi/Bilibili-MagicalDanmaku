@@ -1,0 +1,10 @@
+.svn
+*.lo
+*.o
+lib*.la
+.dirstamp
+.libs
+.deps
+config.log
+config.status
+config.h

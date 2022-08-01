@@ -1,0 +1,34 @@
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.dll
+*.dylib
+*.lib
+
+# Qt-es
+*.qmake.cache
+*.qmake.stash
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+Makefile*
+*-build-*
+*.orig
+
+# QtCreator
+*.autosave
+
+# other
+*.DS_Store
+*.dmp
+*.bak
+docs/html/

@@ -1,0 +1,11 @@
+Breakpad-qt AUTHORS
+-------------
+
+Aleksey Palazhchenko <alexey.palazhchenko@gmail.com>
+ * Initial author of Breakpad-qt.
+
+Sergey Shambir
+ * Contrubutor(build fixes), maintaner of Breakpad-qt.
+
+Alexander Makarov <makarov.san@gmail.com>
+ * Contrubutor(migrate to official google-breakpad, refactoring), maintaner of Breakpad-qt.

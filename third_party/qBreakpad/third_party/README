@@ -1,0 +1,11 @@
+Latest versions of breakpad & deps sources locate at official chromium repos
+
+google-breakpad [master]:
+https://chromium.googlesource.com/breakpad/breakpad
+
+linux-syscall-support [master]:
+https://chromium.googlesource.com/linux-syscall-support
+
+for checking out this submodiles use:
+#> git submodule init
+#> git submodule update

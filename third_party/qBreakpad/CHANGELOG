@@ -1,0 +1,5 @@
+Breakpad-qt 0.4.0 (May 13, 2016)
+-------------------------
+
+  - Improve thread-safety for QBreakpadHandler
+  - Clean useles functions of QBreakpadHandler
