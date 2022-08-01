@@ -3314,6 +3314,11 @@ void MainWindow::on_testDanmakuButton_clicked()
         triggerCmdEvent("NEW_MONTH", LiveDanmaku());
         triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
     }
+    else if (text == "测试崩溃")
+    {
+        int* p = nullptr;
+        *p = 1;
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,

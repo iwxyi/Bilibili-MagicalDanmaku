@@ -44,6 +44,16 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
     QT += texttospeech
 }
 
+# 调试
+# release版本可调试
+# QMAKE_CXXFLAGS_RELEASE #+= $$QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO
+# release版也将生成“.pdb”后缀的调试信息文件
+# 等同于开启 Generate separate debug info
+# QMAKE_LFLAGS_RELEASE = /INCREMENTAL:NO /DEBUG # 这个报错！
+# 调用库
+# LIBS += -lDbgHelp
+
+
 INCLUDEPATH += \
     global/ \
     mainwindow/ \
@@ -359,3 +369,4 @@ contains(ANDROID_TARGET_ARCH,x86) {
     ANDROID_PACKAGE_SOURCE_DIR = \
         $$PWD/android
 }
+

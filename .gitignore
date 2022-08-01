@@ -70,3 +70,4 @@ Thumbs.db
 # --------
 *.exe
 Desktop.ini
+.gradle/

@@ -21,7 +21,7 @@ VS_VERSION_INFO VERSIONINFO
         BEGIN
             BLOCK "080404b0"
             BEGIN
-                VALUE "CompanyName", "懒一夕智能科技"
+                VALUE "CompanyName", "杭州懒一夕智能科技有限公司"
                 VALUE "FileDescription", "神奇弹幕"
                 VALUE "FileVersion", "1.0"
                 VALUE "InternalName", "MagicalDanmaku"
