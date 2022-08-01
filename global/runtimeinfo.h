@@ -43,6 +43,8 @@ public:
     QString appFileName; // 应用程序文件名（不带exe）
     QString appNewVersion;
     QString appDownloadUrl;
+
+    QString ffmpegPath;
 };
 
 extern RuntimeInfo* rt;

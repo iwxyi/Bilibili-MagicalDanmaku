@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>840</width>
-    <height>1368</height>
+    <width>848</width>
+    <height>1171</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>760</width>
-             <height>1248</height>
+             <width>768</width>
+             <height>1051</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3616,7 +3616,7 @@ margin: 40px;</string>
               <x>190</x>
               <y>630</y>
               <width>161</width>
-              <height>101</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3700,6 +3700,42 @@ margin: 40px;</string>
                  <property name="icon">
                   <iconset resource="../resources/resource.qrc">
                    <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_76" stretch="1,0">
+               <item>
+                <widget class="CheckBox1" name="recordFormatCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>默认录播为 flv 流媒体格式，部分播放器无法打开
+开启此选项将转换为通用的 mp4 格式视频，
+需要安装 FFmpeg 方可使用</string>
+                 </property>
+                 <property name="text">
+                  <string>保存为mp4</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="ffmpegButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>选择 FFmpeg.exe 文件</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/video4</normaloff>:/icons/video4</iconset>
                  </property>
                 </widget>
                </item>
@@ -3926,8 +3962,8 @@ QPushButton:pressed
            <widget class="QWidget" name="giftHistorySettingsCard" native="true">
             <property name="geometry">
              <rect>
-              <x>190</x>
-              <y>740</y>
+              <x>180</x>
+              <y>760</y>
               <width>181</width>
               <height>151</height>
              </rect>
@@ -9523,7 +9559,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>840</width>
+     <width>848</width>
      <height>23</height>
     </rect>
    </property>

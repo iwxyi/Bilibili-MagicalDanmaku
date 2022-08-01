@@ -808,6 +808,10 @@ private slots:
 
     void on_saveCmdToSqliteCheck_clicked();
 
+    void on_recordFormatCheck_clicked();
+
+    void on_ffmpegButton_clicked();
+
 private:
     void initView();
     void initStyle();

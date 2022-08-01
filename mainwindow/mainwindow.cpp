@@ -337,6 +337,8 @@ void MainWindow::initView()
     ui->calculateDailyDataButton->setRadius(rt->fluentRadius);
     ui->recordDataButton->setSquareSize();
     ui->recordDataButton->setRadius(rt->fluentRadius);
+    ui->ffmpegButton->setSquareSize();
+    ui->ffmpegButton->setRadius(rt->fluentRadius);
 
     // 答谢页面
     thankTabButtons = {
@@ -767,8 +769,10 @@ void MainWindow::readConfig()
     orderSongBlackList = us->value("music/blackListKeys", "").toString().split(" ", QString::SkipEmptyParts);
 
     // 录播
-    ui->recordCheck->setChecked(us->value("danmaku/record", false).toBool());
-    int recordSplit = us->value("danmaku/recordSplit", 30).toInt();
+    ui->recordCheck->setChecked(us->value("record/enabled", false).toBool());
+    ui->recordFormatCheck->setChecked(us->value("record/format", false).toBool());
+    rt->ffmpegPath = us->value("record/ffmpegPath").toString();
+    int recordSplit = us->value("record/split", 30).toInt();
     ui->recordSplitSpin->setValue(recordSplit);
     recordTimer = new QTimer(this);
     recordTimer->setInterval(recordSplit * 60000); // 默认30分钟断开一次
@@ -6367,7 +6371,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     *ok = true;
     QRegularExpressionMatch match;
     // 用户昵称
-    if (key == "%uname%" || key == "%username%" || key =="%nickname%")
+    if (key == "%uname%" || key == "%username%" || key =="%nickname%" || key == "%file_name%")
         return danmaku.getNickname();
 
     // 用户昵称
@@ -6404,7 +6408,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%level%")
         return snum(danmaku.getLevel());
 
-    else if (key == "%text%")
+    else if (key == "%text%" || key == "%file_path%")
         return toSingleLine(danmaku.getText());
 
     else if (key == "%url_text%")
@@ -8036,16 +8040,17 @@ void MainWindow::startLiveRecord()
         loop->deleteLater();
 
         // B站下载会有302重定向的，需要获取headers里面的Location值
-        if (recordUrl.isEmpty() || !reply->rawHeader("location").isEmpty())
+        QString forward = reply->rawHeader("location").trimmed();
+        if (recordUrl.isEmpty() || !forward.isEmpty())
         {
-            recordUrl = reply->rawHeader("location");
+            recordUrl = forward;
             qInfo() << "录播实际地址：" << recordUrl;
         }
         delete request;
         reply->deleteLater();
         if (recordUrl.isEmpty())
         {
-            qWarning() << "无法获取下载地址";
+            qWarning() << "无法获取下载地址" << forward;
             return ;
         }
 
@@ -8060,9 +8065,8 @@ void MainWindow::startRecordUrl(QString url)
     QDir dir(rt->dataPath);
     dir.mkpath("record");
     dir.cd("record");
-    QString path = QFileInfo(dir.absoluteFilePath(
-                                 ac->roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss") + ".mp4"))
-            .absoluteFilePath();
+    QString fileName = ac->roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
+    QString path = QFileInfo(dir.absoluteFilePath(fileName + ".flv")).absoluteFilePath();
 
     ui->recordCheck->setText("录制中...");
     recordTimer->start();
@@ -8073,10 +8077,12 @@ void MainWindow::startRecordUrl(QString url)
     QNetworkReply *reply = manager.get(*request);
     QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
     recordLoop->exec(); //开启子事件循环
+    disconnect(reply, SIGNAL(finished()), recordLoop, nullptr);
     recordLoop->deleteLater();
     recordLoop = nullptr;
     qInfo() << "录播结束：" << path;
 
+    // 写入文件
     QFile file(path);
     if (!file.open(QFile::WriteOnly))
     {
@@ -8087,10 +8093,48 @@ void MainWindow::startRecordUrl(QString url)
     QByteArray data = reply->readAll();
     if (!data.isEmpty())
     {
+        // 写入到文件
         qint64 write_bytes = file.write(data);
         file.flush();
         if (write_bytes != data.size())
             qCritical() << "写入文件大小错误" << write_bytes << "/" << data.size();
+
+        // 发送事件
+        LiveDanmaku dmk;
+        dmk.setText(path);
+        dmk.setNickname(fileName);
+        triggerCmdEvent("LIVE_RECORD_SAVED", dmk);
+
+        // 进行格式转换
+        if (ui->recordFormatCheck->isChecked())
+        {
+            QString newPath = QFileInfo(dir.absoluteFilePath(fileName + ".mp4")).absoluteFilePath();
+
+            // 调用 FFmpeg 转换格式
+            QProcess * p = new QProcess(this);
+            QString cmd = QString(rt->ffmpegPath + " -i \"%1\" -c copy \"%2\"").arg(path).arg(newPath);
+            // qInfo() <<"录播格式转换：" << cmd;
+            connect(p, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
+                qWarning() << "录播转换出错：" << error << p;
+                QString err = snum(error);
+                if (rt->ffmpegPath.isEmpty() || !isFileExist(rt->ffmpegPath))
+                    err = "FFmpeg文件路径出错";
+                showError("录播转换出错", err);
+            });
+            connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [=](int exitCode, QProcess::ExitStatus exitStatus) {
+                qInfo() << "录播格式转换结束：" << newPath;
+                LiveDanmaku dmk;
+                dmk.setText(newPath);
+                dmk.setNickname(fileName);
+                triggerCmdEvent("LIVE_RECORD_FORMATTED", dmk);
+                p->close();
+                p->deleteLater();
+                QTimer::singleShot(1000, [=]{
+                    deleteFile(path); // 延迟删除旧文件，怕被占用
+                });
+            });
+            p->start(cmd);
+        }
     }
 
     reply->deleteLater();
@@ -20227,7 +20271,7 @@ void MainWindow::on_actionAdd_Room_To_List_triggered()
 void MainWindow::on_recordCheck_clicked()
 {
     bool check = ui->recordCheck->isChecked();
-    us->setValue("danmaku/record", check);
+    us->setValue("record/enabled", check);
 
     if (check)
     {
@@ -20240,7 +20284,7 @@ void MainWindow::on_recordCheck_clicked()
 
 void MainWindow::on_recordSplitSpin_valueChanged(int arg1)
 {
-    us->setValue("danmaku/recordSplit", arg1);
+    us->setValue("record/split", arg1);
     if (recordTimer)
         recordTimer->setInterval(arg1 * 60000);
 }
@@ -22523,4 +22567,29 @@ void MainWindow::on_actionQueryDatabase_triggered()
 void MainWindow::on_saveCmdToSqliteCheck_clicked()
 {
     us->set("db/cmd", saveCmdToSqlite = ui->saveCmdToSqliteCheck->isChecked());
+}
+
+void MainWindow::on_recordFormatCheck_clicked()
+{
+    us->set("record/format", ui->recordFormatCheck->isChecked());
+    if (ui->recordFormatCheck->isChecked() && rt->ffmpegPath.isEmpty())
+    {
+        on_ffmpegButton_clicked();
+        if (rt->ffmpegPath.isEmpty())
+        {
+            ui->recordFormatCheck->setChecked(false);
+            us->set("record/format", false);
+        }
+    }
+}
+
+void MainWindow::on_ffmpegButton_clicked()
+{
+    QString oldPath = us->value("recent/ffmpegPath", "").toString();
+    QString path = QFileDialog::getOpenFileName(this, "选择 ffmpeg.exe 位置", oldPath, "应用程序 (*.exe)");
+    if (path.isEmpty())
+        return ;
+    us->setValue("recent/ffmpegPath", path);
+    us->setValue("record/ffmpegPath", path);
+    rt->ffmpegPath = path;
 }
