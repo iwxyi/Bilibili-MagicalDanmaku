@@ -221,7 +221,7 @@ void SqlService::upgradeDb(const QString &newVersion)
 
 }
 
-void SqlService::insertDanmaku(LiveDanmaku danmaku)
+void SqlService::insertDanmaku(const LiveDanmaku &danmaku)
 {
     if (!db.isOpen())
     {
@@ -326,7 +326,7 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     }
 }
 
-void SqlService::insertMusic(LiveDanmaku danmaku)
+void SqlService::insertMusic(const LiveDanmaku &danmaku)
 {
     QSqlQuery query;
     query.prepare("INSERT INTO music\

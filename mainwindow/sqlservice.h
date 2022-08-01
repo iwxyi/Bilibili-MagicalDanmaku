@@ -26,8 +26,8 @@ public slots:
     void close();
     void initTables();
     void upgradeDb(const QString& newVersion);
-    void insertDanmaku(LiveDanmaku danmaku);
-    void insertMusic(LiveDanmaku danmaku);
+    void insertDanmaku(const LiveDanmaku& danmaku);
+    void insertMusic(const LiveDanmaku& danmaku);
     void insertCmd(const QString& cmd, const QString &data);
     bool exec(const QString& sql);
     bool tryExec(const QString& sql);

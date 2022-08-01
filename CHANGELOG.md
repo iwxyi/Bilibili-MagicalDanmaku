@@ -8,6 +8,7 @@
 
 
 
+
 ### v4.8.0 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.0)
 
 - 新增保存所有记录到SQLite数据库

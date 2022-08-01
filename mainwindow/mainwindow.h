@@ -226,7 +226,7 @@ protected:
 signals:
     void signalRoomChanged(QString roomId);
     void signalLiveStart(QString roomId);
-    void signalNewDanmaku(LiveDanmaku danmaku);
+    void signalNewDanmaku(const LiveDanmaku& danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
     void signalCmdEvent(QString cmd, LiveDanmaku danmaku);
 
@@ -263,7 +263,7 @@ private slots:
 
     void addListItemOnCurrentPage();
 
-    void slotDiange(LiveDanmaku danmaku);
+    void slotDiange(const LiveDanmaku &danmaku);
 
     void sendMsg(QString msg);
     void sendRoomMsg(QString roomId, QString msg);
@@ -953,7 +953,7 @@ private:
     void speakTextQueueNext();
     void voiceDownloadAndSpeak(QString text);
     void playNetAudio(QString url);
-    void showScreenDanmaku(LiveDanmaku danmaku);
+    void showScreenDanmaku(const LiveDanmaku &danmaku);
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();

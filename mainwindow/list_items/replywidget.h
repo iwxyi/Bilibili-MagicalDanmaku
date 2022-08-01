@@ -36,7 +36,7 @@ signals:
     void signalReplyMsgs(QString msgs, LiveDanmaku danmaku, bool manual);
 
 public slots:
-    void slotNewDanmaku(LiveDanmaku danmaku);
+    void slotNewDanmaku(const LiveDanmaku &danmaku);
     void autoResizeEdit() override;
     void triggerAction(LiveDanmaku danmaku);
     bool triggerIfMatch(QString msg, LiveDanmaku danmaku);

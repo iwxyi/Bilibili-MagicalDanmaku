@@ -40,7 +40,7 @@ LuckyDrawWindow::~LuckyDrawWindow()
     delete ui;
 }
 
-void LuckyDrawWindow::slotNewDanmaku(LiveDanmaku danmaku)
+void LuckyDrawWindow::slotNewDanmaku(const LiveDanmaku &danmaku)
 {
     if (this->isHidden() || !isWaiting())
         return ;

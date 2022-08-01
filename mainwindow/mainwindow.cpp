@@ -707,7 +707,7 @@ void MainWindow::readConfig()
     QString defaultDiangeFormat = "^[点點]歌[ :：,，]+(.+)";
     diangeFormatString = us->value("danmaku/diangeFormat", defaultDiangeFormat).toString();
     ui->diangeFormatEdit->setText(diangeFormatString);
-    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), this, SLOT(slotDiange(LiveDanmaku)));
+    connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotDiange(const LiveDanmaku&)));
     ui->diangeReplyCheck->setChecked(us->value("danmaku/diangeReply", false).toBool());
     ui->diangeShuaCheck->setChecked(us->value("danmaku/diangeShua", false).toBool());
     ui->autoPauseOuterMusicCheck->setChecked(us->value("danmaku/autoPauseOuterMusic", false).toBool());
@@ -1212,13 +1212,13 @@ void MainWindow::readConfig()
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
     screenDanmakuColor = qvariant_cast<QColor>(us->value("screendanmaku/color", QColor(0, 0, 0)));
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
 //        QtConcurrent::run([&]{
             showScreenDanmaku(danmaku);
 //        });
     });
 
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
         if (!_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
@@ -3605,7 +3605,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
         us->setValue("reply/r"+QString::number(row)+"Reply", content);
     });
 
-    connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), rw, SLOT(slotNewDanmaku(LiveDanmaku)));
+    connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), rw, SLOT(slotNewDanmaku(const LiveDanmaku&)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
 #ifndef ZUOQI_ENTRANCE
@@ -4470,7 +4470,7 @@ void MainWindow::on_eventListWidget_customContextMenuRequested(const QPoint &)
     showListMenu<EventWidget>(ui->eventListWidget, CODE_EVENT_ACTION_KEY, &MainWindow::saveEventList);
 }
 
-void MainWindow::slotDiange(LiveDanmaku danmaku)
+void MainWindow::slotDiange(const LiveDanmaku &danmaku)
 {
     if (danmaku.getMsgType() != MSG_DANMAKU || danmaku.isPkLink() || danmaku.isNoReply())
         return ;
@@ -4515,7 +4515,8 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
             MyJson json;
             json.insert("key", s);
             qInfo() << "阻止点歌，关键词：" << s;
-            triggerCmdEvent("ORDER_SONG_BLOCKED", danmaku.with(json), true);
+            LiveDanmaku dmk = danmaku;
+            triggerCmdEvent("ORDER_SONG_BLOCKED", dmk.with(json), true);
             return ;
         }
     }
@@ -4538,8 +4539,9 @@ void MainWindow::slotDiange(LiveDanmaku danmaku)
         if (ui->diangeShuaCheck->isChecked() && (count = musicWindow->userOrderCount(danmaku.getNickname())) >= ui->orderSongShuaSpin->value()) // 已经点了
         {
             localNotify("已阻止频繁点歌：" + snum(count));
-            danmaku.setNumber(count);
-            triggerCmdEvent("ORDER_SONG_FREQUENCY", danmaku, true);
+            LiveDanmaku dmk = danmaku;
+            dmk.setNumber(count);
+            triggerCmdEvent("ORDER_SONG_FREQUENCY", dmk, true);
         }
         else
         {
@@ -13908,7 +13910,7 @@ void MainWindow::playNetAudio(QString url)
     });
 }
 
-void MainWindow::showScreenDanmaku(LiveDanmaku danmaku)
+void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
 {
     if (!ui->enableScreenDanmakuCheck->isChecked()) // 不显示所有弹幕
         return ;
@@ -15918,7 +15920,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     {
         danmakuWindow = new LiveDanmakuWindow(this);
 
-        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](LiveDanmaku danmaku) {
+        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
             if (danmaku.is(MSG_DANMAKU))
             {
                 if (isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
@@ -16291,7 +16293,7 @@ void MainWindow::on_actionShow_Lucky_Draw_triggered()
     if (!luckyDrawWindow)
     {
         luckyDrawWindow = new LuckyDrawWindow(nullptr);
-        connect(this, SIGNAL(signalNewDanmaku(LiveDanmaku)), luckyDrawWindow, SLOT(slotNewDanmaku(LiveDanmaku)));
+        connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), luckyDrawWindow, SLOT(slotNewDanmaku(const LiveDanmaku&)));
     }
     luckyDrawWindow->show();
 }
@@ -20102,7 +20104,7 @@ void MainWindow::initDbService()
         sqlService.open();
 
     // TODO: 信号与相关槽改成 const& 的形式以增强性能
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](LiveDanmaku danmaku){
+    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isNoReply())
             return ;
         if (saveToSqlite)

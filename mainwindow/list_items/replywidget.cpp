@@ -78,7 +78,7 @@ QString ReplyWidget::body() const
     return replyEdit->toPlainText();
 }
 
-void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
+void ReplyWidget::slotNewDanmaku(const LiveDanmaku &danmaku)
 {
     if (!check->isChecked() || !danmaku.is(MSG_DANMAKU) || danmaku.isNoReply())
         return ;
@@ -96,8 +96,9 @@ void ReplyWidget::slotNewDanmaku(LiveDanmaku danmaku)
 
     // 开始发送
     qInfo() << "自动回复匹配    text:" << danmaku.getText() << "    exp:" << keyEdit->text();
-    danmaku.setArgs(match.capturedTexts());
-    emit signalReplyMsgs(replyEdit->toPlainText(), danmaku, false);
+    LiveDanmaku dmk = danmaku;
+    dmk.setArgs(match.capturedTexts());
+    emit signalReplyMsgs(replyEdit->toPlainText(), dmk, false);
     triggered();
 }
 

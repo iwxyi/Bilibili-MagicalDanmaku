@@ -28,7 +28,7 @@ public:
     };
 
 public slots:
-    void slotNewDanmaku(LiveDanmaku danmaku);
+    void slotNewDanmaku(const LiveDanmaku &danmaku);
     void slotCountdown();
     void startWaiting();
     void finishWaiting();
