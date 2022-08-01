@@ -112,6 +112,8 @@ void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
     if (!check->isChecked() || cmdKey != cmd)
         return ;
     qInfo() << "响应事件：" << cmd;
+    if (cmd.contains("NEW_MONTH")) // 针对每个月的单独调试
+        qInfo() << actionEdit->toPlainText();
     emit signalEventMsgs(actionEdit->toPlainText(), danmaku, false);
     triggered();
 }

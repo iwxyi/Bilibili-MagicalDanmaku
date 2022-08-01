@@ -1054,7 +1054,7 @@ void LiveDanmakuWindow::resetItemsStyleSheet()
     }
 }
 
-void LiveDanmakuWindow::mergeGift(LiveDanmaku danmaku, int delayTime)
+void LiveDanmakuWindow::mergeGift(const LiveDanmaku &danmaku, int delayTime)
 {
     qint64 uid = danmaku.getUid();
     QString gift = danmaku.getGiftName();

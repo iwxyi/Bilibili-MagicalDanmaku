@@ -2096,14 +2096,14 @@ void MainWindow::removeTimeoutDanmaku()
     }
 }
 
-void MainWindow::appendNewLiveDanmakus(QList<LiveDanmaku> danmakus)
+void MainWindow::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
 {
     // 添加到队列
     roomDanmakus.append(danmakus);
     rt->allDanmakus.append(danmakus);
 }
 
-void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
+void MainWindow::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
 {
     roomDanmakus.append(danmaku);
     lastDanmaku = danmaku;
@@ -2111,7 +2111,7 @@ void MainWindow::appendNewLiveDanmaku(LiveDanmaku danmaku)
     newLiveDanmakuAdded(danmaku);
 }
 
-void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
+void MainWindow::newLiveDanmakuAdded(const LiveDanmaku &danmaku)
 {
     SOCKET_DEB << "+++++新弹幕：" << danmaku.toString();
     emit signalNewDanmaku(danmaku);
@@ -2126,13 +2126,13 @@ void MainWindow::newLiveDanmakuAdded(LiveDanmaku danmaku)
     }
 }
 
-void MainWindow::oldLiveDanmakuRemoved(LiveDanmaku danmaku)
+void MainWindow::oldLiveDanmakuRemoved(const LiveDanmaku &danmaku)
 {
     SOCKET_DEB << "-----旧弹幕：" << danmaku.toString();
     emit signalRemoveDanmaku(danmaku);
 }
 
-void MainWindow::addNoReplyDanmakuText(QString text)
+void MainWindow::addNoReplyDanmakuText(const QString &text)
 {
     noReplyMsgs.append(text);
 }
@@ -2166,7 +2166,7 @@ bool MainWindow::isLiving() const
     return ac->liveStatus == 1;
 }
 
-void MainWindow::localNotify(QString text)
+void MainWindow::localNotify(const QString &text)
 {
 	if (text.isEmpty())
     {
@@ -2176,7 +2176,7 @@ void MainWindow::localNotify(QString text)
     appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
-void MainWindow::localNotify(QString text, qint64 uid)
+void MainWindow::localNotify(const QString &text, qint64 uid)
 {
     LiveDanmaku danmaku(text);
     danmaku.setUid(uid);
@@ -3307,6 +3307,13 @@ void MainWindow::on_testDanmakuButton_clicked()
         }
         writeTextFile("昵称简化测试.csv", sl.join("\n"));
     }
+    else if (text == "测试每月")
+    {
+        triggerCmdEvent("NEW_DAY", LiveDanmaku());
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku());
+        triggerCmdEvent("NEW_MONTH", LiveDanmaku());
+        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku());
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
@@ -3451,7 +3458,7 @@ TaskWidget* MainWindow::addTimerTask(bool enable, int second, QString text, int 
     return tw;
 }
 
-TaskWidget *MainWindow::addTimerTask(MyJson json)
+TaskWidget *MainWindow::addTimerTask(const MyJson &json)
 {
     auto item = addTimerTask(false, 1800, "");
     item->fromJson(json);
@@ -3577,7 +3584,7 @@ ReplyWidget* MainWindow::addAutoReply(bool enable, QString key, QString reply, i
     return rw;
 }
 
-ReplyWidget *MainWindow::addAutoReply(MyJson json)
+ReplyWidget *MainWindow::addAutoReply(const MyJson &json)
 {
     auto item = addAutoReply(false, "", "");
     item->fromJson(json);
@@ -3748,7 +3755,7 @@ EventWidget* MainWindow::addEventAction(bool enable, QString cmd, QString action
     return rw;
 }
 
-EventWidget* MainWindow::addEventAction(MyJson json)
+EventWidget* MainWindow::addEventAction(const MyJson &json)
 {
     auto item = addEventAction(false, "", "");
     item->fromJson(json);
@@ -3851,7 +3858,7 @@ void MainWindow::restoreEventList()
     }
 }
 
-bool MainWindow::hasEvent(QString cmd) const
+bool MainWindow::hasEvent(const QString &cmd) const
 {
     for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
@@ -3978,7 +3985,7 @@ void MainWindow::addCodeSnippets(const QJsonDocument &doc)
     adjustPageSize(PAGE_EXTENSION);
 }
 
-void MainWindow::autoSetCookie(QString s)
+void MainWindow::autoSetCookie(const QString &s)
 {
     us->setValue("danmaku/browserCookie", ac->browserCookie = s);
     if (ac->browserCookie.isEmpty())
@@ -5531,7 +5538,7 @@ void MainWindow::hideRoomIdWidget()
     ani->start();
 }
 
-QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
+QPixmap MainWindow::getRoundedPixmap(const QPixmap &pixmap) const
 {
     QPixmap dest(pixmap.size());
     dest.fill(Qt::transparent);
@@ -5546,7 +5553,7 @@ QPixmap MainWindow::getRoundedPixmap(QPixmap pixmap) const
     return dest;
 }
 
-QPixmap MainWindow::getTopRoundedPixmap(QPixmap pixmap, int radius) const
+QPixmap MainWindow::getTopRoundedPixmap(const QPixmap &pixmap, int radius) const
 {
     QPixmap dest(pixmap.size());
     dest.fill(Qt::transparent);
@@ -5565,7 +5572,7 @@ QPixmap MainWindow::getTopRoundedPixmap(QPixmap pixmap, int radius) const
     return dest;
 }
 
-void MainWindow::getUpInfo(QString uid)
+void MainWindow::getUpInfo(const QString &uid)
 {
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
     get(url, [=](QJsonObject json){
@@ -5592,7 +5599,7 @@ void MainWindow::getUpInfo(QString uid)
     });
 }
 
-void MainWindow::downloadUpFace(QString faceUrl)
+void MainWindow::downloadUpFace(const QString &faceUrl)
 {
     get(faceUrl, [=](QNetworkReply* reply){
         QByteArray jpegData = reply->readAll();
@@ -5618,7 +5625,10 @@ void MainWindow::downloadUpFace(QString faceUrl)
     });
 }
 
-QPixmap MainWindow::toCirclePixmap(QPixmap pixmap) const
+/**
+ * 变成圆形的图片
+ */
+QPixmap MainWindow::toCirclePixmap(const QPixmap &pixmap) const
 {
     if (pixmap.isNull())
         return pixmap;
@@ -14010,7 +14020,7 @@ void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
  * 在添加到消息队列前调用此函数判断
  * 若是，则同步合并实时弹幕中的礼物连击
  */
-bool MainWindow::mergeGiftCombo(LiveDanmaku danmaku)
+bool MainWindow::mergeGiftCombo(const LiveDanmaku &danmaku)
 {
     if (danmaku.getMsgType() != MSG_GIFT)
         return false;

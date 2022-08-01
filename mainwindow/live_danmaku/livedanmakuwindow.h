@@ -104,7 +104,7 @@ public slots:
     void resetItemsText();
     void resetItemsFont();
     void resetItemsStyleSheet();
-    void mergeGift(LiveDanmaku danmaku, int delayTime);
+    void mergeGift(const LiveDanmaku &danmaku, int delayTime);
     void removeAll();
 
     void showMenu();

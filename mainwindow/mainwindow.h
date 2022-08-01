@@ -818,40 +818,40 @@ private:
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 
-    void appendNewLiveDanmakus(QList<LiveDanmaku> roomDanmakus);
-    void appendNewLiveDanmaku(LiveDanmaku danmaku);
-    void newLiveDanmakuAdded(LiveDanmaku danmaku);
-    void oldLiveDanmakuRemoved(LiveDanmaku danmaku);
-    void addNoReplyDanmakuText(QString text);
+    void appendNewLiveDanmakus(const QList<LiveDanmaku> &roomDanmakus);
+    void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
+    void newLiveDanmakuAdded(const LiveDanmaku &danmaku);
+    void oldLiveDanmakuRemoved(const LiveDanmaku &danmaku);
+    void addNoReplyDanmakuText(const QString &text);
     bool hasSimilarOldDanmaku(const QString &s) const;
     bool isLiving() const;
-    void localNotify(QString text);
-    void localNotify(QString text, qint64 uid);
+    void localNotify(const QString &text);
+    void localNotify(const QString &text, qint64 uid);
 
     TaskWidget *addTimerTask(bool enable, int second, QString text, int index = -1);
-    TaskWidget *addTimerTask(MyJson json);
+    TaskWidget *addTimerTask(const MyJson &json);
     void connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem* item);
     void saveTaskList();
     void restoreTaskList();
 
     ReplyWidget *addAutoReply(bool enable, QString key, QString reply, int index= -1);
-    ReplyWidget *addAutoReply(MyJson json);
+    ReplyWidget *addAutoReply(const MyJson &json);
     void connectAutoReplyEvent(ReplyWidget* rw, QListWidgetItem* item);
     void saveReplyList();
     void restoreReplyList();
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
-    EventWidget *addEventAction(MyJson json);
+    EventWidget *addEventAction(const MyJson &json);
     void connectEventActionEvent(EventWidget* tw, QListWidgetItem* item);
     void saveEventList();
     void restoreEventList();
-    bool hasEvent(QString cmd) const;
+    bool hasEvent(const QString &cmd) const;
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
     void addCodeSnippets(const QJsonDocument &doc);
 
-    void autoSetCookie(QString s);
+    void autoSetCookie(const QString &s);
     QVariant getCookies() const;
     void getCookieAccount();
     QString getDomainPort() const;
@@ -879,11 +879,11 @@ private:
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();
     void hideRoomIdWidget();
-    QPixmap getRoundedPixmap(QPixmap pixmap) const;
-    QPixmap getTopRoundedPixmap(QPixmap pixmap, int radius) const;
-    void getUpInfo(QString uid);
-    void downloadUpFace(QString faceUrl);
-    QPixmap toCirclePixmap(QPixmap pixmap) const;
+    QPixmap getRoundedPixmap(const QPixmap &pixmap) const;
+    QPixmap getTopRoundedPixmap(const QPixmap &pixmap, int radius) const;
+    void getUpInfo(const QString &uid);
+    void downloadUpFace(const QString &faceUrl);
+    QPixmap toCirclePixmap(const QPixmap &pixmap) const;
     QPixmap toLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
@@ -892,7 +892,7 @@ private:
     void sendVeriPacket(QWebSocket *socket, QString roomId, QString cookieToken);
     void sendHeartPacket();
     void handleMessage(QJsonObject json);
-    bool mergeGiftCombo(LiveDanmaku danmaku);
+    bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
     void userComeEvent(LiveDanmaku& danmaku);
     void refreshBlockList();
