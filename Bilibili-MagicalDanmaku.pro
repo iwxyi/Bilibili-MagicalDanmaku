@@ -370,14 +370,15 @@ contains(ANDROID_TARGET_ARCH,x86) {
         $$PWD/android
 }
 
-include($$PWD/third_party/qBreakpad/qBreakpad.pri)
-QMAKE_LIBDIR += $$PWD/third_party/qBreakpad/handler
-LIBS += -lqBreakpad
+# 使用qBreakpad生成dump
+# include($$PWD/third_party/qBreakpad/qBreakpad.pri)
+# QMAKE_LIBDIR += $$PWD/third_party/qBreakpad/handler
+# LIBS += -lqBreakpad
 
 # 生成pdb文件
-QMAKE_LFLAGS_RELEASE += /MAP
-QMAKE_CFLAGS_RELEASE += /Zi
-QMAKE_LFLAGS_RELEASE += /debug /opt:ref
+# QMAKE_LFLAGS_RELEASE += /MAP
+# QMAKE_CFLAGS_RELEASE += /Zi
+# QMAKE_LFLAGS_RELEASE += /debug /opt:ref
 
 # 管理员权限
 # QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
