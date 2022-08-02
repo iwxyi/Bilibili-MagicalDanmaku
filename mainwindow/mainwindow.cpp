@@ -8061,7 +8061,7 @@ void MainWindow::startLiveRecord()
 
 void MainWindow::startRecordUrl(QString url)
 {
-    qInfo() << "开始录播";
+    qInfo() << "开始录播 " << QDateTime::currentDateTime();
     QDir dir(rt->dataPath);
     dir.mkpath("record");
     dir.cd("record");
@@ -8072,16 +8072,10 @@ void MainWindow::startRecordUrl(QString url)
     recordTimer->start();
     startRecordTime = QDateTime::currentMSecsSinceEpoch();
     recordLoop = new QEventLoop;
+
     QNetworkAccessManager manager;
     QNetworkRequest* request = new QNetworkRequest(QUrl(url));
     QNetworkReply *reply = manager.get(*request);
-    QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
-    recordLoop->exec(); //开启子事件循环
-    disconnect(reply, SIGNAL(finished()), recordLoop, nullptr);
-    recordLoop->deleteLater();
-    recordLoop = nullptr;
-    qInfo() << "录播结束：" << path;
-
     // 写入文件
     QFile file(path);
     if (!file.open(QFile::WriteOnly))
@@ -8090,6 +8084,18 @@ void MainWindow::startRecordUrl(QString url)
         reply->deleteLater();
         return ;
     }
+    QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
+
+    // TODO 一边下载一边保存
+
+
+    // 开启子事件循环
+    recordLoop->exec();
+    disconnect(reply, SIGNAL(finished()), recordLoop, nullptr);
+    recordLoop->deleteLater();
+    recordLoop = nullptr;
+    qInfo() << "录播结束 " << QDateTime::currentDateTime() << " 已存入：" << path;
+
     QByteArray data = reply->readAll();
     if (!data.isEmpty())
     {
@@ -11712,6 +11718,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (snum(uid) == ac->cookieUid && noReplyMsgs.contains(msg))
         {
             danmaku.setNoReply();
+            danmaku.setAutoSend();
             noReplyMsgs.removeOne(msg);
         }
         else
@@ -20164,7 +20171,7 @@ void MainWindow::initDbService()
 
     // TODO: 信号与相关槽改成 const& 的形式以增强性能
     connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
-        if (danmaku.isNoReply())
+        if (danmaku.isNoReply() && !danmaku.isAutoSend()) // 不包含PK同步的弹幕
             return ;
         if (saveToSqlite)
             sqlService.insertDanmaku(danmaku);

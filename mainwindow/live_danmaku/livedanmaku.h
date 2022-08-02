@@ -446,6 +446,11 @@ public:
         this->no_reply = true;
     }
 
+    void setAutoSend()
+    {
+        this->auto_send = true;
+    }
+
     void setOpposite(bool op)
     {
         this->opposite = op;
@@ -716,6 +721,11 @@ public:
         return no_reply;
     }
 
+    bool isAutoSend() const
+    {
+        return auto_send;
+    }
+
     bool isOpposite() const
     {
         return opposite;
@@ -811,7 +821,8 @@ private:
     int svip = 0;
     int uidentity = 0; // 正式会员
     int iphone = 0; // 手机实名
-    bool no_reply = false;
+    bool no_reply = false; // 不需要处理的弹幕
+    bool auto_send = false; // 自己发送的弹幕，同样也不需要处理
 
     QString anchor_roomid;
     int medal_level = 0;
