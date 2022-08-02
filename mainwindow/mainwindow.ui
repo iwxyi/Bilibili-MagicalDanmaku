@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>848</width>
-    <height>1171</height>
+    <width>827</width>
+    <height>1424</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>768</width>
-             <height>1051</height>
+             <width>747</width>
+             <height>1304</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -3614,9 +3614,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>630</y>
+              <y>620</y>
               <width>161</width>
-              <height>131</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3665,6 +3665,16 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="recordInfoLabel">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>对直播画面进行录制</string>
                </property>
               </widget>
              </item>
@@ -3963,7 +3973,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>180</x>
-              <y>760</y>
+              <y>800</y>
               <width>181</width>
               <height>151</height>
              </rect>
@@ -5823,7 +5833,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>900</y>
+              <y>970</y>
               <width>161</width>
               <height>91</height>
              </rect>
@@ -6035,7 +6045,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>189</x>
-              <y>1000</y>
+              <y>1090</y>
               <width>162</width>
               <height>71</height>
              </rect>
@@ -6221,7 +6231,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>1090</y>
+              <y>1180</y>
               <width>161</width>
               <height>131</height>
              </rect>
@@ -9559,7 +9569,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>848</width>
+     <width>827</width>
      <height>23</height>
     </rect>
    </property>

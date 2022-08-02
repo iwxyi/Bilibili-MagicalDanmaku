@@ -1967,7 +1967,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 #if defined(ENABLE_TRAY)
     if (!tray->isVisible())
     {
-        qApp->quit();
+        prepareQuit();
         return ;
     }
 
@@ -8062,11 +8062,13 @@ void MainWindow::startLiveRecord()
 void MainWindow::startRecordUrl(QString url)
 {
     qInfo() << "开始录播 " << QDateTime::currentDateTime();
+    qint64 startSecond = QDateTime::currentSecsSinceEpoch();
     QDir dir(rt->dataPath);
     dir.mkpath("record");
     dir.cd("record");
     QString fileName = ac->roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
     QString path = QFileInfo(dir.absoluteFilePath(fileName + ".flv")).absoluteFilePath();
+    recordLastPath = path;
 
     ui->recordCheck->setText("录制中...");
     recordTimer->start();
@@ -8078,7 +8080,7 @@ void MainWindow::startRecordUrl(QString url)
     QNetworkReply *reply = manager.get(*request);
     // 写入文件
     QFile file(path);
-    if (!file.open(QFile::WriteOnly))
+    if (!file.open(QFile::WriteOnly | QFile::Append))
     {
         qCritical() << "写入文件失败" << path;
         reply->deleteLater();
@@ -8086,70 +8088,85 @@ void MainWindow::startRecordUrl(QString url)
     }
     QObject::connect(reply, SIGNAL(finished()), recordLoop, SLOT(quit())); //请求结束并下载完成后，退出子事件循环
 
-    // TODO 一边下载一边保存
-
+    // 下载进度：progress=下载总大小（单位Byte）, total=-1
+    connect(reply, &QNetworkReply::downloadProgress, this, [=](qint64 progress, qint64 total){
+        qint64 size = progress / 1024 / 1024; // 单位：M
+        ui->recordCheck->setToolTip("文件大小：" + snum(size) + " M");
+    });
+    // 实时保存到缓冲区
+    connect(reply, &QNetworkReply::readyRead, this, [&]{
+        QByteArray data = reply->read(1024*1024*1024);
+        file.write(data);
+        qint64 second = QDateTime::currentSecsSinceEpoch() - startSecond;
+        qint64 hour = second / 60 / 60;
+        qint64 mint = second / 60 % 60;
+        qint64 secd = second % 60;
+        ui->recordCheck->setText(QString("录制中：%1:%2:%3").arg(hour, 2, 10, QLatin1Char('0'))
+                                 .arg(mint, 2, 10, QLatin1Char('0'))
+                                 .arg(secd, 2, 10, QLatin1Char('0')));
+    });
 
     // 开启子事件循环
     recordLoop->exec();
-    disconnect(reply, SIGNAL(finished()), recordLoop, nullptr);
+    disconnect(reply, nullptr, recordLoop, nullptr);
     recordLoop->deleteLater();
     recordLoop = nullptr;
-    qInfo() << "录播结束 " << QDateTime::currentDateTime() << " 已存入：" << path;
 
-    QByteArray data = reply->readAll();
-    if (!data.isEmpty())
+    // 刷新缓冲区，永久保存到磁盘
+    file.flush();
+    qInfo() << "录播保存至：" << path;
+
+    // 发送事件
+    LiveDanmaku dmk;
+    dmk.setText(path);
+    dmk.setNickname(fileName);
+    triggerCmdEvent("LIVE_RECORD_SAVED", dmk);
+
+    // 进行格式转换
+    if (ui->recordFormatCheck->isChecked())
     {
-        // 写入到文件
-        qint64 write_bytes = file.write(data);
-        file.flush();
-        if (write_bytes != data.size())
-            qCritical() << "写入文件大小错误" << write_bytes << "/" << data.size();
+        QString newPath = QFileInfo(dir.absoluteFilePath(fileName + ".mp4")).absoluteFilePath();
 
-        // 发送事件
-        LiveDanmaku dmk;
-        dmk.setText(path);
-        dmk.setNickname(fileName);
-        triggerCmdEvent("LIVE_RECORD_SAVED", dmk);
-
-        // 进行格式转换
-        if (ui->recordFormatCheck->isChecked())
-        {
-            QString newPath = QFileInfo(dir.absoluteFilePath(fileName + ".mp4")).absoluteFilePath();
-
-            // 调用 FFmpeg 转换格式
-            QProcess * p = new QProcess(this);
-            QString cmd = QString(rt->ffmpegPath + " -i \"%1\" -c copy \"%2\"").arg(path).arg(newPath);
-            // qInfo() <<"录播格式转换：" << cmd;
-            connect(p, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
-                qWarning() << "录播转换出错：" << error << p;
-                QString err = snum(error);
-                if (rt->ffmpegPath.isEmpty() || !isFileExist(rt->ffmpegPath))
-                    err = "FFmpeg文件路径出错";
-                showError("录播转换出错", err);
+        // 调用 FFmpeg 转换格式
+        recordConvertProcess = new QProcess(nullptr);
+        QProcess* currPoc = recordConvertProcess;
+        QString cmd = QString(rt->ffmpegPath + " -i \"%1\" -c copy \"%2\"").arg(path).arg(newPath);
+        connect(currPoc, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
+            qWarning() << "录播转换出错：" << error << currPoc;
+            QString err = snum(error);
+            if (rt->ffmpegPath.isEmpty() || !isFileExist(rt->ffmpegPath))
+                err = "FFmpeg文件路径出错";
+            showError("录播转换出错", err);
+            currPoc->close();
+            currPoc->deleteLater();
+            if (recordConvertProcess == currPoc)
+                recordConvertProcess = nullptr;
+        });
+        connect(currPoc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [=](int exitCode, QProcess::ExitStatus exitStatus) {
+            qInfo() << "录播格式转换结束：" << newPath;
+            LiveDanmaku dmk;
+            dmk.setText(newPath);
+            dmk.setNickname(fileName);
+            triggerCmdEvent("LIVE_RECORD_FORMATTED", dmk);
+            currPoc->close();
+            currPoc->deleteLater();
+            if (recordConvertProcess == currPoc)
+                recordConvertProcess = nullptr;
+            QTimer::singleShot(1000, [=]{
+                deleteFile(path); // 延迟删除旧文件，怕被占用
             });
-            connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [=](int exitCode, QProcess::ExitStatus exitStatus) {
-                qInfo() << "录播格式转换结束：" << newPath;
-                LiveDanmaku dmk;
-                dmk.setText(newPath);
-                dmk.setNickname(fileName);
-                triggerCmdEvent("LIVE_RECORD_FORMATTED", dmk);
-                p->close();
-                p->deleteLater();
-                QTimer::singleShot(1000, [=]{
-                    deleteFile(path); // 延迟删除旧文件，怕被占用
-                });
-            });
-            p->start(cmd);
-        }
+        });
+        currPoc->start(cmd);
     }
 
+    // 删除变量
     reply->deleteLater();
     delete request;
     startRecordTime = 0;
     ui->recordCheck->setText("原画录播");
     recordTimer->stop();
 
-    // 可能是超时结束了，重新下载
+    // 可能是时间结束了，重新下载
     if (ui->recordCheck->isChecked() && isLiving())
     {
         startLiveRecord();
@@ -21166,7 +21183,16 @@ void MainWindow::on_domainEdit_editingFinished()
 void MainWindow::prepareQuit()
 {
     releaseLiveData();
-    qApp->quit();
+
+    QTimer::singleShot(0, [=]{
+        if (recordConvertProcess)
+        {
+            recordConvertProcess->waitForFinished(30000);
+            deleteFile(recordLastPath); // 本来是延迟删的，但是怕来不及了
+        }
+
+        qApp->quit();
+    });
 }
 
 void MainWindow::on_giftComboSendCheck_clicked()

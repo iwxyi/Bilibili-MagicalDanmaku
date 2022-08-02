@@ -1,7 +1,9 @@
-### v4.8.1 [数据库](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.1)
+### v4.8.1 [录播](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.1)
 
-- 新增存储所有CMD
+- 重构录播机制，优化缓冲区，保存时再也不卡顿了
 - 新增使用FFmpeg对录播格式进行自动转换
+- 新增存储所有CMD用来进行日志查询
+- 调整将机器人的弹幕也放入到数据库中
 - 优化copyText、speakText、messageBox命令支持%n%换行
 - 优化昵称简化算法
 - 修复点歌姬黑名单的问题

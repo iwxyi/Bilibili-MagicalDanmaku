@@ -1280,6 +1280,8 @@ private:
     QString recordUrl;
     QEventLoop* recordLoop = nullptr;
     QTimer* recordTimer = nullptr;
+    QProcess* recordConvertProcess = nullptr;
+    QString recordLastPath;
 
     // 大乱斗
     bool pking = false;
