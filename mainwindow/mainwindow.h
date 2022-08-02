@@ -1046,7 +1046,8 @@ private:
     void receivedPrivateMsg(MyJson session);
     void getPositiveVote();
     void positiveVote();
-    void positiveVoteLogin();
+    void fanfanLogin();
+    void fanfanAddOwn();
 
     void startSplash();
     void loadWebExtensionList();
@@ -1418,8 +1419,9 @@ private:
 
     // flag
     bool _loadingOldDanmakus = false;
-    short _hasPositiveVote = 0; // 是否好评，0未知，1好评，-1未好评
+    short _fanfanLike = 0; // 是否好评，0未知，1好评，-1未好评
     int _fanfanLikeCount = 0; // 饭贩好评数量
+    bool _fanfanOwn = false; // 是否已拥有
 
     // 互动
     LiveOpenService* liveOpenService = nullptr;

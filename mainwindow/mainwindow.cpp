@@ -8143,7 +8143,7 @@ void MainWindow::startRecordUrl(QString url)
                 recordConvertProcess = nullptr;
         });
         connect(currPoc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [=](int exitCode, QProcess::ExitStatus exitStatus) {
-            qInfo() << "录播格式转换结束：" << newPath;
+            qInfo() << "录播转换格式保存路径：" << newPath;
             LiveDanmaku dmk;
             dmk.setText(newPath);
             dmk.setNickname(fileName);
@@ -19077,20 +19077,24 @@ void MainWindow::getPositiveVote()
             return ;
         }
         MyJson data = json.data();
-        // bool own = data.b("own");
-        _hasPositiveVote = data.b("is_like");
+        _fanfanOwn = data.b("own");
+        _fanfanLike = data.b("is_like");
         _fanfanLikeCount = data.i("like_count");
-        ui->positiveVoteCheck->setChecked(_hasPositiveVote);
+        ui->positiveVoteCheck->setChecked(_fanfanLike);
         ui->positiveVoteCheck->setText("好评(" + snum(_fanfanLikeCount) + ")");
+
+        // 获取到的数值可能是有问题的
+        if (_fanfanLikeCount == 0)
+            return ;
 
         // 没有评价过的老用户进行提示好评
         if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 7 * 24 * 3600)
-                && !us->value("ask/positiveVote").toBool()
+                && !us->value("ask/positiveVote", false).toBool()
                 && qrand() % 5 == 0
                 && _fanfanLikeCount > 0)
         {
             QTimer::singleShot(3000, [=]{
-                if (!ac->cookieUid.isEmpty() && !_hasPositiveVote)
+                if (!ac->cookieUid.isEmpty() && !_fanfanLike)
                 {
                     auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
                     noti->setBtn(1, "好评", "god");
@@ -19119,6 +19123,12 @@ void MainWindow::getPositiveVote()
             });
         }
 
+        // 添加到自己的库中
+        if (!_fanfanOwn)
+        {
+            qInfo() << "饭贩商店获取本应用";
+            fanfanAddOwn();
+        }
     });
 }
 
@@ -19150,7 +19160,7 @@ void MainWindow::positiveVote()
     });
 }
 
-void MainWindow::positiveVoteLogin()
+void MainWindow::fanfanLogin()
 {
     post("https://api.live.bilibili.com/xlive/virtual-interface/v1/user/login", "", [=](QNetworkReply* reply){
         QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
@@ -19166,8 +19176,34 @@ void MainWindow::positiveVoteLogin()
         autoSetCookie(ac->browserCookie + "; " + DataAsString);
 
         QTimer::singleShot(3000, [=]{
-            positiveVote();
+            if (!_fanfanLike)
+            {
+                positiveVote();
+            }
         });
+    });
+}
+
+void MainWindow::fanfanAddOwn()
+{
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/addOwn";
+    MyJson json;
+    json.insert("app_id", 1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
+
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() == 1666501)
+        {
+            qInfo() << "饭贩已拥有，无需重复添加";
+        }
+        else if (json.code() != 0)
+        {
+            qWarning() << "饭贩添加失败：" << json.msg();
+        }
     });
 }
 
@@ -22431,7 +22467,7 @@ void MainWindow::on_positiveVoteCheck_clicked()
     }
 
     us->setValue("ask/positiveVote", true);
-    if (_hasPositiveVote > 0) // 取消好评
+    if (_fanfanLike > 0) // 取消好评
     {
         if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，要残忍地取消吗？", QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes)
         {
@@ -22448,7 +22484,7 @@ void MainWindow::on_positiveVoteCheck_clicked()
     }
     else // 先获取登录信息，再进行好评
     {
-        positiveVoteLogin();
+        fanfanLogin();
     }
 }
 

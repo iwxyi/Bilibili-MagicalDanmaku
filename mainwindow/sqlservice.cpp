@@ -49,7 +49,7 @@ void SqlService::open()
         qWarning() << "无法打开Sqlite数据库：" << db.lastError();
     }
 
-    qInfo() << "连接Sqlite数据库：" << db.databaseName();
+    qInfo() << "连接 SQLite 数据库：" << db.databaseName();
     initTables();
 }
 
