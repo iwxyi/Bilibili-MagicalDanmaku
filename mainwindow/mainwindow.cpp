@@ -8113,9 +8113,15 @@ void MainWindow::startRecordUrl(QString url)
         qint64 hour = second / 60 / 60;
         qint64 mint = second / 60 % 60;
         qint64 secd = second % 60;
-        ui->recordCheck->setText(QString("录制中：%1:%2:%3").arg(hour, 2, 10, QLatin1Char('0'))
-                                 .arg(mint, 2, 10, QLatin1Char('0'))
-                                 .arg(secd, 2, 10, QLatin1Char('0')));
+        QString timeStr;
+        if (hour > 0)
+        timeStr = QString("录制中：%1:%2:%3").arg(hour, 2, 10, QLatin1Char('0'))
+                .arg(mint, 2, 10, QLatin1Char('0'))
+                .arg(secd, 2, 10, QLatin1Char('0'));
+        else
+            timeStr = QString("录制中：%2:%3").arg(mint, 2, 10, QLatin1Char('0'))
+                                             .arg(secd, 2, 10, QLatin1Char('0'));
+        ui->recordCheck->setText(timeStr);
     });
 
     // 开启子事件循环
