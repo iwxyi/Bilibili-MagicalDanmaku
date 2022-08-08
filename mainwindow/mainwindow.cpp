@@ -14271,7 +14271,6 @@ bool MainWindow::handlePK(QJsonObject json)
          * 2. PK_BATTLE_SETTLE_USER
          * 3. PK_BATTLE_SETTLE_V2
          */
-        qDebug() << "PK结束事件：" << json;
         pkEnd(json);
     }
     else if (cmd == "PK_BATTLE_SETTLE") // 这个才是真正的PK结束消息！

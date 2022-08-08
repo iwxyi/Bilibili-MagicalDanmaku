@@ -1662,13 +1662,13 @@ void OrderPlayerWindow::on_searchResultTable_customContextMenuRequested(const QP
         })->disable(!currentSong.isValid())
                 ->text(favoriteSongs.contains(currentSong), "从收藏中移除", "添加到收藏");
 
-        menu->addAction("导入歌单链接", [=]{
+        /* menu->addAction("导入歌单链接", [=]{
             inputPlayList();
         });
 
         menu->addAction("批量导入歌曲", [=]{
             openMultiImport();
-        })->hide();
+        })->hide(); */
 
         if (currentSong.isValid())
             menu->split()->addAction(sourceName(currentSong.source))->disable();
@@ -3831,13 +3831,13 @@ void OrderPlayerWindow::on_orderSongsListView_customContextMenuRequested(const Q
         removeOrder(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("导入歌单链接", [=]{
+    /* menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
     });
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    });
+    }); */
 
     if (currentSong.isValid())
         menu->split()->addAction(sourceName(currentSong.source))->disable();
@@ -3891,13 +3891,13 @@ void OrderPlayerWindow::on_favoriteSongsListView_customContextMenuRequested(cons
         removeFavorite(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("导入歌单链接", [=]{
+    /*menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
     });
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    });
+    }); */
 
     if (currentSong.isValid())
         menu->split()->addAction(sourceName(currentSong.source))->disable();
@@ -3983,13 +3983,13 @@ void OrderPlayerWindow::on_normalSongsListView_customContextMenuRequested(const 
         removeNormal(songs);
     })->disable(!songs.size());
 
-    menu->split()->addAction("导入歌单链接", [=]{
+    /* menu->split()->addAction("导入歌单链接", [=]{
         inputPlayList();
     });
 
     menu->addAction("批量导入歌曲", [=]{
         openMultiImport();
-    });
+    }); */
 
     if (currentSong.isValid())
         menu->split()->addAction(sourceName(currentSong.source))->disable();
@@ -4398,6 +4398,14 @@ void OrderPlayerWindow::on_settingsButton_clicked()
         }
         update();
     })->check(usePureColor);
+
+    auto importMenu = menu->addMenu("导入");
+    importMenu->addAction("在线歌单", [=]{
+        inputPlayList();
+    });
+    importMenu->addAction("本地歌曲", [=]{
+        openMultiImport();
+    });
 
     menu->exec();
 }
