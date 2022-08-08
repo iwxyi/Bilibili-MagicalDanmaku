@@ -4575,9 +4575,11 @@ void OrderPlayerWindow::setOutputDevice(QString name)
         return ;
     }
 
+    // 好吧，设置失败，无效
     output->setActiveOutput(outputDevice);
-    service->releaseControl(output);
 
     if (!outputDevice.isEmpty())
-        qInfo() << "音乐输出设备：" << outputDevice;
+        qInfo() << "音乐输出设备：" << output->activeOutput();
+
+    service->releaseControl(output);
 }
