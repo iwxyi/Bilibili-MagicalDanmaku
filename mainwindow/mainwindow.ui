@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>827</width>
-    <height>1424</height>
+    <height>1617</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1840,7 +1840,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>747</width>
-             <height>1304</height>
+             <height>1497</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4143,7 +4143,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>660</y>
               <width>161</width>
-              <height>181</height>
+              <height>201</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4192,6 +4192,20 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="closeGuiCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>关闭一些无关紧要的界面效果
+可以减少内存占用</string>
+               </property>
+               <property name="text">
+                <string>关闭界面效果</string>
                </property>
               </widget>
              </item>
@@ -5397,7 +5411,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>840</y>
+              <y>910</y>
               <width>161</width>
               <height>121</height>
              </rect>
@@ -6119,7 +6133,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>980</y>
+              <y>1050</y>
               <width>162</width>
               <height>101</height>
              </rect>
@@ -6333,7 +6347,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>1090</y>
+              <y>1160</y>
               <width>161</width>
               <height>131</height>
              </rect>
@@ -6406,7 +6420,7 @@ margin: 40px;</string>
 数据库默认位置：安装目录/database.db</string>
                </property>
                <property name="text">
-                <string>保存所有记录</string>
+                <string>保存所有记录【捐赠版】</string>
                </property>
               </widget>
              </item>

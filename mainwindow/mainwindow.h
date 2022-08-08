@@ -812,12 +812,15 @@ private slots:
 
     void on_ffmpegButton_clicked();
 
+    void on_closeGuiCheck_clicked();
+
 private:
     void initView();
     void initStyle();
     void initPath();
     void initRuntime();
     void readConfig();
+    void readConfig2();
     void initEvent();
     void adjustPageSize(int page);
     void switchPageAnimation(int page);

@@ -30,6 +30,7 @@ public:
     bool useStringSimilar = false;   // 使用字符串编辑距离相似度算法
     int stringSimilarThreshold = 80; // 相似度达到阈值及以上则算是重复弹幕
     int danmuSimilarJudgeCount = 10; // 重复弹幕的判断数量
+    bool closeGui = false;           // 关闭GUI效果
 };
 
 extern UserSettings* us;
