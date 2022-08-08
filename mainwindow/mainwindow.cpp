@@ -17332,7 +17332,7 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/cry"), "退出", [=]{
             menu->close();
             prepareQuit();
-        })->text(!rt->appNewVersion.isEmpty(), "中断更新并退出")
+        })->text(ui->autoUpdateCheck->isChecked() && !rt->appNewVersion.isEmpty(), "中断更新并退出")
           ->text(isFileExist(QApplication::applicationDirPath() + "/update.zip"), "退出并更新");
         menu->exec();
     }
