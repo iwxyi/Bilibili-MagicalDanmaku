@@ -108,3 +108,7 @@ select music_name, count(*) as count from music where room_id = %room_id% group 
 
 -- 某首歌点歌记录（全部房间）
 select uid, uname, music_name, room_id, datetime(create_time) as time from music where music_name like "%关键词%" order by create_time desc
+
+-------------------------------------- CMD --------------------------------------
+-- 查询CMD（仅供调试）
+select cmd, data, create_time from cmd

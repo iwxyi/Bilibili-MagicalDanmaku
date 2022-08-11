@@ -4535,6 +4535,9 @@ void OrderPlayerWindow::stopOrderSearching()
 void OrderPlayerWindow::selectOutputDevice(FacileMenu *menu)
 {
     // 设置为默认播放设备
+    menu->addAction("该功能暂时无法使用", [=]{
+
+    })->check(false);
     menu->addAction("默认音频设备", [=]{
         setOutputDevice("");
     })->check(outputDevice.isEmpty());

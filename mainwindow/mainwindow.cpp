@@ -14804,7 +14804,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                     "gift_id": 30607,
                     "gift_name": "小心心",
                     "gift_num": 12,
-                    "gift_type": 5,
+                    "gift_type": 5,             // 0 = 普通, 6 = 礼盒, 2 = 加分卡
                     "expire_at": 1612972800,
                     "corner_mark": "4天",
                     "corner_color": "",
