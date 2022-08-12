@@ -16737,6 +16737,8 @@ void MainWindow::pkEnd(QJsonObject json)
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
     if (pkTimer)
         pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
@@ -16878,6 +16880,8 @@ void MainWindow::pkSettle(QJsonObject json)
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
     if (pkTimer)
         pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();

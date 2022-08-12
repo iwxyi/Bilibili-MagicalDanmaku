@@ -8,6 +8,7 @@
 - 优化copyText、speakText、messageBox命令支持%n%换行
 - 优化昵称简化算法
 - 修复点歌姬黑名单的问题
+- 修复PK绝杀时刻无法提前结束的问题
 
 
 
