@@ -84,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
         triggerCmdEvent("START_UP", LiveDanmaku(), true);
     });
 
+#ifdef Q_OS_WIN
     // 检测VC2015
     QTimer::singleShot(1000, [=]{
         if (hasInstallVC2015())
@@ -96,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent)
         });
         tip_box->createTipCard(notify);
     });
+#endif
 
     // 检查更新
     syncTimer->start((qrand() % 10 + 10) * 1000);
@@ -558,8 +560,8 @@ void MainWindow::initPath()
         SOCKET_DEB << "路径：" << rt->dataPath;
     }
 #else
-    dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
-    QDir().mkpath(dataPath);
+    rt->dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/";
+    QDir().mkpath(rt->dataPath);
 #endif
 }
 
@@ -4720,7 +4722,7 @@ void MainWindow::startConnectIdentityCode()
 {
     MyJson json;
     json.insert("code", ac->identityCode); // 主播身份码
-    json.insert("app_id", BILI_APP_ID);
+    json.insert("app_id", (qint64)BILI_APP_ID);
     liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
         if (json.code() != 0)
         {
@@ -10487,6 +10489,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 指定按键的模拟
     if (msg.contains("simulateClickButton"))
     {
+#ifdef Q_OS_WIN
         auto getFlags = [=](QString param) -> DWORD {
             if (param == "left")
                 return MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP;
@@ -10536,6 +10539,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             simulateClickButton(flag);
             return true;
         }
+#endif
     }
 
     // 移动鼠标（相对现在位置）
@@ -10988,10 +10992,10 @@ void MainWindow::simulateClick()
 #endif
 }
 
-void MainWindow::simulateClickButton(DWORD keys)
+void MainWindow::simulateClickButton(qint64 keys)
 {
 #ifdef Q_OS_WIN
-    mouse_event(keys, 0, 0, 0, 0);
+    mouse_event((DWORD)keys, 0, 0, 0, 0);
 #else
     qWarning() << "不支持模拟鼠标点击";
 #endif
@@ -19159,7 +19163,7 @@ void MainWindow::positiveVote()
 {
     QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/like";
     MyJson json;
-    json.insert("app_id", 1653383145397);
+    json.insert("app_id", (qint64)1653383145397);
     json.insert("csrf_token", ac->csrf_token);
     json.insert("csrf", ac->csrf_token);
     json.insert("visit_id", "");
@@ -19207,7 +19211,7 @@ void MainWindow::fanfanAddOwn()
 {
     QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/addOwn";
     MyJson json;
-    json.insert("app_id", 1653383145397);
+    json.insert("app_id", (qint64)1653383145397);
     json.insert("csrf_token", ac->csrf_token);
     json.insert("csrf", ac->csrf_token);
     json.insert("visit_id", "");

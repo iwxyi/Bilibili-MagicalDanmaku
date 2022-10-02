@@ -457,7 +457,15 @@ void MainWindow::syncMagicalRooms()
     get(serverPath + "client/active",
         {"room_id", ac->roomId, "user_id", ac->cookieUid, "up_id", ac->upUid,
          "room_title", ac->roomTitle, "username", ac->cookieUname, "up_name", ac->upName,
-         "version", appVersion, "platform", "windows",
+         "version", appVersion,
+         "platform",
+#ifdef Q_OS_WIN
+         "windows",
+#elif defined(Q_OS_MAC)
+         "macos",
+#elif defined(Q_OS_LINUX)
+         "linux",
+#endif
          "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
          "randkey", ac->csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
@@ -700,14 +708,6 @@ void MainWindow::serverHandleUrl(const QString &urlPath, QHash<QString, QString>
     resp->write(doc);
     resp->end();
 }
-#endif
-
-void MainWindow::processServerVariant(QByteArray &doc)
-{
-    doc.replace("__DOMAIN__", serverDomain.toUtf8())
-            .replace("__PORT__", snum(serverPort).toUtf8())
-            .replace("__WS_PORT__", snum(serverPort+1).toUtf8());
-}
 
 /// 一些header相关的
 /// @param url 不包括前缀api/，直达动作本身
@@ -852,6 +852,14 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
     }
 
     return ba;
+}
+#endif
+
+void MainWindow::processServerVariant(QByteArray &doc)
+{
+    doc.replace("__DOMAIN__", serverDomain.toUtf8())
+            .replace("__PORT__", snum(serverPort).toUtf8())
+            .replace("__WS_PORT__", snum(serverPort+1).toUtf8());
 }
 
 void MainWindow::pullRoomShieldKeyword()

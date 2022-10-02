@@ -979,7 +979,7 @@ private:
     QString getExecutionResult(QStringList &msgs, const LiveDanmaku &_danmaku);
     void simulateKeys(QString seq, bool press = true, bool release = true);
     void simulateClick();
-    void simulateClickButton(DWORD keys);
+    void simulateClickButton(qint64 keys);
     void moveMouse(unsigned long x, unsigned long dy);
     void moveMouseTo(unsigned long tx, unsigned long ty);
     QStringList splitLongDanmu(QString text) const;
@@ -1073,7 +1073,9 @@ private:
     void sendDanmakuToSockets(QString cmd, LiveDanmaku danmaku);
     void sendJsonToSockets(QString cmd, QJsonValue data, QWebSocket* socket = nullptr);
     void processServerVariant(QByteArray& doc);
+#if defined(ENABLE_HTTP_SERVER)
     QByteArray getApiContent(QString url, QHash<QString, QString> params, QString *contentType, QHttpRequest *req, QHttpResponse *resp);
+#endif
     void sendTextToSockets(QString cmd, QByteArray data, QWebSocket* socket = nullptr);
     void sendMusicList(const SongList& songs, QWebSocket* socket = nullptr);
     void sendLyricList(QWebSocket* socket = nullptr);
@@ -1438,6 +1440,7 @@ private:
 class RequestBodyHelper : public QObject
 {
     Q_OBJECT
+#if defined(ENABLE_HTTP_SERVER)
 public:
     RequestBodyHelper(QHttpRequest* req, QHttpResponse* resp)
         : req(req), resp(resp)
@@ -1464,6 +1467,7 @@ signals:
 private:
     QHttpRequest* req;
     QHttpResponse* resp;
+#endif
 };
 
 #endif // MAINWINDOW_H

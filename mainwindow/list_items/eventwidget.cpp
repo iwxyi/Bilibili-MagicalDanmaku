@@ -30,8 +30,10 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     connect(check, &QCheckBox::stateChanged, this, [=]{
         if (isEnabled())
             configShortcut();
+#if defined(ENABLE_SHORTCUT)
         else if (shortcut)
             deleteShortcut();
+#endif
     });
 
     connect(btn, &QPushButton::clicked, this, [=]{
