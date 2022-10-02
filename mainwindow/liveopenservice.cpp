@@ -28,7 +28,7 @@ void LiveOpenService::start()
 
     MyJson json;
     json.insert("code", ac->identityCode); // 主播身份码
-    json.insert("app_id", BILI_APP_ID);
+    json.insert("app_id", (qint64)BILI_APP_ID);
     post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
         if (json.code() != 0)
         {
@@ -95,7 +95,7 @@ void LiveOpenService::end()
     }
 
     MyJson json;
-    json.insert("app_id", BILI_APP_ID);
+    json.insert("app_id", (qint64)BILI_APP_ID);
     json.insert("game_id", gameId);
     post(BILI_API_DOMAIN + "/v2/app/end", json, [=](MyJson json){
         if (json.code() != 0)

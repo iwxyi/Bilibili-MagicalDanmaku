@@ -2,7 +2,9 @@
 #define CALCULATOR_UTIL_H
 
 #include <stdio.h>
+#ifdef Q_OS_WIN
 #include <tchar.h>
+#endif
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -91,6 +93,7 @@ class CalculatorUtil
 public:
     static long long calculate(const char *str)
     {
+#ifdef Q_OS_WIN
         int i,cal_flag=0,k_digit=0,temp_len=0;
         int temp_dispose_flag=0;
         int len=strlen(str);
@@ -324,7 +327,9 @@ ddos:	if(replase_flag==1)
         result=string_temp_dispose(str_copy,k_digit);
         memset(str_copy,'\0',CALC_MAX_LEN);
         return (long long)(result+0.5);
-
+#else
+        return 0;
+#endif
     }
     //
     int precision(long double p)
