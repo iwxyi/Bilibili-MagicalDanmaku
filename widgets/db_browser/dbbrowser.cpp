@@ -46,9 +46,15 @@ void DBBrowser::showQueryResult(QString sql)
     if (model)
         delete model;
     model = new QSqlQueryModel(this);
-    model->setQuery(sql);
+    QSqlQuery query(sql);
+    model->setQuery(query);
     ui->resultTable->setModel(model);
     ui->resultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    if (query.lastError().type() != QSqlError::NoError)
+    {
+        qWarning() << query.lastError().text();
+        QMessageBox::critical(this, "查询出错", query.lastError().text());
+    }
 }
 
 void DBBrowser::on_execButton_clicked()

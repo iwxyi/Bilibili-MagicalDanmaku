@@ -2,89 +2,132 @@
 -- 清空代码并重开窗口可恢复默认
 
 -------------------------------------- 弹幕 --------------------------------------
+
 -- 查看当前直播间历史弹幕
-select uid, uname, msg, ulevel, admin, guard, create_time from danmu where room_id = %room_id% order by create_time desc limit 10000
+select uid, uname, msg, ulevel, admin, guard, datetime(create_time) as time from danmu where room_id = %room_id% order by create_time desc limit 10000
 
 -- 查看某人所有弹幕
-select uid, uname, msg, create_time as last_time from danmu where room_id = %room_id% and uid = "要查询的UID" order by create_time desc
+select uid, uname, msg, datetime(create_time) as first_time from danmu where room_id = %room_id% and uid = "要查询的UID" order by create_time desc
 
 -- 按用户弹幕数量排序
-select uid, uname, count(*) as count, msg as last_msg, create_time as last_time from danmu where room_id = %room_id% group by uid order by count desc
+select uid, uname, count(*) as count, msg as last_msg, datetime(create_time) as first_time from danmu where room_id = %room_id% group by uid order by count desc
 
 -- 统计重复弹幕出现次数
-select msg, count(*) as count, create_time as last_time from danmu where room_id = %room_id% group by msg having count > 1 order by count desc limit 10000
+select msg, count(*) as count from danmu where room_id = %room_id% group by msg having count > 1 order by count desc limit 10000
 
 -- 查找包含指定关键词的弹幕
-select uid, uname, msg, create_time from danmu where room_id = %room_id% and msg like "%关键词%" order by create_time desc limit 10000
+select uid, uname, msg, datetime(create_time) as time from danmu where room_id = %room_id% and msg like "%关键词%" order by create_time desc limit 10000
 
 -- 查看所有 Super Chat
-select uid, uname, msg, price, create_time from danmu where room_id = %room_id% and price > 0 order by create_time desc
+select uid, uname, msg, price, datetime(create_time) as time from danmu where room_id = %room_id% and price > 0 order by create_time desc
 
 -- 统计今天弹幕数量
 select count(*) from danmu where room_id = %room_id% and create_time between datetime('now','start of day','+0 day') and datetime('now','start of day','+1 day')
 
+-- 统计每天的弹幕量
+select strftime('%Y-%m-%d', create_time) as day, count(*) as count from danmu where room_id = %room_id% group by day order by day desc
+
+-- 统计用户历史名字
+select uname, strftime('%Y-%m-%d', create_time) as use_time from danmu where uid = '要查询的UID' group by uname order by create_time desc
+
 -------------------------------------- 进入 --------------------------------------
+
 -- 查看进入直播间记录
-select uid, uname, guard, medal_name, medal_level, create_time as time from interact where room_id = %room_id% and msg_type = 1 order by create_time desc limit 10000
+select uid, uname, guard, medal_name, medal_level, datetime(create_time) as time from interact where room_id = %room_id% and msg_type = 1 order by create_time desc limit 10000
 
 -- 查看舰长进入
-select uid, uname, medal_name, medal_level, create_time as time from interact where room_id = %room_id% and msg_type = 1 and guard > 0 order by create_time desc limit 10000
+select uid, uname, medal_name, medal_level, datetime(create_time) as time from interact where room_id = %room_id% and msg_type = 1 and guard > 0 order by create_time desc limit 10000
 
 -- 按进入次数排序
-select uid, uname, count(*) as count, create_time as last_time from interact where room_id = %room_id% and msg_type = 1 group by uid order by count , create_time desc limit 10000
+select uid, uname, count(*) as count, datetime(create_time) as first_time from interact where room_id = %room_id% and msg_type = 1 group by uid order by count desc limit 1000
+
+-- 按进入次数排序并显示最新的一次
+select uid as ID, uname as 昵称, count(*) as 次数, datetime(create_time) as 最后进入 from (select * from interact order by create_time desc) where room_id = %room_id% and msg_type = 1 group by uid order by 次数 desc limit 1000
 
 -- 统计某人进入次数
-select uname, count(*), create_time as last_time from interact where room_id = %room_id% and uid = "要查询的UID"
+select uname, count(*), datetime(create_time) as first_time from interact where room_id = %room_id% and uid = "要查询的UID"
 
 -------------------------------------- 关注 --------------------------------------
+
 -- 查看关注记录
-select uid, uname, create_time from interact where room_id = %room_id% and msg_type = 2 order by create_time desc limit 10000
+select uid, uname, datetime(create_time) as time from interact where room_id = %room_id% and msg_type = 2 order by create_time desc limit 10000
 
 -- 查看分享直播间
-select uid, uname, create_time from interact where room_id = %room_id% and msg_type = 3 order by create_time desc
+select uid, uname, datetime(create_time) as time from interact where room_id = %room_id% and msg_type = 3 order by create_time desc
 
 -- 查看特别关注
-select uid, uname, create_time from interact where room_id = %room_id% and msg_type = 4 order by create_time desc
+select uid, uname, datetime(create_time) as time from interact where room_id = %room_id% and msg_type = 4 order by create_time desc
 
 -- 统计最近7天的关注人数
 select count(*) from interact where room_id = %room_id% and msg_type = 2 and create_time between datetime('now','start of day','-7 day') and datetime('now','start of day','+0 day')
 
+-- 按关注次数排序
+select uid, uname, count(*) as count, datetime(create_time) as first_time from interact where room_id = %room_id% and msg_type = 2 group by uid having count > 1 order by count desc limit 10000
+
 -------------------------------------- 礼物 --------------------------------------
+
 -- 查看礼物历史（价格存的都是金瓜子，1元=10电池=1000金瓜子）
-select uid, uname, gift_name, number, total_coin, coin_type, create_time from gift where room_id = %room_id% order by create_time desc limit 10000
+select uid, uname, gift_name, number, total_coin, coin_type, datetime(create_time) as time from gift where room_id = %room_id% order by create_time desc limit 10000
 
 -- 查看金瓜子礼物
-select uid, uname, gift_name, number, total_coin, create_time from gift where room_id = %room_id% and coin_type = "gold" and total_coin > 0 order by create_time desc limit 10000
+select uid, uname, gift_name, number, total_coin, datetime(create_time) as time from gift where room_id = %room_id% and coin_type = "gold" and total_coin > 0 order by create_time desc limit 10000
+
+-- 按用户送礼总额排序
+select uid, uname, sum(total_coin) / 1000 as RMB, datetime(create_time) as first_time from gift where room_id = %room_id% and coin_type = "gold" group by uid order by RMB desc
+
+-- 查看某人送礼记录
+select uid, uname, gift_name, number, total_coin, coin_type, datetime(create_time) as time from gift where room_id = %room_id% and uid = "4802222" order by create_time desc limit 10000
 
 -- 查看某人送礼总额
-select uname, sum(total_coin), create_time as last_time from gift where room_id = %room_id% and uid = "要查询的ID" and coin_type = "gold"
+select uname, sum(total_coin), datetime(create_time) as first_time from gift where room_id = %room_id% and uid = "要查询的ID" and coin_type = "gold"
 
--- 按送礼总额排序
-select uid, uname, sum(total_coin) as all_coin, create_time as last_time from gift where room_id = %room_id% and coin_type = "gold" group by uid order by all_coin desc
+-- 查看当月礼物流水
+select sum(total_coin) / 1000 as RMB from gift where room_id = %room_id% and coin_type = "gold" and create_time between datetime('now','start of month') and datetime('now','start of month','+1 month')
 
--- 统计当月礼物流水
-select sum(total_coin) / 1000 from gift where room_id = %room_id% and coin_type = "gold" and create_time between datetime('now','start of month','+1 second') and datetime('now','start of month','+1 month','-1 second')
+-- 查看上个月礼物流水
+select sum(total_coin) / 1000 as RMB from gift where room_id = %room_id% and coin_type = "gold" and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month')
 
--- 统计上个月礼物流水
-select sum(total_coin) / 1000 from gift where room_id = %room_id% and coin_type = "gold" and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month','-1 second')
+-- 统计每月礼物流水
+select strftime('%Y-%m', create_time) as month, sum(total_coin) / 1000 as RMB from gift where room_id = %room_id% and coin_type = "gold" group by month order by month desc
+
+-- 统计每天礼物流水
+select strftime('%Y-%m-%d', create_time) as day, sum(total_coin) / 1000 as RMB from gift where room_id = %room_id% and coin_type = "gold" group by day order by day desc
+
+-- 统计所有天每小时礼物流水
+select strftime('%H', create_time) as hour, sum(total_coin) / 1000 as RMB from gift where room_id = %room_id% and coin_type = "gold" group by hour
 
 -------------------------------------- 舰长 --------------------------------------
+
 -- 查看历史舰长记录
-select uid, uname, gift_name, number, start_time, create_time from guard where room_id = %room_id% order by create_time desc
+select uid, uname, gift_name, number, datetime(start_time) as start, datetime(end_time) as end, datetime(create_time) as time from guard where room_id = %room_id% order by create_time desc
 
 -- 查看当月舰长记录
-select uid, uname, gift_name, number, start_time, create_time from guard where room_id = %room_id% and create_time between datetime('now','start of month','+1 second') and datetime('now','start of month','+1 month','-1 second') order by create_time desc
+select uid, uname, gift_name, number, datetime(start_time) as start, datetime(end_time) as end, datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month') and datetime('now','start of month','+1 month') order by create_time desc
 
 -- 查看上个月舰长记录
-select uid, uname, gift_name, number, start_time, create_time from guard where room_id = %room_id% and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month','-1 second') order by create_time desc
+select uid, uname, gift_name, number, datetime(start_time) as start, datetime(end_time) as end, datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month') order by create_time desc
 
--- 查看某人上船记录
-select uid, uname, gift_name, number, start_time, create_time from guard where room_id = %room_id% and uid = "要查询的ID" order by create_time desc
+-- 按上舰次数排序
+select uid, uname, sum(number) as count, create_time as first_time from guard where room_id = %room_id% group by uid order by count desc
+
+-- 查看某人上船记录（全部房间）
+select uid, uname, gift_name, number, datetime(start_time) as start, datetime(end_time) as end, datetime(create_time) as time from guard where uid = "要查询的ID" order by create_time desc
+
+-- 统计每月购买舰长数量
+select strftime('%Y-%m', create_time) as month, sum(number) as num from guard where room_id = %room_id% group by month order by month desc
 
 -------------------------------------- 点歌 --------------------------------------
+
 -- 查看点歌记录
-select uid, uname, music_name, create_time from music where room_id = %room_id% order by create_time desc limit 10000
+select uid, uname, music_name, datetime(create_time) as time from music where room_id = %room_id% order by create_time desc limit 10000
 
 -- 按歌曲统计点歌排行榜
 select music_name, count(*) as count from music where room_id = %room_id% group by music_name order by count desc
 
+-- 某首歌点歌记录（全部房间）
+select uid, uname, music_name, room_id, datetime(create_time) as time from music where music_name like "%关键词%" order by create_time desc
+
+-------------------------------------- CMD --------------------------------------
+
+-- 查询CMD（仅供调试）
+select cmd, data, create_time from cmd

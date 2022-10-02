@@ -623,6 +623,7 @@ void MainWindow::readConfig()
 
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
+    us->closeGui = us->value("mainwindow/closeGui", false).toBool();
 
     // 标签组
     int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
@@ -806,12 +807,6 @@ void MainWindow::readConfig()
     ui->calculateDailyDataCheck->setChecked(calcDaliy);
     if (calcDaliy)
         startCalculateDailyData();
-
-    // 数据库
-    ui->saveToSqliteCheck->setChecked(saveToSqlite = us->value("db/sqlite").toBool());
-    ui->saveCmdToSqliteCheck->setChecked(saveCmdToSqlite = us->value("db/cmd").toBool());
-    ui->saveCmdToSqliteCheck->setEnabled(saveToSqlite);
-
 
     // PK串门提示
     pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
@@ -1576,6 +1571,21 @@ void MainWindow::readConfig()
     int appOpenCount = us->value("mainwindow/appOpenCount", 0).toInt();
     us->setValue("mainwindow/appOpenCount", ++appOpenCount);
     ui->robotSendCountTextLabel->setToolTip("累计启动 " + snum(appOpenCount) + " 次");
+}
+
+/**
+ * 第二次读取设置
+ * 登录后再进行
+ */
+void MainWindow::readConfig2()
+{
+    // 数据库
+    saveToSqlite = hasPermission() && us->value("db/sqlite").toBool();
+    ui->saveToSqliteCheck->setChecked(saveToSqlite);
+    ui->saveCmdToSqliteCheck->setChecked(saveCmdToSqlite = us->value("db/cmd").toBool());
+    ui->saveCmdToSqliteCheck->setEnabled(saveToSqlite);
+    if (saveToSqlite)
+        sqlService.open();
 }
 
 void MainWindow::initEvent()
@@ -5328,6 +5338,8 @@ void MainWindow::updatePermission()
             ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
             permissionTimer->stop();
         }
+
+        readConfig2();
     });
 }
 
@@ -11356,7 +11368,6 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
         }
         else if (handlePK(json))
         {
-            qWarning() << "未压缩的HandleJson信息";
         }
         else // 压缩弹幕消息
         {
@@ -14793,7 +14804,7 @@ void MainWindow::getBagList(qint64 sendExpire)
                     "gift_id": 30607,
                     "gift_name": "小心心",
                     "gift_num": 12,
-                    "gift_type": 5,
+                    "gift_type": 5,             // 0 = 普通, 6 = 礼盒, 2 = 加分卡
                     "expire_at": 1612972800,
                     "corner_mark": "4天",
                     "corner_color": "",
@@ -15110,6 +15121,9 @@ void MainWindow::updateOnlineGoldRank()
 
 void MainWindow::updateOnlineRankGUI()
 {
+    if (us->closeGui)
+        return ;
+
     // 获取头像
     for (int i = 0; i < onlineGoldRank.size(); i++)
     {
@@ -17328,7 +17342,7 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/cry"), "退出", [=]{
             menu->close();
             prepareQuit();
-        })->text(!rt->appNewVersion.isEmpty(), "中断更新并退出")
+        })->text(ui->autoUpdateCheck->isChecked() && !rt->appNewVersion.isEmpty(), "中断更新并退出")
           ->text(isFileExist(QApplication::applicationDirPath() + "/update.zip"), "退出并更新");
         menu->exec();
     }
@@ -19098,9 +19112,8 @@ void MainWindow::getPositiveVote()
             return ;
 
         // 没有评价过的老用户进行提示好评
-        if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 7 * 24 * 3600)
+        if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 3 * 24 * 3600)
                 && !us->value("ask/positiveVote", false).toBool()
-                && qrand() % 5 == 0
                 && _fanfanLikeCount > 0)
         {
             QTimer::singleShot(3000, [=]{
@@ -19785,6 +19798,9 @@ void MainWindow::openLink(QString link)
 /// 只显示超过一定金额的礼物
 void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 {
+    if (us->closeGui)
+        return ;
+
     // 设置下限
     if (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000) // 超过1元才算
         return ;
@@ -22621,7 +22637,15 @@ void MainWindow::on_actionLogout_triggered()
 
 void MainWindow::on_saveToSqliteCheck_clicked()
 {
+    if (ui->saveToSqliteCheck->isChecked() && !hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        ui->saveToSqliteCheck->setChecked(false);
+        return ;
+    }
+
     us->set("db/sqlite", saveToSqlite = ui->saveToSqliteCheck->isChecked());
+
     ui->saveCmdToSqliteCheck->setEnabled(saveToSqlite);
     if (saveToSqlite)
     {
@@ -22671,4 +22695,33 @@ void MainWindow::on_ffmpegButton_clicked()
     us->setValue("recent/ffmpegPath", path);
     us->setValue("record/ffmpegPath", path);
     rt->ffmpegPath = path;
+}
+
+void MainWindow::on_closeGuiCheck_clicked()
+{
+    us->closeGui = ui->closeGuiCheck->isChecked();
+    us->setValue("mainwindow/closeGui", us->closeGui = ui->closeGuiCheck->isChecked());
+
+    if (us->closeGui)
+    {
+        // 关闭已有的GUI效果
+        auto lw = ui->onlineRankListWidget;
+        while (lw->count())
+        {
+            auto item = lw->item(0);
+            auto widget = lw->itemWidget(item);
+            lw->takeItem(0);
+            delete widget;
+        }
+        ui->onlineRankDescLabel->setPixmap(QPixmap());
+
+        lw = ui->giftListWidget;
+        while (lw->count())
+        {
+            auto item = lw->item(0);
+            auto widget = lw->itemWidget(item);
+            lw->takeItem(0);
+            delete widget;
+        }
+    }
 }

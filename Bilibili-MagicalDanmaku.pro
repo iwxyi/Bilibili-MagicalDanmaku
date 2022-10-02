@@ -82,7 +82,8 @@ INCLUDEPATH += \
     third_party/gif/ \
     third_party/picture_browser/ \
     third_party/notification/ \
-    third_party/linear_check_box/
+    third_party/linear_check_box/ \
+    third_party/mfaudioendpointcontrol_fixed/
 
 SOURCES += \
     mainwindow/liveopenservice.cpp \
