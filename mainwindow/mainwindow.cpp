@@ -19995,6 +19995,19 @@ QString MainWindow::GetFileVertion(QString fullName)
     }
     return str_value;
 #else
+    QString text = readTextFileAutoCodec(":/documents/resource.rc");
+    QString key = "VALUE \"ProductVersion\",";
+    int pos = text.indexOf(key);
+    if (pos != -1)
+    {
+        int right = text.indexOf("\n", pos);
+        if (right == -1)
+            right = text.length();
+        QString version = text.mid(pos + key.length(), right - pos - key.length()).trimmed();
+        if (version.startsWith("\"") && version.endsWith("\""))
+            version = version.mid(1, version.length() - 2);
+        return version;
+    }
     return "";
 #endif
 }
