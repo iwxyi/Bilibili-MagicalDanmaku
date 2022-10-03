@@ -179,6 +179,8 @@ struct Song
         song.name = JVAL_STR(name);
 
         QJsonArray array = json.value("artists").toArray();
+        if (array.empty())
+            array = json.value("ar").toArray();
         QStringList artistNameList;
         foreach (QJsonValue val, array)
         {
@@ -188,8 +190,13 @@ struct Song
         }
         song.artistNames = artistNameList.join("/");
 
-        song.album = Album::fromJson(json.value("album").toObject());
+        QJsonObject album = json.value("album").toObject();
+        if (album.isEmpty())
+            album = json.value("al").toObject();
+        song.album = Album::fromJson(album);
         song.duration = JVAL_INT(duration);
+        if (song.duration == 0)
+            song.duration = JVAL_INT(dt);
         song.mark = JVAL_INT(mark);
 
         if (json.contains("mediaId"))
