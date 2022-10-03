@@ -216,8 +216,12 @@ struct Song
     {
         Song song;
         song.id = JVAL_LONG(songid);
+        if (song.id == 0)
+            song.id = JVAL_LONG(id);
         if (json.contains("songmid"))
             song.mid = JVAL_STR(songmid);
+        else if (json.contains("mid"))
+            song.mid = JVAL_STR(mid);
         song.name = JVAL_STR(songname);
         if(song.name.isEmpty())
             song.name = JVAL_STR(name);

@@ -3265,7 +3265,7 @@ bool OrderPlayerWindow::switchNextSource(Song song, bool play)
 {
     if (!song.isValid())
     {
-        qWarning() << "换源的歌曲是空的";
+        qWarning() << "换源的歌曲是空的：" << song.name;
         return true;
     }
 
