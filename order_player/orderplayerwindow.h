@@ -219,6 +219,7 @@ private slots:
 
 private:
     void searchMusic(QString key, QString addBy = QString(), bool notify = false);
+    void parseSearchResult(QString key, QString addBy, bool notify, MusicSource source, const QJsonObject& json);
     void searchMusicBySource(QString key, MusicSource source, QString addBy = QString());
     void setSearchResultTable(SongList songs);
     void setSearchResultTable(PlayListList playLists);
@@ -283,6 +284,7 @@ private:
     void fetch(QString url, NetJsonFunc func, MusicSource cookie = UnknowMusic);
     void fetch(QString url, NetReplyFunc func, MusicSource cookie = UnknowMusic);
     void fetch(QString url, QStringList params, NetJsonFunc func, MusicSource cookie = UnknowMusic);
+    void fetch(QString url, QJsonObject json, NetJsonFunc func, MusicSource cookie = UnknowMusic);
     QVariant getCookies(QString cookieString);
 
     void getNeteaseAccount();

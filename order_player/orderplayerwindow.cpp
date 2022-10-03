@@ -625,320 +625,352 @@ void OrderPlayerWindow::searchMusic(QString key, QString addBy, bool notify)
     }
 
     startLoading();
-    fetch(url, [=](QJsonObject json){
-        stopLoading();
-        bool insertOnce = this->insertOrderOnce;
-        this->insertOrderOnce = false;
-        currentResultOrderBy = addBy;
-        prevOrderSong = Song();
+    if (source == QQMusic)
+    {
+        // FIX: 使用临时接口
+        url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
+        QJsonObject service;
+        service.insert("method", "DoSearchForQQMusicDesktop");
+        service.insert("module", "music.search.SearchCgiService");
+        QJsonObject param;
+        param.insert("num_per_page", 40);
+        param.insert("page_num", 1);
+        param.insert("query", key);
+        param.insert("search_type", 0);
+        service.insert("param", param);
+        QJsonObject params;
+        params.insert("music.search.SearchCgiService", service);
+        fetch(url, params, [=](QJsonObject json) {
+            stopLoading();
+            parseSearchResult(key, addBy, notify, source, json);
+        }, source);
+    }
+    else
+    {
+        fetch(url, [=](QJsonObject json){
+            stopLoading();
+            parseSearchResult(key, addBy, notify, source, json);
+        }, source);
+    }
 
-        // 不管当前歌曲成不成功，继续导入下一首
-        bool isImporting = importingSongNames.size() > 0;
-        if (isImporting)
+}
+
+void OrderPlayerWindow::parseSearchResult(QString key, QString addBy, bool notify, MusicSource source, const QJsonObject &json)
+{
+    bool insertOnce = this->insertOrderOnce;
+    this->insertOrderOnce = false;
+    currentResultOrderBy = addBy;
+    prevOrderSong = Song();
+
+    // 不管当前歌曲成不成功，继续导入下一首
+    bool isImporting = importingSongNames.size() > 0;
+    if (isImporting)
+    {
+        QTimer::singleShot(200, [=]{
+            importNextSongByName();
+        });
+    }
+
+    QJsonObject response;
+    switch (source) {
+    case UnknowMusic:
+    case LocalMusic:
+        stopOrderSearching();
+        return ;
+    case NeteaseCloudMusic:
+        if (json.value("code").toInt() != 200)
         {
-            QTimer::singleShot(200, [=]{
-                importNextSongByName();
-            });
-        }
-
-        QJsonObject response;
-        switch (source) {
-        case UnknowMusic:
-        case LocalMusic:
+            qWarning() << "网易云返回结果不为200：" << json.value("message").toString();
             stopOrderSearching();
             return ;
-        case NeteaseCloudMusic:
-            if (json.value("code").toInt() != 200)
-            {
-                qWarning() << "网易云返回结果不为200：" << json.value("message").toString();
-                stopOrderSearching();
-                return ;
-            }
-            break;
-        case QQMusic:
+        }
+        break;
+    case QQMusic:
+    {
+        if (json.value("result").toInt() != 100 && json.value("code").toInt() != 0)
         {
-            if (json.value("result").toInt() != 100)
-            {
-                qWarning() << "QQ搜索返回结果不为0：" << json;
-                stopOrderSearching();
-                return ;
-            }
-            break;
-        }
-        case MiguMusic:
-            if (json.value("result").toInt() != 100)
-            {
-                qWarning() << "咪咕搜索返回结果不为1000：" << json.value("result").toInt();
-                stopOrderSearching();
-                return ;
-            }
-            break;
-        case KugouMusic:
-            if (json.value("errCode").toInt() != 0)
-            {
-                qWarning() << "酷狗搜索返回结果不为0：" << json.value("errCode").toInt() << json.value("error").toString();
-                stopOrderSearching();
-                return ;
-            }
-            break;
-        }
-
-        // 搜索成功，开始遍历与显示
-        QJsonArray songs;
-        switch (source) {
-        case UnknowMusic:
-        case LocalMusic:
+            qWarning() << "QQ搜索返回结果不为0：" << json;
+            stopOrderSearching();
             return ;
-        case NeteaseCloudMusic:
-            songs = json.value("result").toObject().value("songs").toArray();
-            break;
-        case QQMusic:
-        case MiguMusic:
-            songs = json.value("data").toObject().value("list").toArray();
-            break;
-        case KugouMusic:
-            songs = json.value("data").toObject().value("info").toArray();
-            break;
         }
-        searchResultSongs.clear();
-        switch (source) {
-        case UnknowMusic:
-        case LocalMusic:
+        break;
+    }
+    case MiguMusic:
+        if (json.value("result").toInt() != 100)
+        {
+            qWarning() << "咪咕搜索返回结果不为1000：" << json.value("result").toInt();
+            stopOrderSearching();
             return ;
-        case NeteaseCloudMusic:
-            foreach (QJsonValue val, songs)
-                searchResultSongs << Song::fromJson(val.toObject());
-            break;
-        case QQMusic:
-            foreach (QJsonValue val, songs)
-                searchResultSongs << Song::fromQQMusicJson(val.toObject());
-            break;
-        case MiguMusic:
-            foreach (QJsonValue val, songs)
-                searchResultSongs << Song::fromMiguMusicJson(val.toObject());
-            break;
-        case KugouMusic:
-            foreach (QJsonValue val, songs)
-                searchResultSongs << Song::fromKugouMusicJson(val.toObject());
-            break;
         }
-
-        MUSIC_DEB << "搜索到数量：" << searchResultSongs.size() << "条";
-        if (blackList.size())
+        break;
+    case KugouMusic:
+        if (json.value("errCode").toInt() != 0)
         {
-            for (int i = 0; i < searchResultSongs.size(); i++)
-            {
-                for (int j = 0; j < blackList.size(); j++)
-                {
-                    if (searchResultSongs.at(i).name.toLower().contains(blackList.at(j))
-                            || searchResultSongs.at(i).artistNames.toLower().contains(blackList.at(j)))
-                    {
-                        searchResultSongs.removeAt(i--);
-                        break;
-                    }
-                }
-            }
+            qWarning() << "酷狗搜索返回结果不为0：" << json.value("errCode").toInt() << json.value("error").toString();
+            stopOrderSearching();
+            return ;
         }
-        setSearchResultTable(searchResultSongs);
+        break;
+    }
 
-        // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
-        Song song;
-        if (!isImporting && !addBy.isEmpty() && key.trimmed().length() >= 1)
+    // 搜索成功，开始遍历与显示
+    QJsonArray songs;
+    switch (source) {
+    case UnknowMusic:
+    case LocalMusic:
+        return ;
+    case NeteaseCloudMusic:
+        songs = json.value("result").toObject().value("songs").toArray();
+        break;
+    case QQMusic:
+        // FIX: 使用临时接口的返回值
+        songs = json.value("music.search.SearchCgiService").toObject().value("data").toObject().value("body").toObject().value("song").toObject().value("list").toArray();
+        break;
+    case MiguMusic:
+        songs = json.value("data").toObject().value("list").toArray();
+        break;
+    case KugouMusic:
+        songs = json.value("data").toObject().value("info").toArray();
+        break;
+    }
+    searchResultSongs.clear();
+    switch (source) {
+    case UnknowMusic:
+    case LocalMusic:
+        return ;
+    case NeteaseCloudMusic:
+        foreach (QJsonValue val, songs)
+            searchResultSongs << Song::fromJson(val.toObject());
+        break;
+    case QQMusic:
+        foreach (QJsonValue val, songs)
+            searchResultSongs << Song::fromQQMusicJson(val.toObject());
+        break;
+    case MiguMusic:
+        foreach (QJsonValue val, songs)
+            searchResultSongs << Song::fromMiguMusicJson(val.toObject());
+        break;
+    case KugouMusic:
+        foreach (QJsonValue val, songs)
+            searchResultSongs << Song::fromKugouMusicJson(val.toObject());
+        break;
+    }
+
+    MUSIC_DEB << "搜索到数量：" << searchResultSongs.size() << "条";
+    if (blackList.size())
+    {
+        for (int i = 0; i < searchResultSongs.size(); i++)
         {
-            QString kk = transToReg(key);
-            QStringList words = kk.split(QRegExp("[- \\(\\)（）]+"), QString::SkipEmptyParts);
-            QString exp = words.join(".*");
-            QRegularExpression re(exp);
-
-            SongList mySongs = favoriteSongs + normalSongs;
-            foreach (Song s, mySongs)
+            for (int j = 0; j < blackList.size(); j++)
             {
-                if ((s.name + s.artistNames).contains(re))
+                if (searchResultSongs.at(i).name.toLower().contains(blackList.at(j))
+                        || searchResultSongs.at(i).artistNames.toLower().contains(blackList.at(j)))
                 {
-                    song = s;
-                    qInfo() << "优先播放收藏/空闲歌单歌曲：" << song.simpleString() << exp;
+                    searchResultSongs.removeAt(i--);
                     break;
                 }
             }
         }
+    }
+    setSearchResultTable(searchResultSongs);
 
-        // 没有搜索结果，也没有能播放的歌曲，直接返回
-        if (!searchResultSongs.size() && !song.isValid())
+    // 判断本地历史记录，优先 收藏 > 空闲 > 搜索
+    Song song;
+    if (!isImporting && !addBy.isEmpty() && key.trimmed().length() >= 1)
+    {
+        QString kk = transToReg(key);
+        QStringList words = kk.split(QRegExp("[- \\(\\)（）]+"), QString::SkipEmptyParts);
+        QString exp = words.join(".*");
+        QRegularExpression re(exp);
+
+        SongList mySongs = favoriteSongs + normalSongs;
+        foreach (Song s, mySongs)
         {
-            qWarning() << "没有搜索结果或者能播放的歌曲";
+            if ((s.name + s.artistNames).contains(re))
+            {
+                song = s;
+                qInfo() << "优先播放收藏/空闲歌单歌曲：" << song.simpleString() << exp;
+                break;
+            }
+        }
+    }
+
+    // 没有搜索结果，也没有能播放的歌曲，直接返回
+    if (!searchResultSongs.size() && !song.isValid())
+    {
+        qWarning() << "没有搜索结果或者能播放的歌曲";
+        stopOrderSearching();
+        return ;
+    }
+
+    if (playingSong.isValid() && playingSong.source == LocalMusic // 获取音乐信息
+            && (playingSong.simpleString() == localCoverKey || playingSong.simpleString() == localLyricKey))
+    {
+        Song song = getSuitableSongOnResults(key, false);
+        if (!song.isValid())
+        {
+            qWarning() << "未找到与本地歌曲匹配的云端音乐：" << key;
+            stopOrderSearching();
+            return ;
+        }
+        if (playingSong.simpleString() == localCoverKey) // 加载封面
+        {
+            downloadSongCover(song);
+        }
+        if (playingSong.simpleString() == localLyricKey) // 加载歌词
+        {
+            downloadSongLyric(song);
+        }
+    }
+    else if (isImporting) // 根据名字导入
+    {
+        if (!importingList)
+        {
+            qWarning() << "无法添加到空列表";
+            return ;
+        }
+
+        // 添加到 *importingList
+        Song song = getSuitableSongOnResults(key, true);
+        if (!song.isValid())
+        {
+            qWarning() << "未找到要导入的歌曲：" << key;
+            if (autoSwitchSource)
+            {
+                // 换源
+                if (switchNextSource(key, source, "", false))
+                {
+                    return ;
+                }
+            }
+            emit signalOrderSongNotFound(key);
+            return ;
+        }
+        qInfo() << "添加自动搜索的歌曲：" << song.simpleString();
+        if (importingList == &orderSongs)
+            appendOrderSongs({song});
+        else if (importingList == &normalSongs)
+            addNormal({song});
+        else if (importingList == &favoriteSongs)
+            addFavorite({song});
+        else
+            qWarning() << "无法添加到未知列表";
+    }
+    else if (!addBy.isEmpty()) // 从点歌的槽进来的
+    {
+        if (!song.isValid()) // 历史中没找到，就从搜索结果中找
+            song = getSuitableSongOnResults(key, true);
+        MUSIC_DEB << "点歌搜索的最佳结果：" << song.simpleString() << " add by: " << addBy;
+        if (!song.isValid())
+        {
+            if (autoSwitchSource)
+            {
+                // 换源
+                if (switchNextSource(key, source, "", false))
+                {
+                    return ;
+                }
+            }
+
+            if (searchResultSongs.size())
+            {
+                song = searchResultSongs.first();
+            }
+            else
+            {
+                qWarning() << "没有可用的搜索结果";
+                stopOrderSearching();
+                playNext();
+                return ;
+            }
+        }
+        song.setAddDesc(addBy);
+        prevOrderSong = song;
+
+        // 添加到点歌列表
+        if (playingSong == song || orderSongs.contains(song)) // 重复点歌
+        {
+            qWarning() << "重复点歌：" << song.simpleString();
             stopOrderSearching();
             return ;
         }
 
-        if (playingSong.isValid() && playingSong.source == LocalMusic // 获取音乐信息
-                && (playingSong.simpleString() == localCoverKey || playingSong.simpleString() == localLyricKey))
+        if (insertOnce) // 可能是换源过来的
         {
-            Song song = getSuitableSongOnResults(key, false);
-            if (!song.isValid())
-            {
-                qWarning() << "未找到与本地歌曲匹配的云端音乐：" << key;
-                stopOrderSearching();
-                return ;
-            }
-            if (playingSong.simpleString() == localCoverKey) // 加载封面
-            {
-                downloadSongCover(song);
-            }
-            if (playingSong.simpleString() == localLyricKey) // 加载歌词
-            {
-                downloadSongLyric(song);
-            }
-        }
-        else if (isImporting) // 根据名字导入
-        {
-            if (!importingList)
-            {
-                qWarning() << "无法添加到空列表";
-                return ;
-            }
-
-            // 添加到 *importingList
-            Song song = getSuitableSongOnResults(key, true);
-            if (!song.isValid())
-            {
-                qWarning() << "未找到要导入的歌曲：" << key;
-                if (autoSwitchSource)
-                {
-                    // 换源
-                    if (switchNextSource(key, source, "", false))
-                    {
-                        return ;
-                    }
-                }
-                emit signalOrderSongNotFound(key);
-                return ;
-            }
-            qInfo() << "添加自动搜索的歌曲：" << song.simpleString();
-            if (importingList == &orderSongs)
-                appendOrderSongs({song});
-            else if (importingList == &normalSongs)
-                addNormal({song});
-            else if (importingList == &favoriteSongs)
-                addFavorite({song});
-            else
-                qWarning() << "无法添加到未知列表";
-        }
-        else if (!addBy.isEmpty()) // 从点歌的槽进来的
-        {
-            if (!song.isValid()) // 历史中没找到，就从搜索结果中找
-                song = getSuitableSongOnResults(key, true);
-            MUSIC_DEB << "点歌搜索的最佳结果：" << song.simpleString() << " add by: " << addBy;
-            if (!song.isValid())
-            {
-                if (autoSwitchSource)
-                {
-                    // 换源
-                    if (switchNextSource(key, source, "", false))
-                    {
-                        return ;
-                    }
-                }
-
-                if (searchResultSongs.size())
-                {
-                    song = searchResultSongs.first();
-                }
-                else
-                {
-                    qWarning() << "没有可用的搜索结果";
-                    stopOrderSearching();
-                    playNext();
-                    return ;
-                }
-            }
-            song.setAddDesc(addBy);
-            prevOrderSong = song;
-
-            // 添加到点歌列表
-            if (playingSong == song || orderSongs.contains(song)) // 重复点歌
-            {
-                qWarning() << "重复点歌：" << song.simpleString();
-                stopOrderSearching();
-                return ;
-            }
-
-            if (insertOnce) // 可能是换源过来的
-            {
-                if (isNotPlaying()) // 很可能是换源过来的
-                    startPlaySong(song);
-                else
-                    appendNextSongs(SongList{song});
-            }
-            else
-                appendOrderSongs(SongList{song});
-
-            // 发送点歌成功的信号
-            if (notify)
-            {
-                qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
-                for (int i = 0; i < orderSongs.size()-1; i++)
-                {
-                    if (orderSongs.at(i).id == song.id) // 同一首歌，如果全都不同，那就是下一首
-                        break;
-                    sumLatency += orderSongs.at(i).duration;
-                }
-                emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
-            }
-            stopOrderSearching();
-        }
-        else if (insertOnce) // 手动点的立即播放，换源后的自动搜索与播放
-        {
-            if (!song.isValid())
-                song = getSuitableSongOnResults(key, true);
-            MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
-            if (!song.isValid())
-            {
-                qWarning() << "无法找到要播放的歌曲：" << key << "   自动换源：" << autoSwitchSource;
-                if (autoSwitchSource)
-                {
-                    MUSIC_DEB << "尝试自动换源：" << playAfterDownloaded.simpleString();
-                    // 尝试换源
-                    // XXX: 此时song是无效的xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                    /* int index = musicSourceQueue.indexOf(song.source);
-                    if (index > -1 && index < musicSourceQueue.size() - 1)
-                    {
-                        this->insertOrderOnce = insertOnce; // true
-                        Song s = playAfterDownloaded;
-                        s.source = source;
-                        downloadSongFailed(s);
-                        return ;
-                    } */
-                    if (switchNextSource(key, source, "", true))
-                    {
-                        return ;
-                    }
-                    qWarning() << "已遍历所有平台，未找到匹配的歌曲";
-                }
-
-                if (searchResultSongs.size())
-                {
-                    qWarning() << "未找到匹配的歌曲，使用第一项";
-                    song = searchResultSongs.first();
-                }
-                else
-                {
-                    qWarning() << "没有可用的搜索结果";
-                    playNext();
-                    return ;
-                }
-            }
-
-            // 播放歌曲
-            if (isNotPlaying() || playAfterDownloaded.isSame(song)) // 很可能是换源过来的
-            {
+            if (isNotPlaying()) // 很可能是换源过来的
                 startPlaySong(song);
+            else
+                appendNextSongs(SongList{song});
+        }
+        else
+            appendOrderSongs(SongList{song});
+
+        // 发送点歌成功的信号
+        if (notify)
+        {
+            qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
+            for (int i = 0; i < orderSongs.size()-1; i++)
+            {
+                if (orderSongs.at(i).id == song.id) // 同一首歌，如果全都不同，那就是下一首
+                    break;
+                sumLatency += orderSongs.at(i).duration;
+            }
+            emit signalOrderSongSucceed(song, sumLatency, orderSongs.size());
+        }
+        stopOrderSearching();
+    }
+    else if (insertOnce) // 手动点的立即播放，换源后的自动搜索与播放
+    {
+        if (!song.isValid())
+            song = getSuitableSongOnResults(key, true);
+        MUSIC_DEB << "换源立即播放：" << playAfterDownloaded.simpleString() << "  歌曲valid：" << song.isValid();
+        if (!song.isValid())
+        {
+            qWarning() << "无法找到要播放的歌曲：" << key << "   自动换源：" << autoSwitchSource;
+            if (autoSwitchSource)
+            {
+                MUSIC_DEB << "尝试自动换源：" << playAfterDownloaded.simpleString();
+                // 尝试换源
+                // XXX: 此时song是无效的xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                /* int index = musicSourceQueue.indexOf(song.source);
+                if (index > -1 && index < musicSourceQueue.size() - 1)
+                {
+                    this->insertOrderOnce = insertOnce; // true
+                    Song s = playAfterDownloaded;
+                    s.source = source;
+                    downloadSongFailed(s);
+                    return ;
+                } */
+                if (switchNextSource(key, source, "", true))
+                {
+                    return ;
+                }
+                qWarning() << "已遍历所有平台，未找到匹配的歌曲";
+            }
+
+            if (searchResultSongs.size())
+            {
+                qWarning() << "未找到匹配的歌曲，使用第一项";
+                song = searchResultSongs.first();
             }
             else
             {
-                appendNextSongs(SongList{song});
+                qWarning() << "没有可用的搜索结果";
+                playNext();
+                return ;
             }
         }
-    }, source);
+
+        // 播放歌曲
+        if (isNotPlaying() || playAfterDownloaded.isSame(song)) // 很可能是换源过来的
+        {
+            startPlaySong(song);
+        }
+        else
+        {
+            appendNextSongs(SongList{song});
+        }
+    }
 }
 
 void OrderPlayerWindow::searchMusicBySource(QString key, MusicSource source, QString addBy)
@@ -3402,6 +3434,50 @@ void OrderPlayerWindow::fetch(QString url, QStringList params, NetJsonFunc func,
             data += (i==0?"":"&") + params.at(i) + "=";
     }
     QByteArray ba(data.toLatin1());
+    // MUSIC_DEB << url + "?" + data;
+
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(reply->readAll(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qWarning() << "解析返回的JSON失败：" << error.errorString() << url;
+        }
+        func(document.object());
+
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+    });
+    manager->post(*request, ba);
+}
+
+void OrderPlayerWindow::fetch(QString url, QJsonObject json, NetJsonFunc func, MusicSource cookie)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    if (cookie == UnknowMusic)
+        cookie = musicSource;
+    switch (cookie) {
+    case UnknowMusic:
+    case LocalMusic:
+        break;
+    case NeteaseCloudMusic:
+        if (!neteaseCookies.isEmpty() && url.startsWith(NETEASE_SERVER))
+            request->setHeader(QNetworkRequest::CookieHeader, neteaseCookiesVariant);
+        break;
+    case QQMusic:
+        if (!qqmusicCookies.isEmpty() && url.startsWith(QQMUSIC_SERVER))
+            request->setHeader(QNetworkRequest::CookieHeader, qqmusicCookiesVariant);
+        break;
+    case MiguMusic:
+    case KugouMusic:
+        break;
+    }
+
+    QByteArray ba(QJsonDocument(json).toJson());
     // MUSIC_DEB << url + "?" + data;
 
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){

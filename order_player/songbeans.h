@@ -219,6 +219,8 @@ struct Song
         if (json.contains("songmid"))
             song.mid = JVAL_STR(songmid);
         song.name = JVAL_STR(songname);
+        if(song.name.isEmpty())
+            song.name = JVAL_STR(name);
 
         QJsonArray array = json.value("singer").toArray();
         QStringList artistNameList;
@@ -230,7 +232,11 @@ struct Song
         }
         song.artistNames = artistNameList.join("/");
 
-        song.album = Album::fromQQMusicJson(json);
+        QJsonObject album = json.value("album").toObject();
+        if (album.isEmpty())
+            song.album = Album::fromQQMusicJson(json);
+        else
+            song.album = Album::fromJson(album);
         song.duration = JVAL_INT(interval) * 1000; // 秒数，转毫秒
         song.mediaId = JVAL_STR(media_mid);
 
