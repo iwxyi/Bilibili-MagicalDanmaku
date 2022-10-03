@@ -4424,6 +4424,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     playMenu->split()->addAction("清理缓存", [=]{
         clearDownloadFiles();
+        userOrderSongQueue.clear();
     })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间");
 
     FacileMenu* stMenu = menu->addMenu("显示");

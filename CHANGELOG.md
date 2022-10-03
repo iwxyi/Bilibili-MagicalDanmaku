@@ -1,3 +1,12 @@
+### v4.8.2 [修复音乐接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.2)
+
+- 优化点歌姬清理缓存可清理点歌候选
+- 修复网易云音乐和QQ音乐的搜索失效的问题
+
+
+
+
+
 ### v4.8.1 [录播](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.1)
 
 - 重构录播机制，优化缓冲区，保存时再也不卡顿了
