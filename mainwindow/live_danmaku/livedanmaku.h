@@ -855,7 +855,7 @@ private:
     int delta_fans_club = 0;
     bool attention = false; // 关注还是取关
 
-    bool opposite = false; // 是否是大乱斗对面的
+    bool opposite = false; // 是否是大乱斗对面的过来
     bool to_view = false; // 是否是自己这边过去串门的
     bool view_return = false; // 自己这边过去串门回来的
     bool pk_link = false; // 是否是PK连接的

@@ -20265,9 +20265,10 @@ void MainWindow::initDbService()
     if (saveToSqlite)
         sqlService.open();
 
-    // TODO: 信号与相关槽改成 const& 的形式以增强性能
     connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
-        if (danmaku.isNoReply() && !danmaku.isAutoSend()) // 不包含PK同步的弹幕
+        if (danmaku.isPkLink()) // 不包含PK同步的弹幕
+            return ;
+        if (danmaku.isNoReply() && !danmaku.isAutoSend()) // 不包含自动发送的弹幕
             return ;
         if (saveToSqlite)
             sqlService.insertDanmaku(danmaku);
