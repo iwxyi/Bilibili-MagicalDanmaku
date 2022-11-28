@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>827</width>
-    <height>1617</height>
+    <width>851</width>
+    <height>634</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>747</width>
-             <height>1497</height>
+             <width>771</width>
+             <height>508</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9583,8 +9583,8 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>827</width>
-     <height>23</height>
+     <width>851</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

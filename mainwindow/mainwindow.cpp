@@ -20022,6 +20022,7 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
     QStringList versions = {
         "3.6.3",
         "4.6.0",
+        "4.8.2",
         rt->appVersion // 最后一个一定是最新版本
     };
     int index = 0;
@@ -20060,6 +20061,10 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
     else if (beforeVersion == "4.6.0")
     {
         us->setValue("runtime/first_use_time", QDateTime::currentSecsSinceEpoch());
+    }
+    else if (beforeVersion == "4.8.2")
+    {
+        deleteDir(rt->dataPath + "musics");
     }
 }
 

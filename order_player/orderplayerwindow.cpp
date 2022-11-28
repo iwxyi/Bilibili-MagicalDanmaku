@@ -18,7 +18,7 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::OrderPlayerWindow),
       settings(dataPath + "musics.ini", QSettings::Format::IniFormat),
-      musicsFileDir(dataPath+"musics"), localMusicsFileDir(dataPath+"local_musics"),
+      musicsFileDir(QStandardPaths::standardLocations(QStandardPaths::TempLocation).first()+"/musics"), localMusicsFileDir(dataPath+"local_musics"),
       player(new QMediaPlayer(this)),
       desktopLyric(new DesktopLyricWidget(settings, nullptr)),
       expandPlayingButton(new InteractiveButtonBase(this))
@@ -4425,7 +4425,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     playMenu->split()->addAction("清理缓存", [=]{
         clearDownloadFiles();
         userOrderSongQueue.clear();
-    })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间");
+    })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间\n当前点歌队列：" + snum(userOrderSongQueue.size()));
 
     FacileMenu* stMenu = menu->addMenu("显示");
 

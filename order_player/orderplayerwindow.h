@@ -340,7 +340,7 @@ private:
 
     // 配置
     QSettings settings;
-    QDir musicsFileDir;
+    QDir musicsFileDir; // 音乐缓存路径
     QDir localMusicsFileDir;
     MusicSource musicSource = NeteaseCloudMusic;
     QList<MusicSource> musicSourceQueue;
