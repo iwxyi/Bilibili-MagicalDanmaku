@@ -697,6 +697,7 @@ void MainWindow::readConfig()
 
     // 失败重试
     ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
+    hostUseIndex = us->value("live/hostIndex").toInt();
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
@@ -4614,11 +4615,15 @@ void MainWindow::initWS()
         // 正在直播的时候突然断开了
         if (isLiving())
         {
-            qWarning() << "正在直播的时候突然断开，5秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+            qWarning() << "正在直播的时候突然断开，" << (reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
             localNotify("[连接断开，重连...]");
             ac->liveStatus = false;
             // 尝试5秒钟后重连
-            connectServerTimer->setInterval(5000);
+            // TODO: 每次重连间隔翻倍
+            connectServerTimer->setInterval(reconnectWSDuration);
+            reconnectWSDuration *= 2;
+            if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
+                reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }
 
         SOCKET_DEB << "disconnected";
@@ -5960,14 +5965,20 @@ void MainWindow::setPkInfoById(QString roomId, QString pkId)
  */
 void MainWindow::startMsgLoop()
 {
-    // 保存房间弹幕
+    // 开启保存房间弹幕
     if (ui->saveDanmakuToFileCheck && !danmuLogFile)
         startSaveDanmakuToFile();
 
-    int hostRetry = 0; // 循环测试连接（意思一下，暂时未使用，否则应当设置为成员变量）
-    HostInfo hostServer = hostList.at(hostRetry);
+    // 开始连接
+    // int hostUseIndex = 0; // 循环遍历可连接的host（意思一下，暂时未使用）
+    if (hostUseIndex < 0 || hostUseIndex >= hostList.size())
+        hostUseIndex = 0;
+    HostInfo hostServer = hostList.at(hostUseIndex);
+    us->setValue("live/hostIndex", hostUseIndex);
+    hostUseIndex++; // 准备用于尝试下一次的遍历，连接成功后-1
+
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
-    SOCKET_DEB << "hostServer:" << host;
+    SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
 
     // 设置安全套接字连接模式（不知道有啥用）
     QSslConfiguration config = socket->sslConfiguration();
@@ -11621,6 +11632,7 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         if (ui->recordCheck->isChecked())
             startLiveRecord();
+        reconnectWSDuration = INTERVAL_RECONNECT_WS;
         emit signalLiveStart(ac->roomId);
 
         if (isLiving() || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
@@ -11653,6 +11665,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "PREPARING") // 下播
     {
         finishLiveRecord();
+        reconnectWSDuration = INTERVAL_RECONNECT_WS;
 
         if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
@@ -17165,6 +17178,7 @@ void MainWindow::connectPkRoom()
 
     connect(pkSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "pkSocket connected";
+        hostUseIndex--;
         // 5秒内发送认证包
         sendVeriPacket(pkSocket, pkRoomId, pkToken);
     });

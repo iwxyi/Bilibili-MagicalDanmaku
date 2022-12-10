@@ -64,8 +64,7 @@ QT_END_NAMESPACE
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
-#define mDebug if (1) qDebug()
-#define SERVER_DEB if (1) qDebug() // 输出服务器功能相关信息
+#define SERVER_DEB if (0) qDebug() // 输出服务器功能相关信息
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
@@ -103,6 +102,9 @@ QT_END_NAMESPACE
 #define FILTER_DANMAKU_MSG "FILTER_DANMAKU_MSG"
 #define FILTER_DANMAKU_COME "FILTER_DANMAKU_COME"
 #define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
+
+#define INTERVAL_RECONNECT_WS 5000
+#define INTERVAL_RECONNECT_WS_MAX 60000
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
@@ -1235,11 +1237,13 @@ private:
     OrderPlayerWindow* musicWindow = nullptr;
 
     // 连接信息
+    int hostUseIndex = 0;
     QList<HostInfo> hostList;
     QWebSocket* socket;
     QTimer* heartTimer;
     QTimer* connectServerTimer;
     bool remoteControl = true;
+    int reconnectWSDuration = INTERVAL_RECONNECT_WS; // WS重连间隔，每次上播/下播重置
 
     bool gettingRoom = false;
     bool gettingUser = false;
