@@ -5118,26 +5118,33 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
             // 看过
             ui->watchedLabel->setText(dataObj.value("watched_show").toObject().value("text_small").toString());
 
-            // 获取大乱斗段位
+            // 获取大乱斗段位（现在可能是空了）
             QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
-            ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
-            QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
-            ui->battleRankNameLabel->setText(ac->battleRankName);
-            if (!ac->battleRankName.isEmpty())
+            if (!battleRankEntryInfo.isEmpty())
             {
-                ui->battleInfoWidget->show();
-                get(battleRankUrl, [=](QNetworkReply* reply1){
-                    QPixmap pixmap;
-                    pixmap.loadFromData(reply1->readAll());
-                    if (!pixmap.isNull())
-                        pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
-                    ui->battleRankIconLabel->setPixmap(pixmap);
-                });
-                upgradeWinningStreak(false);
+                ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
+                QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
+                ui->battleRankNameLabel->setText(ac->battleRankName);
+                if (!ac->battleRankName.isEmpty())
+                {
+                    ui->battleInfoWidget->show();
+                    get(battleRankUrl, [=](QNetworkReply* reply1){
+                        QPixmap pixmap;
+                        pixmap.loadFromData(reply1->readAll());
+                        if (!pixmap.isNull())
+                            pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+                        ui->battleRankIconLabel->setPixmap(pixmap);
+                    });
+                    upgradeWinningStreak(false);
+                }
+                else
+                {
+                    ui->battleInfoWidget->hide();
+                }
             }
             else
             {
-                ui->battleInfoWidget->hide();
+                getRoomBattleInfo();
             }
 
             // 异步获取房间封面
@@ -5177,6 +5184,35 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 
     if (reconnect)
         ui->connectStateLabel->setText("获取房间信息...");
+}
+
+void MainWindow::getRoomBattleInfo()
+{
+    get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",
+        {"uid", ac->upUid, "_", snum(QDateTime::currentMSecsSinceEpoch())}, [=](MyJson json) {
+        MyJson jdata = json.data();
+        MyJson pkInfo = jdata.o("anchor_pk_info");
+        ac->battleRankName = pkInfo.s("pk_rank_name");
+        ui->battleRankNameLabel->setText(ac->battleRankName);
+        QString battleRankUrl = pkInfo.s("first_rank_img_url");
+        if (!ac->battleRankName.isEmpty())
+        {
+            ui->battleInfoWidget->show();
+            get(battleRankUrl, [=](QNetworkReply* reply1){
+                QPixmap pixmap;
+                pixmap.loadFromData(reply1->readAll());
+                if (!pixmap.isNull())
+                    pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+                ui->battleRankIconLabel->setPixmap(pixmap);
+            });
+            upgradeWinningStreak(false);
+            ui->battleInfoWidget->show();
+        }
+        else
+        {
+            ui->battleInfoWidget->hide();
+        }
+    });
 }
 
 bool MainWindow::isLivingOrMayliving()
