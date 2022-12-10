@@ -924,6 +924,7 @@ private:
     void setRoomDescription(QString roomDescription);
     void upgradeWinningStreak(bool emitWinningStreak);
     void getGiftList();
+    void getEmoticonList();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

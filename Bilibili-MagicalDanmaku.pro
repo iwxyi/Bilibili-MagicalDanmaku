@@ -175,6 +175,7 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    mainwindow/live_danmaku/emoticon.h \
     mainwindow/liveopenservice.h \
     mainwindow/sqlservice.h \
     order_player/importsongsdialog.h \
