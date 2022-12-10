@@ -13376,6 +13376,7 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "CUT_OFF")
     {
         localNotify("直播间被超管切断");
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "STOP_LIVE_ROOM_LIST")
     {
@@ -13430,6 +13431,8 @@ void MainWindow::handleMessage(QJsonObject json)
         // QString textSmall = data.s("text_small");
         ui->popularityLabel->setToolTip(textLarge);
         ui->popularityTextLabel->setToolTip(textLarge);
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "VIDEO_CONNECTION_MSG")
     {
@@ -13439,6 +13442,8 @@ void MainWindow::handleMessage(QJsonObject json)
         int dmscore = data.i("dmscore");
         QString toast = data.s("toast"); // "主播结束了视频连线"
         localNotify(toast);
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "VIDEO_CONNECTION_JOIN_END") // 视频连线结束，和上面重复的消息（会连续收到许多次）
     {
@@ -13449,6 +13454,8 @@ void MainWindow::handleMessage(QJsonObject json)
         int dmscore = data.i("dmscore");
         QString toast = data.s("toast"); // 主播结束了视频连线
         qint64 roomId = json.value("roomid").toDouble(); // 10位
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "VIDEO_CONNECTION_JOIN_START") // 视频连线开始（会连续收到许多次）
     {
@@ -13460,6 +13467,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString invitedUname = data.s("invited_uname"); // 连接名字
         qint64 startAt = data.i("start_at"); // 10位
         qint64 roomId = json.value("roomid").toDouble(); // 10位
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "WATCHED_CHANGE")
     {
@@ -13475,6 +13484,8 @@ void MainWindow::handleMessage(QJsonObject json)
         QString textLarge = data.s("text_large");
         ui->popularityLabel->setToolTip(textLarge);
         ui->popularityTextLabel->setToolTip(textLarge);
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "DANMU_AGGREGATION") // 弹幕聚合，就是天选之类的弹幕
     {
@@ -13495,6 +13506,8 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         MyJson data = json.value("data").toObject();
         QString msg = data.s("msg");
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "LIVE_OPEN_PLATFORM_GAME") // 开启互动玩法
     {
@@ -13523,6 +13536,8 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             liveOpenService->startGame(gameId);
         } */
+
+        triggerCmdEvent(cmd, data);
     }
     else if (cmd == "LIVE_PANEL_CHANGE") // 直播面板改变，已知开启互动玩法后会触发
     {
@@ -13537,6 +13552,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 "type": 2
             }
         }*/
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "PLAY_TOGETHER")
     {
@@ -13583,9 +13599,15 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             // TODO:切换分区
         }
+        triggerCmdEvent(cmd, data);
+    }
+    else if (cmd == "POPULARITY_RED_POCKET_START")
+    {
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else if (cmd == "POPULARITY_RED_POCKET_WINNER_LIST") // 抽奖红包
     {
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
     else
     {

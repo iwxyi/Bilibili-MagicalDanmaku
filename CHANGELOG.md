@@ -1,7 +1,11 @@
-### v4.8.2 [修复音乐接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.2)
+### v4.8.2 [修复连接、修复点歌姬](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.2)
 
 - 优化点歌姬清理缓存可清理点歌候选
+- 优化点歌姬缓存路径至系统缓存
+- 修复部分设备上无法连接直播间的问题
 - 修复网易云音乐和QQ音乐的搜索失效的问题
+- 修复无法获取大乱斗信息的问题
+- 修复PK开启同步后对面直播间弹幕存入数据库的问题
 
 
 
