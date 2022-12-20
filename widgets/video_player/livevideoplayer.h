@@ -94,6 +94,7 @@ private:
     bool clipCapture = false;
     int clipLeft = 0, clipTop = 0, clipRight = 0, clipBottom = 0;
     int qn = 4; // 默认原画
+    QMap<int, QString> qn_desc_map; // 支持的画质
 
     qint64 captureMaxLong = 60000;
     QDir captureDir;

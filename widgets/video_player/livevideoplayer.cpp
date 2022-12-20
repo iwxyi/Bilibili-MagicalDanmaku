@@ -178,6 +178,7 @@ void LiveVideoPlayer::slotLiveStart(QString roomId)
 void LiveVideoPlayer::setPlayUrl(QString url)
 {
     player->setMedia(QMediaContent((QUrl(url))));
+
     if (player->state() == QMediaPlayer::StoppedState)
         player->play();
 }
@@ -186,9 +187,9 @@ void LiveVideoPlayer::refreshPlayUrl()
 {
     if (roomId.isEmpty())
         return ;
-    QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + roomId
-            + "&quality=" + QString::number(qn) + "&qn=10000&platform=web&otype=json";
-    qWarning() << "视频流链接：" << url;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + roomId
+            + "&no_playurl=0&mask=1&qn=" + QString::number(qn) + "&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
+    qInfo() << "视频流链接：" << url;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -228,13 +229,69 @@ void LiveVideoPlayer::parsePlayUrl(const QByteArray &data)
     }
 
     // 获取链接
+    /* // 解析出 flv 格式
     QJsonArray array = json.value("data").toObject().value("durl").toArray();
     if (!array.size())
     {
         QMessageBox::warning(this, "播放视频", "未找到可用的链接\n" + data);
         return ;
     }
-    QString url = array.first().toObject().value("url").toString(); // 第一个链接
+    QString url = array.first().toObject().value("url").toString(); // 第一个链接*/
+
+    QJsonObject play_url = json.value("data").toObject().value("playurl_info").toObject().value("playurl").toObject();
+
+    auto qn_descs = play_url.value("g_qn_desc").toArray();
+    this->qn_desc_map.clear();
+    foreach (auto _qn_desc, qn_descs)
+    {
+        auto qn_desc = _qn_desc.toObject();
+        qn_desc_map.insert(qn_desc.value("qn").toInt(), qn_desc.value("desc").toString());
+    }
+
+    QJsonArray streams = play_url.value("stream").toArray();
+    QString url;
+
+    // 先抓取m3u8的视频
+    foreach (auto _stream, streams)
+    {
+        auto stream = _stream.toObject();
+        // m3u8:http_hls, flv:http_stream
+        if (stream.value("protocol_name").toString() != "http_hls")
+            continue;
+
+        auto formats = stream.value("format").toArray(); // 这里有多个可播放的格式
+        foreach (auto _format, formats)
+        {
+            auto format = _format.toObject();
+            auto codecs = format.value("codec").toArray();
+            foreach (auto _codec, codecs)
+            {
+                auto codec = _codec.toObject();
+                QString codec_name = codec.value("codec_name").toString();
+                QString base_url = codec.value("base_url").toString();
+                auto url_infos = codec.value("url_info").toArray();
+                foreach (auto _url_info, url_infos)
+                {
+                    auto url_info = _url_info.toObject();
+                    QString host = url_info.value("host").toString();
+                    QString extra = url_info.value("extra").toString();
+                    qint64 stream_ttl = url_info.value("stream_ttl").toInt();
+
+                    url = host + base_url;
+
+                    if (!url.isEmpty())
+                        break;
+                }
+                if (!url.isEmpty())
+                    break;
+            }
+            if (!url.isEmpty())
+                break;
+        }
+        if (!url.isEmpty())
+            break;
+    }
+
     qInfo() << "playUrl:" << url;
     setPlayUrl(url);
 }
@@ -369,7 +426,7 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     }, 10);
 
     FacileMenu* qnMenu = menu->addMenu(QIcon(":/icons/quality"), "媒体画质");
-    qnMenu->addAction("流畅", [=]{
+    /*qnMenu->addAction("流畅", [=]{
         settings->setValue("videoplayer/qn", qn = 2);
         refreshPlayUrl();
     })->check(qn == 2);
@@ -380,7 +437,35 @@ void LiveVideoPlayer::on_videoWidget_customContextMenuRequested(const QPoint&)
     qnMenu->addAction("原画", [=]{
         settings->setValue("videoplayer/qn", qn = 4);
         refreshPlayUrl();
-    })->check(qn == 4);
+    })->check(qn == 4);*/
+    qnMenu->addAction("杜比", [=]{
+        settings->setValue("videoplayer/qn", qn = 30000);
+        refreshPlayUrl();
+    })->check(qn == 30000)->enable(qn_desc_map.contains(30000));
+    qnMenu->addAction("4K", [=]{
+        settings->setValue("videoplayer/qn", qn = 20000);
+        refreshPlayUrl();
+    })->check(qn == 20000)->enable(qn_desc_map.contains(20000));
+    qnMenu->addAction("原画", [=]{
+        settings->setValue("videoplayer/qn", qn = 10000);
+        refreshPlayUrl();
+    })->check(qn == 10000)->enable(qn_desc_map.contains(10000));
+    qnMenu->addAction("蓝光", [=]{
+        settings->setValue("videoplayer/qn", qn = 400);
+        refreshPlayUrl();
+    })->check(qn == 400)->enable(qn_desc_map.contains(400));
+    qnMenu->addAction("超清", [=]{
+        settings->setValue("videoplayer/qn", qn = 250);
+        refreshPlayUrl();
+    })->check(qn == 250)->enable(qn_desc_map.contains(250));
+    qnMenu->addAction("高清", [=]{
+        settings->setValue("videoplayer/qn", qn = 150);
+        refreshPlayUrl();
+    })->check(qn == 150)->enable(qn_desc_map.contains(150));
+    qnMenu->addAction("流畅", [=]{
+        settings->setValue("videoplayer/qn", qn = 80);
+        refreshPlayUrl();
+    })->check(qn == 80)->enable(qn_desc_map.contains(80));
 
     FacileMenu* volumeMenu = menu->split()->addMenu(QIcon(":/icons/volume2"), "调节音量");
     volumeMenu->addNumberedActions("%1", 0, 110, [=](FacileMenuItem* item, int val){
