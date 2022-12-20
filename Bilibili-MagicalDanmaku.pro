@@ -84,6 +84,7 @@ INCLUDEPATH += \
     third_party/notification/ \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/
+    third_party/m3u8_downloader/
 
 SOURCES += \
     mainwindow/liveopenservice.cpp \
@@ -115,6 +116,7 @@ SOURCES += \
     third_party/interactive_buttons/winsidebarbutton.cpp \
     third_party/linear_check_box/anicheckbox.cpp \
     third_party/linear_check_box/checkbox1.cpp \
+    third_party/m3u8_downloader/m3u8downloader.cpp \
     third_party/notification/tipbox.cpp \
     third_party/notification/tipcard.cpp \
     third_party/qss_editor/qsseditdialog.cpp \
@@ -212,6 +214,7 @@ HEADERS += \
     third_party/interactive_buttons/winsidebarbutton.h \
     third_party/linear_check_box/anicheckbox.h \
     third_party/linear_check_box/checkbox1.h \
+    third_party/m3u8_downloader/m3u8downloader.h \
     third_party/notification/notificationentry.h \
     third_party/notification/tipbox.h \
     third_party/notification/tipcard.h \
