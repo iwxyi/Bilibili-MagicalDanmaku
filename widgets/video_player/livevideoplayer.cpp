@@ -292,6 +292,8 @@ void LiveVideoPlayer::parsePlayUrl(const QByteArray &data)
             break;
     }
 
+    if (url.endsWith("?"))
+        url = url.left(url.length() - 1);
     qInfo() << "playUrl:" << url;
     setPlayUrl(url);
 }
