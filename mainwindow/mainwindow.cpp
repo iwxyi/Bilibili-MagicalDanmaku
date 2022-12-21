@@ -22978,7 +22978,41 @@ void MainWindow::on_recordFormatCheck_clicked()
     us->set("record/format", ui->recordFormatCheck->isChecked());
     if (ui->recordFormatCheck->isChecked() && rt->ffmpegPath.isEmpty())
     {
-        on_ffmpegButton_clicked();
+        // 尝试自动获取 ffmpeg.exe 位置
+        QStringList environmentList = QProcess::systemEnvironment();
+#ifdef Q_OS_WIN
+        const QString app = "ffmpeg.exe";
+#else
+        const QString app = "ffmpeg";
+#endif
+        rt->ffmpegPath = "";
+        foreach (QString environment, environmentList)
+        {
+            if (environment.startsWith("Path="))
+            {
+                QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
+                foreach (QString d, sl)
+                {
+                    QString path = QDir(d).absoluteFilePath(app);
+                    if (QFileInfo(path).exists())
+                    {
+                        qInfo() << "自动设置" << app << "位置：" << path;
+                        rt->ffmpegPath = path;
+                        us->setValue("record/ffmpegPath", path);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        // 手动获取
+        if (rt->ffmpegPath.isEmpty())
+        {
+            on_ffmpegButton_clicked();
+        }
+
+        // 取消勾选
         if (rt->ffmpegPath.isEmpty())
         {
             ui->recordFormatCheck->setChecked(false);
