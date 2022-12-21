@@ -11,11 +11,21 @@ M3u8Downloader::M3u8Downloader(QObject *parent) : QObject(parent)
 {
     seq_timer.setSingleShot(true);
     connect(&seq_timer, SIGNAL(timeout()), this, SLOT(nextSeq()));
+
+    second_timer.setSingleShot(false);
+    connect(&second_timer, &QTimer::timeout, this, [=]{
+        emit signalTimeChanged(QDateTime::currentMSecsSinceEpoch() - start_timestamp);
+    });
 }
 
 M3u8Downloader::~M3u8Downloader()
 {
     stop();
+}
+
+bool M3u8Downloader::isDownloading() const
+{
+    return ts_file != nullptr;
 }
 
 void M3u8Downloader::start(QString url, QString file)
@@ -44,13 +54,17 @@ void M3u8Downloader::stop()
 {
     if (ts_file == nullptr)
         return ;
-    seq_timer.stop();
+    ts_file->flush();
     ts_file->close();
     ts_file->deleteLater();
     ts_urls.clear();
+    seq_timer.stop();
+    second_timer.stop();
     event_loop1.quit();
     event_loop2.quit();
+    ts_file = nullptr;
     qInfo() << "停止下载M3U8";
+    emit signalSaved(save_path);
 }
 
 void M3u8Downloader::startLoop()
@@ -62,8 +76,11 @@ void M3u8Downloader::startLoop()
         return ;
     }
 
+    start_timestamp = QDateTime::currentMSecsSinceEpoch();
+    total_size = 0;
     seq_timer.setInterval(0);
     // seq_timer.start();
+    second_timer.start();
 
     getM3u8();
 }
@@ -75,6 +92,9 @@ void M3u8Downloader::getM3u8()
     QNetworkReply *reply = manager.get(*request);
     connect(reply, SIGNAL(finished()), &event_loop1, SLOT(quit()));
     event_loop1.exec();
+
+    if (!isDownloading())
+        return ;
 
     QByteArray data = reply->readAll();
     // qDebug() << "meu8.file:" << data;
@@ -143,12 +163,19 @@ void M3u8Downloader::downloadTs(int seq, QString url)
     connect(reply, SIGNAL(finished()), &event_loop2, SLOT(quit()));
     event_loop2.exec();
 
+    // 这里可能会结束录制，如果再保存文件会出错
+    if (!isDownloading())
+        return ;
+
     QByteArray data = reply->readAll();
-    // qDebug() << "        " << seq << "ts.file: +" << data.size()/8/1024 << "KB";
+    // qDebug() << "        " << seq << "ts.file: +" << data.size()/1024 << "KB";
     ts_file->write(data);
 
     delete reply;
     delete request;
+
+    total_size += data.size();
+    emit signalProgressChanged(total_size);
 
     if (ts_urls.size())
     {

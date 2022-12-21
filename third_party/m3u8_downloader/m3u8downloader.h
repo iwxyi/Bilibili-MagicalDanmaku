@@ -13,10 +13,13 @@ public:
     explicit M3u8Downloader(QObject *parent = nullptr);
     virtual ~M3u8Downloader();
 
+    bool isDownloading() const;
+
 signals:
     void signalStarted();
-    void signalStoped();
-    void signalProgress(qint64 size);
+    void signalSaved(QString file_path);
+    void signalProgressChanged(qint64 size);
+    void signalTimeChanged(qint64 msecond);
 
 public slots:
     void start(QString url, QString file);
@@ -37,10 +40,12 @@ private:
     QString save_path;
     int prev_seq = 0, next_seq = 0;
     int duration = 0;
-    QTimer seq_timer;
+    QTimer seq_timer, second_timer;
     QEventLoop event_loop1, event_loop2;
     QFile* ts_file = nullptr;
     QList<QPair<int, QString>> ts_urls;
+    qint64 start_timestamp = 0;
+    qint64 total_size = 0;
 };
 
 #endif // M3U8DOWNLOADER_H

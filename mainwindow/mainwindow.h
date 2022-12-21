@@ -55,6 +55,7 @@
 #include "singleentrance.h"
 #include "sqlservice.h"
 #include "dbbrowser.h"
+#include "m3u8_downloader/m3u8downloader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -972,6 +973,7 @@ private:
     void saveCalculateDailyData();
     void saveTouta();
     void restoreToutaGifts(QString text);
+    void initLiveRecord();
     void startLiveRecord();
     void startRecordUrl(QString url);
     void finishLiveRecord();
@@ -1294,6 +1296,7 @@ private:
     QTimer* recordTimer = nullptr;
     QProcess* recordConvertProcess = nullptr;
     QString recordLastPath;
+    M3u8Downloader m3u8Downloader;
 
     // 大乱斗
     bool pking = false;

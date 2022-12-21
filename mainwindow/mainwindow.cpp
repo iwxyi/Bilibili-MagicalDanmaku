@@ -1593,6 +1593,7 @@ void MainWindow::readConfig2()
 
 void MainWindow::initEvent()
 {
+    initLiveRecord();
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -8073,15 +8074,87 @@ void MainWindow::restoreToutaGifts(QString text)
     }
 }
 
+void MainWindow::initLiveRecord()
+{
+    connect(&m3u8Downloader, &M3u8Downloader::signalProgressChanged, this, [=](qint64 size) {
+        qint64 MB = size / 1024 / 1024; // 单位：M
+        ui->recordCheck->setToolTip("文件大小：" + snum(MB) + " M");
+    });
+    connect(&m3u8Downloader, &M3u8Downloader::signalTimeChanged, this, [=](qint64 msecond) {
+        qint64 second = msecond / 1000;
+        qint64 hour = second / 60 / 60;
+        qint64 mint = second / 60 % 60;
+        qint64 secd = second % 60;
+        QString timeStr;
+        if (hour > 0)
+        timeStr = QString("录制中：%1:%2:%3").arg(hour, 2, 10, QLatin1Char('0'))
+                .arg(mint, 2, 10, QLatin1Char('0'))
+                .arg(secd, 2, 10, QLatin1Char('0'));
+        else
+            timeStr = QString("录制中：%2:%3").arg(mint, 2, 10, QLatin1Char('0'))
+                                             .arg(secd, 2, 10, QLatin1Char('0'));
+        ui->recordCheck->setText(timeStr);
+    });
+    connect(&m3u8Downloader, &M3u8Downloader::signalSaved, this, [=](QString path) {
+        // 发送事件
+        LiveDanmaku dmk;
+        dmk.setText(path);
+        QString fileName = QFileInfo(path).fileName();
+        dmk.setNickname(fileName);
+        triggerCmdEvent("LIVE_RECORD_SAVED", dmk);
+
+        // 进行格式转换
+        if (ui->recordFormatCheck->isChecked())
+        {
+            QDir dir = QFileInfo(path).dir();
+            QString newPath = QFileInfo(dir.absoluteFilePath(fileName + ".mp4")).absoluteFilePath();
+
+            // 调用 FFmpeg 转换格式
+            recordConvertProcess = new QProcess(nullptr);
+            QProcess* currPoc = recordConvertProcess;
+            QString cmd = QString(rt->ffmpegPath + " -i \"%1\" -c copy \"%2\"").arg(path).arg(newPath);
+            connect(currPoc, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error){
+                qWarning() << "录播转换出错：" << error << currPoc;
+                QString err = snum(error);
+                if (rt->ffmpegPath.isEmpty() || !isFileExist(rt->ffmpegPath))
+                    err = "FFmpeg文件路径出错";
+                showError("录播转换出错", err);
+                currPoc->close();
+                currPoc->deleteLater();
+                if (recordConvertProcess == currPoc)
+                    recordConvertProcess = nullptr;
+            });
+            connect(currPoc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [=](int exitCode, QProcess::ExitStatus exitStatus) {
+                qInfo() << "录播转换格式保存路径：" << newPath;
+                LiveDanmaku dmk;
+                dmk.setText(newPath);
+                dmk.setNickname(fileName);
+                triggerCmdEvent("LIVE_RECORD_FORMATTED", dmk);
+                currPoc->close();
+                currPoc->deleteLater();
+                if (recordConvertProcess == currPoc)
+                    recordConvertProcess = nullptr;
+                QTimer::singleShot(1000, [=]{
+                    deleteFile(path); // 延迟删除旧文件，怕被占用
+                });
+            });
+            currPoc->start(cmd);
+        }
+
+        ui->recordCheck->setText("原画录播");
+    });
+}
+
 void MainWindow::startLiveRecord()
 {
-    finishLiveRecord();
+    if (m3u8Downloader.isDownloading())
+        finishLiveRecord();
     if (ac->roomId.isEmpty())
         return ;
 
     getRoomLiveVideoUrl([=](QString url){
-        recordUrl = "";
-
+        // 检查能否下载
+        /* recordUrl = "";
         qInfo() << "准备录播：" << url;
         QNetworkAccessManager manager;
         QNetworkRequest* request = new QNetworkRequest(QUrl(url));
@@ -8116,28 +8189,38 @@ void MainWindow::startLiveRecord()
         }
 
         // 开始下载文件
-        startRecordUrl(recordUrl);
+        startRecordUrl(recordUrl); */
+
+        startRecordUrl(url);
     });
 }
 
 void MainWindow::startRecordUrl(QString url)
 {
-    qInfo() << "开始录播 " << QDateTime::currentDateTime();
+    qInfo() << "开始录播:" << url << QDateTime::currentDateTime();
     qint64 startSecond = QDateTime::currentSecsSinceEpoch();
     QDir dir(rt->dataPath);
     dir.mkpath("record");
     dir.cd("record");
     QString fileName = ac->roomId + "_" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
-    QString path = QFileInfo(dir.absoluteFilePath(fileName + ".flv")).absoluteFilePath();
+    QString suffix = ".flv";
+    if (url.contains(".m3u8"))
+        suffix = ".ts";
+    QString path = QFileInfo(dir.absoluteFilePath(fileName + suffix)).absoluteFilePath();
     recordLastPath = path;
 
     ui->recordCheck->setText("录制中...");
     recordTimer->start();
     startRecordTime = QDateTime::currentMSecsSinceEpoch();
-    recordLoop = new QEventLoop;
 
+    // 开始下载
+    m3u8Downloader.start(url, path);
+
+    return ;
+    /* recordLoop = new QEventLoop;
     QNetworkAccessManager manager;
     QNetworkRequest* request = new QNetworkRequest(QUrl(url));
+    request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
     QNetworkReply *reply = manager.get(*request);
     // 写入文件
     QFile file(path);
@@ -8157,6 +8240,7 @@ void MainWindow::startRecordUrl(QString url)
     // 实时保存到缓冲区
     connect(reply, &QNetworkReply::readyRead, this, [&]{
         QByteArray data = reply->read(1024*1024*1024);
+        qDebug() << "保存大小：" << data.size();
         file.write(data);
         qint64 second = QDateTime::currentSecsSinceEpoch() - startSecond;
         qint64 hour = second / 60 / 60;
@@ -8181,7 +8265,7 @@ void MainWindow::startRecordUrl(QString url)
 
     // 刷新缓冲区，永久保存到磁盘
     file.flush();
-    qInfo() << "录播保存至：" << path;
+    qInfo() << "录播完成，保存至：" << path;
 
     // 发送事件
     LiveDanmaku dmk;
@@ -8237,16 +8321,32 @@ void MainWindow::startRecordUrl(QString url)
     if (ui->recordCheck->isChecked() && isLiving())
     {
         startLiveRecord();
-    }
+    } */
 }
 
+/**
+ * 结束录制
+ * 可能是点击按钮取消录制
+ * 也可能是时间到了，需要重新录制
+ */
 void MainWindow::finishLiveRecord()
 {
-    if (!recordLoop)
+    if (m3u8Downloader.isDownloading())
+    {
+        m3u8Downloader.stop();
+
+        // 可能是时间结束了，重新下载
+        if (ui->recordCheck->isChecked() && isLiving())
+        {
+            startLiveRecord();
+        }
+    }
+
+    /* if (!recordLoop)
         return ;
     qInfo() << "结束录播";
     recordLoop->quit();
-    recordLoop = nullptr;
+    recordLoop = nullptr; */
 }
 
 void MainWindow::processRemoteCmd(QString msg, bool response)
@@ -14820,7 +14920,7 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
 {
     if (ac->roomId.isEmpty())
         return ;
-    QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
+    /*QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
             + "&quality=4&qn=10000&platform=web&otype=json";
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -14835,8 +14935,73 @@ void MainWindow::getRoomLiveVideoUrl(StringFunc func)
           "length": 0,
           "order": 1,
           "stream_type": 0,
-          "p2p_type": 0*/
+          "p2p_type": 0*-/
         QString url = array.first().toObject().value("url").toString();
+        if (func)
+            func(url);
+    });*/
+
+    QString full_url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + ac->roomId
+            + "&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
+    get(full_url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qWarning() << ("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject play_url = json.value("data").toObject().value("playurl_info").toObject().value("playurl").toObject();
+        QJsonArray streams = play_url.value("stream").toArray();
+        QString url;
+
+        // 先抓取m3u8的视频
+        foreach (auto _stream, streams)
+        {
+            auto stream = _stream.toObject();
+            // m3u8:http_hls, flv:http_stream
+            if (stream.value("protocol_name").toString() != "http_hls")
+                continue;
+
+            auto formats = stream.value("format").toArray(); // 这里有多个可播放的格式
+            foreach (auto _format, formats)
+            {
+                auto format = _format.toObject();
+                auto codecs = format.value("codec").toArray();
+                foreach (auto _codec, codecs)
+                {
+                    auto codec = _codec.toObject();
+                    QString codec_name = codec.value("codec_name").toString();
+                    QString base_url = codec.value("base_url").toString();
+                    auto url_infos = codec.value("url_info").toArray();
+                    foreach (auto _url_info, url_infos)
+                    {
+                        auto url_info = _url_info.toObject();
+                        QString host = url_info.value("host").toString();
+                        QString extra = url_info.value("extra").toString();
+                        qint64 stream_ttl = url_info.value("stream_ttl").toInt();
+
+                        url = host + base_url;
+
+                        if (!url.isEmpty())
+                            break;
+                    }
+                    if (!url.isEmpty())
+                        break;
+                }
+                if (!url.isEmpty())
+                    break;
+            }
+            if (!url.isEmpty())
+                break;
+        }
+
+        if (url.isEmpty())
+        {
+            qWarning() << "录播无法获取下载地址：" << full_url;
+            return ;
+        }
+        if (url.endsWith("?"))
+            url = url.left(url.length() - 1);
         if (func)
             func(url);
     });
