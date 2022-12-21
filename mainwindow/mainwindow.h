@@ -55,7 +55,7 @@
 #include "singleentrance.h"
 #include "sqlservice.h"
 #include "dbbrowser.h"
-#include "m3u8_downloader/m3u8downloader.h"
+#include "m3u8downloader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

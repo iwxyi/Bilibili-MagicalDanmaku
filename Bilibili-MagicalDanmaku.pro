@@ -57,6 +57,7 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 INCLUDEPATH += \
     global/ \
     mainwindow/ \
+    server/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -83,12 +84,12 @@ INCLUDEPATH += \
     third_party/picture_browser/ \
     third_party/notification/ \
     third_party/linear_check_box/ \
-    third_party/mfaudioendpointcontrol_fixed/
+    third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    mainwindow/liveopenservice.cpp \
-    mainwindow/sqlservice.cpp \
+    server/liveopenservice.cpp \
+    server/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
@@ -178,8 +179,8 @@ HEADERS += \
     global/runtimeinfo.h \
     global/usersettings.h \
     mainwindow/live_danmaku/emoticon.h \
-    mainwindow/liveopenservice.h \
-    mainwindow/sqlservice.h \
+    server/liveopenservice.h \
+    server/sqlservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
@@ -198,7 +199,7 @@ HEADERS += \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
-    mainwindow/live_danmaku/livedanmaku.h \
+    server/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
     third_party/interactive_buttons/pointmenubutton.h \
     third_party/interactive_buttons/threedimenbutton.h \
