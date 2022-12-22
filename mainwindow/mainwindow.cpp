@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 路径
     initPath();
+    initObjects();
     readConfig();
     initEvent();
     initLiveOpenService();
@@ -570,10 +571,7 @@ void MainWindow::initRuntime()
 
 }
 
-/// 读取 settings 中的变量，并进行一系列初始化操作
-/// 可能会读取多次，并且随用户命令重复读取
-/// 所以里面的所有变量都要做好重复初始化的准备
-void MainWindow::readConfig()
+void MainWindow::initObjects()
 {
     bool firstOpen = !QFileInfo(rt->dataPath + "settings.ini").exists();
     if (!firstOpen)
@@ -590,18 +588,14 @@ void MainWindow::readConfig()
     extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
     robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
     wwwDir = QDir(rt->dataPath + "www");
+    liveRoomService = new BiliLiveRoomService(this);
+}
 
-    // extSettings->setValue("testStr", "true");
-    // extSettings->setValue("testBool", true);
-    // extSettings->sync();
-    // delete extSettings;
-    // extSettings = new QSettings(dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
-    /* auto vStr = extSettings->value("testStr");
-    auto vBool = extSettings->value("testBool");
-    qDebug("Str Type is %s", vStr.typeName());
-    qDebug("Bool Type is %s", vBool.typeName());
-    qDebug() << vStr << vBool; */
-
+/// 读取 settings 中的变量，并进行一系列初始化操作
+/// 可能会读取多次，并且随用户命令重复读取
+/// 所以里面的所有变量都要做好重复初始化的准备
+void MainWindow::readConfig()
+{
     // 版本
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
@@ -697,7 +691,6 @@ void MainWindow::readConfig()
 
     // 失败重试
     ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
-    hostUseIndex = us->value("live/hostIndex").toInt();
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
@@ -811,9 +804,7 @@ void MainWindow::readConfig()
     if (calcDaliy)
         startCalculateDailyData();
 
-    // PK串门提示
-    pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
-    ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
+
 
     // PK消息同步
     pkMsgSync = us->value("pk/msgSync", 0).toInt();
@@ -886,9 +877,7 @@ void MainWindow::readConfig()
     ui->giftComboDelaySpin->setValue(us->value("danmaku/giftComboDelay",  5).toInt());
     ui->giftComboTopCheck->setChecked(us->value("danmaku/giftComboTop", false).toBool());
     ui->giftComboMergeCheck->setChecked(us->value("danmaku/giftComboMerge", false).toBool());
-    comboTimer = new QTimer(this);
-    comboTimer->setInterval(500);
-    connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
+
 
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", false).toBool());
@@ -906,7 +895,6 @@ void MainWindow::readConfig()
     // 接收私信
     ui->receivePrivateMsgCheck->setChecked(us->value("privateMsg/enabled", false).toBool());
     ui->processUnreadMsgCheck->setChecked(us->value("privateMsg/processUnread", false).toBool());
-    privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 过滤器
     enableFilter = us->value("danmaku/enableFilter", enableFilter).toBool();
@@ -950,51 +938,19 @@ void MainWindow::readConfig()
 
     connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(trayAction(QSystemTrayIcon::ActivationReason)));
 
-    // 大乱斗
-    pkTimer = new QTimer(this);
-    connect(pkTimer, &QTimer::timeout, this, [=]{
-        // 更新PK信息
-        int second = 0;
-        int minute = 0;
-        if (pkEndTime)
-        {
-            second = static_cast<int>(pkEndTime - QDateTime::currentSecsSinceEpoch());
-            if (second < 0) // 结束后会继续等待一段时间，这时候会变成负数
-                second = 0;
-            minute = second / 60;
-            second = second % 60;
-        }
-        QString text = QString("%1:%2 %3/%4")
-                .arg(minute)
-                .arg((second < 10 ? "0" : "") + QString::number(second))
-                .arg(myVotes)
-                .arg(matchVotes);
-        if (danmakuWindow)
-            danmakuWindow->setStatusText(text);
-    });
-    pkTimer->setInterval(300);
 
-    // 大乱斗自动赠送吃瓜
-    pkEndingTimer = new QTimer(this);
-    connect(pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
+
     bool melon = us->value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
-    pkMaxGold = us->value("pk/maxGold", 300).toInt();
-    pkJudgeEarly = us->value("pk/judgeEarly", 2000).toInt();
-    toutaCount = us->value("pk/toutaCount", 0).toInt();
-    chiguaCount = us->value("pk/chiguaCount", 0).toInt();
-    toutaGold = us->value("pk/toutaGold", 0).toInt();
-    goldTransPk = us->value("pk/goldTransPk", goldTransPk).toInt();
-    toutaBlankList = us->value("pk/blankList").toString().split(";");
     ui->pkAutoMaxGoldCheck->setChecked(us->value("pk/autoMaxGold", true).toBool());
 
     // 大乱斗自动赠送礼物
     ui->toutaGiftCheck->setChecked(us->value("danmaku/toutaGift").toBool());
     QString toutaGiftCountsStr = us->value("danmaku/toutaGiftCounts").toString();
     ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
-    toutaGiftCounts.clear();
+    liveRoomService->toutaGiftCounts.clear();
     foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
-        toutaGiftCounts.append(s.toInt());
+        liveRoomService->toutaGiftCounts.append(s.toInt());
     restoreToutaGifts(us->value("danmaku/toutaGifts", "").toString());
 
 

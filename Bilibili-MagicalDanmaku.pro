@@ -58,6 +58,7 @@ INCLUDEPATH += \
     global/ \
     mainwindow/ \
     server/ \
+    server/live_room/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -88,6 +89,8 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
+    server/live_room/bililiveroomservice.cpp \
+    server/live_room/liveroomservice.cpp \
     server/liveopenservice.cpp \
     server/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
@@ -175,10 +178,13 @@ SOURCES += \
 
 HEADERS += \
     global/accountinfo.h \
+    global/entities.h \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
     mainwindow/live_danmaku/emoticon.h \
+    server/live_room/bililiveroomservice.h \
+    server/live_room/liveroomservice.h \
     server/liveopenservice.h \
     server/sqlservice.h \
     order_player/importsongsdialog.h \
