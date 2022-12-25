@@ -20538,7 +20538,7 @@ void MainWindow::initLiveOpenService()
         return ;
 
     // 初始化
-    liveOpenService = new LiveOpenService(this);
+    liveOpenService = new BiliLiveOpenService(this);
 }
 
 void MainWindow::initDbService()

@@ -51,7 +51,7 @@
 #include "appendbutton.h"
 #include "waterzoombutton.h"
 #include "tipbox.h"
-#include "liveopenservice.h"
+#include "bililiveopenservice.h"
 #include "singleentrance.h"
 #include "sqlservice.h"
 #include "dbbrowser.h"
@@ -1438,7 +1438,7 @@ private:
     bool _fanfanOwn = false; // 是否已拥有
 
     // 互动
-    LiveOpenService* liveOpenService = nullptr;
+    BiliLiveOpenService* liveOpenService = nullptr;
 
     // 数据库
     bool saveToSqlite = false;

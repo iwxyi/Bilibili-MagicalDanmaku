@@ -58,6 +58,7 @@ INCLUDEPATH += \
     global/ \
     mainwindow/ \
     services/ \
+    services/liveservices/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -88,7 +89,9 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    services/liveopenservice.cpp \
+    services/liveservices/bililiveopenservice.cpp \
+    services/liveservices/bililiveservice.cpp \
+    services/liveservices/liveroomservice.cpp \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
@@ -179,7 +182,9 @@ HEADERS += \
     global/runtimeinfo.h \
     global/usersettings.h \
     mainwindow/live_danmaku/emoticon.h \
-    services/liveopenservice.h \
+    services/liveservices/bililiveopenservice.h \
+    services/liveservices/bililiveservice.h \
+    services/liveservices/liveroomservice.h \
     services/sqlservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \
@@ -199,7 +204,7 @@ HEADERS += \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
-    services/livedanmaku.h \
+    services/liveservices/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
     third_party/interactive_buttons/pointmenubutton.h \
     third_party/interactive_buttons/threedimenbutton.h \
