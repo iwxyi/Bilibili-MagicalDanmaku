@@ -146,8 +146,8 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         {
             // 这里不排序，直接发送
             QJsonObject json;
-            json.insert("guards", LiveDanmaku::toJsonArray(liveAllGuards));
-            json.insert("gifts", LiveDanmaku::toJsonArray(liveAllGifts));
+            json.insert("guards", LiveDanmaku::toJsonArray(liveService->liveAllGuards));
+            json.insert("gifts", LiveDanmaku::toJsonArray(liveService->liveAllGifts));
             sendJsonToSockets("LIVE_ALL_GIFTS", json, clientSocket);
         }
 

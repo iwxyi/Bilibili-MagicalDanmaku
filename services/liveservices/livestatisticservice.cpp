@@ -1,8 +1,32 @@
 #include "livestatisticservice.h"
 
-LiveStatisticService::LiveStatisticService()
+LiveStatisticService::LiveStatisticService(QObject *me) : me(me)
 {
+    initTimers();
+}
 
+void LiveStatisticService::readConfig()
+{
+}
+
+void LiveStatisticService::initTimers()
+{
+    minuteTimer = new QTimer();
+    minuteTimer->setInterval(60000);
+
+    hourTimer = new QTimer();
+    QTime currentTime = QTime::currentTime();
+    QTime nextTime = currentTime;
+    nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
+    hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
+
+    dayTimer = new QTimer();
+    QTime zeroTime = QTime::currentTime();
+    zeroTime.setHMS(0, 0, 1); // 本应当完全0点整的，避免误差
+    QDate tomorrowDate = QDate::currentDate();
+    tomorrowDate = tomorrowDate.addDays(1);
+    QDateTime tomorrow(tomorrowDate, zeroTime);
+    dayTimer->setInterval(int(QDateTime::currentDateTime().msecsTo(tomorrow)));
 }
 
 void LiveStatisticService::startCalculateDailyData()

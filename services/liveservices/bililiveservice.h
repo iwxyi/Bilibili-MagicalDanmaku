@@ -17,7 +17,8 @@ public slots:
     void getRoomInfo();
     void updateExistGuards(int page = 0) override;
     void getCookieAccount() override;
-    
+    void getGiftList() override;
+    void getEmoticonList() override;
     
 private:
     

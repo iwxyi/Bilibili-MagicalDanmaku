@@ -870,8 +870,6 @@ private:
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
     void upgradeWinningStreak(bool emitWinningStreak);
-    void getGiftList();
-    void getEmoticonList();
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
@@ -1081,17 +1079,8 @@ private:
     // 直播数据
     LiveRoomService* liveService = nullptr;
 
-    // 房间信息
-    QPixmap roomCover; // 直播间封面原图
-    QPixmap upFace; // 主播头像原图
-
-    // 我的直播
-    QString myLiveRtmp; // rtmp地址
-    QString myLiveCode; // 直播码
-
     // 启动与定时
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
-    QTimer* hourTimer = nullptr;
     QTimer* syncTimer = nullptr;
 
     // 直播心跳
@@ -1274,21 +1263,6 @@ private:
 
     // 自动禁言
     QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
-
-    // 直播间人气
-    QTimer* minuteTimer;
-    int popularVal = 2;
-    qint64 sumPopul = 0;     // 自启动以来的人气
-    qint64 countPopul = 0;   // 自启动以来的人气总和
-
-    // 弹幕人气
-    int minuteDanmuPopul = 0;
-    QList<int> danmuPopulQueue;
-    int danmuPopulValue = 0;
-
-    // 本次直播的礼物列表
-    QList<LiveDanmaku> liveAllGifts;
-    QList<LiveDanmaku> liveAllGuards;
 
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;

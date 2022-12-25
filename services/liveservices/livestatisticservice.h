@@ -14,7 +14,11 @@
 class LiveStatisticService
 {
 public:
-    LiveStatisticService();
+    LiveStatisticService(QObject* me);
+
+    void initTimers();
+
+    void readConfig();
 
     /// 初始化每日数据
     void startCalculateDailyData();
@@ -25,6 +29,7 @@ public:
     virtual void updateExistGuards(int page = 0) { Q_UNUSED(page) }
 
 protected:
+    QObject* me = nullptr;
     /// 每日数据
     QSettings *dailySettings = nullptr;
     QTimer *dayTimer = nullptr;
@@ -44,6 +49,18 @@ protected:
     QString recordFileCodec = ""; // 自动保存上船、礼物记录、每月船员等编码
     QString codeFileCodec = "UTF-8"; // 代码保存的文件编码
     QString externFileCodec = "UTF-8"; // 提供给外界读取例如歌曲文件编码
+
+    // 直播间人气
+    QTimer* minuteTimer = nullptr;
+    QTimer* hourTimer = nullptr;
+    int popularVal = 2;
+    qint64 sumPopul = 0;     // 自启动以来的人气
+    qint64 countPopul = 0;   // 自启动以来的人气总和
+
+    // 弹幕人气
+    int minuteDanmuPopul = 0;
+    QList<int> danmuPopulQueue;
+    int danmuPopulValue = 0;
 };
 
 #endif // LIVESTATISTICSERVICE_H

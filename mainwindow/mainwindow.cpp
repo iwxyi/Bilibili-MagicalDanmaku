@@ -574,7 +574,6 @@ void MainWindow::initRuntime()
 void MainWindow::initLiveService()
 {
     liveService = new BiliLiveService(this);
-    
     // 直播事件
     
     // 变量到UI
@@ -1281,16 +1280,16 @@ void MainWindow::readConfig()
 #endif
 
     // 每分钟定时
-    minuteTimer = new QTimer(this);
-    minuteTimer->setInterval(60000);
-    connect(minuteTimer, &QTimer::timeout, this, [=]{
+
+    Q_ASSERT(liveService->minuteTimer != nullptr);
+    connect(liveService->minuteTimer, &QTimer::timeout, this, [=]{
         // 直播间人气
         if (ac->currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
         {
-            sumPopul += ac->currentPopul;
-            countPopul++;
+            liveService->sumPopul += ac->currentPopul;
+            liveService->countPopul++;
 
-            liveService->dailyAvePopul = int(sumPopul / countPopul);
+            liveService->dailyAvePopul = int(liveService->sumPopul / liveService->countPopul);
             if (liveService->dailySettings)
                 liveService->dailySettings->setValue("average_popularity", liveService->dailyAvePopul);
         }
@@ -1302,27 +1301,22 @@ void MainWindow::readConfig()
         }
 
         // 弹幕人气
-        danmuPopulValue += minuteDanmuPopul;
-        danmuPopulQueue.append(minuteDanmuPopul);
-        minuteDanmuPopul = 0;
-        if (danmuPopulQueue.size() > 5)
-            danmuPopulValue -= danmuPopulQueue.takeFirst();
-        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(liveService->dailyAvePopul));
+        liveService->danmuPopulValue += liveService->minuteDanmuPopul;
+        liveService->danmuPopulQueue.append(liveService->minuteDanmuPopul);
+        liveService->minuteDanmuPopul = 0;
+        if (liveService->danmuPopulQueue.size() > 5)
+            liveService->danmuPopulValue -= liveService->danmuPopulQueue.takeFirst();
+        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(liveService->danmuPopulValue) + "，平均人气：" + snum(liveService->dailyAvePopul));
 
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
 
     // 每小时整点的的事件
-    hourTimer = new QTimer(this);
-    QTime currentTime = QTime::currentTime();
-    QTime nextTime = currentTime;
-    nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
-    hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
-    connect(hourTimer, &QTimer::timeout, this, [=]{
+    connect(liveService->hourTimer, &QTimer::timeout, this, [=]{
         QTime currentTime = QTime::currentTime();
         QTime nextTime = currentTime;
         nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
-        hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
+        liveService->hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
 
         // 永久禁言
         detectEternalBlockUsers();
@@ -1395,16 +1389,8 @@ void MainWindow::readConfig()
             });
         }
     });
-    hourTimer->start();
+    liveService->hourTimer->start();
 
-    // 每天的事件
-    liveService->dayTimer = new QTimer(this);
-    QTime zeroTime = QTime::currentTime();
-    zeroTime.setHMS(0, 0, 1); // 本应当完全0点整的，避免误差
-    QDate tomorrowDate = QDate::currentDate();
-    tomorrowDate = tomorrowDate.addDays(1);
-    QDateTime tomorrow(tomorrowDate, zeroTime);
-    liveService->dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
     // 判断新的一天
     connect(liveService->dayTimer, &QTimer::timeout, this, [=]{
         liveService->todayIsEnding = false;
@@ -1413,6 +1399,8 @@ void MainWindow::readConfig()
             // 当前时间必定是 0:0:1，误差0.2秒内
             QDate tomorrowDate = QDate::currentDate();
             tomorrowDate = tomorrowDate.addDays(1);
+            QTime zeroTime = QTime::currentTime();
+            zeroTime.setHMS(0, 0, 1);
             QDateTime tomorrow(tomorrowDate, zeroTime);
             liveService->dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
         }
@@ -1423,8 +1411,8 @@ void MainWindow::readConfig()
         if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
         us->userComeTimes.clear();
-        sumPopul = 0;
-        countPopul = 0;
+        liveService->sumPopul = 0;
+        liveService->countPopul = 0;
 
         // 触发每天事件
         const QDate currDate = QDate::currentDate();
@@ -1611,9 +1599,9 @@ void MainWindow::adjustPageSize(int page)
     if (page == PAGE_ROOM)
     {
         // 自动调整封面大小
-        if (!roomCover.isNull())
+        if (!liveService->roomCover.isNull())
         {
-            adjustCoverSizeByRoomCover(roomCover);
+            adjustCoverSizeByRoomCover(liveService->roomCover);
 
             /* int w = ui->roomCoverLabel->width();
             if (w > ui->tabWidget->contentsRect().width())
@@ -1730,8 +1718,8 @@ void MainWindow::switchPageAnimation(int page)
     {
         adjustRoomIdWidgetPos();
         showRoomIdWidget();
-        if (!roomCover.isNull())
-            adjustCoverSizeByRoomCover(roomCover);
+        if (!liveService->roomCover.isNull())
+            adjustCoverSizeByRoomCover(liveService->roomCover);
     }
     else
     {
@@ -1979,8 +1967,8 @@ void MainWindow::showEvent(QShowEvent *event)
     }
     us->setValue("mainwindow/autoShow", true);
 
-    if (!roomCover.isNull())
-        adjustCoverSizeByRoomCover(roomCover);
+    if (!liveService->roomCover.isNull())
+        adjustCoverSizeByRoomCover(liveService->roomCover);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -4619,7 +4607,7 @@ void MainWindow::initWS()
 
         // 定时发送心跳包
         heartTimer->start();
-        minuteTimer->start();
+        liveService->minuteTimer->start();
     });
 
     connect(socket, &QWebSocket::disconnected, this, [=]{
@@ -4642,7 +4630,7 @@ void MainWindow::initWS()
         ui->liveStatusButton->setText("");
 
         heartTimer->stop();
-        minuteTimer->stop();
+        liveService->minuteTimer->stop();
 
         // 如果不是主动连接的话，这个会断开
         if (!connectServerTimer->isActive())
@@ -4774,7 +4762,7 @@ void MainWindow::startConnectRoom()
     // 初始化主播数据
     ac->currentFans = 0;
     ac->currentFansClub = 0;
-    this->popularVal = 2;
+    this->liveService->popularVal = 2;
 
     // 准备房间数据
     if (us->danmakuCounts)
@@ -4787,6 +4775,8 @@ void MainWindow::startConnectRoom()
 
     // 开始获取房间信息
     getRoomInfo(true);
+
+    // 如果是管理员，可以获取禁言的用户
     if (ui->enableBlockCheck->isChecked())
         refreshBlockList();
 }
@@ -5187,7 +5177,7 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
                 startLiveRecord();
 
             // 获取礼物
-            getGiftList();
+            liveService->getGiftList();
         });
     }
         break;
@@ -5425,11 +5415,11 @@ void MainWindow::getRoomCover(QString url)
 
 void MainWindow::setRoomCover(const QPixmap& pixmap)
 {
-    roomCover = pixmap; // 原图
-    if (roomCover.isNull())
+    liveService->roomCover = pixmap; // 原图
+    if (liveService->roomCover.isNull())
         return ;
 
-    adjustCoverSizeByRoomCover(roomCover);
+    adjustCoverSizeByRoomCover(liveService->roomCover);
 
     /* int w = ui->roomCoverLabel->width();
     if (w > ui->tabWidget->contentsRect().width())
@@ -5440,7 +5430,7 @@ void MainWindow::setRoomCover(const QPixmap& pixmap)
 
     // 设置程序主题
     QColor bg, fg, sbg, sfg;
-    auto colors = ImageUtil::extractImageThemeColors(roomCover.toImage(), 7);
+    auto colors = ImageUtil::extractImageThemeColors(liveService->roomCover.toImage(), 7);
     ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
     prevPa = BFSColor::fromPalette(palette());
     currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
@@ -5455,7 +5445,7 @@ void MainWindow::setRoomCover(const QPixmap& pixmap)
     ani->start();
 
     // 设置主要界面主题
-    ui->tabWidget->setBg(roomCover);
+    ui->tabWidget->setBg(liveService->roomCover);
 }
 
 void MainWindow::setRoomThemeByCover(double val)
@@ -5681,7 +5671,7 @@ void MainWindow::downloadUpFace(const QString &faceUrl)
 
         QPixmap pixmap;
         pixmap.loadFromData(jpegData);
-        upFace = pixmap; // 原图
+        liveService->upFace = pixmap; // 原图
         pixmap = toCirclePixmap(pixmap); // 圆图
 
         // 设置到窗口图标
@@ -5690,7 +5680,7 @@ void MainWindow::downloadUpFace(const QString &faceUrl)
         tray->setIcon(face);
 
         // 设置到UP头像
-        face = upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        face = liveService->upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
         QPixmap circle = toCirclePixmap(face);
         ui->upHeaderLabel->setPixmap(circle);
         if (musicWindow)
@@ -6885,7 +6875,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 弹幕人气
     else if (key == "%danmu_popularity%")
-        return snum(danmuPopulValue);
+        return snum(liveService->danmuPopulValue);
 
     // 游戏用户
     else if (key == "%in_game_users%")
@@ -11433,7 +11423,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
-        this->popularVal = ac->currentPopul = popularity;
+        this->liveService->popularVal = ac->currentPopul = popularity;
         if (isLiving())
             ui->popularityLabel->setText(QString::number(popularity));
     }
@@ -11871,7 +11861,7 @@ void MainWindow::handleMessage(QJsonObject json)
             noReplyMsgs.removeOne(msg);
         }
         else
-            minuteDanmuPopul++;
+            liveService->minuteDanmuPopul++;
         danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
 
@@ -15461,19 +15451,19 @@ void MainWindow::appendLiveGift(const LiveDanmaku &danmaku)
         qWarning() << "添加礼物到liveGift错误：" << danmaku.toString();
         return ;
     }
-    for (int i = 0; i < liveAllGifts.size(); i++)
+    for (int i = 0; i < liveService->liveAllGifts.size(); i++)
     {
-        auto his = liveAllGifts.at(i);
+        auto his = liveService->liveAllGifts.at(i);
         if (his.getUid() == danmaku.getUid()
                 && his.getGiftId() == danmaku.getGiftId())
         {
-            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            liveService->liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
             return ;
         }
     }
 
     // 新建一个
-    liveAllGifts.append(danmaku);
+    liveService->liveAllGifts.append(danmaku);
 }
 
 void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
@@ -15483,19 +15473,19 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
         qWarning() << "添加上船到liveGuard错误：" << danmaku.toString();
         return ;
     }
-    for (int i = 0; i < liveAllGuards.size(); i++)
+    for (int i = 0; i < liveService->liveAllGuards.size(); i++)
     {
-        auto his = liveAllGuards.at(i);
+        auto his = liveService->liveAllGuards.at(i);
         if (his.getUid() == danmaku.getUid()
                 && his.getGiftId() == danmaku.getGiftId())
         {
-            liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            liveService->liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
             return ;
         }
     }
 
     // 新建一个
-    liveAllGuards.append(danmaku);
+    liveService->liveAllGuards.append(danmaku);
 }
 
 void MainWindow::getPkMatchInfo()
@@ -15692,75 +15682,6 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
             triggerCmdEvent("PK_WINNING_STREAK", danmaku);
         }
         ac->winningStreak = win_count;
-    });
-}
-
-void MainWindow::getGiftList()
-{
-    get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId, [=](MyJson json){
-        if (json.code() != 0)
-        {
-            showError("获取直播间礼物", json.err());
-            return ;
-        }
-
-        pl->allGiftMap.clear();
-        auto list = json.data().a("list");
-        for (QJsonValue val: list)
-        {
-            MyJson info = val.toObject();
-            int id = info.i("id");
-            int bag = info.i("bag_gift");
-            if (!bag)
-                continue;
-            QString name = info.s("name");
-            QString coinType = info.s("coin_type");
-            int coin = info.i("price");
-            QString desc = info.s("desc");
-
-            LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
-            gift.with(info);
-            pl->allGiftMap[id] = gift;
-        }
-        // qInfo() << "直播间礼物数量：" << pl->allGiftMap.size();
-    });
-}
-
-void MainWindow::getEmoticonList()
-{
-    get("https://api.live.bilibili.com/xlive/web-ucenter/v1/emoticon/GetEmoticonGuide",
-        {"room_id", ac->roomId}, [=](MyJson json) {
-        MyJson data = json.data();
-        QJsonArray array = data.a("data");
-        for (int i = 0; i < array.size(); i++)
-        {
-            MyJson emoObj = array.at(i).toObject();
-            QJsonArray emotions = emoObj.a("emoticons");
-            QString name = emoObj.s("pkg_name"); // 通用表情
-            QString descript = emoObj.s("pkg_descript"); // "官方表情(系统)"  "房间专属表情"
-            qint64 pkg_id = emoObj.l("pkg_id"); // 1  109028
-            int pkg_type = emoObj.i("pkg_type"); // 1  2
-
-            for (int j = 0; j < emotions.size(); j++)
-            {
-                MyJson o = emotions.at(j).toObject();
-                Emoticon e;
-                e.name = o.s("emoji"); // 赞
-                e.description = o.s("descript"); // 可空
-                e.id = o.l("emoticon_id"); // 147
-                e.unique = o.s("emoticon_unique"); // official_147
-                e.identity = o.i("identity");
-                e.width = o.i("width");
-                e.height = o.i("height");
-                e.id_dynamic = o.i("id_dynamic");
-                e.url = o.s("url");
-
-                e.pkg_type = pkg_type;
-                e.pkg_id = pkg_id;
-
-                pl->emoticons.insert(e.unique, e);
-            }
-        }
     });
 }
 
@@ -16667,7 +16588,7 @@ void MainWindow::on_actionShow_Live_Video_triggered()
     player->setAttribute(Qt::WA_DeleteOnClose, true);
     player->setRoomId(ac->roomId);
     player->setWindowTitle(ac->roomTitle + " - " + ac->upName);
-    player->setWindowIcon(upFace);
+    player->setWindowIcon(liveService->upFace);
     player->show();
 }
 
@@ -18082,22 +18003,22 @@ void MainWindow::releaseLiveData(bool prepare)
     {
     }
 
-    danmuPopulQueue.clear();
-    minuteDanmuPopul = 0;
-    danmuPopulValue = 0;
+    liveService->danmuPopulQueue.clear();
+    liveService->minuteDanmuPopul = 0;
+    liveService->danmuPopulValue = 0;
 
     diangeHistory.clear();
     ui->diangeHistoryListWidget->clear();
 
     statusLabel->setText("");
-    this->popularVal = 0;
+    this->liveService->popularVal = 0;
 
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
 
     // 本次直播数据
-    liveAllGifts.clear();
-    liveAllGuards.clear();
+    liveService->liveAllGifts.clear();
+    liveService->liveAllGuards.clear();
 
     if (danmakuWindow)
     {
@@ -18130,7 +18051,7 @@ void MainWindow::releaseLiveData(bool prepare)
     finishLiveRecord();
     liveService->saveCalculateDailyData();
 
-    QPixmap face = ac->roomId.isEmpty() ? QPixmap() : toCirclePixmap(upFace);
+    QPixmap face = ac->roomId.isEmpty() ? QPixmap() : toCirclePixmap(liveService->upFace);
     setWindowIcon(face);
     tray->setIcon(face);
 
@@ -18773,8 +18694,8 @@ void MainWindow::myLiveStartLive()
         if (json.code() != 0)
             return showError("一键开播失败", json.msg());
         MyJson rtmp = json.data().o("rtmp");
-        myLiveRtmp = rtmp.s("addr");
-        myLiveCode = rtmp.s("code");
+        liveService->myLiveRtmp = rtmp.s("addr");
+        liveService->myLiveCode = rtmp.s("code");
     });
 }
 
@@ -18914,7 +18835,7 @@ void MainWindow::myLiveSetCover(QString path)
         QString location = data.s("location");
         QString etag = data.s("etag");
 
-        if (roomCover.isNull()) // 仅第一次上传封面，调用 add
+        if (liveService->roomCover.isNull()) // 仅第一次上传封面，调用 add
         {
             post("https://api.live.bilibili.com/room/v1/Cover/add",
             {"room_id", ac->roomId,
@@ -20856,7 +20777,7 @@ void MainWindow::slotStartWork()
     });
 
     // 设置直播状态
-    QPixmap face = toLivingPixmap(toCirclePixmap(upFace));
+    QPixmap face = toLivingPixmap(toCirclePixmap(liveService->upFace));
     setWindowIcon(face);
     tray->setIcon(face);
 
@@ -20869,7 +20790,7 @@ void MainWindow::slotStartWork()
     syncTimer->start((qrand() % 10 + 10) * 1000);
 
     // 本次直播数据
-    liveAllGifts.clear();
+    liveService->liveAllGifts.clear();
 
     // 获取舰长
     updateExistGuards(0);
@@ -22270,12 +22191,12 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
         })->text(isLiving(), "一键下播");
 
         menu->addAction(QIcon(":/icons/rtmp"), "复制rtmp", [=]{
-            QApplication::clipboard()->setText(myLiveRtmp);
-        })->disable(myLiveRtmp.isEmpty())->lingerText("已复制");
+            QApplication::clipboard()->setText(liveService->myLiveRtmp);
+        })->disable(liveService->myLiveRtmp.isEmpty())->lingerText("已复制");
 
         menu->addAction(QIcon(":/icons/token"), "复制直播码", [=]{
-            QApplication::clipboard()->setText(myLiveCode);
-        })->disable(myLiveCode.isEmpty())->lingerText("已复制");
+            QApplication::clipboard()->setText(liveService->myLiveCode);
+        })->disable(liveService->myLiveCode.isEmpty())->lingerText("已复制");
 
         menu->split();
     }
@@ -22294,8 +22215,8 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
             return ;
         us->setValue("danmaku/exportPath", path);
 
-        roomCover.save(path);
-    })->disable(roomCover.isNull());
+        liveService->roomCover.save(path);
+    })->disable(liveService->roomCover.isNull());
 
     menu->exec();
 }
@@ -22316,8 +22237,8 @@ void MainWindow::on_upHeaderLabel_customContextMenuRequested(const QPoint &)
             return ;
         us->setValue("danmaku/exportPath", path);
 
-        upFace.save(path);
-    })->disable(upFace.isNull());
+        liveService->upFace.save(path);
+    })->disable(liveService->upFace.isNull());
 
     menu->exec();
 }
@@ -22800,7 +22721,7 @@ void MainWindow::on_actionShow_Gift_List_triggered()
 {
     if (pl->allGiftMap.empty())
     {
-        getGiftList();
+        liveService->getGiftList();
         QTimer::singleShot(2000, [=]{
             if (pl->allGiftMap.size())
                 on_actionShow_Gift_List_triggered();

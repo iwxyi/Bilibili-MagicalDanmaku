@@ -2,8 +2,9 @@
 #include "liveroomservice.h"
 
 LiveRoomService::LiveRoomService(QObject *parent) 
-    : QObject(parent), NetInterface(this)
+    : QObject(parent), NetInterface(this), LiveStatisticService(this)
 {
+
 }
 
 void LiveRoomService::init()
