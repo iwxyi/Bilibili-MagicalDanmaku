@@ -6,6 +6,7 @@
 class BiliLiveService : public LiveRoomService
 {
     Q_OBJECT
+    friend class MainWindow;
 public:
     BiliLiveService(QObject* parent = nullptr);
     
@@ -21,7 +22,6 @@ public slots:
     void getEmoticonList() override;
     
 private:
-    
 };
 
 #endif // BILILIVESERVICE_H

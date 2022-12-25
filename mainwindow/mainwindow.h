@@ -106,9 +106,6 @@ QT_END_NAMESPACE
 #define FILTER_DANMAKU_COME "FILTER_DANMAKU_COME"
 #define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
 
-#define INTERVAL_RECONNECT_WS 5000
-#define INTERVAL_RECONNECT_WS_MAX 60000
-
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
 #define DEFAULT_MS_TTS_SSML_FORMAT "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\n\
@@ -1083,25 +1080,6 @@ private:
     bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* syncTimer = nullptr;
 
-    // 直播心跳
-    qint64 liveTimestamp = 0;
-    QTimer* xliveHeartBeatTimer = nullptr;
-    int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
-    qint64 xliveHeartBeatEts = 0;        // 上次心跳时间戳
-    int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
-    QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
-    QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
-    QString encServer = "http://iwxyi.com:6001/enc";
-    int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
-
-    // 私信
-    QTimer* privateMsgTimer = nullptr;
-    qint64 privateMsgTimestamp = 0;
-
-    // 活动信息
-    int currentSeasonId = 0; // 大乱斗赛季，获取连胜需要赛季
-    QString pkRuleUrl; // 大乱斗赛季信息
-
     // 动画
     double paletteProg = 0;
     BFSColor prevPa;
@@ -1114,17 +1092,10 @@ private:
     QColor themeSfg = Qt::blue;
     QColor themeGradient = Qt::white;
 
-    // 粉丝数量
-    QList<FanBean> fansList; // 最近的关注，按时间排序
-
     // 弹幕信息
-    QList<LiveDanmaku> roomDanmakus;
     LiveDanmakuWindow* danmakuWindow = nullptr;
-#ifndef SOCKET_MODE
-    QTimer* danmakuTimer;
-    qint64 prevLastDanmakuTimestamp = 0;
-    bool firstPullDanmaku = true; // 是否不加载以前的弹幕
-#endif
+
+    QList<LiveDanmaku> roomDanmakus;
     QTimer* removeTimer;
     qint64 removeDanmakuInterval = 60000;
     QFile* danmuLogFile = nullptr;
@@ -1160,10 +1131,6 @@ private:
     QString filter_danmakuCome; // 弹幕姬：用户进入过滤
     QString filter_danmakuGift; // 弹幕姬：礼物过滤
 
-    // 礼物连击
-    QHash<QString, LiveDanmaku> giftCombos;
-    QTimer* comboTimer = nullptr;
-
     // 发送弹幕队列
     QList<QPair<QStringList, LiveDanmaku>> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
     QTimer* autoMsgTimer;
@@ -1176,18 +1143,10 @@ private:
     QString diangeFormatString;
     OrderPlayerWindow* musicWindow = nullptr;
 
-    // 连接信息
-    int hostUseIndex = 0;
-    QList<HostInfo> hostList;
-    QWebSocket* socket;
-    QTimer* heartTimer;
-    QTimer* connectServerTimer;
-    bool remoteControl = true;
-    int reconnectWSDuration = INTERVAL_RECONNECT_WS; // WS重连间隔，每次上播/下播重置
+    // 远程控制
+    bool remoteControl = true; // 是否允许弹幕命令控制
 
-    bool gettingRoom = false;
-    bool gettingUser = false;
-    bool gettingUp = false;
+    // 服务信息
     QString SERVER_DOMAIN = LOCAL_MODE ? "http://localhost:8102" : "http://iwxyi.com:8102";
     QString serverPath = SERVER_DOMAIN + "/server/";
     int permissionLevel = 0;
@@ -1195,15 +1154,6 @@ private:
     QTimer* permissionTimer = nullptr;
     QString permissionText = "捐赠版";
     qint64 permissionDeadline = 0;
-
-    // 船员
-    bool updateGuarding = false;
-    QList<LiveDanmaku> guardInfos;
-
-    // 高能榜
-    QList<LiveDanmaku> onlineGoldRank;
-    QList<LiveDanmaku> onlineGuards;
-    QList<qint64> onlineRankGuiIds;
 
     // 录播
     qint64 startRecordTime = 0;
@@ -1213,49 +1163,6 @@ private:
     QProcess* recordConvertProcess = nullptr;
     QString recordLastPath;
     M3u8Downloader m3u8Downloader;
-
-    // 大乱斗
-    bool pking = false;
-    int pkBattleType = 0;
-    qint64 pkId = 0;
-    qint64 pkToLive = 0; // PK导致的下播（视频必定触发）
-    int myVotes = 0;
-    int matchVotes = 0;
-    qint64 pkEndTime = 0;
-    QTimer* pkTimer = nullptr;
-    int pkJudgeEarly = 2000;
-    bool pkVideo = false;
-    QList<LiveDanmaku> pkGifts;
-
-    // 大乱斗偷塔
-    QTimer* pkEndingTimer = nullptr;
-    int goldTransPk = 100; // 金瓜子转乱斗值的比例，除以10还是100
-    int pkMaxGold = 300; // 单位是金瓜子，积分要/10
-    bool pkEnding = false;
-    int pkVoting = 0;
-    int toutaCount = 0;
-    int chiguaCount = 0;
-    int toutaGold = 0;
-    int oppositeTouta = 0; // 对面是否偷塔（用作判断）
-    QStringList toutaBlankList; // 偷塔黑名单
-    QStringList magicalRooms; // 同样使用神奇弹幕的房间
-    QList<int> toutaGiftCounts; // 偷塔允许的礼物数量
-    QList<LiveDanmaku> toutaGifts; // 用来偷塔的礼物信息
-
-    // 大乱斗串门
-    bool pkChuanmenEnable = false;
-    int pkMsgSync = 0;
-    QString pkRoomId;
-    QString pkUid;
-    QString pkUname;
-    QSet<qint64> myAudience; // 自己这边的观众
-    QSet<qint64> oppositeAudience; // 对面的观众
-    QWebSocket* pkSocket = nullptr; // 连接对面的房间
-    QString pkToken;
-    QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
-
-    // 大乱斗对面信息
-    int pkOnlineGuard1, pkOnlineGuard2, pkOnlineGuard3;
 
     // 欢迎
     qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道（精确到毫秒）

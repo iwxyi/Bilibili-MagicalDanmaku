@@ -706,7 +706,7 @@ void MainWindow::readConfig()
 
     // 失败重试
     ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
-    hostUseIndex = us->value("live/hostIndex").toInt();
+    liveService->hostUseIndex = us->value("live/hostIndex").toInt();
 
     // 发送队列
     autoMsgTimer = new QTimer(this) ;
@@ -821,19 +821,19 @@ void MainWindow::readConfig()
         liveService->startCalculateDailyData();
 
     // PK串门提示
-    pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
-    ui->pkChuanmenCheck->setChecked(pkChuanmenEnable);
+    liveService->pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
+    ui->pkChuanmenCheck->setChecked(liveService->pkChuanmenEnable);
 
     // PK消息同步
-    pkMsgSync = us->value("pk/msgSync", 0).toInt();
-    if (pkMsgSync == 0)
+    liveService->pkMsgSync = us->value("pk/msgSync", 0).toInt();
+    if (liveService->pkMsgSync == 0)
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
-    else if (pkMsgSync == 1)
+    else if (liveService->pkMsgSync == 1)
         ui->pkMsgSyncCheck->setCheckState(Qt::PartiallyChecked);
-    else if (pkMsgSync == 2)
+    else if (liveService->pkMsgSync == 2)
         ui->pkMsgSyncCheck->setCheckState(Qt::Checked);
-    ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
-    ui->pkMsgSyncCheck->setEnabled(pkChuanmenEnable);
+    ui->pkMsgSyncCheck->setText(liveService->pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
+    ui->pkMsgSyncCheck->setEnabled(liveService->pkChuanmenEnable);
 
     // 判断机器人
     judgeRobot = us->value("danmaku/judgeRobot", 0).toInt();
@@ -895,9 +895,9 @@ void MainWindow::readConfig()
     ui->giftComboDelaySpin->setValue(us->value("danmaku/giftComboDelay",  5).toInt());
     ui->giftComboTopCheck->setChecked(us->value("danmaku/giftComboTop", false).toBool());
     ui->giftComboMergeCheck->setChecked(us->value("danmaku/giftComboMerge", false).toBool());
-    comboTimer = new QTimer(this);
-    comboTimer->setInterval(500);
-    connect(comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
+    liveService->comboTimer = new QTimer(this);
+    liveService->comboTimer->setInterval(500);
+    connect(liveService->comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
 
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", false).toBool());
@@ -915,7 +915,7 @@ void MainWindow::readConfig()
     // 接收私信
     ui->receivePrivateMsgCheck->setChecked(us->value("privateMsg/enabled", false).toBool());
     ui->processUnreadMsgCheck->setChecked(us->value("privateMsg/processUnread", false).toBool());
-    privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
+    liveService->privateMsgTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 过滤器
     enableFilter = us->value("danmaku/enableFilter", enableFilter).toBool();
@@ -960,14 +960,14 @@ void MainWindow::readConfig()
     connect(tray,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(trayAction(QSystemTrayIcon::ActivationReason)));
 
     // 大乱斗
-    pkTimer = new QTimer(this);
-    connect(pkTimer, &QTimer::timeout, this, [=]{
+    liveService->pkTimer = new QTimer(this);
+    connect(liveService->pkTimer, &QTimer::timeout, this, [=]{
         // 更新PK信息
         int second = 0;
         int minute = 0;
-        if (pkEndTime)
+        if (liveService->pkEndTime)
         {
-            second = static_cast<int>(pkEndTime - QDateTime::currentSecsSinceEpoch());
+            second = static_cast<int>(liveService->pkEndTime - QDateTime::currentSecsSinceEpoch());
             if (second < 0) // 结束后会继续等待一段时间，这时候会变成负数
                 second = 0;
             minute = second / 60;
@@ -976,34 +976,34 @@ void MainWindow::readConfig()
         QString text = QString("%1:%2 %3/%4")
                 .arg(minute)
                 .arg((second < 10 ? "0" : "") + QString::number(second))
-                .arg(myVotes)
-                .arg(matchVotes);
+                .arg(liveService->myVotes)
+                .arg(liveService->matchVotes);
         if (danmakuWindow)
             danmakuWindow->setStatusText(text);
     });
-    pkTimer->setInterval(300);
+    liveService->pkTimer->setInterval(300);
 
     // 大乱斗自动赠送吃瓜
-    pkEndingTimer = new QTimer(this);
-    connect(pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
+    liveService->pkEndingTimer = new QTimer(this);
+    connect(liveService->pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
     bool melon = us->value("pk/autoMelon", false).toBool();
     ui->pkAutoMelonCheck->setChecked(melon);
-    pkMaxGold = us->value("pk/maxGold", 300).toInt();
-    pkJudgeEarly = us->value("pk/judgeEarly", 2000).toInt();
-    toutaCount = us->value("pk/toutaCount", 0).toInt();
-    chiguaCount = us->value("pk/chiguaCount", 0).toInt();
-    toutaGold = us->value("pk/toutaGold", 0).toInt();
-    goldTransPk = us->value("pk/goldTransPk", goldTransPk).toInt();
-    toutaBlankList = us->value("pk/blankList").toString().split(";");
+    liveService->pkMaxGold = us->value("pk/maxGold", 300).toInt();
+    liveService->pkJudgeEarly = us->value("pk/judgeEarly", 2000).toInt();
+    liveService->toutaCount = us->value("pk/toutaCount", 0).toInt();
+    liveService->chiguaCount = us->value("pk/chiguaCount", 0).toInt();
+    liveService->toutaGold = us->value("pk/toutaGold", 0).toInt();
+    liveService->goldTransPk = us->value("pk/goldTransPk", liveService->goldTransPk).toInt();
+    liveService->toutaBlankList = us->value("pk/blankList").toString().split(";");
     ui->pkAutoMaxGoldCheck->setChecked(us->value("pk/autoMaxGold", true).toBool());
 
     // 大乱斗自动赠送礼物
     ui->toutaGiftCheck->setChecked(us->value("danmaku/toutaGift").toBool());
     QString toutaGiftCountsStr = us->value("danmaku/toutaGiftCounts").toString();
     ui->toutaGiftCountsEdit->setText(toutaGiftCountsStr);
-    toutaGiftCounts.clear();
+    liveService->toutaGiftCounts.clear();
     foreach (QString s, toutaGiftCountsStr.split(" ", QString::SkipEmptyParts))
-        toutaGiftCounts.append(s.toInt());
+        liveService->toutaGiftCounts.append(s.toInt());
     restoreToutaGifts(us->value("danmaku/toutaGifts", "").toString());
 
 
@@ -1133,13 +1133,13 @@ void MainWindow::readConfig()
     ui->startLiveHourSpin->setValue(us->value("live/startLiveHour", 0).toInt());
     ui->endLiveHourSpin->setValue(us->value("live/endLiveHour", 0).toInt());
     ui->timerConnectIntervalSpin->setValue(us->value("live/timerConnectInterval", 30).toInt());
-    connectServerTimer = new QTimer(this);
-    connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
-    connect(connectServerTimer, &QTimer::timeout, this, [=]{
-        connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
-        if (isLiving() && (socket->state() == QAbstractSocket::ConnectedState || socket->state() == QAbstractSocket::ConnectingState))
+    liveService->connectServerTimer = new QTimer(this);
+    liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
+    connect(liveService->connectServerTimer, &QTimer::timeout, this, [=]{
+        liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        if (isLiving() && (liveService->socket->state() == QAbstractSocket::ConnectedState || liveService->socket->state() == QAbstractSocket::ConnectingState))
         {
-            connectServerTimer->stop();
+            liveService->connectServerTimer->stop();
             return ;
         }
         startConnectRoom();
@@ -1253,8 +1253,8 @@ void MainWindow::readConfig()
     // 自动获取小心心
     ui->acquireHeartCheck->setChecked(us->value("danmaku/acquireHeart", false).toBool());
     ui->heartTimeSpin->setValue(us->value("danmaku/acquireHeartTime", 120).toInt());
-    todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
-    ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
+    liveService->todayHeartMinite = us->value("danmaku/todayHeartMinite").toInt();
+    ui->acquireHeartCheck->setToolTip("今日已领" + snum(liveService->todayHeartMinite/5) + "个小心心(" + snum(liveService->todayHeartMinite) + "分钟)");
 
     // 自动赠送过期礼物
     ui->sendExpireGiftCheck->setChecked(us->value("danmaku/sendExpireGift", false).toBool());
@@ -2626,9 +2626,9 @@ void MainWindow::sendNotifyMsg(QString msg, const LiveDanmaku &danmaku, bool man
  */
 void MainWindow::slotComboSend()
 {
-    if (!giftCombos.size())
+    if (!liveService->giftCombos.size())
     {
-        comboTimer->stop();
+        liveService->comboTimer->stop();
         return ;
     }
 
@@ -2664,7 +2664,7 @@ void MainWindow::slotComboSend()
 
     if (!ui->giftComboTopCheck->isChecked()) // 全部答谢，看冷却时间
     {
-        for (auto it = giftCombos.begin(); it != giftCombos.end(); )
+        for (auto it = liveService->giftCombos.begin(); it != liveService->giftCombos.end(); )
         {
             const LiveDanmaku& danmaku = it.value();
             if (danmaku.getTimeline().toSecsSinceEpoch() + delta > timestamp) // 未到达统计时间
@@ -2675,14 +2675,14 @@ void MainWindow::slotComboSend()
 
             // 开始答谢该项
             thankGift(danmaku);
-            it = giftCombos.erase(it);
+            it = liveService->giftCombos.erase(it);
         }
     }
     else // 等待结束，只答谢最贵的一项
     {
         qint64 maxGold = 0;
-        auto maxIt = giftCombos.begin();
-        for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
+        auto maxIt = liveService->giftCombos.begin();
+        for (auto it = liveService->giftCombos.begin(); it != liveService->giftCombos.end(); it++)
         {
             const LiveDanmaku& danmaku = it.value();
             if (danmaku.getTimeline().toSecsSinceEpoch() + delta > timestamp) // 还有礼物未到答谢时间
@@ -2696,14 +2696,14 @@ void MainWindow::slotComboSend()
         if (maxGold > 0)
         {
             thankGift(maxIt.value());
-            giftCombos.clear();
+            liveService->giftCombos.clear();
             return ;
         }
 
         // 没有金瓜子，只有银瓜子
         int maxSilver = 0;
-        maxIt = giftCombos.begin();
-        for (auto it = giftCombos.begin(); it != giftCombos.end(); it++)
+        maxIt = liveService->giftCombos.begin();
+        for (auto it = liveService->giftCombos.begin(); it != liveService->giftCombos.end(); it++)
         {
             const LiveDanmaku& danmaku = it.value();
             if (danmaku.getTotalCoin() > maxGold)
@@ -2713,7 +2713,7 @@ void MainWindow::slotComboSend()
             }
         }
         thankGift(maxIt.value());
-        giftCombos.clear();
+        liveService->giftCombos.clear();
         return ;
     }
 
@@ -2865,8 +2865,8 @@ void MainWindow::on_testDanmakuButton_clicked()
             sendAutoMsg(text, LiveDanmaku());
         ui->liveStatusButton->setText("已开播");
         ac->liveStatus = 1;
-        if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
-            connectServerTimer->stop();
+        if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
+            liveService->connectServerTimer->stop();
         slotStartWork(); // 每个房间第一次开始工作
 
         triggerCmdEvent("LIVE", LiveDanmaku(), true);
@@ -2878,11 +2878,11 @@ void MainWindow::on_testDanmakuButton_clicked()
         QJsonObject data;
         data.insert("msg_type", 1);
         data.insert("timestamp", QDateTime::currentSecsSinceEpoch());
-        data.insert("uid", pkUid.toLongLong());
+        data.insert("uid", liveService->pkUid.toLongLong());
         data.insert("uname", "测试用户");
         json.insert("data", data);
         handleMessage(json);
-        qInfo() << pkUid << oppositeAudience;
+        qInfo() << liveService->pkUid << liveService->oppositeAudience;
     }
     else if (text == "测试花灯")
     {
@@ -2922,7 +2922,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试心跳")
     {
-        if (xliveHeartBeatBenchmark.isEmpty())
+        if (liveService->xliveHeartBeatBenchmark.isEmpty())
             sendXliveHeartBeatE();
         else
             sendXliveHeartBeatX();
@@ -2933,7 +2933,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试断线")
     {
-        socket->close();
+        liveService->socket->close();
     }
     else if (text == "爆出礼物")
     {
@@ -3355,11 +3355,11 @@ void MainWindow::on_roomIdEdit_editingFinished()
         return ;
 
     // 关闭旧的
-    if (socket)
+    if (liveService->socket)
     {
         ac->liveStatus = 0;
-        if (socket->state() != QAbstractSocket::UnconnectedState)
-            socket->abort();
+        if (liveService->socket->state() != QAbstractSocket::UnconnectedState)
+            liveService->socket->abort();
     }
     ac->roomId = ui->roomIdEdit->text();
     ac->upUid = "";
@@ -3384,7 +3384,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     emit signalRoomChanged(ac->roomId);
 
     // 开启新的
-    if (socket)
+    if (liveService->socket)
     {
         startConnectRoom();
     }
@@ -4061,13 +4061,13 @@ void MainWindow::getCookieAccount()
 {
     if (ac->browserCookie.isEmpty())
         return ;
-    gettingUser = true;
+    liveService->gettingUser = true;
     get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             showError("登录返回不为0", json.value("message").toString());
-            gettingUser = false;
-            if (!gettingRoom)
+            liveService->gettingUser = false;
+            if (!liveService->gettingRoom)
                 triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
             updatePermission();
             return ;
@@ -4086,8 +4086,8 @@ void MainWindow::getCookieAccount()
 #endif
 
         getRobotInfo();
-        gettingUser = false;
-        if (!gettingRoom)
+        liveService->gettingUser = false;
+        if (!liveService->gettingRoom)
             triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
         updatePermission();
         getPositiveVote();
@@ -4591,53 +4591,53 @@ void MainWindow::slotDiange(const LiveDanmaku &danmaku)
 
 void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 {
-    showError("socket", socket->errorString());
+    showError("socket", liveService->socket->errorString());
 }
 
 void MainWindow::initWS()
 {
-    socket = new QWebSocket();
+    liveService->socket = new QWebSocket();
 
-    connect(socket, &QWebSocket::connected, this, [=]{
+    connect(liveService->socket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "socket connected";
         ui->connectStateLabel->setText("状态：已连接");
 
         // 5秒内发送认证包
-        sendVeriPacket(socket, ac->roomId, ac->cookieToken);
+        sendVeriPacket(liveService->socket, ac->roomId, ac->cookieToken);
 
         // 定时发送心跳包
-        heartTimer->start();
+        liveService->heartTimer->start();
         liveService->minuteTimer->start();
     });
 
-    connect(socket, &QWebSocket::disconnected, this, [=]{
+    connect(liveService->socket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
         if (isLiving())
         {
-            qWarning() << "正在直播的时候突然断开，" << (reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+            qWarning() << "正在直播的时候突然断开，" << (liveService->reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
             localNotify("[连接断开，重连...]");
             ac->liveStatus = false;
             // 尝试5秒钟后重连
             // TODO: 每次重连间隔翻倍
-            connectServerTimer->setInterval(reconnectWSDuration);
-            reconnectWSDuration *= 2;
-            if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
-                reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
+            liveService->connectServerTimer->setInterval(liveService->reconnectWSDuration);
+            liveService->reconnectWSDuration *= 2;
+            if (liveService->reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
+                liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }
 
         SOCKET_DEB << "disconnected";
         ui->connectStateLabel->setText("状态：未连接");
         ui->liveStatusButton->setText("");
 
-        heartTimer->stop();
+        liveService->heartTimer->stop();
         liveService->minuteTimer->stop();
 
         // 如果不是主动连接的话，这个会断开
-        if (!connectServerTimer->isActive())
-            connectServerTimer->start();
+        if (!liveService->connectServerTimer->isActive())
+            liveService->connectServerTimer->start();
     });
 
-    connect(socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+    connect(liveService->socket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
 //        qInfo() << "binaryMessageReceived" << message;
 //        for (int i = 0; i < 100; i++) // 测试内存泄漏
         try {
@@ -4657,15 +4657,15 @@ void MainWindow::initWS()
 
     });
 
-    connect(socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
+    connect(liveService->socket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
         qInfo() << "textFrameReceived";
     });
 
-    connect(socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+    connect(liveService->socket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
         qInfo() << "textMessageReceived";
     });
 
-    connect(socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+    connect(liveService->socket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
         SOCKET_DEB << "stateChanged" << state;
         QString str = "未知";
         if (state == QAbstractSocket::UnconnectedState)
@@ -4683,21 +4683,21 @@ void MainWindow::initWS()
         ui->connectStateLabel->setText(str);
     });
 
-    heartTimer = new QTimer(this);
-    heartTimer->setInterval(30000);
-    connect(heartTimer, &QTimer::timeout, this, [=]{
-        if (socket->state() == QAbstractSocket::ConnectedState)
+    liveService->heartTimer = new QTimer(this);
+    liveService->heartTimer->setInterval(30000);
+    connect(liveService->heartTimer, &QTimer::timeout, this, [=]{
+        if (liveService->socket->state() == QAbstractSocket::ConnectedState)
             sendHeartPacket();
-        else if (socket->state() == QAbstractSocket::UnconnectedState)
+        else if (liveService->socket->state() == QAbstractSocket::UnconnectedState)
             startConnectRoom();
 
         // PK Socket
-        if (pkSocket && pkSocket->state() == QAbstractSocket::ConnectedState)
+        if (liveService->pkSocket && liveService->pkSocket->state() == QAbstractSocket::ConnectedState)
         {
             QByteArray ba;
             ba.append("[object Object]");
             ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
-            pkSocket->sendBinaryMessage(ba);
+            liveService->pkSocket->sendBinaryMessage(ba);
         }
 
         // 机器人 Socket
@@ -4714,9 +4714,9 @@ void MainWindow::initWS()
         }
     });
 
-    xliveHeartBeatTimer = new QTimer(this);
-    xliveHeartBeatTimer->setInterval(60000);
-    connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
+    liveService->xliveHeartBeatTimer = new QTimer(this);
+    liveService->xliveHeartBeatTimer->setInterval(60000);
+    connect(liveService->xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         if (isLiving())
             sendXliveHeartBeatX();
     });
@@ -4785,20 +4785,20 @@ void MainWindow::sendXliveHeartBeatE()
 {
     if (ac->roomId.isEmpty() || ac->cookieUid.isEmpty() || !isLiving())
         return ;
-    if (todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
+    if (liveService->todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
     {
-        if (xliveHeartBeatTimer)
-            xliveHeartBeatTimer->stop();
+        if (liveService->xliveHeartBeatTimer)
+            liveService->xliveHeartBeatTimer->stop();
         return ;
     }
 
-    xliveHeartBeatIndex = 0;
+    liveService->xliveHeartBeatIndex = 0;
 
     QString url("https://live-trace.bilibili.com/xlive/data-interface/v1/x25Kn/E");
 
     // 设置数据（JSON的ByteArray）
     QStringList datas;
-    datas << "id=" + QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(xliveHeartBeatIndex).arg(ac->roomId);
+    datas << "id=" + QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(liveService->xliveHeartBeatIndex).arg(ac->roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
     datas << "ts=" + snum(QDateTime::currentMSecsSinceEpoch());
     datas << "is_patch=0";
@@ -4837,13 +4837,13 @@ void MainWindow::sendXliveHeartBeatE()
             }
         }*/
         QJsonObject data = json.value("data").toObject();
-        xliveHeartBeatBenchmark = data.value("secret_key").toString();
-        xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
-        xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
-        xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+        liveService->xliveHeartBeatBenchmark = data.value("secret_key").toString();
+        liveService->xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
+        liveService->xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
+        liveService->xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
 
-        xliveHeartBeatTimer->start();
-        xliveHeartBeatTimer->setInterval(xliveHeartBeatInterval * 1000 - 1000);
+        liveService->xliveHeartBeatTimer->start();
+        liveService->xliveHeartBeatTimer->setInterval(liveService->xliveHeartBeatInterval * 1000 - 1000);
         // qDebug() << "直播心跳E：" << xliveHeartBeatBenchmark;
     });
 }
@@ -4853,20 +4853,20 @@ void MainWindow::sendXliveHeartBeatX()
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     // 获取加密的数据
     QJsonObject postData;
-    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(++xliveHeartBeatIndex).arg(ac->roomId));
+    postData.insert("id",  QString("[%1,%2,%3,%4]").arg(ac->parentAreaId).arg(ac->areaId).arg(++liveService->xliveHeartBeatIndex).arg(ac->roomId));
     postData.insert("device", "[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]");
     postData.insert("ts", timestamp);
-    postData.insert("ets", xliveHeartBeatEts);
-    postData.insert("benchmark", xliveHeartBeatBenchmark);
-    postData.insert("time", xliveHeartBeatInterval);
+    postData.insert("ets", liveService->xliveHeartBeatEts);
+    postData.insert("benchmark", liveService->xliveHeartBeatBenchmark);
+    postData.insert("time", liveService->xliveHeartBeatInterval);
     postData.insert("ua", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36");
     postData.insert("csrf_token", ac->csrf_token);
     postData.insert("csrf", ac->csrf_token);
     QJsonObject calcText;
     calcText.insert("t", postData);
-    calcText.insert("r", xliveHeartBeatSecretRule);
+    calcText.insert("r", liveService->xliveHeartBeatSecretRule);
 
-    postJson(encServer, calcText, [=](QNetworkReply* reply){
+    postJson(liveService->encServer, calcText, [=](QNetworkReply* reply){
         QByteArray repBa = reply->readAll();
         // qDebug() << "加密直播心跳包数据返回：" << repBa;
         // qDebug() << calcText;
@@ -4882,11 +4882,11 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
     QStringList datas;
     datas << "s=" + s; // 生成的签名
     datas << "id=" + QString("[%1,%2,%3,%4]")
-             .arg(ac->parentAreaId).arg(ac->areaId).arg(xliveHeartBeatIndex).arg(ac->roomId);
+             .arg(ac->parentAreaId).arg(ac->areaId).arg(liveService->xliveHeartBeatIndex).arg(ac->roomId);
     datas << "device=[\"AUTO4115984068636104\",\"f5f08e2f-e4e3-4156-8127-616f79a17e1a\"]";
-    datas << "ets=" + snum(xliveHeartBeatEts);
-    datas << "benchmark=" + xliveHeartBeatBenchmark;
-    datas << "time=" + snum(xliveHeartBeatInterval);
+    datas << "ets=" + snum(liveService->xliveHeartBeatEts);
+    datas << "benchmark=" + liveService->xliveHeartBeatBenchmark;
+    datas << "time=" + snum(liveService->xliveHeartBeatInterval);
     datas << "ts=" + snum(timestamp);
     datas << "ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36";
     datas << "csrf_token=" + ac->csrf_token;
@@ -4918,15 +4918,15 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
             }
         }*/
         QJsonObject data = json.value("data").toObject();
-        xliveHeartBeatBenchmark = data.value("secret_key").toString();
-        xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
-        xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
-        xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
-        us->setValue("danmaku/todayHeartMinite", ++todayHeartMinite);
-        ui->acquireHeartCheck->setToolTip("今日已领" + snum(todayHeartMinite/5) + "个小心心(" + snum(todayHeartMinite) + "分钟)");
-        if (todayHeartMinite >= ui->heartTimeSpin->value())
-            if (xliveHeartBeatTimer)
-                xliveHeartBeatTimer->stop();
+        liveService->xliveHeartBeatBenchmark = data.value("secret_key").toString();
+        liveService->xliveHeartBeatEts = qint64(data.value("timestamp").toDouble());
+        liveService->xliveHeartBeatInterval = data.value("heartbeat_interval").toInt();
+        liveService->xliveHeartBeatSecretRule = data.value("secret_rule").toArray();
+        us->setValue("danmaku/todayHeartMinite", ++liveService->todayHeartMinite);
+        ui->acquireHeartCheck->setToolTip("今日已领" + snum(liveService->todayHeartMinite/5) + "个小心心(" + snum(liveService->todayHeartMinite) + "分钟)");
+        if (liveService->todayHeartMinite >= ui->heartTimeSpin->value())
+            if (liveService->xliveHeartBeatTimer)
+                liveService->xliveHeartBeatTimer->stop();
     });
 }
 
@@ -4968,7 +4968,7 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
     {
     case Bilibili:
     {
-        gettingRoom = true;
+        liveService->gettingRoom = true;
         QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
         get(url, [=](QJsonObject json) {
             if (json.value("code").toInt() != 0)
@@ -5023,8 +5023,8 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
             if (ac->liveStatus == 0)
             {
                 ui->liveStatusButton->setText("未开播");
-                if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
-                    connectServerTimer->start();
+                if (ui->timerConnectServerCheck->isChecked() && !liveService->connectServerTimer->isActive())
+                    liveService->connectServerTimer->start();
             }
             else if (ac->liveStatus == 1)
             {
@@ -5052,7 +5052,7 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
                 if (pkId.toLongLong() > 0 && reconnect)
                 {
                     // 这个 pk_status 不是 battle_type
-                    pking = true;
+                    liveService->pking = true;
                     // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
                     setPkInfoById(ac->roomId, pkId);
                     qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
@@ -5153,8 +5153,8 @@ void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 
             // 获取主播头像
             getUpInfo(ac->upUid);
-            gettingRoom = false;
-            if (!gettingUser)
+            liveService->gettingRoom = false;
+            if (!liveService->gettingUser)
                 triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
             updatePermission();
 
@@ -5274,21 +5274,21 @@ bool MainWindow::isLivingOrMayliving()
             if (abort)
             {
                 qInfo() << "短期内不会开播，暂且断开连接";
-                if (!connectServerTimer->isActive())
-                    connectServerTimer->start();
+                if (!liveService->connectServerTimer->isActive())
+                    liveService->connectServerTimer->start();
                 ui->connectStateLabel->setText("等待连接");
 
                 // 如果正在连接或打算连接，却未开播，则断开
-                if (socket->state() != QAbstractSocket::UnconnectedState)
-                    socket->close();
+                if (liveService->socket->state() != QAbstractSocket::UnconnectedState)
+                    liveService->socket->close();
                 return false;
             }
         }
         else // 已开播，则停下
         {
             qInfo() << "开播，停止定时连接";
-            if (connectServerTimer->isActive())
-                connectServerTimer->stop();
+            if (liveService->connectServerTimer->isActive())
+                liveService->connectServerTimer->stop();
             if (ui->doveCheck->isChecked())
                 ui->doveCheck->setChecked(false);
             return true;
@@ -5307,7 +5307,7 @@ bool MainWindow::isWorking() const
 void MainWindow::updatePermission()
 {
     permissionLevel = 0;
-    if (gettingRoom || gettingUser)
+    if (liveService->gettingRoom || liveService->gettingUser)
         return ;
     QString userId = ac->cookieUid;
     get(serverPath + "pay/isVip", {"room_id", ac->roomId, "user_id", userId}, [=](MyJson json) {
@@ -5399,7 +5399,7 @@ int MainWindow::hasPermission()
  */
 void MainWindow::processNewDay()
 {
-    us->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
+    us->setValue("danmaku/todayHeartMinite", liveService->todayHeartMinite = 0);
 }
 
 void MainWindow::getRoomCover(QString url)
@@ -5757,18 +5757,18 @@ void MainWindow::getDanmuInfo()
         QJsonObject data = json.value("data").toObject();
         ac->cookieToken = data.value("token").toString();
         QJsonArray hostArray = data.value("host_list").toArray();
-        hostList.clear();
+        liveService->hostList.clear();
         foreach (auto val, hostArray)
         {
             QJsonObject o = val.toObject();
-            hostList.append(HostInfo{
+            liveService->hostList.append(HostInfo{
                                 o.value("host").toString(),
                                 o.value("port").toInt(),
                                 o.value("wss_port").toInt(),
                                 o.value("ws_port").toInt(),
                             });
         }
-        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
+        SOCKET_DEB << s8("getDanmuInfo: host数量=") << liveService->hostList.size() << "  token=" << ac->cookieToken;
 
         startMsgLoop();
 
@@ -5802,9 +5802,9 @@ void MainWindow::getFansAndUpdate()
 //qInfo() << "    现有粉丝数(第一页)：" << newFans.size();
 
         // 第一次加载
-        if (!fansList.size())
+        if (!liveService->fansList.size())
         {
-            fansList = newFans;
+            liveService->fansList = newFans;
             return ;
         }
 
@@ -5812,9 +5812,9 @@ void MainWindow::getFansAndUpdate()
         // 先找到原先最后关注并且还在的，即：旧列.index == 新列.find
         int index = -1; // 旧列索引
         int find = -1;  // 新列索引
-        while (++index < fansList.size())
+        while (++index < liveService->fansList.size())
         {
-            FanBean fan = fansList.at(index);
+            FanBean fan = liveService->fansList.at(index);
             for (int j = 0; j < newFans.size(); j++)
             {
                 FanBean nFan = newFans.at(j);
@@ -5829,9 +5829,9 @@ void MainWindow::getFansAndUpdate()
         }
 
         // 取消关注（只支持最新关注的，不是专门做的，只是顺带）
-        if (!fansList.size())
+        if (!liveService->fansList.size())
         {}
-        else if (index >= fansList.size()) // 没有被关注过，或之前关注的全部取关了？
+        else if (index >= liveService->fansList.size()) // 没有被关注过，或之前关注的全部取关了？
         {
             qInfo() << s8("没有被关注过，或之前关注的全部取关了？");
         }
@@ -5839,12 +5839,12 @@ void MainWindow::getFansAndUpdate()
         {
             for (int i = 0; i < index; i++)
             {
-                FanBean fan = fansList.at(i);
+                FanBean fan = liveService->fansList.at(i);
                 qInfo() << s8("取消关注：") << fan.uname << QDateTime::fromSecsSinceEpoch(fan.mtime);
                 appendNewLiveDanmaku(LiveDanmaku(fan.uname, fan.mid, false, QDateTime::fromSecsSinceEpoch(fan.mtime)));
             }
             while (index--)
-                fansList.removeFirst();
+                liveService->fansList.removeFirst();
         }
 
         // 新增关注
@@ -5871,7 +5871,7 @@ void MainWindow::getFansAndUpdate()
                 judgeRobotAndMark(danmaku);
             }
 
-            fansList.insert(0, fan);
+            liveService->fansList.insert(0, fan);
         }
 
     });
@@ -5944,7 +5944,7 @@ void MainWindow::setPkInfoById(QString roomId, QString pkId)
         // pk_pre_time  pk_start_time  pk_frozen_time  pk_end_time
         QJsonObject pkData = json.value("data").toObject();
         qint64 pkStartTime = static_cast<qint64>(pkData.value("pk_start_time").toDouble());
-        pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
+        liveService->pkEndTime = static_cast<qint64>(pkData.value("pk_frozen_time").toDouble());
 
         QJsonObject initInfo = pkData.value("init_info").toObject();
         QJsonObject matchInfo = pkData.value("match_info").toObject();
@@ -5955,20 +5955,20 @@ void MainWindow::setPkInfoById(QString roomId, QString pkId)
             matchInfo = temp;
         }
 
-        pkRoomId = snum(qint64(matchInfo.value("room_id").toDouble()));
-        pkUid = snum(qint64(matchInfo.value("uid").toDouble()));
-        pkUname = matchInfo.value("uname").toString();
-        myVotes = initInfo.value("votes").toInt();
-        matchVotes = matchInfo.value("votes").toInt();
-        pkBattleType = pkData.value("battle_type").toInt();
-        pkVideo = pkBattleType == 2;
+        liveService->pkRoomId = snum(qint64(matchInfo.value("room_id").toDouble()));
+        liveService->pkUid = snum(qint64(matchInfo.value("uid").toDouble()));
+        liveService->pkUname = matchInfo.value("uname").toString();
+        liveService->myVotes = initInfo.value("votes").toInt();
+        liveService->matchVotes = matchInfo.value("votes").toInt();
+        liveService->pkBattleType = pkData.value("battle_type").toInt();
+        liveService->pkVideo = liveService->pkBattleType == 2;
 
-        pkTimer->start();
+        liveService->pkTimer->start();
         if (danmakuWindow)
         {
             danmakuWindow->showStatusText();
-            danmakuWindow->setToolTip(pkUname);
-            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+            danmakuWindow->setToolTip(liveService->pkUname);
+            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
         }
         ui->actionShow_PK_Video->setEnabled(true);
 
@@ -5976,21 +5976,21 @@ void MainWindow::setPkInfoById(QString roomId, QString pkId)
         // 已经开始大乱斗
         if (currentTime > pkStartTime) // !如果是刚好开始，可能不能运行下面的，也可能不会触发"PK_START"，不管了
         {
-            if (pkChuanmenEnable)
+            if (liveService->pkChuanmenEnable)
             {
                 connectPkRoom();
             }
 
             // 监听尾声
-            qint64 deltaEnd = pkEndTime - currentTime;
-            if (deltaEnd*1000 > pkJudgeEarly)
+            qint64 deltaEnd = liveService->pkEndTime - currentTime;
+            if (deltaEnd*1000 > liveService->pkJudgeEarly)
             {
-                pkEndingTimer->start(deltaEnd*1000 - pkJudgeEarly);
+                liveService->pkEndingTimer->start(deltaEnd*1000 - liveService->pkJudgeEarly);
 
                 // 怕刚好结束的一瞬间，没有收到大乱斗的消息
                 QTimer::singleShot(qMax(0, int(deltaEnd)), [=]{
-                    pkEnding = false;
-                    pkVoting = 0;
+                    liveService->pkEnding = false;
+                    liveService->pkVoting = 0;
                 });
             }
         }
@@ -6008,22 +6008,22 @@ void MainWindow::startMsgLoop()
 
     // 开始连接
     // int hostUseIndex = 0; // 循环遍历可连接的host（意思一下，暂时未使用）
-    if (hostUseIndex < 0 || hostUseIndex >= hostList.size())
-        hostUseIndex = 0;
-    HostInfo hostServer = hostList.at(hostUseIndex);
-    us->setValue("live/hostIndex", hostUseIndex);
-    hostUseIndex++; // 准备用于尝试下一次的遍历，连接成功后-1
+    if (liveService->hostUseIndex < 0 || liveService->hostUseIndex >= liveService->hostList.size())
+        liveService->hostUseIndex = 0;
+    HostInfo hostServer = liveService->hostList.at(liveService->hostUseIndex);
+    us->setValue("live/hostIndex", liveService->hostUseIndex);
+    liveService->hostUseIndex++; // 准备用于尝试下一次的遍历，连接成功后-1
 
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
-    SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
+    SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (liveService->hostUseIndex-1);
 
     // 设置安全套接字连接模式（不知道有啥用）
-    QSslConfiguration config = socket->sslConfiguration();
+    QSslConfiguration config = liveService->socket->sslConfiguration();
     config.setPeerVerifyMode(QSslSocket::VerifyNone);
     config.setProtocol(QSsl::TlsV1SslV3);
-    socket->setSslConfiguration(config);
+    liveService->socket->setSslConfiguration(config);
 
-    socket->open(host);
+    liveService->socket->open(host);
 }
 
 void MainWindow::sendVeriPacket(QWebSocket* socket, QString roomId, QString token)
@@ -6044,7 +6044,7 @@ void MainWindow::sendHeartPacket()
     ba.append("[object Object]");
     ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
 //    SOCKET_DEB << "发送心跳包：" << ba;
-    socket->sendBinaryMessage(ba);
+    liveService->socket->sendBinaryMessage(ba);
 }
 
 QString MainWindow::getLocalNickname(qint64 uid) const
@@ -6640,9 +6640,9 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%online_rank%")
     {
         qint64 uid = danmaku.getUid();
-        for (int i = 0; i < onlineGoldRank.size(); i++)
+        for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
         {
-            if (onlineGoldRank.at(i).getUid() == uid)
+            if (liveService->onlineGoldRank.at(i).getUid() == uid)
             {
                 return snum(i + 1);
             }
@@ -6697,7 +6697,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         bool isInFans = false;
         qint64 uid = danmaku.getUid();
-        foreach (FanBean fan, fansList)
+        foreach (FanBean fan, liveService->fansList)
             if (fan.mid == uid)
             {
                 isInFans = true;
@@ -6732,7 +6732,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 大航海人数
     else if (key == "%guard_count%")
-        return snum(guardInfos.size());
+        return snum(liveService->guardInfos.size());
 
     // 当前粉丝数量
     else if (key == "%fans_count%")
@@ -6784,24 +6784,24 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 大乱斗
     else if (key == "%pking%")
-        return snum(pking ? 1 : 0);
+        return snum(liveService->pking ? 1 : 0);
     else if (key == "%pk_video%")
-        return snum(pkVideo ? 1 : 0);
+        return snum(liveService->pkVideo ? 1 : 0);
     else if (key == "%pk_room_id%")
-        return pkRoomId;
+        return liveService->pkRoomId;
     else if (key == "%pk_uid%")
-        return pkUid;
+        return liveService->pkUid;
     else if (key == "%pk_uname%")
-        return pkUname;
+        return liveService->pkUname;
     else if (key == "%pk_count%")
-        return snum(!pkRoomId.isEmpty() ? us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() : 0);
+        return snum(!liveService->pkRoomId.isEmpty() ? us->danmakuCounts->value("pk/" + liveService->pkRoomId, 0).toInt() : 0);
     else if (key == "%pk_touta_prob%")
     {
         int prob = 0;
-        if (pking && !pkRoomId.isEmpty())
+        if (liveService->pking && !liveService->pkRoomId.isEmpty())
         {
-            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = us->danmakuCounts->value("pk/" + liveService->pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + liveService->pkRoomId, 0).toInt();
             if (totalCount > 1)
                 prob = toutaCount * 100 / totalCount;
         }
@@ -6809,18 +6809,18 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
 
     else if (key == "%pk_my_votes%")
-        return snum(myVotes);
+        return snum(liveService->myVotes);
     else if (key == "%pk_match_votes%")
-        return snum(matchVotes);
+        return snum(liveService->matchVotes);
     else if (key == "%pk_ending%")
-        return snum(pkEnding ? 1 : 0);
+        return snum(liveService->pkEnding ? 1 : 0);
     else if (key == "%pk_trans_gold%")
-        return snum(goldTransPk);
+        return snum(liveService->goldTransPk);
     else if (key == "%pk_max_gold%")
-        return snum(pkMaxGold);
+        return snum(liveService->pkMaxGold);
 
     else if (key == "%pk_id%")
-        return snum(pkId);
+        return snum(liveService->pkId);
 
     // 房间属性
     else if (key == "%living%")
@@ -6918,7 +6918,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 对面直播间也在用神奇弹幕
     else if (key == "%pk_magical_room%")
-        return !pkRoomId.isEmpty() && magicalRooms.contains(pkRoomId) ? "1" : "0";
+        return !liveService->pkRoomId.isEmpty() && liveService->magicalRooms.contains(liveService->pkRoomId) ? "1" : "0";
 
     // 正在播放的音乐
     else if (key == "%playing_song%")
@@ -8003,15 +8003,15 @@ void MainWindow::finishSaveDanmuToFile()
 
 void MainWindow::saveTouta()
 {
-    us->setValue("pk/toutaCount", toutaCount);
-    us->setValue("pk/chiguaCount", chiguaCount);
-    us->setValue("pk/toutaGold", toutaGold);
-    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold));
+    us->setValue("pk/toutaCount", liveService->toutaCount);
+    us->setValue("pk/chiguaCount", liveService->chiguaCount);
+    us->setValue("pk/toutaGold", liveService->toutaGold);
+    ui->pkAutoMelonCheck->setToolTip(QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(liveService->toutaCount).arg(liveService->chiguaCount).arg(liveService->toutaGold));
 }
 
 void MainWindow::restoreToutaGifts(QString text)
 {
-    toutaGifts.clear();
+    liveService->toutaGifts.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
     foreach (QString s, sl)
     {
@@ -8022,7 +8022,7 @@ void MainWindow::restoreToutaGifts(QString text)
         int id = l.at(0).toInt();
         QString name = l.at(1);
         int gold = l.at(2).toInt();
-        toutaGifts.append(LiveDanmaku("", id, name, 1, 0, QDateTime(), "gold", gold));
+        liveService->toutaGifts.append(LiveDanmaku("", id, name, 1, 0, QDateTime(), "gold", gold));
     }
 }
 
@@ -8326,8 +8326,8 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     }
     else if (msg == "关闭机器人")
     {
-        socket->abort();
-        connectServerTimer->stop();
+        liveService->socket->abort();
+        liveService->connectServerTimer->stop();
     }
     else if (msg == "关闭欢迎")
     {
@@ -10799,7 +10799,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         re = RE("execTouta\\s*\\(\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
-            if (pking)
+            if (liveService->pking)
                 execTouta();
             else
                 qWarning() << "不在PK中，无法偷塔";
@@ -10815,7 +10815,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             int val = caps.at(1).toInt();
-            us->setValue("pk/maxGold", pkMaxGold = val);
+            us->setValue("pk/maxGold", liveService->pkMaxGold = val);
             return true;
         }
     }
@@ -11720,17 +11720,17 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         if (ui->recordCheck->isChecked())
             startLiveRecord();
-        reconnectWSDuration = INTERVAL_RECONNECT_WS;
+        liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
         emit signalLiveStart(ac->roomId);
 
-        if (isLiving() || pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (isLiving() || liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qInfo() << "忽视PK导致的开播情况";
             // 大乱斗时突然断联后恢复
             if (!isLiving())
             {
-                if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
-                    connectServerTimer->stop();
+                if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
+                    liveService->connectServerTimer->stop();
                 slotStartWork();
             }
             return ;
@@ -11740,12 +11740,12 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
-                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 60000) // 起码是上次下播10秒钟后
+                    && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 60000) // 起码是上次下播10秒钟后
                 sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已开播");
             ac->liveStatus = 1;
-            if (ui->timerConnectServerCheck->isChecked() && connectServerTimer->isActive())
-                connectServerTimer->stop();
+            if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
+                liveService->connectServerTimer->stop();
             slotStartWork(); // 每个房间第一次开始工作
         }
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
@@ -11753,22 +11753,22 @@ void MainWindow::handleMessage(QJsonObject json)
     else if (cmd == "PREPARING") // 下播
     {
         finishLiveRecord();
-        reconnectWSDuration = INTERVAL_RECONNECT_WS;
+        liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
 
-        if (pking || pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
         QString roomId = json.value("roomid").toString();
 //        if (roomId == this->roomId || roomId == this->shortId) // 是当前房间的
         {
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
-                    && QDateTime::currentMSecsSinceEpoch() - liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
+                    && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
                 sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已下播");
             ac->liveStatus = 0;
 
-            if (ui->timerConnectServerCheck->isChecked() && !connectServerTimer->isActive())
-                connectServerTimer->start();
+            if (ui->timerConnectServerCheck->isChecked() && !liveService->connectServerTimer->isActive())
+                liveService->connectServerTimer->start();
         }
 
         releaseLiveData(true);
@@ -11816,10 +11816,10 @@ void MainWindow::handleMessage(QJsonObject json)
         }
 
         // 判断对面直播间
-        bool opposite = pking &&
-                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
-                     snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
+        bool opposite = liveService->pking &&
+                ((liveService->oppositeAudience.contains(uid) && !liveService->myAudience.contains(uid))
+                 || (!liveService->pkRoomId.isEmpty() && medal.size() >= 4 &&
+                     snum(static_cast<qint64>(medal[3].toDouble())) == liveService->pkRoomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
         qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
@@ -12215,16 +12215,16 @@ void MainWindow::handleMessage(QJsonObject json)
             }
             else // 延迟发送
             {
-                if (giftCombos.contains(batchComboId)) // 已经连击了，合并
+                if (liveService->giftCombos.contains(batchComboId)) // 已经连击了，合并
                 {
-                    giftCombos[batchComboId].addGift(num, totalCoin, QDateTime::currentDateTime());
+                    liveService->giftCombos[batchComboId].addGift(num, totalCoin, QDateTime::currentDateTime());
                 }
                 else // 创建新的连击
                 {
                     danmaku.setTime(QDateTime::currentDateTime());
-                    giftCombos.insert(batchComboId, danmaku);
-                    if (!comboTimer->isActive())
-                        comboTimer->start();
+                    liveService->giftCombos.insert(batchComboId, danmaku);
+                    if (!liveService->comboTimer->isActive())
+                        liveService->comboTimer->start();
                 }
             }
         }
@@ -12252,13 +12252,13 @@ void MainWindow::handleMessage(QJsonObject json)
             // 正在PK，保存弹幕历史
             // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
             // 方便起见，直接全部保存下来了
-            pkGifts.append(danmaku);
+            liveService->pkGifts.append(danmaku);
 
             // 添加礼物记录
             appendLiveGift(danmaku);
 
             // 正在偷塔阶段
-            if (pkEnding && uid == ac->cookieUid.toLongLong()) // 机器人账号
+            if (liveService->pkEnding && uid == ac->cookieUid.toLongLong()) // 机器人账号
             {
 //                pkVoting -= totalCoin;
 //                if (pkVoting < 0) // 自己用其他设备送了更大的礼物
@@ -12464,7 +12464,7 @@ void MainWindow::handleMessage(QJsonObject json)
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
         appendNewLiveDanmaku(danmaku);
 
-        pkGifts.append(danmaku);
+        liveService->pkGifts.append(danmaku);
         triggerCmdEvent(cmd, danmaku.with(data));
     }
     else if (cmd == "SUPER_CHAT_MESSAGE_JPN") // 醒目留言日文翻译
@@ -12663,11 +12663,11 @@ void MainWindow::handleMessage(QJsonObject json)
             }
 
             // 高能榜上的用户
-            for (int i = 0; i < onlineGoldRank.size(); i++)
+            for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
             {
-                if (onlineGoldRank.at(i).getUid() == uid)
+                if (liveService->onlineGoldRank.at(i).getUid() == uid)
                 {
-                    danmaku = onlineGoldRank.at(i); // 就是这个用户了
+                    danmaku = liveService->onlineGoldRank.at(i); // 就是这个用户了
                     danmaku.setTime(QDateTime::currentDateTime());
                     qInfo() << "                guard:" << danmaku.getGuard();
                     break;
@@ -12781,14 +12781,14 @@ void MainWindow::handleMessage(QJsonObject json)
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
 
-        bool opposite = pking &&
-                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
-                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == pkRoomId));
+        bool opposite = liveService->pking &&
+                ((liveService->oppositeAudience.contains(uid) && !liveService->myAudience.contains(uid))
+                 || (!liveService->pkRoomId.isEmpty() &&
+                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == liveService->pkRoomId));
         danmaku.setOpposite(opposite);
         danmaku.with(data);
 
-        for (const auto& guard: guardInfos)
+        for (const auto& guard: liveService->guardInfos)
             if (guard.getUid() == uid)
             {
                 danmaku.setGuardLevel(guard.getGuard());
@@ -12909,7 +12909,7 @@ void MainWindow::handleMessage(QJsonObject json)
             triggerCmdEvent("FIRST_GUARD", danmaku.with(data), true);
         }
         us->currentGuards[uid] = username;
-        guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
+        liveService->guardInfos.append(LiveDanmaku(guard_level, username, uid, QDateTime::currentDateTime()));
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
@@ -13004,7 +13004,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QJsonArray array = json.value("data").toObject().value("list").toArray();
         // 因为高能榜上的只有名字和ID，没有粉丝牌，有需要的话还是需要手动刷新一下
-        if (array.size() != onlineGoldRank.size())
+        if (array.size() != liveService->onlineGoldRank.size())
         {
             // 还是不更新了吧，没有必要
             // updateOnlineGoldRank();
@@ -13019,12 +13019,12 @@ void MainWindow::handleMessage(QJsonObject json)
                 int score = user.value("score").toInt();
                 int rank = user.value("rank").toInt();
 
-                for (int i = 0; i < onlineGoldRank.size(); i++)
+                for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
                 {
-                    if (onlineGoldRank.at(i).getUid() == uid)
+                    if (liveService->onlineGoldRank.at(i).getUid() == uid)
                     {
-                        onlineGoldRank[i].setFirst(rank);
-                        onlineGoldRank[i].setTotalCoin(score);
+                        liveService->onlineGoldRank[i].setFirst(rank);
+                        liveService->onlineGoldRank[i].setTotalCoin(score);
                         break;
                     }
                 }
@@ -14700,13 +14700,13 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
         // 不过不能这么做，否则不会显示“对面”两个字了
         // myAudience.insert(uid);
     }
-    else if (cmAudience.contains(uid))
+    else if (liveService->cmAudience.contains(uid))
     {
-        if (cmAudience.value(uid) > 0)
+        if (liveService->cmAudience.value(uid) > 0)
         {
             danmaku.setViewReturn(true);
-            danmaku.setPrevTimestamp(cmAudience[uid]);
-            cmAudience[uid] = 0; // 标记为串门回来
+            danmaku.setPrevTimestamp(liveService->cmAudience[uid]);
+            liveService->cmAudience[uid] = 0; // 标记为串门回来
             localNotify(danmaku.getNickname() + " 去对面串门回来");
         }
     }
@@ -14765,7 +14765,7 @@ void MainWindow::refreshBlockList()
 
 bool MainWindow::isInFans(qint64 uid)
 {
-    foreach (auto fan, fansList)
+    foreach (auto fan, liveService->fansList)
     {
         if (fan.mid == uid)
             return true;
@@ -15080,13 +15080,13 @@ void MainWindow::updateExistGuards(int page)
 {
     if (page == 0) // 表示是入口
     {
-        if (updateGuarding)
+        if (liveService->updateGuarding)
             return ;
 
         page = 1;
         us->currentGuards.clear();
-        guardInfos.clear();
-        updateGuarding = true;
+        liveService->guardInfos.clear();
+        liveService->updateGuarding = true;
 
         // 参数是0的话，自动判断是否需要
         if (ac->browserCookie.isEmpty())
@@ -15116,7 +15116,7 @@ void MainWindow::updateExistGuards(int page)
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
-        guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
+        liveService->guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
         us->currentGuards[uid] = username;
 
         if (uid == ac->cookieUid.toLongLong())
@@ -15149,7 +15149,7 @@ void MainWindow::updateExistGuards(int page)
     get(url, [=](QJsonObject json){
         if (_upUid != ac->upUid)
         {
-            updateGuarding = false;
+            liveService->updateGuarding = false;
             return ;
         }
 
@@ -15182,7 +15182,7 @@ void MainWindow::updateExistGuards(int page)
 
             if (liveService->dailySettings)
                 liveService->dailySettings->setValue("guard_count", us->currentGuards.size());
-            updateGuarding = false;
+            liveService->updateGuarding = false;
             ui->guardCountLabel->setText(snum(us->currentGuards.size()));
         }
     });
@@ -15260,7 +15260,7 @@ void MainWindow::updateOnlineGoldRank()
     QString _upUid = ac->upUid;
     QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?roomId="
             +ac->roomId+"&page="+snum(1)+"&ruid="+ac->upUid+"&pageSize="+snum(50);
-    onlineGoldRank.clear();
+    liveService->onlineGoldRank.clear();
     get(url, [=](QJsonObject json){
         if (_upUid != ac->upUid)
             return ;
@@ -15307,7 +15307,7 @@ void MainWindow::updateOnlineGoldRank()
                                  "");
             }
 
-            onlineGoldRank.append(danmaku);
+            liveService->onlineGoldRank.append(danmaku);
         }
         // qInfo() << "高能榜：" << names;
         updateOnlineRankGUI();
@@ -15320,9 +15320,9 @@ void MainWindow::updateOnlineRankGUI()
         return ;
 
     // 获取头像
-    for (int i = 0; i < onlineGoldRank.size(); i++)
+    for (int i = 0; i < liveService->onlineGoldRank.size(); i++)
     {
-        const LiveDanmaku &danmaku = onlineGoldRank.at(i);
+        const LiveDanmaku &danmaku = liveService->onlineGoldRank.at(i);
         qint64 uid = danmaku.getUid();
         if (!pl->userHeaders.contains(uid))
         {
@@ -15350,9 +15350,9 @@ void MainWindow::updateOnlineRankGUI()
 
     // 找到不同点，提升性能（前几应该都不变的）
     int diff = 0;
-    for (diff = 0; diff < onlineGoldRank.size() && diff < ui->onlineRankListWidget->count(); diff++)
+    for (diff = 0; diff < liveService->onlineGoldRank.size() && diff < ui->onlineRankListWidget->count(); diff++)
     {
-        qint64 id1 = onlineGoldRank.at(diff).getUid();
+        qint64 id1 = liveService->onlineGoldRank.at(diff).getUid();
         qint64 id2 = ui->onlineRankListWidget->item(diff)->data(Qt::UserRole).toLongLong();
         if (id1 != id2)
             break;
@@ -15369,9 +15369,9 @@ void MainWindow::updateOnlineRankGUI()
     // 放到GUI
     const int headerRadius = 24;
     int miniHeight = 0;
-    for (int i = diff; i < onlineGoldRank.size(); i++)
+    for (int i = diff; i < liveService->onlineGoldRank.size(); i++)
     {
-        auto& danmaku = onlineGoldRank.at(i);
+        auto& danmaku = liveService->onlineGoldRank.at(i);
         qint64 uid = danmaku.getUid();
         if (pl->userHeaders.contains(uid))
         {
@@ -15437,7 +15437,7 @@ void MainWindow::updateOnlineRankGUI()
     if (miniHeight)
         ui->onlineRankListWidget->setFixedHeight(miniHeight);
     // ui->onlineRankDescLabel->setText(onlineGoldRank.size() ? "高\n能\n榜" : "");
-    ui->onlineRankDescLabel->setPixmap(onlineGoldRank.size() ? QPixmap(":/icons/rank") : QPixmap());
+    ui->onlineRankDescLabel->setPixmap(liveService->onlineGoldRank.size() ? QPixmap(":/icons/rank") : QPixmap());
     ui->onlineRankDescLabel->setMaximumSize(headerRadius * 4 / 3, headerRadius * 2);
 }
 
@@ -15490,7 +15490,7 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
 
 void MainWindow::getPkMatchInfo()
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + pkRoomId;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + liveService->pkRoomId;
     get(url, [=](MyJson json) {
         if (json.value("code").toInt() != 0)
         {
@@ -15540,8 +15540,8 @@ void MainWindow::getPkOnlineGuardPage(int page)
             guard3++;
     };
 
-    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + pkRoomId
-            +"&page=" + QString::number(page) + "&ruid=" + pkUid + "&page_size=30";
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + liveService->pkRoomId
+            +"&page=" + QString::number(page) + "&ruid=" + liveService->pkUid + "&page_size=30";
     get(url, [=](MyJson json){
         MyJson data = json.data();
         // top3
@@ -15632,7 +15632,7 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
         JO(data, season_info);
         JI(season_info, current_season_id); // 赛季ID：38
         JS(season_info, current_season_name); // 赛季名称：PK大乱斗S12赛季
-        this->currentSeasonId = current_season_id;
+        this->liveService->currentSeasonId = current_season_id;
         ui->battleRankIconLabel->setToolTip(current_season_name + " (id:" + snum(current_season_id) + ")");
 
         JO(data, score_info);
@@ -15656,7 +15656,7 @@ void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
         JA(data, assist_list); // 助攻列表
 
         JO(data, pk_url_info);
-        this->pkRuleUrl = pk_url_info.s("pk_rule_url");
+        this->liveService->pkRuleUrl = pk_url_info.s("pk_rule_url");
 
         JO(data, rank_info);
         JI(rank_info, rank); // 排名
@@ -16058,22 +16058,22 @@ void MainWindow::on_timerConnectServerCheck_clicked()
     us->setValue("live/timerConnectServer", enable);
     if (!isLiving() && enable)
         startConnectRoom();
-    else if (!enable && (!socket || socket->state() == QAbstractSocket::UnconnectedState))
+    else if (!enable && (!liveService->socket || liveService->socket->state() == QAbstractSocket::UnconnectedState))
         startConnectRoom();
 }
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
     us->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
-    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
-        connectServerTimer->start();
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
+        liveService->connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
     us->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
-    if (!justStart && ui->timerConnectServerCheck->isChecked() && connectServerTimer && !connectServerTimer->isActive())
-        connectServerTimer->start();
+    if (!justStart && ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
+        liveService->connectServerTimer->start();
 }
 
 void MainWindow::on_calculateDailyDataCheck_clicked()
@@ -16129,21 +16129,21 @@ void MainWindow::on_pkMaxGoldButton_clicked()
 {
     bool ok = false;
     // 默认最大设置的是1000元，有钱人……
-    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n1元=1000金瓜子=100或10乱斗值（按B站规则会变）\n注意：每次偷塔、反偷塔时都单独判断上限，而非一次大乱斗的累加", pkMaxGold, 0, 1000000, 100, &ok);
+    int v = QInputDialog::getInt(this, "自动偷塔礼物上限", "单次PK偷塔赠送的金瓜子上限\n1元=1000金瓜子=100或10乱斗值（按B站规则会变）\n注意：每次偷塔、反偷塔时都单独判断上限，而非一次大乱斗的累加", liveService->pkMaxGold, 0, 1000000, 100, &ok);
     if (!ok)
         return ;
 
-    us->setValue("pk/maxGold", pkMaxGold = v);
+    us->setValue("pk/maxGold", liveService->pkMaxGold = v);
 }
 
 void MainWindow::on_pkJudgeEarlyButton_clicked()
 {
     bool ok = false;
-    int v = QInputDialog::getInt(this, "自动偷塔提前判断", "每次偷塔结束前n毫秒判断，根据网速酌情设置\n1秒=1000毫秒，下次大乱斗生效", pkJudgeEarly, 0, 5000, 500, &ok);
+    int v = QInputDialog::getInt(this, "自动偷塔提前判断", "每次偷塔结束前n毫秒判断，根据网速酌情设置\n1秒=1000毫秒，下次大乱斗生效", liveService->pkJudgeEarly, 0, 5000, 500, &ok);
     if (!ok)
         return ;
 
-    us->setValue("pk/judgeEarly", pkJudgeEarly = v);
+    us->setValue("pk/judgeEarly", liveService->pkJudgeEarly = v);
 }
 
 template<typename T>
@@ -16167,7 +16167,7 @@ bool MainWindow::isConditionTrue(T a, T b, QString op) const
 
 void MainWindow::on_roomIdEdit_returnPressed()
 {
-    if (socket->state() == QAbstractSocket::UnconnectedState)
+    if (liveService->socket->state() == QAbstractSocket::UnconnectedState)
     {
         startConnectRoom();
     }
@@ -16226,10 +16226,10 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             on_actionShow_Live_Danmaku_triggered(); // 重新加载
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalSendMsgToPk, this, [=](QString msg){
-            if (!pking || pkRoomId.isEmpty())
+            if (!liveService->pking || liveService->pkRoomId.isEmpty())
                 return ;
-            qInfo() << "发送PK对面消息：" << pkRoomId << msg;
-            sendRoomMsg(pkRoomId, msg);
+            qInfo() << "发送PK对面消息：" << liveService->pkRoomId << msg;
+            sendRoomMsg(liveService->pkRoomId, msg);
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
             if (judgeRobot)
@@ -16252,9 +16252,9 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         danmakuWindow->hide();
 
         // PK中
-        if (pkBattleType)
+        if (liveService->pkBattleType)
         {
-            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
         }
 
         // 添加弹幕
@@ -16272,7 +16272,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
             danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
 
-            if (pking)
+            if (liveService->pking)
             {
                 danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
             }
@@ -16594,21 +16594,21 @@ void MainWindow::on_actionShow_Live_Video_triggered()
 
 void MainWindow::on_actionShow_PK_Video_triggered()
 {
-    if (pkRoomId.isEmpty())
+    if (liveService->pkRoomId.isEmpty())
         return ;
 
     LiveVideoPlayer* player = new LiveVideoPlayer(us, nullptr);
     player->setAttribute(Qt::WA_DeleteOnClose, true);
-    player->setRoomId(pkRoomId);
+    player->setRoomId(liveService->pkRoomId);
     player->show();
 }
 
 void MainWindow::on_pkChuanmenCheck_clicked()
 {
-    pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
-    us->setValue("pk/chuanmen", pkChuanmenEnable);
+    liveService->pkChuanmenEnable = ui->pkChuanmenCheck->isChecked();
+    us->setValue("pk/chuanmen", liveService->pkChuanmenEnable);
 
-    if (pkChuanmenEnable)
+    if (liveService->pkChuanmenEnable)
     {
         connectPkRoom();
     }
@@ -16616,23 +16616,23 @@ void MainWindow::on_pkChuanmenCheck_clicked()
 
 void MainWindow::on_pkMsgSyncCheck_clicked()
 {
-    if (pkMsgSync == 0)
+    if (liveService->pkMsgSync == 0)
     {
-        pkMsgSync = 1;
+        liveService->pkMsgSync = 1;
         ui->pkMsgSyncCheck->setCheckState(Qt::PartiallyChecked);
     }
-    else if (pkMsgSync == 1)
+    else if (liveService->pkMsgSync == 1)
     {
-        pkMsgSync = 2;
+        liveService->pkMsgSync = 2;
         ui->pkMsgSyncCheck->setCheckState(Qt::Checked);
     }
-    else if (pkMsgSync == 2)
+    else if (liveService->pkMsgSync == 2)
     {
-        pkMsgSync = 0;
+        liveService->pkMsgSync = 0;
         ui->pkMsgSyncCheck->setCheckState(Qt::Unchecked);
     }
-    ui->pkMsgSyncCheck->setText(pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
-    us->setValue("pk/msgSync", pkMsgSync);
+    ui->pkMsgSyncCheck->setText(liveService->pkMsgSync == 1 ? "PK同步消息(仅视频)" : "PK同步消息");
+    us->setValue("pk/msgSync", liveService->pkMsgSync);
 }
 
 void MainWindow::pkPre(QJsonObject json)
@@ -16680,44 +16680,44 @@ void MainWindow::pkPre(QJsonObject json)
     QString uname = data.value("uname").toString();
     QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
     QString room_id = QString::number(static_cast<qint64>(data.value("room_id").toDouble()));
-    pkUname = uname;
-    pkRoomId = room_id;
-    pkUid = uid;
+    liveService->pkUname = uname;
+    liveService->pkRoomId = room_id;
+    liveService->pkUid = uid;
 
     // 大乱斗类型
-    pkBattleType = data.value("battle_type").toInt();
-    if (pkBattleType == 1) // 普通大乱斗
-        pkVideo = false;
-    else if (pkBattleType == 2) // 视频大乱斗
-        pkVideo = true;
+    liveService->pkBattleType = data.value("battle_type").toInt();
+    if (liveService->pkBattleType == 1) // 普通大乱斗
+        liveService->pkVideo = false;
+    else if (liveService->pkBattleType == 2) // 视频大乱斗
+        liveService->pkVideo = true;
     else
-        pkVideo = false;
+        liveService->pkVideo = false;
 
-    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble())  << "    类型：" << pkBattleType;
+    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble())  << "    类型：" << liveService->pkBattleType;
     if (danmakuWindow)
     {
         if (uname.isEmpty())
             danmakuWindow->setStatusText("大乱斗匹配中...");
-        else if (!pkRoomId.isEmpty())
+        else if (!liveService->pkRoomId.isEmpty())
         {
-            int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            int pkCount = us->danmakuCounts->value("pk/" + liveService->pkRoomId, 0).toInt();
             QString text = "匹配：" + uname;
             if(pkCount > 0)
                 text += "[" + QString::number(pkCount) + "]";
             danmakuWindow->setStatusText(text);
-            qInfo() << "主播：" << uname << pkUid << pkRoomId;
-            danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+            qInfo() << "主播：" << uname << liveService->pkUid << liveService->pkRoomId;
+            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
         }
     }
-    pkToLive = QDateTime::currentSecsSinceEpoch();
+    liveService->pkToLive = QDateTime::currentSecsSinceEpoch();
 
-    if (pkChuanmenEnable /*&& battle_type == 2*/)
+    if (liveService->pkChuanmenEnable /*&& battle_type == 2*/)
     {
         connectPkRoom();
     }
     ui->actionShow_PK_Video->setEnabled(true);
     ui->actionJoin_Battle->setEnabled(false);
-    pkGifts.clear();
+    liveService->pkGifts.clear();
 
     // 处理PK对面直播间事件
     if (hasEvent("PK_MATCH_INFO"))
@@ -16746,52 +16746,52 @@ void MainWindow::pkStart(QJsonObject json)
     }*/
 
     QJsonObject data = json.value("data").toObject();
-    pking = true;
+    liveService->pking = true;
     qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
     // qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
-    pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
+    liveService->pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
     qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-    qint64 deltaEnd = pkEndTime - currentTime;
+    qint64 deltaEnd = liveService->pkEndTime - currentTime;
     QString roomId = ac->roomId;
-    oppositeTouta = 0;
-    cmAudience.clear();
-    pkBattleType = data.value("battle_type").toInt();
-    if (pkBattleType == 1) // 普通大乱斗
-        pkVideo = false;
-    else if (pkBattleType == 2) // 视频大乱斗
-        pkVideo = true;
+    liveService->oppositeTouta = 0;
+    liveService->cmAudience.clear();
+    liveService->pkBattleType = data.value("battle_type").toInt();
+    if (liveService->pkBattleType == 1) // 普通大乱斗
+        liveService->pkVideo = false;
+    else if (liveService->pkBattleType == 2) // 视频大乱斗
+        liveService->pkVideo = true;
     else
-        pkVideo = false;
-    if (pkVideo)
+        liveService->pkVideo = false;
+    if (liveService->pkVideo)
     {
-        pkToLive = currentTime;
+        liveService->pkToLive = currentTime;
     }
 
     // 结束前x秒
-    pkEndingTimer->start(deltaEnd*1000 - pkJudgeEarly);
+    liveService->pkEndingTimer->start(deltaEnd*1000 - liveService->pkJudgeEarly);
 
-    pkTimer->start();
+    liveService->pkTimer->start();
     if (danmakuWindow)
     {
         danmakuWindow->showStatusText();
-        danmakuWindow->setToolTip(pkUname);
-        danmakuWindow->setPkStatus(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+        danmakuWindow->setToolTip(liveService->pkUname);
+        danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
     }
     qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
-    qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << pkBattleType;
+    qInfo() << "开启大乱斗, id =" << pkid << "  room=" << liveService->pkRoomId << "  user=" << liveService->pkUid << "   battle_type=" << liveService->pkBattleType;
 
     // 保存PK信息
-    int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
-    us->danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
-    qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
+    int pkCount = us->danmakuCounts->value("pk/" + liveService->pkRoomId, 0).toInt();
+    us->danmakuCounts->setValue("pk/" + liveService->pkRoomId, pkCount+1);
+    qInfo() << "保存匹配次数：" << liveService->pkRoomId << liveService->pkUname << (pkCount+1);
 
     // PK提示
-    QString text = "开启大乱斗：" + pkUname;
+    QString text = "开启大乱斗：" + liveService->pkUname;
     if (pkCount)
         text += "  PK过" + QString::number(pkCount) + "次";
     else
         text += "  初次匹配";
-    localNotify(text, pkUid.toLongLong());
+    localNotify(text, liveService->pkUid.toLongLong());
 
     // 处理对面在线舰长界面
     if (hasEvent("PK_MATCH_ONLINE_GUARD"))
@@ -16822,41 +16822,41 @@ void MainWindow::pkProcess(QJsonObject json)
         "timestamp": 1605749908
     }*/
     QJsonObject data = json.value("data").toObject();
-    int prevMyVotes = myVotes;
-    int prevMatchVotes = matchVotes;
+    int prevMyVotes = liveService->myVotes;
+    int prevMatchVotes = liveService->matchVotes;
     if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == ac->roomId)
     {
-        myVotes = data.value("init_info").toObject().value("votes").toInt();
-        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("match_info").toObject().value("votes").toInt();
     }
     else
     {
-        myVotes = data.value("match_info").toObject().value("votes").toInt();
-        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("init_info").toObject().value("votes").toInt();
     }
 
-    if (!pkTimer->isActive())
-        pkTimer->start();
+    if (!liveService->pkTimer->isActive())
+        liveService->pkTimer->start();
 
-    if (pkEnding)
+    if (liveService->pkEnding)
     {
-        qInfo() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+        qInfo() << "大乱斗进度(偷塔阶段)：" << liveService->myVotes << liveService->matchVotes << "   等待送到：" << liveService->pkVoting;
 
         // 显示偷塔情况
-        if (prevMyVotes < myVotes)
+        if (prevMyVotes < liveService->myVotes)
         {
-            int delta = myVotes - prevMyVotes;
+            int delta = liveService->myVotes - prevMyVotes;
             localNotify("[己方偷塔] + " + snum(delta));
 
             // B站返回的规则改了，偷塔的时候获取不到礼物了
-            pkVoting -= delta;
-            if (pkVoting < 0)
-                pkVoting = 0;
+            liveService->pkVoting -= delta;
+            if (liveService->pkVoting < 0)
+                liveService->pkVoting = 0;
         }
-        if (prevMatchVotes < matchVotes)
+        if (prevMatchVotes < liveService->matchVotes)
         {
-            oppositeTouta++;
-            localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+            liveService->oppositeTouta++;
+            localNotify("[对方偷塔] + " + snum(liveService->matchVotes - prevMatchVotes));
             {
                 // qInfo() << "pk偷塔信息：" << s;
                 if (danmuLogStream)
@@ -16877,7 +16877,7 @@ void MainWindow::pkProcess(QJsonObject json)
     }
     else
     {
-        qInfo() << "大乱斗进度：" << myVotes << matchVotes;
+        qInfo() << "大乱斗进度：" << liveService->myVotes << liveService->matchVotes;
     }
 }
 
@@ -16908,15 +16908,15 @@ void MainWindow::pkEnd(QJsonObject json)
     // winner_type: 2赢，-1输，两边2平局
 
     QJsonObject data = json.value("data").toObject();
-    if (pkVideo)
-        pkToLive = QDateTime::currentSecsSinceEpoch();
+    if (liveService->pkVideo)
+        liveService->pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
     int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
-    if (pkTimer)
-        pkTimer->stop();
-    if (pkEndingTimer)
-        pkEndingTimer->stop();
+    if (liveService->pkTimer)
+        liveService->pkTimer->stop();
+    if (liveService->pkEndingTimer)
+        liveService->pkEndingTimer->stop();
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
@@ -16927,15 +16927,15 @@ void MainWindow::pkEnd(QJsonObject json)
     int winnerType = 0;
     if (snum(thisRoomId) == ac->roomId) // init是自己
     {
-        myVotes = data.value("init_info").toObject().value("votes").toInt();
-        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("init_info").toObject().value("best_uname").toString();
         winnerType = winnerType1;
     }
     else // match是自己
     {
-        matchVotes = data.value("init_info").toObject().value("votes").toInt();
-        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("match_info").toObject().value("best_uname").toString();
         winnerType = winnerType2;
     }
@@ -16947,66 +16947,66 @@ void MainWindow::pkEnd(QJsonObject json)
     int winCode = 0;
     if (!ping)
         winCode = winnerType;
-    if (myVotes > 0)
+    if (liveService->myVotes > 0)
     {
-        for (int i = pkGifts.size()-1; i >= 0; i--)
-            if (pkGifts.at(i).getNickname() == bestName)
+        for (int i = liveService->pkGifts.size()-1; i >= 0; i--)
+            if (liveService->pkGifts.at(i).getNickname() == bestName)
             {
-                bestUid = pkGifts.at(i).getUid();
+                bestUid = liveService->pkGifts.at(i).getUid();
                 break;
             }
-        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        LiveDanmaku danmaku(bestName, bestUid, winCode, liveService->myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
     }
-    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, liveService->myVotes).with(data), true);
 
     localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(ping ? "平局" : (result ? "胜利" : "失败"))
-                                     .arg(myVotes)
-                                     .arg(matchVotes));
-    qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
-    myVotes = 0;
-    matchVotes = 0;
+                                     .arg(liveService->myVotes)
+                                     .arg(liveService->matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << liveService->myVotes << liveService->matchVotes;
+    liveService->myVotes = 0;
+    liveService->matchVotes = 0;
     QTimer::singleShot(60000, [=]{
-        if (pking) // 下一把PK，已经清空了
+        if (liveService->pking) // 下一把PK，已经清空了
             return ;
-        cmAudience.clear();
+        liveService->cmAudience.clear();
     });
 
     // 保存对面偷塔次数
-    if (oppositeTouta && !pkUname.isEmpty())
+    if (liveService->oppositeTouta && !liveService->pkUname.isEmpty())
     {
-        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = us->danmakuCounts->value("touta/" + liveService->pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + liveService->pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
-    pking = false;
-    pkEnding = false;
-    pkVoting = 0;
-    pkEndTime = 0;
-    pkUname = "";
-    pkUid = "";
-    pkRoomId = "";
-    myAudience.clear();
-    oppositeAudience.clear();
-    pkVideo = false;
+    liveService->pking = false;
+    liveService->pkEnding = false;
+    liveService->pkVoting = 0;
+    liveService->pkEndTime = 0;
+    liveService->pkUname = "";
+    liveService->pkUid = "";
+    liveService->pkRoomId = "";
+    liveService->myAudience.clear();
+    liveService->oppositeAudience.clear();
+    liveService->pkVideo = false;
     ui->actionShow_PK_Video->setEnabled(false);
-    pkBattleType = 0;
+    liveService->pkBattleType = 0;
 
     if (ac->cookieUid == ac->upUid)
         ui->actionJoin_Battle->setEnabled(true);
 
-    if (pkSocket)
+    if (liveService->pkSocket)
     {
         try {
-            if (pkSocket->state() == QAbstractSocket::ConnectedState)
-                pkSocket->close(); // 会自动deleterLater
+            if (liveService->pkSocket->state() == QAbstractSocket::ConnectedState)
+                liveService->pkSocket->close(); // 会自动deleterLater
             // pkSocket->deleteLater();
         } catch (...) {
             qCritical() << "delete pkSocket failed";
         }
-        pkSocket = nullptr;
+        liveService->pkSocket = nullptr;
     }
 }
 
@@ -17051,15 +17051,15 @@ void MainWindow::pkSettle(QJsonObject json)
     }*/
 
     QJsonObject data = json.value("data").toObject();
-    if (pkVideo)
-        pkToLive = QDateTime::currentSecsSinceEpoch();
+    if (liveService->pkVideo)
+        liveService->pkToLive = QDateTime::currentSecsSinceEpoch();
     int winnerType1 = data.value("init_info").toObject().value("result_type").toInt();
     int winnerType2 = data.value("match_info").toObject().value("result_type").toInt();
     qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
-    if (pkTimer)
-        pkTimer->stop();
-    if (pkEndingTimer)
-        pkEndingTimer->stop();
+    if (liveService->pkTimer)
+        liveService->pkTimer->stop();
+    if (liveService->pkEndingTimer)
+        liveService->pkEndingTimer->stop();
     if (danmakuWindow)
     {
         danmakuWindow->hideStatusText();
@@ -17070,92 +17070,92 @@ void MainWindow::pkSettle(QJsonObject json)
     int winCode = 0;
     if (snum(thisRoomId) == ac->roomId) // init是自己
     {
-        myVotes = data.value("init_info").toObject().value("votes").toInt();
-        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("init_info").toObject().value("best_uname").toString();
         winCode = winnerType1;
     }
     else // match是自己
     {
-        matchVotes = data.value("init_info").toObject().value("votes").toInt();
-        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        liveService->matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        liveService->myVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("match_info").toObject().value("best_uname").toString();
         winCode = winnerType2;
     }
 
     qint64 bestUid = 0;
-    if (myVotes > 0)
+    if (liveService->myVotes > 0)
     {
-        for (int i = pkGifts.size()-1; i >= 0; i--)
-            if (pkGifts.at(i).getNickname() == bestName)
+        for (int i = liveService->pkGifts.size()-1; i >= 0; i--)
+            if (liveService->pkGifts.at(i).getNickname() == bestName)
             {
-                bestUid = pkGifts.at(i).getUid();
+                bestUid = liveService->pkGifts.at(i).getUid();
                 break;
             }
-        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        LiveDanmaku danmaku(bestName, bestUid, winCode, liveService->myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
     }
-    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, liveService->myVotes).with(data), true);
 
     localNotify(QString("大乱斗 %1：%2 vs %3")
                                      .arg(winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败"))
-                                     .arg(myVotes)
-                                     .arg(matchVotes));
-    qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << myVotes << matchVotes;
-    myVotes = 0;
-    matchVotes = 0;
+                                     .arg(liveService->myVotes)
+                                     .arg(liveService->matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << liveService->myVotes << liveService->matchVotes;
+    liveService->myVotes = 0;
+    liveService->matchVotes = 0;
     QTimer::singleShot(60000, [=]{
-        if (pking) // 下一把PK，已经清空了
+        if (liveService->pking) // 下一把PK，已经清空了
             return ;
-        cmAudience.clear();
+        liveService->cmAudience.clear();
     });
 
     // 保存对面偷塔次数
-    if (oppositeTouta && !pkUname.isEmpty())
+    if (liveService->oppositeTouta && !liveService->pkUname.isEmpty())
     {
-        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
-        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+        int count = us->danmakuCounts->value("touta/" + liveService->pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + liveService->pkRoomId, count+1);
     }
 
     // 清空大乱斗数据
-    pking = false;
-    pkEnding = false;
-    pkVoting = 0;
-    pkEndTime = 0;
-    pkUname = "";
-    pkUid = "";
-    pkRoomId = "";
-    myAudience.clear();
-    oppositeAudience.clear();
-    pkVideo = false;
+    liveService->pking = false;
+    liveService->pkEnding = false;
+    liveService->pkVoting = 0;
+    liveService->pkEndTime = 0;
+    liveService->pkUname = "";
+    liveService->pkUid = "";
+    liveService->pkRoomId = "";
+    liveService->myAudience.clear();
+    liveService->oppositeAudience.clear();
+    liveService->pkVideo = false;
     ui->actionShow_PK_Video->setEnabled(false);
 
     if (ac->cookieUid == ac->upUid)
         ui->actionJoin_Battle->setEnabled(true);
 
-    if (pkSocket)
+    if (liveService->pkSocket)
     {
         try {
-            if (pkSocket->state() == QAbstractSocket::ConnectedState)
-                pkSocket->close(); // 会自动deleterLater
+            if (liveService->pkSocket->state() == QAbstractSocket::ConnectedState)
+                liveService->pkSocket->close(); // 会自动deleterLater
             // pkSocket->deleteLater();
         } catch (...) {
             qCritical() << "delete pkSocket failed";
         }
-        pkSocket = nullptr;
+        liveService->pkSocket = nullptr;
     }
 }
 
 void MainWindow::slotPkEndingTimeout()
 {
-    if (!pking) // 比如换房间了
+    if (!liveService->pking) // 比如换房间了
     {
-        qInfo() << "大乱斗结束前，逻辑不正确" << pking << ac->roomId
-                 << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+        qInfo() << "大乱斗结束前，逻辑不正确" << liveService->pking << ac->roomId
+                 << QDateTime::currentSecsSinceEpoch() << liveService->pkEndTime;
         return ;
     }
 
-    pkEndingTimer->stop();
+    liveService->pkEndingTimer->stop();
 
     slotPkEnding();
 }
@@ -17163,61 +17163,61 @@ void MainWindow::slotPkEndingTimeout()
 int MainWindow::getPkMaxGold(int votes)
 {
     if (!ui->pkAutoMaxGoldCheck->isChecked())
-        return pkMaxGold;
-    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold / goldTransPk); // 用于计算的价格
+        return liveService->pkMaxGold;
+    int money = qMax(0, votes / (1000 / liveService->goldTransPk) - liveService->pkMaxGold / liveService->goldTransPk); // 用于计算的价格
     double prop = pow(money, 1.0/3); // 自动调整的倍率，未限制
-    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
+    double maxProp = 10.0 / qMax(1, liveService->pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
     maxProp = qMax(1.0, maxProp);
     prop = qMin(qMax(1.0, prop), maxProp); // 限制倍率是 1 ~ 10 倍之间
     if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
-        qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
+        qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(liveService->pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
-    return int(pkMaxGold * prop);
+    return int(liveService->pkMaxGold * prop);
 }
 
 bool MainWindow::execTouta()
 {
-    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
+    int maxGold = getPkMaxGold(qMax(liveService->myVotes, liveService->matchVotes));
     if (ui->pkAutoMelonCheck->isChecked()
-            && myVotes + pkVoting <= matchVotes
-            && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
+            && liveService->myVotes + liveService->pkVoting <= liveService->matchVotes
+            && liveService->myVotes + liveService->pkVoting + maxGold/liveService->goldTransPk > liveService->matchVotes
             /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
-            && !toutaBlankList.contains(pkRoomId)
-            && !magicalRooms.contains(pkRoomId))
+            && !liveService->toutaBlankList.contains(liveService->pkRoomId)
+            && !liveService->magicalRooms.contains(liveService->pkRoomId))
     {
         // 调用送礼
         int giftId = 0, giftNum = 0;
         QString giftName;
         int giftUnit = 0, giftVote = 0; // 单价和单乱斗值
-        int needVote = matchVotes - myVotes - pkVoting; // 至少需要多少积分才能不输给对面
+        int needVote = liveService->matchVotes - liveService->myVotes - liveService->pkVoting; // 至少需要多少积分才能不输给对面
 
         if (!ui->toutaGiftCheck->isChecked()) // 赠送吃瓜（比对面多1分）
         {
             giftId = 20004;
             giftUnit = 100;
-            giftVote = giftUnit / goldTransPk; // 单个吃瓜有多少乱斗值
+            giftVote = giftUnit / liveService->goldTransPk; // 单个吃瓜有多少乱斗值
             giftNum = needVote / giftVote + 1; // 需要多少个礼物
 
-            chiguaCount += giftNum;
+            liveService->chiguaCount += giftNum;
         }
         else // 按类型赠送礼物
         {
             int minCost = 0x3f3f3f3f;
-            foreach (auto gift, toutaGifts)
+            foreach (auto gift, liveService->toutaGifts)
             {
                 int unit = gift.getTotalCoin(); // 单价
-                int vote = unit / goldTransPk; // 相当于多少乱斗值
+                int vote = unit / liveService->goldTransPk; // 相当于多少乱斗值
                 int num = needVote / vote + 1; // 起码要这个数量
                 int cost = unit * num; // 总价
                 if (cost > maxGold) // 总价超过上限
                     continue;
 
-                if (toutaGiftCounts.size()) // 数量白名单
+                if (liveService->toutaGiftCounts.size()) // 数量白名单
                 {
                     int index = -1;
-                    for (int i = 0; i < toutaGiftCounts.size(); i++)
+                    for (int i = 0; i < liveService->toutaGiftCounts.size(); i++)
                     {
-                        int count = toutaGiftCounts.at(i);
+                        int count = liveService->toutaGiftCounts.at(i);
                         if (count >= num) // 这个数量可以赢
                         {
                             int cos = unit * count;
@@ -17254,13 +17254,13 @@ bool MainWindow::execTouta()
         }
 
         sendGift(giftId, giftNum);
-        localNotify(QString("[") + (oppositeTouta ? "反" : "") + "偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
-        qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
+        localNotify(QString("[") + (liveService->oppositeTouta ? "反" : "") + "偷塔] " + snum(liveService->matchVotes-liveService->myVotes-liveService->pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
+        qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << liveService->myVotes << "vs" << liveService->matchVotes;
         if (!localDebug)
-            pkVoting += giftVote * giftNum; // 正在赠送中
+            liveService->pkVoting += giftVote * giftNum; // 正在赠送中
 
-        toutaCount++;
-        toutaGold += giftUnit * giftNum;
+        liveService->toutaCount++;
+        liveService->toutaGold += giftUnit * giftNum;
         saveTouta();
         return true;
     }
@@ -17295,46 +17295,46 @@ void MainWindow::getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences
 
 void MainWindow::connectPkRoom()
 {
-    if (pkRoomId.isEmpty())
+    if (liveService->pkRoomId.isEmpty())
         return ;
-    qInfo() << "连接PK房间:" << pkRoomId;
+    qInfo() << "连接PK房间:" << liveService->pkRoomId;
 
     // 根据弹幕消息
-    myAudience.clear();
-    oppositeAudience.clear();
+    liveService->myAudience.clear();
+    liveService->oppositeAudience.clear();
 
-    getRoomCurrentAudiences(ac->roomId, myAudience);
-    getRoomCurrentAudiences(pkRoomId, oppositeAudience);
+    getRoomCurrentAudiences(ac->roomId, liveService->myAudience);
+    getRoomCurrentAudiences(liveService->pkRoomId, liveService->oppositeAudience);
 
     // 额外保存的许多本地弹幕消息
     for (int i = 0; i < roomDanmakus.size(); i++)
     {
         qint64 uid = roomDanmakus.at(i).getUid();
         if (uid)
-            myAudience.insert(uid);
+            liveService->myAudience.insert(uid);
     }
 
     // 保存自己主播、对面主播（带头串门？？？）
-    myAudience.insert(ac->upUid.toLongLong());
-    oppositeAudience.insert(pkUid.toLongLong());
+    liveService->myAudience.insert(ac->upUid.toLongLong());
+    liveService->oppositeAudience.insert(liveService->pkUid.toLongLong());
 
     // 连接socket
-    if (pkSocket)
-        pkSocket->deleteLater();
-    pkSocket = new QWebSocket();
+    if (liveService->pkSocket)
+        liveService->pkSocket->deleteLater();
+    liveService->pkSocket = new QWebSocket();
 
-    connect(pkSocket, &QWebSocket::connected, this, [=]{
+    connect(liveService->pkSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "pkSocket connected";
-        hostUseIndex--;
+        liveService->hostUseIndex--;
         // 5秒内发送认证包
-        sendVeriPacket(pkSocket, pkRoomId, pkToken);
+        sendVeriPacket(liveService->pkSocket, liveService->pkRoomId, liveService->pkToken);
     });
 
-    connect(pkSocket, &QWebSocket::disconnected, this, [=]{
+    connect(liveService->pkSocket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了，比如掉线
-        if (isLiving() && pkSocket)
+        if (isLiving() && liveService->pkSocket)
         {
-            if (pking && pkChuanmenEnable) // 需要继续连接
+            if (liveService->pking && liveService->pkChuanmenEnable) // 需要继续连接
             {
                 qWarning() << "pkSocket断开连接";
 
@@ -17343,14 +17343,14 @@ void MainWindow::connectPkRoom()
             }
             else // 结束的情况，断开并清空
             {
-                pkSocket->deleteLater();
-                pkSocket = nullptr;
+                liveService->pkSocket->deleteLater();
+                liveService->pkSocket = nullptr;
             }
             return ;
         }
     });
 
-    connect(pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+    connect(liveService->pkSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
         slotPkBinaryMessageReceived(message);
     });
 
@@ -17360,11 +17360,11 @@ void MainWindow::connectPkRoom()
 
 void MainWindow::connectPkSocket()
 {
-    if (pkRoomId.isEmpty())
+    if (liveService->pkRoomId.isEmpty())
         return ;
 
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
-    url += "?id="+pkRoomId+"&type=0";
+    url += "?id="+liveService->pkRoomId+"&type=0";
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
@@ -17389,7 +17389,7 @@ void MainWindow::connectPkSocket()
         }
 
         QJsonObject data = json.value("data").toObject();
-        pkToken = data.value("token").toString();
+        liveService->pkToken = data.value("token").toString();
         QJsonArray hostArray = data.value("host_list").toArray();
         QString link = hostArray.first().toObject().value("host").toString();
         int port = hostArray.first().toObject().value("wss_port").toInt();
@@ -17397,14 +17397,14 @@ void MainWindow::connectPkSocket()
         SOCKET_DEB << "pk.socket.host:" << host;
 
         // ========== 连接Socket ==========
-        qInfo() << "连接 PK Socket：" << pkRoomId;
-        if (!pkSocket)
-            pkSocket = new QWebSocket();
-        QSslConfiguration config = pkSocket->sslConfiguration();
+        qInfo() << "连接 PK Socket：" << liveService->pkRoomId;
+        if (!liveService->pkSocket)
+            liveService->pkSocket = new QWebSocket();
+        QSslConfiguration config = liveService->pkSocket->sslConfiguration();
         config.setPeerVerifyMode(QSslSocket::VerifyNone);
         config.setProtocol(QSsl::TlsV1SslV3);
-        pkSocket->setSslConfiguration(config);
-        pkSocket->open(host);
+        liveService->pkSocket->setSslConfiguration(config);
+        liveService->pkSocket->open(host);
     });
     manager->get(*request);
 }
@@ -17557,7 +17557,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     qInfo() << s8(">pk消息命令：") << cmd;
     if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
     {
-        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+        if (!liveService->pkMsgSync || (liveService->pkMsgSync == 1 && !liveService->pkVideo))
             return ;
         QJsonArray info = json.value("info").toArray();
         QJsonArray array = info[0].toArray();
@@ -17573,9 +17573,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
         int medal_level = 0;
 
         // 是否是串门的
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
+        bool toView = liveService->pkBattleType &&
+                ((!liveService->oppositeAudience.contains(uid) && liveService->myAudience.contains(uid))
+                 || (!liveService->pkRoomId.isEmpty() && medal.size() >= 4 &&
                      snum(static_cast<qint64>(medal[3].toDouble())) == ac->roomId));
 
         // !弹幕的时间戳是13位，其他的是10位！
@@ -17608,7 +17608,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
-        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+        if (!liveService->pkMsgSync || (liveService->pkMsgSync == 1 && !liveService->pkVideo))
             return ;
         QJsonObject data = json.value("data").toObject();
         int giftId = data.value("giftId").toInt();
@@ -17653,9 +17653,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
         }
 
         // 是否是串门的
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && anchorRoomId == ac->roomId));
+        bool toView = liveService->pkBattleType &&
+                ((!liveService->oppositeAudience.contains(uid) && liveService->myAudience.contains(uid))
+                 || (!liveService->pkRoomId.isEmpty() && anchorRoomId == ac->roomId));
 
         danmaku.setPkLink(true);
 
@@ -17666,7 +17666,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
     }
     else if (cmd == "INTERACT_WORD")
     {
-        if (!pkChuanmenEnable) // 可能是中途关了
+        if (!liveService->pkChuanmenEnable) // 可能是中途关了
             return ;
         QJsonObject data = json.value("data").toObject();
         int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
@@ -17680,9 +17680,9 @@ void MainWindow::handlePkMessage(QJsonObject json)
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         QString roomId = snum(qint64(data.value("room_id").toDouble()));
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
+        bool toView = liveService->pkBattleType &&
+                ((!liveService->oppositeAudience.contains(uid) && liveService->myAudience.contains(uid))
+                 || (!liveService->pkRoomId.isEmpty() &&
                      snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == ac->roomId));
         bool attentionToMyRoom = false;
         if (!toView) // 不是自己方过去串门的
@@ -17690,13 +17690,13 @@ void MainWindow::handlePkMessage(QJsonObject json)
             if (roomId == ac->roomId && msgType == 2) // 在对面关注当前主播
                 attentionToMyRoom = true;
             else
-                if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+                if (!liveService->pkMsgSync || (liveService->pkMsgSync == 1 && !liveService->pkVideo))
                     return ;
         }
         if (toView || attentionToMyRoom)
         {
-            if (!cmAudience.contains(uid))
-                cmAudience.insert(uid, timestamp);
+            if (!liveService->cmAudience.contains(uid))
+                liveService->cmAudience.insert(uid, timestamp);
         }
 
         // qInfo() << s8("pk观众互动：") << username << spreadDesc;
@@ -17846,9 +17846,9 @@ void MainWindow::saveMonthGuard()
             return QString("提督").toUtf8();
         return QString("舰长").toUtf8();
     };
-    for (int i = 0; i < guardInfos.size(); i++)
+    for (int i = 0; i < liveService->guardInfos.size(); i++)
     {
-        LiveDanmaku danmaku = guardInfos.at(i);
+        LiveDanmaku danmaku = liveService->guardInfos.at(i);
         stream << danmaku.getUid() << ","
                << danmaku.getNickname() << ","
                << getGuardName(danmaku.getGuard()) << "\n";
@@ -17944,23 +17944,23 @@ void MainWindow::releaseLiveData(bool prepare)
 
     if (!prepare) // 切换房间或者断开连接
     {
-        pking = false;
-        pkUid = "";
-        pkUname = "";
-        pkRoomId = "";
-        pkEnding = false;
-        pkVoting = 0;
-        pkVideo = false;
-        pkTimer->stop();
-        pkEndTime = 0;
-        pkBattleType = 0;
-        pkEndingTimer->stop();
-        myAudience.clear();
-        oppositeAudience.clear();
-        fansList.clear();
+        liveService->pking = false;
+        liveService->pkUid = "";
+        liveService->pkUname = "";
+        liveService->pkRoomId = "";
+        liveService->pkEnding = false;
+        liveService->pkVoting = 0;
+        liveService->pkVideo = false;
+        liveService->pkTimer->stop();
+        liveService->pkEndTime = 0;
+        liveService->pkBattleType = 0;
+        liveService->pkEndingTimer->stop();
+        liveService->myAudience.clear();
+        liveService->oppositeAudience.clear();
+        liveService->fansList.clear();
         us->currentGuards.clear();
-        guardInfos.clear();
-        onlineGoldRank.clear();
+        liveService->guardInfos.clear();
+        liveService->onlineGoldRank.clear();
         ac->currentFans = 0;
         ac->currentFansClub = 0;
 
@@ -17970,7 +17970,7 @@ void MainWindow::releaseLiveData(bool prepare)
         for (int i = 0; i < CHANNEL_COUNT; i++)
             msgWaits[i] = WAIT_CHANNEL_MAX;
         roomDanmakus.clear();
-        pkGifts.clear();
+        liveService->pkGifts.clear();
 
         finishSaveDanmuToFile();
 
@@ -18013,8 +18013,8 @@ void MainWindow::releaseLiveData(bool prepare)
     statusLabel->setText("");
     this->liveService->popularVal = 0;
 
-    liveTimestamp = QDateTime::currentMSecsSinceEpoch();
-    xliveHeartBeatTimer->stop();
+    liveService->liveTimestamp = QDateTime::currentMSecsSinceEpoch();
+    liveService->xliveHeartBeatTimer->stop();
 
     // 本次直播数据
     liveService->liveAllGifts.clear();
@@ -18027,11 +18027,11 @@ void MainWindow::releaseLiveData(bool prepare)
         danmakuWindow->releaseLiveData(prepare);
     }
 
-    if (pkSocket)
+    if (liveService->pkSocket)
     {
-        if (pkSocket->state() == QAbstractSocket::ConnectedState)
-            pkSocket->close();
-        pkSocket = nullptr;
+        if (liveService->pkSocket->state() == QAbstractSocket::ConnectedState)
+            liveService->pkSocket->close();
+        liveService->pkSocket = nullptr;
     }
 
     // 结束游戏
@@ -18938,12 +18938,12 @@ void MainWindow::showPkMenu()
     newFacileMenu;
 
     menu->addAction("大乱斗规则", [=]{
-        if (pkRuleUrl.isEmpty())
+        if (liveService->pkRuleUrl.isEmpty())
         {
             showError("大乱斗规则", "未找到规则说明");
             return ;
         }
-        QDesktopServices::openUrl(QUrl(pkRuleUrl));
+        QDesktopServices::openUrl(QUrl(liveService->pkRuleUrl));
     });
 
     menu->addAction("最佳助攻列表", [=]{
@@ -19049,7 +19049,7 @@ void MainWindow::showPkAssists()
 void MainWindow::showPkHistories()
 {
     QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
-                  "ruid=" + ac->upUid + "&room_id=" + ac->roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+                  "ruid=" + ac->upUid + "&room_id=" + ac->roomId + "&season_id=" + snum(liveService->currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
     // qInfo() << "pk histories" << url;
     get(url, [=](MyJson json) {
         if (json.code())
@@ -19184,13 +19184,13 @@ void MainWindow::refreshPrivateMsg()
             qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
             if (sessionTs > currentTimestamp) // 连接中间的时间
                 continue;
-            if (sessionTs <= privateMsgTimestamp) // 之前已处理
+            if (sessionTs <= liveService->privateMsgTimestamp) // 之前已处理
                 break;
 
             // 接收到会话信息
             receivedPrivateMsg(session);
         }
-        privateMsgTimestamp = currentTimestamp;
+        liveService->privateMsgTimestamp = currentTimestamp;
     });
 }
 
@@ -19246,7 +19246,7 @@ void MainWindow::receivedPrivateMsg(MyJson session)
         }
         qInfo() << "接收到私信: " << name << msgType << ":" << content
                 << "    (" << sessionTs << "  in "
-                << privateMsgTimestamp << "~" << QDateTime::currentMSecsSinceEpoch() << ")";
+                << liveService->privateMsgTimestamp << "~" << QDateTime::currentMSecsSinceEpoch() << ")";
 
         // 触发事件
         LiveDanmaku danmaku(talkerId, name, content);
@@ -20460,13 +20460,13 @@ void MainWindow::showSqlQueryResult(QString sql)
 
 void MainWindow::on_actionMany_Robots_triggered()
 {
-    if (!hostList.size()) // 未连接
+    if (!liveService->hostList.size()) // 未连接
         return ;
 
-    HostInfo hostServer = hostList.at(0);
+    HostInfo hostServer = liveService->hostList.at(0);
     QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
 
-    QSslConfiguration config = this->socket->sslConfiguration();
+    QSslConfiguration config = this->liveService->socket->sslConfiguration();
     config.setPeerVerifyMode(QSslSocket::VerifyNone);
     config.setProtocol(QSsl::TlsV1SslV3);
 
@@ -20476,7 +20476,7 @@ void MainWindow::on_actionMany_Robots_triggered()
         connect(socket, &QWebSocket::connected, this, [=]{
             qInfo() << "rSocket" << i << "connected";
             // 5秒内发送认证包
-            sendVeriPacket(socket, pkRoomId, pkToken);
+            sendVeriPacket(socket, liveService->pkRoomId, liveService->pkToken);
         });
         connect(socket, &QWebSocket::disconnected, this, [=]{
             robots_sockets.removeOne(socket);
@@ -20703,29 +20703,29 @@ void MainWindow::on_orderSongShuaSpin_editingFinished()
 void MainWindow::on_pkMelonValButton_clicked()
 {
     bool ok = false;
-    int val = QInputDialog::getInt(this, "乱斗值比例", "1乱斗值等于多少金瓜子？10或100？", goldTransPk, 1, 100, 1, &ok);
+    int val = QInputDialog::getInt(this, "乱斗值比例", "1乱斗值等于多少金瓜子？10或100？", liveService->goldTransPk, 1, 100, 1, &ok);
     if (!ok)
         return ;
-    goldTransPk = val;
-    us->setValue("pk/goldTransPk", goldTransPk);
+    liveService->goldTransPk = val;
+    us->setValue("pk/goldTransPk", liveService->goldTransPk);
 }
 
 void MainWindow::slotPkEnding()
 {
-    qInfo() << "大乱斗结束前情况：" << myVotes << matchVotes
-             << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+    qInfo() << "大乱斗结束前情况：" << liveService->myVotes << liveService->matchVotes
+             << QDateTime::currentSecsSinceEpoch() << liveService->pkEndTime;
 
-    pkEnding = true;
-    pkVoting = 0;
+    liveService->pkEnding = true;
+    liveService->pkVoting = 0;
 
     // 几个吃瓜就能解决的……
     {
         QString text = QString("大乱斗尾声：%1 vs %2")
-                .arg(myVotes).arg(matchVotes);
-        if (!pkRoomId.isEmpty())
+                .arg(liveService->myVotes).arg(liveService->matchVotes);
+        if (!liveService->pkRoomId.isEmpty())
         {
-            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
-            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            int totalCount = us->danmakuCounts->value("pk/" + liveService->pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + liveService->pkRoomId, 0).toInt();
             if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
                 text += QString("  偷塔概率:%1/%2")
                                 .arg(toutaCount).arg(totalCount);
@@ -20746,7 +20746,7 @@ void MainWindow::slotPkEnding()
 void MainWindow::slotStartWork()
 {
     // 初始化开播数据
-    liveTimestamp = QDateTime::currentMSecsSinceEpoch();
+    liveService->liveTimestamp = QDateTime::currentMSecsSinceEpoch();
 
     // 自动更换勋章
     if (ui->autoSwitchMedalCheck->isChecked())
@@ -21295,8 +21295,8 @@ void MainWindow::on_acquireHeartCheck_clicked()
     }
     else
     {
-        if (xliveHeartBeatTimer)
-            xliveHeartBeatTimer->stop();
+        if (liveService->xliveHeartBeatTimer)
+            liveService->xliveHeartBeatTimer->stop();
     }
 }
 
@@ -21383,11 +21383,11 @@ void MainWindow::on_pkBlankButton_clicked()
 {
     bool ok = false;
     QString text = QInputDialog::getText(this, "自动偷塔黑名单", "设置不启用自动偷塔的房间号列表\n多个房间用任意非数字符号分隔",
-                                         QLineEdit::Normal, toutaBlankList.join(";"), &ok);
+                                         QLineEdit::Normal, liveService->toutaBlankList.join(";"), &ok);
     if (!ok)
         return ;
-    toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
-    us->setValue("pk/blankList", toutaBlankList.join(";"));
+    liveService->toutaBlankList = text.split(QRegExp("[^\\d]+"), QString::SkipEmptyParts);
+    us->setValue("pk/blankList", liveService->toutaBlankList.join(";"));
 }
 
 void MainWindow::on_actionUpdate_New_Version_triggered()
@@ -22075,14 +22075,14 @@ void MainWindow::on_toutaGiftCheck_clicked()
     us->setValue("danmaku/toutaGift", ui->toutaGiftCheck->isChecked());
 
     // 设置默认值
-    if (!toutaGiftCounts.size())
+    if (!liveService->toutaGiftCounts.size())
     {
         QString s = "1 2 3 10 100 520 1314";
         ui->toutaGiftCountsEdit->setText(s);
         on_toutaGiftCountsEdit_textEdited(s);
     }
 
-    if (!toutaGifts.size())
+    if (!liveService->toutaGifts.size())
     {
         QString s = "20004 吃瓜 100\n\
                 20014 比心 500\n\
@@ -22106,10 +22106,10 @@ void MainWindow::on_toutaGiftCountsEdit_textEdited(const QString &arg1)
     // 允许的数量，如：1 2 3 4 5 10 11 100 101
     us->setValue("danmaku/toutaGiftCounts", arg1);
     QStringList sl = arg1.split(" ", QString::SkipEmptyParts);
-    toutaGiftCounts.clear();
+    liveService->toutaGiftCounts.clear();
     foreach (QString s, sl)
     {
-        toutaGiftCounts.append(s.toInt());
+        liveService->toutaGiftCounts.append(s.toInt());
     }
 }
 
@@ -22117,7 +22117,7 @@ void MainWindow::on_toutaGiftListButton_clicked()
 {
     // 礼物ID 礼物名字 金瓜子
     QStringList sl;
-    foreach (auto gift, toutaGifts)
+    foreach (auto gift, liveService->toutaGifts)
     {
         sl.append(QString("%1 %2 %3").arg(gift.getGiftId()).arg(gift.getGiftName()).arg(gift.getTotalCoin()));
     }
@@ -22133,7 +22133,7 @@ void MainWindow::on_toutaGiftListButton_clicked()
 void MainWindow::on_timerConnectIntervalSpin_editingFinished()
 {
     us->setValue("live/timerConnectInterval", ui->timerConnectIntervalSpin->value());
-    connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
+    liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
 }
 
 void MainWindow::on_heartTimeSpin_editingFinished()
@@ -22598,23 +22598,23 @@ void MainWindow::on_receivePrivateMsgCheck_stateChanged(int arg1)
 {
     if (arg1)
     {
-        if (!privateMsgTimer)
+        if (!liveService->privateMsgTimer)
         {
             // 初始化时钟
-            privateMsgTimer = new QTimer(this);
-            privateMsgTimer->setInterval(5000);
-            privateMsgTimer->setSingleShot(false);
-            connect(privateMsgTimer, &QTimer::timeout, this, [=]{
+            liveService->privateMsgTimer = new QTimer(this);
+            liveService->privateMsgTimer->setInterval(5000);
+            liveService->privateMsgTimer->setSingleShot(false);
+            connect(liveService->privateMsgTimer, &QTimer::timeout, this, [=]{
                 refreshPrivateMsg();
             });
         }
 
-        privateMsgTimer->start();
+        liveService->privateMsgTimer->start();
     }
     else
     {
-        if (privateMsgTimer)
-            privateMsgTimer->stop();
+        if (liveService->privateMsgTimer)
+            liveService->privateMsgTimer->stop();
     }
 }
 

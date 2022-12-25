@@ -472,10 +472,10 @@ void MainWindow::syncMagicalRooms()
         // 检测数组
         json = json.data();
         QJsonArray roomArray = json.value("rooms").toArray();
-        magicalRooms.clear();
+        liveService->magicalRooms.clear();
         foreach (QJsonValue val, roomArray)
         {
-            magicalRooms.append(val.toString());
+            liveService->magicalRooms.append(val.toString());
         }
 
         // 检测新版
