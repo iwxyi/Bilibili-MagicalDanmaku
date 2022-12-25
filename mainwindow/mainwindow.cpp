@@ -819,7 +819,7 @@ void MainWindow::readConfig()
     bool calcDaliy = us->value("live/calculateDaliyData", true).toBool();
     ui->calculateDailyDataCheck->setChecked(calcDaliy);
     if (calcDaliy)
-        startCalculateDailyData();
+        liveService->startCalculateDailyData();
 
     // PK串门提示
     pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
@@ -1290,15 +1290,15 @@ void MainWindow::readConfig()
             sumPopul += ac->currentPopul;
             countPopul++;
 
-            dailyAvePopul = int(sumPopul / countPopul);
-            if (dailySettings)
-                dailySettings->setValue("average_popularity", dailyAvePopul);
+            liveService->dailyAvePopul = int(sumPopul / countPopul);
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("average_popularity", liveService->dailyAvePopul);
         }
-        if (dailyMaxPopul < ac->currentPopul)
+        if (liveService->dailyMaxPopul < ac->currentPopul)
         {
-            dailyMaxPopul = ac->currentPopul;
-            if (dailySettings)
-                dailySettings->setValue("max_popularity", dailyMaxPopul);
+            liveService->dailyMaxPopul = ac->currentPopul;
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("max_popularity", liveService->dailyMaxPopul);
         }
 
         // 弹幕人气
@@ -1307,7 +1307,7 @@ void MainWindow::readConfig()
         minuteDanmuPopul = 0;
         if (danmuPopulQueue.size() > 5)
             danmuPopulValue -= danmuPopulQueue.takeFirst();
-        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
+        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(liveService->dailyAvePopul));
 
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
@@ -1355,13 +1355,13 @@ void MainWindow::readConfig()
         // 以 23:59:30为准
         QDateTime current = QDateTime::currentDateTime();
         QTime t = current.time();
-        if (todayIsEnding) // 已经触发最后一小时事件了
+        if (liveService->todayIsEnding) // 已经触发最后一小时事件了
         {
         }
         else if (current.time().hour() == 23
                 || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
         {
-            todayIsEnding = true;
+            liveService->todayIsEnding = true;
             QDateTime dt = current;
             QTime t = dt.time();
             t.setHMS(23, 59, 30); // 移动到最后半分钟
@@ -1398,28 +1398,28 @@ void MainWindow::readConfig()
     hourTimer->start();
 
     // 每天的事件
-    dayTimer = new QTimer(this);
+    liveService->dayTimer = new QTimer(this);
     QTime zeroTime = QTime::currentTime();
     zeroTime.setHMS(0, 0, 1); // 本应当完全0点整的，避免误差
     QDate tomorrowDate = QDate::currentDate();
     tomorrowDate = tomorrowDate.addDays(1);
     QDateTime tomorrow(tomorrowDate, zeroTime);
-    dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
+    liveService->dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
     // 判断新的一天
-    connect(dayTimer, &QTimer::timeout, this, [=]{
-        todayIsEnding = false;
+    connect(liveService->dayTimer, &QTimer::timeout, this, [=]{
+        liveService->todayIsEnding = false;
         qInfo() << "--------NEW_DAY" << QDateTime::currentDateTime();
         {
             // 当前时间必定是 0:0:1，误差0.2秒内
             QDate tomorrowDate = QDate::currentDate();
             tomorrowDate = tomorrowDate.addDays(1);
             QDateTime tomorrow(tomorrowDate, zeroTime);
-            dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
+            liveService->dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
         }
 
         // 每天重新计算
         if (ui->calculateDailyDataCheck->isChecked())
-            startCalculateDailyData();
+            liveService->startCalculateDailyData();
         if (danmuLogFile /* && !isLiving() */)
             startSaveDanmakuToFile();
         us->userComeTimes.clear();
@@ -1461,7 +1461,7 @@ void MainWindow::readConfig()
             us->setValue("runtime/open_week_number", currDate.weekNumber());
         }
     });
-    dayTimer->start();
+    liveService->dayTimer->start();
 
     // 判断第一次打开
     QDate currDate = QDate::currentDate();
@@ -1889,7 +1889,7 @@ MainWindow::~MainWindow()
     }
     if (ui->calculateDailyDataCheck->isChecked())
     {
-        saveCalculateDailyData();
+        liveService->saveCalculateDailyData();
     }
     us->setValue("mainwindow/configFlowScroll", ui->scrollArea->verticalScrollBar()->sliderPosition());
     us->setValue("mainwindow/timerTaskScroll", ui->taskListWidget->verticalScrollBar()->sliderPosition());
@@ -2036,9 +2036,9 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QLinearGradient linearGrad(QPointF(width() / 2, 0), QPointF(width() / 2, height()));
     linearGrad.setColorAt(0, themeBg);
     double pos = 1.0;
-    if (dailyMaxPopul > 100 && dailyAvePopul > 100)
+    if (liveService->dailyMaxPopul > 100 && liveService->dailyAvePopul > 100)
     {
-        pos = dailyAvePopul / double(dailyMaxPopul);
+        pos = liveService->dailyAvePopul / double(liveService->dailyMaxPopul);
         pos = qMin(qMax(pos, 0.3), 1.0);
     }
     linearGrad.setColorAt(pos, themeGradient);
@@ -4783,7 +4783,7 @@ void MainWindow::startConnectRoom()
     dir.mkdir(rt->dataPath+"danmaku_counts");
     us->danmakuCounts = new QSettings(rt->dataPath+"danmaku_counts/" + ac->roomId + ".ini", QSettings::Format::IniFormat);
     if (ui->calculateDailyDataCheck->isChecked())
-        startCalculateDailyData();
+        liveService->startCalculateDailyData();
 
     // 开始获取房间信息
     getRoomInfo(true);
@@ -6726,19 +6726,19 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 本次进来人次
     else if (key == "%today_come%")
-        return snum(dailyCome);
+        return snum(liveService->dailyCome);
 
     // 新人发言数量
     else if (key == "%today_newbie_msg%")
-        return snum(dailyNewbieMsg);
+        return snum(liveService->dailyNewbieMsg);
 
     // 今天弹幕总数
     else if (key == "%today_danmaku%")
-        return snum(dailyDanmaku);
+        return snum(liveService->dailyDanmaku);
 
     // 今天新增关注
     else if (key == "%today_fans%")
-        return snum(dailyNewFans);
+        return snum(liveService->dailyNewFans);
 
     // 大航海人数
     else if (key == "%guard_count%")
@@ -6752,19 +6752,19 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
 
     // 今天金瓜子总数
     else if (key == "%today_gold%")
-        return snum(dailyGiftGold);
+        return snum(liveService->dailyGiftGold);
 
     // 今天银瓜子总数
     else if (key == "%today_silver%")
-        return snum(dailyGiftSilver);
+        return snum(liveService->dailyGiftSilver);
 
     // 今天是否有新舰长
     else if (key == "%today_guard%")
-        return snum(dailyGuard);
+        return snum(liveService->dailyGuard);
 
     // 今日最高人气
     else if (key == "%today_max_ppl%")
-        return snum(dailyMaxPopul);
+        return snum(liveService->dailyMaxPopul);
 
     // 当前人气
     else if (key == "%popularity%")
@@ -7995,8 +7995,8 @@ void MainWindow::startSaveDanmakuToFile()
     danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
     danmuLogStream = new QTextStream(danmuLogFile);
     danmuLogStream->setGenerateByteOrderMark(true);
-    if (!externFileCodec.isEmpty())
-        danmuLogStream->setCodec(externFileCodec.toUtf8());
+    if (!liveService->externFileCodec.isEmpty())
+        danmuLogStream->setCodec(liveService->externFileCodec.toUtf8());
 }
 
 void MainWindow::finishSaveDanmuToFile()
@@ -8009,54 +8009,6 @@ void MainWindow::finishSaveDanmuToFile()
     danmuLogFile->deleteLater();
     danmuLogFile = nullptr;
     danmuLogStream = nullptr;
-}
-
-void MainWindow::startCalculateDailyData()
-{
-    if (dailySettings)
-    {
-        saveCalculateDailyData();
-        dailySettings->deleteLater();
-    }
-
-    QDir dir;
-    dir.mkdir(rt->dataPath+"live_daily");
-    QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
-    dailySettings = new QSettings(rt->dataPath+"live_daily/" + ac->roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
-
-    dailyCome = dailySettings->value("come", 0).toInt();
-    dailyPeopleNum = dailySettings->value("people_num", 0).toInt();
-    dailyDanmaku = dailySettings->value("danmaku", 0).toInt();
-    dailyNewbieMsg = dailySettings->value("newbie_msg", 0).toInt();
-    dailyNewFans = dailySettings->value("new_fans", 0).toInt();
-    dailyTotalFans = dailySettings->value("total_fans", 0).toInt();
-    dailyGiftSilver = dailySettings->value("gift_silver", 0).toInt();
-    dailyGiftGold = dailySettings->value("gift_gold", 0).toInt();
-    dailyGuard = dailySettings->value("guard", 0).toInt();
-    dailyMaxPopul = dailySettings->value("max_popularity", 0).toInt();
-    dailyAvePopul = 0;
-    if (us->currentGuards.size())
-        dailySettings->setValue("guard_count", us->currentGuards.size());
-    else
-        updateExistGuards(0);
-}
-
-void MainWindow::saveCalculateDailyData()
-{
-    if (dailySettings)
-    {
-        dailySettings->setValue("come", dailyCome);
-        dailySettings->setValue("people_num", qMax(dailySettings->value("people_num").toInt(), us->userComeTimes.size()));
-        dailySettings->setValue("danmaku", dailyDanmaku);
-        dailySettings->setValue("newbie_msg", dailyNewbieMsg);
-        dailySettings->setValue("new_fans", dailyNewFans);
-        dailySettings->setValue("total_fans", ac->currentFans);
-        dailySettings->setValue("gift_silver", dailyGiftSilver);
-        dailySettings->setValue("gift_gold", dailyGiftGold);
-        dailySettings->setValue("guard", dailyGuard);
-        if (us->currentGuards.size())
-            dailySettings->setValue("guard_count", us->currentGuards.size());
-    }
 }
 
 void MainWindow::saveTouta()
@@ -9651,8 +9603,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString content = caps.at(3);
             QString text = readTextFile(fileName);
             text.replace(anchor, content + anchor);
-            if (!codeFileCodec.isEmpty())
-                writeTextFile(fileName, text, codeFileCodec);
+            if (!liveService->codeFileCodec.isEmpty())
+                writeTextFile(fileName, text, liveService->codeFileCodec);
             else
                 writeTextFile(fileName, text);
             qInfo() << "修改文件：" << fileName;
@@ -11376,8 +11328,8 @@ void MainWindow::savePlayingSong()
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!externFileCodec.isEmpty())
-        stream.setCodec(externFileCodec.toUtf8());
+    if (!liveService->externFileCodec.isEmpty())
+        stream.setCodec(liveService->externFileCodec.toUtf8());
     stream << text;
     file.flush();
     file.close();
@@ -11423,8 +11375,8 @@ void MainWindow::saveOrderSongs(const SongList &songs)
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!externFileCodec.isEmpty())
-        stream.setCodec(externFileCodec.toUtf8());
+    if (!liveService->externFileCodec.isEmpty())
+        stream.setCodec(liveService->externFileCodec.toUtf8());
     stream << sl.join("\n");
     file.flush();
     file.close();
@@ -11445,8 +11397,8 @@ void MainWindow::saveSongLyrics()
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!externFileCodec.isEmpty())
-        stream.setCodec(externFileCodec.toUtf8());
+    if (!liveService->externFileCodec.isEmpty())
+        stream.setCodec(liveService->externFileCodec.toUtf8());
     stream << lyrics.join("\n");
     file.flush();
     file.close();
@@ -11579,11 +11531,11 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                     qInfo() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
                     // appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
 
-                    dailyNewFans += delta_fans;
-                    if (dailySettings)
+                    liveService->dailyNewFans += delta_fans;
+                    if (liveService->dailySettings)
                     {
-                        dailySettings->setValue("new_fans", dailyNewFans);
-                        dailySettings->setValue("total_fans", ac->currentFans);
+                        liveService->dailySettings->setValue("new_fans", liveService->dailyNewFans);
+                        liveService->dailySettings->setValue("total_fans", ac->currentFans);
                     }
 
 //                    if (delta_fans) // 如果有变动，实时更新
@@ -11888,9 +11840,9 @@ void MainWindow::handleMessage(QJsonObject json)
         // 统计弹幕次数
         int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
         us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
-        dailyDanmaku++;
-        if (dailySettings)
-            dailySettings->setValue("danmaku", dailyDanmaku);
+        liveService->dailyDanmaku++;
+        if (liveService->dailySettings)
+            liveService->dailySettings->setValue("danmaku", liveService->dailyDanmaku);
 
         // 等待通道
         if (uid != ac->cookieUid.toLongLong())
@@ -11929,9 +11881,9 @@ void MainWindow::handleMessage(QJsonObject json)
         // 新人发言
         if (danmuCount == 1)
         {
-            dailyNewbieMsg++;
-            if (dailySettings)
-                dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+            liveService->dailyNewbieMsg++;
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("newbie_msg", liveService->dailyNewbieMsg);
         }
 
         // 新人小号禁言
@@ -12293,9 +12245,9 @@ void MainWindow::handleMessage(QJsonObject json)
             userSilver += totalCoin;
             us->danmakuCounts->setValue("silver/"+snum(uid), userSilver);
 
-            dailyGiftSilver += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_silver", dailyGiftSilver);
+            liveService->dailyGiftSilver += totalCoin;
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("gift_silver", liveService->dailyGiftSilver);
         }
         if (coinType == "gold")
         {
@@ -12303,9 +12255,9 @@ void MainWindow::handleMessage(QJsonObject json)
             userGold += totalCoin;
             us->danmakuCounts->setValue("gold/"+snum(uid), userGold);
 
-            dailyGiftGold += totalCoin;
-            if (dailySettings)
-                dailySettings->setValue("gift_gold", dailyGiftGold);
+            liveService->dailyGiftGold += totalCoin;
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("gift_gold", liveService->dailyGiftGold);
 
             // 正在PK，保存弹幕历史
             // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
@@ -12999,9 +12951,9 @@ void MainWindow::handleMessage(QJsonObject json)
         guardCount += addition;
         us->danmakuCounts->setValue("guard/" + snum(uid), guardCount);
 
-        dailyGuard += num;
-        if (dailySettings)
-            dailySettings->setValue("guard", dailyGuard);
+        liveService->dailyGuard += num;
+        if (liveService->dailySettings)
+            liveService->dailySettings->setValue("guard", liveService->dailyGuard);
 
         triggerCmdEvent(cmd, danmaku.with(data));
     }
@@ -14749,9 +14701,9 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     us->danmakuCounts->setValue("come/"+snum(uid), userCome);
     us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
 
-    dailyCome++;
-    if (dailySettings)
-        dailySettings->setValue("come", dailyCome);
+    liveService->dailyCome++;
+    if (liveService->dailySettings)
+        liveService->dailySettings->setValue("come", liveService->dailyCome);
     if (danmaku.isOpposite())
     {
         // 加到自己这边来，免得下次误杀（即只提醒一次）
@@ -15238,8 +15190,8 @@ void MainWindow::updateExistGuards(int page)
             if (ui->saveMonthGuardCheck->isChecked())
                 saveMonthGuard();
 
-            if (dailySettings)
-                dailySettings->setValue("guard_count", us->currentGuards.size());
+            if (liveService->dailySettings)
+                liveService->dailySettings->setValue("guard_count", us->currentGuards.size());
             updateGuarding = false;
             ui->guardCountLabel->setText(snum(us->currentGuards.size()));
         }
@@ -16208,22 +16160,22 @@ void MainWindow::on_calculateDailyDataCheck_clicked()
     bool enable = ui->calculateDailyDataCheck->isChecked();
     us->setValue("live/calculateDaliyData", enable);
     if (enable)
-        startCalculateDailyData();
+        liveService->startCalculateDailyData();
 }
 
 void MainWindow::on_pushButton_clicked()
 {
     QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd\n");
-    text += "\n进来人次：" + snum(dailyCome);
+    text += "\n进来人次：" + snum(liveService->dailyCome);
     text += "\n观众人数：" + snum(us->userComeTimes.count());
-    text += "\n弹幕数量：" + snum(dailyDanmaku);
-    text += "\n新人弹幕：" + snum(dailyNewbieMsg);
-    text += "\n新增关注：" + snum(dailyNewFans);
-    text += "\n银瓜子数：" + snum(dailyGiftSilver);
-    text += "\n金瓜子数：" + snum(dailyGiftGold);
-    text += "\n上船次数：" + snum(dailyGuard);
-    text += "\n最高人气：" + snum(dailyMaxPopul);
-    text += "\n平均人气：" + snum(dailyAvePopul);
+    text += "\n弹幕数量：" + snum(liveService->dailyDanmaku);
+    text += "\n新人弹幕：" + snum(liveService->dailyNewbieMsg);
+    text += "\n新增关注：" + snum(liveService->dailyNewFans);
+    text += "\n银瓜子数：" + snum(liveService->dailyGiftSilver);
+    text += "\n金瓜子数：" + snum(liveService->dailyGiftGold);
+    text += "\n上船次数：" + snum(liveService->dailyGuard);
+    text += "\n最高人气：" + snum(liveService->dailyMaxPopul);
+    text += "\n平均人气：" + snum(liveService->dailyAvePopul);
 
     text += "\n\n累计粉丝：" + snum(ac->currentFans);
     QMessageBox::information(this, "今日数据", text);
@@ -17962,8 +17914,8 @@ void MainWindow::saveMonthGuard()
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!recordFileCodec.isEmpty())
-        stream.setCodec(recordFileCodec.toUtf8());
+    if (!liveService->recordFileCodec.isEmpty())
+        stream.setCodec(liveService->recordFileCodec.toUtf8());
 
     stream << QString("UID,昵称,级别,备注\n").toUtf8();
     auto getGuardName = [=](int level) {
@@ -17996,8 +17948,8 @@ void MainWindow::saveEveryGuard(LiveDanmaku danmaku)
         qWarning() << "打开上船记录文件失败：" << filePath;
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!recordFileCodec.isEmpty())
-        stream.setCodec(recordFileCodec.toUtf8());
+    if (!liveService->recordFileCodec.isEmpty())
+        stream.setCodec(liveService->recordFileCodec.toUtf8());
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,累计,UID,备注\n").toUtf8();
@@ -18028,8 +17980,8 @@ void MainWindow::saveEveryGift(LiveDanmaku danmaku)
         qWarning() << "打开礼物记录文件失败：" << filePath;
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!recordFileCodec.isEmpty())
-        stream.setCodec(recordFileCodec.toUtf8());
+    if (!liveService->recordFileCodec.isEmpty())
+        stream.setCodec(liveService->recordFileCodec.toUtf8());
 
     if (!exists)
         stream << QString("日期,时间,昵称,礼物,数量,金瓜子,UID\n").toUtf8();
@@ -18052,8 +18004,8 @@ void MainWindow::appendFileLine(QString filePath, QString format, LiveDanmaku da
         qWarning() << "打开文件失败：" << filePath;
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!codeFileCodec.isEmpty())
-        stream.setCodec(codeFileCodec.toUtf8());
+    if (!liveService->codeFileCodec.isEmpty())
+        stream.setCodec(liveService->codeFileCodec.toUtf8());
     stream << processDanmakuVariants(format, danmaku) << "\n";
     file.close();
 }
@@ -18176,7 +18128,7 @@ void MainWindow::releaseLiveData(bool prepare)
     ui->actionJoin_Battle->setEnabled(false);
 
     finishLiveRecord();
-    saveCalculateDailyData();
+    liveService->saveCalculateDailyData();
 
     QPixmap face = ac->roomId.isEmpty() ? QPixmap() : toCirclePixmap(upFace);
     setWindowIcon(face);
@@ -21645,8 +21597,8 @@ void MainWindow::on_exportDailyButton_clicked()
     file.open(QIODevice::WriteOnly);
     QTextStream stream(&file);
     stream.setGenerateByteOrderMark(true);
-    if (!recordFileCodec.isEmpty())
-        stream.setCodec(recordFileCodec.toUtf8());
+    if (!liveService->recordFileCodec.isEmpty())
+        stream.setCodec(liveService->recordFileCodec.toUtf8());
 
     // 拼接数据
     QString dirPath = rt->dataPath + "live_daily";
@@ -22683,7 +22635,7 @@ void MainWindow::exportAllGuardsByMonth(QString exportPath)
         }
     }
 
-    writeTextFile(exportPath, fullText, recordFileCodec);
+    writeTextFile(exportPath, fullText, liveService->recordFileCodec);
 }
 
 

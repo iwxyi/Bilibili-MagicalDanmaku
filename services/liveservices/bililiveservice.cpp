@@ -10,6 +10,10 @@ void BiliLiveService::startConnectRoom(const QString& roomId)
     
 }
 
+void BiliLiveService::getRoomInfo()
+{
+}
+
 void BiliLiveService::updateExistGuards(int page)
 {
 }

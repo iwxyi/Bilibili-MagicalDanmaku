@@ -915,8 +915,6 @@ private:
 
     void startSaveDanmakuToFile();
     void finishSaveDanmuToFile();
-    void startCalculateDailyData();
-    void saveCalculateDailyData();
     void saveTouta();
     void restoreToutaGifts(QString text);
     void initLiveRecord();
@@ -1208,26 +1206,6 @@ private:
     QTimer* permissionTimer = nullptr;
     QString permissionText = "捐赠版";
     qint64 permissionDeadline = 0;
-
-    // 每日数据
-    QSettings* dailySettings = nullptr;
-    QTimer* dayTimer = nullptr;
-    int dailyCome = 0; // 进来数量人次
-    int dailyPeopleNum = 0; // 本次进来的人数（不是全程的话，不准确）
-    int dailyDanmaku = 0; // 弹幕数量
-    int dailyNewbieMsg = 0; // 新人发言数量（需要开启新人发言提示）
-    int dailyNewFans = 0; // 关注数量
-    int dailyTotalFans = 0; // 粉丝总数量（需要开启感谢关注）
-    int dailyGiftSilver = 0; // 银瓜子总价值
-    int dailyGiftGold = 0; // 金瓜子总价值（不包括船员）
-    int dailyGuard = 0; // 上船/续船人次
-    int dailyMaxPopul = 0; // 最高人气
-    int dailyAvePopul = 0; // 平均人气
-    bool todayIsEnding = false;
-
-    QString recordFileCodec = ""; // 自动保存上船、礼物记录、每月船员等编码
-    QString codeFileCodec = "UTF-8"; // 代码保存的文件编码
-    QString externFileCodec = "UTF-8"; // 提供给外界读取例如歌曲文件编码
 
     // 船员
     bool updateGuarding = false;

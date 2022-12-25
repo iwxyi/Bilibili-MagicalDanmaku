@@ -93,6 +93,7 @@ SOURCES += \
     services/liveservices/bililiveopenservice.cpp \
     services/liveservices/bililiveservice.cpp \
     services/liveservices/liveroomservice.cpp \
+    services/liveservices/livestatisticservice.cpp \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
@@ -187,6 +188,7 @@ HEADERS += \
     services/liveservices/bililiveopenservice.h \
     services/liveservices/bililiveservice.h \
     services/liveservices/liveroomservice.h \
+    services/liveservices/livestatisticservice.h \
     services/sqlservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \

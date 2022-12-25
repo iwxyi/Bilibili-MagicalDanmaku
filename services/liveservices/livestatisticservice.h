@@ -1,0 +1,49 @@
+#ifndef LIVESTATISTICSERVICE_H
+#define LIVESTATISTICSERVICE_H
+
+#include <QSettings>
+#include <QTimer>
+#include <QDir>
+#include <QFile>
+#include "livedanmaku.h"
+#include "runtimeinfo.h"
+#include "usersettings.h"
+#include "accountinfo.h"
+#include "platforminfo.h"
+
+class LiveStatisticService
+{
+public:
+    LiveStatisticService();
+
+    /// 初始化每日数据
+    void startCalculateDailyData();
+    /// 保存每日数据
+    void saveCalculateDailyData();
+
+    /// 保存舰长数据的时候需要在线获取
+    virtual void updateExistGuards(int page = 0) { Q_UNUSED(page) }
+
+protected:
+    /// 每日数据
+    QSettings *dailySettings = nullptr;
+    QTimer *dayTimer = nullptr;
+    int dailyCome = 0;       // 进来数量人次
+    int dailyPeopleNum = 0;  // 本次进来的人数（不是全程的话，不准确）
+    int dailyDanmaku = 0;    // 弹幕数量
+    int dailyNewbieMsg = 0;  // 新人发言数量（需要开启新人发言提示）
+    int dailyNewFans = 0;    // 关注数量
+    int dailyTotalFans = 0;  // 粉丝总数量（需要开启感谢关注）
+    int dailyGiftSilver = 0; // 银瓜子总价值
+    int dailyGiftGold = 0;   // 金瓜子总价值（不包括船员）
+    int dailyGuard = 0;      // 上船/续船人次
+    int dailyMaxPopul = 0;   // 最高人气
+    int dailyAvePopul = 0;   // 平均人气
+    bool todayIsEnding = false; // 最后一小时
+
+    QString recordFileCodec = ""; // 自动保存上船、礼物记录、每月船员等编码
+    QString codeFileCodec = "UTF-8"; // 代码保存的文件编码
+    QString externFileCodec = "UTF-8"; // 提供给外界读取例如歌曲文件编码
+};
+
+#endif // LIVESTATISTICSERVICE_H

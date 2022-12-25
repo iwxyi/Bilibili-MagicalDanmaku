@@ -14,6 +14,7 @@ signals:
     
 public slots:
     void startConnectRoom(const QString& roomId) override;
+    void getRoomInfo();
     void updateExistGuards(int page = 0) override;
     void getCookieAccount() override;
     
