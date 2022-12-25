@@ -1,12 +1,25 @@
-#ifndef BILIROOMLIVESERVICE_H
-#define BILIROOMLIVESERVICE_H
+#ifndef BILILIVESERVICE_H
+#define BILILIVESERVICE_H
 
 #include "liveroomservice.h"
 
-class BiliRoomLiveService : public LiveRoomService
+class BiliLiveService : public LiveRoomService
 {
+    Q_OBJECT
 public:
-    BiliRoomLiveService(QObject* parent = nullptr);
+    BiliLiveService(QObject* parent = nullptr);
+    
+signals:
+    
+    
+public slots:
+    void startConnectRoom(const QString& roomId) override;
+    void updateExistGuards(int page = 0) override;
+    void getCookieAccount() override;
+    
+    
+private:
+    
 };
 
-#endif // BILIROOMLIVESERVICE_H
+#endif // BILILIVESERVICE_H

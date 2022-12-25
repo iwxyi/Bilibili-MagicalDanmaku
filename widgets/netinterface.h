@@ -227,7 +227,7 @@ public:
         Q_UNUSED(request)
     }
 
-    virtual QVariant getCookies(QString cookieString)
+    virtual QVariant getCookies(const QString& cookieString) const
     {
         QList<QNetworkCookie> cookies;
 

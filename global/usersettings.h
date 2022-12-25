@@ -2,7 +2,7 @@
 #define USERSETTINGS_H
 
 #include "mysettings.h"
-class EternalBlockUser;
+#include "externalblockuser.h"
 
 class UserSettings : public MySettings
 {

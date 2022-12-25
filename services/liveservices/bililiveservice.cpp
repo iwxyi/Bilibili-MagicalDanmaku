@@ -1,6 +1,19 @@
 #include "bililiveservice.h"
 
-BiliRoomLiveService::BiliRoomLiveService(QObject *parent)
+BiliLiveService::BiliLiveService(QObject *parent)
 {
 
+}
+
+void BiliLiveService::startConnectRoom(const QString& roomId)
+{
+    
+}
+
+void BiliLiveService::updateExistGuards(int page)
+{
+}
+
+void BiliLiveService::getCookieAccount()
+{
 }

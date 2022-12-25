@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${default}"
+                "${default}",
+                "E:/Projects/BilibiliLiveDanmaku_Run/*"
             ],
             "defines": [
                 "_DEBUG",

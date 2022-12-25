@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 路径
     initPath();
+    initLiveService();
     readConfig();
     initEvent();
     initLiveOpenService();
@@ -568,6 +569,15 @@ void MainWindow::initPath()
 void MainWindow::initRuntime()
 {
 
+}
+
+void MainWindow::initLiveService()
+{
+    liveService = new BiliLiveService(this);
+    
+    // 直播事件
+    
+    // 变量到UI
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作

@@ -59,6 +59,7 @@ INCLUDEPATH += \
     mainwindow/ \
     services/ \
     services/liveservices/ \
+    services/entities/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -181,7 +182,8 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
-    mainwindow/live_danmaku/emoticon.h \
+    services/entities/emoticon.h \
+    services/entities/entities.h \
     services/liveservices/bililiveopenservice.h \
     services/liveservices/bililiveservice.h \
     services/liveservices/liveroomservice.h \
@@ -284,6 +286,7 @@ HEADERS += \
     widgets/editor/conditioneditor.h \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
+    widgets/eternal_block_dialog/eternalblockdialog.h \
     mainwindow/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \
