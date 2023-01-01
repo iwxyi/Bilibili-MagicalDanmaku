@@ -53,8 +53,8 @@ void LiveStatisticService::startCalculateDailyData()
     dailyGuard = dailySettings->value("guard", 0).toInt();
     dailyMaxPopul = dailySettings->value("max_popularity", 0).toInt();
     dailyAvePopul = 0;
-    if (us->currentGuards.size())
-        dailySettings->setValue("guard_count", us->currentGuards.size());
+    if (ac->currentGuards.size())
+        dailySettings->setValue("guard_count", ac->currentGuards.size());
     else
         updateExistGuards(0);
 }
@@ -72,7 +72,7 @@ void LiveStatisticService::saveCalculateDailyData()
         dailySettings->setValue("gift_silver", dailyGiftSilver);
         dailySettings->setValue("gift_gold", dailyGiftGold);
         dailySettings->setValue("guard", dailyGuard);
-        if (us->currentGuards.size())
-            dailySettings->setValue("guard_count", us->currentGuards.size());
+        if (ac->currentGuards.size())
+            dailySettings->setValue("guard_count", ac->currentGuards.size());
     }
 }

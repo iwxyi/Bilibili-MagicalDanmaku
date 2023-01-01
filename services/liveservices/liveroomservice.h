@@ -9,6 +9,8 @@
 
 #define INTERVAL_RECONNECT_WS 5000
 #define INTERVAL_RECONNECT_WS_MAX 60000
+#define SOCKET_DEB if (0) qDebug() // 输出调试信息
+#define SOCKET_INF if (0) qDebug() // 输出数据包信息
 
 class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
 {
@@ -23,6 +25,8 @@ public:
 
     /// 读取设置
     virtual void readConfig();
+
+    virtual void releaseLiveData(bool prepare);
 
 signals:
     void signalConnectionStarted(); // WebSocket开始连接
@@ -46,6 +50,10 @@ signals:
     void signalGetRoomAndRobotFinished(); // 获取房间基础信息/机器人基础信息结束
     void signalFinishDove(); // 结束今天的鸽鸽
     void signalCanRecord(); // 直播中，如果连接的话则可以开始录播
+    void signalGuardsChanged(); // 舰长变化
+    void signalOnlineRankChanged(); // 高能榜变化
+    void signalAutoAdjustDanmakuLongest(); // 调整弹幕最高字数
+    void signalHeartTimeNumberChanged(int num, int minute); // 通过连接一直领取小心心
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -56,6 +64,7 @@ signals:
     void signalBattleScoreChanged(const QString& text);
 
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku);
+    void signalShowError(const QString& title, const QString& info);
 
 public slots:
     /// 开始获取房间，进行一些初始化操作
@@ -66,16 +75,23 @@ public slots:
 public:
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
+    /// 获取直播间Host信息
+    virtual void getDanmuInfo() {}
     virtual bool isLiving() const;
     virtual bool isLivingOrMayLiving();
     virtual void getRoomCover(const QString& url) { Q_UNUSED(url) }
     virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
+    /// 更新高能榜
+    virtual void updateOnlineGoldRank();
     /// 获取礼物ID
     virtual void getGiftList() {}
     /// 获取表情包ID
     virtual void getEmoticonList() {}
+    /// 模拟在线观看效果（带心跳的那种）
+    virtual void startHeartConnection() {}
+    virtual void stopHeartConnection() {}
 
     /// 更新大乱斗连胜
     virtual void getRoomBattleInfo() {}
@@ -174,18 +190,6 @@ protected:
     QWebSocket* pkSocket = nullptr; // 连接对面的房间
     QString pkToken;
     QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
-
-    // TODO: 下面这些变量在接口转移时，需要移动到BiliLiveService中
-    // 直播心跳
-    qint64 liveTimestamp = 0;
-    QTimer* xliveHeartBeatTimer = nullptr;
-    int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
-    qint64 xliveHeartBeatEts = 0;        // 上次心跳时间戳
-    int xliveHeartBeatInterval = 60;     // 上次心时间跳间隔（实测都是60）
-    QString xliveHeartBeatBenchmark;     // 上次心跳秘钥参数（实测每次都一样）
-    QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
-    QString encServer = "http://iwxyi.com:6001/enc";
-    int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
 
     // 私信
     QTimer* privateMsgTimer = nullptr;

@@ -4,7 +4,7 @@
 LiveRoomService::LiveRoomService(QObject *parent) 
     : QObject(parent), NetInterface(this), LiveStatisticService(this)
 {
-
+    init();
 }
 
 void LiveRoomService::init()
@@ -15,6 +15,18 @@ void LiveRoomService::init()
 void LiveRoomService::readConfig()
 {
 
+}
+
+void LiveRoomService::releaseLiveData(bool prepare)
+{
+    if (!prepare)
+    {
+
+    }
+    else
+    {
+
+    }
 }
 
 void LiveRoomService::startConnectRoom(const QString &roomId)

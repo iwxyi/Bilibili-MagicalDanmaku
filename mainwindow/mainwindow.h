@@ -64,8 +64,6 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 #define LOCAL_MODE 0
-#define SOCKET_DEB if (0) qDebug() // 输出调试信息
-#define SOCKET_INF if (0) qDebug() // 输出数据包信息
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
 #define SERVER_DEB if (0) qDebug() // 输出服务器功能相关信息
 
@@ -813,10 +811,6 @@ private:
     void initWS();
     void startConnectIdentityCode();
     void startConnectRoom();
-    void sendXliveHeartBeatE();
-    void sendXliveHeartBeatX();
-    void sendXliveHeartBeatX(QString s, qint64 timestamp);
-    void getRoomInfo(bool reconnect, int reconnectCount = 0);
     bool isWorking() const;
 
     void updatePermission();
@@ -833,7 +827,6 @@ private:
     QPixmap getTopRoundedPixmap(const QPixmap &pixmap, int radius) const;
     QPixmap toCirclePixmap(const QPixmap &pixmap) const;
     QPixmap toLivingPixmap(QPixmap pixmap) const;
-    void getDanmuInfo();
     void getFansAndUpdate();
     void getPkInfoById(QString roomId, QString pkId);
     void startMsgLoop();
@@ -851,7 +844,6 @@ private:
     void roomEntryAction();
     void sendExpireGift();
     void getBagList(qint64 sendExpire = 0);
-    void updateExistGuards(int page);
     void newGuardUpdate(const LiveDanmaku &danmaku);
     void updateOnlineGoldRank();
     void updateOnlineRankGUI();

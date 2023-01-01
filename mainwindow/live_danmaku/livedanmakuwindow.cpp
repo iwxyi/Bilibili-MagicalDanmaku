@@ -1236,12 +1236,12 @@ void LiveDanmakuWindow::showMenu()
         {
             actionHistory->setText("送礼总额：" + snum(us->danmakuCounts->value("gold/"+snum(uid)).toLongLong()/1000) + "元");
             if (danmaku.is(MSG_GUARD_BUY))
-                actionMedal->setText("船员数量：" + snum(us->currentGuards.size()));
+                actionMedal->setText("船员数量：" + snum(ac->currentGuards.size()));
             actionCopyGiftId->setText("礼物ID：" + snum(danmaku.getGiftId()));
         }
         else if (danmaku.is(MSG_WELCOME_GUARD))
         {
-            actionMedal->setText("船员数量：" + snum(us->currentGuards.size()));
+            actionMedal->setText("船员数量：" + snum(ac->currentGuards.size()));
         }
 
         if (!danmaku.getAnchorRoomid().isEmpty() && !danmaku.getMedalName().isEmpty())

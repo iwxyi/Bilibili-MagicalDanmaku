@@ -24,7 +24,6 @@ public:
     QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
     QList<qint64> notReplyUsers;   // 不自动回复的用户
     QHash<int, QString> giftAlias; // 礼物名字
-    QHash<qint64, QString> currentGuards; // 当前船员ID-Name
     QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
 
     bool useStringSimilar = false;   // 使用字符串编辑距离相似度算法
@@ -36,7 +35,8 @@ public:
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间
     int timerConnectInterval;        // 定时检测的时间（分支）
-    bool liveDove = false;           // 鸽一天
+    bool liveDove = false;           // 鸽一天，不自动连接
+    int getHeartTimeCount = 0;       // 获取小心心的总数
 };
 
 extern UserSettings* us;
