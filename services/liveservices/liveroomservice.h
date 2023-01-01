@@ -2,6 +2,7 @@
 #define LIVEROOMSERVICE_H
 
 #include <QWebSocket>
+#include <QRegularExpression>
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
@@ -26,30 +27,59 @@ public:
 signals:
     void signalConnectionStarted(); // WebSocket开始连接
     void signalConnectionStateChanged(QAbstractSocket::SocketState state);
-    void signalWorkStarted(); // 直播开始/连接上就已经开始直播
+    void signalConnectionStateTextChanged(const QString& text);
+    void signalStartWork(); // 直播开始/连接上就已经开始直播
     void signalLiveStarted();
     void signalLiveStopped();
 
-    void signalRoomUidChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
+    void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const QString &uid);
+    void signalUpFaceChanged(const QPixmap& pixmap);
     void signalUpInfoChanged();
+    void signalUpSignatureChanged(const QString& signature);
     void signalRobotIdChanged(const QString &uid);
     void signalRoomInfoChanged();
+    void signalImUpChanged(bool isUp);
     void signalRoomCoverChanged(const QPixmap &pixmap);
     void signalUpHeadChanged(const QPixmap &pixmap);
     void signalRobotHeadChanged(const QPixmap &pixmap);
+    void signalGetRoomAndRobotFinished(); // 获取房间基础信息/机器人基础信息结束
+    void signalFinishDove(); // 结束今天的鸽鸽
+    void signalCanRecord(); // 直播中，如果连接的话则可以开始录播
+
+    void signalBattleEnabled(bool enable);
+    void signalBattleRankGot();
+    void signalBattleRankNameChanged(const QString& name);
+    void signalBattleRankIconChanged(const QPixmap& pixmap);
+    void signalBattleSeasonInfoChanged(const QString& text);
+    void signalBattleNumsChanged(const QString& text);
+    void signalBattleScoreChanged(const QString& text);
+
+    void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku);
 
 public slots:
-    /// 开始获取房间信息
-    virtual void startConnectRoom(const QString &roomId) = 0;
-    /// 通过身份码获取房间信息
+    /// 开始获取房间，进行一些初始化操作
+    virtual void startConnectRoom(const QString &roomId);
+    /// 通过身份码连接房间
     virtual void startConnectIdentityCode(const QString &code) { Q_UNUSED(code) }
+
+public:
+    /// 获取直播间信息
+    virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
+    virtual bool isLiving() const;
+    virtual bool isLivingOrMayLiving();
+    virtual void getRoomCover(const QString& url) { Q_UNUSED(url) }
+    virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
     /// 获取礼物ID
     virtual void getGiftList() {}
     /// 获取表情包ID
     virtual void getEmoticonList() {}
+
+    /// 更新大乱斗连胜
+    virtual void getRoomBattleInfo() {}
+    virtual void updateWinningStreak(bool emitWinningStreak) {}
 
     /// 获取机器人账号信息
     virtual void getCookieAccount() = 0;
@@ -62,7 +92,7 @@ public:
     virtual void autoSetCookie(const QString &s);
     
 
-private:
+protected:
     // 连接信息
     int hostUseIndex = 0;
     QList<HostInfo> hostList;
@@ -88,6 +118,7 @@ private:
     QList<LiveDanmaku> guardInfos;
 
     // 高能榜
+    int online = 0;
     QList<LiveDanmaku> onlineGoldRank;
     QList<LiveDanmaku> onlineGuards;
     QList<qint64> onlineRankGuiIds;

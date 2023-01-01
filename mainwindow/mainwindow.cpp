@@ -641,7 +641,7 @@ void MainWindow::initObject()
     liveService->connectServerTimer = new QTimer(this);
     connect(liveService->connectServerTimer, &QTimer::timeout, this, [=]{
         liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
-        if (isLiving() && (liveService->socket->state() == QAbstractSocket::ConnectedState || liveService->socket->state() == QAbstractSocket::ConnectingState))
+        if (liveService->isLiving() && (liveService->socket->state() == QAbstractSocket::ConnectedState || liveService->socket->state() == QAbstractSocket::ConnectingState))
         {
             liveService->connectServerTimer->stop();
             return ;
@@ -728,7 +728,7 @@ void MainWindow::initObject()
     // 每分钟定时
     connect(liveService->minuteTimer, &QTimer::timeout, this, [=]{
         // 直播间人气
-        if (ac->currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
+        if (ac->currentPopul > 1 && liveService->isLiving()) // 为0的时候不计入内；为1时可能机器人在线
         {
             liveService->sumPopul += ac->currentPopul;
             liveService->countPopul++;
@@ -776,7 +776,7 @@ void MainWindow::initObject()
         }
 
         // 版权声明
-        if (isLiving() && !us->value("danmaku/copyright", false).toBool()
+        if (liveService->isLiving() && !us->value("danmaku/copyright", false).toBool()
                 && qrand() % 3 == 0)
         {
             /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
@@ -994,9 +994,175 @@ void MainWindow::initRuntime()
 void MainWindow::initLiveService()
 {
     liveService = new BiliLiveService(this);
-    // 直播事件
     
-    // 变量到UI
+    /// 变量到UI
+    connect(liveService, &LiveRoomService::signalConnectionStateTextChanged, this, [=](const QString& text) {
+        ui->connectStateLabel->setText(text);
+    });
+
+    // 连接之后
+    connect(liveService, &LiveRoomService::signalRoomInfoChanged, this, [=] {
+        // 设置房间信息
+        ui->roomIdEdit->setText(ac->roomId);
+        tray->setToolTip(ac->roomTitle + " - " + ac->upName);
+        if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
+            ui->roomNameLabel->setText(ac->roomTitle);
+        ui->upNameLabel->setText(ac->upName);
+        setRoomDescription(ac->roomDescription);
+        ui->roomAreaLabel->setText(ac->areaName);
+        ui->popularityLabel->setText(snum(liveService->online));
+        ui->fansCountLabel->setText(snum(ac->currentFans));
+        ui->fansClubCountLabel->setText(snum(ac->currentFansClub));
+        ui->tagsButtonGroup->initStringList(ac->roomTags);
+
+        // 榜单信息
+        ui->roomRankLabel->setText(snum(ac->roomRank));
+        if (!ac->rankArea.isEmpty())
+        {
+            if (!ac->rankArea.endsWith("榜"))
+                ac->rankArea += "榜";
+            ui->roomRankTextLabel->setText(ac->rankArea);
+            ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(ac->countdown));
+        }
+        ui->liveRankLabel->setText(ac->liveRank); // 直播榜（主播榜）
+        ui->liveRankLabel->setToolTip("分区榜：" + ac->areaRank);
+        ui->watchedLabel->setText(ac->watchedShow);
+
+        // 设置直播状态
+        if (ac->liveStatus == 0)
+        {
+            ui->liveStatusButton->setText("未开播");
+            if (us->timerConnectServer && !liveService->connectServerTimer->isActive())
+                liveService->connectServerTimer->start();
+        }
+        else if (ac->liveStatus == 1)
+        {
+            ui->liveStatusButton->setText("已开播");
+        }
+        else if (ac->liveStatus == 2)
+        {
+            ui->liveStatusButton->setText("轮播中");
+        }
+        else
+        {
+            ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
+        }
+
+        // 大乱斗信息
+        ui->battleRankNameLabel->setText(ac->battleRankName);
+        if (!ac->battleRankName.isEmpty()) // 已经使用过大乱斗
+        {
+            ui->battleInfoWidget->show();
+        }
+        else // 没有参加过大乱斗
+        {
+            ui->battleInfoWidget->hide();
+        }
+
+        if (danmakuWindow)
+            danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+
+        updatePermission();
+    });
+
+    connect(liveService, &LiveRoomService::signalImUpChanged, this, [=](bool isUp){
+        if (isUp)
+        {
+            ui->actionJoin_Battle->setEnabled(true);
+        }
+    });
+
+    connect(liveService, &LiveRoomService::signalRoomCoverChanged, this, [=](const QPixmap& pixmap) {
+        setRoomCover(pixmap);
+    });
+
+    connect(liveService, &LiveRoomService::signalUpFaceChanged, this, [=](const QPixmap& pixmap) {
+        QPixmap circlePixmap = toCirclePixmap(pixmap); // 圆图
+
+        // 设置到窗口图标
+        QPixmap face = liveService->isLiving() ? toLivingPixmap(circlePixmap) : circlePixmap;
+        setWindowIcon(face);
+        tray->setIcon(face);
+
+        // 设置到UP头像
+        face = liveService->upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QPixmap circle = toCirclePixmap(face);
+        ui->upHeaderLabel->setPixmap(circle);
+        if (musicWindow)
+        {
+            musicWindow->setTitleIcon(circle);
+        }
+    });
+
+    connect(liveService, &LiveRoomService::signalUpSignatureChanged, this, [=](const QString& signature) {
+        ui->upLevelLabel->setText(signature);
+    });
+
+    connect(liveService, &LiveRoomService::signalFinishDove, this, [=]{
+        ui->doveCheck->setChecked(false);
+    });
+
+    /// 直播事件
+    connect(liveService, &LiveRoomService::signalGetRoomAndRobotFinished, this, [=]() {
+        triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
+    });
+
+    connect(liveService, &LiveRoomService::signalStartWork, this, [=] {
+        slotStartWork();
+    });
+
+    connect(liveService, &LiveRoomService::signalCanRecord, this, [=] {
+        if (ui->recordCheck->isChecked() && liveService->isLiving())
+            startLiveRecord();
+    });
+
+    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku) {
+        triggerCmdEvent(cmd, danmaku);
+    });
+
+    /// 大乱斗
+    connect(liveService, &LiveRoomService::signalBattleEnabled, this, [=](bool enable) {
+        if (enable)
+        {
+            ui->battleInfoWidget->show();
+        }
+        else
+        {
+            ui->battleInfoWidget->hide();
+        }
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleRankGot, this, [=] {
+        if (ui->battleInfoWidget->isHidden())
+            ui->battleInfoWidget->show();
+        ui->winningStreakLabel->setText("连胜" + snum(ac->winningStreak) + "场");
+    });
+    connect(liveService, &LiveRoomService::signalBattleRankNameChanged, this, [=](const QString& text) {
+        ui->battleRankNameLabel->setText(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleRankIconChanged, this, [=](const QPixmap& pixmap) {
+        QPixmap p = pixmap;
+        if (!p.isNull())
+            p = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
+        ui->battleRankIconLabel->setPixmap(pixmap);
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleNumsChanged, this, [=](const QString& text) {
+        ui->winningStreakLabel->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleSeasonInfoChanged, this, [=](const QString& text) {
+        ui->battleRankIconLabel->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleNumsChanged, this, [=](const QString& text) {
+        ui->winningStreakLabel->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalBattleScoreChanged, this, [=](const QString& text) {
+        ui->battleRankNameLabel->setToolTip(text);
+    });
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作
@@ -1429,11 +1595,11 @@ void MainWindow::readConfig()
     permissionText = us->value("mainwindow/permissionText", rt->asPlugin ? "Lite版" : permissionText).toString();
 
     // 定时连接
-    ui->timerConnectServerCheck->setChecked(us->value("live/timerConnectServer", false).toBool());
-    ui->startLiveHourSpin->setValue(us->value("live/startLiveHour", 0).toInt());
-    ui->endLiveHourSpin->setValue(us->value("live/endLiveHour", 0).toInt());
-    ui->timerConnectIntervalSpin->setValue(us->value("live/timerConnectInterval", 30).toInt());
-    liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000);
+    ui->timerConnectServerCheck->setChecked(us->timerConnectServer = us->value("live/timerConnectServer", false).toBool());
+    ui->startLiveHourSpin->setValue(us->startLiveHour = us->value("live/startLiveHour", 0).toInt());
+    ui->endLiveHourSpin->setValue(us->endLiveHour = us->value("live/endLiveHour", 0).toInt());
+    ui->timerConnectIntervalSpin->setValue(us->timerConnectInterval = us->value("live/timerConnectInterval", 30).toInt());
+    liveService->connectServerTimer->setInterval(us->timerConnectInterval * 60000);
 
     // WS连接
     initWS();
@@ -2187,11 +2353,6 @@ bool MainWindow::hasSimilarOldDanmaku(const QString& s) const
             break;
     }
     return false;
-}
-
-bool MainWindow::isLiving() const
-{
-    return ac->liveStatus == 1;
 }
 
 void MainWindow::localNotify(const QString &text)
@@ -3837,7 +3998,7 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
                 localNotify("[未开播，不做操作]");
             return ;
         }
-        if (!isLiving() && !manual)
+        if (!liveService->isLiving() && !manual)
             manual = true;
 
         if (sendVariantMsg(sl, danmaku, EVENT_CD_CN, manual))
@@ -4624,7 +4785,7 @@ void MainWindow::initWS()
 
     connect(liveService->socket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了
-        if (isLiving())
+        if (liveService->isLiving())
         {
             qWarning() << "正在直播的时候突然断开，" << (liveService->reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
             localNotify("[连接断开，重连...]");
@@ -4729,7 +4890,7 @@ void MainWindow::initWS()
     liveService->xliveHeartBeatTimer = new QTimer(this);
     liveService->xliveHeartBeatTimer->setInterval(60000);
     connect(liveService->xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
-        if (isLiving())
+        if (liveService->isLiving())
             sendXliveHeartBeatX();
     });
 }
@@ -4795,7 +4956,7 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::sendXliveHeartBeatE()
 {
-    if (ac->roomId.isEmpty() || ac->cookieUid.isEmpty() || !isLiving())
+    if (ac->roomId.isEmpty() || ac->cookieUid.isEmpty() || !liveService->isLiving())
         return ;
     if (liveService->todayHeartMinite >= ui->heartTimeSpin->value()) // 小心心已经收取满了
     {
@@ -4943,370 +5104,16 @@ void MainWindow::sendXliveHeartBeatX(QString s, qint64 timestamp)
 }
 
 /**
- * 获取房间信息
- * （已废弃）
- */
-void MainWindow::getRoomInit()
-{
-    QString roomInitUrl = "https://api.live.bilibili.com/room/v1/Room/room_init?id=" + ac->roomId;
-    connect(new NetUtil(roomInitUrl), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取房间初始化出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << "房间初始化返回结果不为0：" << json.value("message").toString();
-            return ;
-        }
-
-        int realRoom = json.value("data").toObject().value("room_id").toInt();
-        qInfo() << "真实房间号：" << realRoom;
-    });
-}
-
-/**
  * 获取直播间信息，然后再开始连接
  * @param reconnect       是否是重新获取信息
  * @param reconnectCount  连接失败的重连次数
  */
 void MainWindow::getRoomInfo(bool reconnect, int reconnectCount)
 {
-    switch (rt->livePlatform)
-    {
-    case Bilibili:
-    {
-        liveService->gettingRoom = true;
-        QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
-        get(url, [=](QJsonObject json) {
-            if (json.value("code").toInt() != 0)
-            {
-                qCritical() << s8("获取房间信息返回结果不为0：") << json.value("message").toString();
-                setRoomCover(QPixmap(":/bg/bg"));
-                ui->connectStateLabel->setText("连接失败" + snum(reconnectCount+1));
-
-                if (reconnectCount >= 5)
-                {
-                    ui->connectStateLabel->setText("无法连接");
-                    return ;
-                }
-                qInfo() << "尝试重新获取房间信息：" << (reconnectCount + 1);
-                QTimer::singleShot(5000, [=]{
-                    getRoomInfo(reconnect, reconnectCount + 1);
-                });
-                return ;
-            }
-
-            QJsonObject dataObj = json.value("data").toObject();
-            QJsonObject roomInfo = dataObj.value("room_info").toObject();
-            QJsonObject anchorInfo = dataObj.value("anchor_info").toObject();
-
-            // 获取房间信息
-            ac->roomId = QString::number(roomInfo.value("room_id").toInt()); // 应当一样，但防止是短ID
-            ui->roomIdEdit->setText(ac->roomId);
-            ac->shortId = QString::number(roomInfo.value("short_id").toInt());
-            ac->upUid = QString::number(static_cast<qint64>(roomInfo.value("uid").toDouble()));
-            ac->liveStatus = roomInfo.value("live_status").toInt();
-            int pkStatus = roomInfo.value("pk_status").toInt();
-            if (danmakuWindow)
-                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
-            ac->roomTitle = roomInfo.value("title").toString();
-            ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
-            ac->roomDescription = roomInfo.value("description").toString();
-            ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
-            setWindowTitle(ac->roomTitle + " - " + ac->upName);
-            tray->setToolTip(ac->roomTitle + " - " + ac->upName);
-            if (ui->roomNameLabel->text().isEmpty() || ui->roomNameLabel->text() != warmWish)
-                ui->roomNameLabel->setText(ac->roomTitle);
-#ifdef ZUOQI_ENTRANCE
-            fakeEntrance->setRoomName(ac->roomTitle);
-#endif
-            ui->upNameLabel->setText(ac->upName);
-            ac->roomNews = dataObj.value("news_info").toObject().value("content").toString();
-
-            // 设置房间描述
-            setRoomDescription(ac->roomDescription);
-
-            // 设置直播状态
-            if (ac->liveStatus == 0)
-            {
-                ui->liveStatusButton->setText("未开播");
-                if (ui->timerConnectServerCheck->isChecked() && !liveService->connectServerTimer->isActive())
-                    liveService->connectServerTimer->start();
-            }
-            else if (ac->liveStatus == 1)
-            {
-                ui->liveStatusButton->setText("已开播");
-            }
-            else if (ac->liveStatus == 2)
-            {
-                ui->liveStatusButton->setText("轮播中");
-            }
-            else
-            {
-                ui->liveStatusButton->setText("未知状态" + snum(ac->liveStatus));
-            }
-
-            qInfo() << "房间信息: roomid=" << ac->roomId
-                     << "  shortid=" << ac->shortId
-                     << "  upName=" << ac->upName
-                     << "  uid=" << ac->upUid;
-
-            // 设置PK状态
-            if (pkStatus)
-            {
-                QJsonObject battleInfo = dataObj.value("battle_info").toObject();
-                QString pkId = QString::number(static_cast<qint64>(battleInfo.value("pk_id").toDouble()));
-                if (pkId.toLongLong() > 0 && reconnect)
-                {
-                    // 这个 pk_status 不是 battle_type
-                    liveService->pking = true;
-                    // pkVideo = pkStatus == 2; // 注意：如果是匹配到后、开始前，也算是1/2,
-                    setPkInfoById(ac->roomId, pkId);
-                    qInfo() << "正在大乱斗：" << pkId << "   pk_status=" << pkStatus;
-                }
-            }
-            else
-            {
-                QTimer::singleShot(5000, [=]{ // 延迟5秒，等待主播UID和机器人UID都获取到
-                    if (ac->cookieUid == ac->upUid)
-                        ui->actionJoin_Battle->setEnabled(true);
-                });
-            }
-
-            // 发送心跳要用到的直播信息
-            ac->areaId = snum(roomInfo.value("area_id").toInt());
-            ac->areaName = roomInfo.value("area_name").toString();
-            ac->parentAreaId = snum(roomInfo.value("parent_area_id").toInt());
-            ac->parentAreaName = roomInfo.value("parent_area_name").toString();
-            ui->roomAreaLabel->setText(ac->areaName);
-
-            // 疑似在线人数
-            int online = roomInfo.value("online").toInt();
-            ui->popularityLabel->setText(snum(online));
-
-            // 获取主播信息
-            ac->currentFans = anchorInfo.value("relation_info").toObject().value("attention").toInt();
-            ac->currentFansClub = anchorInfo.value("medal_info").toObject().value("fansclub").toInt();
-    //        qInfo() << s8("粉丝数：") << ac->currentFans << s8("    粉丝团：") << ac->currentFansClub;
-            ui->fansCountLabel->setText(snum(ac->currentFans));
-            ui->fansClubCountLabel->setText(snum(ac->currentFansClub));
-            // getFansAndUpdate();
-
-            // 获取主播等级
-            QJsonObject liveInfo = anchorInfo.value("live_info").toObject();
-            ac->anchorLiveLevel = liveInfo.value("level").toInt();
-            ac->anchorLiveScore = qint64(liveInfo.value("upgrade_score").toDouble());
-            ac->anchorUpgradeScore = qint64(liveInfo.value("score").toDouble());
-            // TODO: 显示主播等级和积分
-
-            // 设置标签
-            ui->tagsButtonGroup->initStringList(ac->roomTags);
-
-            // 获取热门榜信息
-            QJsonObject hotRankInfo = dataObj.value("hot_rank_info").toObject();
-            int rank = hotRankInfo.value("rank").toInt();
-            QString rankArea = hotRankInfo.value("area_name").toString();
-            int countdown = hotRankInfo.value("countdown").toInt();
-            if (!rankArea.isEmpty())
-            {
-                ui->roomRankLabel->setText(snum(rank));
-                if (!rankArea.endsWith("榜"))
-                    rankArea += "榜";
-                ui->roomRankTextLabel->setText(rankArea);
-                ui->roomRankTextLabel->setToolTip("当前总人数:" + snum(countdown));
-            }
-
-            // 获取直播排行榜
-            QJsonObject areaRankInfo = dataObj.value("area_rank_info").toObject();
-            ac->areaRank = areaRankInfo.value("areaRank").toObject().value("rank").toString();
-            ac->liveRank = areaRankInfo.value("liveRank").toObject().value("rank").toString(); // ==anchor_info.live_info.rank
-            ui->liveRankLabel->setText(ac->liveRank); // 直播榜（主播榜）
-            ui->liveRankLabel->setToolTip("分区榜：" + ac->areaRank);
-
-            // 看过
-            ui->watchedLabel->setText(dataObj.value("watched_show").toObject().value("text_small").toString());
-
-            // 获取大乱斗段位（现在可能是空了）
-            QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
-            if (!battleRankEntryInfo.isEmpty())
-            {
-                ac->battleRankName = battleRankEntryInfo.value("rank_name").toString();
-                QString battleRankUrl = battleRankEntryInfo.value("first_rank_img_url").toString(); // 段位图片
-                ui->battleRankNameLabel->setText(ac->battleRankName);
-                if (!ac->battleRankName.isEmpty())
-                {
-                    ui->battleInfoWidget->show();
-                    get(battleRankUrl, [=](QNetworkReply* reply1){
-                        QPixmap pixmap;
-                        pixmap.loadFromData(reply1->readAll());
-                        if (!pixmap.isNull())
-                            pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
-                        ui->battleRankIconLabel->setPixmap(pixmap);
-                    });
-                    upgradeWinningStreak(false);
-                }
-                else
-                {
-                    ui->battleInfoWidget->hide();
-                }
-            }
-            else
-            {
-                getRoomBattleInfo();
-            }
-
-            // 异步获取房间封面
-            getRoomCover(roomInfo.value("cover").toString());
-
-            // 获取主播头像
-            getUpInfo(ac->upUid);
-            liveService->gettingRoom = false;
-            if (!liveService->gettingUser)
-                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
-            updatePermission();
-
-            // 判断房间，未开播则暂停连接，等待开播
-            if (!isLivingOrMayliving())
-                return ;
-
-            // 开始工作
-            if (isLiving())
-                slotStartWork();
-
-            if (!reconnect)
-                return ;
-
-            // 获取弹幕信息
-            getDanmuInfo();
-
-            // 录播
-            if (ui->recordCheck->isChecked() && isLiving())
-                startLiveRecord();
-
-            // 获取礼物
-            liveService->getGiftList();
-        });
-    }
-        break;
-    }
+    liveService->getRoomInfo(reconnect, reconnectCount);
 
     if (reconnect)
         ui->connectStateLabel->setText("获取房间信息...");
-}
-
-void MainWindow::getRoomBattleInfo()
-{
-    get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",
-        {"uid", ac->upUid, "_", snum(QDateTime::currentMSecsSinceEpoch())}, [=](MyJson json) {
-        MyJson jdata = json.data();
-        MyJson pkInfo = jdata.o("anchor_pk_info");
-        ac->battleRankName = pkInfo.s("pk_rank_name");
-        ui->battleRankNameLabel->setText(ac->battleRankName);
-        QString battleRankUrl = pkInfo.s("first_rank_img_url");
-        if (!ac->battleRankName.isEmpty())
-        {
-            ui->battleInfoWidget->show();
-            get(battleRankUrl, [=](QNetworkReply* reply1){
-                QPixmap pixmap;
-                pixmap.loadFromData(reply1->readAll());
-                if (!pixmap.isNull())
-                    pixmap = pixmap.scaledToHeight(ui->battleRankNameLabel->height() * 2, Qt::SmoothTransformation);
-                ui->battleRankIconLabel->setPixmap(pixmap);
-            });
-            upgradeWinningStreak(false);
-            ui->battleInfoWidget->show();
-        }
-        else
-        {
-            ui->battleInfoWidget->hide();
-        }
-    });
-}
-
-bool MainWindow::isLivingOrMayliving()
-{
-    if (ui->timerConnectServerCheck->isChecked())
-    {
-        if (!isLiving()) // 未开播，等待下一次的检测
-        {
-            // 如果是开播前一段时间，则继续保持着连接
-            int start = ui->startLiveHourSpin->value();
-            int end = ui->endLiveHourSpin->value();
-            int hour = QDateTime::currentDateTime().time().hour();
-            int minu = QDateTime::currentDateTime().time().minute();
-            bool abort = false;
-            qint64 currentVal = hour * 3600000 + minu * 60000;
-            qint64 nextVal = (currentVal + ui->timerConnectIntervalSpin->value() * 60000) % (24 * 3600000); // 0点
-            if (start < end) // 白天档
-            {
-                qInfo() << "白天档" << currentVal << start * 3600000 << end * 3600000;
-                if (nextVal >= start * 3600000
-                        && currentVal <= end * 3600000)
-                {
-                    if (ui->doveCheck->isChecked()) // 今天鸽了
-                    {
-                        abort = true;
-                        qInfo() << "今天鸽了";
-                    }
-                    // 即将开播
-                }
-                else // 直播时间之外
-                {
-                    qInfo() << "未开播，继续等待";
-                    abort = true;
-                    if (currentVal > end * 3600000 && ui->doveCheck->isChecked()) // 今天结束鸽鸽
-                        ui->doveCheck->setChecked(false);
-                }
-            }
-            else if (start > end) // 熬夜档
-            {
-                qInfo() << "晚上档" << currentVal << start * 3600000 << end * 3600000;
-                if (currentVal + ui->timerConnectIntervalSpin->value() * 60000 >= start * 3600000
-                        || currentVal <= end * 3600000)
-                {
-                    if (ui->doveCheck->isChecked()) // 今晚鸽了
-                        abort = true;
-                    // 即将开播
-                }
-                else // 直播时间之外
-                {
-                    qInfo() << "未开播，继续等待";
-                    abort = true;
-                    if (currentVal > end * 3600000 && currentVal < start * 3600000
-                            && ui->doveCheck->isChecked())
-                        ui->doveCheck->setChecked(false);
-                }
-            }
-
-            if (abort)
-            {
-                qInfo() << "短期内不会开播，暂且断开连接";
-                if (!liveService->connectServerTimer->isActive())
-                    liveService->connectServerTimer->start();
-                ui->connectStateLabel->setText("等待连接");
-
-                // 如果正在连接或打算连接，却未开播，则断开
-                if (liveService->socket->state() != QAbstractSocket::UnconnectedState)
-                    liveService->socket->close();
-                return false;
-            }
-        }
-        else // 已开播，则停下
-        {
-            qInfo() << "开播，停止定时连接";
-            if (liveService->connectServerTimer->isActive())
-                liveService->connectServerTimer->stop();
-            if (ui->doveCheck->isChecked())
-                ui->doveCheck->setChecked(false);
-            return true;
-        }
-    }
-    return true;
 }
 
 bool MainWindow::isWorking() const
@@ -5412,17 +5219,6 @@ int MainWindow::hasPermission()
 void MainWindow::processNewDay()
 {
     us->setValue("danmaku/todayHeartMinite", liveService->todayHeartMinite = 0);
-}
-
-void MainWindow::getRoomCover(QString url)
-{
-    get(url, [=](QNetworkReply* reply1){
-        QByteArray jpegData = reply1->readAll();
-
-        QPixmap pixmap;
-        pixmap.loadFromData(jpegData);
-        setRoomCover(pixmap);
-    });
 }
 
 void MainWindow::setRoomCover(const QPixmap& pixmap)
@@ -5649,59 +5445,6 @@ QPixmap MainWindow::getTopRoundedPixmap(const QPixmap &pixmap, int radius) const
     return dest;
 }
 
-void MainWindow::getUpInfo(const QString &uid)
-{
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取主播信息返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-
-        // 设置签名
-        QString sign = data.value("sign").toString();
-        {
-            // 删除首尾空
-            sign.replace(QRegularExpression("\n[\n\r ]*\n"), "\n")
-                    .replace(QRegularExpression("^[\n\r ]+"), "")
-                    .replace(QRegularExpression("[\n\r ]+$"), "");
-            ui->upLevelLabel->setText(sign.trimmed());
-        }
-
-        // 开始下载头像
-        QString face = data.value("face").toString();
-        downloadUpFace(face);
-    });
-}
-
-void MainWindow::downloadUpFace(const QString &faceUrl)
-{
-    get(faceUrl, [=](QNetworkReply* reply){
-        QByteArray jpegData = reply->readAll();
-
-        QPixmap pixmap;
-        pixmap.loadFromData(jpegData);
-        liveService->upFace = pixmap; // 原图
-        pixmap = toCirclePixmap(pixmap); // 圆图
-
-        // 设置到窗口图标
-        QPixmap face = isLiving() ? toLivingPixmap(pixmap) : pixmap;
-        setWindowIcon(face);
-        tray->setIcon(face);
-
-        // 设置到UP头像
-        face = liveService->upFace.scaled(ui->upHeaderLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        QPixmap circle = toCirclePixmap(face);
-        ui->upHeaderLabel->setPixmap(circle);
-        if (musicWindow)
-        {
-            musicWindow->setTitleIcon(circle);
-        }
-    });
-}
-
 /**
  * 变成圆形的图片
  */
@@ -5889,7 +5632,7 @@ void MainWindow::getFansAndUpdate()
     });
 }
 
-void MainWindow::setPkInfoById(QString roomId, QString pkId)
+void MainWindow::getPkInfoById(QString roomId, QString pkId)
 {
     /*{
         "code": 0,
@@ -8300,7 +8043,7 @@ void MainWindow::finishLiveRecord()
         m3u8Downloader.stop();
 
         // 可能是时间结束了，重新下载
-        if (ui->recordCheck->isChecked() && isLiving())
+        if (ui->recordCheck->isChecked() && liveService->isLiving())
         {
             startLiveRecord();
         }
@@ -11436,7 +11179,7 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
                 + (uchar)body[3];
         SOCKET_DEB << "人气值=" << popularity;
         liveService->popularVal = ac->currentPopul = popularity;
-        if (isLiving())
+        if (liveService->isLiving())
             ui->popularityLabel->setText(QString::number(popularity));
     }
     else if (operation == OP_SEND_MSG_REPLY) // 普通包
@@ -11735,11 +11478,11 @@ void MainWindow::handleMessage(QJsonObject json)
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
         emit signalLiveStart(ac->roomId);
 
-        if (isLiving() || liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        if (liveService->isLiving() || liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qInfo() << "忽视PK导致的开播情况";
             // 大乱斗时突然断联后恢复
-            if (!isLiving())
+            if (!liveService->isLiving())
             {
                 if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
                     liveService->connectServerTimer->stop();
@@ -14600,7 +14343,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605748006
         }*/
         // PK结束更新大乱斗信息
-        upgradeWinningStreak(true);
+        updateWinningStreak(true);
         return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_V2")
@@ -15625,76 +15368,9 @@ void MainWindow::setRoomDescription(QString roomDescription)
         ui->roomDescriptionBrowser->show();
 }
 
-void MainWindow::upgradeWinningStreak(bool emitWinningStreak)
+void MainWindow::updateWinningStreak(bool emitWinningStreak)
 {
-    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + ac->upUid + "&room_id=" + ac->roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
-    // qInfo() << "winning streak:" << url;
-    get(url, [=](MyJson json) {
-        JO(json, data);
-        JO(data, anchor_pk_info);
-        JS(anchor_pk_info, pk_rank_name); // 段位名字：钻石传说
-        JI(anchor_pk_info, pk_rank_star); // 段位级别：2
-        JS(anchor_pk_info, first_rank_img_url); // 图片
-        if (pk_rank_name.isEmpty())
-            return ;
-        if (ui->battleInfoWidget->isHidden())
-            ui->battleInfoWidget->show();
-        // if (!battleRankName.contains(pk_rank_name)) // 段位有变化
 
-        JO(data, season_info);
-        JI(season_info, current_season_id); // 赛季ID：38
-        JS(season_info, current_season_name); // 赛季名称：PK大乱斗S12赛季
-        liveService->currentSeasonId = current_season_id;
-        ui->battleRankIconLabel->setToolTip(current_season_name + " (id:" + snum(current_season_id) + ")");
-
-        JO(data, score_info);
-        JI(score_info, total_win_num); // 总赢：309
-        JI(score_info, max_win_num); // 最高连胜：16
-        JI(score_info, total_num); // 总次数（>总赢）：454
-        JI(score_info, total_tie_count); // 平局：3
-        JI(score_info, total_lose_count); // 总失败数：142
-        JI(score_info, win_count); // 当前连胜？：5
-        JI(score_info, win_rate); // 胜率：69
-        ui->winningStreakLabel->setText("连胜" + snum(win_count) + "场");
-        QStringList nums {
-            "总场次　：" + snum(total_num),
-                    "胜　　场：" + snum(total_win_num),
-                    "败　　场：" + snum(total_lose_count),
-                    "最高连胜：" + snum(max_win_num),
-                    "胜　　率：" + snum(win_rate) + "%"
-        };
-        ui->winningStreakLabel->setToolTip(nums.join("\n"));
-
-        JA(data, assist_list); // 助攻列表
-
-        JO(data, pk_url_info);
-        liveService->pkRuleUrl = pk_url_info.s("pk_rule_url");
-
-        JO(data, rank_info);
-        JI(rank_info, rank); // 排名
-        JL(rank_info, score); // 积分
-        JL(anchor_pk_info, next_rank_need_score); // 下一级需要积分
-        QStringList scores {
-            "排名：" + snum(rank),
-                    "积分：" + snum(score),
-                    "升级需要积分：" + snum(next_rank_need_score)
-        };
-        ui->battleRankNameLabel->setToolTip(scores.join("\n"));
-
-        JO(data, last_pk_info);
-        JO(last_pk_info, match_info);
-        JL(match_info, room_id); // 最后匹配的主播
-        ac->lastMatchRoomId = room_id;
-
-        if (emitWinningStreak && ac->winningStreak > 0 && ac->winningStreak == win_count - 1)
-        {
-            LiveDanmaku danmaku;
-            danmaku.setNumber(win_count);
-            danmaku.with(match_info);
-            triggerCmdEvent("PK_WINNING_STREAK", danmaku);
-        }
-        ac->winningStreak = win_count;
-    });
 }
 
 void MainWindow::on_autoSendWelcomeCheck_stateChanged(int arg1)
@@ -16067,8 +15743,9 @@ void MainWindow::on_promptBlockNewbieKeysEdit_textChanged()
 void MainWindow::on_timerConnectServerCheck_clicked()
 {
     bool enable = ui->timerConnectServerCheck->isChecked();
+    us->timerConnectServer = enable;
     us->setValue("live/timerConnectServer", enable);
-    if (!isLiving() && enable)
+    if (!liveService->isLiving() && enable)
         startConnectRoom();
     else if (!enable && (!liveService->socket || liveService->socket->state() == QAbstractSocket::UnconnectedState))
         startConnectRoom();
@@ -16076,15 +15753,17 @@ void MainWindow::on_timerConnectServerCheck_clicked()
 
 void MainWindow::on_startLiveHourSpin_valueChanged(int arg1)
 {
-    us->setValue("live/startLiveHour", ui->startLiveHourSpin->value());
-    if (!justStart && ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
+    us->startLiveHour = ui->startLiveHourSpin->value();
+    us->setValue("live/startLiveHour", us->startLiveHour);
+    if (!justStart && us->timerConnectServer && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
         liveService->connectServerTimer->start();
 }
 
 void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 {
-    us->setValue("live/endLiveHour", ui->endLiveHourSpin->value());
-    if (!justStart && ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
+    us->endLiveHour = ui->endLiveHourSpin->value();
+    us->setValue("live/endLiveHour", us->endLiveHour);
+    if (!justStart && us->timerConnectServer && liveService->connectServerTimer && !liveService->connectServerTimer->isActive())
         liveService->connectServerTimer->start();
 }
 
@@ -16122,7 +15801,8 @@ void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 
 void MainWindow::on_doveCheck_clicked()
 {
-    // 这里不做操作，重启失效
+    // 这里不做保存，重启失效
+    us->liveDove = ui->doveCheck->isChecked();
 }
 
 void MainWindow::on_notOnlyNewbieCheck_clicked()
@@ -17344,7 +17024,7 @@ void MainWindow::connectPkRoom()
 
     connect(liveService->pkSocket, &QWebSocket::disconnected, this, [=]{
         // 正在直播的时候突然断开了，比如掉线
-        if (isLiving() && liveService->pkSocket)
+        if (liveService->isLiving() && liveService->pkSocket)
         {
             if (liveService->pking && liveService->pkChuanmenEnable) // 需要继续连接
             {
@@ -17768,7 +17448,7 @@ void MainWindow::handlePkMessage(QJsonObject json)
 
 bool MainWindow::shallAutoMsg() const
 {
-    return !ui->sendAutoOnlyLiveCheck->isChecked() || (isLiving() /*&& popularVal > 1*/);
+    return !ui->sendAutoOnlyLiveCheck->isChecked() || (liveService->isLiving() /*&& popularVal > 1*/);
 }
 
 bool MainWindow::shallAutoMsg(const QString &sl) const
@@ -18474,7 +18154,7 @@ void MainWindow::sendPrivateMsg(qint64 uid, QString msg)
 
 void MainWindow::joinBattle(int type)
 {
-    if (!isLiving() || ac->cookieUid != ac->upUid)
+    if (!liveService->isLiving() || ac->cookieUid != ac->upUid)
     {
         showError("大乱斗", "未开播或不是主播本人");
         return ;
@@ -20558,7 +20238,7 @@ void MainWindow::on_recordCheck_clicked()
 
     if (check)
     {
-        if (!ac->roomId.isEmpty() && isLiving())
+        if (!ac->roomId.isEmpty() && liveService->isLiving())
             startLiveRecord();
     }
     else
@@ -20783,7 +20463,7 @@ void MainWindow::slotStartWork()
             return ;
 
         // 挂小心心
-        if (ui->acquireHeartCheck->isChecked() && isLiving())
+        if (ui->acquireHeartCheck->isChecked() && liveService->isLiving())
         {
             sendXliveHeartBeatE();
         }
@@ -20823,7 +20503,7 @@ void MainWindow::slotStartWork()
 void MainWindow::on_autoSwitchMedalCheck_clicked()
 {
     us->setValue("danmaku/autoSwitchMedal", ui->autoSwitchMedalCheck->isChecked());
-    if (!ac->roomId.isEmpty() && isLiving())
+    if (!ac->roomId.isEmpty() && liveService->isLiving())
     {
         // switchMedalToRoom(roomId.toLongLong());
         switchMedalToUp(ac->upUid.toLongLong());
@@ -21303,7 +20983,7 @@ void MainWindow::on_acquireHeartCheck_clicked()
 
     if (ui->acquireHeartCheck->isChecked())
     {
-        if (isLiving())
+        if (liveService->isLiving())
             sendXliveHeartBeatE();
     }
     else
@@ -22191,7 +21871,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
             myLiveSelectArea(false);
         });
         menu->addAction(QIcon(":/icons/video2"), "一键开播", [=]{
-            if (!isLiving())
+            if (!liveService->isLiving())
             {
                 // 一键开播
                 myLiveStartLive();
@@ -22201,7 +21881,7 @@ void MainWindow::on_roomCoverSpacingLabel_customContextMenuRequested(const QPoin
                 // 一键下播
                 myLiveStopLive();
             }
-        })->text(isLiving(), "一键下播");
+        })->text(liveService->isLiving(), "一键下播");
 
         menu->addAction(QIcon(":/icons/rtmp"), "复制rtmp", [=]{
             QApplication::clipboard()->setText(liveService->myLiveRtmp);
@@ -22789,7 +22469,7 @@ void MainWindow::on_liveOpenCheck_clicked()
     us->set("live-open/enabled", ui->liveOpenCheck->isChecked());
     if (ui->liveOpenCheck->isChecked())
     {
-        if (isLiving())
+        if (liveService->isLiving())
             liveOpenService->start();
     }
     else

@@ -31,6 +31,12 @@ public:
     int stringSimilarThreshold = 80; // 相似度达到阈值及以上则算是重复弹幕
     int danmuSimilarJudgeCount = 10; // 重复弹幕的判断数量
     bool closeGui = false;           // 关闭GUI效果
+
+    bool timerConnectServer = false; // 定时连接
+    int startLiveHour = -1;          // 最早上班的时间
+    int endLiveHour = -1;            // 最晚下播的时间
+    int timerConnectInterval;        // 定时检测的时间（分支）
+    bool liveDove = false;           // 鸽一天
 };
 
 extern UserSettings* us;

@@ -778,7 +778,6 @@ private:
     void oldLiveDanmakuRemoved(const LiveDanmaku &danmaku);
     void addNoReplyDanmakuText(const QString &text);
     bool hasSimilarOldDanmaku(const QString &s) const;
-    bool isLiving() const;
     void localNotify(const QString &text);
     void localNotify(const QString &text, qint64 uid);
 
@@ -817,17 +816,13 @@ private:
     void sendXliveHeartBeatE();
     void sendXliveHeartBeatX();
     void sendXliveHeartBeatX(QString s, qint64 timestamp);
-    void getRoomInit();
     void getRoomInfo(bool reconnect, int reconnectCount = 0);
-    void getRoomBattleInfo();
-    bool isLivingOrMayliving();
     bool isWorking() const;
 
     void updatePermission();
     int hasPermission();
     void processNewDay();
 
-    void getRoomCover(QString url);
     void setRoomCover(const QPixmap &pixmap);
     void setRoomThemeByCover(double val);
     void adjustCoverSizeByRoomCover(QPixmap pixmap);
@@ -836,13 +831,11 @@ private:
     void hideRoomIdWidget();
     QPixmap getRoundedPixmap(const QPixmap &pixmap) const;
     QPixmap getTopRoundedPixmap(const QPixmap &pixmap, int radius) const;
-    void getUpInfo(const QString &uid);
-    void downloadUpFace(const QString &faceUrl);
     QPixmap toCirclePixmap(const QPixmap &pixmap) const;
     QPixmap toLivingPixmap(QPixmap pixmap) const;
     void getDanmuInfo();
     void getFansAndUpdate();
-    void setPkInfoById(QString roomId, QString pkId);
+    void getPkInfoById(QString roomId, QString pkId);
     void startMsgLoop();
     void sendVeriPacket(QWebSocket *socket, QString roomId, QString cookieToken);
     void sendHeartPacket();
@@ -867,7 +860,7 @@ private:
     void getPkMatchInfo();
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
-    void upgradeWinningStreak(bool emitWinningStreak);
+    void updateWinningStreak(bool emitWinningStreak);
 
     QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;

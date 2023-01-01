@@ -15,11 +15,18 @@ signals:
     
 public slots:
     void startConnectRoom(const QString& roomId) override;
-    void getRoomInfo();
+
+public:
+    void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
+    void getRoomCover(const QString &url) override;
+    void getUpInfo(const QString &uid) override;
     void updateExistGuards(int page = 0) override;
     void getCookieAccount() override;
     void getGiftList() override;
     void getEmoticonList() override;
+
+    void getRoomBattleInfo() override;
+    void updateWinningStreak(bool emitWinningStreak) override;
     
 private:
 };

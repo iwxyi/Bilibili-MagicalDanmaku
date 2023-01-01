@@ -34,6 +34,10 @@ public:
     QStringList roomTags;    // 主播个人标签
     QString areaRank;        // 分区排行（字符串，比如 >100）
     QString liveRank;        // 总排行（字符串），也是主播排行
+    int roomRank = 0;
+    QString rankArea;        // 是哪个榜的
+    int countdown = 0;       // 当前人数
+    QString watchedShow;     // 总的看过？
     int winningStreak = 0;   // 连胜
     int currentPopul = 0;    // 人气值
     qint64 lastMatchRoomId;  // 最后匹配的直播间
