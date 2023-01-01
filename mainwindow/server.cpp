@@ -10,12 +10,19 @@ void MainWindow::openServer(int port)
         port = 5520;
     serverPort = qint16(port);
 #if defined(ENABLE_HTTP_SERVER)
-    server = new QHttpServer;
-    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
-            this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
+    if (!server)
+    {
+        server = new QHttpServer;
+        connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
+                this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
 
-    // 设置服务端参数
-    initServerData();
+        // 设置服务端参数
+        initServerData();
+    }
+    else
+    {
+        server->close();
+    }
 
     // 开启服务器
     qInfo() << "开启 HTTP 服务" << port;

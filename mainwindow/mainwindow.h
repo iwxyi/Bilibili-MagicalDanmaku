@@ -762,6 +762,7 @@ private slots:
 private:
     void initView();
     void initStyle();
+    void initObject();
     void initPath();
     void initRuntime();
     void initLiveService();

@@ -37,6 +37,7 @@ public:
     const int widgetSizeL = 48;
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
     const int giftImgSize = 60;
+    bool firstOpen = false;
 
     QString dataPath;   // 末尾带/
     QString appVersion; // 不带v
