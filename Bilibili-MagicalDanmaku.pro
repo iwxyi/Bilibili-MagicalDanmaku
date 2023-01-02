@@ -90,6 +90,7 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
+    services/liveservices/bililivecmds.cpp \
     services/liveservices/bililiveopenservice.cpp \
     services/liveservices/bililiveservice.cpp \
     services/liveservices/liveroomservice.cpp \
@@ -235,6 +236,7 @@ HEADERS += \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
     third_party/utils/mysettings.h \
+    third_party/utils/pixmaputil.h \
     third_party/utils/simplecalculatorutil.h \
     third_party/utils/string_distance_util.h \
     third_party/utils/tx_nlp.h \

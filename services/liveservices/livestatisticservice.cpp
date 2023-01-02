@@ -76,3 +76,33 @@ void LiveStatisticService::saveCalculateDailyData()
             dailySettings->setValue("guard_count", ac->currentGuards.size());
     }
 }
+
+void LiveStatisticService::startSaveDanmakuToFile()
+{
+    if (danmuLogFile)
+        finishSaveDanmuToFile();
+
+    QDir dir;
+    dir.mkdir(rt->dataPath+"danmaku_histories");
+    QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
+
+    qInfo() << "开启弹幕记录：" << rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log";
+    danmuLogFile = new QFile(rt->dataPath+"danmaku_histories/" + ac->roomId + "_" + date + ".log");
+    danmuLogFile->open(QIODevice::WriteOnly | QIODevice::Append);
+    danmuLogStream = new QTextStream(danmuLogFile);
+    danmuLogStream->setGenerateByteOrderMark(true);
+    if (!externFileCodec.isEmpty())
+        danmuLogStream->setCodec(externFileCodec.toUtf8());
+}
+
+void LiveStatisticService::finishSaveDanmuToFile()
+{
+    if (!danmuLogFile)
+        return ;
+
+    delete danmuLogStream;
+    danmuLogFile->close();
+    danmuLogFile->deleteLater();
+    danmuLogFile = nullptr;
+    danmuLogStream = nullptr;
+}

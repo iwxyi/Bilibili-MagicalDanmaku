@@ -2,6 +2,7 @@
 #define BILIBILIAPIUTIL_H
 
 #include <QByteArray>
+#include <zlib.h>
 
 enum Operation
 {
@@ -81,6 +82,23 @@ public:
 
         QByteArray ba((char*)&header, sizeof(header));
         return ba + body;*/
+    }
+
+    /**
+     * 博客来源：https://blog.csdn.net/doujianyoutiao/article/details/106236207
+     */
+    static QByteArray zlibToQtUncompr(const char *pZLIBData, uLongf dataLen/*, uLongf srcDataLen = 0x100000*/)
+    {
+        char *pQtData = new char[dataLen + 4];
+        char *pByte = (char *)(&dataLen);/*(char *)(&srcDataLen);*/
+        pQtData[3] = *pByte;
+        pQtData[2] = *(pByte + 1);
+        pQtData[1] = *(pByte + 2);
+        pQtData[0] = *(pByte + 3);
+        memcpy(pQtData + 4, pZLIBData, dataLen);
+        QByteArray qByteArray(pQtData, dataLen + 4);
+        delete[] pQtData;
+        return qUncompress(qByteArray);
     }
 };
 

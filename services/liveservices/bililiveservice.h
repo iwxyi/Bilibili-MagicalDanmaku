@@ -19,6 +19,10 @@ public:
 
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;
+    void startMsgLoop() override;
+    void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
+    void sendHeartPacket() override;
+
     void getRoomCover(const QString &url) override;
     void getUpInfo(const QString &uid) override;
     void updateExistGuards(int page = 0) override;
@@ -29,16 +33,29 @@ public:
 
     void getRoomBattleInfo() override;
     void updateWinningStreak(bool emitWinningStreak) override;
+    void getPkInfoById(const QString &roomId, const QString &pkId) override;
+    void connectPkRoom() override;
+    void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences) override;
+    void connectPkSocket() override;
 
     void startHeartConnection() override;
     void stopHeartConnection() override;
     void sendXliveHeartBeatE();
     void sendXliveHeartBeatX();
     void sendXliveHeartBeatX(QString s, qint64 timestamp);
+
+    void processNewDayData() override;
+
+    void uncompressPkBytes(const QByteArray &body);
+    void handlePkMessage(QJsonObject json);
+
+public slots:
+    void slotBinaryMessageReceived(const QByteArray &message) override;
+
+    void slotPkBinaryMessageReceived(const QByteArray &message) override;
     
 private:
     // 直播心跳
-    qint64 liveTimestamp = 0;
     QTimer* xliveHeartBeatTimer = nullptr;
     int xliveHeartBeatIndex = 0;         // 发送心跳的索引（每次+1）
     qint64 xliveHeartBeatEts = 0;        // 上次心跳时间戳

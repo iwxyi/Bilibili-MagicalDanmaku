@@ -62,29 +62,46 @@ signals:
     void signalBattleSeasonInfoChanged(const QString& text);
     void signalBattleNumsChanged(const QString& text);
     void signalBattleScoreChanged(const QString& text);
+    void signalBattleStarted();
+    void signalBattleFinished();
 
+    void signalAppendNewLiveDanmaku(const LiveDanmaku& danmaku);
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku);
     void signalShowError(const QString& title, const QString& info);
+    void signalLocalNotify(const QString& text);
 
 public slots:
     /// 开始获取房间，进行一些初始化操作
-    virtual void startConnectRoom(const QString &roomId);
+    virtual void startConnectRoom(const QString &roomId) { Q_UNUSED(roomId) }
     /// 通过身份码连接房间
     virtual void startConnectIdentityCode(const QString &code) { Q_UNUSED(code) }
+
+    virtual void slotBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
+
+    virtual void slotPkBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
 
 public:
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
     /// 获取直播间Host信息
-    virtual void getDanmuInfo() {}
+    virtual void getDanmuInfo() = 0;
+    /// 根据获得的Host信息，开始连接socket
+    virtual void startMsgLoop() = 0;
+    /// 初次连接socket，发送认证包
+    virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) { Q_UNUSED(socket) Q_UNUSED(roomId) Q_UNUSED(token) }
+    /// 连接后定时发送心跳包
+    virtual void sendHeartPacket() {}
+
+    /// 是否在直播中
     virtual bool isLiving() const;
+    /// 是否在直播，或者可能要开播
     virtual bool isLivingOrMayLiving();
     virtual void getRoomCover(const QString& url) { Q_UNUSED(url) }
     virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
     /// 更新高能榜
-    virtual void updateOnlineGoldRank();
+    virtual void updateOnlineGoldRank() {}
     /// 获取礼物ID
     virtual void getGiftList() {}
     /// 获取表情包ID
@@ -93,13 +110,23 @@ public:
     virtual void startHeartConnection() {}
     virtual void stopHeartConnection() {}
 
-    /// 更新大乱斗连胜
+    /// 获取大乱斗段位
     virtual void getRoomBattleInfo() {}
-    virtual void updateWinningStreak(bool emitWinningStreak) {}
+    /// 更新大乱斗连胜
+    virtual void updateWinningStreak(bool emitWinningStreak) { Q_UNUSED(emitWinningStreak) }
+    /// 获取这一把大乱斗的信息
+    virtual void getPkInfoById(const QString& roomId, const QString& pkId) { Q_UNUSED(roomId) Q_UNUSED(pkId) }
+    /// 单独socket连接对面直播间
+    virtual void connectPkRoom() {}
+    /// 根据直播间弹幕，保存当前观众信息
+    virtual void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences){ Q_UNUSED(roomId) Q_UNUSED(audiences) }
+    virtual void connectPkSocket() { }
 
     /// 获取机器人账号信息
     virtual void getCookieAccount() = 0;
     QVariant getCookies() const;
+
+    virtual void processNewDayData() {}
 
 public:
     /// 根据Url设置对应的Cookie
@@ -112,10 +139,11 @@ protected:
     // 连接信息
     int hostUseIndex = 0;
     QList<HostInfo> hostList;
-    QWebSocket* socket;
+    QWebSocket* liveSocket;
     QTimer* heartTimer;
     QTimer* connectServerTimer;
     int reconnectWSDuration = INTERVAL_RECONNECT_WS; // WS重连间隔，每次上播/下播重置
+    qint64 liveTimestamp = 0;
 
     // 状态变量
     bool gettingRoom = false;
@@ -123,6 +151,7 @@ protected:
     bool gettingUp = false;
 
     // 房间信息
+    QList<LiveDanmaku> roomDanmakus;
     QPixmap roomCover; // 直播间封面原图
     QPixmap upFace; // 主播头像原图
 
@@ -187,7 +216,7 @@ protected:
     QString pkUname;
     QSet<qint64> myAudience; // 自己这边的观众
     QSet<qint64> oppositeAudience; // 对面的观众
-    QWebSocket* pkSocket = nullptr; // 连接对面的房间
+    QWebSocket* pkLiveSocket = nullptr; // 连接对面的房间
     QString pkToken;
     QHash<qint64, qint64> cmAudience; // 自己这边跑过去串门了: timestamp10:串门，0已经回来/提示
 

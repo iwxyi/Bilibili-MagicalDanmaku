@@ -37,6 +37,14 @@ public:
     int timerConnectInterval;        // 定时检测的时间（分支）
     bool liveDove = false;           // 鸽一天，不自动连接
     int getHeartTimeCount = 0;       // 获取小心心的总数
+    bool saveDanmakuToFile = false;  // 保存弹幕日志文件
+
+    QString getLocalNickname(qint64 uid) const
+    {
+        if (localNicknames.contains(uid))
+            return localNicknames.value(uid);
+        return "";
+    }
 };
 
 extern UserSettings* us;

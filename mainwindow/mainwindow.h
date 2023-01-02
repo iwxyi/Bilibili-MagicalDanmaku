@@ -353,8 +353,6 @@ private slots:
 
     void on_pkMsgSyncCheck_clicked();
 
-    void slotPkBinaryMessageReceived(const QByteArray &message);
-
     void on_actionMany_Robots_triggered();
 
     void on_judgeRobotCheck_clicked();
@@ -823,15 +821,6 @@ private:
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();
     void hideRoomIdWidget();
-    QPixmap getRoundedPixmap(const QPixmap &pixmap) const;
-    QPixmap getTopRoundedPixmap(const QPixmap &pixmap, int radius) const;
-    QPixmap toCirclePixmap(const QPixmap &pixmap) const;
-    QPixmap toLivingPixmap(QPixmap pixmap) const;
-    void getFansAndUpdate();
-    void getPkInfoById(QString roomId, QString pkId);
-    void startMsgLoop();
-    void sendVeriPacket(QWebSocket *socket, QString roomId, QString cookieToken);
-    void sendHeartPacket();
     void handleMessage(QJsonObject json);
     bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
@@ -854,7 +843,6 @@ private:
     void setRoomDescription(QString roomDescription);
     void updateWinningStreak(bool emitWinningStreak);
 
-    QString getLocalNickname(qint64 name) const;
     void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
     QString processTimeVariants(QString msg) const;
     QStringList getEditConditionStringList(QString plainText, LiveDanmaku danmaku);
@@ -894,8 +882,6 @@ private:
     void playNetAudio(QString url);
     void showScreenDanmaku(const LiveDanmaku &danmaku);
 
-    void startSaveDanmakuToFile();
-    void finishSaveDanmuToFile();
     void saveTouta();
     void restoreToutaGifts(QString text);
     void initLiveRecord();
@@ -934,11 +920,6 @@ private:
     void pkSettle(QJsonObject json);
     int getPkMaxGold(int votes);
     bool execTouta();
-    void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences);
-    void connectPkRoom();
-    void connectPkSocket();
-    void uncompressPkBytes(const QByteArray &body);
-    void handlePkMessage(QJsonObject json);
     bool shallAutoMsg() const;
     bool shallAutoMsg(const QString& sl) const;
     bool shallAutoMsg(const QString& sl, bool& manual);
@@ -1081,11 +1062,8 @@ private:
     // 弹幕信息
     LiveDanmakuWindow* danmakuWindow = nullptr;
 
-    QList<LiveDanmaku> roomDanmakus;
     QTimer* removeTimer;
     qint64 removeDanmakuInterval = 60000;
-    QFile* danmuLogFile = nullptr;
-    QTextStream* danmuLogStream = nullptr;
     qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
     int danmuLongest = 20;

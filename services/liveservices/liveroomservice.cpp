@@ -29,11 +29,6 @@ void LiveRoomService::releaseLiveData(bool prepare)
     }
 }
 
-void LiveRoomService::startConnectRoom(const QString &roomId)
-{
-
-}
-
 bool LiveRoomService::isLiving() const
 {
     return ac->liveStatus == 1;
@@ -102,8 +97,8 @@ bool LiveRoomService::isLivingOrMayLiving()
                 emit signalConnectionStateTextChanged("等待连接");
 
                 // 如果正在连接或打算连接，却未开播，则断开
-                if (socket->state() != QAbstractSocket::UnconnectedState)
-                    socket->close();
+                if (liveSocket->state() != QAbstractSocket::UnconnectedState)
+                    liveSocket->close();
                 return false;
             }
         }

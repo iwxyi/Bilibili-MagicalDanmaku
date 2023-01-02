@@ -28,6 +28,10 @@ public:
     /// 保存舰长数据的时候需要在线获取
     virtual void updateExistGuards(int page = 0) { Q_UNUSED(page) }
 
+    /// 保存弹幕记录
+    void startSaveDanmakuToFile();
+    void finishSaveDanmuToFile();
+
 protected:
     QObject* me = nullptr;
     /// 每日数据
@@ -61,6 +65,10 @@ protected:
     int minuteDanmuPopul = 0;
     QList<int> danmuPopulQueue;
     int danmuPopulValue = 0;
+
+    // 弹幕日志
+    QFile* danmuLogFile = nullptr;
+    QTextStream* danmuLogStream = nullptr;
 };
 
 #endif // LIVESTATISTICSERVICE_H
