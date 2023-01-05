@@ -760,7 +760,6 @@ private:
     void initStyle();
     void initObject();
     void initPath();
-    void initRuntime();
     void initLiveService();
     void readConfig();
     void readConfig2();
@@ -813,7 +812,6 @@ private:
 
     void updatePermission();
     int hasPermission();
-    void processNewDay();
 
     void setRoomCover(const QPixmap &pixmap);
     void setRoomThemeByCover(double val);
@@ -935,12 +933,8 @@ private:
     QRect getScreenRect();
     QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
-    void switchMedalToRoom(qint64 targetRoomId);
     void switchMedalToUp(qint64 upId, int page = 1);
     void wearMedal(qint64 medalId);
-    void doSign();
-    void joinLOT(qint64 id, bool follow = true);
-    void joinStorm(qint64 id);
     void sendPrivateMsg(qint64 uid, QString msg);
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);

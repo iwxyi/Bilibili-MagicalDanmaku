@@ -30,6 +30,9 @@ public:
     void getCookieAccount() override;
     void getGiftList() override;
     void getEmoticonList() override;
+    void doSign() override;
+    void joinLOT(qint64 id, bool follow) override;
+    void joinStorm(qint64 id) override;
 
     void getRoomBattleInfo() override;
     void updateWinningStreak(bool emitWinningStreak) override;

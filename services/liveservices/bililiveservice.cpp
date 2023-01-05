@@ -20,6 +20,10 @@ void BiliLiveService::readConfig()
     emit signalHeartTimeNumberChanged(todayHeartMinite/5, todayHeartMinite);
 }
 
+/**
+ * 断开连接/下播时清空数据
+ * @param prepare 是否是下播
+ */
 void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
@@ -628,6 +632,115 @@ void BiliLiveService::getEmoticonList()
         } });
 }
 
+void BiliLiveService::doSign()
+{
+    if (ac->csrf_token.isEmpty())
+    {
+        emit signalSignInfoChanged("机器人账号未登录");
+        QTimer::singleShot(10000, [=]{
+            emit signalSignInfoChanged("每日自动签到");
+        });
+        return ;
+    }
+
+    QString url("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign");
+
+    // 建立对象
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qCritical() << s8("自动签到返回结果不为0：") << msg;
+            emit signalSignInfoChanged(msg);
+        }
+        else
+        {
+            emit signalSignInfoChanged("签到成功");
+            emit signalSignDescChanged("最近签到时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        }
+        QTimer::singleShot(10000, [=]{
+            emit signalSignInfoChanged("每日自动签到");
+        });
+    });
+}
+
+void BiliLiveService::joinLOT(qint64 id, bool follow)
+{
+    if (!id)
+        return ;
+    if (ac->csrf_token.isEmpty())
+    {
+        emit signalLOTInfoChanged("机器人账号未登录");
+        QTimer::singleShot(10000, [=]{
+            emit signalLOTInfoChanged("自动参与活动");
+        });
+        return ;
+    }
+
+    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
+             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
+    qInfo() << "参与天选：" << id << follow << url;
+
+    post(url, QByteArray(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qCritical() << s8("参加天选返回结果不为0：") << msg;
+            emit signalLOTInfoChanged(msg);
+            emit signalLOTDescChanged(msg);
+        }
+        else
+        {
+            emit signalLOTInfoChanged("参与成功");
+            qInfo() << "参与天选成功！";
+            emit signalLOTDescChanged("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
+        }
+        QTimer::singleShot(10000, [=]{
+            emit signalLOTInfoChanged("自动参与活动");
+        });
+    });
+}
+
+void BiliLiveService::joinStorm(qint64 id)
+{
+    if (!id)
+        return ;
+    if (ac->csrf_token.isEmpty())
+    {
+        emit signalLOTInfoChanged("机器人账号未登录");
+        QTimer::singleShot(10000, [=]{
+            emit signalLOTInfoChanged("自动参与活动");
+        });
+        return ;
+    }
+
+    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
+             "?id="+QString::number(id)+"&color=5566168&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
+    qInfo() << "参与节奏风暴：" << id << url;
+
+    post(url, QByteArray(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qCritical() << s8("参加节奏风暴返回结果不为0：") << msg;
+            emit signalLOTInfoChanged(msg);
+            emit signalLOTDescChanged(msg);
+        }
+        else
+        {
+            emit signalLOTInfoChanged("参与成功");
+            qInfo() << "参与节奏风暴成功！";
+            QString content = json.value("data").toObject().value("content").toString();
+            emit signalLOTDescChanged("最近参与时间：" +
+                                            QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")
+                                            + "\n\n" + content);
+        }
+        QTimer::singleShot(10000, [=]{
+            emit signalLOTInfoChanged("自动参与活动");
+        });
+    });
+}
+
 void BiliLiveService::getRoomBattleInfo()
 {
     get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",
@@ -718,7 +831,7 @@ void BiliLiveService::updateWinningStreak(bool emitWinningStreak)
             LiveDanmaku danmaku;
             danmaku.setNumber(win_count);
             danmaku.with(match_info);
-            emit signalTriggerCmdEvent("PK_WINNING_STREAK", danmaku);
+            triggerCmdEvent("PK_WINNING_STREAK", danmaku);
         }
     });
 }
@@ -1137,6 +1250,11 @@ void BiliLiveService::sendXliveHeartBeatX(QString s, qint64 timestamp)
     });
 }
 
+/**
+ * 新的一天到来了
+ * 可能是启动时就是新的一天
+ * 也可能是运行时到了第二天
+ */
 void BiliLiveService::processNewDayData()
 {
     us->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
@@ -1281,7 +1399,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         danmaku.setPkLink(true);
         emit signalAppendNewLiveDanmaku(danmaku);
 
-        emit signalTriggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));
+        triggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1339,7 +1457,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         if (toView) // 自己这边过去送礼物，居心何在！
             emit signalAppendNewLiveDanmaku(danmaku);
 
-        emit signalTriggerCmdEvent("PK_" + cmd, danmaku.with(data));
+        triggerCmdEvent("PK_" + cmd, danmaku.with(data));
     }
     else if (cmd == "INTERACT_WORD")
     {
@@ -1391,42 +1509,42 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         if (attentionToMyRoom)
         {
             danmaku.transToAttention(timestamp);
-            emit signalLocalNotify("对面的 " + username + " 关注了本直播间 " + snum(uid));
-            emit signalTriggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku.with(data));
+            localNotify("对面的 " + username + " 关注了本直播间 " + snum(uid));
+            triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku.with(data));
         }
         else if (msgType == 1)
         {
             if (toView)
             {
-                emit signalLocalNotify(username + " 跑去对面串门 " + snum(uid)); // 显示一个短通知，就不作为一个弹幕了
-                emit signalTriggerCmdEvent("CALL_ON_OPPOSITE", danmaku.with(data));
+                localNotify(username + " 跑去对面串门 " + snum(uid)); // 显示一个短通知，就不作为一个弹幕了
+                triggerCmdEvent("CALL_ON_OPPOSITE", danmaku.with(data));
             }
-            emit signalTriggerCmdEvent("PK_" + cmd, danmaku.with(data));
+            triggerCmdEvent("PK_" + cmd, danmaku.with(data));
         }
         else if (msgType == 2)
         {
             danmaku.transToAttention(timestamp);
             if (toView)
             {
-                emit signalLocalNotify(username + " 关注了对面直播间 " + snum(uid)); // XXX
-                emit signalTriggerCmdEvent("ATTENTION_OPPOSITE", danmaku.with(data));
+                localNotify(username + " 关注了对面直播间 " + snum(uid)); // XXX
+                triggerCmdEvent("ATTENTION_OPPOSITE", danmaku.with(data));
             }
-            emit signalTriggerCmdEvent("PK_ATTENTION", danmaku.with(data));
+            triggerCmdEvent("PK_ATTENTION", danmaku.with(data));
         }
         else if (msgType == 3)
         {
             danmaku.transToShare();
             if (toView)
             {
-                emit signalLocalNotify(username + " 分享了对面直播间 " + snum(uid)); // XXX
-                emit signalTriggerCmdEvent("SHARE_OPPOSITE", danmaku.with(data));
+                localNotify(username + " 分享了对面直播间 " + snum(uid)); // XXX
+                triggerCmdEvent("SHARE_OPPOSITE", danmaku.with(data));
             }
-            emit signalTriggerCmdEvent("PK_SHARE", danmaku.with(data));
+            triggerCmdEvent("PK_SHARE", danmaku.with(data));
         }
         // appendNewLiveDanmaku(danmaku);
     }
     else if (cmd == "CUT_OFF")
     {
-        emit signalLocalNotify("对面直播间被超管切断");
+        localNotify("对面直播间被超管切断");
     }
 }

@@ -9,7 +9,220 @@ LiveRoomService::LiveRoomService(QObject *parent)
 
 void LiveRoomService::init()
 {
+    // 礼物连击
+    comboTimer = new QTimer(this);
+    comboTimer->setInterval(500);
 
+    // 大乱斗
+    pkTimer = new QTimer(this);
+    pkTimer->setInterval(300);
+    pkEndingTimer = new QTimer(this);
+
+    // 定时连接
+    connectServerTimer = new QTimer(this);
+    connect(connectServerTimer, &QTimer::timeout, this, [=]{
+        connectServerTimer->setInterval(us->timerConnectInterval * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
+        if (isLiving() && (liveSocket->state() == QAbstractSocket::ConnectedState || liveSocket->state() == QAbstractSocket::ConnectingState))
+        {
+            connectServerTimer->stop();
+            return ;
+        }
+        emit signalStartConnectRoom();
+    });
+
+    initTimeTasks();
+}
+
+void LiveRoomService::initTimeTasks()
+{
+    // 每分钟定时
+    connect(minuteTimer, &QTimer::timeout, this, [=]{
+        // 直播间人气
+        if (ac->currentPopul > 1 && isLiving()) // 为0的时候不计入内；为1时可能机器人在线
+        {
+            sumPopul += ac->currentPopul;
+            countPopul++;
+
+            dailyAvePopul = int(sumPopul / countPopul);
+            if (dailySettings)
+                dailySettings->setValue("average_popularity", dailyAvePopul);
+        }
+        if (dailyMaxPopul < ac->currentPopul)
+        {
+            dailyMaxPopul = ac->currentPopul;
+            if (dailySettings)
+                dailySettings->setValue("max_popularity", dailyMaxPopul);
+        }
+
+        // 弹幕人气
+        danmuPopulValue += minuteDanmuPopul;
+        danmuPopulQueue.append(minuteDanmuPopul);
+        minuteDanmuPopul = 0;
+        if (danmuPopulQueue.size() > 5)
+            danmuPopulValue -= danmuPopulQueue.takeFirst();
+        emit signalDanmuPopularChanged("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
+
+
+        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
+    });
+
+    // 每小时整点的的事件
+    connect(hourTimer, &QTimer::timeout, this, [=]{
+        QTime currentTime = QTime::currentTime();
+        QTime nextTime = currentTime;
+        nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
+        hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
+
+        // 自动签到
+        if (us->autoDoSign)
+        {
+            int hour = QTime::currentTime().hour();
+            if (hour == 0)
+            {
+                doSign();
+            }
+        }
+
+        triggerCmdEvent("NEW_HOUR", LiveDanmaku(), false);
+        qInfo() << "NEW_HOUR:" << QDateTime::currentDateTime();
+
+        // 判断每天最后一小时
+        // 以 23:59:30为准
+        QDateTime current = QDateTime::currentDateTime();
+        QTime t = current.time();
+        if (todayIsEnding) // 已经触发最后一小时事件了
+        {
+        }
+        else if (current.time().hour() == 23
+                || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
+        {
+            todayIsEnding = true;
+            QDateTime dt = current;
+            QTime t = dt.time();
+            t.setHMS(23, 59, 30); // 移动到最后半分钟
+            dt.setTime(t);
+            qint64 delta = dt.toMSecsSinceEpoch() - QDateTime::currentMSecsSinceEpoch();
+            if (delta < 0) // 可能已经是即将最后了
+                delta = 0;
+            QTimer::singleShot(delta, [=]{
+                triggerCmdEvent("DAY_END", LiveDanmaku(), true);
+
+                // 判断每月最后一天
+                QDate d = current.date();
+                int days = d.daysInMonth();
+                if (d.day() == days) // 1~31 == 28~31
+                {
+                    triggerCmdEvent("MONTH_END", LiveDanmaku(), true);
+
+                    // 判断每年最后一天
+                    days = d.daysInYear();
+                    if (d.dayOfYear() == days)
+                    {
+                        triggerCmdEvent("YEAR_END", LiveDanmaku(), true);
+                    }
+                }
+
+                // 判断每周最后一天
+                if (d.dayOfWeek() == 7)
+                {
+                    triggerCmdEvent("WEEK_END", LiveDanmaku(), true);
+                }
+            });
+        }
+        emit signalNewHour();
+    });
+    hourTimer->start();
+
+    // 判断新的一天
+    connect(dayTimer, &QTimer::timeout, this, [=]{
+        todayIsEnding = false;
+        qInfo() << "--------NEW_DAY" << QDateTime::currentDateTime();
+        {
+            // 当前时间必定是 0:0:1，误差0.2秒内
+            QDate tomorrowDate = QDate::currentDate();
+            tomorrowDate = tomorrowDate.addDays(1);
+            QTime zeroTime = QTime::currentTime();
+            zeroTime.setHMS(0, 0, 1);
+            QDateTime tomorrow(tomorrowDate, zeroTime);
+            dayTimer->setInterval(int(QDateTime::currentDateTime().msecsTo(tomorrow)));
+        }
+
+        // 每天重新计算
+        if (us->calculateDailyData)
+            startCalculateDailyData();
+        if (danmuLogFile /* && !isLiving() */)
+            startSaveDanmakuToFile();
+        us->userComeTimes.clear();
+        sumPopul = 0;
+        countPopul = 0;
+
+        // 触发每天事件
+        const QDate currDate = QDate::currentDate();
+        triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
+        us->setValue("runtime/open_day", currDate.day());
+        emit signalUpdatePermission();
+
+        processNewDayData();
+        qInfo() << "当前 month =" << currDate.month() << ", day =" << currDate.day() << ", week =" << currDate.dayOfWeek();
+
+        // 判断每一月初
+        if (currDate.day() == 1)
+        {
+            triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
+            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
+            us->setValue("runtime/open_month", currDate.month());
+
+            // 判断每一年初
+            if (currDate.month() == 1)
+            {
+                triggerCmdEvent("NEW_YEAR", LiveDanmaku(), true);
+                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
+                triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku(), true);
+                us->setValue("runtime/open_year", currDate.year());
+            }
+        }
+
+        // 判断每周一
+        if (currDate.dayOfWeek() == 1)
+        {
+            triggerCmdEvent("NEW_WEEK", LiveDanmaku(), true);
+            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
+            us->setValue("runtime/open_week_number", currDate.weekNumber());
+        }
+
+        emit signalNewDay();
+    });
+    dayTimer->start();
+
+    // 判断第一次打开
+    QDate currDate = QDate::currentDate();
+    int prevYear = us->value("runtime/open_year", -1).toInt();
+    int prevMonth = us->value("runtime/open_month", -1).toInt();
+    int prevDay = us->value("runtime/open_day", -1).toInt();
+    int prevWeekNumber = us->value("runtime/open_week_number", -1).toInt();
+    if (prevYear != currDate.year())
+    {
+        prevMonth = prevDay = -1; // 避免是不同年的同一月
+        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
+        us->setValue("runtime/open_year", currDate.year());
+    }
+    if (prevMonth != currDate.month())
+    {
+        prevDay = -1; // 避免不同月的同一天
+        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
+        us->setValue("runtime/open_month", currDate.month());
+    }
+    if (prevDay != currDate.day())
+    {
+        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
+        us->setValue("runtime/open_day", currDate.day());
+    }
+    if (prevWeekNumber != currDate.weekNumber())
+    {
+        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
+        us->setValue("runtime/open_week_number", currDate.weekNumber());
+    }
 }
 
 void LiveRoomService::readConfig()
@@ -118,6 +331,16 @@ bool LiveRoomService::isLivingOrMayLiving()
 QVariant LiveRoomService::getCookies() const
 {
     return NetInterface::getCookies(ac->browserCookie);
+}
+
+void LiveRoomService::triggerCmdEvent(const QString &cmd, const LiveDanmaku &danmaku, bool debug)
+{
+    emit signalTriggerCmdEvent(cmd, danmaku, debug);
+}
+
+void LiveRoomService::localNotify(const QString &text, qint64 uid)
+{
+    emit signalLocalNotify(text, uid);
 }
 
 void LiveRoomService::setUrlCookie(const QString &url, QNetworkRequest *request)

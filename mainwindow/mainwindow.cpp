@@ -35,7 +35,7 @@
 #include "order_player/roundedpixmaplabel.h"
 #include "string_distance_util.h"
 #include "bili_api_util.h"
-#include "utils/pixmaputil.h"
+#include "pixmaputil.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -52,8 +52,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 路径
     initPath();
-    initLiveService();
     initObject();
+    initLiveService();
     readConfig();
     initEvent();
     initLiveOpenService();
@@ -605,51 +605,6 @@ void MainWindow::initObject()
         // 如果是，则继续录
     });
 
-    // 礼物连击
-    liveService->comboTimer = new QTimer(this);
-    liveService->comboTimer->setInterval(500);
-    connect(liveService->comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
-
-    // 大乱斗
-    liveService->pkTimer = new QTimer(this);
-    connect(liveService->pkTimer, &QTimer::timeout, this, [=]{
-        // 更新PK信息
-        int second = 0;
-        int minute = 0;
-        if (liveService->pkEndTime)
-        {
-            second = static_cast<int>(liveService->pkEndTime - QDateTime::currentSecsSinceEpoch());
-            if (second < 0) // 结束后会继续等待一段时间，这时候会变成负数
-                second = 0;
-            minute = second / 60;
-            second = second % 60;
-        }
-        QString text = QString("%1:%2 %3/%4")
-                .arg(minute)
-                .arg((second < 10 ? "0" : "") + QString::number(second))
-                .arg(liveService->myVotes)
-                .arg(liveService->matchVotes);
-        if (danmakuWindow)
-            danmakuWindow->setStatusText(text);
-    });
-    liveService->pkTimer->setInterval(300);
-
-    // 大乱斗自动赠送吃瓜
-    liveService->pkEndingTimer = new QTimer(this);
-    connect(liveService->pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
-
-    // 定时连接
-    liveService->connectServerTimer = new QTimer(this);
-    connect(liveService->connectServerTimer, &QTimer::timeout, this, [=]{
-        liveService->connectServerTimer->setInterval(ui->timerConnectIntervalSpin->value() * 60000); // 比如服务器主动断开，则会短期内重新定时，还原自动连接定时
-        if (liveService->isLiving() && (liveService->liveSocket->state() == QAbstractSocket::ConnectedState || liveService->liveSocket->state() == QAbstractSocket::ConnectingState))
-        {
-            liveService->connectServerTimer->stop();
-            return ;
-        }
-        startConnectRoom();
-    });
-
     // 状态栏
     statusLabel = new QLabel(this);
     statusLabel->setObjectName("statusLabel");
@@ -726,205 +681,6 @@ void MainWindow::initObject()
         });
     }
 
-    // 每分钟定时
-    connect(liveService->minuteTimer, &QTimer::timeout, this, [=]{
-        // 直播间人气
-        if (ac->currentPopul > 1 && liveService->isLiving()) // 为0的时候不计入内；为1时可能机器人在线
-        {
-            liveService->sumPopul += ac->currentPopul;
-            liveService->countPopul++;
-
-            liveService->dailyAvePopul = int(liveService->sumPopul / liveService->countPopul);
-            if (liveService->dailySettings)
-                liveService->dailySettings->setValue("average_popularity", liveService->dailyAvePopul);
-        }
-        if (liveService->dailyMaxPopul < ac->currentPopul)
-        {
-            liveService->dailyMaxPopul = ac->currentPopul;
-            if (liveService->dailySettings)
-                liveService->dailySettings->setValue("max_popularity", liveService->dailyMaxPopul);
-        }
-
-        // 弹幕人气
-        liveService->danmuPopulValue += liveService->minuteDanmuPopul;
-        liveService->danmuPopulQueue.append(liveService->minuteDanmuPopul);
-        liveService->minuteDanmuPopul = 0;
-        if (liveService->danmuPopulQueue.size() > 5)
-            liveService->danmuPopulValue -= liveService->danmuPopulQueue.takeFirst();
-        ui->danmuCountLabel->setToolTip("5分钟弹幕人气：" + snum(liveService->danmuPopulValue) + "，平均人气：" + snum(liveService->dailyAvePopul));
-
-        triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
-    });
-
-    // 每小时整点的的事件
-    connect(liveService->hourTimer, &QTimer::timeout, this, [=]{
-        QTime currentTime = QTime::currentTime();
-        QTime nextTime = currentTime;
-        nextTime.setHMS((currentTime.hour() + 1) % 24, 0, 1);
-        liveService->hourTimer->setInterval(currentTime.hour() < 23 ? currentTime.msecsTo(nextTime) : 3600000);
-
-        // 永久禁言
-        detectEternalBlockUsers();
-
-        // 自动签到
-        if (ui->autoDoSignCheck->isChecked())
-        {
-            int hour = QTime::currentTime().hour();
-            if (hour == 0)
-            {
-                doSign();
-            }
-        }
-
-        // 版权声明
-        if (liveService->isLiving() && !us->value("danmaku/copyright", false).toBool()
-                && qrand() % 3 == 0)
-        {
-            /* if (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()))
-            {
-                sendMsg(QString(QByteArray::fromBase64("562U6LCi5aes44CQ"))
-                        +QApplication::applicationName()
-                        +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
-            } */
-        }
-        triggerCmdEvent("NEW_HOUR", LiveDanmaku(), false);
-        qInfo() << "NEW_HOUR:" << QDateTime::currentDateTime();
-
-        // 判断每天最后一小时
-        // 以 23:59:30为准
-        QDateTime current = QDateTime::currentDateTime();
-        QTime t = current.time();
-        if (liveService->todayIsEnding) // 已经触发最后一小时事件了
-        {
-        }
-        else if (current.time().hour() == 23
-                || (t.hour() == 22 && t.minute() == 59 && t.second() > 30)) // 22:59:30之后的
-        {
-            liveService->todayIsEnding = true;
-            QDateTime dt = current;
-            QTime t = dt.time();
-            t.setHMS(23, 59, 30); // 移动到最后半分钟
-            dt.setTime(t);
-            qint64 delta = dt.toMSecsSinceEpoch() - QDateTime::currentMSecsSinceEpoch();
-            if (delta < 0) // 可能已经是即将最后了
-                delta = 0;
-            QTimer::singleShot(delta, [=]{
-                triggerCmdEvent("DAY_END", LiveDanmaku(), true);
-
-                // 判断每月最后一天
-                QDate d = current.date();
-                int days = d.daysInMonth();
-                if (d.day() == days) // 1~31 == 28~31
-                {
-                    triggerCmdEvent("MONTH_END", LiveDanmaku(), true);
-
-                    // 判断每年最后一天
-                    days = d.daysInYear();
-                    if (d.dayOfYear() == days)
-                    {
-                        triggerCmdEvent("YEAR_END", LiveDanmaku(), true);
-                    }
-                }
-
-                // 判断每周最后一天
-                if (d.dayOfWeek() == 7)
-                {
-                    triggerCmdEvent("WEEK_END", LiveDanmaku(), true);
-                }
-            });
-        }
-    });
-    liveService->hourTimer->start();
-
-    // 判断新的一天
-    connect(liveService->dayTimer, &QTimer::timeout, this, [=]{
-        liveService->todayIsEnding = false;
-        qInfo() << "--------NEW_DAY" << QDateTime::currentDateTime();
-        {
-            // 当前时间必定是 0:0:1，误差0.2秒内
-            QDate tomorrowDate = QDate::currentDate();
-            tomorrowDate = tomorrowDate.addDays(1);
-            QTime zeroTime = QTime::currentTime();
-            zeroTime.setHMS(0, 0, 1);
-            QDateTime tomorrow(tomorrowDate, zeroTime);
-            liveService->dayTimer->setInterval(QDateTime::currentDateTime().msecsTo(tomorrow));
-        }
-
-        // 每天重新计算
-        if (ui->calculateDailyDataCheck->isChecked())
-            liveService->startCalculateDailyData();
-        if (liveService->danmuLogFile /* && !isLiving() */)
-            liveService->startSaveDanmakuToFile();
-        us->userComeTimes.clear();
-        liveService->sumPopul = 0;
-        liveService->countPopul = 0;
-
-        // 触发每天事件
-        const QDate currDate = QDate::currentDate();
-        triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
-        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_day", currDate.day());
-        updatePermission();
-
-        processNewDay();
-        qInfo() << "当前 month =" << currDate.month() << ", day =" << currDate.day() << ", week =" << currDate.dayOfWeek();
-
-        // 判断每一月初
-        if (currDate.day() == 1)
-        {
-            triggerCmdEvent("NEW_MONTH", LiveDanmaku(), true);
-            triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-            us->setValue("runtime/open_month", currDate.month());
-
-            // 判断每一年初
-            if (currDate.month() == 1)
-            {
-                triggerCmdEvent("NEW_YEAR", LiveDanmaku(), true);
-                triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
-                triggerCmdEvent("HAPPY_NEW_YEAR", LiveDanmaku(), true);
-                us->setValue("runtime/open_year", currDate.year());
-            }
-        }
-
-        // 判断每周一
-        if (currDate.dayOfWeek() == 1)
-        {
-            triggerCmdEvent("NEW_WEEK", LiveDanmaku(), true);
-            triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-            us->setValue("runtime/open_week_number", currDate.weekNumber());
-        }
-    });
-    liveService->dayTimer->start();
-
-    // 判断第一次打开
-    QDate currDate = QDate::currentDate();
-    int prevYear = us->value("runtime/open_year", -1).toInt();
-    int prevMonth = us->value("runtime/open_month", -1).toInt();
-    int prevDay = us->value("runtime/open_day", -1).toInt();
-    int prevWeekNumber = us->value("runtime/open_week_number", -1).toInt();
-    if (prevYear != currDate.year())
-    {
-        prevMonth = prevDay = -1; // 避免是不同年的同一月
-        triggerCmdEvent("NEW_YEAR_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_year", currDate.year());
-    }
-    if (prevMonth != currDate.month())
-    {
-        prevDay = -1; // 避免不同月的同一天
-        triggerCmdEvent("NEW_MONTH_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_month", currDate.month());
-    }
-    if (prevDay != currDate.day())
-    {
-        triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_day", currDate.day());
-    }
-    if (prevWeekNumber != currDate.weekNumber())
-    {
-        triggerCmdEvent("NEW_WEEK_FIRST", LiveDanmaku(), true);
-        us->setValue("runtime/open_week_number", currDate.weekNumber());
-    }
-
     // sync
     syncTimer = new QTimer(this);
     syncTimer->setSingleShot(true);
@@ -987,14 +743,14 @@ void MainWindow::initPath()
 #endif
 }
 
-void MainWindow::initRuntime()
-{
-
-}
-
 void MainWindow::initLiveService()
 {
     liveService = new BiliLiveService(this);
+
+    /// 流程操作
+    connect(liveService, &LiveRoomService::signalStartConnectRoom, this, [=]{
+        startConnectRoom();
+    });
     
     /// 变量到UI
     connect(liveService, &LiveRoomService::signalConnectionStateTextChanged, this, [=](const QString& text) {
@@ -1122,6 +878,26 @@ void MainWindow::initLiveService()
             adjustDanmakuLongest();
     });
 
+    connect(liveService, &LiveRoomService::signalDanmuPopularChanged, this, [=](const QString& text){
+        ui->danmuCountLabel->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalSignInfoChanged, this, [=](const QString& text){
+        ui->autoDoSignCheck->setText(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalSignDescChanged, this, [=](const QString& text){
+        ui->autoDoSignCheck->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalLOTInfoChanged, this, [=](const QString& text){
+        ui->autoLOTCheck->setText(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalLOTDescChanged, this, [=](const QString& text){
+        ui->autoLOTCheck->setToolTip(text);
+    });
+
     /// 直播事件
     connect(liveService, &LiveRoomService::signalGetRoomAndRobotFinished, this, [=]() {
         triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
@@ -1145,16 +921,29 @@ void MainWindow::initLiveService()
         appendNewLiveDanmaku(danmaku);
     });
 
-    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku) {
-        triggerCmdEvent(cmd, danmaku);
+    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
+        triggerCmdEvent(cmd, danmaku, debug);
     });
 
     connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
         showError(title, info);
     });
 
-    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text) {
-        localNotify(text);
+    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
+        localNotify(text, uid);
+    });
+
+    connect(liveService, &LiveRoomService::signalUpdatePermission, this, [=] {
+        updatePermission();
+    });
+
+    connect(liveService, &LiveRoomService::signalNewHour, this, [=] {
+
+    });
+
+    connect(liveService, &LiveRoomService::signalNewDay, this, [=] {
+        // 永久禁言
+        detectEternalBlockUsers();
     });
 
     /// 大乱斗
@@ -1214,6 +1003,37 @@ void MainWindow::initLiveService()
     connect(liveService, &LiveRoomService::signalBattleFinished, this, [=] {
 
     });
+
+
+    /// 需要调整的
+    // 礼物连击
+    connect(liveService->comboTimer, SIGNAL(timeout()), this, SLOT(slotComboSend()));
+
+    // 大乱斗
+    connect(liveService->pkTimer, &QTimer::timeout, this, [=]{
+        // 更新PK信息
+        int second = 0;
+        int minute = 0;
+        if (liveService->pkEndTime)
+        {
+            second = static_cast<int>(liveService->pkEndTime - QDateTime::currentSecsSinceEpoch());
+            if (second < 0) // 结束后会继续等待一段时间，这时候会变成负数
+                second = 0;
+            minute = second / 60;
+            second = second % 60;
+        }
+        QString text = QString("%1:%2 %3/%4")
+                .arg(minute)
+                .arg((second < 10 ? "0" : "") + QString::number(second))
+                .arg(liveService->myVotes)
+                .arg(liveService->matchVotes);
+        if (danmakuWindow)
+            danmakuWindow->setStatusText(text);
+    });
+
+    // 大乱斗自动赠送吃瓜
+    connect(liveService->pkEndingTimer, &QTimer::timeout, this, &MainWindow::slotPkEndingTimeout);
+
 
 }
 
@@ -1380,9 +1200,9 @@ void MainWindow::readConfig()
     ui->saveDanmakuToFileCheck->setChecked(us->saveDanmakuToFile = us->value("danmaku/saveDanmakuToFile", false).toBool());
 
     // 每日数据
-    bool calcDaliy = us->value("live/calculateDaliyData", true).toBool();
-    ui->calculateDailyDataCheck->setChecked(calcDaliy);
-    if (calcDaliy)
+    us->calculateDailyData = us->value("live/calculateDaliyData", true).toBool();
+    ui->calculateDailyDataCheck->setChecked(us->calculateDailyData);
+    if (us->calculateDailyData)
         liveService->startCalculateDailyData();
 
     // PK串门提示
@@ -1469,7 +1289,6 @@ void MainWindow::readConfig()
 
     // 仅开播发送
     ui->sendAutoOnlyLiveCheck->setChecked(us->value("danmaku/sendAutoOnlyLive", false).toBool());
-    ui->autoDoSignCheck->setChecked(us->value("danmaku/autoDoSign", false).toBool());
 
     // 勋章升级
     ui->listenMedalUpgradeCheck->setChecked(us->value("danmaku/listenMedalUpgrade", false).toBool());
@@ -1685,10 +1504,10 @@ void MainWindow::readConfig()
     screenDanmakuColor = qvariant_cast<QColor>(us->value("screendanmaku/color", QColor(0, 0, 0)));
 
     // 自动签到
-    ui->autoDoSignCheck->setChecked(us->value("danmaku/autoDoSign", false).toBool());
+    ui->autoDoSignCheck->setChecked(us->autoDoSign = us->value("danmaku/autoDoSign", false).toBool());
 
     // 自动参与天选
-    ui->autoLOTCheck->setChecked(us->value("danmaku/autoLOT", false).toBool());
+    ui->autoLOTCheck->setChecked(us->autoJoinLOT = us->value("danmaku/autoLOT", false).toBool());
 
     // 自动获取小心心
     ui->acquireHeartCheck->setChecked(us->value("danmaku/acquireHeart", false).toBool());
@@ -2101,7 +1920,7 @@ MainWindow::~MainWindow()
     {
         liveService->finishSaveDanmuToFile();
     }
-    if (ui->calculateDailyDataCheck->isChecked())
+    if (us->calculateDailyData)
     {
         liveService->saveCalculateDailyData();
     }
@@ -4988,7 +4807,7 @@ void MainWindow::startConnectRoom()
     QDir dir;
     dir.mkdir(rt->dataPath+"danmaku_counts");
     us->danmakuCounts = new QSettings(rt->dataPath+"danmaku_counts/" + ac->roomId + ".ini", QSettings::Format::IniFormat);
-    if (ui->calculateDailyDataCheck->isChecked())
+    if (us->calculateDailyData)
         liveService->startCalculateDailyData();
 
     // 开始获取房间信息
@@ -5092,16 +4911,6 @@ void MainWindow::updatePermission()
 int MainWindow::hasPermission()
 {
     return justStart || permissionLevel;
-}
-
-/**
- * 新的一天到来了
- * 可能是启动时就是新的一天
- * 也可能是运行时到了第二天
- */
-void MainWindow::processNewDay()
-{
-    liveService->processNewDayData();
 }
 
 void MainWindow::setRoomCover(const QPixmap& pixmap)
@@ -11747,10 +11556,10 @@ void MainWindow::handleMessage(QJsonObject json)
                 danmakuWindow->removeBlockText(text);
             });
         }
-        qInfo() << "节奏风暴：" << text << ui->autoLOTCheck->isChecked();
-        if (ui->autoLOTCheck->isChecked())
+        qInfo() << "节奏风暴：" << text << us->autoJoinLOT;
+        if (us->autoJoinLOT)
         {
-            joinStorm(id);
+            liveService->joinStorm(id);
         }
 
         triggerCmdEvent(cmd, LiveDanmaku().with(data));
@@ -12395,10 +12204,10 @@ void MainWindow::handleMessage(QJsonObject json)
         int giftId = data.value("gift_id").toInt();
         int time = data.value("time").toInt();
         qInfo() << "天选弹幕：" << danmu;
-        if (!danmu.isEmpty() && giftId <= 0 && ui->autoLOTCheck->isChecked())
+        if (!danmu.isEmpty() && giftId <= 0 && us->autoJoinLOT)
         {
             int requireType = data.value("require_type").toInt();
-            joinLOT(id, requireType);
+            liveService->joinLOT(id, requireType);
         }
         if (danmakuWindow)
         {
@@ -14992,9 +14801,9 @@ void MainWindow::on_endLiveHourSpin_valueChanged(int arg1)
 
 void MainWindow::on_calculateDailyDataCheck_clicked()
 {
-    bool enable = ui->calculateDailyDataCheck->isChecked();
-    us->setValue("live/calculateDaliyData", enable);
-    if (enable)
+    us->calculateDailyData = ui->calculateDailyDataCheck->isChecked();
+    us->setValue("live/calculateDaliyData", us->calculateDailyData);
+    if (us->calculateDailyData)
         liveService->startCalculateDailyData();
 }
 
@@ -16597,90 +16406,6 @@ QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
 }
 
 /**
- * 通过直播间ID切换勋章
- * 这个是旧的API，但是好像有些勋章拿不到？
- */
-void MainWindow::switchMedalToRoom(qint64 targetRoomId)
-{
-    qInfo() << "自动切换勋章：roomId=" << targetRoomId;
-    QString url = "https://api.live.bilibili.com/fans_medal/v1/FansMedal/get_list_in_room";
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("切换勋章返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-
-        // 获取用户信息
-        QJsonArray medals = json.value("data").toArray();
-        /*  buff_msg: "(舰长buff：上限提升至150%)"
-            can_delete: false     // 变灰了才能删除
-            day_limit: 250000
-            guard_level: 3
-            guard_type: 3
-            icon_code: 2
-            icon_text: "最近获得"
-            intimacy: 1380
-            is_lighted: 1         // 是否未变灰
-            is_receive: 1
-            last_wear_time: 1613491199
-            level: 21
-            live_stream_status: 0  // 是否正在直播
-            lpl_status: 0
-            master_available: 1
-            master_status: 0
-            medal_color: 1725515
-            medal_color_border: 6809855
-            medal_color_end: 5414290
-            medal_color_start: 1725515
-            medal_id: 373753
-            medal_level: 21
-            medal_name: "181mm"
-            next_intimacy: 2000
-            rank: "-"
-            receive_channel: 4
-            receive_time: "2021-01-10 09:33:22"
-            room_id: 11584296      // 牌子房间
-            score: 50001380
-            source: 1
-            status: 1              // 是否佩戴中
-            sup_code: 2
-            sup_text: "最近获得"
-            target_face: ""
-            target_id: 20285041
-            target_name: "懒一夕智能科技"
-            today_feed: 0
-            today_intimacy: 0
-            uid: 20285041          // 牌子用户
-        */
-
-        foreach (QJsonValue val, medals)
-        {
-            QJsonObject medal = val.toObject();
-            qint64 roomId = static_cast<qint64>(medal.value("room_id").toDouble());
-            int status = medal.value("status").toInt(); // 1佩戴，0未佩戴
-
-            if (roomId == targetRoomId)
-            {
-                if (status) // 已佩戴，就不用管了
-                    return ;
-
-                // 佩带牌子
-                /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
-                if (!isLighted) // 牌子是灰的，可以不用管，发个弹幕就点亮了
-                    return ;
-                */
-
-                qint64 medalId = static_cast<qint64>(medal.value("medal_id").toDouble());
-                wearMedal(medalId);
-                return ;
-            }
-        }
-        qWarning() << "第一页未检测到粉丝勋章，无法自动切换";
-    });
-}
-
-/**
  * 通过主播ID切换勋章
  */
 void MainWindow::switchMedalToUp(qint64 upId, int page)
@@ -16794,118 +16519,6 @@ void MainWindow::wearMedal(qint64 medalId)
             return ;
         }
         qInfo() << "佩戴主播粉丝勋章成功";
-    });
-}
-
-/**
- * 自动签到
- */
-void MainWindow::doSign()
-{
-    if (ac->csrf_token.isEmpty())
-    {
-        ui->autoDoSignCheck->setText("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("每日自动签到");
-        });
-        return ;
-    }
-
-    QString url("https://api.live.bilibili.com/xlive/web-ucenter/v1/sign/DoSign");
-
-    // 建立对象
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            QString msg = json.value("message").toString();
-            qCritical() << s8("自动签到返回结果不为0：") << msg;
-            ui->autoDoSignCheck->setText(msg);
-        }
-        else
-        {
-            ui->autoDoSignCheck->setText("签到成功");
-            ui->autoDoSignCheck->setToolTip("最近签到时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        }
-        QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("每日自动签到");
-        });
-    });
-}
-
-void MainWindow::joinLOT(qint64 id, bool follow)
-{
-    if (!id )
-        return ;
-    if (ac->csrf_token.isEmpty())
-    {
-        ui->autoDoSignCheck->setText("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("自动参与活动");
-        });
-        return ;
-    }
-
-    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/Anchor/Join"
-             "?id="+QString::number(id)+(follow?"&follow=true":"")+"&platform=pc&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
-    qInfo() << "参与天选：" << id << follow << url;
-
-    post(url, QByteArray(), [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            QString msg = json.value("message").toString();
-            qCritical() << s8("参加天选返回结果不为0：") << msg;
-            ui->autoLOTCheck->setText(msg);
-            ui->autoLOTCheck->setToolTip(msg);
-        }
-        else
-        {
-            ui->autoLOTCheck->setText("参与成功");
-            qInfo() << "参与天选成功！";
-            ui->autoLOTCheck->setToolTip("最近参与时间：" + QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss"));
-        }
-        QTimer::singleShot(10000, [=]{
-            ui->autoLOTCheck->setText("自动参与活动");
-        });
-    });
-}
-
-void MainWindow::joinStorm(qint64 id)
-{
-    if (!id )
-        return ;
-    if (ac->csrf_token.isEmpty())
-    {
-        ui->autoDoSignCheck->setText("机器人账号未登录");
-        QTimer::singleShot(10000, [=]{
-            ui->autoDoSignCheck->setText("自动参与活动");
-        });
-        return ;
-    }
-
-    QString url("https://api.live.bilibili.com/xlive/lottery-interface/v1/storm/Join"
-             "?id="+QString::number(id)+"&color=5566168&csrf_token="+ac->csrf_token+"&csrf="+ac->csrf_token+"&visit_id=");
-    qInfo() << "参与节奏风暴：" << id << url;
-
-    post(url, QByteArray(), [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            QString msg = json.value("message").toString();
-            qCritical() << s8("参加节奏风暴返回结果不为0：") << msg;
-            ui->autoLOTCheck->setText(msg);
-            ui->autoLOTCheck->setToolTip(msg);
-        }
-        else
-        {
-            ui->autoLOTCheck->setText("参与成功");
-            qInfo() << "参与节奏风暴成功！";
-            QString content = json.value("data").toObject().value("content").toString();
-            ui->autoLOTCheck->setToolTip("最近参与时间：" +
-                                            QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss")
-                                            + "\n\n" + content);
-        }
-        QTimer::singleShot(10000, [=]{
-            ui->autoLOTCheck->setText("自动参与活动");
-        });
     });
 }
 
@@ -19311,7 +18924,7 @@ void MainWindow::on_sendAutoOnlyLiveCheck_clicked()
 
 void MainWindow::on_autoDoSignCheck_clicked()
 {
-    us->setValue("danmaku/autoDoSign", ui->autoDoSignCheck->isChecked());
+    us->setValue("danmaku/autoDoSign", us->autoDoSign = ui->autoDoSignCheck->isChecked());
 }
 
 void MainWindow::on_actionRoom_Status_triggered()
@@ -19322,7 +18935,7 @@ void MainWindow::on_actionRoom_Status_triggered()
 
 void MainWindow::on_autoLOTCheck_clicked()
 {
-    us->setValue("danmaku/autoLOT", ui->autoLOTCheck->isChecked());
+    us->setValue("danmaku/autoLOT", us->autoJoinLOT = ui->autoLOTCheck->isChecked());
 }
 
 void MainWindow::on_blockNotOnlyNewbieCheck_clicked()

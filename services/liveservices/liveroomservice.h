@@ -22,6 +22,7 @@ public:
 
     /// 初始化所有变量，new、connect等
     virtual void init();
+    void initTimeTasks();
 
     /// 读取设置
     virtual void readConfig();
@@ -29,6 +30,7 @@ public:
     virtual void releaseLiveData(bool prepare);
 
 signals:
+    void signalStartConnectRoom(); // 通知总的开始连接
     void signalConnectionStarted(); // WebSocket开始连接
     void signalConnectionStateChanged(QAbstractSocket::SocketState state);
     void signalConnectionStateTextChanged(const QString& text);
@@ -54,6 +56,12 @@ signals:
     void signalOnlineRankChanged(); // 高能榜变化
     void signalAutoAdjustDanmakuLongest(); // 调整弹幕最高字数
     void signalHeartTimeNumberChanged(int num, int minute); // 通过连接一直领取小心心
+    void signalDanmuPopularChanged(const QString& text); // 5分钟弹幕人气
+    void signalPopularChanged(qint64 count); // 人气值
+    void signalSignInfoChanged(const QString& text); // 自动签到
+    void signalSignDescChanged(const QString& text);
+    void signalLOTInfoChanged(const QString& text); // 天选等活动
+    void signalLOTDescChanged(const QString& text);
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -66,13 +74,14 @@ signals:
     void signalBattleFinished();
 
     void signalAppendNewLiveDanmaku(const LiveDanmaku& danmaku);
-    void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku);
+    void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
     void signalShowError(const QString& title, const QString& info);
-    void signalLocalNotify(const QString& text);
+    void signalLocalNotify(const QString& text, qint64 uid);
+    void signalNewHour();
+    void signalNewDay();
+    void signalUpdatePermission();
 
 public slots:
-    /// 开始获取房间，进行一些初始化操作
-    virtual void startConnectRoom(const QString &roomId) { Q_UNUSED(roomId) }
     /// 通过身份码连接房间
     virtual void startConnectIdentityCode(const QString &code) { Q_UNUSED(code) }
 
@@ -106,6 +115,12 @@ public:
     virtual void getGiftList() {}
     /// 获取表情包ID
     virtual void getEmoticonList() {}
+    /// 每日签到
+    virtual void doSign() {}
+    /// 天选之人抽奖
+    virtual void joinLOT(qint64 id, bool arg) { Q_UNUSED(id) Q_UNUSED(arg) }
+    /// 节奏风暴
+    virtual void joinStorm(qint64 id) { Q_UNUSED(id) }
     /// 模拟在线观看效果（带心跳的那种）
     virtual void startHeartConnection() {}
     virtual void stopHeartConnection() {}
@@ -127,6 +142,8 @@ public:
     QVariant getCookies() const;
 
     virtual void processNewDayData() {}
+    virtual void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
+    virtual void localNotify(const QString& text, qint64 uid = 0);
 
 public:
     /// 根据Url设置对应的Cookie

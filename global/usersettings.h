@@ -38,6 +38,9 @@ public:
     bool liveDove = false;           // 鸽一天，不自动连接
     int getHeartTimeCount = 0;       // 获取小心心的总数
     bool saveDanmakuToFile = false;  // 保存弹幕日志文件
+    bool autoDoSign = false;         // 每天自动签到
+    bool autoJoinLOT = false;        // 自动参加天选
+    bool calculateDailyData = false; // 统计每天数据
 
     QString getLocalNickname(qint64 uid) const
     {
