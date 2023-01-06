@@ -925,12 +925,12 @@ void MainWindow::initLiveService()
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
-        showError(title, info);
-    });
-
     connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
         localNotify(text, uid);
+    });
+
+    connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
+        showError(title, info);
     });
 
     connect(liveService, &LiveRoomService::signalUpdatePermission, this, [=] {
@@ -1003,7 +1003,6 @@ void MainWindow::initLiveService()
     connect(liveService, &LiveRoomService::signalBattleFinished, this, [=] {
 
     });
-
 
     /// 需要调整的
     // 礼物连击
@@ -1545,10 +1544,10 @@ void MainWindow::readConfig()
     ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
 
     // 调试模式
-    localDebug = us->value("debug/localDebug", false).toBool();
-    ui->actionLocal_Mode->setChecked(localDebug);
-    debugPrint = us->value("debug/debugPrint", false).toBool();
-    ui->actionDebug_Mode->setChecked(debugPrint);
+    us->localMode = us->value("debug/localDebug", false).toBool();
+    ui->actionLocal_Mode->setChecked(us->localMode);
+    us->debugPrint = us->value("debug/debugPrint", false).toBool();
+    ui->actionDebug_Mode->setChecked(us->debugPrint);
     saveRecvCmds = us->value("debug/saveRecvCmds", false).toBool();
     ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
     if (saveRecvCmds)
@@ -2244,7 +2243,7 @@ void MainWindow::localNotify(const QString &text, qint64 uid)
  */
 void MainWindow::sendMsg(QString msg)
 {
-    if (localDebug)
+    if (us->localMode)
     {
         localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
         return ;
@@ -2378,7 +2377,7 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
 {
     if (msgs.trimmed().isEmpty())
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[空弹幕，已忽略]");
         return ;
     }
@@ -2404,7 +2403,7 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, in
 {
     if (msgs.trimmed().isEmpty())
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[空弹幕，已忽略]");
         return ;
     }
@@ -2533,13 +2532,13 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
     if (!manual && !shallAutoMsg()) // 不在直播中
     {
         qInfo() << "未开播，不做操作(cd)" << msg;
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[未开播，不做操作]");
         return ;
     }
     if (msg.trimmed().isEmpty())
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[空弹幕，已跳过]");
         return ;
     }
@@ -2605,7 +2604,7 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch(); // 值是毫秒，用户配置为秒
     if (cd > 0 && timestamp - msgCds[channel] < cd)
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[未完成冷却：" + snum(timestamp - msgCds[channel]) + " 不足 " + snum(cd) + "毫秒]");
         return ;
     }
@@ -2614,7 +2613,7 @@ void MainWindow::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
     // 等待通道
     if (waitCount > 0 && msgWaits[waitChannel] < waitCount)
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[未完成等待：" + snum(msgWaits[waitChannel]) + " 不足 " + snum(waitCount) + "条]");
         return ;
     }
@@ -2683,7 +2682,7 @@ void MainWindow::slotComboSend()
             QString msg = words.at(r);
             if (us->strongNotifyUsers.contains(danmaku.getUid()))
             {
-                if (debugPrint)
+                if (us->debugPrint)
                     localNotify("[强提醒]");
                 sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
@@ -2694,7 +2693,7 @@ void MainWindow::slotComboSend()
             }
             return true;
         }
-        else if (debugPrint)
+        else if (us->debugPrint)
         {
             localNotify("[没有可发送的连击答谢弹幕]");
             return false;
@@ -2888,7 +2887,7 @@ void MainWindow::on_testDanmakuButton_clicked()
                 sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
-            else if (debugPrint)
+            else if (us->debugPrint)
             {
                 localNotify("[没有可发送的上船弹幕]");
             }
@@ -3552,12 +3551,12 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
     });
 
     connect(tw, &TaskWidget::signalSendMsgs, this, [=](QString sl, bool manual){
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[定时任务:" + snum(ui->taskListWidget->row(item)) + "]");
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行定时任务
         {
             qInfo() << "未开播，不做回复(timer)" << sl;
-            if (debugPrint)
+            if (us->debugPrint)
                 localNotify("[未开播，不做回复]");
             return ;
         }
@@ -3565,7 +3564,7 @@ void MainWindow::connectTimerTaskEvent(TaskWidget *tw, QListWidgetItem *item)
         if (sendVariantMsg(sl, LiveDanmaku(), TASK_CD_CN, manual))
         {
         }
-        else if (debugPrint)
+        else if (us->debugPrint)
         {
             localNotify("[没有可发送的定时弹幕]");
         }
@@ -3690,7 +3689,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
         {
             if (!danmaku.isPkLink())
                 qInfo() << "未开播，不做回复(reply)" << sl;
-            if (debugPrint)
+            if (us->debugPrint)
                 localNotify("[未开播，不做回复]");
             return ;
         }
@@ -3698,7 +3697,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
         if (sendVariantMsg(sl, danmaku, REPLY_CD_CN, manual, true))
         {
         }
-        else if (debugPrint)
+        else if (us->debugPrint)
         {
             localNotify("[没有可发送的回复弹幕]");
         }
@@ -3865,7 +3864,7 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
         if (!manual && !shallAutoMsg(sl, manual)) // 没有开播，不进行自动回复
         {
             qInfo() << "未开播，不做操作(event)" << sl;
-            if (debugPrint)
+            if (us->debugPrint)
                 localNotify("[未开播，不做操作]");
             return ;
         }
@@ -3875,7 +3874,7 @@ void MainWindow::connectEventActionEvent(EventWidget *rw, QListWidgetItem *item)
         if (sendVariantMsg(sl, danmaku, EVENT_CD_CN, manual))
         {
         }
-        else if (debugPrint)
+        else if (us->debugPrint)
         {
             localNotify("[没有可发送的事件弹幕]");
         }
@@ -4815,12 +4814,12 @@ void MainWindow::startConnectRoom()
 
     // 如果是管理员，可以获取禁言的用户
     if (ui->enableBlockCheck->isChecked())
-        refreshBlockList();
+        liveService->refreshBlockList();
 }
 
 bool MainWindow::isWorking() const
 {
-    if (localDebug)
+    if (us->localMode)
         return false;
     return (shallAutoMsg() && (ui->autoSendWelcomeCheck->isChecked() || ui->autoSendGiftCheck->isChecked() || ui->autoSendAttentionCheck->isChecked()));
 }
@@ -5277,7 +5276,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
             // s = s.replace(QRegExp("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
             if (s.length() > danmuLongest && !s.contains("%"))
             {
-                if (debugPrint)
+                if (us->debugPrint)
                     localNotify("[去掉过长候选：" + s + "]");
                 result.removeAt(i--);
             }
@@ -6022,7 +6021,7 @@ QString MainWindow::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
     else if (key == "%local_mode%")
     {
-        return localDebug ? "1" : "0";
+        return us->localMode ? "1" : "0";
     }
     else if (key == "%repeat_10%")
     {
@@ -7499,7 +7498,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         }
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
-        delBlockUser(danmaku.getUid());
+        liveService->delBlockUser(danmaku.getUid());
         if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
         {
             us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
@@ -7545,7 +7544,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                     saveEternalBlockUsers();
                 }
 
-                delBlockUser(danmaku.getUid());
+                liveService->delBlockUser(danmaku.getUid());
                 sendNotifyMsg(">已解禁：" + nick, true);
                 blockedQueue.removeAt(i);
                 return ;
@@ -7568,7 +7567,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
                     saveEternalBlockUsers();
                 }
 
-                delBlockUser(danmaku.getUid());
+                liveService->delBlockUser(danmaku.getUid());
                 sendNotifyMsg(">已解禁：" + nick, true);
                 blockedQueue.removeAt(i);
                 return ;
@@ -7725,7 +7724,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = caps.at(2).toInt();
-            addBlockUser(uid, hour);
+            liveService->addBlockUser(uid, hour);
             return true;
         }
         re = RE("block\\s*\\(\\s*(\\d+)\\s*\\)");
@@ -7735,7 +7734,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = ui->autoBlockTimeSpin->value();
-            addBlockUser(uid, hour);
+            liveService->addBlockUser(uid, hour);
             return true;
         }
     }
@@ -7749,7 +7748,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
-            delBlockUser(uid);
+            liveService->delBlockUser(uid);
             return true;
         }
     }
@@ -7778,7 +7777,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
-            appointAdmin(uid);
+            liveService->appointAdmin(uid);
             return true;
         }
     }
@@ -7792,7 +7791,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
-            dismissAdmin(uid);
+            liveService->dismissAdmin(uid);
             return true;
         }
     }
@@ -10891,7 +10890,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 }
             }
         };
-        if (!debugPrint && (snum(uid) == ac->upUid || snum(uid) == ac->cookieUid)) // 是自己或UP主的，不屏蔽
+        if (!us->debugPrint && (snum(uid) == ac->upUid || snum(uid) == ac->cookieUid)) // 是自己或UP主的，不屏蔽
         {
             // 不仅不屏蔽，反而支持主播特权
             processRemoteCmd(msg);
@@ -10930,7 +10929,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     if (!isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku)) // 阻止自动禁言过滤器
                     {
                         // 拉黑
-                        addBlockUser(uid, ui->autoBlockTimeSpin->value());
+                        liveService->addBlockUser(uid, ui->autoBlockTimeSpin->value());
                         blocked = true;
 
                         // 通知
@@ -10951,7 +10950,7 @@ void MainWindow::handleMessage(QJsonObject json)
                                         sendNotifyMsg(s, danmaku);
                                     }
                                 }
-                                else if (debugPrint)
+                                else if (us->debugPrint)
                                 {
                                     localNotify("[没有可发送的禁言通知弹幕]");
                                 }
@@ -11195,7 +11194,7 @@ void MainWindow::handleMessage(QJsonObject json)
                         QString msg = words.at(r);
                         if (us->strongNotifyUsers.contains(uid))
                         {
-                            if (debugPrint)
+                            if (us->debugPrint)
                                 localNotify("[强提醒]");
                             sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
                                       ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
@@ -11203,12 +11202,12 @@ void MainWindow::handleMessage(QJsonObject json)
                         else
                             sendGiftMsg(msg, danmaku);
                     }
-                    else if (debugPrint)
+                    else if (us->debugPrint)
                     {
                         localNotify("[没有可发送的礼物答谢弹幕]");
                     }
                 }
-                else if (debugPrint)
+                else if (us->debugPrint)
                 {
                     localNotify("[礼物被合并，不答谢]");
                 }
@@ -11676,7 +11675,7 @@ void MainWindow::handleMessage(QJsonObject json)
             if (danmaku.getUid() == 0)
             {
                 // qWarning() << "未在已有高能榜上找到，立即更新高能榜";
-                // updateOnlineGoldRank();
+                // liveService->updateOnlineGoldRank();
                 return ;
             }
 
@@ -11902,7 +11901,12 @@ void MainWindow::handleMessage(QJsonObject json)
 
         // 新船员数量事件
         if (!ac->currentGuards.contains(uid))
-            newGuardUpdate(danmaku);
+        {
+            if (hasEvent("NEW_GUARD_COUNT"))
+            {
+                liveService->getGuardCount(danmaku);
+            }
+        }
 
         if (!guardCount)
         {
@@ -11921,7 +11925,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
-            else if (debugPrint)
+            else if (us->debugPrint)
             {
                 localNotify("[没有可发送的上船弹幕]");
             }
@@ -12007,7 +12011,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (array.size() != liveService->onlineGoldRank.size())
         {
             // 还是不更新了吧，没有必要
-            // updateOnlineGoldRank();
+            // liveService->updateOnlineGoldRank();
         }
         else
         {
@@ -12059,7 +12063,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
 
         // 数量变化了，那还是得刷新一下
-        updateOnlineGoldRank();
+        liveService->updateOnlineGoldRank();
 
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
@@ -12831,17 +12835,17 @@ void MainWindow::sendWelcome(LiveDanmaku danmaku)
     QStringList words = getEditConditionStringList(ui->autoWelcomeWordsEdit->toPlainText(), danmaku);
     if (!words.size())
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[没有可用的欢迎弹幕]");
         return ;
     }
     int r = qrand() % words.size();
-    if (debugPrint && !(words.size() == 1 && words.first().trimmed().isEmpty()))
+    if (us->debugPrint && !(words.size() == 1 && words.first().trimmed().isEmpty()))
         localNotify("[rand " + snum(r) + " in " + snum(words.size()) + "]");
     QString msg = words.at(r);
     if (us->strongNotifyUsers.contains(danmaku.getUid()))
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[强提醒]");
         sendCdMsg(msg, danmaku, 2000, NOTIFY_CD_CN,
                   ui->sendWelcomeTextCheck->isChecked(), ui->sendWelcomeVoiceCheck->isChecked(), false);
@@ -12858,7 +12862,7 @@ void MainWindow::sendAttentionThans(LiveDanmaku danmaku)
     QStringList words = getEditConditionStringList(ui->autoAttentionWordsEdit->toPlainText(), danmaku);
     if (!words.size())
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[没有可用的感谢关注弹幕]");
         return ;
     }
@@ -13727,42 +13731,6 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     }
 }
 
-void MainWindow::refreshBlockList()
-{
-    if (ac->browserData.isEmpty())
-    {
-        showError("请先设置用户数据");
-        return ;
-    }
-
-    // 刷新被禁言的列表
-    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+ac->roomId+"&page=1";
-    get(url, [=](QJsonObject json){
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            qWarning() << "获取禁言：" << json.value("message").toString();
-            /* if (code == 403)
-                showError("获取禁言", "您没有权限");
-            else
-                showError("获取禁言", json.value("message").toString()); */
-            return ;
-        }
-        QJsonArray list = json.value("data").toArray();
-        us->userBlockIds.clear();
-        foreach (QJsonValue val, list)
-        {
-            QJsonObject obj = val.toObject();
-            qint64 id = static_cast<qint64>(obj.value("id").toDouble());
-            qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
-            QString uname = obj.value("uname").toString();
-            us->userBlockIds.insert(uid, id);
-//            qInfo() << "已屏蔽:" << id << uname << uid;
-        }
-
-    });
-}
-
 bool MainWindow::isInFans(qint64 uid)
 {
     foreach (auto fan, liveService->fansList)
@@ -13781,7 +13749,7 @@ void MainWindow::sendGift(int giftId, int giftNum)
         return ;
     }
 
-    if (localDebug)
+    if (us->localMode)
     {
         localNotify("赠送礼物 -> " + snum(giftId) + " x " + snum(giftNum));
         return ;
@@ -13829,7 +13797,7 @@ void MainWindow::sendBagGift(int giftId, int giftNum, qint64 bagId)
         return ;
     }
 
-    if (localDebug)
+    if (us->localMode)
     {
         localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
         return ;
@@ -14074,31 +14042,6 @@ void MainWindow::getBagList(qint64 sendExpire)
             }
         }
     });
-}
-
-/**
- * 有新上船后调用（不一定是第一次，可能是掉船了）
- * @param guardLevel 大航海等级
- */
-void MainWindow::newGuardUpdate(const LiveDanmaku& danmaku)
-{
-    if (!hasEvent("NEW_GUARD_COUNT"))
-        return ;
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
-    get(url, [=](MyJson json) {
-        int count = json.data().o("guard_info").i("count");
-        LiveDanmaku ld = danmaku;
-        ld.setNumber(count);
-        triggerCmdEvent("NEW_GUARD_COUNT", ld.with(json.data()), true);
-    });
-}
-
-/**
- * 获取高能榜上的用户（仅取第一页就行了）
- */
-void MainWindow::updateOnlineGoldRank()
-{
-
 }
 
 void MainWindow::updateOnlineRankGUI()
@@ -14484,151 +14427,6 @@ void MainWindow::showDiangeHistory()
     QMessageBox::information(this, "点歌历史", text);
 }
 
-void MainWindow::appointAdmin(qint64 uid)
-{
-    if (ac->upUid != ac->cookieUid)
-    {
-        showError("房管操作", "仅主播可用");
-        return ;
-    }
-    post("https://api.live.bilibili.com/xlive/web-ucenter/v1/roomAdmin/appoint",
-         ("admin=" + snum(uid) + "&admin_level=1&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
-         [=](MyJson json) {
-        qInfo() << "任命房管：" << json;
-        if (json.code() != 0)
-        {
-            showError("任命房管", json.msg());
-            return ;
-        }
-
-    });
-}
-
-void MainWindow::dismissAdmin(qint64 uid)
-{
-    if (ac->upUid != ac->cookieUid)
-    {
-        showError("房管操作", "仅主播可用");
-        return ;
-    }
-    post("https://api.live.bilibili.com/xlive/app-ucenter/v1/roomAdmin/dismiss",
-         ("uid=" + snum(uid) + "&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
-         [=](MyJson json) {
-        qInfo() << "取消任命房管：" << json;
-        if (json.code() != 0)
-        {
-            showError("取消任命房管", json.msg());
-            return ;
-        }
-    });
-}
-
-void MainWindow::addBlockUser(qint64 uid, int hour)
-{
-    addBlockUser(uid, ac->roomId.toLongLong(), hour);
-}
-
-void MainWindow::addBlockUser(qint64 uid, qint64 roomId, int hour)
-{
-    if(ac->browserData.isEmpty())
-    {
-        showError("请先设置登录信息");
-        return ;
-    }
-
-    if (localDebug)
-    {
-        localNotify("禁言用户 -> " + snum(uid) + " " + snum(hour) + " 小时");
-        return ;
-    }
-
-    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
-    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token);
-    qInfo() << "禁言：" << uid << hour;
-    post(url, data.toStdString().data(), [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            showError("禁言失败", json.value("message").toString());
-            return ;
-        }
-        QJsonObject d = json.value("data").toObject();
-        qint64 id = static_cast<qint64>(d.value("id").toDouble());
-        us->userBlockIds[uid] = id;
-    });
-}
-
-void MainWindow::delBlockUser(qint64 uid)
-{
-    delBlockUser(uid, ac->roomId.toLongLong());
-}
-
-void MainWindow::delBlockUser(qint64 uid, qint64 roomId)
-{
-    if(ac->browserData.isEmpty())
-    {
-        showError("请先设置登录信息");
-        return ;
-    }
-
-    if (localDebug)
-    {
-        localNotify("取消禁言 -> " + snum(uid));
-        return ;
-    }
-
-    if (us->userBlockIds.contains(uid))
-    {
-        qInfo() << "取消禁言：" << uid << "  id =" << us->userBlockIds.value(uid);
-        delRoomBlockUser(us->userBlockIds.value(uid));
-        us->userBlockIds.remove(uid);
-        return ;
-    }
-
-    // 获取直播间的网络ID，再取消屏蔽
-    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+snum(roomId)+"&page=1";
-    get(url, [=](QJsonObject json){
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            if (code == 403)
-                showError("取消禁言", "您没有权限");
-            else
-                showError("取消禁言", json.value("message").toString());
-            return ;
-        }
-        QJsonArray list = json.value("data").toArray();
-        foreach (QJsonValue val, list)
-        {
-            QJsonObject obj = val.toObject();
-            if (static_cast<qint64>(obj.value("uid").toDouble()) == uid)
-            {
-                delRoomBlockUser(static_cast<qint64>(obj.value("id").toDouble())); // 获取房间ID
-                break;
-            }
-        }
-
-    });
-}
-
-void MainWindow::delRoomBlockUser(qint64 id)
-{
-    QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
-    QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(id).arg(ac->roomId).arg(ac->csrf_token).arg(ac->csrf_token);
-
-    post(url, data.toStdString().data(), [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            showError("取消禁言", json.value("message").toString());
-            return ;
-        }
-
-        // if (userBlockIds.values().contains(id))
-        //    userBlockIds.remove(userBlockIds.key(id));
-    });
-}
-
 void MainWindow::eternalBlockUser(qint64 uid, QString uname)
 {
     if (us->eternalBlockUsers.contains(EternalBlockUser(uid, ac->roomId.toLongLong())))
@@ -14637,7 +14435,7 @@ void MainWindow::eternalBlockUser(qint64 uid, QString uname)
         return ;
     }
 
-    addBlockUser(uid, 720);
+    liveService->addBlockUser(uid, 720);
 
     us->eternalBlockUsers.append(EternalBlockUser(uid, ac->roomId.toLongLong(), uname, ac->upName, ac->roomTitle, QDateTime::currentSecsSinceEpoch()));
     saveEternalBlockUsers();
@@ -14669,7 +14467,7 @@ void MainWindow::cancelEternalBlockUserAndUnblock(qint64 uid, qint64 roomId)
 {
     cancelEternalBlockUser(uid, roomId);
 
-    delBlockUser(uid, roomId);
+    liveService->delBlockUser(uid, snum(roomId));
 }
 
 void MainWindow::saveEternalBlockUsers()
@@ -14701,7 +14499,7 @@ void MainWindow::detectEternalBlockUsers()
         // 该补上禁言啦
         blocked = true;
         qInfo() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
-        addBlockUser(user.uid, user.roomId, MAX_BLOCK_HOUR);
+        liveService->addBlockUser(user.uid, snum(user.roomId), MAX_BLOCK_HOUR);
 
         user.time = currentSecond;
         us->eternalBlockUsers.removeFirst();
@@ -14719,7 +14517,7 @@ void MainWindow::on_enableBlockCheck_clicked()
         danmakuWindow->setEnableBlock(enable);
 
     if (enable)
-        refreshBlockList();
+        liveService->refreshBlockList();
 }
 
 
@@ -14938,8 +14736,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
-        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), this, SLOT(addBlockUser(qint64, int)));
-        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), this, SLOT(delBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), liveService, SLOT(addBlockUser(qint64, int)));
+        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
         connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
@@ -14966,8 +14764,8 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
                 ui->closeTransMouseButton->hide();
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
-        connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), this, SLOT(appointAdmin(qint64)));
-        connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), this, SLOT(dismissAdmin(qint64)));
+        connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
+        connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), liveService, SLOT(dismissAdmin(qint64)));
         danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
         danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
         danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
@@ -15893,7 +15691,7 @@ int MainWindow::getPkMaxGold(int votes)
     double maxProp = 10.0 / qMax(1, liveService->pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
     maxProp = qMax(1.0, maxProp);
     prop = qMin(qMax(1.0, prop), maxProp); // 限制倍率是 1 ~ 10 倍之间
-    if (ui->pkAutoMelonCheck->isChecked() && debugPrint)
+    if (ui->pkAutoMelonCheck->isChecked() && us->debugPrint)
         qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(liveService->pkMaxGold * prop)) + "金瓜子, "
                     +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
     return int(liveService->pkMaxGold * prop);
@@ -15980,7 +15778,7 @@ bool MainWindow::execTouta()
         sendGift(giftId, giftNum);
         localNotify(QString("[") + (liveService->oppositeTouta ? "反" : "") + "偷塔] " + snum(liveService->matchVotes-liveService->myVotes-liveService->pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
         qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << liveService->myVotes << "vs" << liveService->matchVotes;
-        if (!localDebug)
+        if (!us->localMode)
             liveService->pkVoting += giftVote * giftNum; // 正在赠送中
 
         liveService->toutaCount++;
@@ -16025,11 +15823,11 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/live"), "视频流", [=]{
             on_actionShow_Live_Video_triggered();
         });
-        if (localDebug || debugPrint)
+        if (us->localMode || us->debugPrint)
         {
             menu->split();
-            menu->addAction(ui->actionLocal_Mode)->hide(!localDebug);
-            menu->addAction(ui->actionDebug_Mode)->hide(!debugPrint);
+            menu->addAction(ui->actionLocal_Mode)->hide(!us->localMode);
+            menu->addAction(ui->actionDebug_Mode)->hide(!us->debugPrint);
         }
 
         menu->split();
@@ -16077,7 +15875,7 @@ bool MainWindow::shallAutoMsg(const QString &sl, bool &manual)
 bool MainWindow::shallSpeakText()
 {
     bool rst = !ui->dontSpeakOnPlayingSongCheck->isChecked() || !musicWindow || !musicWindow->isPlaying();
-    if (!rst && debugPrint)
+    if (!rst && us->debugPrint)
         localNotify("[放歌中，跳过语音]");
     return rst;
 }
@@ -16639,7 +16437,7 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
     QList<int> specialGifts { 30607 };
     if (ac->upUid.isEmpty() || (!danmaku.getTotalCoin() && !specialGifts.contains(danmaku.getGiftId()))) // 亲密度为0，不需要判断
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[勋章升级：免费礼物]");
         return ;
     }
@@ -16652,21 +16450,21 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
         }
         else
         {
-            if (debugPrint)
+            if (us->debugPrint)
                 localNotify("[勋章升级：小心心无效]");
             return ;
         }
     }
     if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
     {
-        if (debugPrint)
+        if (us->debugPrint)
             localNotify("[勋章升级：0电池礼物]");
         return ;
     }
 
     QString currentAnchorRoom = danmaku.getAnchorRoomid();
     int currentMedalLevel = danmaku.getMedalLevel();
-    if (debugPrint)
+    if (us->debugPrint)
         localNotify("[当前勋章：房间" + currentAnchorRoom + "，等级" + snum(currentMedalLevel) + "]");
 
     // 获取新的等级
@@ -16680,29 +16478,29 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             MyJson medalObject = json.data();
             if (medalObject.isEmpty())
             {
-                if (debugPrint)
+                if (us->debugPrint)
                     localNotify("[勋章升级：无勋章]");
                 return ; // 没有勋章，更没有亲密度
             }
             int intimacy = medalObject.i("intimacy"); // 当前亲密度
             int nextIntimacy = medalObject.i("next_intimacy"); // 下一级亲密度
-            if (debugPrint)
+            if (us->debugPrint)
                 localNotify("[亲密度：" + snum(intimacy) + "/" + snum(nextIntimacy) + "]");
             if (intimacy >= giftIntimacy) // 没有升级，或者刚拿到粉丝牌升到1级
             {
-                if (debugPrint)
+                if (us->debugPrint)
                     localNotify("[勋章升级：未升级，已有" + snum(intimacy) + ">=礼物" + snum(giftIntimacy) + "]");
                 return ;
             }
             LiveDanmaku ld = danmaku;
             int level = medalObject.i("level");
-            if (debugPrint)
+            if (us->debugPrint)
             {
                 localNotify("[勋章升级：" + snum(level) + "级]");
             }
             if (ld.getAnchorRoomid() != ac->roomId && (!ac->shortId.isEmpty() && ld.getAnchorRoomid() != ac->shortId)) // 没有戴本房间的牌子
             {
-                if (debugPrint)
+                if (us->debugPrint)
                     localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
             }
             ld.setMedalLevel(level); // 设置为本房间的牌子
@@ -19795,7 +19593,7 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
         {
             if (QMessageBox::question(this, "模拟CMDS", "您的[本地模式]未开启，可能会回复奇奇怪怪的内容，是否开启[本地模式]？",
                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes)
-                ui->actionLocal_Mode->setChecked(localDebug = true);
+                ui->actionLocal_Mode->setChecked(us->localMode = true);
         }
         ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = false);
 
@@ -19818,7 +19616,7 @@ void MainWindow::on_pushRecvCmdsButton_clicked()
     else // 关闭模拟输入
     {
         if (ui->actionLocal_Mode->isChecked() && us->value("debug/localDebug", false).toBool())
-            ui->actionLocal_Mode->setChecked(localDebug = false);
+            ui->actionLocal_Mode->setChecked(us->localMode = false);
 
         if (us->value("debug/saveRecvCmds", false).toBool())
             ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
@@ -19911,14 +19709,14 @@ void MainWindow::on_actionLast_Candidate_triggered()
 
 void MainWindow::on_actionLocal_Mode_triggered()
 {
-    us->setValue("debug/localDebug", localDebug = ui->actionLocal_Mode->isChecked());
-    qInfo() << "本地模式：" << localDebug;
+    us->setValue("debug/localDebug", us->localMode = ui->actionLocal_Mode->isChecked());
+    qInfo() << "本地模式：" << us->localMode;
 }
 
 void MainWindow::on_actionDebug_Mode_triggered()
 {
-    us->setValue("debug/debugPrint", debugPrint = ui->actionDebug_Mode->isChecked());
-    qInfo() << "调试模式：" << debugPrint;
+    us->setValue("debug/debugPrint", us->debugPrint = ui->actionDebug_Mode->isChecked());
+    qInfo() << "调试模式：" << us->debugPrint;
 }
 
 void MainWindow::on_actionGuard_Online_triggered()

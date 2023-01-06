@@ -343,6 +343,11 @@ void LiveRoomService::localNotify(const QString &text, qint64 uid)
     emit signalLocalNotify(text, uid);
 }
 
+void LiveRoomService::showError(const QString &title, const QString &desc)
+{
+    emit signalShowError(title, desc);
+}
+
 void LiveRoomService::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())

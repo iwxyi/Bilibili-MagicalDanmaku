@@ -257,14 +257,6 @@ private slots:
 
     void showDiangeHistory();
 
-    void appointAdmin(qint64 uid);
-    void dismissAdmin(qint64 uid);
-
-    void addBlockUser(qint64 uid, int hour);
-    void addBlockUser(qint64 uid, qint64 roomId, int hour);
-    void delBlockUser(qint64 uid);
-    void delBlockUser(qint64 uid, qint64 roomId);
-    void delRoomBlockUser(qint64 id);
     void eternalBlockUser(qint64 uid, QString uname);
     void cancelEternalBlockUser(qint64 uid);
     void cancelEternalBlockUser(qint64 uid, qint64 roomId);
@@ -823,7 +815,6 @@ private:
     bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
     void userComeEvent(LiveDanmaku& danmaku);
-    void refreshBlockList();
     bool isInFans(qint64 upUid);
     void sendGift(int giftId, int giftNum);
     void sendBagGift(int giftId, int giftNum, qint64 bagId);
@@ -831,8 +822,6 @@ private:
     void roomEntryAction();
     void sendExpireGift();
     void getBagList(qint64 sendExpire = 0);
-    void newGuardUpdate(const LiveDanmaku &danmaku);
-    void updateOnlineGoldRank();
     void updateOnlineRankGUI();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
@@ -1067,9 +1056,6 @@ private:
     int liveTotalDanmaku = 0; // 本场直播的弹幕数量
 
     // 调试
-    bool localDebug = false;   // 本地调试模式
-    bool debugPrint = false;   // 调试输出模式
-
     bool saveRecvCmds = false; // 保存收到的CMD
     QFile* saveCmdsFile = nullptr;
 

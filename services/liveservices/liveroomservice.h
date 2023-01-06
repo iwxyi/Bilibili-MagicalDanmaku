@@ -75,8 +75,8 @@ signals:
 
     void signalAppendNewLiveDanmaku(const LiveDanmaku& danmaku);
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
-    void signalShowError(const QString& title, const QString& info);
     void signalLocalNotify(const QString& text, qint64 uid);
+    void signalShowError(const QString& title, const QString& info);
     void signalNewHour();
     void signalNewDay();
     void signalUpdatePermission();
@@ -88,6 +88,21 @@ public slots:
     virtual void slotBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
 
     virtual void slotPkBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
+
+    /// 设置为管理员
+    virtual void appointAdmin(qint64 uid) { Q_UNUSED(uid) }
+    /// 取消管理员
+    virtual void dismissAdmin(qint64 uid) { Q_UNUSED(uid) }
+    /// 禁言
+    virtual void addBlockUser(qint64 uid, int hour) { addBlockUser(uid, ac->roomId, hour); }
+    virtual void addBlockUser(qint64 uid, QString roomId, int hour) { Q_UNUSED(uid) Q_UNUSED(hour) Q_UNUSED(roomId) }
+    /// 取消禁言
+    virtual void delBlockUser(qint64 uid) { delBlockUser(uid, ac->roomId); }
+    virtual void delBlockUser(qint64 uid, QString roomId) { Q_UNUSED(uid) Q_UNUSED(roomId) }
+    /// 禁言要通过禁言id来解除禁言，所以有两步操作
+    virtual void delRoomBlockUser(qint64 id) { Q_UNUSED(id) }
+    /// 刷新直播间禁言的用户
+    virtual void refreshBlockList() {}
 
 public:
     /// 获取直播间信息
@@ -109,6 +124,8 @@ public:
     virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
+    /// 获取舰长数量
+    virtual void getGuardCount(const LiveDanmaku &danmaku) { Q_UNUSED(danmaku) }
     /// 更新高能榜
     virtual void updateOnlineGoldRank() {}
     /// 获取礼物ID
@@ -121,6 +138,7 @@ public:
     virtual void joinLOT(qint64 id, bool arg) { Q_UNUSED(id) Q_UNUSED(arg) }
     /// 节奏风暴
     virtual void joinStorm(qint64 id) { Q_UNUSED(id) }
+    
     /// 模拟在线观看效果（带心跳的那种）
     virtual void startHeartConnection() {}
     virtual void stopHeartConnection() {}
@@ -144,6 +162,7 @@ public:
     virtual void processNewDayData() {}
     virtual void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
     virtual void localNotify(const QString& text, qint64 uid = 0);
+    virtual void showError(const QString& title, const QString& desc = "");
 
 public:
     /// 根据Url设置对应的Cookie

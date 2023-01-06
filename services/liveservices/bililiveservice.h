@@ -14,18 +14,22 @@ signals:
     
 
 public:
+    /// 数据操作
     void readConfig() override;
     void releaseLiveData(bool prepare) override;
 
+    /// 直播间连接
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;
     void startMsgLoop() override;
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
     void sendHeartPacket() override;
 
+    /// 直播间接口
     void getRoomCover(const QString &url) override;
     void getUpInfo(const QString &uid) override;
     void updateExistGuards(int page = 0) override;
+    void getGuardCount(const LiveDanmaku &danmaku) override;
     void updateOnlineGoldRank() override;
     void getCookieAccount() override;
     void getGiftList() override;
@@ -33,7 +37,9 @@ public:
     void doSign() override;
     void joinLOT(qint64 id, bool follow) override;
     void joinStorm(qint64 id) override;
+    
 
+    /// 大乱斗
     void getRoomBattleInfo() override;
     void updateWinningStreak(bool emitWinningStreak) override;
     void getPkInfoById(const QString &roomId, const QString &pkId) override;
@@ -41,14 +47,17 @@ public:
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences) override;
     void connectPkSocket() override;
 
+    /// 长链心跳
     void startHeartConnection() override;
     void stopHeartConnection() override;
     void sendXliveHeartBeatE();
     void sendXliveHeartBeatX();
     void sendXliveHeartBeatX(QString s, qint64 timestamp);
 
+    /// 一些事件
     void processNewDayData() override;
 
+    /// 解包
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
 
@@ -56,6 +65,14 @@ public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
 
     void slotPkBinaryMessageReceived(const QByteArray &message) override;
+
+    /// 用户管理
+    void appointAdmin(qint64 uid) override;
+    void dismissAdmin(qint64 uid) override;
+    void addBlockUser(qint64 uid, QString roomId, int hour) override;
+    void delBlockUser(qint64 uid, QString roomId) override;
+    void delRoomBlockUser(qint64 id) override;
+    void refreshBlockList() override;
     
 private:
     // 直播心跳

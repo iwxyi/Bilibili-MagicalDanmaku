@@ -450,6 +450,20 @@ void BiliLiveService::updateExistGuards(int page)
 }
 
 /**
+ * 有新上船后调用（不一定是第一次，可能是掉船了）
+ * @param danmaku 发送信号的参数
+ */
+void BiliLiveService::getGuardCount(const LiveDanmaku &danmaku)
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
+    get(url, [=](MyJson json) {
+        int count = json.data().o("guard_info").i("count");
+        LiveDanmaku ld = danmaku;
+        ld.setNumber(count);
+        triggerCmdEvent("NEW_GUARD_COUNT", ld.with(json.data()), true);
+    });
+}
+/**
  * 获取高能榜上的用户（仅取第一页就行了）
  */
 void BiliLiveService::updateOnlineGoldRank()
@@ -1247,6 +1261,175 @@ void BiliLiveService::sendXliveHeartBeatX(QString s, qint64 timestamp)
         if (todayHeartMinite >= us->getHeartTimeCount)
             if (xliveHeartBeatTimer)
                 xliveHeartBeatTimer->stop();
+    });
+}
+
+void BiliLiveService::appointAdmin(qint64 uid)
+{
+    if (ac->upUid != ac->cookieUid)
+    {
+        showError("房管操作", "仅主播可用");
+        return ;
+    }
+    post("https://api.live.bilibili.com/xlive/web-ucenter/v1/roomAdmin/appoint",
+         ("admin=" + snum(uid) + "&admin_level=1&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
+         [=](MyJson json) {
+        qInfo() << "任命房管：" << json;
+        if (json.code() != 0)
+        {
+            showError("任命房管", json.msg());
+            return ;
+        }
+
+    });
+}
+
+void BiliLiveService::dismissAdmin(qint64 uid)
+{
+    if (ac->upUid != ac->cookieUid)
+    {
+        showError("房管操作", "仅主播可用");
+        return ;
+    }
+    post("https://api.live.bilibili.com/xlive/app-ucenter/v1/roomAdmin/dismiss",
+         ("uid=" + snum(uid) + "&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=").toLatin1(),
+         [=](MyJson json) {
+        qInfo() << "取消任命房管：" << json;
+        if (json.code() != 0)
+        {
+            showError("取消任命房管", json.msg());
+            return ;
+        }
+    });
+}
+
+void BiliLiveService::addBlockUser(qint64 uid, QString roomId, int hour)
+{
+    if(ac->browserData.isEmpty())
+    {
+        showError("请先设置登录信息");
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("禁言用户 -> " + snum(uid) + " " + snum(hour) + " 小时");
+        return ;
+    }
+
+    QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
+    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token);
+    qInfo() << "禁言：" << uid << hour;
+    post(url, data.toStdString().data(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("禁言失败", json.value("message").toString());
+            return ;
+        }
+        QJsonObject d = json.value("data").toObject();
+        qint64 id = static_cast<qint64>(d.value("id").toDouble());
+        us->userBlockIds[uid] = id;
+    });
+}
+
+void BiliLiveService::delBlockUser(qint64 uid, QString roomId)
+{
+    if(ac->browserData.isEmpty())
+    {
+        showError("请先设置登录信息");
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("取消禁言 -> " + snum(uid));
+        return ;
+    }
+
+    if (us->userBlockIds.contains(uid))
+    {
+        qInfo() << "取消禁言：" << uid << "  id =" << us->userBlockIds.value(uid);
+        delRoomBlockUser(us->userBlockIds.value(uid));
+        us->userBlockIds.remove(uid);
+        return ;
+    }
+
+    // 获取直播间的网络ID，再取消屏蔽
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid=" + roomId + "&page=1";
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("取消禁言", "您没有权限");
+            else
+                showError("取消禁言", json.value("message").toString());
+            return ;
+        }
+        QJsonArray list = json.value("data").toArray();
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject obj = val.toObject();
+            if (static_cast<qint64>(obj.value("uid").toDouble()) == uid)
+            {
+                delRoomBlockUser(static_cast<qint64>(obj.value("id").toDouble())); // 获取房间ID
+                break;
+            }
+        }
+    });
+}
+
+void BiliLiveService::delRoomBlockUser(qint64 id)
+{
+    QString url = "https://api.live.bilibili.com/banned_service/v1/Silent/del_room_block_user";
+    QString data = QString("id=%1&roomid=%2&csrf_token=%4&csrd=%5&visit_id=")
+                    .arg(id).arg(ac->roomId).arg(ac->csrf_token).arg(ac->csrf_token);
+
+    post(url, data.toStdString().data(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("取消禁言", json.value("message").toString());
+            return ;
+        }
+
+        // if (userBlockIds.values().contains(id))
+        //    userBlockIds.remove(userBlockIds.key(id));
+    });
+}
+
+void BiliLiveService::refreshBlockList()
+{
+    if (ac->browserData.isEmpty())
+    {
+        showError("请先设置用户数据");
+        return ;
+    }
+
+    // 刷新被禁言的列表
+    QString url = "https://api.live.bilibili.com/liveact/ajaxGetBlockList?roomid="+ac->roomId+"&page=1";
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            qWarning() << "获取禁言：" << json.value("message").toString();
+            /* if (code == 403)
+                showError("获取禁言", "您没有权限");
+            else
+                showError("获取禁言", json.value("message").toString()); */
+            return ;
+        }
+        QJsonArray list = json.value("data").toArray();
+        us->userBlockIds.clear();
+        foreach (QJsonValue val, list)
+        {
+            QJsonObject obj = val.toObject();
+            qint64 id = static_cast<qint64>(obj.value("id").toDouble());
+            qint64 uid = static_cast<qint64>(obj.value("uid").toDouble());
+            QString uname = obj.value("uname").toString();
+            us->userBlockIds.insert(uid, id);
+//            qInfo() << "已屏蔽:" << id << uname << uid;
+        }
     });
 }
 

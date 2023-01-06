@@ -42,6 +42,9 @@ public:
     bool autoJoinLOT = false;        // 自动参加天选
     bool calculateDailyData = false; // 统计每天数据
 
+    bool localMode = false;         // 本地调试模式
+    bool debugPrint = false;         // 调试输出模式
+
     QString getLocalNickname(qint64 uid) const
     {
         if (localNicknames.contains(uid))
