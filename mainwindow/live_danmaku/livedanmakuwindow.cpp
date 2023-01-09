@@ -1216,6 +1216,7 @@ void LiveDanmakuWindow::showMenu()
 
     if (uid != 0)
     {
+        actionCopyUid->setText("复制UID:" + snum(uid));
         if (danmaku.isAdmin())
             actionUserInfo->setText("房管主页");
         else if (danmaku.getGuard() == 1)
@@ -1295,6 +1296,7 @@ void LiveDanmakuWindow::showMenu()
     }
     else // 包括 item == nullptr
     {
+        actionCopyUid->setText("复制UID");
         actionUserInfo->setEnabled(false);
         actionCopyUid->setEnabled(false);
         actionHistory->setEnabled(false);

@@ -938,7 +938,6 @@ void BiliLiveService::getPkInfoById(const QString &roomId, const QString &pkId)
 
         pkTimer->start();
 
-
         qint64 currentTime = QDateTime::currentSecsSinceEpoch();
         // 已经开始大乱斗
         if (currentTime > pkStartTime) // !如果是刚好开始，可能不能运行下面的，也可能不会触发"PK_START"，不管了
@@ -1431,6 +1430,21 @@ void BiliLiveService::refreshBlockList()
 //            qInfo() << "已屏蔽:" << id << uname << uid;
         }
     });
+}
+
+void BiliLiveService::adjustDanmakuLongest()
+{
+    int longest = 20;
+
+    // UL等级：20级30字
+    if (ac->cookieULevel >= 20)
+        longest = qMax(longest, 30);
+
+    // 大航海：舰长20，提督/总督40
+    if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
+        longest = qMax(longest, 40);
+    
+    emit signalDanmakuLongestChanged(longest);
 }
 
 /**

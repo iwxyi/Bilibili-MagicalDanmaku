@@ -474,6 +474,8 @@ void MainWindow::syncMagicalRooms()
          "linux",
 #endif
          "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
+         "fans", snum(ac->currentFans), "guards", snum(ac->currentGuards.size()),
+         "area", ac->parentAreaName + "/" + ac->areaName,
          "randkey", ac->csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
         // 检测数组

@@ -10,7 +10,7 @@ public:
     /**
      * 变成圆角图片
      */
-    static QPixmap getRoundedPixmap(const QPixmap &pixmap)
+    static QPixmap getRoundedPixmap(const QPixmap &pixmap, int radius = 5)
     {
         QPixmap dest(pixmap.size());
         dest.fill(Qt::transparent);
@@ -19,7 +19,7 @@ public:
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
         QRect rect = QRect(0, 0, pixmap.width(), pixmap.height());
         QPainterPath path;
-        path.addRoundedRect(rect, 5, 5);
+        path.addRoundedRect(rect, radius, radius);
         painter.setClipPath(path);
         painter.drawPixmap(rect, pixmap);
         return dest;

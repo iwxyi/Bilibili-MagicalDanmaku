@@ -875,7 +875,7 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveRoomService::signalAutoAdjustDanmakuLongest, this, [=]{
         if (ui->adjustDanmakuLongestCheck->isChecked())
-            adjustDanmakuLongest();
+            liveService->adjustDanmakuLongest();
     });
 
     connect(liveService, &LiveRoomService::signalDanmuPopularChanged, this, [=](const QString& text){
@@ -914,6 +914,11 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveRoomService::signalHeartTimeNumberChanged, this, [=](int num, int minute) {
         ui->acquireHeartCheck->setToolTip("今日已领" + snum(num) + "个小心心(" + snum(minute) + "分钟)");
+    });
+    
+    connect(liveService, &LiveRoomService::signalDanmakuLongestChanged, this, [=](int length) {
+        ui->danmuLongestSpin->setValue(length);
+        on_danmuLongestSpin_editingFinished();
     });
 
     /// 信号传递
@@ -4231,7 +4236,7 @@ void MainWindow::getRobotInfo()
         MyJson data = json.data();
         ac->cookieULevel = data.o("user").i("user_level");
         if (ui->adjustDanmakuLongestCheck->isChecked())
-            adjustDanmakuLongest();
+            liveService->adjustDanmakuLongest();
     });
 }
 
@@ -16083,7 +16088,7 @@ void MainWindow::releaseLiveData(bool prepare)
 
         ac->cookieGuardLevel = 0;
         if (ui->adjustDanmakuLongestCheck->isChecked())
-            adjustDanmakuLongest();
+            liveService->adjustDanmakuLongest();
 
         for (int i = 0; i < ui->giftListWidget->count(); i++)
         {
@@ -16185,22 +16190,6 @@ QRect MainWindow::getScreenRect()
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenRect = screen->availableVirtualGeometry();
     return screenRect;
-}
-
-QPixmap MainWindow::toRoundedPixmap(QPixmap pixmap, int radius) const
-{
-    if (pixmap.isNull())
-        return pixmap;
-    QPixmap tmp(pixmap.size());
-    tmp.fill(Qt::transparent);
-    QPainter painter(&tmp);
-    painter.setRenderHints(QPainter::Antialiasing, true);
-    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
-    QPainterPath path;
-    path.addRoundedRect(0, 0, tmp.width(), tmp.height(), radius, radius);
-    painter.setClipPath(path);
-    painter.drawPixmap(0, 0, tmp.width(), tmp.height(), pixmap);
-    return tmp;
 }
 
 /**
@@ -16507,22 +16496,6 @@ void MainWindow::detectMedalUpgrade(LiveDanmaku danmaku)
             triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
         });
     });
-}
-
-/// 根据UL等级或者舰长自动调整字数
-void MainWindow::adjustDanmakuLongest()
-{
-    int longest = 20;
-    // UL等级：20级30字
-    if (ac->cookieULevel >= 20)
-        longest = qMax(longest, 30);
-
-    // 大航海：舰长20，提督/总督40
-    if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
-        longest = qMax(longest, 40);
-
-    ui->danmuLongestSpin->setValue(longest);
-    on_danmuLongestSpin_editingFinished();
 }
 
 void MainWindow::myLiveSelectArea(bool update)
@@ -19919,7 +19892,7 @@ void MainWindow::on_adjustDanmakuLongestCheck_clicked()
     us->setValue("danmaku/adjustDanmakuLongest", en);
     if (en)
     {
-        adjustDanmakuLongest();
+        liveService->adjustDanmakuLongest();
     }
 }
 

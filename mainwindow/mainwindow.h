@@ -920,14 +920,12 @@ private:
 
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
-    QPixmap toRoundedPixmap(QPixmap pixmap, int radius = 5) const;
 
     void switchMedalToUp(qint64 upId, int page = 1);
     void wearMedal(qint64 medalId);
     void sendPrivateMsg(qint64 uid, QString msg);
     void joinBattle(int type);
     void detectMedalUpgrade(LiveDanmaku danmaku);
-    void adjustDanmakuLongest();
     void myLiveSelectArea(bool update);
     void myLiveUpdateArea(QString area);
     void myLiveStartLive();

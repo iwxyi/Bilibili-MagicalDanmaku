@@ -73,6 +73,7 @@ public slots:
     void delBlockUser(qint64 uid, QString roomId) override;
     void delRoomBlockUser(qint64 id) override;
     void refreshBlockList() override;
+    void adjustDanmakuLongest() override;
     
 private:
     // 直播心跳

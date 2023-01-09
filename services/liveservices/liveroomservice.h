@@ -62,6 +62,7 @@ signals:
     void signalSignDescChanged(const QString& text);
     void signalLOTInfoChanged(const QString& text); // 天选等活动
     void signalLOTDescChanged(const QString& text);
+    void signalDanmakuLongestChanged(int length); // 弹幕长度
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -85,8 +86,10 @@ public slots:
     /// 通过身份码连接房间
     virtual void startConnectIdentityCode(const QString &code) { Q_UNUSED(code) }
 
+    /// 接收到 WS CMD 数据包
     virtual void slotBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
 
+    /// 接收到 PK 的 WS CMD 数据包
     virtual void slotPkBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
 
     /// 设置为管理员
@@ -103,6 +106,8 @@ public slots:
     virtual void delRoomBlockUser(qint64 id) { Q_UNUSED(id) }
     /// 刷新直播间禁言的用户
     virtual void refreshBlockList() {}
+    /// 根据UL等级或者舰长自动调整字数
+    virtual void adjustDanmakuLongest() {}
 
 public:
     /// 获取直播间信息
