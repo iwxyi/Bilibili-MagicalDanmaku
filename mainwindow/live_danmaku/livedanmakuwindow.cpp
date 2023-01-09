@@ -2691,7 +2691,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
         {
-            qWarning() << "用户信息返回结果不为0：" << json.value("message").toString();
+            qWarning() << "用户" << uid << "信息返回结果不为0：" << json.value("message").toString();
             if (json.value("message").toString().contains("拦截"))
             {
                 // 一分钟后再试

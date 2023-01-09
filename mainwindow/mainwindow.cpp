@@ -12698,6 +12698,44 @@ void MainWindow::handleMessage(QJsonObject json)
     {
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
+    else if (cmd == "LIKE_INFO_V3_CLICK")
+    {
+        /*{
+            "cmd": "LIKE_INFO_V3_CLICK",
+            "data": {
+                "contribution_info": {
+                    "grade": 0
+                },
+                "dmscore": 20,
+                "fans_medal": {
+                    "anchor_roomid": 0,
+                    "guard_level": 0,
+                    "icon_id": 0,
+                    "is_lighted": 0,
+                    "medal_color": 12478086,
+                    "medal_color_border": 12632256,
+                    "medal_color_end": 12632256,
+                    "medal_color_start": 12632256,
+                    "medal_level": 14,
+                    "medal_name": "猛男",
+                    "score": 45450,
+                    "special": "",
+                    "target_id": 183430
+                },
+                "identities": [
+                    1
+                ],
+                "like_icon": "https://i0.hdslb.com/bfs/live/23678e3d90402bea6a65251b3e728044c21b1f0f.png",
+                "like_text": "为主播点赞了",
+                "msg_type": 6,
+                "show_area": 0,
+                "uid": 308873328,
+                "uname": "Xiamuの",
+                "uname_color": ""
+            }
+        }*/
+        triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << json;
@@ -17952,7 +17990,14 @@ void MainWindow::addGuiGiftList(const LiveDanmaku &danmaku)
 
     // 先下载图片，然后进行设置
     // TODO: 这个URL的图片有些是不准确的
-    QString url = "http://openapi.zbmate.com/gift_icons/b/";
+    QString url;
+    if (pl->allGiftMap.contains(id))
+        url = pl->allGiftMap.value(id).getFaceUrl();
+    if (url.isEmpty())
+    {
+        url = "http://openapi.zbmate.com/gift_icons/b/";
+        qWarning() << "无法获取礼物图片：" << id << "   使用接口" << url << "代替";
+    }
     if (danmaku.isGuard()) // 舰长礼物的话，是静态的图片
     {
         int guard = danmaku.getGuard();

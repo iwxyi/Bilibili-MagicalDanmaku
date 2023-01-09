@@ -529,6 +529,11 @@ public:
                 && this->text == another.text;
     }
 
+    void setFaceUrl(const QString& url)
+    {
+        this->faceUrl = url;
+    }
+
     QString getText() const
     {
         return text;
@@ -806,6 +811,11 @@ public:
         return retry > 0;
     }
 
+    QString getFaceUrl() const
+    {
+        return faceUrl;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -823,6 +833,7 @@ private:
     int iphone = 0; // 手机实名
     bool no_reply = false; // 不需要处理的弹幕
     bool auto_send = false; // 自己发送的弹幕，同样也不需要处理
+    QString faceUrl;
 
     QString anchor_roomid;
     int medal_level = 0;

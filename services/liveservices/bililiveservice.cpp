@@ -600,8 +600,10 @@ void BiliLiveService::getGiftList()
                 QString coinType = info.s("coin_type");
                 int coin = info.i("price");
                 QString desc = info.s("desc");
+                QString img = info.s("img_basic");
 
                 LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
+                gift.setFaceUrl(img);
                 gift.with(info);
                 pl->allGiftMap[id] = gift;
             }
