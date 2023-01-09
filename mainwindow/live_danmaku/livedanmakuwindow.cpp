@@ -615,7 +615,7 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
             auto widget = listWidget->itemWidget(item);
             item->setData(DANMAKU_STRING_ROLE, ""); // 清空，免得重复删除到头一个上面
 
-            if (enableAnimation)
+            if (enableAnimation && !us->closeGui)
             {
                 if (!widget)
                 {
@@ -937,7 +937,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     item->setSizeHint(widget->sizeHint());
 
     // 动画
-    if (enableAnimation)
+    if (enableAnimation && !us->closeGui)
     {
         QPropertyAnimation* ani = new QPropertyAnimation(widget, "size");
         ani->setStartValue(QSize(widget->width(), oldHeight));
@@ -1216,7 +1216,7 @@ void LiveDanmakuWindow::showMenu()
 
     if (uid != 0)
     {
-        actionCopyUid->setText("复制UID:" + snum(uid));
+        actionCopyUid->setText("复制UID：" + snum(uid));
         if (danmaku.isAdmin())
             actionUserInfo->setText("房管主页");
         else if (danmaku.getGuard() == 1)
@@ -2242,7 +2242,10 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
         ani->setEndValue(end);
         ani->setDuration(duration);
         ani->setEasingCurve(curve);
-        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        connect(ani, &QPropertyAnimation::stateChanged, ani, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+            if (newState != QAbstractAnimation::Running)
+                ani->deleteLater();
+        });
         ani->start();
     };
 
@@ -2644,7 +2647,7 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
     setItemWidgetText(item);
 
-    if (false && enableAnimation)
+    if (false && enableAnimation && us->closeGui)
     {
         QPropertyAnimation* ani = new QPropertyAnimation(label, "size");
         ani->setStartValue(QSize(label->width(), ht));
@@ -2658,9 +2661,13 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
             if (scrollEnd)
                 listWidget->scrollToBottom();
         });
-        connect(ani, &QPropertyAnimation::finished, label, [=]{
-            if (scrollEnd)
-                listWidget->scrollToBottom();
+        connect(ani, &QPropertyAnimation::stateChanged, label, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+            if (newState != QAbstractAnimation::Running)
+            {
+                if (scrollEnd)
+                    listWidget->scrollToBottom();
+            }
+            ani->deleteLater();
         });
         ani->start();
     }
@@ -2668,6 +2675,8 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
 void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
+    if (us->closeGui) // 关闭界面效果不显示头像
+        return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
@@ -2864,7 +2873,10 @@ void LiveDanmakuWindow::selectBgPicture()
     ani->setEndValue(pictureAlpha);
     ani->setDuration(800);
     ani->setEasingCurve(QEasingCurve::InOutSine);
-    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    connect(ani, &QPropertyAnimation::stateChanged, ani, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+        if (newState != QAbstractAnimation::Running)
+            ani->deleteLater();
+    });
     ani->start();
 
     ani = new QPropertyAnimation(this, "prevAlpha");
@@ -2872,7 +2884,10 @@ void LiveDanmakuWindow::selectBgPicture()
     ani->setEndValue(0);
     ani->setDuration(800);
     ani->setEasingCurve(QEasingCurve::InOutSine);
-    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    connect(ani, &QPropertyAnimation::stateChanged, ani, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+        if (newState != QAbstractAnimation::Running)
+            ani->deleteLater();
+    });
     ani->start();
 }
 
