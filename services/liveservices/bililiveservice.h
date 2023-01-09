@@ -69,7 +69,7 @@ public slots:
     /// 用户管理
     void appointAdmin(qint64 uid) override;
     void dismissAdmin(qint64 uid) override;
-    void addBlockUser(qint64 uid, QString roomId, int hour) override;
+    void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) override;
     void delBlockUser(qint64 uid, QString roomId) override;
     void delRoomBlockUser(qint64 id) override;
     void refreshBlockList() override;

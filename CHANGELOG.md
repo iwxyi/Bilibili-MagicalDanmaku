@@ -1,3 +1,16 @@
+### v4.9.0 [修复bug、性能优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.9.0)
+
+这个版本开始彻底重构代码，可能会出现一些功能无效的情况，请及时反馈
+
+- 修复直播流视频无法加载的问题
+- 修复无法录播的问题
+- “关闭界面效果”增加关闭弹幕动画
+- 修复动画可能导致内存泄漏的问题
+
+
+
+
+
 ### v4.8.3 [修复连接](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.8.3)
 
 - 优化点歌姬缓存路径至系统缓存

@@ -2,6 +2,7 @@
 #include "bililiveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
+#include "stringutil.h"
 
 BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 {
@@ -1302,7 +1303,7 @@ void BiliLiveService::dismissAdmin(qint64 uid)
     });
 }
 
-void BiliLiveService::addBlockUser(qint64 uid, QString roomId, int hour)
+void BiliLiveService::addBlockUser(qint64 uid, QString roomId, int hour, QString msg)
 {
     if(ac->browserData.isEmpty())
     {
@@ -1317,8 +1318,8 @@ void BiliLiveService::addBlockUser(qint64 uid, QString roomId, int hour)
     }
 
     QString url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_block_user";
-    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=")
-                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token);
+    QString data = QString("roomid=%1&block_uid=%2&hour=%3&csrf_token=%4&csrd=%5&visit_id=&msg=%6")
+                    .arg(roomId).arg(uid).arg(hour).arg(ac->csrf_token).arg(ac->csrf_token).arg(urlEncode(msg));
     qInfo() << "禁言：" << uid << hour;
     post(url, data.toStdString().data(), [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
@@ -1329,6 +1330,7 @@ void BiliLiveService::addBlockUser(qint64 uid, QString roomId, int hour)
         QJsonObject d = json.value("data").toObject();
         qint64 id = static_cast<qint64>(d.value("id").toDouble());
         us->userBlockIds[uid] = id;
+        qInfo() << "禁言成功：" << uid;
     });
 }
 
@@ -1391,6 +1393,7 @@ void BiliLiveService::delRoomBlockUser(qint64 id)
             showError("取消禁言", json.value("message").toString());
             return ;
         }
+        qInfo() << "取消禁言成功：" << id;
 
         // if (userBlockIds.values().contains(id))
         //    userBlockIds.remove(userBlockIds.key(id));

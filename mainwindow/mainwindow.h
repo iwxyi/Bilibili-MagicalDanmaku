@@ -257,7 +257,7 @@ private slots:
 
     void showDiangeHistory();
 
-    void eternalBlockUser(qint64 uid, QString uname);
+    void eternalBlockUser(qint64 uid, QString uname, QString msg);
     void cancelEternalBlockUser(qint64 uid);
     void cancelEternalBlockUser(qint64 uid, qint64 roomId);
     void cancelEternalBlockUserAndUnblock(qint64 uid);

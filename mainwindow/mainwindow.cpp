@@ -1783,7 +1783,10 @@ void MainWindow::switchPageAnimation(int page)
         ani->setEndValue(end);
         ani->setEasingCurve(curve);
         ani->setDuration(duration);
-        connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+        connect(ani, &QPropertyAnimation::stateChanged, ani, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+            if (newState != QAbstractAnimation::Running)
+                ani->deleteLater();
+        });
         ani->start();
     };
 
@@ -4945,7 +4948,10 @@ void MainWindow::setRoomCover(const QPixmap& pixmap)
     connect(ani, &QPropertyAnimation::valueChanged, this, [=](const QVariant& val){
         setRoomThemeByCover(val.toDouble());
     });
-    connect(ani, SIGNAL(finished()), ani, SLOT(deleteLater()));
+    connect(ani, &QPropertyAnimation::stateChanged, ani, [=](QAbstractAnimation::State newState, QAbstractAnimation::State oldState){
+        if (newState != QAbstractAnimation::Running)
+            ani->deleteLater();
+    });
     ani->start();
 
     // 设置主要界面主题
@@ -7504,9 +7510,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
         LiveDanmaku danmaku = blockedQueue.takeLast();
         liveService->delBlockUser(danmaku.getUid());
-        if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+        if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), "")))
         {
-            us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+            us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), ""));
             saveEternalBlockUsers();
         }
         if (response)
@@ -7543,9 +7549,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), "")))
                 {
-                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), ""));
                     saveEternalBlockUsers();
                 }
 
@@ -7566,9 +7572,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong())))
+                if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), "")))
                 {
-                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong()));
+                    us->eternalBlockUsers.removeOne(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), ""));
                     saveEternalBlockUsers();
                 }
 
@@ -7595,7 +7601,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
             QString nick = danmaku.getNickname();
             if (nick.contains(nickname))
             {
-                eternalBlockUser(danmaku.getUid(), danmaku.getNickname());
+                eternalBlockUser(danmaku.getUid(), danmaku.getNickname(), danmaku.getText());
                 sendNotifyMsg(">已永久禁言：" + nick, true);
                 return ;
             }
@@ -7722,6 +7728,17 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 禁言
     if (msg.contains("block"))
     {
+        re = RE("block\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            int hour = caps.at(2).toInt();
+            QString msg = caps.at(3);
+            liveService->addBlockUser(uid, hour, msg);
+            return true;
+        }
         re = RE("block\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
@@ -7729,7 +7746,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = caps.at(2).toInt();
-            liveService->addBlockUser(uid, hour);
+            liveService->addBlockUser(uid, hour, "");
             return true;
         }
         re = RE("block\\s*\\(\\s*(\\d+)\\s*\\)");
@@ -7739,7 +7756,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             int hour = ui->autoBlockTimeSpin->value();
-            liveService->addBlockUser(uid, hour);
+            liveService->addBlockUser(uid, hour, "");
             return true;
         }
     }
@@ -7761,6 +7778,17 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 永久禁言
     if (msg.contains("eternalBlock"))
     {
+        re = RE("eternalBlock\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*,\\s*(.+*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            QString uname = caps.at(2);
+            QString msg = caps.at(3);
+            eternalBlockUser(uid, uname, msg);
+            return true;
+        }
         re = RE("eternalBlock\\s*\\(\\s*(\\d+)\\s*,\\s*(\\S+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
@@ -7768,7 +7796,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             qint64 uid = caps.at(1).toLongLong();
             QString uname = caps.at(2);
-            eternalBlockUser(uid, uname);
+            eternalBlockUser(uid, uname, "");
             return true;
         }
     }
@@ -10934,7 +10962,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     if (!isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku)) // 阻止自动禁言过滤器
                     {
                         // 拉黑
-                        liveService->addBlockUser(uid, ui->autoBlockTimeSpin->value());
+                        liveService->addBlockUser(uid, ui->autoBlockTimeSpin->value(), msg);
                         blocked = true;
 
                         // 通知
@@ -14432,17 +14460,17 @@ void MainWindow::showDiangeHistory()
     QMessageBox::information(this, "点歌历史", text);
 }
 
-void MainWindow::eternalBlockUser(qint64 uid, QString uname)
+void MainWindow::eternalBlockUser(qint64 uid, QString uname, QString msg)
 {
-    if (us->eternalBlockUsers.contains(EternalBlockUser(uid, ac->roomId.toLongLong())))
+    if (us->eternalBlockUsers.contains(EternalBlockUser(uid, ac->roomId.toLongLong(), msg)))
     {
         localNotify("该用户已经在永久禁言中");
         return ;
     }
 
-    liveService->addBlockUser(uid, 720);
+    liveService->addBlockUser(uid, 720, msg);
 
-    us->eternalBlockUsers.append(EternalBlockUser(uid, ac->roomId.toLongLong(), uname, ac->upName, ac->roomTitle, QDateTime::currentSecsSinceEpoch()));
+    us->eternalBlockUsers.append(EternalBlockUser(uid, ac->roomId.toLongLong(), uname, ac->upName, ac->roomTitle, QDateTime::currentSecsSinceEpoch(), msg));
     saveEternalBlockUsers();
     qInfo() << "添加永久禁言：" << uname << "    当前人数：" << us->eternalBlockUsers.size();
 }
@@ -14454,7 +14482,7 @@ void MainWindow::cancelEternalBlockUser(qint64 uid)
 
 void MainWindow::cancelEternalBlockUser(qint64 uid, qint64 roomId)
 {
-    EternalBlockUser user(uid, roomId);
+    EternalBlockUser user(uid, roomId, "");
     if (!us->eternalBlockUsers.contains(user))
         return ;
 
@@ -14504,7 +14532,7 @@ void MainWindow::detectEternalBlockUsers()
         // 该补上禁言啦
         blocked = true;
         qInfo() << "永久禁言：重新禁言用户" << user.uid << user.uname << user.time << "->" << currentSecond;
-        liveService->addBlockUser(user.uid, snum(user.roomId), MAX_BLOCK_HOUR);
+        liveService->addBlockUser(user.uid, snum(user.roomId), MAX_BLOCK_HOUR, user.msg);
 
         user.time = currentSecond;
         us->eternalBlockUsers.removeFirst();
@@ -14741,9 +14769,9 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
         connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
-        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int)), liveService, SLOT(addBlockUser(qint64, int)));
+        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int, QString)), liveService, SLOT(addBlockUser(qint64, int, QString)));
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
-        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString)), this, SLOT(eternalBlockUser(qint64,QString)));
+        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
         connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
         connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));

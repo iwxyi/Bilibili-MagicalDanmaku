@@ -97,8 +97,8 @@ public slots:
     /// 取消管理员
     virtual void dismissAdmin(qint64 uid) { Q_UNUSED(uid) }
     /// 禁言
-    virtual void addBlockUser(qint64 uid, int hour) { addBlockUser(uid, ac->roomId, hour); }
-    virtual void addBlockUser(qint64 uid, QString roomId, int hour) { Q_UNUSED(uid) Q_UNUSED(hour) Q_UNUSED(roomId) }
+    virtual void addBlockUser(qint64 uid, int hour, QString msg) { addBlockUser(uid, ac->roomId, hour, msg); }
+    virtual void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) { Q_UNUSED(uid) Q_UNUSED(hour) Q_UNUSED(roomId) Q_UNUSED(msg) }
     /// 取消禁言
     virtual void delBlockUser(qint64 uid) { delBlockUser(uid, ac->roomId); }
     virtual void delBlockUser(qint64 uid, QString roomId) { Q_UNUSED(uid) Q_UNUSED(roomId) }

@@ -14,15 +14,16 @@ struct EternalBlockUser
     QString upName;
     QString roomTitle;
     qint64 time = 0; // 上次禁言的时间
+    QString msg;
 
     EternalBlockUser()
     {}
 
-    EternalBlockUser(qint64 uid, qint64 roomId) : uid(uid), roomId(roomId)
+    EternalBlockUser(qint64 uid, qint64 roomId, QString msg) : uid(uid), roomId(roomId), msg(msg)
     {}
 
-    EternalBlockUser(qint64 uid, qint64 roomId, QString name, QString upName, QString title, qint64 time)
-        : uid(uid), roomId(roomId), uname(name), upName(upName), roomTitle(title), time(time)
+    EternalBlockUser(qint64 uid, qint64 roomId, QString name, QString upName, QString title, qint64 time, QString msg)
+        : uid(uid), roomId(roomId), uname(name), upName(upName), roomTitle(title), time(time), msg(msg)
     {}
 
     static EternalBlockUser fromJson(QJsonObject json)
@@ -34,6 +35,7 @@ struct EternalBlockUser
         user.upName = json.value("upName").toString();
         user.roomTitle = json.value("roomTitle").toString();
         user.time = static_cast<qint64>(json.value("time").toDouble());
+        user.msg = json.value("msg").toString();
         return user;
     }
 
@@ -46,6 +48,7 @@ struct EternalBlockUser
         json.insert("upName", upName);
         json.insert("roomTitle", roomTitle);
         json.insert("time", time);
+        json.insert("msg", msg);
         return json;
     }
 

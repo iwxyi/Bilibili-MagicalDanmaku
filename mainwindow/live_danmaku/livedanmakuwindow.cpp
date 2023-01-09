@@ -1356,7 +1356,7 @@ void LiveDanmakuWindow::showMenu()
         {
             menu->addAction(actionAddBlockTemp);
             menu->addAction(actionAddBlock);
-            if (us->eternalBlockUsers.contains(EternalBlockUser(uid, roomId)))
+            if (us->eternalBlockUsers.contains(EternalBlockUser(uid, roomId, "")))
                 menu->addAction(actionCancelEternalBlock);
             else
                 menu->addAction(actionEternalBlock);
@@ -1861,13 +1861,13 @@ void LiveDanmakuWindow::showMenu()
         QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(uid)+"/video"));
     });
     connect(actionAddBlockTemp, &QAction::triggered, this, [=]{
-        emit signalAddBlockUser(uid, 1);
+        emit signalAddBlockUser(uid, 1, msg);
     });
     connect(actionAddBlock, &QAction::triggered, this, [=]{
-        emit signalAddBlockUser(uid, 720);
+        emit signalAddBlockUser(uid, 720, msg);
     });
     connect(actionEternalBlock, &QAction::triggered, this, [=]{
-        emit signalEternalBlockUser(uid, danmaku.getNickname());
+        emit signalEternalBlockUser(uid, danmaku.getNickname(), msg);
     });
     connect(actionCancelEternalBlock, &QAction::triggered, this, [=]{
         emit signalCancelEternalBlockUser(uid);
@@ -2271,7 +2271,7 @@ void LiveDanmakuWindow::showFastBlock(qint64 uid, QString msg)
     });
     connect(btn, &QPushButton::clicked, btn, [=]{
         disconnect(btn, SIGNAL(clicked()));
-        emit signalAddBlockUser(uid, 720);
+        emit signalAddBlockUser(uid, 720, msg);
         timer->setInterval(100);
         timer->start();
     });
