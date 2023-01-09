@@ -1988,7 +1988,7 @@ MainWindow::~MainWindow()
         qInfo() << "检测到已下载的安装包，进行更新";
         QString appPath = QApplication::applicationDirPath();
         QProcess process;
-        process.startDetached(UPDATE_TOOL_NAME, { "-u", pkgPath, appPath, "-d", "-4"} );
+        process.startDetached(UPDATE_TOOL_NAME, { "-u", pkgPath, appPath, "-d", "-8", "-4"} );
     }
 }
 
