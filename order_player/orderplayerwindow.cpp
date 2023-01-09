@@ -529,9 +529,24 @@ void OrderPlayerWindow::slotSearchAndAutoAppend(QString key, QString by)
         key = "伴奏 " + key;
     }
 
+    // 前面有队列，但是时间很久也没删除，肯定是出问题了
+    if (userOrderSongQueue.size() && QDateTime::currentSecsSinceEpoch() - prevOrderTimestamp > 10)
+    {
+        userOrderSongQueue.clear();
+    }
+
+    // 进入队列
     userOrderSongQueue.append(qMakePair(key, by));
-    if (userOrderSongQueue.size() == 1)
+    if (userOrderSongQueue.size() == 1) // 只有自己，说明没有正在搜索
+    {
         searchMusic(key, by, true);
+    }
+    else
+    {
+        qDebug() << "当前点歌队列：" << userOrderSongQueue;
+    }
+    prevOrderTimestamp = QDateTime::currentSecsSinceEpoch();
+
 }
 
 /**
@@ -905,7 +920,7 @@ void OrderPlayerWindow::parseSearchResult(QString key, QString addBy, bool notif
         else
             appendOrderSongs(SongList{song});
 
-        // 发送点歌成功的信号
+        // 发送点歌成功的信号（此时还没开始下载）
         if (notify)
         {
             qint64 sumLatency = isNotPlaying() ? 0 : player->duration() - player->position();
@@ -4425,6 +4440,7 @@ void OrderPlayerWindow::on_settingsButton_clicked()
     playMenu->split()->addAction("清理缓存", [=]{
         clearDownloadFiles();
         userOrderSongQueue.clear();
+        prevOrderTimestamp = 0;
     })->uncheck()->tooltip("清理已经下载的所有歌曲，腾出空间\n当前点歌队列：" + snum(userOrderSongQueue.size()));
 
     FacileMenu* stMenu = menu->addMenu("显示");
@@ -4590,14 +4606,17 @@ void OrderPlayerWindow::stopLoading()
 
 void OrderPlayerWindow::startOrderSearching()
 {
-
+    prevOrderTimestamp = QDateTime::currentSecsSinceEpoch();
 }
 
 void OrderPlayerWindow::stopOrderSearching()
 {
     // 结束本次搜索
     if (userOrderSongQueue.size())
-        userOrderSongQueue.removeFirst();
+    {
+        auto info = userOrderSongQueue.takeFirst();
+        qInfo() << "结束用户点歌：" << info.first << info.second;
+    }
     insertOrderOnce = false;
 
     // 进行下一次的搜索
@@ -4605,6 +4624,7 @@ void OrderPlayerWindow::stopOrderSearching()
     {
         QString key = userOrderSongQueue.first().first;
         QString by = userOrderSongQueue.first().second;
+        qInfo() << "开始下一位用户点歌：" << key << by;
         searchMusic(key, by, true);
     }
 }

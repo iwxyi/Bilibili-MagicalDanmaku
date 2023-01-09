@@ -3386,6 +3386,17 @@ void MainWindow::on_testDanmakuButton_clicked()
         int* p = nullptr;
         *p = 1;
     }
+    else if (text == "测试批量点歌")
+    {
+        if (musicWindow)
+        {
+            musicWindow->slotSearchAndAutoAppend("1", "测试用户");
+            musicWindow->slotSearchAndAutoAppend("2", "测试用户");
+            musicWindow->slotSearchAndAutoAppend("3", "测试用户");
+            musicWindow->slotSearchAndAutoAppend("4", "测试用户");
+            musicWindow->slotSearchAndAutoAppend("5", "测试用户");
+        }
+    }
     else
     {
         appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
