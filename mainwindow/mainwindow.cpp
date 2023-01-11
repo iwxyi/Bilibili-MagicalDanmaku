@@ -1048,7 +1048,9 @@ void MainWindow::readConfig()
 {
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
-    us->closeGui = us->value("mainwindow/closeGui", false).toBool();
+
+    // 界面效果
+    ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 
     // 标签组
     int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
@@ -2128,11 +2130,12 @@ void MainWindow::removeTimeoutDanmaku()
     if (pushCmdsFile && liveService->roomDanmakus.size() < 1000) // 不移除弹幕
         return ;
 
-    // 移除过期队列
+    // 移除过期队列，单位：毫秒
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     qint64 removeTime = timestamp - removeDanmakuInterval;
-    if (liveService->roomDanmakus.size())
+    for (int i = 0; i < liveService->roomDanmakus.size(); i++)
     {
+        auto danmaku = liveService->roomDanmakus.at(i);
         QDateTime dateTime = liveService->roomDanmakus.first().getTimeline();
         if (dateTime.toMSecsSinceEpoch() < removeTime)
         {
@@ -2147,6 +2150,7 @@ void MainWindow::removeTimeoutDanmaku()
     {
         auto danmaku = liveService->roomDanmakus.at(i);
         auto type = danmaku.getMsgType();
+        // 提示类型
         if (type == MSG_ATTENTION || type == MSG_WELCOME || type == MSG_FANS
                 || (type == MSG_GIFT && (!danmaku.isGoldCoin() || danmaku.getTotalCoin() < 1000))
                 || (type == MSG_DANMAKU && danmaku.isNoReply())
@@ -2158,8 +2162,12 @@ void MainWindow::removeTimeoutDanmaku()
             {
                 liveService->roomDanmakus.removeAt(i--);
                 oldLiveDanmakuRemoved(danmaku);
+                // break; // 不break，就是一次性删除多个
             }
-            // break; // 不break，就是一次性删除多个
+            else
+            {
+                break;
+            }
         }
     }
 }
