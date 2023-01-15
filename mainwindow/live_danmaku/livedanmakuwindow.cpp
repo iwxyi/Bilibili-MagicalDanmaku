@@ -649,6 +649,8 @@ void LiveDanmakuWindow::slotOldLiveDanmakuRemoved(LiveDanmaku danmaku)
                 widget->deleteLater();
                 if (item == currentItem)
                     listWidget->clearSelection();
+                if (scrollEnd)
+                    listWidget->scrollToBottom();
             }
             return ;
         }
