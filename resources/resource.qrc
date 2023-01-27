@@ -178,7 +178,6 @@
         <file alias="warm_wish">documents/warm_wish.txt</file>
         <file alias="qq_qrcode">documents/qq_qrcode.png</file>
         <file alias="server_urls">documents/server_urls.txt</file>
-        <file alias="kk">documents/k.key</file>
         <file alias="translation_events">documents/translation_events.txt</file>
         <file alias="sql">documents/sql.txt</file>
         <file>resource.rc</file>

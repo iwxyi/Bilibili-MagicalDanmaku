@@ -67,6 +67,7 @@ void DBBrowser::on_execButton_clicked()
     if (cursor.hasSelection()) // 选中代码
     {
         code = cursor.selectedText();
+        code = code.replace(" \n", " ").replace("\n", " "); // 允许多行
     }
     else // 当前行
     {
