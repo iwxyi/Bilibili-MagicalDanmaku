@@ -402,6 +402,7 @@ private:
     bool insertOrderOnce = false; // 插入到前面
     QTimer* searchingOverTimeTimer;
     QList<QPair<QString, QString>> userOrderSongQueue;
+    qint64 prevOrderTimestamp = 0; // 用户点歌时间（避免上一次太久导致卡住）
     QTimer* notifyTimer;
 
     // 音乐账号

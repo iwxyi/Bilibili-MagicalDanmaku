@@ -83,9 +83,9 @@ signals:
     void signalSendMsg(QString msg);
     void signalSendMsgToPk(QString msg);
     void signalMarkUser(qint64 uid);
-    void signalAddBlockUser(qint64 uid, int hour);
+    void signalAddBlockUser(qint64 uid, int hour, QString msg);
     void signalDelBlockUser(qint64 uid);
-    void signalEternalBlockUser(qint64 uid, QString uname);
+    void signalEternalBlockUser(qint64 uid, QString uname, QString msg);
     void signalCancelEternalBlockUser(qint64 uid);
     void signalChangeWindowMode();
     void signalAIReplyed(QString msg, qint64 uid);

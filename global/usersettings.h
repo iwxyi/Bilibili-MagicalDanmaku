@@ -2,7 +2,7 @@
 #define USERSETTINGS_H
 
 #include "mysettings.h"
-class EternalBlockUser;
+#include "externalblockuser.h"
 
 class UserSettings : public MySettings
 {
@@ -24,13 +24,33 @@ public:
     QList<qint64> notWelcomeUsers; // 不自动欢迎的用户（某些领导、黑粉）
     QList<qint64> notReplyUsers;   // 不自动回复的用户
     QHash<int, QString> giftAlias; // 礼物名字
-    QHash<qint64, QString> currentGuards; // 当前船员ID-Name
     QList<EternalBlockUser> eternalBlockUsers; // 永久禁言
 
     bool useStringSimilar = false;   // 使用字符串编辑距离相似度算法
     int stringSimilarThreshold = 80; // 相似度达到阈值及以上则算是重复弹幕
     int danmuSimilarJudgeCount = 10; // 重复弹幕的判断数量
     bool closeGui = false;           // 关闭GUI效果
+
+    bool timerConnectServer = false; // 定时连接
+    int startLiveHour = -1;          // 最早上班的时间
+    int endLiveHour = -1;            // 最晚下播的时间
+    int timerConnectInterval;        // 定时检测的时间（分支）
+    bool liveDove = false;           // 鸽一天，不自动连接
+    int getHeartTimeCount = 0;       // 获取小心心的总数
+    bool saveDanmakuToFile = false;  // 保存弹幕日志文件
+    bool autoDoSign = false;         // 每天自动签到
+    bool autoJoinLOT = false;        // 自动参加天选
+    bool calculateDailyData = false; // 统计每天数据
+
+    bool localMode = false;         // 本地调试模式
+    bool debugPrint = false;         // 调试输出模式
+
+    QString getLocalNickname(qint64 uid) const
+    {
+        if (localNicknames.contains(uid))
+            return localNicknames.value(uid);
+        return "";
+    }
 };
 
 extern UserSettings* us;

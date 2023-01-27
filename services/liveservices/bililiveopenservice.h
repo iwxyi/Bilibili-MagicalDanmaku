@@ -13,11 +13,15 @@
 #define LIVE_OPEN_DEB if (0) qDebug()
 #define LIVE_OPEN_SOCKET_DEB if (0) qDebug()
 
-class LiveOpenService : public QObject
+/**
+ * 直播服务类
+ * 与 BiliLiveService 的区别是，这是官方的服务，需要使用身份码才能连接
+ */
+class BiliLiveOpenService : public QObject
 {
     Q_OBJECT
 public:
-    explicit LiveOpenService(QObject *parent = nullptr);
+    explicit BiliLiveOpenService(QObject *parent = nullptr);
 
     qint64 getAppId() const;
     bool isPlaying() const;

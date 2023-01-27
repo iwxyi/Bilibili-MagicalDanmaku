@@ -57,6 +57,9 @@ contains(DEFINES, ENABLE_TEXTTOSPEECH) {
 INCLUDEPATH += \
     global/ \
     mainwindow/ \
+    services/ \
+    services/liveservices/ \
+    services/entities/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -83,12 +86,16 @@ INCLUDEPATH += \
     third_party/picture_browser/ \
     third_party/notification/ \
     third_party/linear_check_box/ \
-    third_party/mfaudioendpointcontrol_fixed/
+    third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    mainwindow/liveopenservice.cpp \
-    mainwindow/sqlservice.cpp \
+    services/liveservices/bililivecmds.cpp \
+    services/liveservices/bililiveopenservice.cpp \
+    services/liveservices/bililiveservice.cpp \
+    services/liveservices/liveroomservice.cpp \
+    services/liveservices/livestatisticservice.cpp \
+    services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/imageutil.cpp \
@@ -177,9 +184,13 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
-    mainwindow/live_danmaku/emoticon.h \
-    mainwindow/liveopenservice.h \
-    mainwindow/sqlservice.h \
+    services/entities/emoticon.h \
+    services/entities/entities.h \
+    services/liveservices/bililiveopenservice.h \
+    services/liveservices/bililiveservice.h \
+    services/liveservices/liveroomservice.h \
+    services/liveservices/livestatisticservice.h \
+    services/sqlservice.h \
     order_player/importsongsdialog.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
@@ -198,7 +209,7 @@ HEADERS += \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
-    mainwindow/live_danmaku/livedanmaku.h \
+    services/liveservices/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
     third_party/interactive_buttons/pointmenubutton.h \
     third_party/interactive_buttons/threedimenbutton.h \
@@ -225,6 +236,7 @@ HEADERS += \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
     third_party/utils/mysettings.h \
+    third_party/utils/pixmaputil.h \
     third_party/utils/simplecalculatorutil.h \
     third_party/utils/string_distance_util.h \
     third_party/utils/tx_nlp.h \
@@ -278,6 +290,7 @@ HEADERS += \
     widgets/editor/conditioneditor.h \
     widgets/escape_dialog/escapedialog.h \
     widgets/escape_dialog/hoverbutton.h \
+    widgets/eternal_block_dialog/eternalblockdialog.h \
     mainwindow/list_items/eventwidget.h \
     widgets/fluentbutton.h \
     widgets/mytabwidget.h \

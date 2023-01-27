@@ -10,12 +10,19 @@ void MainWindow::openServer(int port)
         port = 5520;
     serverPort = qint16(port);
 #if defined(ENABLE_HTTP_SERVER)
-    server = new QHttpServer;
-    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
-            this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
+    if (!server)
+    {
+        server = new QHttpServer;
+        connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
+                this, SLOT(serverHandle(QHttpRequest*, QHttpResponse*)));
 
-    // 设置服务端参数
-    initServerData();
+        // 设置服务端参数
+        initServerData();
+    }
+    else
+    {
+        server->close();
+    }
 
     // 开启服务器
     qInfo() << "开启 HTTP 服务" << port;
@@ -146,8 +153,8 @@ void MainWindow::processSocketTextMsg(QWebSocket *clientSocket, const QString &m
         {
             // 这里不排序，直接发送
             QJsonObject json;
-            json.insert("guards", LiveDanmaku::toJsonArray(liveAllGuards));
-            json.insert("gifts", LiveDanmaku::toJsonArray(liveAllGifts));
+            json.insert("guards", LiveDanmaku::toJsonArray(liveService->liveAllGuards));
+            json.insert("gifts", LiveDanmaku::toJsonArray(liveService->liveAllGifts));
             sendJsonToSockets("LIVE_ALL_GIFTS", json, clientSocket);
         }
 
@@ -467,15 +474,17 @@ void MainWindow::syncMagicalRooms()
          "linux",
 #endif
          "working", (isWorking() ? "1" : "0"), "permission", snum(hasPermission()),
+         "fans", snum(ac->currentFans), "guards", snum(ac->currentGuards.size()),
+         "area", ac->parentAreaName + "/" + ac->areaName,
          "randkey", ac->csrf_token.toLatin1().toBase64()},
         [=](MyJson json) {
         // 检测数组
         json = json.data();
         QJsonArray roomArray = json.value("rooms").toArray();
-        magicalRooms.clear();
+        liveService->magicalRooms.clear();
         foreach (QJsonValue val, roomArray)
         {
-            magicalRooms.append(val.toString());
+            liveService->magicalRooms.append(val.toString());
         }
 
         // 检测新版

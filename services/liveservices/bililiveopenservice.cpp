@@ -1,9 +1,9 @@
 #include <QMessageAuthenticationCode>
-#include "liveopenservice.h"
+#include "bililiveopenservice.h"
 #include "accountinfo.h"
 #include "fileutil.h"
 
-LiveOpenService::LiveOpenService(QObject *parent) : QObject(parent)
+BiliLiveOpenService::BiliLiveOpenService(QObject *parent) : QObject(parent)
 {
     heartTimer = new QTimer(this);
     heartTimer->setInterval(20000);
@@ -11,17 +11,17 @@ LiveOpenService::LiveOpenService(QObject *parent) : QObject(parent)
     connect(heartTimer, SIGNAL(timeout()), this, SLOT(sendHeart()));
 }
 
-qint64 LiveOpenService::getAppId() const
+qint64 BiliLiveOpenService::getAppId() const
 {
     return BILI_APP_ID;
 }
 
-bool LiveOpenService::isPlaying() const
+bool BiliLiveOpenService::isPlaying() const
 {
     return heartTimer->isActive();
 }
 
-void LiveOpenService::start()
+void BiliLiveOpenService::start()
 {
     if (!isValid())
         return ;
@@ -86,7 +86,7 @@ void LiveOpenService::start()
     } */
 }
 
-void LiveOpenService::end()
+void BiliLiveOpenService::end()
 {
     if (gameId.isEmpty())
     {
@@ -111,7 +111,7 @@ void LiveOpenService::end()
     });
 }
 
-void LiveOpenService::sendHeart()
+void BiliLiveOpenService::sendHeart()
 {
     if (gameId.isEmpty())
     {
@@ -134,13 +134,13 @@ void LiveOpenService::sendHeart()
     });
 }
 
-void LiveOpenService::endIfStarted()
+void BiliLiveOpenService::endIfStarted()
 {
     if (isPlaying())
         end();
 }
 
-void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
+void BiliLiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
 {
     if (!websocket)
     {
@@ -165,7 +165,7 @@ void LiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
     websocket->open(url);
 }
 
-void LiveOpenService::sendWSHeart()
+void BiliLiveOpenService::sendWSHeart()
 {
     QByteArray ba;
     ba.append("[object Object]");
@@ -174,7 +174,7 @@ void LiveOpenService::sendWSHeart()
     LIVE_OPEN_SOCKET_DEB << "互动玩法发送心跳包：" << ba;
 }
 
-void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
+void BiliLiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
 {
     // 秘钥
     static QStringList sl = readTextFile(":/documents/kk").split("\n");
@@ -225,7 +225,7 @@ void LiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
     manager->post(*request, data);
 }
 
-bool LiveOpenService::isValid()
+bool BiliLiveOpenService::isValid()
 {
     if (ac->identityCode.isEmpty())
     {

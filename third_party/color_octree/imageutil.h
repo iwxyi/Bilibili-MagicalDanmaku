@@ -1,5 +1,5 @@
-#ifndef PIXMAPUTIL_H
-#define PIXMAPUTIL_H
+#ifndef IMAGEUTIL_H
+#define IMAGEUTIL_H
 
 #include <QPixmap>
 #include <QList>
@@ -31,4 +31,4 @@ public:
     static QColor randomColor();
 };
 
-#endif // PIXMAPUTIL_H
+#endif // IMAGEUTIL_H
