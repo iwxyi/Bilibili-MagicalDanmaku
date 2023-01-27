@@ -1242,6 +1242,8 @@ void MainWindow::readConfig()
 
         us->localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
     }
+    if (us->localNicknames.empty())
+        us->localNicknames.insert(20285041, "神奇弹幕开发者");
 
     // 礼物别名
     us->giftAlias.clear();
@@ -1262,6 +1264,8 @@ void MainWindow::readConfig()
     {
         us->careUsers.append(s.toLongLong());
     }
+    if (us->careUsers.empty())
+        us->careUsers.append(20285041);
 
     // 强提醒
     us->strongNotifyUsers.clear();
@@ -1270,6 +1274,8 @@ void MainWindow::readConfig()
     {
         us->strongNotifyUsers.append(s.toLongLong());
     }
+    if (us->strongNotifyUsers.isEmpty())
+        us->strongNotifyUsers.append(20285041);
 
     // 不自动欢迎
     us->notWelcomeUsers.clear();
