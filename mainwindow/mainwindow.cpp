@@ -17461,7 +17461,7 @@ void MainWindow::loadWebExtensionList()
             if (desc.isEmpty())
                 desc = descAll;
             QString dirName = info.fileName();
-            if (!urlR.isEmpty() && !urlR.startsWith("/"))
+            if (!urlR.isEmpty() && !urlR.startsWith("/")) // "/"开头以www为根目录，否则以扩展目录为根目录
                 urlR = "/" + dirName + "/" + urlR;
             if (!cssR.isEmpty() && !cssR.startsWith("/"))
                 cssR = "/" + dirName + "/" + cssR;
@@ -17606,7 +17606,17 @@ void MainWindow::loadWebExtensionList()
                         shakeWidget(ui->serverCheck);
                         return showError("未开启网络服务", "不可使用" + name);
                     }
-                    QDesktopServices::openUrl(getDomainPort() + urlR);
+                    if (urlR.endsWith(".exe") || urlR.endsWith(".vbs") || urlR.endsWith(".bat"))
+                    {
+                        qInfo() << "启动程序：" << QDir(wwwDir).absolutePath() + urlR;
+                        QProcess process;
+                        process.startDetached(QDir(wwwDir).absolutePath() + urlR);
+                    }
+                    else
+                    {
+                        qInfo() << "打开网址：" << getDomainPort() + urlR;
+                        QDesktopServices::openUrl(getDomainPort() + urlR);
+                    }
                 });
 
                 auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
@@ -17615,13 +17625,22 @@ void MainWindow::loadWebExtensionList()
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
-                btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                    QApplication::clipboard()->setText(getDomainPort() + urlR);
-                });
+
+                if (urlR.endsWith(".exe") || urlR.endsWith(".vbs") || urlR.endsWith(".bat"))
+                {
+                    btn->setToolTip("本扩展为应用程序，可单独运行");
+                    connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                        QProcess process;
+                        process.startDetached(QDir(wwwDir).absolutePath() + urlR);
+                    });
+                }
+                else
+                {
+                    btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+                    connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                        QApplication::clipboard()->setText(getDomainPort() + urlR);
+                    });
+                }
             }
 
             // 配置
