@@ -13122,7 +13122,7 @@ void MainWindow::on_setCustomVoiceButton_clicked()
                      "百度语音"};
     QStringList urls{
         "http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&voice=EkhoMandarin&speedDelta=0&pitchDelta=0&volumeDelta=0&text=%url_text%",
-        "https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=%url_text%"
+        "https://ai.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=%url_text%"
     };
     QStringList descs{
         "",
@@ -13182,7 +13182,7 @@ void MainWindow::playNetAudio(QString url)
         auto contentType = reply1->header(QNetworkRequest::ContentTypeHeader).toString();
         if (contentType.contains("json"))
         {
-            // https://cloud.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=这是一个测试文本
+            // https://ai.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=这是一个测试文本
             QByteArray ba = reply1->readAll();
             MyJson json(ba);
             QString s = json.s("data");
@@ -17853,7 +17853,7 @@ void MainWindow::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
         request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
-    if (url.contains("cloud.baidu.com"))
+    if (url.contains("ai.baidu.com"))
         request->setRawHeader("Referer", "https://ai.baidu.com/tech/speech/tts_online");
 }
 
