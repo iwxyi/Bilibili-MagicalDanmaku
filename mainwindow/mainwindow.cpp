@@ -12761,6 +12761,31 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
+    else if (cmd == "AREA_RANK_CHANGED")
+    {
+        /*{
+            "cmd": "AREA_RANK_CHANGED",
+            "data": {
+                "action_type": 1,
+                "conf_id": 18,
+                "icon_url_blue": "https://i0.hdslb.com/bfs/live/18e2990a546d33368200f9058f3d9dbc4038eb5c.png",
+                "icon_url_grey": "https://i0.hdslb.com/bfs/live/cb7444b1faf1d785df6265bfdc1fcfc993419b76.png",
+                "icon_url_pink": "https://i0.hdslb.com/bfs/live/a6c490c36e88c7b191a04883a5ec15aed187a8f7.png",
+                "jump_url_link": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=3&ruid=1424343672&conf_id=18&is_live_half_webview=1&hybrid_rotate_d=1&is_cling_player=1&hybrid_half_ui=1,3,100p,70p,f4eefa,0,30,100,0,0;2,2,375,100p,f4eefa,0,30,100,0,0;3,3,100p,70p,f4eefa,0,30,100,0,0;4,2,375,100p,f4eefa,0,30,100,0,0;5,3,100p,70p,f4eefa,0,30,100,0,0;6,3,100p,70p,f4eefa,0,30,100,0,0;7,3,100p,70p,f4eefa,0,30,100,0,0;8,3,100p,70p,f4eefa,0,30,100,0,0#/area-rank",
+                "jump_url_pc": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=4&ruid=1424343672&conf_id=18&pc_ui=338,465,f4eefa,0#/area-rank",
+                "jump_url_pink": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=1&ruid=1424343672&conf_id=18&is_live_half_webview=1&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,12,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,12,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0#/area-rank",
+                "jump_url_web": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=2&ruid=1424343672&conf_id=18#/area-rank",
+                "msg_id": "d09b58ac-278f-4bf6-bd1e-481b548fc336",
+                "rank": 36,
+                "rank_name": "聊天热榜",
+                "timestamp": 1675690660,
+                "uid": 1424343672
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        int rank = data.i("rank");
+        QString name = data.s("rank_name");
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << json;
@@ -19807,6 +19832,10 @@ void MainWindow::on_actionDebug_Mode_triggered()
 {
     us->setValue("debug/debugPrint", us->debugPrint = ui->actionDebug_Mode->isChecked());
     qInfo() << "调试模式：" << us->debugPrint;
+    if (us->debugPrint)
+        ensureFileExist("update_tool.log");
+    else
+        deleteFile("update_tool.log");
 }
 
 void MainWindow::on_actionGuard_Online_triggered()
