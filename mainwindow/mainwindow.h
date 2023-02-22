@@ -1077,7 +1077,7 @@ private:
     QList<QPair<QStringList, LiveDanmaku>> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
     QTimer* autoMsgTimer;
     bool inDanmakuCd = false;    // 避免频繁发送弹幕
-    bool inDanmakuDelay = false; // 对于 >run(>delay(xxx)) 的支持
+    int inDanmakuDelay = 0; // 对于 >run(>delay(xxx)) 的支持
 
     // 点歌
     bool diangeAutoCopy = false;

@@ -2413,7 +2413,7 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     // 分割与发送
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(qMakePair(sl, danmaku));
-    if (!autoMsgTimer->isActive() && !inDanmakuDelay)
+    if (/*!autoMsgTimer->isActive() &&*/ !inDanmakuDelay && !inDanmakuCd)
     {
         slotSendAutoMsg(false); // 先运行一次
     }
@@ -2437,10 +2437,6 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, in
     }
     autoMsgTimer->stop();
     autoMsgTimer->start();
-    /* if (!autoMsgTimer->isActive())
-    {
-        autoMsgTimer->start();
-    } */
 }
 
 /**
@@ -2490,7 +2486,6 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     CmdResponse res = NullRes;
     int resVal = 0;
     bool exec = execFunc(msg, *danmaku, res, resVal);
-
     if (!exec) // 如果是发送弹幕
     {    
         msg = msgToShort(msg);
@@ -2519,9 +2514,11 @@ void MainWindow::slotSendAutoMsg(bool timeout)
             autoMsgTimer->setInterval(resVal);
             if (!autoMsgTimer->isActive())
                 autoMsgTimer->start();
-            inDanmakuDelay = true;
+            inDanmakuDelay++;
             QTimer::singleShot(resVal, [=]{
-                inDanmakuDelay = false;
+                inDanmakuDelay--;
+                if (inDanmakuDelay < 0)
+                    inDanmakuDelay = 0;
             });
             return ;
         }
