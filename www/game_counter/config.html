@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹幕配置</title>
+    <script src="../js/jquery.js"></script>
+    <script src="../js/mdui.js"></script>
+    <script src="../js/magical_danmaku.js"></script>
+    <link rel="stylesheet" href="../css/mdui.css" />
+</head>
+
+<body style="margin: 20px;">
+    <h1>礼物时钟设置</h1>
+
+    <div>
+        <label class="mdui-checkbox">
+            <input type="checkbox" id='enableTimer' />
+            <i class="mdui-checkbox-icon"></i>
+            倒计时时钟
+        </label>
+    </div>
+
+    <div class="mdui-row-xs-1 mdui-row-sm-2 mdui-row-md-3 mdui-row-lg-4 mdui-row-xl-5 mdui-grid-list">
+        <div class="mdui-col">
+            <div class="mdui-grid-tile">
+                <div class="mdui-card">
+                    <div class="mdui-card-content">
+                        <div class="mdui-card-primary-title">礼物1</div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">礼物名字</label>
+                            <input id="giftName1" class="mdui-textfield-input" type="text" placeholder="多个礼物之间用“|”分隔" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">显示图标</label>
+                            <input id="giftIcon1" class="mdui-textfield-input" type="text" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">要求数量</label>
+                            <input id="giftNum1" class="mdui-textfield-input" type="number" min="1" max="99999" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">修改时间(秒)</label>
+                            <input id="timeNum1" class="mdui-textfield-input" type="number" min="-99999" max="99999" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="mdui-col">
+            <div class="mdui-grid-tile">
+                <div class="mdui-card">
+                    <div class="mdui-card-content">
+                        <div class="mdui-card-primary-title">礼物2</div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">礼物名字</label>
+                            <input id="giftName2" class="mdui-textfield-input" type="text" placeholder="多个礼物之间用“|”分隔" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">显示图标</label>
+                            <input id="giftIcon2" class="mdui-textfield-input" type="text" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">要求数量</label>
+                            <input id="giftNum2" class="mdui-textfield-input" type="number" min="1" max="99999" />
+                        </div>
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">修改时间(秒)</label>
+                            <input id="timeNum2" class="mdui-textfield-input" type="number" min="-99999" max="99999" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        configGroup = 'gift-timer';
+
+        function readConfig(data) {
+            var addCheck = function (id) {
+                if (data[id] == true)
+                    $('#' + id).attr("checked", true);
+                $('#' + id).click(function () {
+                    saveConfig(id, $(this).is(':checked'));
+                });
+            };
+
+            var addInput = function (id) {
+                if (data[id] !== undefined) {
+                    $('#' + id).val(data[id]);
+                }
+                $('#' + id).bind('change', function () {
+                    saveConfig(id, '"' + $(this).val() + '"');
+                });
+            };
+
+            addCheck('enableTimer');
+            addInput('giftName1');
+            addInput('giftName2');
+            addInput('giftIcon1');
+            addInput('giftIcon2');
+            addInput('giftNum1');
+            addInput('giftNum2');
+            addInput('timeNum1');
+            addInput('timeNum2');
+        }
+
+    </script>
+</body>
+
+</html>

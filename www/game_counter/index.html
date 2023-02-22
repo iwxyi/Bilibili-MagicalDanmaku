@@ -1,0 +1,51 @@
+<head>
+    <title>神奇弹幕自定义文字</title>
+    <link rel="stylesheet" href="style.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="style_custom.css" media="screen" type="text/css" />
+    <script src="../js/jquery.js"></script>
+    <script src="../js/magical_danmaku.js"></script>
+</head>
+
+<body style="margin: 0px">
+    <div id="count-block" class="count-text">
+        0
+    </div>
+
+    <script type="text/javascript">
+        // ws连接
+        usedMsgType = ['GAME_COUNTER']; // !需要使用的cmd类型
+        configGroup = 'game-counter'; // !留空表示不需要读取配置
+
+        // 运行变量
+        var currentCount = 0; // 当前秒
+
+        function readConfig(data) {
+            if (data['currentCount'] != undefined) {
+                currentCount = data['currentCount'];
+                console.log('初始数量：' + currentCount);
+            }
+            setCount(currentCount);
+        }
+
+        function parseCmd(cmd, data) {
+            switch (cmd) {
+                case 'SET_COUNT':
+                    var count = data['count'];
+                    var delta = data['delta'];
+                    if (delta != undefined && delta != null && delta != 0) {
+                        setCount(currentCount + delta);
+                    } else {
+                        setCount(count);
+                    }
+                    saveConfig('currentCount', currentCount);
+                    break;
+            }
+        }
+
+        // 修改时间
+        function setCount(count) {
+            currentCount = count;
+            $("#count-block").text("" + currentCount);
+        }
+    </script>
+</body>
