@@ -9578,6 +9578,23 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("call"))
+    {
+        re = RE("call\\s*\\(\\s*([^,]+)\\s*,?(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString event = caps.at(1);
+            QString args = caps.at(2).trimmed();
+            QStringList argList = args.split(",", QString::SkipEmptyParts);
+            argList.insert(0, caps.at(0));
+            qInfo() << "执行命令：" << event << " 参数：" << argList.join(",");
+            danmaku.setArgs(argList);
+            triggerCmdEvent(event, danmaku);
+            return true;
+        }
+    }
+
     // 点歌
     if (msg.contains("orderSong"))
     {
