@@ -86,3 +86,4 @@ AI聊天=aiChat
 设置本地模式=setLocalMode
 重新连接直播间=reconnectRoom
 链接直播间=connectRoom
+比较窗口截图=compareScreenShot

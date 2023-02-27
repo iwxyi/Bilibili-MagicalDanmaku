@@ -1194,6 +1194,9 @@ private:
     bool saveToSqlite = false;
     bool saveCmdToSqlite = false;
     SqlService sqlService;
+
+    // 缓存
+    QHash<QString, QPixmap> cacheImages;
 };
 
 class RequestBodyHelper : public QObject

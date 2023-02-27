@@ -6639,6 +6639,71 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             return errorArg("字符串");
         return toSingleLine(QByteArray::fromPercentEncoding(args.toUtf8()));
     }
+    else if (funcName == "compareScreenShot")
+    {
+        if (argList.size() < 6)
+            return errorArg("");
+
+        int id = argList.at(0).toInt();
+        int x = argList.at(1).toInt();
+        int y = argList.at(2).toInt();
+        int w = argList.at(3).toInt();
+        int h = argList.at(4).toInt();
+        QString path = argList.at(5);
+
+        auto screens = QGuiApplication::screens();
+        if (id < 0 || id >= screens.size())
+        {
+            showError("保存屏幕截图", "错误的屏幕ID：" + snum(id));
+            return "0";
+        }
+
+        QScreen *screen = screens.at(id);
+        auto pixmap = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h);
+
+        QPixmap comparedPixmap;
+        if (cacheImages.contains(path))
+        {
+            comparedPixmap = cacheImages[path];
+        }
+        else
+        {
+            if (!comparedPixmap.load(path))
+            {
+                showError("加载图片", "加载图片失败：" + path);
+                return "0";
+            }
+            qInfo() << "加载本地图片进缓存：" << path;
+            cacheImages[path] = comparedPixmap;
+        }
+
+        if (pixmap.size() != comparedPixmap.size())
+            return "0";
+
+        if (pixmap.width() > 100)
+        {
+            pixmap = pixmap.scaledToWidth(100);
+            comparedPixmap = comparedPixmap.scaledToWidth(100);
+        }
+        else if (pixmap.height() > 100)
+        {
+            pixmap = pixmap.scaledToHeight(100);
+            comparedPixmap = comparedPixmap.scaledToHeight(100);
+        }
+
+        QImage image1 = pixmap.toImage();
+        QImage image2 = comparedPixmap.toImage();
+        double sum = 0;
+        for (int i = 0; i < image1.width(); i++)
+        {
+            for (int j = 0; j < image1.height(); j++)
+            {
+                if (image1.pixel(i, j) == image2.pixel(i, j))
+                    sum += 1;
+            }
+        }
+        return snum(int(sum * 100 / (image1.width() * image1.height())));
+    }
 
     return "";
 }
@@ -10008,6 +10073,42 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             sql = toMultiLine(sql);
             qInfo() << "执行命令：" << caps;
             showSqlQueryResult(sql);
+            return true;
+        }
+    }
+
+    // 图片相关的
+    if (msg.contains("saveScreenShot"))
+    {
+        re = RE("saveScreenShot\\s*\\((\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(.+)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            int id = caps.at(1).toInt();
+            int x = caps.at(2).toInt();
+            int y = caps.at(3).toInt();
+            int w = caps.at(4).toInt();
+            int h = caps.at(5).toInt();
+            QString path = caps.at(6);
+            auto screens = QGuiApplication::screens();
+            if (id < 0 || id >= screens.size())
+            {
+                showError("保存屏幕截图", "错误的屏幕ID：" + snum(id));
+                return true;
+            }
+            QScreen *screen = screens.at(id);
+            auto pixmap = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h);
+
+            QFileInfo info(path);
+            QDir dir = info.absoluteDir();
+            dir.mkpath(dir.absolutePath());
+            pixmap.save(path);
+            if (cacheImages.contains(path))
+            {
+                cacheImages[path] = pixmap;
+            }
+            qInfo() << "保存截图：" << QRect(x, y, w, h) << screen->geometry() << path;
             return true;
         }
     }

@@ -16,7 +16,7 @@ QT_END_NAMESPACE
 LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     : QWidget(nullptr)
 {
-    this->setWindowTitle("实时弹幕");
+    this->setWindowTitle("弹幕姬");
     this->setMinimumSize(45,45);                        //设置最小尺寸
 #ifdef Q_OS_ANDROID
     this->setAttribute(Qt::WA_TranslucentBackground, false);
@@ -34,7 +34,16 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 
     bool onTop = us->value("livedanmakuwindow/onTop", true).toBool();
     if (onTop)
+    {
         this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+
+        // WS_EX_APPWINDOW：悬浮在任务栏、全屏游戏窗口之上
+#ifdef Q_OS_WIN32
+//        auto hwnd = (HWND)this->winId();
+//        auto widgetStyle = WS_EX_TOPMOST | WS_EX_APPWINDOW | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW;
+//        SetWindowLong(hwnd, GWL_EXSTYLE, widgetStyle);
+#endif
+    }
     if (us->value("livedanmakuwindow/transMouse", false).toBool())
     {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
