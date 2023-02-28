@@ -1,5 +1,5 @@
-#ifndef IMAGEUTIL_H
-#define IMAGEUTIL_H
+#ifndef COLOROCTREEUTIL_H
+#define COLOROCTREEUTIL_H
 
 #include <QPixmap>
 #include <QList>
@@ -7,7 +7,7 @@
 
 #define IMAGE_CALC_PIXEL_MAX_SIZE 128 // 计算的最大边长（大图缩小）
 
-class ImageUtil
+class ColorOctreeUtil
 {
 public:
     static QColor getImageAverageColor(QImage image, int maxPool = IMAGE_CALC_PIXEL_MAX_SIZE);
@@ -31,4 +31,4 @@ public:
     static QColor randomColor();
 };
 
-#endif // IMAGEUTIL_H
+#endif // COLOROCTREEUTIL_H

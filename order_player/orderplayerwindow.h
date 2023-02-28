@@ -24,7 +24,7 @@
 #include "songbeans.h"
 #include "desktoplyricwidget.h"
 #include "numberanimation.h"
-#include "imageutil.h"
+#include "coloroctreeutil.h"
 #include "logindialog.h"
 #include "netinterface.h"
 
