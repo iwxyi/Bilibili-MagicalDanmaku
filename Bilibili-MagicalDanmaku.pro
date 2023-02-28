@@ -231,6 +231,7 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
     third_party/utils/conditionutil.h \
     third_party/utils/httpuploader.h \

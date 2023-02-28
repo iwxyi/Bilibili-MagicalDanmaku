@@ -1196,7 +1196,7 @@ private:
     SqlService sqlService;
 
     // 缓存
-    QHash<QString, QPixmap> cacheImages;
+    QHash<QString, QImage> cacheImages;
 };
 
 class RequestBodyHelper : public QObject

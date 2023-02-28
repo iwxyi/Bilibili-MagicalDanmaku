@@ -36,6 +36,7 @@
 #include "string_distance_util.h"
 #include "bili_api_util.h"
 #include "pixmaputil.h"
+#include "ImageSimilarityUtil.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -6650,6 +6651,9 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         int w = argList.at(3).toInt();
         int h = argList.at(4).toInt();
         QString path = argList.at(5);
+        QString type = "";
+        if (argList.size() > 6)
+            type = argList.at(6).toLower();
 
         auto screens = QGuiApplication::screens();
         if (id < 0 || id >= screens.size())
@@ -6659,50 +6663,54 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
 
         QScreen *screen = screens.at(id);
-        auto pixmap = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h);
+        QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
 
-        QPixmap comparedPixmap;
+        QImage comparedImage;
         if (cacheImages.contains(path))
         {
-            comparedPixmap = cacheImages[path];
+            comparedImage = cacheImages[path];
         }
         else
         {
-            if (!comparedPixmap.load(path))
+            if (!comparedImage.load(path))
             {
                 showError("加载图片", "加载图片失败：" + path);
                 return "0";
             }
             qInfo() << "加载本地图片进缓存：" << path;
-            cacheImages[path] = comparedPixmap;
+            cacheImages[path] = comparedImage;
         }
 
-        if (pixmap.size() != comparedPixmap.size())
+        if (image.size() != comparedImage.size())
+        {
+            showError("比较图片", "图片尺寸不同，无法比较");
             return "0";
-
-        if (pixmap.width() > 100)
-        {
-            pixmap = pixmap.scaledToWidth(100);
-            comparedPixmap = comparedPixmap.scaledToWidth(100);
-        }
-        else if (pixmap.height() > 100)
-        {
-            pixmap = pixmap.scaledToHeight(100);
-            comparedPixmap = comparedPixmap.scaledToHeight(100);
         }
 
-        QImage image1 = pixmap.toImage();
-        QImage image2 = comparedPixmap.toImage();
-        double sum = 0;
-        for (int i = 0; i < image1.width(); i++)
+        if (type.isEmpty() || type == "pixel")
         {
-            for (int j = 0; j < image1.height(); j++)
-            {
-                if (image1.pixel(i, j) == image2.pixel(i, j))
-                    sum += 1;
-            }
+            int threshold = 8;
+            if (argList.size() > 7)
+                threshold = argList.at(7).toInt();
+            return snum(int(ImageSimilarityUtil::compareImageByPixel(image, comparedImage, us->imageSimilarPrecision, threshold) * 100));
         }
-        return snum(int(sum * 100 / (image1.width() * image1.height())));
+        else if (type == "ahash")
+        {
+            return snum(ImageSimilarityUtil::aHash(image, comparedImage));
+        }
+        else if (type == "dhash")
+        {
+
+        }
+        else if (type == "phash")
+        {
+
+        }
+        else
+        {
+            return "0";
+        }
+
     }
 
     return "";
@@ -10098,15 +10106,15 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
                 return true;
             }
             QScreen *screen = screens.at(id);
-            auto pixmap = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h);
+            QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
 
             QFileInfo info(path);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
-            pixmap.save(path);
+            image.save(path);
             if (cacheImages.contains(path))
             {
-                cacheImages[path] = pixmap;
+                cacheImages[path] = image;
             }
             qInfo() << "保存截图：" << QRect(x, y, w, h) << screen->geometry() << path;
             return true;
