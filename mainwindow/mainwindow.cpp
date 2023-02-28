@@ -6681,14 +6681,13 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             cacheImages[path] = comparedImage;
         }
 
-        if (image.size() != comparedImage.size())
-        {
-            showError("比较图片", "图片尺寸不同，无法比较");
-            return "0";
-        }
-
         if (type.isEmpty() || type == "pixel")
         {
+            if (image.size() != comparedImage.size()) // 完全一样的大小
+            {
+                showError("比较图片", "图片尺寸不同，无法比较");
+                return "0";
+            }
             int threshold = 8;
             if (argList.size() > 7)
                 threshold = argList.at(7).toInt();
@@ -6696,18 +6695,34 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         else if (type == "ahash")
         {
+            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
+            {
+                showError("比较图片", "图片比例不同，无法比较");
+                return "0";
+            }
             return snum(ImageSimilarityUtil::aHash(image, comparedImage));
         }
         else if (type == "dhash")
         {
-
+            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
+            {
+                showError("比较图片", "图片比例不同，无法比较");
+                return "0";
+            }
+            // TODO:dhash
         }
         else if (type == "phash")
         {
-
+            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
+            {
+                showError("比较图片", "图片比例不同，无法比较");
+                return "0";
+            }
+            // TODO:phash
         }
         else
         {
+            showError("比较图片", "不支持的图片相似度算法：" + type);
             return "0";
         }
 

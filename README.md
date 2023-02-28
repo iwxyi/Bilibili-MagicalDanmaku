@@ -464,16 +464,40 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 >saveScreenShot(0, 100, 100, 200, 200, D:/test.png)
 ```
 
-该代码会把截图保存到 `D:/test.png` 的位置。
+该代码会把矩形 `(100, 100, 200*200)` 这个范围的截图保存到 `D:/test.png` 的位置。
 
 添加定时 1 秒，代码：
 
 ```
 [%>compareScreenShot(0, 100, 100, 200, 200, D:/test.png)% == 100]*>localNotify(相同)
+
 >localNotify(不相同，相似度：%>compareScreenShot(0, 100, 100, 200, 200, D:/test.png)%)
 ```
 
+`%>compareScreenShot(0, 100, 100, 200, 200, D:/test.png)% == 100` 的意思是将当前 `(100, 100, 200*200)` 的截图**和之前保存的截图进行比较**。
+
 如果显示内容没变，则会打印出“相同”的文字。相似程度从 0 到 100，按像素进行比较，0 为完全不同，100 为完全相同。
+
+有多种算法，并且支持不同参数：
+
+- 按 pixel（默认）：压缩到 8×8 大小后逐一按像素比较
+  `compareScreenShot(screenId, x, y, w, h, path, pixel)`
+  返回 0 ~ 100 整数的相似度，越高则越趋于相同。
+  需要两张图大小完全一样。
+- 按 pixel 与一定范围内的差值
+  `compareScreenShot(screenId, x, y, w, h, path, pixel, threshold)` 其中 threshold 为 0 到 255 之间的整数，两张图相同位置的 R/G/B 差值在阈值内的视为同一个点。
+  返回 0 ~ 100 整数的相似度，越高则越趋于相同。
+  需要两张图大小完全一样。
+- AHash
+  `compareScreenShot(screenId, x, y, w, h, path, ahash)`
+  返回 0 ~ 64 整数的相似度，一般当 >= 60 的时候可视为同一张图。
+  需要两张图的比例完全一样
+- DHash
+  `compareScreenShot(screenId, x, y, w, h, path, dhash)`
+  尚未实现
+- PHash
+  `compareScreenShot(screenId, x, y, w, h, path, phash)`
+  尚未实现
 
 
 
@@ -947,42 +971,42 @@ border-image: url(C:/Path/To/Image.png)
 
 按指定格式，获取动态的数值，格式：`%>func(args)%`
 
-| 函数                                          | 中文             | 描述                                                         |
-| --------------------------------------------- | ---------------- | ------------------------------------------------------------ |
-| cd(channel)                                   | 冷却通道         | 获取冷却通道剩下的秒数                                       |
-| wait(channel)                                 | 等待通道         | 获取等待通道不是自己的弹幕数量                               |
-| time(format)                                  | 格式化时间       | 当前时间转换为数值，如 yyyy-MM-dd                            |
-| unameToUid(uname)                             | 查找用户名       | 由部分昵称倒找弹幕记录，获得UID                              |
-| inputText(title, default)                     | 输入文本         | 输入文本，两个参数都可省略                                   |
-| strlen(text)                                  | 取文本长度       | 一串文字的长度                                               |
-| trim(text)                                    | 删首尾空         | 去掉字符串首尾的空格和制表符                                 |
-| substr(text, left, length)                    | 取子串           | 获取文字的一部分                                             |
-| simpleName(name)                              | 昵称简化         |                                                              |
-| simpleNum(number)                             | 数值简化         |                                                              |
-| inGameUsers(listId, uid)                      | 在游戏用户中     | listId可省略。程序重启数据会清空                             |
-| inGameNumbers(listId, num)                    | 在游戏数值中     | listId可省略，程序重启数据仍在                               |
-| inGameTexts(listId, text)                     | 在游戏文本中     | listId可省略，程序重启数据仍在                               |
-| getValue(key, def)                            | 取变量值         | 等同于`%{key}%`，默认值def可省略                             |
-| random(min, max)                              | 取随机数         | 包含两端数字                                                 |
-| randomArray(a, b, c, d...)                    | 随机数组         | 任意多参数，随机返回其中一个                                 |
-| filterReject(filter)                          | 过滤器拒绝       | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例）          |
-| inFilterList(filter, content)                 | 在过滤列表中     | 包含在空格分隔的词库中则返回1（参考过滤器示例）              |
-| inFilterMatch(filter, content)                | 在过滤正则中     | 满足正则则返回1（参考过滤器示例）                            |
-| fileExists                                    | 文件存在         | 有这个文件则返回1，否则0                                     |
-| abs(val)                                      | 取绝对值         |                                                              |
-| log2(val)                                     | 取对数2          |                                                              |
-| log10(val)                                    | 取对数10         |                                                              |
-| pow2(val)                                     | 取平方           |                                                              |
-| pow(val, a)                                   | 取乘方           |                                                              |
-| pasteText()                                   | 粘贴文字         | 获取剪贴板的文本                                             |
-| getScreenPositionColor(wid, x, y)             | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
-| getWindowPositionColor(name, x, y)            | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
-| execReplyResult(text)                         | 执行回复结果     | 获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\n”则会返回用它分隔的单行文字 |
-| execEventResult(event)                        | 执行事件结果     | 获取指定事件的执行结果，重复则取第一个，同上                 |
-| readTextFile(fileName)                        | 读取文本文件     | 读取文本文件中的所有内容，所有换行符 `\n` 将会被替换为 `%n%` |
-| getTextFileLine(fileName, line)               | 获取文本文件行   | 读取文本文件中的第 line 行，行数从 1 开始                    |
-| getTextFileLineCount(fileName)                | 获取文本文件行数 | 读取文本文件中的所有行数（以 `\n` 为准）                     |
-| compareScreenShot(screenId, x, y, w, h, path) | 比较窗口截图     | 比较当前窗口的截图与指定图片文件的相似度。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径。返回一个0到100的数字，表示相似程度 |
+| 函数                                                        | 中文             | 描述                                                         |
+| ----------------------------------------------------------- | ---------------- | ------------------------------------------------------------ |
+| cd(channel)                                                 | 冷却通道         | 获取冷却通道剩下的秒数                                       |
+| wait(channel)                                               | 等待通道         | 获取等待通道不是自己的弹幕数量                               |
+| time(format)                                                | 格式化时间       | 当前时间转换为数值，如 yyyy-MM-dd                            |
+| unameToUid(uname)                                           | 查找用户名       | 由部分昵称倒找弹幕记录，获得UID                              |
+| inputText(title, default)                                   | 输入文本         | 输入文本，两个参数都可省略                                   |
+| strlen(text)                                                | 取文本长度       | 一串文字的长度                                               |
+| trim(text)                                                  | 删首尾空         | 去掉字符串首尾的空格和制表符                                 |
+| substr(text, left, length)                                  | 取子串           | 获取文字的一部分                                             |
+| simpleName(name)                                            | 昵称简化         |                                                              |
+| simpleNum(number)                                           | 数值简化         |                                                              |
+| inGameUsers(listId, uid)                                    | 在游戏用户中     | listId可省略。程序重启数据会清空                             |
+| inGameNumbers(listId, num)                                  | 在游戏数值中     | listId可省略，程序重启数据仍在                               |
+| inGameTexts(listId, text)                                   | 在游戏文本中     | listId可省略，程序重启数据仍在                               |
+| getValue(key, def)                                          | 取变量值         | 等同于`%{key}%`，默认值def可省略                             |
+| random(min, max)                                            | 取随机数         | 包含两端数字                                                 |
+| randomArray(a, b, c, d...)                                  | 随机数组         | 任意多参数，随机返回其中一个                                 |
+| filterReject(filter)                                        | 过滤器拒绝       | 被对应filter拒绝则返回1,否则返回0（参考过滤器示例）          |
+| inFilterList(filter, content)                               | 在过滤列表中     | 包含在空格分隔的词库中则返回1（参考过滤器示例）              |
+| inFilterMatch(filter, content)                              | 在过滤正则中     | 满足正则则返回1（参考过滤器示例）                            |
+| fileExists                                                  | 文件存在         | 有这个文件则返回1，否则0                                     |
+| abs(val)                                                    | 取绝对值         |                                                              |
+| log2(val)                                                   | 取对数2          |                                                              |
+| log10(val)                                                  | 取对数10         |                                                              |
+| pow2(val)                                                   | 取平方           |                                                              |
+| pow(val, a)                                                 | 取乘方           |                                                              |
+| pasteText()                                                 | 粘贴文字         | 获取剪贴板的文本                                             |
+| getScreenPositionColor(wid, x, y)                           | 获取屏幕位置颜色 | wid为屏幕ID（一般为0），x y 为横纵坐标，返回例如 `#f0f0f0` 的颜色格式 |
+| getWindowPositionColor(name, x, y)                          | 获取窗口位置颜色 | name 为窗口名字（可以是部分）或者句柄ID，不能是最小化窗口    |
+| execReplyResult(text)                                       | 执行回复结果     | 获取满足text的第一个回复的执行结果；结果中若存在命令则会执行，若有换行符“\n”则会返回用它分隔的单行文字 |
+| execEventResult(event)                                      | 执行事件结果     | 获取指定事件的执行结果，重复则取第一个，同上                 |
+| readTextFile(fileName)                                      | 读取文本文件     | 读取文本文件中的所有内容，所有换行符 `\n` 将会被替换为 `%n%` |
+| getTextFileLine(fileName, line)                             | 获取文本文件行   | 读取文本文件中的第 line 行，行数从 1 开始                    |
+| getTextFileLineCount(fileName)                              | 获取文本文件行数 | 读取文本文件中的所有行数（以 `\n` 为准）                     |
+| compareScreenShot(screenId, x, y, w, h, path[, other args]) | 比较窗口截图     | 比较当前窗口的截图与指定图片文件的相似度。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径。返回一个0到100的数字，表示相似程度。具体请参考[示例](#示例：比较屏幕内容) |
 
 以获取时间为例：
 

@@ -91,7 +91,7 @@ public:
         };
 
         auto toAHash = [toHashSeq](const QImage& image) {
-            QImage img = image.scaled(8, 8, Qt::KeepAspectRatio);
+            QImage img = image.scaled(8, 8);
             img = convertToGray64(img);
             int ave1 = getGrayAverage(img);
             return toHashSeq(img, ave1);
