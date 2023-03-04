@@ -56,7 +56,7 @@ public:
     static double compareImageByPixel(QImage image1, QImage image2, int side, int threshold)
     {
         Q_ASSERT(image1.size() == image2.size());
-        if (image1.width() > side && image1.height() > side)
+        if ((image1.width() > side && image1.height() > side) || image1.size() != image2.size())
         {
             if (threshold == 0)
                 return compareImageByPixel(image1.scaled(side, side, Qt::KeepAspectRatioByExpanding), image2.scaled(side, side, Qt::KeepAspectRatioByExpanding));
@@ -107,6 +107,27 @@ public:
     {
         Q_ASSERT(image1.size() == image2.size());
 
+        auto toHashSeq = [](const QImage& image) {
+            HashSeq hs;
+            for (int i = 0; i < image.height(); i++)
+            {
+                int average = 0;
+                for (int j = 0; j < image.width(); j++)
+                    average += image.pixelColor(j, i).red();
+                average /= image.width();
+                for (int j = 0; j < image.width(); j++)
+                    hs.append(image.pixelColor(j, i).red() > average ? 1 : 0);
+            }
+            return hs;
+        };
+
+        auto toDHash = [toHashSeq](const QImage& image) {
+            QImage img = image.scaled(8, 8);
+            img = convertToGray64(img);
+            return toHashSeq(img);
+        };
+
+        return hanmingDistance(toDHash(image1), toDHash(image2));
     }
 
     /**
@@ -193,8 +214,6 @@ public:
     static int hanmingDistance(HashSeq hash1, HashSeq hash2)
     {
         Q_ASSERT(hash1.size() == hash2.size());
-        qDebug() << hash1;
-        qDebug() << hash2;
         int distance = 0;
         for (int i = 0; i < hash1.size(); i++)
         {

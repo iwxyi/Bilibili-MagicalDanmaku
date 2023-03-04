@@ -6528,7 +6528,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QColor color = pixmap.toImage().pixelColor(0, 0);
         return QVariant(color).toString();
     }
-    else if (funcName == "getWindowPositionColor") // 获取屏幕上某个点的颜色
+    else if (funcName == "getWindowPositionColor") // 获取指定窗口某个点的颜色
     {
         QString name = argList.at(0); // 窗口名字
         bool isId = false;
@@ -6683,11 +6683,6 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
 
         if (type.isEmpty() || type == "pixel")
         {
-            if (image.size() != comparedImage.size()) // 完全一样的大小
-            {
-                showError("比较图片", "图片尺寸不同，无法比较");
-                return "0";
-            }
             int threshold = 8;
             if (argList.size() > 7)
                 threshold = argList.at(7).toInt();
@@ -6695,21 +6690,11 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         }
         else if (type == "ahash")
         {
-            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
-            {
-                showError("比较图片", "图片比例不同，无法比较");
-                return "0";
-            }
             return snum(ImageSimilarityUtil::aHash(image, comparedImage));
         }
         else if (type == "dhash")
         {
-            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
-            {
-                showError("比较图片", "图片比例不同，无法比较");
-                return "0";
-            }
-            // TODO:dhash
+            return snum(ImageSimilarityUtil::dHash(image, comparedImage));
         }
         else if (type == "phash")
         {
@@ -6725,7 +6710,36 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
             showError("比较图片", "不支持的图片相似度算法：" + type);
             return "0";
         }
+    }
+    else if (funcName == "getScreenWidth")
+    {
+        int screenId = 0;
+        if (argList.size() > 0)
+            screenId = argList.at(0).toInt();
+        auto screens = QGuiApplication::screens();
+        if (screenId < 0 || screenId >= screens.size())
+        {
+            showError(funcName, "错误的屏幕ID：" + snum(screenId));
+            return "0";
+        }
 
+        QScreen *screen = screens.at(screenId);
+        return snum(screen->geometry().width());
+    }
+    else if (funcName == "getScreenHeight")
+    {
+        int screenId = 0;
+        if (argList.size() > 0)
+            screenId = argList.at(0).toInt();
+        auto screens = QGuiApplication::screens();
+        if (screenId < 0 || screenId >= screens.size())
+        {
+            showError(funcName, "错误的屏幕ID：" + snum(screenId));
+            return "0";
+        }
+
+        QScreen *screen = screens.at(screenId);
+        return snum(screen->geometry().height());
     }
 
     return "";
