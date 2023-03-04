@@ -21029,31 +21029,51 @@ void MainWindow::on_recordFormatCheck_clicked()
     us->set("record/format", ui->recordFormatCheck->isChecked());
     if (ui->recordFormatCheck->isChecked() && rt->ffmpegPath.isEmpty())
     {
-        // 尝试自动获取 ffmpeg.exe 位置
-        QStringList environmentList = QProcess::systemEnvironment();
 #ifdef Q_OS_WIN
-        const QString app = "ffmpeg.exe";
+        const QString ffmpegApp = "ffmpeg.exe";
 #else
-        const QString app = "ffmpeg";
+        const QString ffmpegApp = "ffmpeg";
 #endif
-        rt->ffmpegPath = "";
-        foreach (QString environment, environmentList)
+
+        // 尝试自动获取 ffmpeg.exe 位置
+        if (isFileExist(QApplication::applicationDirPath() + "/" + ffmpegApp)) // 应用目录下
         {
-            if (environment.startsWith("Path="))
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/tools/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/tools" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/tools/ffmpeg/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/tools/ffmpeg/" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/www/ffmpeg/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/www/ffmpeg" + ffmpegApp;
+        }
+        else // 检查环境变量
+        {
+            QStringList environmentList = QProcess::systemEnvironment();
+            rt->ffmpegPath = "";
+            foreach (QString environment, environmentList)
             {
-                QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
-                foreach (QString d, sl)
+                if (environment.startsWith("Path="))
                 {
-                    QString path = QDir(d).absoluteFilePath(app);
-                    if (QFileInfo(path).exists())
+                    QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
+                    foreach (QString d, sl)
                     {
-                        qInfo() << "自动设置" << app << "位置：" << path;
-                        rt->ffmpegPath = path;
-                        us->setValue("record/ffmpegPath", path);
-                        break;
+                        QString path = QDir(d).absoluteFilePath(ffmpegApp);
+                        if (QFileInfo(path).exists())
+                        {
+                            qInfo() << "自动设置" << ffmpegApp << "位置：" << path;
+                            rt->ffmpegPath = path;
+                            us->setValue("record/ffmpegPath", path);
+                            break;
+                        }
                     }
+                    break;
                 }
-                break;
             }
         }
 

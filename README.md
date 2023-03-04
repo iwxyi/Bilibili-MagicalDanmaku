@@ -483,18 +483,15 @@ QQ群：**1038738410**，欢迎交流反馈与研究新功能~
 - 按 pixel（默认）：压缩到 8×8 大小后逐一按像素比较
   `compareScreenShot(screenId, x, y, w, h, path, pixel)`
   返回 0 ~ 100 整数的相似度，越高则越趋于相同。
-  需要两张图大小完全一样。
 - 按 pixel 与一定范围内的差值
   `compareScreenShot(screenId, x, y, w, h, path, pixel, threshold)` 其中 threshold 为 0 到 255 之间的整数，两张图相同位置的 R/G/B 差值在阈值内的视为同一个点。
   返回 0 ~ 100 整数的相似度，越高则越趋于相同。
-  需要两张图大小完全一样。
 - AHash
   `compareScreenShot(screenId, x, y, w, h, path, ahash)`
   返回 0 ~ 64 整数的相似度，一般当 >= 60 的时候可视为同一张图。
-  需要两张图的比例完全一样
 - DHash
   `compareScreenShot(screenId, x, y, w, h, path, dhash)`
-  尚未实现
+  返回 0 ~ 64 整数的相似度，一般当 >= 60 的时候可视为同一张图。
 - PHash
   `compareScreenShot(screenId, x, y, w, h, path, phash)`
   尚未实现

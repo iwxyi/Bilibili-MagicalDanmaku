@@ -136,7 +136,7 @@ public:
     static double pHash(QImage image1, QImage image2)
     {
         Q_ASSERT(image1.size() == image2.size());
-
+        return 0;
     }
 
     /**
