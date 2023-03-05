@@ -1,5 +1,5 @@
 #include <QMessageAuthenticationCode>
-#include "bililiveopenservice.h"
+#include "bili_liveopenservice.h"
 #include "accountinfo.h"
 #include "fileutil.h"
 

@@ -90,9 +90,9 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    services/liveservices/bililivecmds.cpp \
-    services/liveservices/bililiveopenservice.cpp \
-    services/liveservices/bililiveservice.cpp \
+    services/liveservices/bili_livecmds.cpp \
+    services/liveservices/bili_liveopenservice.cpp \
+    services/liveservices/bili_liveservice.cpp \
     services/liveservices/liveroomservice.cpp \
     services/liveservices/livestatisticservice.cpp \
     services/sqlservice.cpp \
@@ -186,8 +186,8 @@ HEADERS += \
     global/usersettings.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
-    services/liveservices/bililiveopenservice.h \
-    services/liveservices/bililiveservice.h \
+    services/liveservices/bili_liveopenservice.h \
+    services/liveservices/bili_liveservice.h \
     services/liveservices/liveroomservice.h \
     services/liveservices/livestatisticservice.h \
     services/sqlservice.h \
@@ -209,7 +209,7 @@ HEADERS += \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
-    services/liveservices/livedanmaku.h \
+    services/entities/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
     third_party/interactive_buttons/pointmenubutton.h \
     third_party/interactive_buttons/threedimenbutton.h \

@@ -277,7 +277,7 @@ protected:
     bool pkVideo = false;
     QList<LiveDanmaku> pkGifts;
 
-    // PK偷塔
+    // PK结尾
     QTimer* pkEndingTimer = nullptr;
     int goldTransPk = 100; // 金瓜子转乱斗值的比例，除以10还是100
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10

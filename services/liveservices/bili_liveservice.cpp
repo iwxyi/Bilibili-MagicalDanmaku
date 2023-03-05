@@ -4,7 +4,7 @@
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QClipboard>
-#include "bililiveservice.h"
+#include "bili_liveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
 #include "stringutil.h"

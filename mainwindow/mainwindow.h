@@ -52,12 +52,12 @@
 #include "appendbutton.h"
 #include "waterzoombutton.h"
 #include "tipbox.h"
-#include "bililiveopenservice.h"
+#include "bili_liveopenservice.h"
 #include "singleentrance.h"
 #include "sqlservice.h"
 #include "dbbrowser.h"
 #include "m3u8downloader.h"
-#include "bililiveservice.h"
+#include "bili_liveservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
