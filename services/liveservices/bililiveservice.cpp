@@ -1,8 +1,14 @@
 #include <zlib.h>
+#include <QFileDialog>
+#include <QInputDialog>
 #include "bililiveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
 #include "stringutil.h"
+#include "facilemenu.h"
+#include "textinputdialog.h"
+#include "fileutil.h"
+#include "httpuploader.h"
 
 BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 {
@@ -756,6 +762,634 @@ void BiliLiveService::joinStorm(qint64 id)
             emit signalLOTInfoChanged("自动参与活动");
         });
     });
+}
+
+void BiliLiveService::openUserSpacePage(QString uid)
+{
+    if (uid.isEmpty())
+        return;
+    QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + uid));
+}
+
+void BiliLiveService::openLiveRoomPage(QString roomId)
+{
+    if (roomId.isEmpty())
+        return;
+    QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomId));
+}
+
+void BiliLiveService::openAreaRankPage(QString areaId, QString parentAreaId)
+{
+    if (areaId.isEmpty() || parentAreaId.isEmpty())
+        return;
+    QDesktopServices::openUrl(QUrl("https://live.bilibili.com/p/eden/area-tags?areaId=" + areaId + "&parentAreaId=" + parentAreaId));
+}
+
+void BiliLiveService::switchMedalToUp(QString upId, int page)
+{
+    qInfo() << "自动切换勋章：upId=" << upId;
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_home_medals?uid=" + ac->cookieUid + "&source=2&need_rank=false&master_status=0&page=" + snum(page);
+    get(url, [=](MyJson json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("切换勋章返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户信息
+        MyJson data = json.data();
+        JI(data, cnt); Q_UNUSED(cnt) // 粉丝勋章个数
+        JI(data, max); Q_UNUSED(max) // 1000
+        JI(data, curr_page);
+        JI(data, total_page);
+        JA(data, list);
+
+        /*  can_delete: true
+            day_limit: 250000
+            guard_level: 0
+            guard_type: 0
+            icon_code: 0
+            icon_text: ""
+            intimacy: 1380
+            is_lighted: 1
+            is_receive: 1
+            last_wear_time: 1625119143
+            level: 21
+            live_stream_status: 0
+            lpl_status: 0
+            master_available: 1
+            master_status: 0
+            medal_color: 1725515
+            medal_color_border: 1725515
+            medal_color_end: 5414290
+            medal_color_start: 1725515
+            medal_id: 373753
+            medal_level: 21
+            medal_name: "181mm"
+            next_intimacy: 2000
+            rank: "-"
+            receive_channel: 4
+            receive_time: "2021-01-10 09:33:22"
+            score: 50001380
+            source: 1
+            status: 0
+            target_face: "https://i1.hdslb.com/bfs/face/29183e0e21b60c01a95bb5c281566edb22af0f43.jpg"
+            target_id: 20285041
+            target_name: "懒一夕智能科技官方"
+            today_feed: 0
+            today_intimacy: 0
+            uid: 20285041  */
+        foreach (QJsonValue val, list)
+        {
+            MyJson medal = val.toObject();
+            JI(medal, status); // 1佩戴，0未佩戴
+            JL(medal, target_id); // 主播
+
+            if (snum(target_id) == upId)
+            {
+                if (status) // 已佩戴，就不用管了
+                {
+                    qInfo() << "已佩戴当前直播间的粉丝勋章";
+                    return ;
+                }
+
+                // 佩带牌子
+                /*int isLighted = medal.value("is_lighted").toBool(); // 1能用，0变灰
+                if (!isLighted) // 牌子是灰的，可以不用管，发个弹幕就点亮了
+                    return ;
+                */
+
+                qint64 medalId = static_cast<qint64>(medal.value("medal_id").toDouble());
+                wearMedal(medalId);
+                return ;
+            }
+        }
+
+        // 未检测到勋章
+        if (curr_page >= total_page) // 已经是最后一页了
+        {
+            qInfo() << "未检测到勋章，无法佩戴";
+        }
+        else // 没有勋章
+        {
+            switchMedalToUp(upId, page+1);
+        }
+    });
+}
+
+void BiliLiveService::wearMedal(qint64 medalId)
+{
+    qInfo() << "佩戴勋章：medalId=" << medalId;
+    QString url("https://api.live.bilibili.com/xlive/web-room/v1/fansMedal/wear");
+    QStringList datas;
+    datas << "medal_id=" + QString::number(medalId);
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
+    datas << "visit_id=";
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    // 连接槽
+    post(url, ba, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("戴勋章返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+        qInfo() << "佩戴主播粉丝勋章成功";
+    });
+}
+
+void BiliLiveService::sendPrivateMsg(QString uid, QString msg)
+{
+    if (ac->csrf_token.isEmpty())
+    {
+        return ;
+    }
+
+    QString url("https://api.vc.bilibili.com/web_im/v1/web_im/send_msg");
+
+    QStringList params;
+    params << "msg%5Bsender_uid%5D=" + ac->cookieUid;
+    params << "msg%5Breceiver_id%5D=" + uid;
+    params << "msg%5Breceiver_type%5D=1";
+    params << "msg%5Bmsg_type%5D=1";
+    params << "msg%5Bmsg_status%5D=0";
+    params << "msg%5Bcontent%5D=" + QUrl::toPercentEncoding("{\"content\":\"" + msg.replace("\n", "\\n") + "\"}");
+    params << "msg%5Btimestamp%5D="+snum(QDateTime::currentSecsSinceEpoch());
+    params << "msg%5Bnew_face_version%5D=0";
+    params << "msg%5Bdev_id%5D=81872DC0-FBC0-4CF8-8E93-093DE2083F51";
+    params << "from_firework=0";
+    params << "build=0";
+    params << "mobi_app=web";
+    params << "csrf_token=" + ac->csrf_token;
+    params << "csrf=" + ac->csrf_token;
+    QByteArray ba(params.join("&").toStdString().data());
+
+    // 连接槽
+    post(url, ba, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            QString msg = json.value("message").toString();
+            qCritical() << s8("发送消息出错，返回结果不为0：") << msg;
+            return ;
+        }
+    });
+}
+
+void BiliLiveService::joinBattle(int type)
+{
+    if (!isLiving() || ac->cookieUid != ac->upUid)
+    {
+        showError("大乱斗", "未开播或不是主播本人");
+        return ;
+    }
+
+    QStringList params{
+        "room_id", ac->roomId,
+        "platform", "pc",
+        "battle_type", snum(type),
+        "csrf_token", ac->csrf_token,
+        "csrf", ac->csrf_token
+    };
+    post("https://api.live.bilibili.com/av/v1/Battle/join", params, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+            showError("开启大乱斗", json.value("message").toString());
+        else
+            emit signalBattleStartMatch();
+        qInfo() << "匹配大乱斗" << json;
+    });
+}
+
+/**
+ * 监听勋章升级
+ * 一个小问题：如果用户一点一点的点击送礼物，那么升级那段时间获取到的亲密度刚好在送礼物边缘
+ * 可能会多播报几次，或者压根就不播报
+ */
+void BiliLiveService::detectMedalUpgrade(LiveDanmaku danmaku)
+{
+    /* {
+        "code": 0,
+        "msg": "",
+        "message": "",
+        "data": {
+            "guard_type": 3,
+            "intimacy": 2672,
+            "is_receive": 1,
+            "last_wear_time": 1616941910,
+            "level": 23,
+            "lpl_status": 0,
+            "master_available": 1,
+            "master_status": 0,
+            "medal_id": 37075,
+            "medal_name": "蘑菇云",
+            "receive_channel": 30726000,
+            "receive_time": "2020-12-11 21:41:39",
+            "score": 50007172,
+            "source": 1,
+            "status": 0,
+            "target_id": 13908357,
+            "today_intimacy": 4,
+            "uid": 20285041,
+            "target_name": "娇羞的蘑菇",
+            "target_face": "https://i1.hdslb.com/bfs/face/180d0e87a0e88cb6c04ce6504c3f04003dd77392.jpg",
+            "live_stream_status": 0,
+            "icon_code": 0,
+            "icon_text": "",
+            "rank": "-",
+            "medal_color": 1725515,
+            "medal_color_start": 1725515,
+            "medal_color_end": 5414290,
+            "guard_level": 3,
+            "medal_color_border": 6809855,
+            "is_lighted": 1,
+            "today_feed": 4,
+            "day_limit": 250000,
+            "next_intimacy": 3000,
+            "can_delete": false
+        }
+    } */
+    // 如果是一点一点的点过去，则会出问题
+    qint64 uid = danmaku.getUid();
+    if (medalUpgradeWaiting.contains(uid)) // 只计算第一次
+        return ;
+
+    QList<int> specialGifts { 30607 };
+    if (ac->upUid.isEmpty() || (!danmaku.getTotalCoin() && !specialGifts.contains(danmaku.getGiftId()))) // 亲密度为0，不需要判断
+    {
+        if (us->debugPrint)
+            localNotify("[勋章升级：免费礼物]");
+        return ;
+    }
+    long long giftIntimacy = danmaku.getTotalCoin() / 100;
+    if (danmaku.getGiftId() == 30607)
+    {
+        if ((danmaku.getAnchorRoomid() == ac->roomId && danmaku.getMedalLevel() < 21) || !danmaku.isGuard())
+        {
+            giftIntimacy = danmaku.getNumber() * 50; // 21级以下的小心心有效，一个50
+        }
+        else
+        {
+            if (us->debugPrint)
+                localNotify("[勋章升级：小心心无效]");
+            return ;
+        }
+    }
+    if (!giftIntimacy) // 0瓜子，不知道什么小礼物，就不算进去了
+    {
+        if (us->debugPrint)
+            localNotify("[勋章升级：0电池礼物]");
+        return ;
+    }
+
+    QString currentAnchorRoom = danmaku.getAnchorRoomid();
+    int currentMedalLevel = danmaku.getMedalLevel();
+    if (us->debugPrint)
+        localNotify("[当前勋章：房间" + currentAnchorRoom + "，等级" + snum(currentMedalLevel) + "]");
+
+    // 获取新的等级
+    QString url = "https://api.live.bilibili.com/fans_medal/v1/fans_medal/get_fans_medal_info?source=1&uid="
+            + snum(danmaku.getUid()) + "&target_id=" + ac->upUid;
+
+    medalUpgradeWaiting.append(uid);
+    QTimer::singleShot(0, [=]{
+        medalUpgradeWaiting.removeOne(uid);
+        get(url, [=](MyJson json){
+            MyJson medalObject = json.data();
+            if (medalObject.isEmpty())
+            {
+                if (us->debugPrint)
+                    localNotify("[勋章升级：无勋章]");
+                return ; // 没有勋章，更没有亲密度
+            }
+            int intimacy = medalObject.i("intimacy"); // 当前亲密度
+            int nextIntimacy = medalObject.i("next_intimacy"); // 下一级亲密度
+            if (us->debugPrint)
+                localNotify("[亲密度：" + snum(intimacy) + "/" + snum(nextIntimacy) + "]");
+            if (intimacy >= giftIntimacy) // 没有升级，或者刚拿到粉丝牌升到1级
+            {
+                if (us->debugPrint)
+                    localNotify("[勋章升级：未升级，已有" + snum(intimacy) + ">=礼物" + snum(giftIntimacy) + "]");
+                return ;
+            }
+            LiveDanmaku ld = danmaku;
+            int level = medalObject.i("level");
+            if (us->debugPrint)
+            {
+                localNotify("[勋章升级：" + snum(level) + "级]");
+            }
+            if (ld.getAnchorRoomid() != ac->roomId && (!ac->shortId.isEmpty() && ld.getAnchorRoomid() != ac->shortId)) // 没有戴本房间的牌子
+            {
+                if (us->debugPrint)
+                    localNotify("[勋章升级：非本房间 " + ld.getAnchorRoomid() + "]");
+            }
+            ld.setMedalLevel(level); // 设置为本房间的牌子
+            triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
+        });
+    });
+}
+
+void BiliLiveService::myLiveSelectArea(bool update)
+{
+    get("https://api.live.bilibili.com/xlive/web-interface/v1/index/getWebAreaList?source_id=2", [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("获取分区列表", json.msg());
+        FacileMenu *menu = (new FacileMenu(rt->mainwindow))->setSubMenuShowOnCursor(false);
+        if (update)
+            menu->addTitle("修改分区", 1);
+        else
+            menu->addTitle("选择分区", 1);
+
+        json.data().each("data", [=](MyJson json){
+            QString parentId = snum(json.i("id")); // 这是int类型的
+            QString parentName = json.s("name");
+            auto parentMenu = menu->addMenu(parentName);
+            json.each("list", [=](MyJson json) {
+                QString id = json.s("id"); // 这个是字符串的
+                QString name = json.s("name");
+                parentMenu->addAction(name, [=]{
+                    ac->areaId = id;
+                    ac->areaName = name;
+                    ac->parentAreaId = parentId;
+                    ac->parentAreaName = parentName;
+                    us->setValue("myLive/areaId", ac->areaId);
+                    us->setValue("myLive/parentAreaId", ac->parentAreaId);
+                    qInfo() << "选择分区：" << parentName << parentId << ac->areaName << ac->areaId;
+                    if (update)
+                    {
+                        myLiveUpdateArea(ac->areaId);
+                    }
+                });
+            });
+        });
+
+        menu->exec();
+    });
+}
+
+void BiliLiveService::myLiveUpdateArea(QString area)
+{
+    qInfo() << "更新AreaId:" << area;
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+    {"room_id", ac->roomId, "area_id", area,
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+         [=](MyJson json) {
+        if (json.code() != 0)
+            return showError("修改分区失败", json.msg());
+    });
+}
+
+void BiliLiveService::myLiveStartLive()
+{
+    int lastAreaId = us->value("myLive/areaId", 0).toInt();
+    if (!lastAreaId)
+    {
+        showError("一键开播", "必须选择分类才能开播");
+        return ;
+    }
+    post("https://api.live.bilibili.com/room/v1/Room/startLive",
+    {"room_id", ac->roomId, "platform", "pc", "area_v2", snum(lastAreaId),
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+         [=](MyJson json) {
+        qInfo() << "开播：" << json;
+        if (json.code() != 0)
+            return showError("一键开播失败", json.msg());
+        MyJson rtmp = json.data().o("rtmp");
+        myLiveRtmp = rtmp.s("addr");
+        myLiveCode = rtmp.s("code");
+    });
+}
+
+void BiliLiveService::myLiveStopLive()
+{
+    post("https://api.live.bilibili.com/room/v1/Room/stopLive",
+    {"room_id", ac->roomId, "platform", "pc",
+         "csrf_token", ac->csrf_token, "csrf", ac->csrf_token},
+         [=](MyJson json) {
+        qInfo() << "下播：" << json;
+        if (json.code() != 0)
+            return showError("一键下播失败", json.msg());
+    });
+}
+
+void BiliLiveService::myLiveSetTitle(QString newTitle)
+{
+    if (ac->upUid != ac->cookieUid)
+        return showError("只有主播才能操作");
+    if (newTitle.isEmpty())
+    {
+        QString title = ac->roomTitle;
+        bool ok = false;
+        newTitle = QInputDialog::getText(rt->mainwindow, "修改直播间标题", "修改直播间标题，立刻生效", QLineEdit::Normal, title, &ok);
+        if (!ok)
+            return ;
+    }
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", ac->roomId,
+             "title", newTitle,
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置直播间标题：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        ac->roomTitle = newTitle;
+        emit signalRoomTitleChanged(newTitle);
+#ifdef ZUOQI_ENTRANCE
+        fakeEntrance->setRoomName(newTitle);
+#endif
+    });
+}
+
+void BiliLiveService::myLiveSetNews()
+{
+    QString content = ac->roomNews;
+    bool ok = false;
+    content = TextInputDialog::getText(rt->mainwindow, "修改主播公告", "修改主播公告，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room_ex/v1/RoomNews/update",
+         QStringList{
+             "room_id", ac->roomId,
+             "uid", ac->cookieUid,
+             "content", content,
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置主播公告：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        ac->roomNews = content;
+    });
+}
+
+void BiliLiveService::myLiveSetDescription()
+{
+    QString content = ac->roomDescription;
+    bool ok = false;
+    content = TextInputDialog::getText(rt->mainwindow, "修改个人简介", "修改主播的个人简介，立刻生效", content, &ok);
+    if (!ok)
+        return ;
+
+    post("https://api.live.bilibili.com/room/v1/Room/update",
+         QStringList{
+             "room_id", ac->roomId,
+             "description", content,
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token
+         }, [=](MyJson json) {
+        qInfo() << "设置个人简介：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        ac->roomDescription = content;
+        emit signalRoomDescriptionChanged(content);
+    });
+}
+
+void BiliLiveService::myLiveSetCover(QString path)
+{
+    if (ac->upUid != ac->cookieUid)
+        return showError("只有主播才能操作");
+    if (path.isEmpty())
+    {
+        // 选择封面
+        QString oldPath = us->value("recent/coverPath", "").toString();
+        path = QFileDialog::getOpenFileName(rt->mainwindow, "选择上传的封面", oldPath, "Image (*.jpg *.png *.jpeg *.gif)");
+        if (path.isEmpty())
+            return ;
+        us->setValue("recent/coverPath", path);
+    }
+    else
+    {
+        if (!isFileExist(path))
+            return showError("封面文件不存在", path);
+    }
+
+    // 裁剪图片：大致是 470 / 293 = 1.6 = 8 : 5
+    QPixmap pixmap(path);
+    // if (!ClipDialog::clip(pixmap, AspectRatio, 8, 5))
+    //     return ;
+
+    // 压缩图片
+    const int width = 470;
+    const QString clipPath = rt->dataPath + "temp_cover.jpeg";
+    pixmap = pixmap.scaledToWidth(width, Qt::SmoothTransformation);
+    pixmap.save(clipPath);
+
+    // 开始上传
+    HttpUploader* uploader = new HttpUploader("https://api.bilibili.com/x/upload/web/image?csrf=" + ac->csrf_token);
+    uploader->setCookies(ac->userCookies);
+    uploader->addTextField("bucket", "live");
+    uploader->addTextField("dir", "new_room_cover");
+    uploader->addFileField("file", "blob", clipPath, "image/jpeg");
+    uploader->post();
+    connect(uploader, &HttpUploader::finished, this, [=](QNetworkReply* reply) {
+        MyJson json(reply->readAll());
+        qInfo() << "上传封面：" << json;
+        if (json.code() != 0)
+            return showError("上传封面失败", json.msg());
+
+        auto data = json.data();
+        QString location = data.s("location");
+        QString etag = data.s("etag");
+
+        if (roomCover.isNull()) // 仅第一次上传封面，调用 add
+        {
+            post("https://api.live.bilibili.com/room/v1/Cover/add",
+            {"room_id", ac->roomId,
+             "url", location,
+             "type", "cover",
+             "csrf_token", ac->csrf_token,
+             "csrf", ac->csrf_token,
+             "visit_id", getRandomKey(12)
+                 }, [=](MyJson json) {
+                qInfo() << "添加封面：" << json;
+                if (json.code() != 0)
+                    return showError("添加封面失败", json.msg());
+            });
+        }
+        else // 后面就要调用替换的API了，需要参数 pic_id
+        {
+            // 获取 pic_id
+            get("https://api.live.bilibili.com/room/v1/Cover/new_get_list?room_id=" +ac->roomId, [=](MyJson json) {
+                qInfo() << "获取封面ID：" << json;
+                if (json.code() != 0)
+                    return showError("设置封面失败", "无法获取封面ID");
+                auto array = json.a("data");
+                if (!array.size())
+                    return showError("设置封面失败", "获取不到封面数据");
+                const qint64 picId = (long long)(array.first().toObject().value("id").toDouble());
+
+                post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
+                {"room_id", ac->roomId,
+                 "url", location,
+                 "pic_id", snum(picId),
+                 "type", "cover",
+                 "csrf_token", ac->csrf_token,
+                 "csrf", ac->csrf_token,
+                 "visit_id", getRandomKey(12)
+                     }, [=](MyJson json) {
+                    qInfo() << "设置封面：" << json;
+                    if (json.code() != 0)
+                        return showError("设置封面失败", json.msg());
+                });
+            });
+        }
+    });
+}
+
+void BiliLiveService::myLiveSetTags()
+{
+    QString content = ac->roomTags.join(" ");
+    bool ok = false;
+    content = QInputDialog::getText(rt->mainwindow, "修改我的个人标签", "多个标签之间使用空格分隔\n短时间修改太多标签可能会被临时屏蔽", QLineEdit::Normal, content, &ok);
+    if (!ok)
+        return ;
+
+    QStringList oldTags = ac->roomTags;
+    QStringList newTags = content.split(" ", QString::SkipEmptyParts);
+
+    auto toPost = [=](QString action, QString tag){
+        QString rst = NetUtil::postWebData("https://api.live.bilibili.com/room/v1/Room/update",
+                             QStringList{
+                                 "room_id", ac->roomId,
+                                 action, tag,
+                                 "csrf_token", ac->csrf_token,
+                                 "csrf", ac->csrf_token
+                             }, ac->userCookies);
+        MyJson json(rst.toUtf8());
+        qInfo() << "修改个人标签：" << json;
+        if (json.code() != 0)
+            return showError(json.msg());
+        if (action == "add_tag")
+            ac->roomTags.append(tag);
+        else
+            ac->roomTags.removeOne(tag);
+    };
+
+    // 对比新旧
+    foreach (auto tag, newTags)
+    {
+        if (oldTags.contains(tag)) // 没变的部分
+        {
+            oldTags.removeOne(tag);
+            continue;
+        }
+
+        // 新增的
+        qInfo() << "添加个人标签：" << tag;
+        toPost("add_tag", tag);
+    }
+    foreach (auto tag, oldTags)
+    {
+        qInfo() << "删除个人标签：" << tag;
+        toPost("del_tag", tag);
+    }
+
+    // 刷新界面
+    emit signalRoomTagsChanged(ac->roomTags);
 }
 
 void BiliLiveService::getRoomBattleInfo()

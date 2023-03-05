@@ -4,6 +4,7 @@
 #include <QWebSocket>
 #include <QRegularExpression>
 #include <QObjectCleanupHandler>
+#include <QDesktopServices>
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
@@ -48,6 +49,9 @@ signals:
     void signalRoomInfoChanged();
     void signalImUpChanged(bool isUp);
     void signalRoomCoverChanged(const QPixmap &pixmap);
+    void signalRoomTitleChanged(const QString& title);
+    void signalRoomDescriptionChanged(const QString& desc);
+    void signalRoomTagsChanged(const QStringList& tags);
     void signalUpHeadChanged(const QPixmap &pixmap);
     void signalRobotHeadChanged(const QPixmap &pixmap);
     void signalGetRoomAndRobotFinished(); // 获取房间基础信息/机器人基础信息结束
@@ -74,6 +78,7 @@ signals:
     void signalBattleScoreChanged(const QString& text);
     void signalBattleStarted();
     void signalBattleFinished();
+    void signalBattleStartMatch();
 
     void signalAppendNewLiveDanmaku(const LiveDanmaku& danmaku);
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
@@ -144,6 +149,27 @@ public:
     virtual void joinLOT(qint64 id, bool arg) { Q_UNUSED(id) Q_UNUSED(arg) }
     /// 节奏风暴
     virtual void joinStorm(qint64 id) { Q_UNUSED(id) }
+    /// 打开用户首页
+    virtual void openUserSpacePage(QString uid) { Q_UNUSED(uid) }
+    /// 打开直播间首页
+    virtual void openLiveRoomPage(QString roomId) { Q_UNUSED(roomId) }
+    /// 打开分区排行
+    virtual void openAreaRankPage(QString areaId, QString parentAreaId) { Q_UNUSED(areaId) Q_UNUSED(parentAreaId) }
+    /// 切换勋章至指定的主播ID
+    virtual void switchMedalToUp(QString upId, int page = 1) { Q_UNUSED(upId) Q_UNUSED(page)}
+    virtual void wearMedal(qint64 medalId) { Q_UNUSED(medalId) }
+    virtual void sendPrivateMsg(QString uid, QString msg) { Q_UNUSED(uid) Q_UNUSED(msg) }
+    virtual void joinBattle(int type) { Q_UNUSED(type) }
+    virtual void detectMedalUpgrade(LiveDanmaku danmaku) { Q_UNUSED(danmaku) }
+    virtual void myLiveSelectArea(bool update) { Q_UNUSED(update) }
+    virtual void myLiveUpdateArea(QString area) { Q_UNUSED(area) }
+    virtual void myLiveStartLive() {}
+    virtual void myLiveStopLive() {}
+    virtual void myLiveSetTitle(QString newTitle = "") { Q_UNUSED(newTitle) }
+    virtual void myLiveSetNews() {}
+    virtual void myLiveSetDescription() {}
+    virtual void myLiveSetCover(QString path = "") { Q_UNUSED(path) }
+    virtual void myLiveSetTags() {}
     
     /// 模拟在线观看效果（带心跳的那种）
     virtual void startHeartConnection() {}
@@ -165,6 +191,7 @@ public:
     virtual void getCookieAccount() = 0;
     QVariant getCookies() const;
 
+    /// 事件处理
     virtual void processNewDayData() {}
     virtual void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
     virtual void localNotify(const QString& text, qint64 uid = 0);
@@ -199,6 +226,9 @@ protected:
 
     // 粉丝数量
     QList<FanBean> fansList; // 最近的关注，按时间排序
+
+    // 粉丝牌
+    QList<qint64> medalUpgradeWaiting; // 正在计算的升级
 
     // 船员
     bool updateGuarding = false;

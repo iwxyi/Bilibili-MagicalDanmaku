@@ -921,27 +921,15 @@ private:
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
 
-    void switchMedalToUp(qint64 upId, int page = 1);
-    void wearMedal(qint64 medalId);
-    void sendPrivateMsg(qint64 uid, QString msg);
-    void joinBattle(int type);
-    void detectMedalUpgrade(LiveDanmaku danmaku);
-    void myLiveSelectArea(bool update);
-    void myLiveUpdateArea(QString area);
-    void myLiveStartLive();
-    void myLiveStopLive();
-    void myLiveSetTitle(QString newTItle = "");
-    void myLiveSetNews();
-    void myLiveSetDescription();
-    void myLiveSetCover(QString path = "");
-    void myLiveSetTags();
     void showPkMenu();
     void showPkAssists();
     void showPkHistories();
+
     void refreshPrivateMsg();
     void receivedPrivateMsg(MyJson session);
     void getPositiveVote();
     void positiveVote();
+
     void fanfanLogin();
     void fanfanAddOwn();
 
@@ -1155,9 +1143,6 @@ private:
     QList<qint64> gameUsers[CHANNEL_COUNT];
     QList<qint64> gameNumberLists[CHANNEL_COUNT];
     QList<QString> gameTextLists[CHANNEL_COUNT];
-
-    // 粉丝牌
-    QList<qint64> medalUpgradeWaiting;
 
     // 服务端
 #ifdef ENABLE_HTTP_SERVER

@@ -46,6 +46,7 @@ public:
     QString appDownloadUrl;
 
     QString ffmpegPath;
+    QWidget* mainwindow = nullptr;
 };
 
 extern RuntimeInfo* rt;
