@@ -1,0 +1,10 @@
+.count-text {
+    color      : #38DEE3;
+    font-weight: bold;
+    font-size  : 40px;
+    text-shadow: -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0px 2px 2px rgba(0, 0, 0, 0.2);
+}

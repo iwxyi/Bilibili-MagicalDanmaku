@@ -289,6 +289,7 @@ VALUES(?,?,?,?,?,?,?,?,?,?,?)");
         query.addBindValue(danmaku.getGuard());
         query.addBindValue(danmaku.getTotalCoin());
         query.addBindValue(danmaku.getNumber());
+        // start_time 和 end_time 是同一个时间
         query.addBindValue(QDateTime::fromSecsSinceEpoch(static_cast<qint64>(danmaku.extraJson.value("start_time").toDouble())));
         query.addBindValue(QDateTime::fromSecsSinceEpoch(static_cast<qint64>(danmaku.extraJson.value("end_time").toDouble())));
         query.addBindValue(danmaku.getTimeline());

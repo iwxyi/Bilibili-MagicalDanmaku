@@ -11,10 +11,12 @@ QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
 QT_END_NAMESPACE
 
+#define TO_SIMPLE_NUMBER(x) (x > 100000 ? QString(snum(x/10000)+"万") : snum(x))
+
 LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     : QWidget(nullptr)
 {
-    this->setWindowTitle("实时弹幕");
+    this->setWindowTitle("弹幕姬");
     this->setMinimumSize(45,45);                        //设置最小尺寸
 #ifdef Q_OS_ANDROID
     this->setAttribute(Qt::WA_TranslucentBackground, false);
@@ -32,7 +34,16 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 
     bool onTop = us->value("livedanmakuwindow/onTop", true).toBool();
     if (onTop)
+    {
         this->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+
+        // WS_EX_APPWINDOW：悬浮在任务栏、全屏游戏窗口之上
+#ifdef Q_OS_WIN32
+//        auto hwnd = (HWND)this->winId();
+//        auto widgetStyle = WS_EX_TOPMOST | WS_EX_APPWINDOW | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW;
+//        SetWindowLong(hwnd, GWL_EXSTYLE, widgetStyle);
+#endif
+    }
     if (us->value("livedanmakuwindow/transMouse", false).toBool())
     {
         this->setAttribute(Qt::WA_TransparentForMouseEvents, true);
@@ -917,6 +928,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
 
     if (danmaku.isRobot())
         text = (simpleMode ? "[机] " : "<font color='#5E86C1'>[机]</font> ") + text;
+
+    if (danmaku.getUid() == 20285041)
+        text = (simpleMode ? "[开] " : "<font color='#4169E1'>[开发者]</font> ") + text;
 
     // 串门判断
     if (danmaku.isToView())
@@ -2373,8 +2387,8 @@ void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action, QAc
             return ;
         }
         QJsonObject obj = json.value("data").toObject();
-        int following = obj.value("following").toInt(); // 关注
-        int follower = obj.value("follower").toInt(); // 粉丝
+        QString following = TO_SIMPLE_NUMBER(obj.value("following").toInt()); // 关注
+        QString follower = TO_SIMPLE_NUMBER(obj.value("follower").toInt()); // 粉丝
         // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
         // int black = obj.value("black").toInt(); // 黑名单（自己登录）
         if (!action2)
@@ -2432,11 +2446,11 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action, QActi
         {
             QStringList sl;
             if (achive_view)
-                sl << "播放:" + snum(achive_view);
+                sl << "播放:" + TO_SIMPLE_NUMBER(achive_view);
             if (article_view)
-                sl << "阅读:" + snum(article_view);
+                sl << "阅读:" + TO_SIMPLE_NUMBER(article_view);
             if (article_like)
-                sl << "点赞:" + snum(article_like);
+                sl << "点赞:" + TO_SIMPLE_NUMBER(article_like);
 
             if (sl.size())
                 action->setText(sl.join(","));
@@ -2445,11 +2459,11 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action, QActi
         }
         else
         {
-            action->setText("播放数:" + snum(achive_view));
+            action->setText("播放数:" + TO_SIMPLE_NUMBER(achive_view));
             if (action2)
-                action2->setText("阅读数:" + snum(article_view));
+                action2->setText("阅读数:" + TO_SIMPLE_NUMBER(article_view));
             if (action3)
-                action3->setText("获赞数:" + snum(article_like));
+                action3->setText("获赞数:" + TO_SIMPLE_NUMBER(article_like));
         }
     });
     manager->get(*request);

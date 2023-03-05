@@ -40,3 +40,6 @@ url编码=urlEncode
 url解码=urlDecode
 SQL执行=SQLExec
 SQL查询=SQLQuery
+保存窗口截图=saveScreenShot
+获取屏幕宽度=getScreenWidth
+获取屏幕高度=getScreenHeight

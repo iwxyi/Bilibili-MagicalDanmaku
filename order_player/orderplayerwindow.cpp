@@ -3095,8 +3095,8 @@ void OrderPlayerWindow::startBgAnimation(int duration)
 void OrderPlayerWindow::setThemeColor(const QPixmap &cover)
 {
     QColor bg, fg, sbg, sfg;
-    auto colors = ImageUtil::extractImageThemeColors(cover.toImage(), 7);
-    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    auto colors = ColorOctreeUtil::extractImageThemeColors(cover.toImage(), 7);
+    ColorOctreeUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
 
     prevPa = BFSColor::fromPalette(palette());
     currentPa = BFSColor(QList<QColor>{bg, fg,sbg, sfg});

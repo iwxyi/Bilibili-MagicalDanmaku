@@ -98,7 +98,7 @@ SOURCES += \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     third_party/color_octree/coloroctree.cpp \
-    third_party/color_octree/imageutil.cpp \
+    third_party/color_octree/coloroctreeutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
     third_party/facile_menu/facilemenuitem.cpp \
     third_party/gif/avilib.cpp \
@@ -197,7 +197,7 @@ HEADERS += \
     third_party/calculator/func_define.h \
     third_party/calculator/function.h \
     third_party/color_octree/coloroctree.h \
-    third_party/color_octree/imageutil.h \
+    third_party/color_octree/coloroctreeutil.h \
     third_party/facile_menu/facilemenu.h \
     third_party/facile_menu/facilemenuitem.h \
     third_party/gif/avilib.h \
@@ -231,6 +231,7 @@ HEADERS += \
     third_party/notification/tipcard.h \
     third_party/qss_editor/qsseditdialog.h \
     third_party/qss_editor/qsshighlighteditor.h \
+    third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
     third_party/utils/conditionutil.h \
     third_party/utils/httpuploader.h \

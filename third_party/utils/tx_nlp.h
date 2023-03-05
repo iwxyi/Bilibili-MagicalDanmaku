@@ -167,6 +167,9 @@ public:
 
         // 过滤文字
         if (answer.contains("未搜到")
+                || answer.contains("风太大了，没有听清，能再说一遍么")
+                || answer.contains("刚才和其它人说话，没听清，再说一遍吧")
+                || answer.contains("不小心走神了，能再说一遍么")
                 || answer.isEmpty())
             return ;
 

@@ -36,6 +36,7 @@
 #include "string_distance_util.h"
 #include "bili_api_util.h"
 #include "pixmaputil.h"
+#include "ImageSimilarityUtil.h"
 
 TxNlp* TxNlp::txNlp = nullptr;
 
@@ -1242,6 +1243,8 @@ void MainWindow::readConfig()
 
         us->localNicknames.insert(sl.at(0).toLongLong(), sl.at(1));
     }
+    if (us->localNicknames.empty())
+        us->localNicknames.insert(20285041, "神奇弹幕开发者");
 
     // 礼物别名
     us->giftAlias.clear();
@@ -1262,6 +1265,8 @@ void MainWindow::readConfig()
     {
         us->careUsers.append(s.toLongLong());
     }
+    if (us->careUsers.empty())
+        us->careUsers.append(20285041);
 
     // 强提醒
     us->strongNotifyUsers.clear();
@@ -1270,6 +1275,8 @@ void MainWindow::readConfig()
     {
         us->strongNotifyUsers.append(s.toLongLong());
     }
+    if (us->strongNotifyUsers.isEmpty())
+        us->strongNotifyUsers.append(20285041);
 
     // 不自动欢迎
     us->notWelcomeUsers.clear();
@@ -2407,7 +2414,7 @@ void MainWindow::sendAutoMsg(QString msgs, const LiveDanmaku &danmaku)
     // 分割与发送
     QStringList sl = msgs.split("\\n", QString::SkipEmptyParts);
     autoMsgQueues.append(qMakePair(sl, danmaku));
-    if (!autoMsgTimer->isActive() && !inDanmakuDelay)
+    if (/*!autoMsgTimer->isActive() &&*/ !inDanmakuDelay && !inDanmakuCd)
     {
         slotSendAutoMsg(false); // 先运行一次
     }
@@ -2431,10 +2438,6 @@ void MainWindow::sendAutoMsgInFirst(QString msgs, const LiveDanmaku &danmaku, in
     }
     autoMsgTimer->stop();
     autoMsgTimer->start();
-    /* if (!autoMsgTimer->isActive())
-    {
-        autoMsgTimer->start();
-    } */
 }
 
 /**
@@ -2484,7 +2487,6 @@ void MainWindow::slotSendAutoMsg(bool timeout)
     CmdResponse res = NullRes;
     int resVal = 0;
     bool exec = execFunc(msg, *danmaku, res, resVal);
-
     if (!exec) // 如果是发送弹幕
     {    
         msg = msgToShort(msg);
@@ -2513,9 +2515,11 @@ void MainWindow::slotSendAutoMsg(bool timeout)
             autoMsgTimer->setInterval(resVal);
             if (!autoMsgTimer->isActive())
                 autoMsgTimer->start();
-            inDanmakuDelay = true;
+            inDanmakuDelay++;
             QTimer::singleShot(resVal, [=]{
-                inDanmakuDelay = false;
+                inDanmakuDelay--;
+                if (inDanmakuDelay < 0)
+                    inDanmakuDelay = 0;
             });
             return ;
         }
@@ -4956,8 +4960,8 @@ void MainWindow::setRoomCover(const QPixmap& pixmap)
 
     // 设置程序主题
     QColor bg, fg, sbg, sfg;
-    auto colors = ImageUtil::extractImageThemeColors(liveService->roomCover.toImage(), 7);
-    ImageUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
+    auto colors = ColorOctreeUtil::extractImageThemeColors(liveService->roomCover.toImage(), 7);
+    ColorOctreeUtil::getBgFgSgColor(colors, &bg, &fg, &sbg, &sfg);
     prevPa = BFSColor::fromPalette(palette());
     currentPa = BFSColor(QList<QColor>{bg, fg, sbg, sfg});
     QPropertyAnimation* ani = new QPropertyAnimation(this, "paletteProg");
@@ -6524,7 +6528,7 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QColor color = pixmap.toImage().pixelColor(0, 0);
         return QVariant(color).toString();
     }
-    else if (funcName == "getWindowPositionColor") // 获取屏幕上某个点的颜色
+    else if (funcName == "getWindowPositionColor") // 获取指定窗口某个点的颜色
     {
         QString name = argList.at(0); // 窗口名字
         bool isId = false;
@@ -6635,6 +6639,107 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         if (argList.size() < 1 || args.isEmpty())
             return errorArg("字符串");
         return toSingleLine(QByteArray::fromPercentEncoding(args.toUtf8()));
+    }
+    else if (funcName == "compareScreenShot")
+    {
+        if (argList.size() < 6)
+            return errorArg("");
+
+        int id = argList.at(0).toInt();
+        int x = argList.at(1).toInt();
+        int y = argList.at(2).toInt();
+        int w = argList.at(3).toInt();
+        int h = argList.at(4).toInt();
+        QString path = argList.at(5);
+        QString type = "";
+        if (argList.size() > 6)
+            type = argList.at(6).toLower();
+
+        auto screens = QGuiApplication::screens();
+        if (id < 0 || id >= screens.size())
+        {
+            showError("保存屏幕截图", "错误的屏幕ID：" + snum(id));
+            return "0";
+        }
+
+        QScreen *screen = screens.at(id);
+        QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
+
+        QImage comparedImage;
+        if (cacheImages.contains(path))
+        {
+            comparedImage = cacheImages[path];
+        }
+        else
+        {
+            if (!comparedImage.load(path))
+            {
+                showError("加载图片", "加载图片失败：" + path);
+                return "0";
+            }
+            qInfo() << "加载本地图片进缓存：" << path;
+            cacheImages[path] = comparedImage;
+        }
+
+        if (type.isEmpty() || type == "pixel")
+        {
+            int threshold = 8;
+            if (argList.size() > 7)
+                threshold = argList.at(7).toInt();
+            return snum(int(ImageSimilarityUtil::compareImageByPixel(image, comparedImage, us->imageSimilarPrecision, threshold) * 100));
+        }
+        else if (type == "ahash")
+        {
+            return snum(ImageSimilarityUtil::aHash(image, comparedImage));
+        }
+        else if (type == "dhash")
+        {
+            return snum(ImageSimilarityUtil::dHash(image, comparedImage));
+        }
+        else if (type == "phash")
+        {
+            if (image.width() * comparedImage.height() != image.height() * comparedImage.width()) // 相同的宽高比
+            {
+                showError("比较图片", "图片比例不同，无法比较");
+                return "0";
+            }
+            // TODO:phash
+        }
+        else
+        {
+            showError("比较图片", "不支持的图片相似度算法：" + type);
+            return "0";
+        }
+    }
+    else if (funcName == "getScreenWidth")
+    {
+        int screenId = 0;
+        if (argList.size() > 0)
+            screenId = argList.at(0).toInt();
+        auto screens = QGuiApplication::screens();
+        if (screenId < 0 || screenId >= screens.size())
+        {
+            showError(funcName, "错误的屏幕ID：" + snum(screenId));
+            return "0";
+        }
+
+        QScreen *screen = screens.at(screenId);
+        return snum(screen->geometry().width());
+    }
+    else if (funcName == "getScreenHeight")
+    {
+        int screenId = 0;
+        if (argList.size() > 0)
+            screenId = argList.at(0).toInt();
+        auto screens = QGuiApplication::screens();
+        if (screenId < 0 || screenId >= screens.size())
+        {
+            showError(funcName, "错误的屏幕ID：" + snum(screenId));
+            return "0";
+        }
+
+        QScreen *screen = screens.at(screenId);
+        return snum(screen->geometry().height());
     }
 
     return "";
@@ -9572,6 +9677,23 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
         }
     }
 
+    if (msg.contains("call"))
+    {
+        re = RE("call\\s*\\(\\s*([^,]+)\\s*,?(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString event = caps.at(1);
+            QString args = caps.at(2).trimmed();
+            QStringList argList = args.split(",", QString::SkipEmptyParts);
+            argList.insert(0, caps.at(0));
+            qInfo() << "执行命令：" << event << " 参数：" << argList.join(",");
+            danmaku.setArgs(argList);
+            triggerCmdEvent(event, danmaku);
+            return true;
+        }
+    }
+
     // 点歌
     if (msg.contains("orderSong"))
     {
@@ -9988,6 +10110,42 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             sql = toMultiLine(sql);
             qInfo() << "执行命令：" << caps;
             showSqlQueryResult(sql);
+            return true;
+        }
+    }
+
+    // 图片相关的
+    if (msg.contains("saveScreenShot"))
+    {
+        re = RE("saveScreenShot\\s*\\((\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(.+)\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            int id = caps.at(1).toInt();
+            int x = caps.at(2).toInt();
+            int y = caps.at(3).toInt();
+            int w = caps.at(4).toInt();
+            int h = caps.at(5).toInt();
+            QString path = caps.at(6);
+            auto screens = QGuiApplication::screens();
+            if (id < 0 || id >= screens.size())
+            {
+                showError("保存屏幕截图", "错误的屏幕ID：" + snum(id));
+                return true;
+            }
+            QScreen *screen = screens.at(id);
+            QImage image = screen->grabWindow(QApplication::desktop()->winId(), x, y, w, h).toImage();
+
+            QFileInfo info(path);
+            QDir dir = info.absoluteDir();
+            dir.mkpath(dir.absolutePath());
+            image.save(path);
+            if (cacheImages.contains(path))
+            {
+                cacheImages[path] = image;
+            }
+            qInfo() << "保存截图：" << QRect(x, y, w, h) << screen->geometry() << path;
             return true;
         }
     }
@@ -12754,6 +12912,31 @@ void MainWindow::handleMessage(QJsonObject json)
             }
         }*/
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
+    }
+    else if (cmd == "AREA_RANK_CHANGED")
+    {
+        /*{
+            "cmd": "AREA_RANK_CHANGED",
+            "data": {
+                "action_type": 1,
+                "conf_id": 18,
+                "icon_url_blue": "https://i0.hdslb.com/bfs/live/18e2990a546d33368200f9058f3d9dbc4038eb5c.png",
+                "icon_url_grey": "https://i0.hdslb.com/bfs/live/cb7444b1faf1d785df6265bfdc1fcfc993419b76.png",
+                "icon_url_pink": "https://i0.hdslb.com/bfs/live/a6c490c36e88c7b191a04883a5ec15aed187a8f7.png",
+                "jump_url_link": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=3&ruid=1424343672&conf_id=18&is_live_half_webview=1&hybrid_rotate_d=1&is_cling_player=1&hybrid_half_ui=1,3,100p,70p,f4eefa,0,30,100,0,0;2,2,375,100p,f4eefa,0,30,100,0,0;3,3,100p,70p,f4eefa,0,30,100,0,0;4,2,375,100p,f4eefa,0,30,100,0,0;5,3,100p,70p,f4eefa,0,30,100,0,0;6,3,100p,70p,f4eefa,0,30,100,0,0;7,3,100p,70p,f4eefa,0,30,100,0,0;8,3,100p,70p,f4eefa,0,30,100,0,0#/area-rank",
+                "jump_url_pc": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=4&ruid=1424343672&conf_id=18&pc_ui=338,465,f4eefa,0#/area-rank",
+                "jump_url_pink": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=1&ruid=1424343672&conf_id=18&is_live_half_webview=1&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,ffffff,0,30,100,12,0;2,2,375,100p,ffffff,0,30,100,0,0;3,3,100p,70p,ffffff,0,30,100,12,0;4,2,375,100p,ffffff,0,30,100,0,0;5,3,100p,70p,ffffff,0,30,100,0,0;6,3,100p,70p,ffffff,0,30,100,0,0;7,3,100p,70p,ffffff,0,30,100,0,0;8,3,100p,70p,ffffff,0,30,100,0,0#/area-rank",
+                "jump_url_web": "https://live.bilibili.com/p/html/live-app-hotrank/index.html?clientType=2&ruid=1424343672&conf_id=18#/area-rank",
+                "msg_id": "d09b58ac-278f-4bf6-bd1e-481b548fc336",
+                "rank": 36,
+                "rank_name": "聊天热榜",
+                "timestamp": 1675690660,
+                "uid": 1424343672
+            }
+        }*/
+        MyJson data = json.value("data").toObject();
+        int rank = data.i("rank");
+        QString name = data.s("rank_name");
     }
     else
     {
@@ -17461,7 +17644,7 @@ void MainWindow::loadWebExtensionList()
             if (desc.isEmpty())
                 desc = descAll;
             QString dirName = info.fileName();
-            if (!urlR.isEmpty() && !urlR.startsWith("/"))
+            if (!urlR.isEmpty() && !urlR.startsWith("/")) // "/"开头以www为根目录，否则以扩展目录为根目录
                 urlR = "/" + dirName + "/" + urlR;
             if (!cssR.isEmpty() && !cssR.startsWith("/"))
                 cssR = "/" + dirName + "/" + cssR;
@@ -17606,7 +17789,17 @@ void MainWindow::loadWebExtensionList()
                         shakeWidget(ui->serverCheck);
                         return showError("未开启网络服务", "不可使用" + name);
                     }
-                    QDesktopServices::openUrl(getDomainPort() + urlR);
+                    if (urlR.endsWith(".exe") || urlR.endsWith(".vbs") || urlR.endsWith(".bat"))
+                    {
+                        qInfo() << "启动程序：" << QDir(wwwDir).absolutePath() + urlR;
+                        QProcess process;
+                        process.startDetached(QDir(wwwDir).absolutePath() + urlR);
+                    }
+                    else
+                    {
+                        qInfo() << "打开网址：" << getDomainPort() + urlR;
+                        QDesktopServices::openUrl(getDomainPort() + urlR);
+                    }
                 });
 
                 auto btn = new WaterCircleButton(QIcon(":/icons/copy"), widget);
@@ -17615,13 +17808,22 @@ void MainWindow::loadWebExtensionList()
                 btn->setSquareSize();
                 btn->setCursor(Qt::PointingHandCursor);
                 btn->setFixedForePos();
-                btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
-                // btn->hide();
-                // connect(widget, SIGNAL(signalMouseEnter()), btn, SLOT(show()));
-                // connect(widget, SIGNAL(signalMouseLeave()), btn, SLOT(hide()));
-                connect(btn, &InteractiveButtonBase::clicked, this, [=]{
-                    QApplication::clipboard()->setText(getDomainPort() + urlR);
-                });
+
+                if (urlR.endsWith(".exe") || urlR.endsWith(".vbs") || urlR.endsWith(".bat"))
+                {
+                    btn->setToolTip("本扩展为应用程序，可单独运行");
+                    connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                        QProcess process;
+                        process.startDetached(QDir(wwwDir).absolutePath() + urlR);
+                    });
+                }
+                else
+                {
+                    btn->setToolTip("复制URL，可粘贴到直播姬/OBS的“浏览器”中");
+                    connect(btn, &InteractiveButtonBase::clicked, this, [=]{
+                        QApplication::clipboard()->setText(getDomainPort() + urlR);
+                    });
+                }
             }
 
             // 配置
@@ -19782,6 +19984,10 @@ void MainWindow::on_actionDebug_Mode_triggered()
 {
     us->setValue("debug/debugPrint", us->debugPrint = ui->actionDebug_Mode->isChecked());
     qInfo() << "调试模式：" << us->debugPrint;
+    if (us->debugPrint)
+        ensureFileExist("update_tool.log");
+    else
+        deleteFile("update_tool.log");
 }
 
 void MainWindow::on_actionGuard_Online_triggered()
@@ -20823,31 +21029,51 @@ void MainWindow::on_recordFormatCheck_clicked()
     us->set("record/format", ui->recordFormatCheck->isChecked());
     if (ui->recordFormatCheck->isChecked() && rt->ffmpegPath.isEmpty())
     {
-        // 尝试自动获取 ffmpeg.exe 位置
-        QStringList environmentList = QProcess::systemEnvironment();
 #ifdef Q_OS_WIN
-        const QString app = "ffmpeg.exe";
+        const QString ffmpegApp = "ffmpeg.exe";
 #else
-        const QString app = "ffmpeg";
+        const QString ffmpegApp = "ffmpeg";
 #endif
-        rt->ffmpegPath = "";
-        foreach (QString environment, environmentList)
+
+        // 尝试自动获取 ffmpeg.exe 位置
+        if (isFileExist(QApplication::applicationDirPath() + "/" + ffmpegApp)) // 应用目录下
         {
-            if (environment.startsWith("Path="))
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/tools/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/tools" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/tools/ffmpeg/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/tools/ffmpeg/" + ffmpegApp;
+        }
+        else if (isFileExist(QApplication::applicationDirPath() + "/www/ffmpeg/" + ffmpegApp))
+        {
+            rt->ffmpegPath = QApplication::applicationDirPath() + "/www/ffmpeg" + ffmpegApp;
+        }
+        else // 检查环境变量
+        {
+            QStringList environmentList = QProcess::systemEnvironment();
+            rt->ffmpegPath = "";
+            foreach (QString environment, environmentList)
             {
-                QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
-                foreach (QString d, sl)
+                if (environment.startsWith("Path="))
                 {
-                    QString path = QDir(d).absoluteFilePath(app);
-                    if (QFileInfo(path).exists())
+                    QStringList sl = environment.right(environment.length() - 5).split(";", QString::SkipEmptyParts);
+                    foreach (QString d, sl)
                     {
-                        qInfo() << "自动设置" << app << "位置：" << path;
-                        rt->ffmpegPath = path;
-                        us->setValue("record/ffmpegPath", path);
-                        break;
+                        QString path = QDir(d).absoluteFilePath(ffmpegApp);
+                        if (QFileInfo(path).exists())
+                        {
+                            qInfo() << "自动设置" << ffmpegApp << "位置：" << path;
+                            rt->ffmpegPath = path;
+                            us->setValue("record/ffmpegPath", path);
+                            break;
+                        }
                     }
+                    break;
                 }
-                break;
             }
         }
 

@@ -3,6 +3,7 @@
 
 #include <QWebSocket>
 #include <QRegularExpression>
+#include <QObjectCleanupHandler>
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
@@ -268,6 +269,9 @@ protected:
     // 活动信息
     int currentSeasonId = 0; // 大乱斗赛季，获取连胜需要赛季
     QString pkRuleUrl; // 大乱斗赛季信息
+
+    // 内存管理
+    QObjectCleanupHandler cleanupHandler;
 };
 
 #endif // LIVEROOMSERVICE_H

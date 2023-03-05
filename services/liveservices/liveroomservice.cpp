@@ -232,13 +232,13 @@ void LiveRoomService::readConfig()
 
 void LiveRoomService::releaseLiveData(bool prepare)
 {
-    if (!prepare)
+    if (!prepare) // 断开连接
     {
 
     }
-    else
+    else // 下播
     {
-
+        cleanupHandler.clear(); // 清理泄露的内存
     }
 }
 

@@ -1,10 +1,10 @@
 #include <math.h>
-#include "imageutil.h"
+#include "coloroctreeutil.h"
 
 /**
  * 图片转换为颜色集
  */
-QColor ImageUtil::getImageAverageColor(QImage image, int maxSize)
+QColor ColorOctreeUtil::getImageAverageColor(QImage image, int maxSize)
 {
     int hCount = image.width();
     int vCount = image.height();
@@ -40,7 +40,7 @@ QColor ImageUtil::getImageAverageColor(QImage image, int maxSize)
 /** 
  * 获取图片中所有的颜色
  */
-QList<ColorOctree::ColorCount> ImageUtil::extractImageThemeColors(QImage image, int count)
+QList<ColorOctree::ColorCount> ColorOctreeUtil::extractImageThemeColors(QImage image, int count)
 {
     auto octree = ColorOctree(image, IMAGE_CALC_PIXEL_MAX_SIZE, count);
     auto result = octree.result();
@@ -63,7 +63,7 @@ QList<ColorOctree::ColorCount> ImageUtil::extractImageThemeColors(QImage image, 
  * 然后和调色盘中颜色对比
  * 取出每种最是相近的颜色
  */
-QList<QColor> ImageUtil::extractImageThemeColorsInPalette(QImage image, QList<QColor> paletteColors, int needCount)
+QList<QColor> ColorOctreeUtil::extractImageThemeColorsInPalette(QImage image, QList<QColor> paletteColors, int needCount)
 {
     auto octree = ColorOctree(image, IMAGE_CALC_PIXEL_MAX_SIZE, paletteColors.size());
     auto result = octree.result();
@@ -100,7 +100,7 @@ QList<QColor> ImageUtil::extractImageThemeColorsInPalette(QImage image, QList<QC
 /**
  * 获取反色
  */
-QColor ImageUtil::getInvertColor(QColor color)
+QColor ColorOctreeUtil::getInvertColor(QColor color)
 {
     auto getInvert = [=](int c) -> int{
         if (c < 96 || c > 160)
@@ -123,7 +123,7 @@ QColor ImageUtil::getInvertColor(QColor color)
  * 前景色是与其余颜色的(色差*数量)方差和最大的
  * @return 颜色提取是否成功
  */
-bool ImageUtil::getBgFgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg)
+bool ColorOctreeUtil::getBgFgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg)
 {
     Q_ASSERT(bg && fg);
     if (!colors.size())
@@ -176,7 +176,7 @@ bool ImageUtil::getBgFgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, 
 /**
  * 同上，外加一个辅助色
  */
-bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sg)
+bool ColorOctreeUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sg)
 {
     // 调用上面先获取背景色、前景色
     if (!getBgFgColor(colors, bg, fg))
@@ -220,7 +220,7 @@ bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg
  * 同上
  * 获取四种颜色：背景色、前景色（文字）、辅助背景色（与文字色差大）、辅助前景色（与背景色差大）
  */
-bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sbg, QColor *sfg)
+bool ColorOctreeUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg, QColor *fg, QColor *sbg, QColor *sfg)
 {
     // 调用上面先获取背景色、前景色
     if (!getBgFgColor(colors, bg, fg))
@@ -292,7 +292,7 @@ bool ImageUtil::getBgFgSgColor(QList<ColorOctree::ColorCount> colors, QColor *bg
 /// 获取色差最大的一项
 /// 由于RGB颜色空间不是均匀颜色空间,按照空间距离得到的色差并不完全符合人的视觉,
 /// 在实际应用时经常采取给各颜色分量加上一定权值的办法，一般加权取值(3,4,2)
-QColor ImageUtil::getFastestColor(QColor bg, QList<QColor> palette)
+QColor ColorOctreeUtil::getFastestColor(QColor bg, QList<QColor> palette)
 {
     qint64 maxi = -1;
     QColor maxiColor;
@@ -314,7 +314,7 @@ QColor ImageUtil::getFastestColor(QColor bg, QList<QColor> palette)
 
 /// 获取色差最大的一项
 /// 但是也会参考数量，数量越多权重越高
-QColor ImageUtil::getFastestColor(QColor bg, QList<ColorOctree::ColorCount> palette, int enableCount)
+QColor ColorOctreeUtil::getFastestColor(QColor bg, QList<ColorOctree::ColorCount> palette, int enableCount)
 {
     qint64 maxi = -1;
     QColor maxiColor = QColor::Invalid;
@@ -339,7 +339,7 @@ QColor ImageUtil::getFastestColor(QColor bg, QList<ColorOctree::ColorCount> pale
 }
 
 /// 返回随机深色调
-QColor ImageUtil::randomColor()
+QColor ColorOctreeUtil::randomColor()
 {
     return QColor::fromHsl(rand()%360,rand()%256,rand()%200);
 }

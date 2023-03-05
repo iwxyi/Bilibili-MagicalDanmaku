@@ -101,7 +101,10 @@ public:
                         if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
                         {
                             QString full = caps.at(0);
-                            if (full.indexOf(QRegularExpression("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$"), 0, &match) == -1)
+                            QRegularExpression re("^\\s*(.*)\\s*(~)\\s*([^~]*?)\\s*$");
+                            if (!re.isValid())
+                                qWarning() << "错误的正则表达式1：" << re.errorString();
+                            if (full.indexOf(re, 0, &match) == -1)
                             {
                                 qWarning() << "错误的~运算：" << full;
                                 isTrue = false;
@@ -111,10 +114,12 @@ public:
                             s1 = caps.at(1);
                             s2 = caps.at(3);
                             CALC_DEB << "纠正运算：" << s1 << "~" << s2;
+                            // qWarning() << "错误的~表达式：" << s2;
                         }
 
                         QRegularExpression re(s2);
-                        qWarning() << "错误的~表达式：" << s2;
+                        if (!re.isValid())
+                            qWarning() << "错误的正则表达式2：" << re.errorString();
                         if (!s1.contains(QRegularExpression(s2)))
                         {
                             isTrue = false;

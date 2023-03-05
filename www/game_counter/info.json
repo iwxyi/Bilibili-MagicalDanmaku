@@ -1,0 +1,53 @@
+{
+    "name": "游戏统计",
+    "min_version": "4.9.1",
+	"author": "小乂",
+    "list": [
+        {
+            "name": "游戏击杀统计",
+            "url": "index.html",
+            "config": "config.html",
+            "css": "style.css",
+            "css_custom": "style_custom.css",
+            "desc": "击杀数统计，显示剩余击杀数量，送礼物增加/减少",
+            "code": [
+                {
+                    "action": ">call(击杀统计_设置数量, 10)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": false,
+                    "event": "数字统计：点右边的发送来初始化数量"
+                },
+                {
+                    "action": "[%礼物名字% = 心动盲盒]>call(数字统计_调整数量, 2)\n[%礼物名字% = 舰长]>call(数字统计_调整数量, 15)\n[%礼物名字% = 情书]>call(数字统计_调整数量, -1)\n[%礼物名字% = 闪耀盲盒]>call(数字统计_调整数量, -7)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "SEND_GIFT"
+                },
+                {
+                    "action": ">sendToSockets(GAME_COUNTER, {\"cmd\": \"SET_COUNT\", \"data\": { \"count\": %$1% }})",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "数字统计_设置数量"
+                },
+                {
+                    "action": ">sendToSockets(GAME_COUNTER, {\"cmd\": \"SET_COUNT\", \"data\": { \"delta\": %$1% }})",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "数字统计_调整数量"
+                },
+                {
+                    "action": ">call(数字统计_调整数量, 1)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "KEY:ctrl+alt+up"
+                },
+                {
+                    "action": ">call(数字统计_调整数量, -1)",
+                    "anchor_key": "神奇弹幕:EventAction",
+                    "enabled": true,
+                    "event": "KEY:ctrl+alt+down"
+                }
+            ]
+        }
+    ]
+}
