@@ -1,6 +1,9 @@
 #include <zlib.h>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QTableView>
+#include <QStandardItemModel>
+#include <QClipboard>
 #include "bililiveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
@@ -1320,7 +1323,7 @@ void BiliLiveService::myLiveSetCover(QString path)
                 auto array = json.a("data");
                 if (!array.size())
                     return showError("设置封面失败", "获取不到封面数据");
-                const qint64 picId = (long long)(array.first().toObject().value("id").toDouble());
+                const qint64 picId = static_cast<long long>(array.first().toObject().value("id").toDouble());
 
                 post("https://api.live.bilibili.com/room/v1/Cover/new_replace_cover",
                 {"room_id", ac->roomId,
@@ -1392,6 +1395,330 @@ void BiliLiveService::myLiveSetTags()
     emit signalRoomTagsChanged(ac->roomTags);
 }
 
+void BiliLiveService::showPkMenu()
+{
+    FacileMenu* menu = new FacileMenu(rt->mainwindow);
+
+    menu->addAction("大乱斗规则", [=]{
+        if (pkRuleUrl.isEmpty())
+        {
+            showError("大乱斗规则", "未找到规则说明");
+            return ;
+        }
+        QDesktopServices::openUrl(QUrl(pkRuleUrl));
+    });
+
+    menu->addAction("最佳助攻列表", [=]{
+        showPkAssists();
+    });
+
+    menu->split()->addAction("赛季匹配记录", [=]{
+        showPkHistories();
+    });
+
+    menu->addAction("最后匹配的直播间", [=]{
+        if (!ac->lastMatchRoomId)
+        {
+            showError("匹配记录", "没有最后匹配的直播间");
+            return ;
+        }
+        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + snum(ac->lastMatchRoomId)));
+    });
+
+    menu->exec();
+}
+
+void BiliLiveService::showPkAssists()
+{
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank?uid=" + ac->upUid + "&room_id=" + ac->roomId + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    // qInfo() << "pk assists:" << url;
+    get(url, [=](MyJson json) {
+        JO(json, data);
+        JA(data, assist_list); // 助攻列表
+
+        QString title = "助攻列表";
+        auto view = new QTableView(rt->mainwindow);
+        auto model = new QStandardItemModel(view);
+        QStringList columns {
+            "名字", "积分", "UID"
+        };
+        model->setColumnCount(columns.size());
+        model->setHorizontalHeaderLabels(columns);
+        model->setRowCount(assist_list.size());
+
+
+        for (int row = 0; row < assist_list.count(); row++)
+        {
+            MyJson assist = assist_list.at(row).toObject();
+            JI(assist, rank); Q_UNUSED(rank)
+            JL(assist, uid);
+            JS(assist, name);
+            JS(assist, face);
+            JL(assist, pk_score);
+
+            int col = 0;
+            model->setItem(row, col++, new QStandardItem(name));
+            model->setItem(row, col++, new QStandardItem(snum(pk_score)));
+            model->setItem(row, col++, new QStandardItem(snum(uid)));
+        }
+
+        // 创建控件
+        view->setModel(model);
+        view->setAttribute(Qt::WA_ShowModal, true);
+        view->setAttribute(Qt::WA_DeleteOnClose, true);
+        view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+
+        // 自适应宽度
+        view->resizeColumnsToContents();
+        for(int i = 0; i < model->columnCount(); i++)
+            view->setColumnWidth(i, view->columnWidth(i) + 10); // 加一点，不然会显得很挤
+
+        // 显示位置
+        QRect rect = rt->mainwindow->geometry();
+        // int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+        rect.setTop(rect.top());
+        view->setWindowTitle(title);
+        view->setGeometry(rect);
+        view->show();
+
+        // 菜单
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(view, &QWidget::customContextMenuRequested, view, [=]{
+            auto index = view->currentIndex();
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString uname = model->item(row, 0)->data(Qt::DisplayRole).toString();
+            QString uid = model->item(row, 2)->data(Qt::DisplayRole).toString();
+
+            FacileMenu* menu = new FacileMenu(rt->mainwindow);
+            menu->addAction("复制昵称", [=]{
+                QApplication::clipboard()->setText(uname);
+            });
+            menu->addAction("复制UID", [=]{
+                QApplication::clipboard()->setText(uid);
+            });
+            menu->split()->addAction("查看首页", [=]{
+                QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + uid));
+            });
+            menu->exec();
+        });
+    });
+}
+
+void BiliLiveService::showPkHistories()
+{
+    QString url = "https://api.live.bilibili.com/av/v1/Battle/getPkRecord?"
+                  "ruid=" + ac->upUid + "&room_id=" + ac->roomId + "&season_id=" + snum(currentSeasonId) + "&_=" + snum(QDateTime::currentMSecsSinceEpoch());
+    // qInfo() << "pk histories" << url;
+    get(url, [=](MyJson json) {
+        if (json.code())
+            return showError("获取PK历史失败", json.msg());
+        QString title = "大乱斗历史";
+        auto view = new QTableView(rt->mainwindow);
+        auto model = new QStandardItemModel(view);
+        int rowCount = 0;
+        QStringList columns {
+            "时间", "主播", "结果", "积分", "票数"/*自己:对面*/, "房间ID"
+        };
+        model->setColumnCount(columns.size());
+        model->setHorizontalHeaderLabels(columns);
+
+        auto pkInfo = json.data().o("pk_info");
+        auto dates = pkInfo.keys();
+        std::sort(dates.begin(), dates.end(), [=](const QString& s1, const QString& s2) {
+            return s1 > s2;
+        });
+        foreach (auto date, dates)
+        {
+            pkInfo.o(date).each("list", [&](MyJson info) {
+                int result = info.i("result_type"); // 2胜利，1平局，-1失败
+                QString resultText = result < 0 ? "失败" : result > 1 ? "胜利" : "平局";
+                auto matchInfo = info.o("match_info");
+
+                int row = rowCount++;
+                int col = 0;
+                model->setRowCount(rowCount);
+                model->setItem(row, col++, new QStandardItem(date + " " + info.s("pk_end_time")));
+                model->setItem(row, col++, new QStandardItem(matchInfo.s("name")));
+                auto resultItem = new QStandardItem(resultText);
+                model->setItem(row, col++, resultItem);
+                auto scoreItem = new QStandardItem(snum(info.l("pk_score")));
+                model->setItem(row, col++, scoreItem);
+                scoreItem->setTextAlignment(Qt::AlignCenter);
+                auto votesItem = new QStandardItem(snum(info.l("current_pk_votes")) + " : " + snum(matchInfo.l("pk_votes")));
+                model->setItem(row, col++, votesItem);
+                votesItem->setTextAlignment(Qt::AlignCenter);
+                if (result > 1)
+                    resultItem->setForeground(Qt::green);
+                else if (result < 0)
+                    resultItem->setForeground(Qt::red);
+                model->setItem(row, col++, new QStandardItem(snum(matchInfo.l("room_id"))));
+            });
+        }
+
+        // 创建控件
+        view->setModel(model);
+        view->setAttribute(Qt::WA_ShowModal, true);
+        view->setAttribute(Qt::WA_DeleteOnClose, true);
+        view->setWindowFlags(Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint | Qt::Dialog);
+
+        // 自适应宽度
+        view->resizeColumnsToContents();
+        for(int i = 0; i < model->columnCount(); i++)
+            view->setColumnWidth(i, view->columnWidth(i) + 10); // 加一点，不然会显得很挤
+
+        // 显示位置
+        QRect rect = rt->mainwindow->geometry();
+        // int titleHeight = style()->pixelMetric(QStyle::PM_TitleBarHeight);
+        rect.setTop(rect.top());
+        view->setWindowTitle(title);
+        view->setGeometry(rect);
+        view->show();
+
+        // 菜单
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(view, &QWidget::customContextMenuRequested, view, [=]{
+            auto index = view->currentIndex();
+            if (!index.isValid())
+                return ;
+            int row = index.row();
+            QString uname = model->item(row, 1)->data(Qt::DisplayRole).toString();
+            QString roomId = model->item(row, 5)->data(Qt::DisplayRole).toString();
+
+            FacileMenu* menu = new FacileMenu(rt->mainwindow);
+            menu->addAction("复制昵称", [=]{
+                QApplication::clipboard()->setText(uname);
+            });
+            menu->addAction("复制房间号", [=]{
+                QApplication::clipboard()->setText(roomId);
+            });
+            menu->split()->addAction("前往直播间", [=]{
+                QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + roomId));
+            });
+            menu->exec();
+        });
+    });
+}
+
+void BiliLiveService::refreshPrivateMsg()
+{
+    if (ac->cookieUid.isEmpty())
+        return ;
+
+    qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
+    get("https://api.vc.bilibili.com/session_svr/v1/session_svr/get_sessions?session_type=1&group_fold=1&unfollow_fold=0&build=0&mobi_app=web",
+    // get("https://api.vc.bilibili.com/session_svr/v1/session_svr/new_sessions?begin_ts=0&build=0&mobi_app=web",
+        [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            if (json.code() == -412)
+            {
+                showError("接收私信：" + snum(json.code()), "过于频繁，15分钟后自动重试");
+                emit signalRefreshPrivateMsgEnabled(false);
+                QTimer::singleShot(15 * 60000, [=]{
+                    emit signalRefreshPrivateMsgEnabled(true);
+                });
+            }
+            else
+            {
+                showError("接收私信：" + snum(json.code()), json.msg());
+                emit signalRefreshPrivateMsgEnabled(false);
+            }
+            return ;
+        }
+
+        MyJson data = json.data();
+        QJsonArray sessionList = data.a("session_list");
+        foreach (QJsonValue sessionV, sessionList) // 默认按最新时间排序
+        {
+            MyJson session = sessionV.toObject();
+
+            // 判断未读消息
+            /* qint64 unreadCount = session.i("unread_count");
+            if (!unreadCount) // TODO:有时候自动回复不会显示未读
+                continue; */
+
+            qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
+            if (sessionTs > currentTimestamp) // 连接中间的时间
+                continue;
+            if (sessionTs <= privateMsgTimestamp) // 之前已处理
+                break;
+
+            // 接收到会话信息
+            receivedPrivateMsg(session);
+        }
+        privateMsgTimestamp = currentTimestamp;
+    });
+}
+
+void BiliLiveService::receivedPrivateMsg(MyJson session)
+{
+    // 解析消息内容
+    qint64 talkerId = session.l("talker_id"); // 用户ID
+    if (!talkerId)
+        return ;
+    qint64 sessionTs = session.l("session_ts") / 1000; // 会话时间，纳秒
+    int isFollow = session.i("is_follow"); Q_UNUSED(isFollow)
+    int isDnd = session.i("is_dnd"); Q_UNUSED(isDnd)
+    MyJson lastMsg = session.o("last_msg");
+    QString content = "";
+    int msgType = 0;
+    if (!lastMsg.isEmpty())
+    {
+        // 1纯文本，2图片，3撤回消息，6自定义表情，7分享稿件，10通知消息，11发布视频，12发布专栏，13卡片消息，14分享直播，
+        msgType = lastMsg.i("msg_type"); // 使用 %.msg_type% 获取
+        qint64 senderUid = lastMsg.l("sender_uid"); // 自己或者对面发送的
+        if (senderUid != talkerId) // 自己已经回复了
+            return ;
+        qint64 receiverId = lastMsg.l("receiver_id");
+        Q_ASSERT(receiverId == ac->cookieUid.toLongLong());
+        content = lastMsg.s("content");
+        MyJson lastContent = MyJson::from(content.toUtf8());
+        if (lastContent.contains("content"))
+            content = lastContent.s("content");
+        else if (lastContent.contains("text"))
+            content = lastContent.s("text");
+        else
+            content.replace("\\n", "\n"); // 肯定有问题
+    }
+    qInfo() << "接收到私信：" << session;
+
+    // 获取发送者信息
+    get("https://api.bilibili.com/x/space/acc/info?mid=" + snum(talkerId), [=](MyJson info) {
+        MyJson newJson = session;
+
+        // 解析信息
+        QString name = snum(talkerId);
+        QString faceUrl = "";
+        if (info.code() == 0)
+        {
+            MyJson data = info.data();
+            name = data.s("name");
+            faceUrl = data.s("face");
+            newJson.insert("sender", info);
+        }
+        else
+        {
+            qWarning() << "获取私信发送者信息失败：" << info.msg();
+        }
+        qInfo() << "接收到私信: " << name << msgType << ":" << content
+                << "    (" << sessionTs << "  in "
+                << privateMsgTimestamp << "~" << QDateTime::currentMSecsSinceEpoch() << ")";
+
+        // 触发事件
+        LiveDanmaku danmaku(talkerId, name, content);
+        danmaku.with(session);
+        danmaku.setUid(talkerId);
+        danmaku.setTime(QDateTime::fromMSecsSinceEpoch(sessionTs));
+        triggerCmdEvent("RECEIVE_PRIVATE_MSG", danmaku);
+    });
+}
+
 void BiliLiveService::getRoomBattleInfo()
 {
     get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",
@@ -1422,7 +1749,7 @@ void BiliLiveService::updateWinningStreak(bool emitWinningStreak)
         JO(json, data);
         JO(data, anchor_pk_info);
         JS(anchor_pk_info, pk_rank_name); // 段位名字：钻石传说
-        JI(anchor_pk_info, pk_rank_star); // 段位级别：2
+        JI(anchor_pk_info, pk_rank_star); Q_UNUSED(pk_rank_star) // 段位级别：2
         JS(anchor_pk_info, first_rank_img_url); // 图片
         if (pk_rank_name.isEmpty())
             return ;
@@ -1439,7 +1766,7 @@ void BiliLiveService::updateWinningStreak(bool emitWinningStreak)
         JI(score_info, total_win_num); // 总赢：309
         JI(score_info, max_win_num); // 最高连胜：16
         JI(score_info, total_num); // 总次数（>总赢）：454
-        JI(score_info, total_tie_count); // 平局：3
+        JI(score_info, total_tie_count); Q_UNUSED(total_tie_count) // 平局：3
         JI(score_info, total_lose_count); // 总失败数：142
         JI(score_info, win_count); // 当前连胜？：5
         JI(score_info, win_rate); // 胜率：69

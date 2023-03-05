@@ -921,12 +921,6 @@ private:
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
 
-    void showPkMenu();
-    void showPkAssists();
-    void showPkHistories();
-
-    void refreshPrivateMsg();
-    void receivedPrivateMsg(MyJson session);
     void getPositiveVote();
     void positiveVote();
 

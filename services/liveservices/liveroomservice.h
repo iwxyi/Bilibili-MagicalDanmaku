@@ -68,6 +68,7 @@ signals:
     void signalLOTInfoChanged(const QString& text); // 天选等活动
     void signalLOTDescChanged(const QString& text);
     void signalDanmakuLongestChanged(int length); // 弹幕长度
+    void signalRefreshPrivateMsgEnabled(bool enable); // 私信功能开关
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -114,6 +115,9 @@ public slots:
     virtual void refreshBlockList() {}
     /// 根据UL等级或者舰长自动调整字数
     virtual void adjustDanmakuLongest() {}
+    /// 私信
+    virtual void refreshPrivateMsg() {}
+    virtual void receivedPrivateMsg(MyJson session) { Q_UNUSED(session) }
 
 public:
     /// 获取直播间信息
@@ -158,9 +162,13 @@ public:
     /// 切换勋章至指定的主播ID
     virtual void switchMedalToUp(QString upId, int page = 1) { Q_UNUSED(upId) Q_UNUSED(page)}
     virtual void wearMedal(qint64 medalId) { Q_UNUSED(medalId) }
+    /// 发送私信
     virtual void sendPrivateMsg(QString uid, QString msg) { Q_UNUSED(uid) Q_UNUSED(msg) }
+    /// 参加大乱斗
     virtual void joinBattle(int type) { Q_UNUSED(type) }
+    /// 送礼物后检测勋章升级
     virtual void detectMedalUpgrade(LiveDanmaku danmaku) { Q_UNUSED(danmaku) }
+    /// 修改直播间信息
     virtual void myLiveSelectArea(bool update) { Q_UNUSED(update) }
     virtual void myLiveUpdateArea(QString area) { Q_UNUSED(area) }
     virtual void myLiveStartLive() {}
@@ -170,6 +178,10 @@ public:
     virtual void myLiveSetDescription() {}
     virtual void myLiveSetCover(QString path = "") { Q_UNUSED(path) }
     virtual void myLiveSetTags() {}
+    /// 获取PK相关信息
+    virtual void showPkMenu() {}
+    virtual void showPkAssists() {}
+    virtual void showPkHistories() {}
     
     /// 模拟在线观看效果（带心跳的那种）
     virtual void startHeartConnection() {}

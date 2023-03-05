@@ -54,6 +54,9 @@ public:
     void myLiveSetDescription() override;
     void myLiveSetCover(QString path = "") override;
     void myLiveSetTags() override;
+    void showPkMenu() override;
+    void showPkAssists() override;
+    void showPkHistories() override;
 
     /// 大乱斗
     void getRoomBattleInfo() override;
@@ -90,6 +93,9 @@ public slots:
     void delRoomBlockUser(qint64 id) override;
     void refreshBlockList() override;
     void adjustDanmakuLongest() override;
+    /// 私信
+    void refreshPrivateMsg() override;
+    void receivedPrivateMsg(MyJson session) override;
     
 private:
     // 直播心跳
