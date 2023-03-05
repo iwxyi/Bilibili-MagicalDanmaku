@@ -90,6 +90,7 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
+    mainwindow/cmd_process.cpp \
     services/liveservices/bili_livecmds.cpp \
     services/liveservices/bili_liveopenservice.cpp \
     services/liveservices/bili_liveservice.cpp \
