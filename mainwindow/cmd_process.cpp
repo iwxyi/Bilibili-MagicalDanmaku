@@ -69,7 +69,10 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
 
             qInfo() << ">消息命令UNZC：" << cmd;
 
-            handleUncompMessage(cmd, json);
+            if (!handleUncompMessage(cmd, json))
+            {
+                qWarning() << QString(body);
+            }
         }
         else
         {
@@ -86,11 +89,11 @@ void MainWindow::slotBinaryMessageReceived(const QByteArray &message)
     SOCKET_DEB << "消息处理结束";
 }
 
-void MainWindow::handleUncompMessage(QString cmd, MyJson json)
+bool MainWindow::handleUncompMessage(QString cmd, MyJson json)
 {
     if (cmd == "STOP_LIVE_ROOM_LIST" || cmd == "WIDGET_BANNER" || cmd == "NOTICE_MSG")
     {
-        return ;
+        return true;
     }
     else if (cmd == "ROOM_RANK")
     {
@@ -236,12 +239,45 @@ void MainWindow::handleUncompMessage(QString cmd, MyJson json)
     else if (cmd == "HOT_ROOM_NOTIFY")
     {
     }
+    else if (cmd == "GUARD_HONOR_THOUSAND") // 千舰变化
+    {
+        /*{
+            "cmd": "GUARD_HONOR_THOUSAND",
+            "data": {
+                "add": [],
+                "del": [
+                    2051617240,
+                    1501380958,
+                    1484169431,
+                    1398337493,
+                    1084222017,
+                    672353429,
+                    672346917,
+                    672342685,
+                    672328094,
+                    480680646,
+                    401315430,
+                    226102317,
+                    194484313,
+                    8881297,
+                    8739477,
+                    6713974,
+                    1521415,
+                    745493,
+                    114866,
+                    67141
+                ]
+            }
+        }*/
+    }
     else
     {
-        qWarning() << "未处理的未压缩命令=" << cmd << "   正文=" << QString(body);
+        qWarning() << "未处理的未压缩命令=" << cmd << "   正文=" << json;
+        return false;
     }
 
     triggerCmdEvent(cmd, LiveDanmaku(json.value("data").toObject()));
+    return true;
 }
 
 bool MainWindow::handlePK(QJsonObject json)
@@ -2654,6 +2690,44 @@ void MainWindow::handleMessage(QJsonObject json)
         MyJson data = json.value("data").toObject();
         int rank = data.i("rank");
         QString name = data.s("rank_name");
+    }
+    else if (cmd == "WIDGET_GIFT_STAR_PROCESS")
+    {
+        /*{
+            "cmd": "WIDGET_GIFT_STAR_PROCESS",
+            "data": {
+                "ddl_timestamp": 1678636800,
+                "finished": false,
+                "process_list": [
+                    {
+                        "completed_num": 4,
+                        "gift_id": 31036,
+                        "gift_img": "https://s1.hdslb.com/bfs/live/8b40d0470890e7d573995383af8a8ae074d485d9.png",
+                        "gift_name": "礼物星球",
+                        "target_num": 200
+                    },
+                    {
+                        "completed_num": 1,
+                        "gift_id": 31037,
+                        "gift_img": "https://s1.hdslb.com/bfs/live/461be640f60788c1d159ec8d6c5d5cf1ef3d1830.png",
+                        "gift_name": "礼物星球",
+                        "target_num": 100
+                    },
+                    {
+                        "completed_num": 0,
+                        "gift_id": 31883,
+                        "gift_img": "https://s1.hdslb.com/bfs/live/d819113c3c3edde56d0eb872d3723ac2025f19bc.png",
+                        "gift_name": "礼物星球",
+                        "target_num": 1
+                    }
+                ],
+                "reward_gift": 32268,
+                "reward_gift_img": "https://s1.hdslb.com/bfs/live/7ca35670d343096c4bd9cd6d5491aa8a5305f82c.png",
+                "reward_gift_name": "礼物星球",
+                "start_date": 20230306,
+                "version": 1678105731045
+            }
+        }*/
     }
     else
     {

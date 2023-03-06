@@ -1,3 +1,14 @@
+### v4.9.2 [Win API接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.9.2)
+
+- 调整移动鼠标 `moveMouse` / `moveMouseTo` 为 `adjustMouse` / `moveMouse`
+
+- 新增显示窗口、移动窗口、发送窗口消息等多个命令
+- 新增查找窗口、前景窗口、窗口大小、鼠标位置等多个函数
+
+
+
+
+
 ### v4.9.1 [游戏统计、函数封装](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.9.1)
 
 - 新增获取屏幕宽高的函数

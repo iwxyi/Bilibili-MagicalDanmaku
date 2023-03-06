@@ -6757,18 +6757,172 @@ QString MainWindow::replaceDynamicVariants(const QString &funcName, const QStrin
         QScreen *screen = screens.at(screenId);
         return snum(screen->geometry().height());
     }
-    else if (funcName == "funcWindowByName")
+    else if (funcName == "findWindow" || funcName == "findWindowByName") // 通过类名或窗口标题来获取句柄
     {
         if (argList.size() < 1)
-            return errorArg("");
+            return errorArg("窗口标题名/类名");
         QString winName = argList.at(0);
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
         HWND hwnd = FindWindow(nullptr, static_cast<LPCWSTR>(winName.toStdWString().c_str()));
-        return snum((long long)hwnd);
+        qInfo() << funcName << winName << hwnd;
+        return snum((long long)hwnd); // 如果找不到窗口，那么可能会是空的
 #else
         return "0";
 #endif
     }
+    else if (funcName == "getForegroundWindow")
+    {
+#ifdef Q_OS_WIN
+        HWND hWnd = GetForegroundWindow();
+        qInfo() << funcName << hWnd;
+        return snum((long long)hWnd); // 如果找不到窗口，那么可能会是空的
+#else
+        return "0";
+#endif
+    }
+    else if (funcName == "getWindowState") // 窗口是否是全屏（最大化不算）
+    {
+        if (argList.size() < 2)
+            return errorArg("窗口句柄");
+#ifdef Q_OS_WIN
+        HWND hWnd = (HWND)argList.at(0).toLongLong();
+        if (hWnd == nullptr)
+        {
+            showError(funcName, "无法获取窗口ID");
+            return "0";
+        }
+
+        //参数2取值定义如下：
+        //0 : 判断窗口是否存在
+        //1 : 判断窗口是否处于激活
+        //2 : 判断窗口是否可见
+        //3 : 判断窗口是否最小化
+        //4 : 判断窗口是否最大化
+        //5 : 判断窗口是否置顶
+        //6 : 判断窗口是否无响应
+        QString typer = argList.at(1).toLower();
+        int type = 0;
+        if (typer.contains("exist"))
+            type = 0;
+        else if (typer.contains("activ"))
+            type = 1;
+        else if (typer.contains("vis"))
+            type = 2;
+        else if (typer.contains("min"))
+            type = 3;
+        else if (typer.contains("max"))
+            type = 4;
+        else if  (typer.contains("top"))
+            type = 5;
+        else if (typer.contains("hung"))
+            type = 6;
+
+        // int result = GetWindowState(hWnd, type); // 暂时不支持这个函数
+        // return result ? "1" : "0";
+        return "0";
+#else
+        return "0";
+#endif
+    }
+    else if (funcName == "isWindowFullScreen") // 窗口是否是全屏（最大化不算）
+    {
+        if (argList.size() < 1)
+            return errorArg("窗口句柄");
+#ifdef Q_OS_WIN
+        HWND hWnd = (HWND)argList.at(0).toLongLong();
+        if (hWnd == nullptr)
+        {
+            showError(funcName, "无法获取窗口ID");
+            return "0";
+        }
+
+        //获取顶层窗口的矩形范围
+        RECT top_window_rect;
+        if(!GetWindowRect(hWnd, &top_window_rect))
+        {
+            return FALSE;
+        }
+
+        //获取窗口所在显示器
+        HMONITOR monitor_hwnd = MonitorFromRect(&top_window_rect, MONITOR_DEFAULTTONULL);
+        if(!monitor_hwnd)return FALSE;
+
+        //获取显示器的信息
+        MONITORINFO monitor_info;
+        monitor_info.cbSize = sizeof(monitor_info);
+        GetMonitorInfo(monitor_hwnd, &monitor_info);
+
+        //判断显示器的显示范围和顶层窗口是否相同,相同就是全屏显示了
+        //不相同就不是全屏显示
+        bool eq = EqualRect(&top_window_rect, &(monitor_info.rcMonitor));
+        return eq ? "1" : "0";
+#else
+        return "0";
+#endif
+    }
+    else if (funcName == "getCursorPos")
+    {
+        if (argList.size() < 1)
+            return errorArg("x/y");
+        QString type = argList.at(0).toLower();
+        if (type.contains("x"))
+            return snum(QCursor::pos().x());
+        else if (type.contains("y"))
+            return snum(QCursor::pos().y());
+        else
+            return "0";
+    }
+    else if (funcName == "getWindowRect")
+    {
+        if (argList.size() < 2)
+            return errorArg("窗口句柄, 尺寸类型");
+#ifdef Q_OS_WIN
+        HWND hWnd = (HWND)argList.at(0).toLongLong();
+        if (hWnd == nullptr)
+        {
+            showError(funcName, "无法获取窗口ID");
+            return "0";
+        }
+
+        //获取顶层窗口的矩形范围
+        RECT top_window_rect;
+        if(!GetWindowRect(hWnd, &top_window_rect))
+        {
+            showError("无法获取窗口尺寸");
+            return "0";
+        }
+
+        QString type = argList.at(1).toLower();
+        if (type.startsWith("x") || type.startsWith("l")) // x / left
+            return snum(top_window_rect.left);
+        if (type.startsWith("y") || type.startsWith("t")) // y / top
+            return snum(top_window_rect.top);
+        if (type.startsWith("r")) // y / right
+            return snum(top_window_rect.right);
+        if (type.startsWith("b")) // y / bottom
+            return snum(top_window_rect.bottom);
+        if (type.startsWith("w")) // y / width
+            return snum(top_window_rect.right - top_window_rect.left);
+        if (type.startsWith("h")) // y / height
+            return snum(top_window_rect.bottom - top_window_rect.top);
+
+#else
+        return "0";
+#endif
+    }
+    else if (funcName == "getWindowFromPoint")
+    {
+        if (argList.size() < 2)
+            return errorArg("x, y");
+        int x = argList.at(0).toInt();
+        int y = argList.at(1).toInt();
+#ifdef Q_OS_WIN
+        POINT curpos {x, y};
+        HWND hWnd = WindowFromPoint(curpos);
+        return snum((long long)hWnd);
+#endif
+    }
+
 
     return "";
 }
@@ -8730,7 +8884,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString path = caps.at(1);
             qInfo() << "执行命令：" << caps;
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
             path = QString("file:///") + path;
             bool is_open = QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
             if(!is_open)
@@ -9862,9 +10016,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 移动鼠标（相对现在位置）
-    if (msg.contains("moveMouse"))
+    if (msg.contains("adjustMouse") || msg.contains("adjustCursor"))
     {
-        re = RE("moveMouse\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        re = RE("adjust(?:Mouse|Cursor)\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -9877,9 +10031,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     }
 
     // 移动鼠标到绝对位置
-    if (msg.contains("moveMouseTo"))
+    if (msg.contains("moveMouse") || msg.contains("moveCursor"))
     {
-        re = RE("moveMouseTo\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
+        re = RE("move(?:Mouse|Cursor)\\s*\\(\\s*([-\\d]+)\\s*,\\s*([-\\d]+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -10114,7 +10268,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
     // 执行数据库
     if (msg.contains("sqlExec") || msg.contains("SQLExec"))
     {
-        re = RE("(?:sql|SQL)Exec\\s*\\((.+?)\\)");
+        re = RE("(?:sql|SQL)Exec\\s*\\(\\s*(.+?)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -10177,6 +10331,99 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             return true;
         }
     }
+
+    // windows API
+    if (msg.contains("showWindow"))
+    {
+        re = RE("showWindow\\s*\\(\\s*(\\d*)\\s*,\\s*(\\S*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString pointer = caps[1];
+            QString typer = caps[2].toLower();
+            qInfo() << "执行命令：" << caps;
+#ifdef Q_OS_WIN
+            int type = SW_MAXIMIZE;
+            bool ok = false;
+            if (typer.contains("hide"))
+                type = SW_HIDE;
+            else if (typer.contains("normal"))
+                type = SW_NORMAL;
+            else if (typer.contains("max"))
+                type = SW_MAXIMIZE;
+            else if (typer.contains("show"))
+                type = SW_SHOW;
+            else if (typer.contains("min"))
+                type = SW_MINIMIZE;
+            else if (typer.contains("restore"))
+                type = SW_RESTORE;
+            else if (typer.contains("default"))
+                type = SW_SHOWDEFAULT;
+            else if (typer.toInt(&ok) || ok)
+                type = typer.toInt();
+            HWND hWnd = (HWND)pointer.toLongLong();
+            if (hWnd == nullptr)
+            {
+                showError("showWindow", "找不到该窗口");
+                return true;
+            }
+            ShowWindow(hWnd, type);
+#endif
+            return true;
+        }
+    }
+
+    if (msg.contains("sendWindowMessage")) // 需要窗口的输入框获取焦点才能进行输入
+    {
+        re = RE("sendWindowMessage\\s*\\(\\s*(\\d*)\\s*,\\s*(.*?)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString pointer = caps[1];
+            QString text = toMultiLine(caps[2]);
+#ifdef Q_OS_WIN
+            HWND hWnd = (HWND)pointer.toLongLong();
+            if (hWnd == nullptr)
+            {
+                showError("sendWindowMessage", "找不到该窗口");
+                return true;
+            }
+            for(QChar c: text)
+            {
+                int v_latin = c.unicode(); // 对应的code码
+                SendMessageW(hWnd,WM_IME_CHAR,(WPARAM)v_latin,(LPARAM)v_latin);
+            }
+#endif
+            return true;
+        }
+    }
+
+    if (msg.contains("moveWindow"))
+    {
+        re = RE("moveWindow\\s*\\(\\s*(\\d*)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString pointer = caps[1];
+#ifdef Q_OS_WIN
+            HWND hWnd = (HWND)pointer.toLongLong();
+            if (hWnd == nullptr)
+            {
+                showError("sendWindowMessage", "找不到该窗口");
+                return true;
+            }
+            int x = caps[2].toInt();
+            int y = caps[3].toInt();
+            int w = caps[4].toInt();
+            int h = caps[5].toInt();
+            MoveWindow(hWnd, x, y, w, h, true);
+#endif
+            return true;
+        }
+    }
+
 
     return false;
 }
@@ -10297,6 +10544,14 @@ void MainWindow::simulateKeys(QString seq, bool press, bool release)
             keySeq.append(VK_SHIFT);
         else if (ch == "alt")
             keySeq.append(VK_MENU);
+        else if (ch == "tab")
+            keySeq.append(VK_TAB);
+        else if (ch.startsWith("0x"))
+        {
+            ch = ch.right(ch.length() - 2);
+            int val = ch.toInt(nullptr, 16);
+            keySeq.append(val);
+        }
         /* else if (ch >= "0" && ch <= "9")
             keySeq.append(0x30 + ch.toInt());
         else if (ch >= "a" && ch <= "z")

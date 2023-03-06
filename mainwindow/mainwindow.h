@@ -811,7 +811,7 @@ private:
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();
     void hideRoomIdWidget();
-    void handleUncompMessage(QString cmd, MyJson json);
+    bool handleUncompMessage(QString cmd, MyJson json);
     void handleMessage(QJsonObject json);
     bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
