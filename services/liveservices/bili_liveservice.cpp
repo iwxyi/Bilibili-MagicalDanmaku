@@ -531,8 +531,10 @@ void BiliLiveService::updateOnlineGoldRank()
     onlineGoldRank.clear();
     get(url, [=](QJsonObject json){
         if (_upUid != ac->upUid)
+        {
+            qWarning() << "已切换直播间，忽略高能榜结果";
             return ;
-
+        }
         QStringList names;
         QJsonObject data = json.value("data").toObject();
         QJsonArray array = data.value("OnlineRankItem").toArray();
@@ -578,6 +580,7 @@ void BiliLiveService::updateOnlineGoldRank()
             onlineGoldRank.append(danmaku);
         }
         // qInfo() << "高能榜：" << names;
+        emit signalOnlineRankChanged();
     });
 }
 
