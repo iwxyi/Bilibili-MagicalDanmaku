@@ -96,6 +96,9 @@ public slots:
     /// 私信
     void refreshPrivateMsg() override;
     void receivedPrivateMsg(MyJson session) override;
+    /// 弹幕
+    void sendMsg(const QString& msg) override;
+    void sendRoomMsg(QString uid, const QString& msg) override;
     
 private:
     // 直播心跳

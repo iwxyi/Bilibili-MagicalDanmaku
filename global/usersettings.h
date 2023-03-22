@@ -42,6 +42,7 @@ public:
     bool autoDoSign = false;         // 每天自动签到
     bool autoJoinLOT = false;        // 自动参加天选
     bool calculateDailyData = false; // 统计每天数据
+    bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
 
     bool localMode = false;         // 本地调试模式
     bool debugPrint = false;         // 调试输出模式

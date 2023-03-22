@@ -752,6 +752,9 @@ void MainWindow::initLiveService()
     connect(liveService, &LiveRoomService::signalConnectionStateTextChanged, this, [=](const QString& text) {
         ui->connectStateLabel->setText(text);
     });
+    connect(liveService, &LiveRoomService::signalStatusChanged, this, [=](const QString& text) {
+        statusLabel->setText(text);
+    });
 
     // 连接之后
     connect(liveService, &LiveRoomService::signalRoomInfoChanged, this, [=] {
@@ -959,6 +962,14 @@ void MainWindow::initLiveService()
         detectEternalBlockUsers();
     });
 
+    connect(liveService, &LiveRoomService::signalSendAutoMsg, this, [=](const QString& msg, const LiveDanmaku& danmaku) {
+        sendAutoMsg(msg, danmaku);
+    });
+    
+    connect(liveService, &LiveRoomService::signalSendAutoMsgInFirst, this, [=](const QString& msg, const LiveDanmaku& danmaku, int interval) {
+        sendAutoMsgInFirst(msg, danmaku, interval);
+    });
+
     /// 大乱斗
     connect(liveService, &LiveRoomService::signalBattleEnabled, this, [=](bool enable) {
         if (enable)
@@ -1125,15 +1136,15 @@ void MainWindow::readConfig()
     this->removeDanmakuTipInterval = removeIv * 1000;
 
     // 单条弹幕最长长度
-    danmuLongest = us->value("danmaku/danmuLongest", 20).toInt();
-    ui->danmuLongestSpin->setValue(danmuLongest);
+    ac->danmuLongest = us->value("danmaku/danmuLongest", 20).toInt();
+    ui->danmuLongestSpin->setValue(ac->danmuLongest);
     ui->adjustDanmakuLongestCheck->setChecked(us->value("danmaku/adjustDanmakuLongest", true).toBool());
     robotTotalSendMsg = us->value("danmaku/robotTotalSend", 0).toInt();
     ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
     ui->robotSendCountLabel->setToolTip("累计发送弹幕 " + snum(robotTotalSendMsg) + " 条");
 
     // 失败重试
-    ui->retryFailedDanmuCheck->setChecked(us->value("danmaku/retryFailedDanmu", true).toBool());
+    ui->retryFailedDanmuCheck->setChecked(us->retryFailedDanmaku = us->value("danmaku/retryFailedDanmu", true).toBool());
     liveService->hostUseIndex = us->value("live/hostIndex").toInt();
 
     // 点歌
@@ -2278,105 +2289,6 @@ void MainWindow::localNotify(const QString &text, qint64 uid)
 }
 
 /**
- * 发送单条弹幕的原子操作
- */
-void MainWindow::sendMsg(QString msg)
-{
-    if (us->localMode)
-    {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
-    }
-
-    sendRoomMsg(ac->roomId, msg);
-}
-
-void MainWindow::sendRoomMsg(QString roomId, QString msg)
-{
-    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
-    {
-        showError("发送弹幕", "机器人账号未登录");
-#ifdef ZUOQI_ENTRANCE
-        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
-#endif
-        return ;
-    }
-    if (msg.isEmpty() || roomId.isEmpty())
-        return ;
-
-    // 设置数据（JSON的ByteArray）
-    QString s = ac->browserData;
-    int posl = s.indexOf("msg=")+4;
-    int posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, msg);
-
-    posl = s.indexOf("roomid=")+7;
-    posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, roomId);
-
-    QByteArray ba(s.toStdString().data());
-
-    // 连接槽
-    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
-        QString errorMsg = json.value("message").toString();
-        statusLabel->setText("");
-        if (!errorMsg.isEmpty())
-        {
-            QString errorDesc = errorMsg;
-            if (errorMsg == "f")
-            {
-                errorDesc = "包含屏蔽词";
-            }
-            else if (errorMsg == "k")
-            {
-                errorDesc = "包含直播间屏蔽词";
-            }
-
-            showError("发送弹幕失败", errorDesc);
-            qWarning() << msg;
-            localNotify(errorDesc + " -> " + msg);
-
-            // 重试
-            if (!ui->retryFailedDanmuCheck->isChecked())
-                return ;
-
-            if (errorMsg.contains("msg in 1s"))
-            {
-                localNotify("[5s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
-            }
-            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
-            {
-                localNotify("[4s后重试]");
-                sendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
-            }
-            else if (errorMsg.contains("超出限制长度"))
-            {
-                if (msg.length() <= ui->danmuLongestSpin->value())
-                {
-                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ui->danmuLongestSpin->value()) + "]");
-                }
-                else
-                {
-                    localNotify("[自动分割长度]");
-                    sendAutoMsgInFirst(splitLongDanmu(msg).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
-                }
-            }
-            else if (errorMsg == "f") // 系统敏感词
-            {
-            }
-            else if (errorMsg == "k") // 主播设置的直播间敏感词
-            {
-            }
-        }
-    });
-}
-
-/**
  * 发送带有变量的弹幕或者执行代码
  * @param msg       多行，带变量
  * @param danmaku   参数
@@ -2508,9 +2420,9 @@ void MainWindow::slotSendAutoMsg(bool timeout)
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
         if (danmaku->isRetry())
-            sendRoomMsg(danmaku->getRoomId(), msg);
+            liveService->sendRoomMsg(danmaku->getRoomId(), msg);
         else
-            sendMsg(msg);
+            liveService->sendMsg(msg);
         inDanmakuCd = true;
         us->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
         ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
@@ -5324,7 +5236,7 @@ QStringList MainWindow::getEditConditionStringList(QString plainText, LiveDanmak
                 continue;
             s = s.replace(QRegExp("^\\s+\\(\\s*[\\w\\d: ,]*\\s*\\)"), "").replace("*", "").trimmed(); // 去掉发送选项
             // s = s.replace(QRegExp("^\\s+\\(\\s*cd\\d+\\s*:\\s*\\d+\\s*\\)"), "").replace("*", "").trimmed();
-            if (s.length() > danmuLongest && !s.contains("%"))
+            if (s.length() > ac->danmuLongest && !s.contains("%"))
             {
                 if (us->debugPrint)
                     localNotify("[去掉过长候选：" + s + "]");
@@ -7308,19 +7220,19 @@ QString MainWindow::numberSimplify(int number) const
 
 QString MainWindow::msgToShort(QString msg) const
 {
-    if (msg.startsWith(">") || msg.length() <= danmuLongest)
+    if (msg.startsWith(">") || msg.length() <= ac->danmuLongest)
         return msg;
     if (msg.contains(" "))
     {
         msg = msg.replace(" ", "");
-        if (msg.length() <= danmuLongest)
+        if (msg.length() <= ac->danmuLongest)
             return msg;
     }
     if (msg.contains("“"))
     {
         msg = msg.replace("“", "");
         msg = msg.replace("”", "");
-        if (msg.length() <= danmuLongest)
+        if (msg.length() <= ac->danmuLongest)
             return msg;
     }
     return msg;
@@ -8397,7 +8309,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QString roomId = caps.at(1);
             QString msg = caps.at(2);
             qInfo() << "执行命令：" << caps;
-            sendRoomMsg(roomId, msg);
+            liveService->sendRoomMsg(roomId, msg);
             return true;
         }
     }
@@ -9616,7 +9528,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString text = caps.at(1);
             qInfo() << "执行命令：" << caps;
-            sendLongText(text);
+            liveService->sendLongText(text);
             return true;
         }
     }
@@ -9711,7 +9623,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku& danmaku, CmdResponse &res, i
             {
                 // 直接发送弹幕
                 TxNlp::instance()->chat(text, [=](QString s){
-                    sendLongText(s);
+                    liveService->sendLongText(s);
                 }, maxLen);
             }
             return true;
@@ -10632,33 +10544,6 @@ void MainWindow::moveMouseTo(unsigned long tx, unsigned long ty)
 #else
     qWarning() << "不支持模拟鼠标点击";
 #endif
-}
-
-QStringList MainWindow::splitLongDanmu(QString text) const
-{
-    QStringList sl;
-    int len = text.length();
-    const int maxOne = danmuLongest;
-    int count = (len + maxOne - 1) / maxOne;
-    for (int i = 0; i < count; i++)
-    {
-        sl << text.mid(i * maxOne, maxOne);
-    }
-    return sl;
-}
-
-void MainWindow::sendLongText(QString text)
-{
-    if (text.contains("%n%"))
-    {
-        text.replace("%n%", "\n");
-        for (auto s : text.split("\n", QString::SkipEmptyParts))
-        {
-            sendLongText(s);
-        }
-        return ;
-    }
-    sendAutoMsg(splitLongDanmu(text).join("\\n"), LiveDanmaku());
 }
 
 void MainWindow::restoreCustomVariant(QString text)
@@ -12627,7 +12512,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
         });
 
         connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
-        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), this, SLOT(sendMsg(QString)));
+        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), liveService, SLOT(sendMsg(QString)));
         connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int, QString)), liveService, SLOT(addBlockUser(qint64, int, QString)));
         connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
         connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
@@ -12643,7 +12528,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
             if (!liveService->pking || liveService->pkRoomId.isEmpty())
                 return ;
             qInfo() << "发送PK对面消息：" << liveService->pkRoomId << msg;
-            sendRoomMsg(liveService->pkRoomId, msg);
+            liveService->sendRoomMsg(liveService->pkRoomId, msg);
         });
         connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
             if (judgeRobot)
@@ -12966,7 +12851,7 @@ void MainWindow::on_actionSend_Long_Text_triggered()
     if (!ok || text.isEmpty())
         return ;
 
-    sendLongText(text);
+    liveService->sendLongText(text);
 }
 
 void MainWindow::on_actionShow_Lucky_Draw_triggered()
@@ -16072,13 +15957,13 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 
         // AI回复长度上限，以及过滤
         if (ui->AIReplyMsgCheck->checkState() == Qt::PartiallyChecked
-                && reply.length() > danmuLongest)
+                && reply.length() > ac->danmuLongest)
             return ;
 
         // 自动断句
         QStringList sl;
         int len = reply.length();
-        const int maxOne = danmuLongest;
+        const int maxOne = ac->danmuLongest;
         int count = (len + maxOne - 1) / maxOne;
         for (int i = 0; i < count; i++)
         {
@@ -16090,8 +15975,8 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
 
 void MainWindow::on_danmuLongestSpin_editingFinished()
 {
-    danmuLongest = ui->danmuLongestSpin->value();
-    us->setValue("danmaku/danmuLongest", danmuLongest);
+    ac->danmuLongest = ui->danmuLongestSpin->value();
+    us->setValue("danmaku/danmuLongest", ac->danmuLongest);
 }
 
 
@@ -16302,7 +16187,7 @@ void MainWindow::on_giftComboDelaySpin_editingFinished()
 
 void MainWindow::on_retryFailedDanmuCheck_clicked()
 {
-    us->setValue("danmaku/retryFailedDanmu", ui->retryFailedDanmuCheck->isChecked());
+    us->setValue("danmaku/retryFailedDanmu", us->retryFailedDanmaku = ui->retryFailedDanmuCheck->isChecked());
 }
 
 void MainWindow::on_songLyricsToFileCheck_clicked()

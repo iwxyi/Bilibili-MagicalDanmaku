@@ -1722,6 +1722,108 @@ void BiliLiveService::receivedPrivateMsg(MyJson session)
     });
 }
 
+/**
+ * 发送单条弹幕的原子操作
+ */
+void BiliLiveService::sendMsg(const QString& msg)
+{
+    if (us->localMode)
+    {
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
+
+    sendRoomMsg(ac->roomId, msg);
+}
+
+/**
+ * 向指定直播间发送弹幕
+ */
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
+{
+    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
+    {
+        showError("发送弹幕", "机器人账号未登录");
+#ifdef ZUOQI_ENTRANCE
+        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
+#endif
+        return ;
+    }
+    if (msg.isEmpty() || ac->roomId.isEmpty())
+        return ;
+
+    // 设置数据（JSON的ByteArray）
+    QString s = ac->browserData;
+    int posl = s.indexOf("msg=")+4;
+    int posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, msg);
+
+    posl = s.indexOf("roomid=")+7;
+    posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, roomId);
+
+    QByteArray ba(s.toStdString().data());
+
+    // 连接槽
+    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
+        QString errorMsg = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (!errorMsg.isEmpty())
+        {
+            QString errorDesc = errorMsg;
+            if (errorMsg == "f")
+            {
+                errorDesc = "包含屏蔽词";
+            }
+            else if (errorMsg == "k")
+            {
+                errorDesc = "包含直播间屏蔽词";
+            }
+
+            showError("发送弹幕失败", errorDesc);
+            qWarning() << msg;
+            localNotify(errorDesc + " -> " + msg);
+
+            // 重试
+            if (!us->retryFailedDanmaku)
+                return ;
+
+            if (errorMsg.contains("msg in 1s"))
+            {
+                localNotify("[5s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+            }
+            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
+            {
+                localNotify("[4s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
+            }
+            else if (errorMsg.contains("超出限制长度"))
+            {
+                if (msg.length() <= ac->danmuLongest)
+                {
+                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ac->danmuLongest) + "]");
+                }
+                else
+                {
+                    localNotify("[自动分割长度]");
+                    emit signalSendAutoMsgInFirst(splitLongDanmu(msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
+                }
+            }
+            else if (errorMsg == "f") // 系统敏感词
+            {
+            }
+            else if (errorMsg == "k") // 主播设置的直播间敏感词
+            {
+            }
+        }
+    });
+}
+
 void BiliLiveService::getRoomBattleInfo()
 {
     get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",

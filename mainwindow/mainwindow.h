@@ -207,9 +207,7 @@ private slots:
     void addListItemOnCurrentPage();
 
     void slotDiange(const LiveDanmaku &danmaku);
-
-    void sendMsg(QString msg);
-    void sendRoomMsg(QString roomId, QString msg);
+    
     bool sendVariantMsg(QString msg, const LiveDanmaku& danmaku, int channel = NOTIFY_CD_CN, bool manual = false, bool delayMine = false);
     void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
     void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
@@ -887,8 +885,6 @@ private:
     void simulateClickButton(qint64 keys);
     void moveMouse(unsigned long x, unsigned long dy);
     void moveMouseTo(unsigned long tx, unsigned long ty);
-    QStringList splitLongDanmu(QString text) const;
-    void sendLongText(QString text);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
@@ -1030,7 +1026,6 @@ private:
     qint64 removeDanmakuInterval = 60000;
     qint64 removeDanmakuTipInterval = 20000;
     QStringList noReplyMsgs;
-    int danmuLongest = 20;
     bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
     LiveDanmaku lastDanmaku; // 最近一个弹幕
     int robotTotalSendMsg = 0; // 机器人发送的弹幕数量

@@ -39,6 +39,7 @@ signals:
     void signalStartWork(); // 直播开始/连接上就已经开始直播
     void signalLiveStarted();
     void signalLiveStopped();
+    void signalStatusChanged(const QString& text); // 状态或提示改变，修改状态栏
 
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const QString &uid);
@@ -69,6 +70,8 @@ signals:
     void signalLOTDescChanged(const QString& text);
     void signalDanmakuLongestChanged(int length); // 弹幕长度
     void signalRefreshPrivateMsgEnabled(bool enable); // 私信功能开关
+    void signalSendAutoMsg(const QString& msg, const LiveDanmaku& danmaku);
+    void signalSendAutoMsgInFirst(const QString& msg, const LiveDanmaku& danmaku, int interval);
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -118,6 +121,9 @@ public slots:
     /// 私信
     virtual void refreshPrivateMsg() {}
     virtual void receivedPrivateMsg(MyJson session) { Q_UNUSED(session) }
+    /// 发送弹幕
+    virtual void sendMsg(const QString& msg) { Q_UNUSED(msg) }
+    virtual void sendRoomMsg(QString roomId, const QString& msg) { Q_UNUSED(roomId) Q_UNUSED(msg) }
 
 public:
     /// 获取直播间信息
@@ -215,6 +221,8 @@ public:
     /// 设置全局默认的Cookie变量
     virtual void autoSetCookie(const QString &s);
     
+    QStringList splitLongDanmu(const QString& text, int maxOne) const;
+    void sendLongText(QString text);
 
 protected:
     // 连接信息
