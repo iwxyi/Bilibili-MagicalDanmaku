@@ -18,6 +18,7 @@ class LiveRoomService : public QObject, public NetInterface, public LiveStatisti
 {
     Q_OBJECT
     friend class MainWindow;
+    friend class CodeRunner;
 
 public:
     explicit LiveRoomService(QObject *parent = nullptr);

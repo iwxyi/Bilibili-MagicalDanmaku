@@ -37,6 +37,7 @@ RuntimeInfo* rt;
 UserSettings* us;
 AccountInfo* ac;
 PlatformInfo* pl;
+CodeRunner* cr;
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
     us = nullptr;
     ac = new AccountInfo;
     pl = new PlatformInfo;
+    cr = new CodeRunner;
 
     MainWindow w;
     if (w.getSettings()->value("debug/logFile", false).toBool())

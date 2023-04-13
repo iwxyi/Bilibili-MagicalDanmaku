@@ -703,7 +703,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QString text = ui->startLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 60000) // 起码是上次下播10秒钟后
-                sendAutoMsg(text, LiveDanmaku());
+                cr->sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已开播");
             ac->liveStatus = 1;
             if (ui->timerConnectServerCheck->isChecked() && liveService->connectServerTimer->isActive())
@@ -725,7 +725,7 @@ void MainWindow::handleMessage(QJsonObject json)
             QString text = ui->endLiveWordsEdit->text();
             if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
                     && QDateTime::currentMSecsSinceEpoch() - liveService->liveTimestamp > 600000) // 起码是十分钟后再播报，万一只是尝试开播呢
-                sendAutoMsg(text, LiveDanmaku());
+                cr->sendAutoMsg(text, LiveDanmaku());
             ui->liveStatusButton->setText("已下播");
             ac->liveStatus = 0;
 
@@ -800,7 +800,7 @@ void MainWindow::handleMessage(QJsonObject json)
         if (uid != ac->cookieUid.toLongLong())
         {
             for (int i = 0; i < CHANNEL_COUNT; i++)
-                msgWaits[i]++;
+                cr->msgWaits[i]++;
         }
 
         // 添加到列表
@@ -816,11 +816,11 @@ void MainWindow::handleMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        if (snum(uid) == ac->cookieUid && noReplyMsgs.contains(msg))
+        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(msg))
         {
             danmaku.setNoReply();
             danmaku.setAutoSend();
-            noReplyMsgs.removeOne(msg);
+            cr->noReplyMsgs.removeOne(msg);
         }
         else
             liveService->minuteDanmuPopul++;
@@ -828,7 +828,7 @@ void MainWindow::handleMessage(QJsonObject json)
         appendNewLiveDanmaku(danmaku);
 
         // 进入累计
-        ui->danmuCountLabel->setText(snum(++liveTotalDanmaku));
+        ui->danmuCountLabel->setText(snum(++(cr->liveTotalDanmaku)));
 
         // 新人发言
         if (danmuCount == 1)
@@ -871,7 +871,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 QString reStr = ui->autoBlockNewbieKeysEdit->toPlainText();
                 if (reStr.endsWith("|"))
                     reStr = reStr.left(reStr.length()-1);
-                translateUnicode(reStr);
+                cr->translateUnicode(reStr);
                 QRegularExpression re(reStr);
                 if (!re.isValid())
                     showError("错误的禁言关键词表达式");
@@ -889,7 +889,7 @@ void MainWindow::handleMessage(QJsonObject json)
                     }
                     qInfo() << "检测到新人违禁词，自动拉黑：" << username << msg;
 
-                    if (!isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku)) // 阻止自动禁言过滤器
+                    if (!cr->isFilterRejected("FILTER_KEYWORD_BLOCK", danmaku)) // 阻止自动禁言过滤器
                     {
                         // 拉黑
                         liveService->addBlockUser(uid, ui->autoBlockTimeSpin->value(), msg);
@@ -903,14 +903,14 @@ void MainWindow::handleMessage(QJsonObject json)
                             {
                                 prevNotifyInCount = rt->allDanmakus.size();
 
-                                QStringList words = getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
+                                QStringList words = cr->getEditConditionStringList(ui->autoBlockNewbieNotifyWordsEdit->toPlainText(), danmaku);
                                 if (words.size())
                                 {
                                     int r = qrand() % words.size();
                                     QString s = words.at(r);
                                     if (!s.trimmed().isEmpty())
                                     {
-                                        sendNotifyMsg(s, danmaku);
+                                        cr->sendNotifyMsg(s, danmaku);
                                     }
                                 }
                                 else if (us->debugPrint)
@@ -1150,7 +1150,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 // 如果合并了，那么可能已经感谢了，就不用管了
                 if (!merged)
                 {
-                    QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+                    QStringList words = cr->getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
                     if (words.size())
                     {
                         int r = qrand() % words.size();
@@ -1159,11 +1159,11 @@ void MainWindow::handleMessage(QJsonObject json)
                         {
                             if (us->debugPrint)
                                 localNotify("[强提醒]");
-                            sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
+                            cr->sendCdMsg(msg, danmaku, NOTIFY_CD, GIFT_CD_CN,
                                       ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
                         }
                         else
-                            sendGiftMsg(msg, danmaku);
+                            cr->sendGiftMsg(msg, danmaku);
                     }
                     else if (us->debugPrint)
                     {
@@ -1880,12 +1880,12 @@ void MainWindow::handleMessage(QJsonObject json)
 
         if (!justStart && ui->autoSendGiftCheck->isChecked())
         {
-            QStringList words = getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
+            QStringList words = cr->getEditConditionStringList(ui->autoThankWordsEdit->toPlainText(), danmaku);
             if (words.size())
             {
                 int r = qrand() % words.size();
                 QString msg = words.at(r);
-                sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
+                cr->sendCdMsg(msg, danmaku, NOTIFY_CD, NOTIFY_CD_CN,
                           ui->sendGiftTextCheck->isChecked(), ui->sendGiftVoiceCheck->isChecked(), false);
             }
             else if (us->debugPrint)
@@ -2351,7 +2351,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }
         else
         {
-            localNotify(uidToName(uid) + " 被任命为房管", uid);
+            localNotify(cr->uidToName(uid) + " 被任命为房管", uid);
         }
         triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
     }
@@ -2364,7 +2364,7 @@ void MainWindow::handleMessage(QJsonObject json)
         }*/
         QString msg = json.value("msg").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
-        localNotify(uidToName(uid) + " 被取消房管", uid);
+        localNotify(cr->uidToName(uid) + " 被取消房管", uid);
         triggerCmdEvent(cmd, LiveDanmaku(msg).with(json));
     }
     else if (cmd == "ROOM_ADMINS")
@@ -2430,7 +2430,7 @@ void MainWindow::handleMessage(QJsonObject json)
             {
                 LiveDanmaku danmaku = LiveDanmaku(text).with(json);
                 qInfo() << "NOTICE:" << text;
-                if (isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
+                if (cr->isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
                     return ;
                 text.replace("<$", "").replace("$>", "");
                 localNotify(text);

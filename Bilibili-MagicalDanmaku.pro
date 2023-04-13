@@ -60,6 +60,7 @@ INCLUDEPATH += \
     services/ \
     services/liveservices/ \
     services/entities/ \
+    services/code_runner/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -91,6 +92,8 @@ INCLUDEPATH += \
 
 SOURCES += \
     mainwindow/cmd_process.cpp \
+    mainwindow/run_cmd.cpp \
+    services/code_runner/coderunner.cpp \
     services/liveservices/bili_livecmds.cpp \
     services/liveservices/bili_liveopenservice.cpp \
     services/liveservices/bili_liveservice.cpp \
@@ -98,6 +101,8 @@ SOURCES += \
     services/liveservices/livestatisticservice.cpp \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
+    services/voice_service/voiceservice.cpp \
+    services/web_server/webserver.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/coloroctreeutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -185,6 +190,7 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
     services/liveservices/bili_liveopenservice.h \
@@ -193,6 +199,8 @@ HEADERS += \
     services/liveservices/livestatisticservice.h \
     services/sqlservice.h \
     order_player/importsongsdialog.h \
+    services/voice_service/voiceservice.h \
+    services/web_server/webserver.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
     third_party/calculator/func_define.h \
