@@ -483,7 +483,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
     // 设置数据
     item->setData(DANMAKU_JSON_ROLE, danmaku.toJson());
     item->setData(DANMAKU_STRING_ROLE, danmaku.toString());
-    if ((danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode) // 只显示弹幕的数据
+    if ((danmaku.is(MSG_DANMAKU) || danmaku.is(MSG_SUPER_CHAT)) && !simpleMode && !us->closeGui) // 只显示弹幕的数据
     {
         QString path = headPath(danmaku.getUid());
         bool hasPortrait = QFileInfo(path).exists();
@@ -2691,8 +2691,6 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
 void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
-    if (us->closeGui) // 关闭界面效果不显示头像
-        return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
     QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);

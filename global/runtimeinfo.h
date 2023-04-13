@@ -4,6 +4,7 @@
 #include <QHash>
 #include <QList>
 #include <QApplication>
+#include <QDir>
 
 #if true
 #define s8(x) QString(x)
@@ -46,6 +47,7 @@ public:
     QString appDownloadUrl;
 
     QString ffmpegPath;
+    QWidget* mainwindow = nullptr;
 };
 
 extern RuntimeInfo* rt;

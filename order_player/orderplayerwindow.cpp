@@ -4494,9 +4494,11 @@ void OrderPlayerWindow::on_settingsButton_clicked()
 
     auto importMenu = menu->addMenu("导入");
     importMenu->addAction("在线歌单", [=]{
+        menu->close();
         inputPlayList();
     });
     importMenu->addAction("本地歌曲", [=]{
+        menu->close();
         openMultiImport();
     });
 

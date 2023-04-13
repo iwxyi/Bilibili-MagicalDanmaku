@@ -18,9 +18,6 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
-#if defined(ENABLE_TEXTTOSPEECH)
-#include <QtTextToSpeech/QTextToSpeech>
-#endif
 #if defined(ENABLE_HTTP_SERVER)
 #include <qhttpserver.h>
 #include <qhttprequest.h>
@@ -31,6 +28,7 @@
 #include "usersettings.h"
 #include "accountinfo.h"
 #include "platforminfo.h"
+#include "coderunner.h"
 #include "netutil.h"
 #include "entities.h"
 #include "livedanmaku.h"
@@ -42,8 +40,6 @@
 #include "textinputdialog.h"
 #include "luckydrawwindow.h"
 #include "livevideoplayer.h"
-#include "xfytts.h"
-#include "microsofttts.h"
 #include "externalblockdialog.h"
 #include "picturebrowser.h"
 #include "netinterface.h"
@@ -52,12 +48,14 @@
 #include "appendbutton.h"
 #include "waterzoombutton.h"
 #include "tipbox.h"
-#include "bililiveopenservice.h"
+#include "bili_liveopenservice.h"
 #include "singleentrance.h"
 #include "sqlservice.h"
 #include "dbbrowser.h"
 #include "m3u8downloader.h"
-#include "bililiveservice.h"
+#include "bili_liveservice.h"
+#include "web_server/webserver.h"
+#include "voice_service/voiceservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -69,21 +67,6 @@ QT_END_NAMESPACE
 
 #define CONNECT_SERVER_INTERVAL 1800000
 
-#define AUTO_MSG_CD 1500
-#define NOTIFY_CD 2000
-
-#define CHANNEL_COUNT 100
-#define MAGICAL_SPLIT_CHAR "-bdm-split-bdm-"
-#define WAIT_CHANNEL_MAX 99
-
-#define NOTIFY_CD_CN 0     // 默认通知通道（强提醒、通告、远程控制等）
-#define WELCOME_CD_CN 1    // 送礼冷却通道
-#define GIFT_CD_CN 2       // 礼物冷却通道
-#define ATTENTION_CD_CN 3  // 关注冷却通道
-#define TASK_CD_CN 4       // 定时任务冷却通道
-#define REPLY_CD_CN 5      // 自动回复冷却通道
-#define EVENT_CD_CN 6      // 事件动作冷却通道
-
 #define SERVER_PORT 0
 #define DANMAKU_SERVER_PORT 1
 #define MUSIC_SERVER_PORT 2
@@ -94,15 +77,6 @@ QT_END_NAMESPACE
 #define PAGE_MUSIC 3
 #define PAGE_EXTENSION 4
 #define PAGE_PREFENCE 5
-
-#define TAB_TIMER_TASK 0   // 定时任务
-#define TAB_AUTO_REPLY 1   // 自动回复
-#define TAB_EVENT_ACTION 2 // 事件动作
-
-#define FILTER_MUSIC_ORDER "FILTER_MUSIC_ORDER"
-#define FILTER_DANMAKU_MSG "FILTER_DANMAKU_MSG"
-#define FILTER_DANMAKU_COME "FILTER_DANMAKU_COME"
-#define FILTER_DANMAKU_GIFT "FILTER_DANMAKU_GIFT"
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
@@ -141,21 +115,6 @@ public:
         QDateTime time;
     };
 
-    enum CmdResponse
-    {
-        NullRes,
-        AbortRes,
-        DelayRes,
-    };
-
-    enum VoicePlatform
-    {
-        VoiceLocal,
-        VoiceXfy,
-        VoiceCustom,
-        VoiceMS,
-    };
-
     const QSettings *getSettings() const;
 
 protected:
@@ -176,6 +135,9 @@ signals:
 public slots:
     void pullLiveDanmaku();
     void removeTimeoutDanmaku();
+
+    void processRemoteCmd(QString msg, bool response = true);
+    bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
 
 private slots:
     void on_DiangeAutoCopyCheck_stateChanged(int);
@@ -208,18 +170,6 @@ private slots:
 
     void slotDiange(const LiveDanmaku &danmaku);
 
-    void sendMsg(QString msg);
-    void sendRoomMsg(QString roomId, QString msg);
-    bool sendVariantMsg(QString msg, const LiveDanmaku& danmaku, int channel = NOTIFY_CD_CN, bool manual = false, bool delayMine = false);
-    void sendAutoMsg(QString msgs, const LiveDanmaku& danmaku);
-    void sendAutoMsgInFirst(QString msgs, const LiveDanmaku& danmaku, int interval = 0);
-    void slotSendAutoMsg(bool timeout);
-    void sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel, bool enableText, bool enableVoice, bool manual);
-    void sendCdMsg(QString msgs, const LiveDanmaku& danmaku);
-    void sendGiftMsg(QString msg, const LiveDanmaku& danmaku);
-    void sendAttentionMsg(QString msg, const LiveDanmaku& danmaku);
-    void sendNotifyMsg(QString msg, bool manual = false);
-    void sendNotifyMsg(QString msg, const LiveDanmaku &danmaku, bool manual = false);
     void slotComboSend();
     void slotPkEndingTimeout();
 
@@ -609,8 +559,6 @@ private slots:
 
     void on_musicBlackListButton_clicked();
 
-    void setFilter(QString filterName, QString content);
-
     void on_enableFilterCheck_clicked();
 
     void on_actionReplace_Variant_triggered();
@@ -756,6 +704,9 @@ private:
     void readConfig();
     void readConfig2();
     void initEvent();
+    void initCodeRunner();
+    void initWebServer();
+    void initVoiceService();
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 
@@ -763,8 +714,6 @@ private:
     void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
     void newLiveDanmakuAdded(const LiveDanmaku &danmaku);
     void oldLiveDanmakuRemoved(const LiveDanmaku &danmaku);
-    void addNoReplyDanmakuText(const QString &text);
-    bool hasSimilarOldDanmaku(const QString &s) const;
     void localNotify(const QString &text);
     void localNotify(const QString &text, qint64 uid);
 
@@ -800,7 +749,6 @@ private:
     void initWS();
     void startConnectIdentityCode();
     void startConnectRoom();
-    bool isWorking() const;
 
     void updatePermission();
     int hasPermission();
@@ -811,6 +759,7 @@ private:
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();
     void hideRoomIdWidget();
+    bool handleUncompMessage(QString cmd, MyJson json);
     void handleMessage(QJsonObject json);
     bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
@@ -830,25 +779,6 @@ private:
     void setRoomDescription(QString roomDescription);
     void updateWinningStreak(bool emitWinningStreak);
 
-    void analyzeMsgAndCd(QString &msg, int& cd, int& channel) const;
-    QString processTimeVariants(QString msg) const;
-    QStringList getEditConditionStringList(QString plainText, LiveDanmaku danmaku);
-    QString processDanmakuVariants(QString msg, const LiveDanmaku &danmaku);
-    QString replaceDanmakuVariants(const LiveDanmaku &danmaku, const QString& key, bool* ok) const;
-    QString replaceDanmakuJson(const QJsonObject& json, const QString &key_seq, bool *ok) const;
-    QString replaceDynamicVariants(const QString& funcName, const QString& args, const LiveDanmaku &danmaku);
-    QString processMsgHeaderConditions(QString msg) const;
-    template<typename T>
-    bool isConditionTrue(T a, T b, QString op) const;
-    bool isFilterRejected(QString filterName, const LiveDanmaku& danmaku);
-    bool processFilter(QString filterText, const LiveDanmaku& danmaku);
-    void translateUnicode(QString& s) const;
-
-    qint64 unameToUid(QString text);
-    QString uidToName(qint64 uid);
-    QString nicknameSimplify(const LiveDanmaku& danmaku) const;
-    QString numberSimplify(int number) const;
-    QString msgToShort(QString msg) const;
     double getPaletteBgProg() const;
     void setPaletteBgProg(double x);
 
@@ -862,7 +792,6 @@ private:
     void judgeRobotAndMark(LiveDanmaku danmaku);
     void markNotRobot(qint64 uid);
     void initTTS();
-    void speekVariantText(QString text);
     void speakText(QString text);
     void speakTextQueueNext();
     void voiceDownloadAndSpeak(QString text);
@@ -875,19 +804,6 @@ private:
     void startLiveRecord();
     void startRecordUrl(QString url);
     void finishLiveRecord();
-
-    void processRemoteCmd(QString msg, bool response = true);
-    bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
-    QString getReplyExecutionResult(QString key, const LiveDanmaku &danmaku);
-    QString getEventExecutionResult(QString key, const LiveDanmaku &danmaku);
-    QString getExecutionResult(QStringList &msgs, const LiveDanmaku &_danmaku);
-    void simulateKeys(QString seq, bool press = true, bool release = true);
-    void simulateClick();
-    void simulateClickButton(qint64 keys);
-    void moveMouse(unsigned long x, unsigned long dy);
-    void moveMouseTo(unsigned long tx, unsigned long ty);
-    QStringList splitLongDanmu(QString text) const;
-    void sendLongText(QString text);
 
     void restoreCustomVariant(QString text);
     QString saveCustomVariant();
@@ -907,11 +823,6 @@ private:
     void pkSettle(QJsonObject json);
     int getPkMaxGold(int votes);
     bool execTouta();
-    bool shallAutoMsg() const;
-    bool shallAutoMsg(const QString& sl) const;
-    bool shallAutoMsg(const QString& sl, bool& manual);
-    bool shallSpeakText();
-    void addBannedWord(QString word, QString anchor);
 
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);
@@ -921,27 +832,9 @@ private:
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
 
-    void switchMedalToUp(qint64 upId, int page = 1);
-    void wearMedal(qint64 medalId);
-    void sendPrivateMsg(qint64 uid, QString msg);
-    void joinBattle(int type);
-    void detectMedalUpgrade(LiveDanmaku danmaku);
-    void myLiveSelectArea(bool update);
-    void myLiveUpdateArea(QString area);
-    void myLiveStartLive();
-    void myLiveStopLive();
-    void myLiveSetTitle(QString newTItle = "");
-    void myLiveSetNews();
-    void myLiveSetDescription();
-    void myLiveSetCover(QString path = "");
-    void myLiveSetTags();
-    void showPkMenu();
-    void showPkAssists();
-    void showPkHistories();
-    void refreshPrivateMsg();
-    void receivedPrivateMsg(MyJson session);
     void getPositiveVote();
     void positiveVote();
+
     void fanfanLogin();
     void fanfanAddOwn();
 
@@ -991,11 +884,6 @@ private:
     void showNotify(QString title, QString s) const;
     void showNotify(QString s) const;
 
-    QString toFilePath(const QString& fileName) const;
-    QString toSingleLine(QString text) const;
-    QString toMultiLine(QString text) const;
-    QString toRunableCode(QString text) const;
-
     void initLiveOpenService();
     void initDbService();
     void showSqlQueryResult(QString sql);
@@ -1003,8 +891,6 @@ private:
 private:
     // 应用信息
     Ui::MainWindow *ui;
-    MySettings* heaps;
-    MySettings* extSettings;
 
     // 控件
     QList<WaterZoomButton*> sideButtonList;
@@ -1046,47 +932,19 @@ private:
     QTimer* removeTimer;
     qint64 removeDanmakuInterval = 60000;
     qint64 removeDanmakuTipInterval = 20000;
-    QStringList noReplyMsgs;
-    int danmuLongest = 20;
-    bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的
     LiveDanmaku lastDanmaku; // 最近一个弹幕
-    int robotTotalSendMsg = 0; // 机器人发送的弹幕数量
-    int liveTotalDanmaku = 0; // 本场直播的弹幕数量
 
     // 调试
     bool saveRecvCmds = false; // 保存收到的CMD
     QFile* saveCmdsFile = nullptr;
-
     QFile* pushCmdsFile = nullptr;
     QTimer* pushCmdsTimer = nullptr;
-
-    const int debugLastCount = 20;
-    QStringList lastConditionDanmu;
-    QStringList lastCandidateDanmaku;
-
-    // 过滤器
-    bool enableFilter = true;
-    // 过滤器（已废弃方案）
-    QString filter_musicOrder; // 点歌过滤
-    QRegularExpression filter_musicOrderRe;
-    QString filter_danmakuMsg; // 弹幕姬：消息
-    QString filter_danmakuCome; // 弹幕姬：用户进入过滤
-    QString filter_danmakuGift; // 弹幕姬：礼物过滤
-
-    // 发送弹幕队列
-    QList<QPair<QStringList, LiveDanmaku>> autoMsgQueues; // 待发送的自动弹幕，是一个二维列表！
-    QTimer* autoMsgTimer;
-    bool inDanmakuCd = false;    // 避免频繁发送弹幕
-    int inDanmakuDelay = 0; // 对于 >run(>delay(xxx)) 的支持
 
     // 点歌
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
     QString diangeFormatString;
     OrderPlayerWindow* musicWindow = nullptr;
-
-    // 远程控制
-    bool remoteControl = true; // 是否允许弹幕命令控制
 
     // 服务信息
     QString SERVER_DOMAIN = LOCAL_MODE ? "http://localhost:8102" : "http://iwxyi.com:8102";
@@ -1105,10 +963,6 @@ private:
     QProcess* recordConvertProcess = nullptr;
     QString recordLastPath;
     M3u8Downloader m3u8Downloader;
-
-    // 欢迎
-    qint64 msgCds[CHANNEL_COUNT] = {}; // 冷却通道（精确到毫秒）
-    int msgWaits[CHANNEL_COUNT] = {}; // 等待通道
 
     // 自动禁言
     QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
@@ -1131,49 +985,15 @@ private:
     QSystemTrayIcon *tray;//托盘图标添加成员
 
     // 文字转语音
-    VoicePlatform voicePlatform = VoiceLocal;
-#if defined(ENABLE_TEXTTOSPEECH)
-    QTextToSpeech *tts = nullptr;
-#endif
-    XfyTTS* xfyTTS = nullptr;
-    int voicePitch = 50;
-    int voiceSpeed = 50;
-    int voiceVolume = 50;
-    QString voiceName;
-    QStringList ttsQueue;
-    QMediaPlayer* ttsPlayer = nullptr;
-    bool ttsDownloading = false;
-    MicrosoftTTS* msTTS = nullptr;
-    QString msTTSFormat;
+    VoiceService* voiceService = nullptr;
 
     // 全屏弹幕
     QFont screenDanmakuFont;
     QColor screenDanmakuColor;
     QList<QLabel*> screenLabels;
 
-    // 游戏列表
-    QList<qint64> gameUsers[CHANNEL_COUNT];
-    QList<qint64> gameNumberLists[CHANNEL_COUNT];
-    QList<QString> gameTextLists[CHANNEL_COUNT];
-
-    // 粉丝牌
-    QList<qint64> medalUpgradeWaiting;
-
     // 服务端
-#ifdef ENABLE_HTTP_SERVER
-    QHttpServer *server = nullptr;
-#endif
-    QString serverDomain;
-    qint16 serverPort = 0;
-    QDir wwwDir;
-    QHash<QString, QString> contentTypeMap;
-    QWebSocketServer* danmakuSocketServer = nullptr;
-    QList<QWebSocket*> danmakuSockets;
-    QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
-
-    bool sendSongListToSockets = false;
-    bool sendLyricListToSockets = false;
-    bool sendCurrentSongToSockets = false;
+    WebServer* webServer;
 
     // 截图管理
     PictureBrowser* pictureBrowser = nullptr;
@@ -1194,9 +1014,6 @@ private:
     bool saveToSqlite = false;
     bool saveCmdToSqlite = false;
     SqlService sqlService;
-
-    // 缓存
-    QHash<QString, QImage> cacheImages;
 };
 
 class RequestBodyHelper : public QObject

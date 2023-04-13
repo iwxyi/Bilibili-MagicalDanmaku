@@ -28,7 +28,7 @@ QRCodeLoginDialog::~QRCodeLoginDialog()
 
 void QRCodeLoginDialog::getLoginUrl()
 {
-    get("http://passport.bilibili.com/qrcode/getLoginUrl", [=](MyJson json){
+    get("https://passport.bilibili.com/qrcode/getLoginUrl", [=](MyJson json){
         if (json.code())
             return error("code不为0：" + QString::number(json.code()));
         MyJson data = json.data();

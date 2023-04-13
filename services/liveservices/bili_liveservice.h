@@ -37,7 +37,26 @@ public:
     void doSign() override;
     void joinLOT(qint64 id, bool follow) override;
     void joinStorm(qint64 id) override;
-    
+    void openUserSpacePage(QString uid) override;
+    void openLiveRoomPage(QString roomId) override;
+    void openAreaRankPage(QString areaId, QString parentAreaId) override;
+    void switchMedalToUp(QString upId, int page = 1) override;
+    void wearMedal(qint64 medalId) override;
+    void sendPrivateMsg(QString  uid, QString msg) override;
+    void joinBattle(int type) override;
+    void detectMedalUpgrade(LiveDanmaku danmaku) override;
+    void myLiveSelectArea(bool update) override;
+    void myLiveUpdateArea(QString area) override;
+    void myLiveStartLive() override;
+    void myLiveStopLive() override;
+    void myLiveSetTitle(QString newTitle = "") override;
+    void myLiveSetNews() override;
+    void myLiveSetDescription() override;
+    void myLiveSetCover(QString path = "") override;
+    void myLiveSetTags() override;
+    void showPkMenu() override;
+    void showPkAssists() override;
+    void showPkHistories() override;
 
     /// 大乱斗
     void getRoomBattleInfo() override;
@@ -74,6 +93,12 @@ public slots:
     void delRoomBlockUser(qint64 id) override;
     void refreshBlockList() override;
     void adjustDanmakuLongest() override;
+    /// 私信
+    void refreshPrivateMsg() override;
+    void receivedPrivateMsg(MyJson session) override;
+    /// 弹幕
+    void sendMsg(const QString& msg) override;
+    void sendRoomMsg(QString uid, const QString& msg) override;
     
 private:
     // 直播心跳

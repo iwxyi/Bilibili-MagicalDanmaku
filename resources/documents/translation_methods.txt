@@ -79,11 +79,15 @@ AI聊天=aiChat
 模拟松开按键=simulateReleaseKeys
 模拟点击=simulateClick
 模拟点击按钮=simulateClickButton
-移动鼠标至=moveMouseTo
 移动鼠标=moveMouse
+调整鼠标=adjustMouse
 执行脚本=execScript
 复制文字=copyText
 设置本地模式=setLocalMode
 重新连接直播间=reconnectRoom
 链接直播间=connectRoom
-比较窗口截图=compareScreenShot
+保存窗口截图=saveScreenShot
+显示窗口=showWindow
+发送窗口消息=sendWindowMessage
+移动窗口=moveWindow
+

@@ -60,6 +60,7 @@ INCLUDEPATH += \
     services/ \
     services/liveservices/ \
     services/entities/ \
+    services/code_runner/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -90,13 +91,18 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    services/liveservices/bililivecmds.cpp \
-    services/liveservices/bililiveopenservice.cpp \
-    services/liveservices/bililiveservice.cpp \
+    mainwindow/cmd_process.cpp \
+    mainwindow/run_cmd.cpp \
+    services/code_runner/coderunner.cpp \
+    services/liveservices/bili_livecmds.cpp \
+    services/liveservices/bili_liveopenservice.cpp \
+    services/liveservices/bili_liveservice.cpp \
     services/liveservices/liveroomservice.cpp \
     services/liveservices/livestatisticservice.cpp \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
+    services/voice_service/voiceservice.cpp \
+    services/web_server/webserver.cpp \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/coloroctreeutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -184,14 +190,17 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
-    services/liveservices/bililiveopenservice.h \
-    services/liveservices/bililiveservice.h \
+    services/liveservices/bili_liveopenservice.h \
+    services/liveservices/bili_liveservice.h \
     services/liveservices/liveroomservice.h \
     services/liveservices/livestatisticservice.h \
     services/sqlservice.h \
     order_player/importsongsdialog.h \
+    services/voice_service/voiceservice.h \
+    services/web_server/webserver.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
     third_party/calculator/func_define.h \
@@ -209,7 +218,7 @@ HEADERS += \
     mainwindow/list_items/listiteminterface.h \
     mainwindow/live_danmaku/freecopyedit.h \
     mainwindow/live_danmaku/livedanmakuwindow.h \
-    services/liveservices/livedanmaku.h \
+    services/entities/livedanmaku.h \
     mainwindow/live_danmaku/portraitlabel.h \
     third_party/interactive_buttons/pointmenubutton.h \
     third_party/interactive_buttons/threedimenbutton.h \

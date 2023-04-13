@@ -1006,6 +1006,12 @@ border-image: url(C:/Path/To/Image.png)
 | compareScreenShot(screenId, x, y, w, h, path[, other args]) | 比较窗口截图     | 比较当前窗口的截图与指定图片文件的相似度。<br />screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径。<br />返回一个0到100的数字，表示相似程度。具体请参考[示例](#示例：定时监测屏幕内容) |
 | getScreenWidth(screenId)                                    | 获取屏幕宽度     | 获取指定显示器的屏幕宽度。如果不指定屏幕ID，则默认为0        |
 | getScreenHeight(screenId)                                   | 获取屏幕高度     | 同上                                                         |
+| findWindow(窗口标题)                                        | 查找窗口         | 根据完整的窗口标题或类名来查找顶级窗口（不搜索子窗口），返回一个窗口句柄（hwnd），可用于作为修改窗口的命令的参数。结合`spy++`工具来获取标题或类名 |
+| getForegroundWindow()                                       | 获取前景窗口     | 获取当前具有焦点的窗口的句柄（hwnd）                         |
+| isWindowFullScreen(hwnd)                                    | 窗口是否全屏     | 判断窗口是否全屏（不包含最大化），可用于判断游戏全屏、视频全屏 |
+| getCursorPos(x/y)                                           | 获取鼠标位置     | 获取当前鼠标的位置，参数为 x 或 y 字符串                     |
+| getWindowRect(hwnd, x/y/w/h)                                | 获取窗口位置     | 获取指定窗口几何坐标的值                                     |
+| getWindowFromPoint(x, y)                                    | 获取坐标所在窗口 | 获取屏幕上坐标为(x,y)的位置指向的最前面的窗口                |
 
 以获取时间为例：
 
@@ -1390,15 +1396,15 @@ tips：
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
-| simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键，不分大小写。加号使用“add”代替；不支持汉字等非键盘键位字符 |
+| simulateKeys(keys)                                 | 模拟按键         | 模拟例如“ctrl+a”等按键，不分大小写。加号使用“add”代替；不支持汉字等非键盘键位字符。可用`0x70`这样的形式模拟Win的F1键等。 |
 | simulatePressKeys(keys)                            | 模拟按下按键     | 同上                                                         |
 | simulateReleaseKeys(keys)                          | 模拟松开按键     | 同上                                                         |
 | simulateClick()                                    | 模拟点击         | 模拟鼠标左键点击                                             |
 | simulateClick(x, y)                                | 模拟点击         | 移动到指定x,y点，再模拟单击                                  |
 | simulateClickButton(flag)                          | 模拟点击按钮     | 模拟鼠标点击，flag为WIN API 中的mouse_event事件的DWORD参数，即鼠标事件的位或值。如6为左键单击，24为右键单击。可简写为 left、right、middle、x |
 | simulateClickButton(flag, x, y)                    | 模拟点击按钮     | 移动到指定x,y点，再模拟各按键点击；flag同上                  |
-| moveMouseTo(x, y)                                  | 移动鼠标至       | 移动鼠标到指定x,y点                                          |
-| moveMouse(dx, dy)                                  | 移动鼠标         | 移动鼠标，相对于现在的位置差                                 |
+| moveMouse(x, y)                                    | 移动鼠标         | 移动鼠标到指定x,y点                                          |
+| moveMouse(dx, dy)                                  | 调整鼠标         | 移动鼠标，相对于现在的位置差                                 |
 | execScript(path)                                   | 执行脚本         | 执行放在`程序目录/control/`文件夹下的bat或者vbs脚本，或绝对路径 |
 | copyText(text)                                     | 复制文字         | 把文字复制到剪贴板                                           |
 | setRoomTitle                                       | 设置直播标题     | 主播设置直播间的大标题                                       |
@@ -1409,6 +1415,9 @@ tips：
 | SQLExec                                            | SQL执行          | 需要开启数据库。执行SQL语句，如创建表格、插入记录            |
 | SQLQuery                                           | SQL查询          | 需要开启数据库。执行SQL语句并显示查询结果，如查找弹幕记录    |
 | saveScreenShot(screenId, x, y, w, h, path)         | 保存窗口截图     | 保存指定位置的窗口截图为本地图片。screenId:屏幕ID，只有一个屏幕则为0；x/y/w/h:坐标与宽高；path:要比较的文件路径 |
+| showWindow()                                       |                  |                                                              |
+| sendWindowMessage()                                |                  |                                                              |
+| moveWindow()                                       |                  |                                                              |
 
 
 在自动回复的每一条弹幕中使用符号 `>` 开头，紧接着 `func(arg...)` 格式，将执行命令，而不发送弹幕（若不是上述命令，将改为弹幕发送）。

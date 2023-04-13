@@ -379,3 +379,29 @@ void LiveRoomService::autoSetCookie(const QString &s)
     us->setValue("danmaku/browserData", ac->browserData);
     qInfo() << "设置弹幕格式：" << ac->browserData;
 }
+
+QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) const
+{
+    QStringList sl;
+    int len = text.length();
+    int count = (len + maxOne - 1) / maxOne;
+    for (int i = 0; i < count; i++)
+    {
+        sl << text.mid(i * maxOne, maxOne);
+    }
+    return sl;
+}
+
+void LiveRoomService::sendLongText(QString text)
+{
+    if (text.contains("%n%"))
+    {
+        text.replace("%n%", "\n");
+        for (auto s : text.split("\n", QString::SkipEmptyParts))
+        {
+            sendLongText(s);
+        }
+        return ;
+    }
+    emit signalSendAutoMsg(splitLongDanmu(text, ac->danmuLongest).join("\\n"), LiveDanmaku());
+}
