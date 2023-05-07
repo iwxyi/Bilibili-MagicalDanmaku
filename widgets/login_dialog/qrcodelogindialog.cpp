@@ -70,7 +70,7 @@ void QRCodeLoginDialog::getLoginUrl()
 
 void QRCodeLoginDialog::getLoginInfo()
 {
-    post("http://passport.bilibili.com/qrcode/getLoginInfo", QStringList{"oauthKey", oauthKey}, [=](QNetworkReply* reply){
+    post("https://passport.bilibili.com/qrcode/getLoginInfo", QStringList{"oauthKey", oauthKey}, [=](QNetworkReply* reply){
         MyJson json(reply->readAll());
         int jsonb(json, status);
         QString jsons(json, message);

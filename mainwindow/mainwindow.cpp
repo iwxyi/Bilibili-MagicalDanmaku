@@ -1670,15 +1670,15 @@ void MainWindow::initEvent()
 
 void MainWindow::initCodeRunner()
 {
-    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
+    connect(cr, &CodeRunner::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
+    connect(cr, &CodeRunner::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
         localNotify(text, uid);
     });
 
-    connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
+    connect(cr, &CodeRunner::signalShowError, this, [=](const QString& title, const QString& info) {
         showError(title, info);
     });
     connect(cr, &CodeRunner::signalSpeakText, this, [=](const QString& text) {
