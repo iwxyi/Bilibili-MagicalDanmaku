@@ -323,7 +323,7 @@ void BiliLiveService::getRoomCover(const QString &url)
 
 void BiliLiveService::getUpInfo(const QString &uid)
 {
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
+    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + uid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {

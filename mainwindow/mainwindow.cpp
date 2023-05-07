@@ -3739,7 +3739,7 @@ void MainWindow::getCookieAccount()
     if (ac->browserCookie.isEmpty())
         return ;
     liveService->gettingUser = true;
-    get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             showError("登录返回不为0", json.value("message").toString());
@@ -3784,7 +3784,7 @@ QString MainWindow::getDomainPort() const
 
 void MainWindow::getRobotInfo()
 {
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + ac->cookieUid;
+    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + ac->cookieUid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -5389,7 +5389,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
     }
 
     // 网络判断
-    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
@@ -5423,7 +5423,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
 
 void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
 {
-    QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)

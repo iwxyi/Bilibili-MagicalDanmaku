@@ -2358,7 +2358,7 @@ void LiveDanmakuWindow::hideStatusText()
 
 void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action, QAction *action2)
 {
-    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -2406,7 +2406,7 @@ void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action, QAc
 
 void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action, QAction *action2, QAction *action3)
 {
-    QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(uid);
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(uid);
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
@@ -2693,7 +2693,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
+    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
