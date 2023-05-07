@@ -187,14 +187,38 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayLiving())
+        {
+            emit signalConnectionStateTextChanged("等待开播");
             return ;
+        }
 
         // 开始工作
         if (isLiving())
             emit signalStartWork();
 
         if (!reconnect)
+        {
+            if (liveSocket)
+            {
+                if (liveSocket->state() == QAbstractSocket::ConnectedState)
+                {
+                    emit signalConnectionStateTextChanged("已连接");
+                }
+                else if (liveSocket->state() == QAbstractSocket::ConnectingState)
+                {
+                    emit signalConnectionStateTextChanged("连接中");
+                }
+                else
+                {
+                    emit signalConnectionStateTextChanged("未连接");
+                }
+            }
+            else
+            {
+                emit signalConnectionStateTextChanged("未初始化");
+            }
             return ;
+        }
 
         // 获取弹幕信息
         getDanmuInfo();
