@@ -1307,7 +1307,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
 {
     MUSIC_DEB << "智能获取最合适的结果：" << key << "   严格：" << strict;
     Q_ASSERT(searchResultSongs.size());
-    key = key.trimmed();
+    key = key.trimmed().toLower();
 
     // 直接选第一首
     if (!intelliPlayer)
@@ -1336,7 +1336,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name == name && song.artistNames == author)
+                if (song.name.toLower() == name && song.artistNames.toLower() == author)
                     return song;
             }
 
@@ -1345,7 +1345,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name == name && song.artistNames.contains(author))
+                if (song.name.toLower() == name && song.artistNames.toLower().contains(author))
                     return song;
             }
 
@@ -1354,7 +1354,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name.contains(name) && song.artistNames == author)
+                if (song.name.toLower().contains(name) && song.artistNames.toLower() == author)
                     return song;
             }
 
@@ -1363,7 +1363,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name.contains(name) && song.artistNames.contains(author))
+                if (song.name.toLower().contains(name) && song.artistNames.toLower().contains(author))
                     return song;
             }
         }
@@ -1383,7 +1383,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name == name && song.artistNames == author)
+                if (song.name.toLower() == name && song.artistNames.toLower() == author)
                     return song;
             }
 
@@ -1392,7 +1392,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name == name && song.artistNames.contains(author))
+                if (song.name.toLower() == name && song.artistNames.toLower().contains(author))
                     return song;
             }
 
@@ -1401,7 +1401,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name.contains(name) && song.artistNames == author)
+                if (song.name.toLower().contains(name) && song.artistNames.toLower() == author)
                     return song;
             }
 
@@ -1410,7 +1410,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
             {
                 if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                     continue;
-                if (song.name.contains(name) && song.artistNames.contains(author))
+                if (song.name.toLower().contains(name) && song.artistNames.toLower().contains(author))
                     return song;
             }
 
@@ -1426,7 +1426,7 @@ Song OrderPlayerWindow::getSuitableSongOnResults(QString key, bool strict) const
         {
             if (validMusicTime && song.duration && song.duration <= SHORT_MUSIC_DURATION)
                 continue;
-            if (song.name == name)
+            if (song.name.toLower() == name)
                 return song;
         }
     }
