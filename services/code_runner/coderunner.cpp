@@ -724,7 +724,8 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 读取配置文件的变量
-        re = QRegularExpression("%\\{([^%{[(]*?)\\}%");
+        //re = QRegularExpression("%\\{([^%{[(]*?)\\}%");
+        re = QRegularExpression("%\\{((.(?!%[\\[\\(\\{]))*?)\\}%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
