@@ -724,14 +724,21 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
         }
 
         // 读取配置文件的变量
-        re = QRegularExpression("%\\{([^(%(\\{|\\[|>))]*?)\\}%");
+        re = QRegularExpression("%\\{([^%{[(]*?)\\}%");
         while (msg.indexOf(re, 0, &match) > -1)
         {
             QString _var = match.captured(0);
             QString key = match.captured(1);
+            QString def = "";
+            if (key.contains("|"))
+            {
+                int pos = key.indexOf("|");
+                def = key.right(key.length() - pos - 1);
+                key = key.left(pos);
+            }
             if (!key.contains("/"))
                 key = "heaps/" + key;
-            QVariant var = heaps->value(key);
+            QVariant var = heaps->value(key, def);
             msg.replace(_var, var.toString()); // 默认使用变量类型吧
             find = true;
         }
