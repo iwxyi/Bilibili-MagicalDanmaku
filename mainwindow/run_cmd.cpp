@@ -2071,7 +2071,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             if (caps.size() > 3 && !caps.at(3).isEmpty())
             {
                 // 触发事件
-                TxNlp::instance()->chat(text, [=](QString s){
+                chatService->txNlp->chat(text, [=](QString s){
                     QJsonObject js;
                     js.insert("reply", s);
                     LiveDanmaku dm = danmaku;
@@ -2082,7 +2082,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             else
             {
                 // 直接发送弹幕
-                TxNlp::instance()->chat(text, [=](QString s){
+                chatService->txNlp->chat(text, [=](QString s){
                     liveService->sendLongText(s);
                 }, maxLen);
             }
@@ -2108,7 +2108,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 return true;
             QString code = caps.at(2);
             code = cr->toRunableCode(cr->toMultiLine(code));
-            TxNlp::instance()->chat(text, [=](QString result) {
+            chatService->txNlp->chat(text, [=](QString result) {
                 LiveDanmaku dmk = danmaku;
                 dmk.setText(result);
                 QStringList sl = cr->getEditConditionStringList(code, dmk);

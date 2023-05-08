@@ -93,6 +93,7 @@ INCLUDEPATH += \
 SOURCES += \
     mainwindow/cmd_process.cpp \
     mainwindow/run_cmd.cpp \
+    services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
     services/liveservices/bili_livecmds.cpp \
@@ -191,6 +192,7 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    services/chat_service/chatservice.h \
     services/code_runner/chatgptmanager.h \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \

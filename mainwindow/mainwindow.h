@@ -56,6 +56,7 @@
 #include "bili_liveservice.h"
 #include "web_server/webserver.h"
 #include "voice_service/voiceservice.h"
+#include "chat_service/chatservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -705,6 +706,10 @@ private slots:
 
     void on_chatGPTKeyButton_clicked();
 
+    void on_chatGPTRadio_clicked();
+
+    void on_chatTxRadio_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -717,6 +722,7 @@ private:
     void initCodeRunner();
     void initWebServer();
     void initVoiceService();
+    void initChatService();
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 
@@ -996,6 +1002,9 @@ private:
 
     // 文字转语音
     VoiceService* voiceService = nullptr;
+
+    // 聊天
+    ChatService* chatService = nullptr;
 
     // 全屏弹幕
     QFont screenDanmakuFont;

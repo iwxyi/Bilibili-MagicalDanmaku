@@ -8,18 +8,8 @@
 class TxNlp : public QObject
 {
     Q_OBJECT
-private:
-    TxNlp() {}
 public:
-    /**
-     * 单例模式
-     */
-    static TxNlp* instance()
-    {
-        if (!txNlp)
-            txNlp = new TxNlp();
-        return txNlp;
-    }
+    TxNlp(QObject* parent = nullptr) : QObject(parent) {}
 
     void setSecretId(const QString& id) { this->secretId = id.toLocal8Bit(); }
 
@@ -184,8 +174,6 @@ signals:
 private:
     QByteArray secretId;
     QByteArray secretKey;
-
-    static TxNlp* txNlp;
 };
 
 #endif // TX_NLP_H

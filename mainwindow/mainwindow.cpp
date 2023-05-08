@@ -35,8 +35,6 @@
 #include "bili_api_util.h"
 #include "pixmaputil.h"
 
-TxNlp* TxNlp::txNlp = nullptr;
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       NetInterface(this),
@@ -44,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
       sqlService(this)
 {
     ui->setupUi(this);
+    resize(800, 600);
     rt->mainwindow = this;
     cr->setMainUI(ui);
 
@@ -59,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     initCodeRunner();
     initWebServer();
     initVoiceService();
+    initChatService();
     readConfig();
 
 #ifdef Q_OS_ANDROID
@@ -1458,19 +1458,39 @@ void MainWindow::readConfig()
     ui->voiceCustomUrlEdit->setText(us->value("voice/customUrl", "").toString());
 
     // AI回复
+    chatService->chatPlatform = static_cast<ChatPlatform>(us->value("chat/platform", 0).toInt());
+    if (chatService->chatPlatform == ChatGPT)
+    {
+        ui->chatGPTRadio->setChecked(true);
+    }
+    else if (chatService->chatPlatform == TxNLP)
+    {
+        ui->chatTxRadio->setChecked(true);
+    }
+    else
+    {
+        ui->chatGPTRadio->setChecked(true);
+    }
+
+    // chatgpt
+    ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
+    ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
+    ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
+
+    // 腾讯闲聊
     QString TXSecretId = us->value("tx_nlp/secretId").toString();
     if (!TXSecretId.isEmpty())
     {
-        TxNlp::instance()->setSecretId(TXSecretId);
+        chatService->txNlp->setSecretId(TXSecretId);
         ui->TXSecretIdEdit->setText(TXSecretId);
     }
     QString TXSecretKey = us->value("tx_nlp/secretKey").toString();
     if (!TXSecretKey.isEmpty())
     {
-        TxNlp::instance()->setSecretKey(TXSecretKey);
+        chatService->txNlp->setSecretKey(TXSecretKey);
         ui->TXSecretKeyEdit->setText(TXSecretKey);
     }
-    connect(TxNlp::instance(), &TxNlp::signalError, this, [=](const QString& err){
+    connect(chatService->txNlp, &TxNlp::signalError, this, [=](const QString& err){
         showError("智能闲聊", err);
     });
 
@@ -1569,12 +1589,6 @@ void MainWindow::readConfig()
     // 互动玩法
     ui->identityCodeEdit->setText(ac->identityCode = us->value("live-open/identityCode").toString());
     ui->liveOpenCheck->setChecked(us->value("live-open/enabled").toBool());
-
-    // ChatGPT
-    //ui->chatGPTModelNameCombo->setCurrentIndex(0);
-    ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
-    ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
-    ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
 
     // 数据清理
     ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
@@ -1707,6 +1721,11 @@ void MainWindow::initVoiceService()
 {
     voiceService = new VoiceService(this);
     cr->setVoiceService(voiceService);
+}
+
+void MainWindow::initChatService()
+{
+    chatService = new ChatService(this);
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -6959,6 +6978,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     if (!danmakuWindow)
     {
         danmakuWindow = new LiveDanmakuWindow(this);
+        danmakuWindow->setChatService(this->chatService);
 
         connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
             if (danmaku.is(MSG_DANMAKU))
@@ -11700,14 +11720,14 @@ void MainWindow::on_TXSecretIdEdit_editingFinished()
 {
     QString text = ui->TXSecretIdEdit->text();
     us->setValue("tx_nlp/secretId", text);
-    TxNlp::instance()->setSecretId(text);
+    chatService->txNlp->setSecretId(text);
 }
 
 void MainWindow::on_TXSecretKeyEdit_editingFinished()
 {
     QString text = ui->TXSecretKeyEdit->text();
     us->setValue("tx_nlp/secretKey", text);
-    TxNlp::instance()->setSecretKey(text);
+    chatService->txNlp->setSecretKey(text);
 }
 
 void MainWindow::on_saveDanmakuToFileButton_clicked()
@@ -12077,4 +12097,18 @@ void MainWindow::on_chatGPTKeyButton_clicked()
         QDesktopServices::openUrl(url);
     });
     watcher->setFuture(future);
+}
+
+void MainWindow::on_chatGPTRadio_clicked()
+{
+    ui->chatTxRadio->setChecked(false);
+    ui->chatGPTRadio->setChecked(true);
+    us->setValue("chat/paltform", chatService->chatPlatform = ChatGPT);
+}
+
+void MainWindow::on_chatTxRadio_clicked()
+{
+    ui->chatTxRadio->setChecked(true);
+    ui->chatGPTRadio->setChecked(false);
+    us->setValue("chat/paltform", chatService->chatPlatform = TxNLP);
 }

@@ -217,6 +217,11 @@ LiveDanmakuWindow::~LiveDanmakuWindow()
     us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
 }
 
+void LiveDanmakuWindow::setChatService(ChatService *service)
+{
+    this->chatService = service;
+}
+
 void LiveDanmakuWindow::showEvent(QShowEvent *event)
 {
 #ifndef Q_OS_ANDROID
@@ -2198,7 +2203,7 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     // 优化消息文本
     // msg.replace(QRegularExpression("\\s+"), "，");
 
-    TxNlp::instance()->chat(msg, [=](QString answer){
+    chatService->txNlp->chat(msg, [=](QString answer){
         if (answer.isEmpty())
             return ;
 

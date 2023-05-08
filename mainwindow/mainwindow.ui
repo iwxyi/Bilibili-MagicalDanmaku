@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>843</width>
-    <height>1714</height>
+    <width>1026</width>
+    <height>1451</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>763</width>
-             <height>1576</height>
+             <width>946</width>
+             <height>1313</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2161,8 +2161,8 @@ margin: 40px;</string>
              <rect>
               <x>370</x>
               <y>10</y>
-              <width>151</width>
-              <height>191</height>
+              <width>171</width>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2187,7 +2187,7 @@ margin: 40px;</string>
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>智能闲聊</string>
+                <string>智能聊天</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -2246,6 +2246,350 @@ margin: 40px;</string>
                </property>
                <property name="tristate">
                 <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_77">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QRadioButton" name="chatGPTRadio">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>ChatGPT</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="chatTxRadio">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>腾讯</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="chatGPTSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>1120</y>
+              <width>161</width>
+              <height>201</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#chatGPTSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_85">
+             <item>
+              <widget class="QLabel" name="label_70">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>ChatGPT</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_42" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="chatGPTKeyButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>申请秘钥</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_6">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_71">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>秘钥</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_72">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>模型</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_73">
+                 <property name="text">
+                  <string>token</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_75">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>上下文</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="gptKeyEdit">
+                 <property name="toolTip">
+                  <string>ChatGPT 秘钥
+支持OpenAI、API2D的秘钥</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="chatGPTModelNameCombo">
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo-0301</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4-0314</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QSpinBox" name="chatGPTMaxTokenCountSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>最大的输入Token
+和输出的总和不得超过模型的Token上限</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string/>
+                 </property>
+                 <property name="prefix">
+                  <string> 最大</string>
+                 </property>
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>40960</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>1024</number>
+                 </property>
+                 <property name="value">
+                  <number>2048</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QSpinBox" name="chatGPTMaxContextCountSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>弹幕聊天上下文的数量
+越多则衔接越自然，但消耗的Token也会更多</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string/>
+                 </property>
+                 <property name="prefix">
+                  <string> 最大</string>
+                 </property>
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>2</number>
+                 </property>
+                 <property name="value">
+                  <number>16</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="TxNLPSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>770</x>
+              <y>10</y>
+              <width>161</width>
+              <height>131</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>每次更新后显示更新了什么</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#TxNLPSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_86">
+             <item>
+              <widget class="QLabel" name="label_74">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>腾讯闲聊</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_43" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
                </property>
               </widget>
              </item>
@@ -2690,7 +3034,7 @@ margin: 40px;</string>
              <rect>
               <x>10</x>
               <y>350</y>
-              <width>171</width>
+              <width>181</width>
               <height>171</height>
              </rect>
             </property>
@@ -4807,7 +5151,7 @@ QPushButton:pressed
              <rect>
               <x>550</x>
               <y>230</y>
-              <width>201</width>
+              <width>241</width>
               <height>151</height>
              </rect>
             </property>
@@ -5095,6 +5439,177 @@ margin: 40px;</string>
 {
 	background: transparent;
 }</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="voiceMSSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>550</x>
+              <y>990</y>
+              <width>191</width>
+              <height>171</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#voiceMSSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_73">
+             <item>
+              <widget class="QLabel" name="label_55">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string> 微软语音</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_35" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_5">
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_57">
+                 <property name="text">
+                  <string>地区码</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="MSAreaCodeEdit">
+                 <property name="toolTip">
+                  <string>区域标识符，如下：
+地理位置	区域	区域标识符
+美洲	Central US	centralus
+美洲	美国东部	eastus
+美洲	美国东部 2	eastus2
+美洲	美国中北部	northcentralus
+美洲	美国中南部	southcentralus
+美洲	美国中西部	westcentralus
+美洲	美国西部	westus
+美洲	美国西部 2	westus2
+美洲	加拿大中部	canadacentral
+美洲	Brazil South	brazilsouth
+亚太区	东亚	eastasia
+亚太区	东南亚	southeastasia
+亚太区	澳大利亚东部	australiaeast
+亚太区	印度中部	centralindia
+亚太区	日本东部	japaneast
+亚太区	日本西部	japanwest
+亚太区	韩国中部	koreacentral
+欧洲	北欧	northeurope
+欧洲	西欧	westeurope
+欧洲	法国中部	francecentral
+欧洲	瑞士北部	switzerlandnorth
+欧洲	英国南部	uksouth</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string>southeastasia</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_59">
+                 <property name="text">
+                  <string>格式</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="MSSubscriptionKeyEdit">
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_58">
+                 <property name="text">
+                  <string>订阅码</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QPushButton" name="MS_TTS__SSML_Btn">
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string> 设置SSML格式</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azure.microsoft.com/zh-cn/services/cognitive-services/text-to-speech/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;申请微软文本转语音&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="openExternalLinks">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -5675,177 +6190,6 @@ QPushButton:pressed
                 <bool>false</bool>
                </property>
               </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="voiceMSSettingsCard" native="true">
-            <property name="geometry">
-             <rect>
-              <x>550</x>
-              <y>990</y>
-              <width>191</width>
-              <height>171</height>
-             </rect>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">#voiceMSSettingsCard
-{
-	background: #f7f7ff;
-	border: none;
-	border-radius: 5px;
-}</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_73">
-             <item>
-              <widget class="QLabel" name="label_55">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font-size: 14px;
-font-weight: 500;</string>
-               </property>
-               <property name="text">
-                <string> 微软语音</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_35" native="true">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">background: lightgray;
-margin: 40px;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QGridLayout" name="gridLayout_5">
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_57">
-                 <property name="text">
-                  <string>地区码</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="MSAreaCodeEdit">
-                 <property name="toolTip">
-                  <string>区域标识符，如下：
-地理位置	区域	区域标识符
-美洲	Central US	centralus
-美洲	美国东部	eastus
-美洲	美国东部 2	eastus2
-美洲	美国中北部	northcentralus
-美洲	美国中南部	southcentralus
-美洲	美国中西部	westcentralus
-美洲	美国西部	westus
-美洲	美国西部 2	westus2
-美洲	加拿大中部	canadacentral
-美洲	Brazil South	brazilsouth
-亚太区	东亚	eastasia
-亚太区	东南亚	southeastasia
-亚太区	澳大利亚东部	australiaeast
-亚太区	印度中部	centralindia
-亚太区	日本东部	japaneast
-亚太区	日本西部	japanwest
-亚太区	韩国中部	koreacentral
-欧洲	北欧	northeurope
-欧洲	西欧	westeurope
-欧洲	法国中部	francecentral
-欧洲	瑞士北部	switzerlandnorth
-欧洲	英国南部	uksouth</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="text">
-                  <string>southeastasia</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_59">
-                 <property name="text">
-                  <string>格式</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="MSSubscriptionKeyEdit">
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_58">
-                 <property name="text">
-                  <string>订阅码</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QPushButton" name="MS_TTS__SSML_Btn">
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-                 </property>
-                 <property name="text">
-                  <string> 设置SSML格式</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azure.microsoft.com/zh-cn/services/cognitive-services/text-to-speech/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;申请微软文本转语音&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="openExternalLinks">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </item>
             </layout>
            </widget>
@@ -6486,260 +6830,6 @@ QPushButton:pressed
                 <bool>false</bool>
                </property>
               </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="chatGPTSettingsCard" native="true">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>1120</y>
-              <width>161</width>
-              <height>201</height>
-             </rect>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">#chatGPTSettingsCard
-{
-	background: #f7f7ff;
-	border: none;
-	border-radius: 5px;
-}</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_85">
-             <item>
-              <widget class="QLabel" name="label_70">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font-size: 14px;
-font-weight: 500;</string>
-               </property>
-               <property name="text">
-                <string>ChatGPT</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_42" native="true">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">background: lightgray;
-margin: 40px;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="InteractiveButtonBase" name="chatGPTKeyButton">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-               </property>
-               <property name="text">
-                <string>申请秘钥</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QGridLayout" name="gridLayout_6">
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_71">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="text">
-                  <string>秘钥</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_72">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="text">
-                  <string>模型</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_73">
-                 <property name="text">
-                  <string>token</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_75">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="text">
-                  <string>上下文</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="gptKeyEdit">
-                 <property name="toolTip">
-                  <string>ChatGPT 秘钥
-支持OpenAI、API2D的秘钥</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QComboBox" name="chatGPTModelNameCombo">
-                 <item>
-                  <property name="text">
-                   <string>gpt-3.5-turbo</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-3.5-turbo-0301</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-4</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-4-0314</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QSpinBox" name="chatGPTMaxTokenCountSpin">
-                 <property name="contextMenuPolicy">
-                  <enum>Qt::NoContextMenu</enum>
-                 </property>
-                 <property name="toolTip">
-                  <string>最大的输入Token
-和输出的总和不得超过模型的Token上限</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="frame">
-                  <bool>false</bool>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="suffix">
-                  <string/>
-                 </property>
-                 <property name="prefix">
-                  <string> 最大</string>
-                 </property>
-                 <property name="minimum">
-                  <number>1</number>
-                 </property>
-                 <property name="maximum">
-                  <number>40960</number>
-                 </property>
-                 <property name="singleStep">
-                  <number>1024</number>
-                 </property>
-                 <property name="value">
-                  <number>2048</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QSpinBox" name="chatGPTMaxContextCountSpin">
-                 <property name="contextMenuPolicy">
-                  <enum>Qt::NoContextMenu</enum>
-                 </property>
-                 <property name="toolTip">
-                  <string>弹幕聊天上下文的数量
-越多则衔接越自然，但消耗的Token也会更多</string>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-                 </property>
-                 <property name="frame">
-                  <bool>false</bool>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="suffix">
-                  <string/>
-                 </property>
-                 <property name="prefix">
-                  <string> 最大</string>
-                 </property>
-                 <property name="minimum">
-                  <number>1</number>
-                 </property>
-                 <property name="maximum">
-                  <number>100</number>
-                 </property>
-                 <property name="singleStep">
-                  <number>2</number>
-                 </property>
-                 <property name="value">
-                  <number>16</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </item>
             </layout>
            </widget>
@@ -9843,7 +9933,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>843</width>
+     <width>1026</width>
      <height>26</height>
     </rect>
    </property>
