@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>851</width>
-    <height>634</height>
+    <width>843</width>
+    <height>1714</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>771</width>
-             <height>508</height>
+             <width>763</width>
+             <height>1576</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1913,6 +1913,12 @@ margin: 40px;</string>
                <property name="contextMenuPolicy">
                 <enum>Qt::NoContextMenu</enum>
                </property>
+               <property name="toolTip">
+                <string>弹幕保留的时间，超过之后会清空记录。
+影响从用户查找、ChatGPT聊天上下文等功能。
+如果弹幕太多，会影响性能。
+查看历史弹幕，可以从保存的txt、数据库中查看。</string>
+               </property>
                <property name="layoutDirection">
                 <enum>Qt::LeftToRight</enum>
                </property>
@@ -1944,7 +1950,7 @@ margin: 40px;</string>
                 <number>10</number>
                </property>
                <property name="value">
-                <number>60</number>
+                <number>600</number>
                </property>
               </widget>
              </item>
@@ -1978,7 +1984,7 @@ margin: 40px;</string>
                 <number>5</number>
                </property>
                <property name="value">
-                <number>20</number>
+                <number>60</number>
                </property>
               </widget>
              </item>
@@ -6483,6 +6489,260 @@ QPushButton:pressed
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="chatGPTSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>1120</y>
+              <width>161</width>
+              <height>201</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#chatGPTSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_85">
+             <item>
+              <widget class="QLabel" name="label_70">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>ChatGPT</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_42" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="InteractiveButtonBase" name="chatGPTKeyButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>申请秘钥</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QGridLayout" name="gridLayout_6">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_71">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>秘钥</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_72">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>模型</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_73">
+                 <property name="text">
+                  <string>token</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_75">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>上下文</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="gptKeyEdit">
+                 <property name="toolTip">
+                  <string>ChatGPT 秘钥
+支持OpenAI、API2D的秘钥</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="chatGPTModelNameCombo">
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo-0301</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4-0314</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QSpinBox" name="chatGPTMaxTokenCountSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>最大的输入Token
+和输出的总和不得超过模型的Token上限</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string/>
+                 </property>
+                 <property name="prefix">
+                  <string> 最大</string>
+                 </property>
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>40960</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>1024</number>
+                 </property>
+                 <property name="value">
+                  <number>2048</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QSpinBox" name="chatGPTMaxContextCountSpin">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::NoContextMenu</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>弹幕聊天上下文的数量
+越多则衔接越自然，但消耗的Token也会更多</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QAbstractSpinBox
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string/>
+                 </property>
+                 <property name="prefix">
+                  <string> 最大</string>
+                 </property>
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>2</number>
+                 </property>
+                 <property name="value">
+                  <number>16</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -9583,7 +9843,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>851</width>
+     <width>843</width>
      <height>26</height>
     </rect>
    </property>

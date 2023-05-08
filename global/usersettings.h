@@ -44,6 +44,10 @@ public:
     bool calculateDailyData = false; // 统计每天数据
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
+    QString open_ai_key;
+    QString chatgpt_model_name;
+    int chatgpt_max_token_count = 4096;
+    int chatgpt_max_context_count = 16;
 
     bool localMode = false;   // 本地调试模式
     bool debugPrint = false;  // 调试输出模式

@@ -6,6 +6,7 @@
 #include "tx_nlp.h"
 #include "variantviewer.h"
 #include "csvviewer.h"
+#include "chatgptutil.h"
 
 void MainWindow::processRemoteCmd(QString msg, bool response)
 {
@@ -2114,6 +2115,25 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 if (!sl.empty())
                     cr->sendAutoMsg(sl.first(), dmk);
             });
+            return true;
+        }
+    }
+
+
+    if (msg.contains("ChatGPT") || msg.contains("ChatGPT.chat"))
+    {
+        re = RE("ChatGPT(\\.chat)?\\s*\\(\\s*(\\d+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            QString text = caps.at(2).trimmed();
+            if (text.isEmpty())
+                return true;
+
+
+
             return true;
         }
     }

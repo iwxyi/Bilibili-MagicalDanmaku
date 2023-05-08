@@ -695,6 +695,16 @@ private slots:
 
     void on_closeGuiCheck_clicked();
 
+    void on_gptKeyEdit_textEdited(const QString &arg1);
+
+    void on_chatGPTMaxTokenCountSpin_valueChanged(int arg1);
+
+    void on_chatGPTMaxContextCountSpin_valueChanged(int arg1);
+
+    void on_chatGPTModelNameCombo_activated(const QString &arg1);
+
+    void on_chatGPTKeyButton_clicked();
+
 private:
     void initView();
     void initStyle();

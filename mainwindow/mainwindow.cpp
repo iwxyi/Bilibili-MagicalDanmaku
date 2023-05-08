@@ -1570,6 +1570,12 @@ void MainWindow::readConfig()
     ui->identityCodeEdit->setText(ac->identityCode = us->value("live-open/identityCode").toString());
     ui->liveOpenCheck->setChecked(us->value("live-open/enabled").toBool());
 
+    // ChatGPT
+    //ui->chatGPTModelNameCombo->setCurrentIndex(0);
+    ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
+    ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
+    ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
+
     // 数据清理
     ui->autoClearComeIntervalSpin->setValue(us->value("danmaku/clearDidntComeInterval", 7).toInt());
 
@@ -8059,13 +8065,13 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/star"), "主界面", [=]{
             this->show();
             this->activateWindow();
-        });
+        })->check(this->isVisible());
         menu->split()->addAction(QIcon(":/icons/danmu"), "弹幕姬", [=]{
             on_actionShow_Live_Danmaku_triggered();
-        });
+        })->check(danmakuWindow && danmakuWindow->isVisible());
         menu->addAction(QIcon(":/icons/order_song"), "点歌姬", [=]{
             on_actionShow_Order_Player_Window_triggered();
-        });
+        })->check(musicWindow && musicWindow->isVisible());
         menu->addAction(QIcon(":/icons/live"), "视频流", [=]{
             on_actionShow_Live_Video_triggered();
         });
@@ -12029,4 +12035,46 @@ void MainWindow::on_closeGuiCheck_clicked()
             delete widget;
         }
     }
+}
+
+void MainWindow::on_gptKeyEdit_textEdited(const QString &arg1)
+{
+    us->setValue("chatgpt/open_ai_key", us->open_ai_key = arg1);
+}
+
+void MainWindow::on_chatGPTModelNameCombo_activated(const QString &arg1)
+{
+    us->setValue("chatgpt/model_name", us->chatgpt_model_name = arg1);
+}
+
+void MainWindow::on_chatGPTMaxTokenCountSpin_valueChanged(int arg1)
+{
+    us->setValue("chatgpt/max_token_count", us->chatgpt_max_token_count = arg1);
+}
+
+void MainWindow::on_chatGPTMaxContextCountSpin_valueChanged(int arg1)
+{
+    us->setValue("chatgpt/max_context_count", us->chatgpt_max_context_count = arg1);
+}
+
+void MainWindow::on_chatGPTKeyButton_clicked()
+{
+    QFuture<bool> future = NetUtil::checkPublicNetThread(true);
+    NetUtil::checkPublicNetThread(false);
+    QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
+
+    connect(watcher, &QFutureWatcher<void>::finished,[=]{
+        // qInfo() << "可连接外网：" << future.result();
+        QString url;
+        if(future.result())
+        {
+            url = "https://www.openai.com";
+        }
+        else
+        {
+            url = "https://api2d.com";
+        }
+        QDesktopServices::openUrl(url);
+    });
+    watcher->setFuture(future);
 }
