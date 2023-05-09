@@ -573,6 +573,13 @@ void MainWindow::initObject()
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
 
+    // 编译时间
+    QString dateTime = __DATE__;
+    //注意此处的replace()，可以保证日期为2位，不足的补0
+    dateTime = QLocale(QLocale::English).toDateTime(dateTime.replace("  "," 0"), "MMM dd yyyy").toString("yyyy.MM.dd");
+    QTime buildTime = QTime::fromString(__TIME__, "hh:mm:ss");
+    ui->appNameLabel->setToolTip("编译时间：" + dateTime + " " + buildTime.toString());
+
     // 各种时钟
     // 定时移除弹幕
     removeTimer = new QTimer(this);
