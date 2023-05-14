@@ -2539,6 +2539,7 @@ void BiliLiveService::adjustDanmakuLongest()
     if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
         longest = qMax(longest, 40);
     
+    ac->danmuLongest = longest;
     emit signalDanmakuLongestChanged(longest);
 }
 

@@ -1,3 +1,14 @@
+### v4.10.0 [GPT接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.0)
+
+- 新增ChatGPT功能，可选3.5/4等多个模型
+- 新增GPT参数配置的界面
+- 新增AI弹幕回复的选择界面，可用GPT/腾讯
+- 新增使用AI生成代码
+
+
+
+
+
 ### v4.9.2 [Win API接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.9.2)
 
 - 调整移动鼠标 `moveMouse` / `moveMouseTo` 为 `adjustMouse` / `moveMouse`

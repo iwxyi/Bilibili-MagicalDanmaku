@@ -1062,6 +1062,11 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(local.length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
     }
 
+    else if (key == "%danmu_longest")
+    {
+        return snum(ac->danmuLongest);
+    }
+
     // 是否新关注
     else if (key == "%new_attention%")
     {

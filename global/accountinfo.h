@@ -19,7 +19,7 @@ public:
     QString cookieToken;      // csrf_token
     int cookieULevel = 0;     // 自己的等级
     int cookieGuardLevel = 0; // 自己的大航海
-    int danmuLongest = 20;
+    int danmuLongest = 20;    // 最长的弹幕
 
     // 连接的直播间信息
     QString roomId;          // 房间长ID
