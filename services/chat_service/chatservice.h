@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "tx_nlp.h"
+#include "chatgptmanager.h"
 
 enum ChatPlatform
 {
@@ -16,12 +17,17 @@ class ChatService : public QObject
 public:
     explicit ChatService(QObject *parent = nullptr);
 
+    void setLiveService(LiveRoomService* service);
+
 signals:
 
 public slots:
+    void chat(qint64 uid, QString text, NetStringFunc func);
+    void clear();
 
 public:
     ChatPlatform chatPlatform;
+    ChatGPTManager* chatgpt = nullptr;
     TxNlp* txNlp = nullptr;
 };
 

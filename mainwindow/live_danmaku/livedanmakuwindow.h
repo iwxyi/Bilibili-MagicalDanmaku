@@ -203,6 +203,7 @@ private:
 
     QString headDir; // 头像保存的路径/ (带/)
     bool headerApiIsBanned = false;
+    QSet<qint64> hasGetUserHeader;
 
     int fontHeight;
     int lineSpacing;

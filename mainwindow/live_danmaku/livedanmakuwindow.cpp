@@ -2161,7 +2161,7 @@ void LiveDanmakuWindow::startTranslate(QListWidgetItem *item)
         QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "翻译失败：" <<error.errorString();
             return ;
         }
 
@@ -2203,7 +2203,7 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     // 优化消息文本
     // msg.replace(QRegularExpression("\\s+"), "，");
 
-    chatService->txNlp->chat(msg, [=](QString answer){
+    chatService->chat(uid, msg, [=](QString answer){
         if (answer.isEmpty())
             return ;
 
@@ -2216,7 +2216,7 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         item->setData(DANMAKU_REPLY_ROLE, answer);
 
         adjustItemTextDynamic(item);
-    }, 0);
+    });
 }
 
 void LiveDanmakuWindow::setEnableBlock(bool enable)
@@ -2378,7 +2378,7 @@ void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action, QAc
         QJsonDocument document = QJsonDocument::fromJson(data, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取粉丝失败：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2427,7 +2427,7 @@ void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action, QActi
         QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取播放量失败：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2493,7 +2493,7 @@ void LiveDanmakuWindow::showGuardInAction(qint64 roomId, qint64 uid, QAction *ac
         QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取舰长失败：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2532,7 +2532,7 @@ void LiveDanmakuWindow::showPkLevelInAction(qint64 roomId, QAction *actionUser, 
         QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
+            qDebug() << "获取PK等级失败：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
@@ -2696,16 +2696,45 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
 
 void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
+    if (hasGetUserHeader.contains(uid)) // 避免重复获取头像
+        return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
-    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid);
+    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
+    hasGetUserHeader.insert(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        QByteArray ba = result.toUtf8();
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qDebug() << error.errorString();
-            return ;
+            if (error.error == QJsonParseError::GarbageAtEnd && ba.contains("}{"))
+            {
+                int index = ba.indexOf("}{");
+                ba = ba.right(ba.length() - index - 1);
+
+                // 再获取一遍
+                document = QJsonDocument::fromJson(ba, &error);
+                if (error.error != QJsonParseError::NoError)
+                {
+                    qDebug() << "获取用户信息失败：" << error.errorString();
+                    headerApiIsBanned = true;
+                    QTimer::singleShot(60000, [=]{
+                        headerApiIsBanned = false;
+                    });
+                    return ;
+                }
+            }
+            else
+            {
+                qDebug() << "获取用户信息失败：" << error.errorString();
+                headerApiIsBanned = true;
+                QTimer::singleShot(60000, [=]{
+                    headerApiIsBanned = false;
+                });
+                return ;
+            }
+
         }
         QJsonObject json = document.object();
         if (json.value("code").toInt() != 0)
@@ -2726,6 +2755,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QString faceUrl = data.value("face").toString();
 
         getUserHeadPortrait(uid, faceUrl, item);
+        hasGetUserHeader.remove(uid);
     });
 }
 

@@ -696,7 +696,7 @@ private slots:
 
     void on_closeGuiCheck_clicked();
 
-    void on_gptKeyEdit_textEdited(const QString &arg1);
+    void on_chatGPTKeyEdit_textEdited(const QString &arg1);
 
     void on_chatGPTMaxTokenCountSpin_valueChanged(int arg1);
 
@@ -709,6 +709,8 @@ private slots:
     void on_chatGPTRadio_clicked();
 
     void on_chatTxRadio_clicked();
+
+    void on_chatGPTPromptButton_clicked();
 
 private:
     void initView();

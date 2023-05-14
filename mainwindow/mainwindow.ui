@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1026</width>
-    <height>1451</height>
+    <width>1017</width>
+    <height>1571</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1839,8 +1839,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>946</width>
-             <height>1313</height>
+             <width>937</width>
+             <height>1433</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2284,7 +2284,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>1120</y>
               <width>161</width>
-              <height>201</height>
+              <height>231</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2337,12 +2337,14 @@ margin: 40px;</string>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="chatGPTKeyButton">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton
+              <layout class="QHBoxLayout" name="horizontalLayout_78">
+               <item>
+                <widget class="QPushButton" name="chatGPTKeyButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
 {
 	background: transparent;
 	border: 1px solid lightgray;
@@ -2360,11 +2362,43 @@ QPushButton:pressed
 }
 
 </string>
-               </property>
-               <property name="text">
-                <string>申请秘钥</string>
-               </property>
-              </widget>
+                 </property>
+                 <property name="text">
+                  <string>申请秘钥</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="chatGPTPromptButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string>Prompt</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
              <item>
               <layout class="QGridLayout" name="gridLayout_6">
@@ -2406,7 +2440,7 @@ QPushButton:pressed
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLineEdit" name="gptKeyEdit">
+                <widget class="QLineEdit" name="chatGPTKeyEdit">
                  <property name="toolTip">
                   <string>ChatGPT 秘钥
 支持OpenAI、API2D的秘钥</string>
@@ -9933,7 +9967,7 @@ font-weight: 500;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1026</width>
+     <width>1017</width>
      <height>26</height>
     </rect>
    </property>

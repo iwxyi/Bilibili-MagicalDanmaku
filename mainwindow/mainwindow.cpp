@@ -1480,6 +1480,8 @@ void MainWindow::readConfig()
     }
 
     // chatgpt
+    us->chatgpt_prompt = us->value("chatgpt/prompt").toString();
+    ui->chatGPTKeyEdit->setText(us->open_ai_key = us->value("chatgpt/open_ai_key", us->open_ai_key).toString());
     ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
     ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
     ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
@@ -1733,6 +1735,7 @@ void MainWindow::initVoiceService()
 void MainWindow::initChatService()
 {
     chatService = new ChatService(this);
+    chatService->setLiveService(this->liveService);
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -10348,7 +10351,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
     if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
     {
         // 机器人自己的不回复（不然自己和自己打起来了）
-        if (snum(uid) == ac->cookieUid)
+        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
             return ;
 
         // AI回复长度上限，以及过滤
@@ -10357,6 +10360,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
             return ;
 
         // 自动断句
+        qInfo() << "发送AI回复：" << reply;
         QStringList sl;
         int len = reply.length();
         const int maxOne = ac->danmuLongest;
@@ -12064,7 +12068,7 @@ void MainWindow::on_closeGuiCheck_clicked()
     }
 }
 
-void MainWindow::on_gptKeyEdit_textEdited(const QString &arg1)
+void MainWindow::on_chatGPTKeyEdit_textEdited(const QString &arg1)
 {
     us->setValue("chatgpt/open_ai_key", us->open_ai_key = arg1);
 }
@@ -12118,4 +12122,15 @@ void MainWindow::on_chatTxRadio_clicked()
     ui->chatTxRadio->setChecked(true);
     ui->chatGPTRadio->setChecked(false);
     us->setValue("chat/paltform", chatService->chatPlatform = TxNLP);
+}
+
+void MainWindow::on_chatGPTPromptButton_clicked()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "prompt", "设置ChatGPT的prompt", QLineEdit::Normal, us->chatgpt_prompt, &ok);
+    if (!ok)
+        return ;
+
+    us->chatgpt_prompt = s;
+    us->setValue("chatgpt/prompt", s);
 }

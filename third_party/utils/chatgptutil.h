@@ -66,7 +66,7 @@ public:
     void getResponse(const QString& paramText)
     {
         QJsonObject json;
-        json.insert("model", "gpt-3.5-turbo");
+        json.insert("model", us->chatgpt_model_name);
         QJsonArray array;
         QJsonObject rc;
         rc.insert("role", "user");
@@ -80,7 +80,7 @@ public:
     void getResponse(QList<ChatBean> chats)
     {
         QJsonObject json;
-        json.insert("model", "gpt-3.5-turbo");
+        json.insert("model", us->chatgpt_model_name);
         QJsonArray array;
         for (int i = 0; i < chats.size(); i++)
         {
@@ -148,7 +148,7 @@ public:
             {
                 if (choice0.value("finish_reason").toString() != "stop")
                 {
-                    qCritical() << ("无法获取message：" + ba);
+                    qCritical() << ("无法获取message：" + QString(ba));
                     emit signalResponseError("无法获取message：" + ba);
                 }
             }
@@ -166,7 +166,7 @@ public:
         }
         else
         {
-            qDebug() << ("无法解析ChatGPT回复：" + ba);
+            qDebug() << ("无法解析ChatGPT回复：" + QString(ba));
             emit signalResponseError(ba);
         }
     }
@@ -199,7 +199,6 @@ public:
             connect(reply, &QNetworkReply::readyRead, this, [=]() {
                 QString ba = QString(reply->readAll());
                 QStringList list = ba.split("\n\n");
-                // qDebug() << "=========" << ba;
                 foreach (auto str, list)
                 {
                     QString content = str.simplified().remove(0, 5).trimmed();
@@ -221,6 +220,7 @@ public:
         {
             force_stop = false;
             qDebug() << ("ChatGPT强制结束线程");
+            emit signalResponseFinished();
             return ;
         }
 
@@ -238,6 +238,19 @@ public:
         force_stop = true;
         emit signalStopThread();
         waiting = false;
+    }
+
+    void stopAndDelete()
+    {
+        if (waiting)
+        {
+            deleteLater();
+        }
+        else
+        {
+            connect(this, SIGNAL(signalResponseFinished()), this, SLOT(deleteLater()));
+            stop();
+        }
     }
 
 private:
