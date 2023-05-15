@@ -2394,7 +2394,7 @@ QPushButton:pressed
 </string>
                  </property>
                  <property name="text">
-                  <string>Prompt</string>
+                  <string>提示词</string>
                  </property>
                 </widget>
                </item>

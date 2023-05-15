@@ -347,7 +347,7 @@ void BiliLiveService::getRoomCover(const QString &url)
 
 void BiliLiveService::getUpInfo(const QString &uid)
 {
-    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + uid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + uid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -1716,7 +1716,7 @@ void BiliLiveService::receivedPrivateMsg(MyJson session)
     qInfo() << "接收到私信：" << session;
 
     // 获取发送者信息
-    get("https://api.bilibili.com/x/space/acc/info?mid=" + snum(talkerId), [=](MyJson info) {
+    get("https://api.bilibili.com/x/space/space/wbi/info?mid=" + snum(talkerId), [=](MyJson info) {
         MyJson newJson = session;
 
         // 解析信息

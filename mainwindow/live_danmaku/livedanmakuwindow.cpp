@@ -2700,7 +2700,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
-    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
     hasGetUserHeader.insert(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -2708,32 +2708,12 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         QJsonDocument document = QJsonDocument::fromJson(ba, &error);
         if (error.error != QJsonParseError::NoError)
         {
-            if (error.error == QJsonParseError::GarbageAtEnd && ba.contains("}{"))
-            {
-                int index = ba.indexOf("}{");
-                ba = ba.right(ba.length() - index - 1);
-
-                // 再获取一遍
-                document = QJsonDocument::fromJson(ba, &error);
-                if (error.error != QJsonParseError::NoError)
-                {
-                    qDebug() << "获取用户信息失败：" << error.errorString();
-                    headerApiIsBanned = true;
-                    QTimer::singleShot(60000, [=]{
-                        headerApiIsBanned = false;
-                    });
-                    return ;
-                }
-            }
-            else
-            {
-                qDebug() << "获取用户信息失败：" << error.errorString();
-                headerApiIsBanned = true;
-                QTimer::singleShot(60000, [=]{
-                    headerApiIsBanned = false;
-                });
-                return ;
-            }
+            qDebug() << "获取用户信息失败：" << error.errorString();
+            headerApiIsBanned = true;
+            QTimer::singleShot(60000, [=]{
+                headerApiIsBanned = false;
+            });
+            return ;
 
         }
         QJsonObject json = document.object();

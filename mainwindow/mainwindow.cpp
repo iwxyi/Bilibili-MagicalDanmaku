@@ -3819,7 +3819,7 @@ QString MainWindow::getDomainPort() const
 
 void MainWindow::getRobotInfo()
 {
-    QString url = "https://api.bilibili.com/x/space/acc/info?mid=" + ac->cookieUid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + ac->cookieUid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {

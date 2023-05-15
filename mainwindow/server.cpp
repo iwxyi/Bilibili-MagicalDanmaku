@@ -735,7 +735,7 @@ QByteArray MainWindow::getApiContent(QString url, QHash<QString, QString> params
         if (!isFileExist(filePath))
         {
             // 获取封面URL并下载封面
-            MyJson json(NetUtil::getWebData("https://api.bilibili.com/x/space/acc/info?mid=" + uid));
+            MyJson json(NetUtil::getWebData("https://api.bilibili.com/x/space/wbi/acc/info?mid=" + uid));
             NetUtil::downloadWebFile(json.data().s("face"), filePath);
         }
 
