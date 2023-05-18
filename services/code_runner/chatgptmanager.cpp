@@ -85,7 +85,7 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
         // 判断token是否超出了
 
         // 添加记忆
-        chats.append(userChats.at(i));
+        chats.insert(0, userChats.at(i));
     }
     chatgpt->getResponse(chats);
 }
