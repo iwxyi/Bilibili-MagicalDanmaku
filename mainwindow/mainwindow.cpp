@@ -557,7 +557,7 @@ void MainWindow::initObject()
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
     QString oldValue = us->value("runtime/appVersion").toString();
-    if (rt->appVersion != oldValue)
+    if (compareVersion(rt->appVersion, oldValue) != 0)
     {
         upgradeVersionToLastest(oldValue);
         us->setValue("runtime/appVersion", rt->appVersion);
@@ -8604,7 +8604,7 @@ void MainWindow::loadWebExtensionList()
         QString authorAll = json.s("author");
         QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
-        if (!minVersion.isEmpty() && rt->appVersion < minVersion)
+        if (!minVersion.isEmpty() && compareVersion(rt->appVersion, minVersion) < 0)
         {
             showError("扩展不可用", "【" + extName + "】要求版本：v" + minVersion);
         }

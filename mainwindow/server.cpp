@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "fileutil.h"
+#include "stringutil.h"
 
 void MainWindow::openServer(int port)
 {
@@ -491,10 +492,10 @@ void MainWindow::syncMagicalRooms()
         QString latestVersion = json.value("latest_version").toString();
         if (latestVersion.startsWith("v") || latestVersion.startsWith("V"))
             latestVersion.replace(0, 1, "");
+        rt->appNewVersion = latestVersion;
 
-        if (latestVersion > appVersion)
+        if (compareVersion(latestVersion, appVersion) > 0)
         {
-            rt->appNewVersion = latestVersion;
             rt->appDownloadUrl = json.value("download_url").toString();
             ui->actionUpdate_New_Version->setText("有新版本：" + rt->appNewVersion);
             ui->actionUpdate_New_Version->setIcon(QIcon(":/icons/new_version"));

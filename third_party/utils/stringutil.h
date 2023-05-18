@@ -50,4 +50,6 @@ bool isHtmlString(const QString& str);
 
 QString getRandomKey(int len);
 
+int compareVersion(const QString& s1, const QString& s2);
+
 #endif // STRINGUTIL_H
