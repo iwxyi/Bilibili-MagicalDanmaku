@@ -6,6 +6,7 @@
 #include "tx_nlp.h"
 #include "variantviewer.h"
 #include "csvviewer.h"
+#include "chatgptutil.h"
 
 void MainWindow::processRemoteCmd(QString msg, bool response)
 {
@@ -2070,7 +2071,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             if (caps.size() > 3 && !caps.at(3).isEmpty())
             {
                 // 触发事件
-                TxNlp::instance()->chat(text, [=](QString s){
+                chatService->txNlp->chat(text, [=](QString s){
                     QJsonObject js;
                     js.insert("reply", s);
                     LiveDanmaku dm = danmaku;
@@ -2081,7 +2082,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             else
             {
                 // 直接发送弹幕
-                TxNlp::instance()->chat(text, [=](QString s){
+                chatService->txNlp->chat(text, [=](QString s){
                     liveService->sendLongText(s);
                 }, maxLen);
             }
@@ -2107,13 +2108,32 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 return true;
             QString code = caps.at(2);
             code = cr->toRunableCode(cr->toMultiLine(code));
-            TxNlp::instance()->chat(text, [=](QString result) {
+            chatService->txNlp->chat(text, [=](QString result) {
                 LiveDanmaku dmk = danmaku;
                 dmk.setText(result);
                 QStringList sl = cr->getEditConditionStringList(code, dmk);
                 if (!sl.empty())
                     cr->sendAutoMsg(sl.first(), dmk);
             });
+            return true;
+        }
+    }
+
+
+    if (msg.contains("ChatGPT") || msg.contains("ChatGPT.chat"))
+    {
+        re = RE("ChatGPT(\\.chat)?\\s*\\(\\s*(\\d+?)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            qint64 uid = caps.at(1).toLongLong();
+            QString text = caps.at(2).trimmed();
+            if (text.isEmpty())
+                return true;
+
+
+
             return true;
         }
     }

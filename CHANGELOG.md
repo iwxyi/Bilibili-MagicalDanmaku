@@ -1,9 +1,22 @@
+### v4.10.0 [GPT接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.0)
+
+- 新增ChatGPT功能，可选3.5/4等多个模型
+- 新增GPT参数配置的界面
+- 新增AI弹幕回复的选择界面，可用GPT/腾讯
+- 新增使用AI生成代码
+- 修复账号接口失效的问题
+
+
+
+
+
 ### v4.9.2 [Win API接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.9.2)
 
 - 调整移动鼠标 `moveMouse` / `moveMouseTo` 为 `adjustMouse` / `moveMouse`
 - 新增显示窗口、移动窗口、发送窗口消息等多个命令
 - 新增查找窗口、前景窗口、窗口大小、鼠标位置等多个函数
 - 优化按键模拟支持16进制的参数用于模拟所有按键
+- 修复二维码登录失效的问题
 - 修复高能榜失效的问题
 
 

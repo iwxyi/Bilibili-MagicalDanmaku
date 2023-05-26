@@ -45,6 +45,13 @@ public:
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
 
+    QString open_ai_key;
+    QString chatgpt_model_name = "gpt-3.5-turbo";
+    bool chatgpt_history_input = false;
+    int chatgpt_max_token_count = 2048;
+    int chatgpt_max_context_count = 16;
+    QString chatgpt_prompt;
+
     bool localMode = false;   // 本地调试模式
     bool debugPrint = false;  // 调试输出模式
     bool complexCalc = false; // 启动复杂计算（禁用，有大bug）

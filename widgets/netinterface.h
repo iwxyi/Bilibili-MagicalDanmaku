@@ -38,8 +38,25 @@ public:
             QJsonDocument document = QJsonDocument::fromJson(ba, &error);
             if (error.error != QJsonParseError::NoError)
             {
-                qDebug() << error.errorString() << url << ba;
-                return ;
+                // 过于频繁，导致同时回复了两遍JSON
+                if (error.error == QJsonParseError::GarbageAtEnd && ba.contains("}{"))
+                {
+                    int index = ba.indexOf("}{");
+                    ba = ba.right(ba.length() - index - 1);
+
+                    // 再获取一遍
+                    document = QJsonDocument::fromJson(ba, &error);
+                    if (error.error != QJsonParseError::NoError)
+                    {
+                        qDebug() << error.error << error.errorString() << url << QString(ba);
+                        return ;
+                    }
+                }
+                else
+                {
+                    qDebug() << error.error << error.errorString() << url << QString(ba);
+                    return ;
+                }
             }
             func(document.object());
         }, cookies);

@@ -93,6 +93,8 @@ INCLUDEPATH += \
 SOURCES += \
     mainwindow/cmd_process.cpp \
     mainwindow/run_cmd.cpp \
+    services/chat_service/chatservice.cpp \
+    services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
     services/liveservices/bili_livecmds.cpp \
     services/liveservices/bili_liveopenservice.cpp \
@@ -190,6 +192,8 @@ HEADERS += \
     global/platforminfo.h \
     global/runtimeinfo.h \
     global/usersettings.h \
+    services/chat_service/chatservice.h \
+    services/code_runner/chatgptmanager.h \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
@@ -242,6 +246,7 @@ HEADERS += \
     third_party/qss_editor/qsshighlighteditor.h \
     third_party/utils/ImageSimilarityUtil.h \
     third_party/utils/bili_api_util.h \
+    third_party/utils/chatgptutil.h \
     third_party/utils/conditionutil.h \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \

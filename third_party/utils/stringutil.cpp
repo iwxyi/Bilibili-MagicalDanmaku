@@ -341,3 +341,39 @@ QString getRandomKey(int len)
     }
     return result;
 }
+
+/**
+ * 版本号的比较
+ * 4.1 > 4.0 = 4 > 3.10.1 > 3.9.2 > 1
+ * @return 左<右:-1，左=右:0，左>右:1
+ */
+int compareVersion(const QString &s1, const QString &s2)
+{
+    QStringList sl1 = s1.trimmed().split(".");
+    QStringList sl2 = s2.trimmed().split(".");
+    int count = qMin(sl1.size(), sl2.size());
+    for (int i = 0; i < count; i++)
+    {
+        int v1 = sl1.at(i).toInt();
+        int v2 = sl2.at(i).toInt();
+        if (v1 < v2)
+            return -1;
+        if (v1 > v2)
+            return 1;
+    }
+    if (sl1.size() < sl2.size())
+    {
+        for (int i = count; i < sl2.size(); i++)
+            if (sl2.at(i).toInt() != 0)
+                return -1;
+        return 0;
+    }
+    if (sl1.size() > sl2.size())
+    {
+        for (int i = count; i < sl1.size(); i++)
+            if (sl1.at(i).toInt() != 0)
+                return 1;
+        return 0;
+    }
+    return 0;
+}

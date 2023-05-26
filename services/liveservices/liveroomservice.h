@@ -19,7 +19,6 @@ class LiveRoomService : public QObject, public NetInterface, public LiveStatisti
     Q_OBJECT
     friend class MainWindow;
     friend class CodeRunner;
-
 public:
     explicit LiveRoomService(QObject *parent = nullptr);
 
@@ -31,6 +30,8 @@ public:
     virtual void readConfig();
 
     virtual void releaseLiveData(bool prepare);
+
+    QList<LiveDanmaku> getDanmusByUID(qint64 uid);
 
 signals:
     void signalStartConnectRoom(); // 通知总的开始连接

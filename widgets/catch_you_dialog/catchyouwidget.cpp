@@ -102,7 +102,7 @@ void CatchYouWidget::getUserFollows(qint64 taskTs, QString userId, int page)
     if (page == 1)
         users.clear();
 
-    get("http://api.bilibili.com/x/relation/followings?vmid=" + userId + "&ps=50&pn=" + QString::number(page), [=](QJsonObject json){
+    get("https://api.bilibili.com/x/relation/followings?vmid=" + userId + "&ps=50&pn=" + QString::number(page), [=](QJsonObject json){
         if (currentTaskTs != taskTs)
             return ;
 

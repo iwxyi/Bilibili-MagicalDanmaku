@@ -187,14 +187,38 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
         // 判断房间，未开播则暂停连接，等待开播
         if (!isLivingOrMayLiving())
+        {
+            emit signalConnectionStateTextChanged("等待开播");
             return ;
+        }
 
         // 开始工作
         if (isLiving())
             emit signalStartWork();
 
         if (!reconnect)
+        {
+            if (liveSocket)
+            {
+                if (liveSocket->state() == QAbstractSocket::ConnectedState)
+                {
+                    emit signalConnectionStateTextChanged("已连接");
+                }
+                else if (liveSocket->state() == QAbstractSocket::ConnectingState)
+                {
+                    emit signalConnectionStateTextChanged("连接中");
+                }
+                else
+                {
+                    emit signalConnectionStateTextChanged("未连接");
+                }
+            }
+            else
+            {
+                emit signalConnectionStateTextChanged("未初始化");
+            }
             return ;
+        }
 
         // 获取弹幕信息
         getDanmuInfo();
@@ -323,7 +347,7 @@ void BiliLiveService::getRoomCover(const QString &url)
 
 void BiliLiveService::getUpInfo(const QString &uid)
 {
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + uid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + uid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -1692,7 +1716,7 @@ void BiliLiveService::receivedPrivateMsg(MyJson session)
     qInfo() << "接收到私信：" << session;
 
     // 获取发送者信息
-    get("https://api.bilibili.com/x/space/acc/info?mid=" + snum(talkerId), [=](MyJson info) {
+    get("https://api.bilibili.com/x/space/space/wbi/info?mid=" + snum(talkerId), [=](MyJson info) {
         MyJson newJson = session;
 
         // 解析信息
@@ -2515,6 +2539,7 @@ void BiliLiveService::adjustDanmakuLongest()
     if (ac->cookieGuardLevel == 1 || ac->cookieGuardLevel == 2)
         longest = qMax(longest, 40);
     
+    ac->danmuLongest = longest;
     emit signalDanmakuLongestChanged(longest);
 }
 

@@ -14,6 +14,9 @@
 #include <QRegularExpression>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QProcess>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
 
 typedef std::function<void(QString)> const NetResultFuncType;
 
@@ -250,6 +253,39 @@ public:
         else
             return QString();
     }
+
+    // =======================================================================
+    // 判断是否联网了（阻塞主线程）
+    static bool checkPublicNet(bool out = false)
+    {
+        QString url = out ? "www.google.com" : "www.baidu.com";
+        QString networkCmd = "ping " + url + " -n 2 -w 500";
+        QProcess process;
+        process.start(networkCmd);
+        process.waitForFinished();
+        QString result = process.readAll();
+        return result.contains("TTL=");
+    }
+
+    // 判断是否联网（不阻塞）
+    static QFuture<bool> checkPublicNetThread(bool out = false)
+    {
+        QString url = out ? "www.google.com" : "www.baidu.com";
+        QString networkCmd = "ping " + url + " -n 2 -w 1000";
+        auto check = [=]{
+            QProcess process;
+            process.start(networkCmd);
+            process.waitForFinished();
+            QByteArray result = process.readAll();
+            return result.contains("TTL=");
+        };
+        //放在线程中，防止界面卡住
+        QFuture<bool> future= QtConcurrent::run(check);
+
+        return future;
+    }
+
+
 
 public:
     NetUtil() {}

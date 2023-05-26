@@ -130,7 +130,7 @@ void VideoLyricsCreator::on_actionSet_Cookie_triggered()
 // https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/video/info.md
 void VideoLyricsCreator::getVideoInfo(QString key, QString id)
 {
-    QString url = "http://api.bilibili.com/x/web-interface/view?"+key+"=" + id;
+    QString url = "https://api.bilibili.com/x/web-interface/view?"+key+"=" + id;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -215,7 +215,7 @@ void VideoLyricsCreator::sendLyrics(qint64 time, QString text)
     if (text.isEmpty()) // 空歌词不需要发送
         return ;
 
-    QUrl url("http://api.bilibili.com/x/v2/dm/post");
+    QUrl url("https://api.bilibili.com/x/v2/dm/post");
 
     // 建立对象
     QNetworkAccessManager* manager = new QNetworkAccessManager;

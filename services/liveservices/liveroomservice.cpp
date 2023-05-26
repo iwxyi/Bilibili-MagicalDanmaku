@@ -242,6 +242,17 @@ void LiveRoomService::releaseLiveData(bool prepare)
     }
 }
 
+QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid)
+{
+    QList<LiveDanmaku> dms;
+    for (int i = 0; i < roomDanmakus.size(); i++)
+    {
+        if (roomDanmakus.at(i).getUid() == uid && roomDanmakus.at(i).is(MessageType::MSG_DANMAKU))
+            dms.append(roomDanmakus.at(i));
+    }
+    return dms;
+}
+
 bool LiveRoomService::isLiving() const
 {
     return ac->liveStatus == 1;

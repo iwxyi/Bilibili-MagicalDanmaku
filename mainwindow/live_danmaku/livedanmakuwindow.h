@@ -47,6 +47,7 @@
 #endif
 #include "portraitlabel.h"
 #include "externalblockdialog.h"
+#include "chat_service/chatservice.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -68,6 +69,8 @@ class LiveDanmakuWindow : public QWidget
 public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
+
+    void setChatService(ChatService* service);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -200,6 +203,7 @@ private:
 
     QString headDir; // 头像保存的路径/ (带/)
     bool headerApiIsBanned = false;
+    QSet<qint64> hasGetUserHeader;
 
     int fontHeight;
     int lineSpacing;
@@ -228,6 +232,8 @@ private:
     int prevAlpha = 0;
 
     QString labelStyleSheet;
+
+    ChatService* chatService = nullptr;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

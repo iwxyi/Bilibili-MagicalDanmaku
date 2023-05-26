@@ -35,8 +35,6 @@
 #include "bili_api_util.h"
 #include "pixmaputil.h"
 
-TxNlp* TxNlp::txNlp = nullptr;
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       NetInterface(this),
@@ -44,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
       sqlService(this)
 {
     ui->setupUi(this);
+    resize(800, 600);
     rt->mainwindow = this;
     cr->setMainUI(ui);
 
@@ -59,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     initCodeRunner();
     initWebServer();
     initVoiceService();
+    initChatService();
     readConfig();
 
 #ifdef Q_OS_ANDROID
@@ -557,7 +557,7 @@ void MainWindow::initObject()
     if (rt->appVersion.startsWith("v") || rt->appVersion.startsWith("V"))
             rt->appVersion.replace(0, 1, "");
     QString oldValue = us->value("runtime/appVersion").toString();
-    if (rt->appVersion != oldValue)
+    if (compareVersion(rt->appVersion, oldValue) != 0)
     {
         upgradeVersionToLastest(oldValue);
         us->setValue("runtime/appVersion", rt->appVersion);
@@ -572,6 +572,13 @@ void MainWindow::initObject()
         });
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
+
+    // 编译时间
+    QString dateTime = __DATE__;
+    //注意此处的replace()，可以保证日期为2位，不足的补0
+    dateTime = QLocale(QLocale::English).toDateTime(dateTime.replace("  "," 0"), "MMM dd yyyy").toString("yyyy.MM.dd");
+    QTime buildTime = QTime::fromString(__TIME__, "hh:mm:ss");
+    ui->appNameLabel->setToolTip("编译时间：" + dateTime + " " + buildTime.toString());
 
     // 各种时钟
     // 定时移除弹幕
@@ -1458,19 +1465,41 @@ void MainWindow::readConfig()
     ui->voiceCustomUrlEdit->setText(us->value("voice/customUrl", "").toString());
 
     // AI回复
+    chatService->chatPlatform = static_cast<ChatPlatform>(us->value("chat/platform", 0).toInt());
+    if (chatService->chatPlatform == ChatGPT)
+    {
+        ui->chatGPTRadio->setChecked(true);
+    }
+    else if (chatService->chatPlatform == TxNLP)
+    {
+        ui->chatTxRadio->setChecked(true);
+    }
+    else
+    {
+        ui->chatGPTRadio->setChecked(true);
+    }
+
+    // chatgpt
+    us->chatgpt_prompt = us->value("chatgpt/prompt").toString();
+    ui->chatGPTKeyEdit->setText(us->open_ai_key = us->value("chatgpt/open_ai_key", us->open_ai_key).toString());
+    ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
+    ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
+    ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
+
+    // 腾讯闲聊
     QString TXSecretId = us->value("tx_nlp/secretId").toString();
     if (!TXSecretId.isEmpty())
     {
-        TxNlp::instance()->setSecretId(TXSecretId);
+        chatService->txNlp->setSecretId(TXSecretId);
         ui->TXSecretIdEdit->setText(TXSecretId);
     }
     QString TXSecretKey = us->value("tx_nlp/secretKey").toString();
     if (!TXSecretKey.isEmpty())
     {
-        TxNlp::instance()->setSecretKey(TXSecretKey);
+        chatService->txNlp->setSecretKey(TXSecretKey);
         ui->TXSecretKeyEdit->setText(TXSecretKey);
     }
-    connect(TxNlp::instance(), &TxNlp::signalError, this, [=](const QString& err){
+    connect(chatService->txNlp, &TxNlp::signalError, this, [=](const QString& err){
         showError("智能闲聊", err);
     });
 
@@ -1670,15 +1699,15 @@ void MainWindow::initEvent()
 
 void MainWindow::initCodeRunner()
 {
-    connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
+    connect(cr, &CodeRunner::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
         triggerCmdEvent(cmd, danmaku, debug);
     });
 
-    connect(liveService, &LiveRoomService::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
+    connect(cr, &CodeRunner::signalLocalNotify, this, [=](const QString& text, qint64 uid) {
         localNotify(text, uid);
     });
 
-    connect(liveService, &LiveRoomService::signalShowError, this, [=](const QString& title, const QString& info) {
+    connect(cr, &CodeRunner::signalShowError, this, [=](const QString& title, const QString& info) {
         showError(title, info);
     });
     connect(cr, &CodeRunner::signalSpeakText, this, [=](const QString& text) {
@@ -1701,6 +1730,12 @@ void MainWindow::initVoiceService()
 {
     voiceService = new VoiceService(this);
     cr->setVoiceService(voiceService);
+}
+
+void MainWindow::initChatService()
+{
+    chatService = new ChatService(this);
+    chatService->setLiveService(this->liveService);
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -3739,7 +3774,7 @@ void MainWindow::getCookieAccount()
     if (ac->browserCookie.isEmpty())
         return ;
     liveService->gettingUser = true;
-    get("http://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
             showError("登录返回不为0", json.value("message").toString());
@@ -3784,7 +3819,7 @@ QString MainWindow::getDomainPort() const
 
 void MainWindow::getRobotInfo()
 {
-    QString url = "http://api.bilibili.com/x/space/acc/info?mid=" + ac->cookieUid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + ac->cookieUid;
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -5389,7 +5424,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
     }
 
     // 网络判断
-    QString url = "http://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
@@ -5423,7 +5458,7 @@ void MainWindow::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, Da
 
 void MainWindow::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
 {
-    QString url = "http://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
     get(url, [=](QJsonObject json){
         int code = json.value("code").toInt();
         if (code != 0)
@@ -6953,6 +6988,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
     if (!danmakuWindow)
     {
         danmakuWindow = new LiveDanmakuWindow(this);
+        danmakuWindow->setChatService(this->chatService);
 
         connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
             if (danmaku.is(MSG_DANMAKU))
@@ -8059,13 +8095,13 @@ void MainWindow::trayAction(QSystemTrayIcon::ActivationReason reason)
         menu->addAction(QIcon(":/icons/star"), "主界面", [=]{
             this->show();
             this->activateWindow();
-        });
+        })->check(this->isVisible());
         menu->split()->addAction(QIcon(":/icons/danmu"), "弹幕姬", [=]{
             on_actionShow_Live_Danmaku_triggered();
-        });
+        })->check(danmakuWindow && danmakuWindow->isVisible());
         menu->addAction(QIcon(":/icons/order_song"), "点歌姬", [=]{
             on_actionShow_Order_Player_Window_triggered();
-        });
+        })->check(musicWindow && musicWindow->isVisible());
         menu->addAction(QIcon(":/icons/live"), "视频流", [=]{
             on_actionShow_Live_Video_triggered();
         });
@@ -8568,7 +8604,7 @@ void MainWindow::loadWebExtensionList()
         QString authorAll = json.s("author");
         QString descAll = json.s("desc");
         QString minVersion = json.s("min_version");
-        if (!minVersion.isEmpty() && rt->appVersion < minVersion)
+        if (!minVersion.isEmpty() && compareVersion(rt->appVersion, minVersion) < 0)
         {
             showError("扩展不可用", "【" + extName + "】要求版本：v" + minVersion);
         }
@@ -10315,7 +10351,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
     if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
     {
         // 机器人自己的不回复（不然自己和自己打起来了）
-        if (snum(uid) == ac->cookieUid)
+        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
             return ;
 
         // AI回复长度上限，以及过滤
@@ -10324,6 +10360,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
             return ;
 
         // 自动断句
+        qInfo() << "发送AI回复：" << reply;
         QStringList sl;
         int len = reply.length();
         const int maxOne = ac->danmuLongest;
@@ -11694,14 +11731,14 @@ void MainWindow::on_TXSecretIdEdit_editingFinished()
 {
     QString text = ui->TXSecretIdEdit->text();
     us->setValue("tx_nlp/secretId", text);
-    TxNlp::instance()->setSecretId(text);
+    chatService->txNlp->setSecretId(text);
 }
 
 void MainWindow::on_TXSecretKeyEdit_editingFinished()
 {
     QString text = ui->TXSecretKeyEdit->text();
     us->setValue("tx_nlp/secretKey", text);
-    TxNlp::instance()->setSecretKey(text);
+    chatService->txNlp->setSecretKey(text);
 }
 
 void MainWindow::on_saveDanmakuToFileButton_clicked()
@@ -12029,4 +12066,71 @@ void MainWindow::on_closeGuiCheck_clicked()
             delete widget;
         }
     }
+}
+
+void MainWindow::on_chatGPTKeyEdit_textEdited(const QString &arg1)
+{
+    us->setValue("chatgpt/open_ai_key", us->open_ai_key = arg1);
+}
+
+void MainWindow::on_chatGPTModelNameCombo_activated(const QString &arg1)
+{
+    us->setValue("chatgpt/model_name", us->chatgpt_model_name = arg1);
+}
+
+void MainWindow::on_chatGPTMaxTokenCountSpin_valueChanged(int arg1)
+{
+    us->setValue("chatgpt/max_token_count", us->chatgpt_max_token_count = arg1);
+}
+
+void MainWindow::on_chatGPTMaxContextCountSpin_valueChanged(int arg1)
+{
+    us->setValue("chatgpt/max_context_count", us->chatgpt_max_context_count = arg1);
+}
+
+void MainWindow::on_chatGPTKeyButton_clicked()
+{
+    QFuture<bool> future = NetUtil::checkPublicNetThread(true);
+    NetUtil::checkPublicNetThread(false);
+    QFutureWatcher<void> *watcher = new QFutureWatcher<void>(this);
+
+    connect(watcher, &QFutureWatcher<void>::finished,[=]{
+        // qInfo() << "可连接外网：" << future.result();
+        QString url;
+        if(future.result())
+        {
+            url = "https://www.openai.com";
+        }
+        else
+        {
+            url = "https://api2d.com";
+        }
+        QDesktopServices::openUrl(url);
+    });
+    watcher->setFuture(future);
+}
+
+void MainWindow::on_chatGPTRadio_clicked()
+{
+    ui->chatTxRadio->setChecked(false);
+    ui->chatGPTRadio->setChecked(true);
+    us->setValue("chat/paltform", chatService->chatPlatform = ChatGPT);
+}
+
+void MainWindow::on_chatTxRadio_clicked()
+{
+    ui->chatTxRadio->setChecked(true);
+    ui->chatGPTRadio->setChecked(false);
+    us->setValue("chat/paltform", chatService->chatPlatform = TxNLP);
+}
+
+void MainWindow::on_chatGPTPromptButton_clicked()
+{
+    bool ok = false;
+    QString s = QInputDialog::getText(this, "prompt", "设置ChatGPT的prompt", QLineEdit::Normal, us->chatgpt_prompt, &ok);
+    if (!ok)
+        return ;
+
+    us->chatgpt_prompt = s;
+    us->setValue("chatgpt/prompt", s);
 }
