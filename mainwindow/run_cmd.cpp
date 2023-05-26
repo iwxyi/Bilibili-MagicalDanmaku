@@ -2071,20 +2071,20 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             if (caps.size() > 3 && !caps.at(3).isEmpty())
             {
                 // 触发事件
-                chatService->txNlp->chat(text, [=](QString s){
+                chatService->chat(danmaku.getUid(), text, [=](QString s){
                     QJsonObject js;
                     js.insert("reply", s);
                     LiveDanmaku dm = danmaku;
                     dm.with(js);
                     triggerCmdEvent(caps.at(3), danmaku);
-                }, maxLen);
+                });
             }
             else
             {
                 // 直接发送弹幕
-                chatService->txNlp->chat(text, [=](QString s){
+                chatService->chat(danmaku.getUid(), text, [=](QString s){
                     liveService->sendLongText(s);
-                }, maxLen);
+                });
             }
             return true;
         }

@@ -1,9 +1,16 @@
+### v4.10.1 [GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)优化
+
+- 新增 AIReply 命令支持自动调用 ChatGPT
+
+
+
+
+
 ### v4.10.0 [GPT接入](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.0)
 
 - 新增ChatGPT功能，可选3.5/4等多个模型
 - 新增GPT参数配置的界面
 - 新增AI弹幕回复的选择界面，可用GPT/腾讯
-- 新增使用AI生成代码
 - 修复账号接口失效的问题
 
 
