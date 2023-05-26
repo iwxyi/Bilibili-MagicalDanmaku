@@ -137,7 +137,7 @@ bool MainWindow::handleUncompMessage(QString cmd, MyJson json)
         ac->currentFans = fans;
         ac->currentFansClub = fans_club;
         qInfo() << s8("粉丝数量：") << fans << s8("  粉丝团：") << fans_club;
-        // appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
+        // liveService->appendNewLiveDanmaku(LiveDanmaku(fans, fans_club, delta_fans, delta_club));
 
         liveService->dailyNewFans += delta_fans;
         if (liveService->dailySettings)
@@ -825,7 +825,7 @@ void MainWindow::handleMessage(QJsonObject json)
         else
             liveService->minuteDanmuPopul++;
         danmaku.setOpposite(opposite);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
 
         // 进入累计
         ui->danmuCountLabel->setText(snum(++(cr->liveTotalDanmaku)));
@@ -1135,7 +1135,7 @@ void MainWindow::handleMessage(QJsonObject json)
         danmaku.setFirst(merged ? 0 : 1);
         if (!merged)
         {
-            appendNewLiveDanmaku(danmaku);
+            liveService->appendNewLiveDanmaku(danmaku);
             addGuiGiftList(danmaku);
         }
         if (ui->saveEveryGiftCheck->isChecked())
@@ -1424,7 +1424,7 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(uname, message, uid, user_level, QDateTime::fromSecsSinceEpoch(end_time), name_color, message_font_color,
                     gift_id, gift_name, num, price);
         danmaku.setMedal(snum(anchor_roomid), medal_name, medal_level, medal_color, anchor_uname);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
 
         liveService->pkGifts.append(danmaku);
         triggerCmdEvent(cmd, danmaku.with(data));
@@ -1543,7 +1543,7 @@ void MainWindow::handleMessage(QJsonObject json)
             username = localName;*/
         LiveDanmaku danmaku(LiveDanmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp)
                                         , true, unameColor, spreadDesc, spreadInfo));
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent(cmd, danmaku.with(data));
     }
@@ -1772,7 +1772,7 @@ void MainWindow::handleMessage(QJsonObject json)
         else if (msgType == 2) // 2关注 4特别关注
         {
             danmaku.transToAttention(timestamp);
-            appendNewLiveDanmaku(danmaku);
+            liveService->appendNewLiveDanmaku(danmaku);
 
             if (!justStart && ui->autoSendAttentionCheck->isChecked())
             {
@@ -1796,7 +1796,7 @@ void MainWindow::handleMessage(QJsonObject json)
         {
             danmaku.transToAttention(timestamp);
             danmaku.setSpecial(1);
-            appendNewLiveDanmaku(danmaku);
+            liveService->appendNewLiveDanmaku(danmaku);
 
             if (!justStart && ui->autoSendAttentionCheck->isChecked())
             {
@@ -1830,7 +1830,7 @@ void MainWindow::handleMessage(QJsonObject json)
         QString nickname = json.value("uname").toString();
         qint64 uid = static_cast<qint64>(json.value("uid").toDouble());
         LiveDanmaku danmaku(LiveDanmaku(nickname, uid));
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
         blockedQueue.append(danmaku);
 
         triggerCmdEvent(cmd, danmaku.with(json));
@@ -1855,7 +1855,7 @@ void MainWindow::handleMessage(QJsonObject json)
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price,
                             guardCount == 0 ? 1 : ac->currentGuards.contains(uid) ? 0 : 2);
         danmaku.with(data);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
         addGuiGiftList(danmaku);
 

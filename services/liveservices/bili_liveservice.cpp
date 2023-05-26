@@ -1849,6 +1849,41 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
     });
 }
 
+void BiliLiveService::pullLiveDanmaku()
+{
+    if (ac->roomId.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/ajax/msg";
+    QStringList param{"roomid", ac->roomId};
+    connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
+            return ;
+        }
+
+        _loadingOldDanmakus = true;
+        QJsonObject json = document.object();
+        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
+        QDateTime time = QDateTime::currentDateTime();
+        qint64 removeTime = time.toMSecsSinceEpoch() - us->removeDanmakuInterval;
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
+                continue;
+            danmaku.transToDanmu();
+            danmaku.setTime(time);
+            danmaku.setNoReply();
+            appendNewLiveDanmaku(danmaku);
+        }
+        _loadingOldDanmakus = false;
+    });
+}
+
 QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
 {
     switch (type)
@@ -2715,7 +2750,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             minuteDanmuPopular++;*/
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
-        emit signalAppendNewLiveDanmaku(danmaku);
+        appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));
     }
@@ -2773,7 +2808,7 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         danmaku.setPkLink(true);
 
         if (toView) // 自己这边过去送礼物，居心何在！
-            emit signalAppendNewLiveDanmaku(danmaku);
+            appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_" + cmd, danmaku.with(data));
     }

@@ -49,6 +49,8 @@ signals:
     void signalLiveStopped();
     void signalStatusChanged(const QString& text); // 状态或提示改变，修改状态栏
 
+    void signalNewDanmaku(const LiveDanmaku& danmaku); // 通知外部各种界面
+
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const QString &uid);
     void signalUpFaceChanged(const QPixmap& pixmap);
@@ -92,7 +94,6 @@ signals:
     void signalBattleFinished();
     void signalBattleStartMatch();
 
-    void signalAppendNewLiveDanmaku(const LiveDanmaku& danmaku);
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
     void signalLocalNotify(const QString& text, qint64 uid);
     void signalShowError(const QString& title, const QString& info);
@@ -132,6 +133,8 @@ public slots:
     /// 发送弹幕
     virtual void sendMsg(const QString& msg) { Q_UNUSED(msg) }
     virtual void sendRoomMsg(QString roomId, const QString& msg) { Q_UNUSED(roomId) Q_UNUSED(msg) }
+    /// 恢复之前的弹幕
+    virtual void pullLiveDanmaku() { }
 
 public:
     /// 获取直播间信息
@@ -224,6 +227,8 @@ public:
     virtual void showError(const QString& title, const QString& desc = "");
     
 public:
+    void appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus);
+    void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
     /// 根据Url设置对应的Cookie
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
     /// 设置全局默认的Cookie变量
@@ -342,6 +347,10 @@ protected:
 
     // 内存管理
     QObjectCleanupHandler cleanupHandler;
+
+    // flag
+    bool _loadingOldDanmakus = false;
+    LiveDanmaku lastDanmaku; // 最近一个弹幕
 };
 
 #endif // LIVEROOMSERVICE_H

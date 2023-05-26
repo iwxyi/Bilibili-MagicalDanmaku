@@ -32,6 +32,8 @@ public:
     int imageSimilarPrecision = 8;   // 图片相似度精度，越大越好
     bool closeGui = false;           // 关闭GUI效果
 
+    qint64 removeDanmakuInterval = 60000;
+    qint64 removeDanmakuTipInterval = 20000;
     bool timerConnectServer = false; // 定时连接
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间

@@ -929,10 +929,6 @@ void MainWindow::initLiveService()
     });
 
     /// 信号传递
-    connect(liveService, &LiveRoomService::signalAppendNewLiveDanmaku, this, [=](const LiveDanmaku& danmaku) {
-        appendNewLiveDanmaku(danmaku);
-    });
-
     connect(liveService, &LiveRoomService::signalTriggerCmdEvent, this, [=](const QString& cmd, const LiveDanmaku& danmaku, bool debug) {
         triggerCmdEvent(cmd, danmaku, debug);
     });
@@ -1125,11 +1121,11 @@ void MainWindow::readConfig()
     // 移除间隔
     int removeIv = us->value("danmaku/removeInterval", 60).toInt();
     ui->removeDanmakuIntervalSpin->setValue(removeIv); // 自动引发改变事件
-    this->removeDanmakuInterval = removeIv * 1000;
+    us->removeDanmakuInterval = removeIv * 1000;
 
     removeIv = us->value("danmaku/removeTipInterval", 20).toInt();
     ui->removeDanmakuTipIntervalSpin->setValue(removeIv); // 自动引发改变事件
-    this->removeDanmakuTipInterval = removeIv * 1000;
+    us->removeDanmakuTipInterval = removeIv * 1000;
 
     // 单条弹幕最长长度
     ac->danmuLongest = us->value("danmaku/danmuLongest", 20).toInt();
@@ -1678,7 +1674,7 @@ void MainWindow::initDanmakuWindow()
         danmakuWindow->setLiveService(this->liveService);
         danmakuWindow->setChatService(this->chatService);
 
-        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
+        connect(liveService, &LiveRoomService::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
             if (danmaku.is(MSG_DANMAKU))
             {
                 if (cr->isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
@@ -1758,7 +1754,7 @@ void MainWindow::initDanmakuWindow()
             }
             else // 没有之前的弹幕，从API重新pull下来
             {
-                pullLiveDanmaku();
+                liveService->pullLiveDanmaku();
             }
             danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
             danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
@@ -1775,17 +1771,17 @@ void MainWindow::initEvent()
     initLiveRecord();
 
     // 点歌
-    connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotDiange(const LiveDanmaku&)));
+    connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), this, SLOT(slotDiange(const LiveDanmaku&)));
 
     // 滚屏
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         showScreenDanmaku(danmaku);
     });
 
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
-        if (!_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
+        if (!liveService->_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
                 && cr->shallSpeakText())
         {
             if (cr->hasSimilarOldDanmaku(danmaku.getText()))
@@ -2280,42 +2276,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
     painter.fillRect(rect(), linearGrad);
 }
 
-/// 恢复之前的弹幕
-void MainWindow::pullLiveDanmaku()
-{
-    if (ac->roomId.isEmpty())
-        return ;
-    QString url = "https://api.live.bilibili.com/ajax/msg";
-    QStringList param{"roomid", ac->roomId};
-    connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qCritical() << result;
-            return ;
-        }
-
-        _loadingOldDanmakus = true;
-        QJsonObject json = document.object();
-        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-        QDateTime time = QDateTime::currentDateTime();
-        qint64 removeTime = time.toMSecsSinceEpoch() - removeDanmakuInterval;
-        for (int i = 0; i < danmakus.size(); i++)
-        {
-            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
-            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
-                continue;
-            danmaku.transToDanmu();
-            danmaku.setTime(time);
-            danmaku.setNoReply();
-            appendNewLiveDanmaku(danmaku);
-        }
-        _loadingOldDanmakus = false;
-    });
-}
-
 void MainWindow::removeTimeoutDanmaku()
 {
     if (pushCmdsFile && liveService->roomDanmakus.size() < 1000) // 不移除弹幕
@@ -2323,7 +2283,7 @@ void MainWindow::removeTimeoutDanmaku()
 
     // 移除过期队列，单位：毫秒
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
-    qint64 removeTime = timestamp - removeDanmakuInterval;
+    qint64 removeTime = timestamp - us->removeDanmakuInterval;
     for (int i = 0; i < liveService->roomDanmakus.size(); i++)
     {
         auto danmaku = liveService->roomDanmakus.at(i);
@@ -2336,7 +2296,7 @@ void MainWindow::removeTimeoutDanmaku()
     }
 
     // 移除多余的提示（一般时间更短）
-    removeTime = timestamp - removeDanmakuTipInterval;
+    removeTime = timestamp - us->removeDanmakuTipInterval;
     for (int i = 0; i < liveService->roomDanmakus.size(); i++)
     {
         auto danmaku = liveService->roomDanmakus.at(i);
@@ -2363,36 +2323,6 @@ void MainWindow::removeTimeoutDanmaku()
     }
 }
 
-void MainWindow::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
-{
-    // 添加到队列
-    liveService->roomDanmakus.append(danmakus);
-    rt->allDanmakus.append(danmakus);
-}
-
-void MainWindow::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
-{
-    liveService->roomDanmakus.append(danmaku);
-    lastDanmaku = danmaku;
-    rt->allDanmakus.append(danmaku);
-    newLiveDanmakuAdded(danmaku);
-}
-
-void MainWindow::newLiveDanmakuAdded(const LiveDanmaku &danmaku)
-{
-    SOCKET_DEB << "+++++新弹幕：" << danmaku.toString();
-    emit signalNewDanmaku(danmaku);
-
-    // 保存到文件
-    if (liveService->danmuLogStream)
-    {
-        if (danmaku.is(MSG_DEF) && danmaku.getText().startsWith("["))
-            return ;
-        (*liveService->danmuLogStream) << danmaku.toString() << "\n";
-        (*liveService->danmuLogStream).flush(); // 立刻刷新到文件里
-    }
-}
-
 void MainWindow::oldLiveDanmakuRemoved(const LiveDanmaku &danmaku)
 {
     SOCKET_DEB << "-----旧弹幕：" << danmaku.toString();
@@ -2406,14 +2336,14 @@ void MainWindow::localNotify(const QString &text)
         qWarning() << ">localNotify([空文本])";
         return ;
     }
-    appendNewLiveDanmaku(LiveDanmaku(text));
+    liveService->appendNewLiveDanmaku(LiveDanmaku(text));
 }
 
 void MainWindow::localNotify(const QString &text, qint64 uid)
 {
     LiveDanmaku danmaku(text);
     danmaku.setUid(uid);
-    appendNewLiveDanmaku(danmaku);
+    liveService->appendNewLiveDanmaku(danmaku);
 }
 
 /**
@@ -2552,7 +2482,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         QString coinType = qrand()%2 ? "gold" : "silver";
         int totalCoin = qrand() % 20 * 100;
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
         if (ui->saveEveryGiftCheck->isChecked())
             saveEveryGift(danmaku);
 
@@ -2576,13 +2506,13 @@ void MainWindow::on_testDanmakuButton_clicked()
         bool merged = mergeGiftCombo(danmaku); // 如果有合并，则合并到之前的弹幕上面
         if (!merged)
         {
-            appendNewLiveDanmaku(danmaku);
+            liveService->appendNewLiveDanmaku(danmaku);
         }
     }
     else if (text == "测试醒目留言")
     {
         LiveDanmaku danmaku("测试用户", "测试弹幕", 1001, 12, QDateTime::currentDateTime(), "", "", 39, "醒目留言", 1, 30);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
     }
     else if (text == "测试消息")
     {
@@ -2592,7 +2522,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     {
         QString uname = "测试舰长";
         LiveDanmaku danmaku(qrand() % 3 + 1, uname, uid, QDateTime::currentDateTime());
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
 
         if (ui->autoSendWelcomeCheck->isChecked() && !us->notWelcomeUsers.contains(uid))
         {
@@ -2628,7 +2558,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         }
         gift_id = 10000 + guard_level;
         LiveDanmaku danmaku(username, uid, giftName, num, guard_level, gift_id, price, 2);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
         appendLiveGuard(danmaku);
         if (ui->saveEveryGuardCheck->isChecked())
             saveEveryGuard(danmaku);
@@ -2695,7 +2625,7 @@ void MainWindow::on_testDanmakuButton_clicked()
         int totalCoin = qrand() % 20 * 100;
         uid = 123456;
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        appendNewLiveDanmaku(danmaku);
+        liveService->appendNewLiveDanmaku(danmaku);
         triggerCmdEvent("SEND_GIFT", danmaku, true);
     }
     else if (text == "测试高能榜")
@@ -3147,15 +3077,15 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else
     {
-        appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
-                             uid, 12,
-                             QDateTime::currentDateTime(), "", ""));
+        liveService->appendNewLiveDanmaku(LiveDanmaku("测试用户" + QString::number(r), text,
+                                          uid, 12,
+                                          QDateTime::currentDateTime(), "", ""));
     }
 }
 
 void MainWindow::on_removeDanmakuIntervalSpin_valueChanged(int arg1)
 {
-    this->removeDanmakuInterval = arg1 * 1000;
+    us->removeDanmakuInterval = arg1 * 1000;
     us->setValue("danmaku/removeInterval", arg1);
 }
 
@@ -3198,7 +3128,7 @@ void MainWindow::on_roomIdEdit_editingFinished()
     {
         startConnectRoom();
     }
-    pullLiveDanmaku();
+    liveService->pullLiveDanmaku();
 }
 
 void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
@@ -3443,7 +3373,7 @@ void MainWindow::connectAutoReplyEvent(ReplyWidget *rw, QListWidgetItem *item)
         us->setValue("reply/r"+QString::number(row)+"Reply", content);
     });
 
-    connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), rw, SLOT(slotNewDanmaku(const LiveDanmaku&)));
+    connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), rw, SLOT(slotNewDanmaku(const LiveDanmaku&)));
 
     connect(rw, &ReplyWidget::signalReplyMsgs, this, [=](QString sl, LiveDanmaku danmaku, bool manual){
 #ifndef ZUOQI_ENTRANCE
@@ -4394,7 +4324,7 @@ void MainWindow::slotDiange(const LiveDanmaku &danmaku)
 
         cr->addNoReplyDanmakuText(danmaku.getText()); // 点歌回复
         QTimer::singleShot(10, [=]{
-            appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
+            liveService->appendNewLiveDanmaku(LiveDanmaku(danmaku.getNickname(), danmaku.getUid(), text, danmaku.getTimeline()));
         });
     }
 }
@@ -5936,7 +5866,7 @@ void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
         return ;
     if (!ui->enableScreenMsgCheck->isChecked() && danmaku.getMsgType() != MSG_DANMAKU) // 不显示所有msg
         return ;
-    if (_loadingOldDanmakus) // 正在加载旧弹幕
+    if (liveService->_loadingOldDanmakus) // 正在加载旧弹幕
         return ;
     if (danmaku.isPkLink()) // 对面同步过来的弹幕
         return ;
@@ -6086,7 +6016,7 @@ void MainWindow::userComeEvent(LiveDanmaku &danmaku)
     danmaku.setNumber(userCome);
     danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
 
-    appendNewLiveDanmaku(danmaku);
+    liveService->appendNewLiveDanmaku(danmaku);
 
     userCome++;
     us->danmakuCounts->setValue("come/"+snum(uid), userCome);
@@ -7022,7 +6952,7 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_removeDanmakuTipIntervalSpin_valueChanged(int arg1)
 {
-    this->removeDanmakuTipInterval = arg1 * 1000;
+    us->removeDanmakuTipInterval = arg1 * 1000;
     us->setValue("danmaku/removeTipInterval", arg1);
 }
 
@@ -7370,7 +7300,7 @@ void MainWindow::on_actionShow_Lucky_Draw_triggered()
     if (!luckyDrawWindow)
     {
         luckyDrawWindow = new LuckyDrawWindow(nullptr);
-        connect(this, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), luckyDrawWindow, SLOT(slotNewDanmaku(const LiveDanmaku&)));
+        connect(liveService, SIGNAL(signalNewDanmaku(const LiveDanmaku&)), luckyDrawWindow, SLOT(slotNewDanmaku(const LiveDanmaku&)));
     }
     luckyDrawWindow->show();
 }
@@ -9571,7 +9501,7 @@ void MainWindow::initDbService()
     if (saveToSqlite)
         sqlService.open();
 
-    connect(this, &MainWindow::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
+    connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 不包含PK同步的弹幕
             return ;
         if (danmaku.isNoReply() && !danmaku.isAutoSend()) // 不包含自动发送的弹幕

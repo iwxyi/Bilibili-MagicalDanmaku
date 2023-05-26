@@ -1303,7 +1303,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
-            appendFileLine(fileName, format, lastDanmaku);
+            appendFileLine(fileName, format, liveService->lastDanmaku);
             qInfo() << "修改文件：" << fileName;
             return true;
         }

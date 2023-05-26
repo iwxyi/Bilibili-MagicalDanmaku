@@ -134,7 +134,6 @@ signals:
     void signalCmdEvent(QString cmd, LiveDanmaku danmaku);
 
 public slots:
-    void pullLiveDanmaku();
     void removeTimeoutDanmaku();
 
     void processRemoteCmd(QString msg, bool response = true);
@@ -729,9 +728,6 @@ private:
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 
-    void appendNewLiveDanmakus(const QList<LiveDanmaku> &roomDanmakus);
-    void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
-    void newLiveDanmakuAdded(const LiveDanmaku &danmaku);
     void oldLiveDanmakuRemoved(const LiveDanmaku &danmaku);
     void localNotify(const QString &text);
     void localNotify(const QString &text, qint64 uid);
@@ -947,11 +943,7 @@ private:
 
     // 弹幕信息
     LiveDanmakuWindow* danmakuWindow = nullptr;
-
     QTimer* removeTimer;
-    qint64 removeDanmakuInterval = 60000;
-    qint64 removeDanmakuTipInterval = 20000;
-    LiveDanmaku lastDanmaku; // 最近一个弹幕
 
     // 调试
     bool saveRecvCmds = false; // 保存收到的CMD
@@ -1024,7 +1016,7 @@ private:
     QString warmWish;
 
     // flag
-    bool _loadingOldDanmakus = false;
+
     short _fanfanLike = 0; // 是否好评，0未知，1好评，-1未好评
     int _fanfanLikeCount = 0; // 饭贩好评数量
     bool _fanfanOwn = false; // 是否已拥有

@@ -99,6 +99,7 @@ public slots:
     /// 弹幕
     void sendMsg(const QString& msg) override;
     void sendRoomMsg(QString uid, const QString& msg) override;
+    void pullLiveDanmaku() override;
     
 public:
     /// 一些接口

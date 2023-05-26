@@ -359,6 +359,31 @@ void LiveRoomService::showError(const QString &title, const QString &desc)
     emit signalShowError(title, desc);
 }
 
+void LiveRoomService::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
+{
+    // 添加到队列
+    roomDanmakus.append(danmakus);
+    rt->allDanmakus.append(danmakus);
+}
+
+void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
+{
+    roomDanmakus.append(danmaku);
+    lastDanmaku = danmaku;
+    rt->allDanmakus.append(danmaku);
+
+    // 保存到文件
+    if (danmuLogStream)
+    {
+        if (danmaku.is(MSG_DEF) && danmaku.getText().startsWith("["))
+            return ;
+        (*danmuLogStream) << danmaku.toString() << "\n";
+        (*danmuLogStream).flush(); // 立刻刷新到文件里
+    }
+
+    emit signalNewDanmaku(danmaku);
+}
+
 void LiveRoomService::setUrlCookie(const QString &url, QNetworkRequest *request)
 {
     if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
