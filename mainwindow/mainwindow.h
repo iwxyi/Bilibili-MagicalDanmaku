@@ -720,6 +720,7 @@ private:
     void initLiveService();
     void readConfig();
     void readConfig2();
+    void initDanmakuWindow();
     void initEvent();
     void initCodeRunner();
     void initWebServer();

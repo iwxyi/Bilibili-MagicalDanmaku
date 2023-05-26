@@ -100,6 +100,15 @@ public slots:
     void sendMsg(const QString& msg) override;
     void sendRoomMsg(QString uid, const QString& msg) override;
     
+public:
+    /// 一些接口
+    virtual QString getApiUrl(ApiType type, qint64 id) override;
+
+    virtual void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
+    virtual void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
+    virtual void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
+    virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
+    
 private:
     // 直播心跳
     QTimer* xliveHeartBeatTimer = nullptr;

@@ -48,6 +48,7 @@
 #include "portraitlabel.h"
 #include "externalblockdialog.h"
 #include "chat_service/chatservice.h"
+#include "liveservices/liveroomservice.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -70,6 +71,7 @@ public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
 
+    void setLiveService(LiveRoomService *service);
     void setChatService(ChatService* service);
 
 protected:
@@ -131,11 +133,6 @@ public slots:
     void setStatusText(QString text);
     void setStatusTooltip(QString tooltip);
     void hideStatusText();
-
-    void showFollowCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr);
-    void showViewCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr);
-    void showGuardInAction(qint64 roomId, qint64 uid, QAction* action);
-    void showPkLevelInAction(qint64 roomId, QAction* actionUser, QAction* actionRank);
 
     void releaseLiveData(bool prepare = false);
 
@@ -233,6 +230,7 @@ private:
 
     QString labelStyleSheet;
 
+    LiveRoomService *liveService = nullptr;
     ChatService* chatService = nullptr;
 };
 

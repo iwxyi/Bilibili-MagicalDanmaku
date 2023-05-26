@@ -19,9 +19,9 @@ class LiveDanmaku;
 enum LivePlatform
 {
     Bilibili,   // 哔哩哔哩
+    Douyin,     // 抖音
     Huya,       // 虎牙
     Douyu,      // 斗鱼
-    Douyin,     // 抖音
     Kuaishou,   // 快手
 };
 

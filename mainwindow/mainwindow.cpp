@@ -1672,6 +1672,104 @@ void MainWindow::readConfig2()
         sqlService.open();
 }
 
+void MainWindow::initDanmakuWindow()
+{
+    danmakuWindow = new LiveDanmakuWindow(this);
+        danmakuWindow->setLiveService(this->liveService);
+        danmakuWindow->setChatService(this->chatService);
+
+        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
+            if (danmaku.is(MSG_DANMAKU))
+            {
+                if (cr->isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
+                    return ;
+            }
+            else if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
+            {
+                if (cr->isFilterRejected("FILTER_DANMAKU_COME", danmaku))
+                    return ;
+            }
+            else if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
+            {
+                if (cr->isFilterRejected("FILTER_DANMAKU_GIFT", danmaku))
+                    return ;
+            }
+            else if (danmaku.is(MSG_ATTENTION))
+            {
+                if (cr->isFilterRejected("FILTER_DANMAKU_ATTENTION", danmaku))
+                    return ;
+            }
+
+            danmakuWindow->slotNewLiveDanmaku(danmaku);
+        });
+
+        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
+        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), liveService, SLOT(sendMsg(QString)));
+        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int, QString)), liveService, SLOT(addBlockUser(qint64, int, QString)));
+        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
+        connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
+        connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
+        connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
+        connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
+            danmakuWindow->deleteLater();
+            danmakuWindow = nullptr;
+            on_actionShow_Live_Danmaku_triggered(); // 重新加载
+        });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalSendMsgToPk, this, [=](QString msg){
+            if (!liveService->pking || liveService->pkRoomId.isEmpty())
+                return ;
+            qInfo() << "发送PK对面消息：" << liveService->pkRoomId << msg;
+            liveService->sendRoomMsg(liveService->pkRoomId, msg);
+        });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
+            if (judgeRobot)
+                markNotRobot(uid);
+        });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalTransMouse, this, [=](bool enabled){
+            if (enabled)
+                ui->closeTransMouseButton->show();
+            else
+                ui->closeTransMouseButton->hide();
+        });
+        connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
+        connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
+        connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), liveService, SLOT(dismissAdmin(qint64)));
+        danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
+        danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
+        danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+        danmakuWindow->setWindowIcon(this->windowIcon());
+        danmakuWindow->setWindowTitle(this->windowTitle());
+        danmakuWindow->hide();
+
+        // PK中
+        if (liveService->pkBattleType)
+        {
+            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
+        }
+
+        // 添加弹幕
+        QTimer::singleShot(0, [=]{
+            danmakuWindow->removeAll();
+            if (liveService->roomDanmakus.size())
+            {
+                for (int i = 0; i < liveService->roomDanmakus.size(); i++)
+                    danmakuWindow->slotNewLiveDanmaku(liveService->roomDanmakus.at(i));
+            }
+            else // 没有之前的弹幕，从API重新pull下来
+            {
+                pullLiveDanmaku();
+            }
+            danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
+            danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+
+            if (liveService->pking)
+            {
+                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
+            }
+        });
+}
+
 void MainWindow::initEvent()
 {
     initLiveRecord();
@@ -6987,99 +7085,7 @@ void MainWindow::on_actionShow_Live_Danmaku_triggered()
 {
     if (!danmakuWindow)
     {
-        danmakuWindow = new LiveDanmakuWindow(this);
-        danmakuWindow->setChatService(this->chatService);
-
-        connect(this, &MainWindow::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
-            if (danmaku.is(MSG_DANMAKU))
-            {
-                if (cr->isFilterRejected("FILTER_DANMAKU_MSG", danmaku))
-                    return ;
-            }
-            else if (danmaku.is(MSG_WELCOME) || danmaku.is(MSG_WELCOME_GUARD))
-            {
-                if (cr->isFilterRejected("FILTER_DANMAKU_COME", danmaku))
-                    return ;
-            }
-            else if (danmaku.is(MSG_GIFT) || danmaku.is(MSG_GUARD_BUY))
-            {
-                if (cr->isFilterRejected("FILTER_DANMAKU_GIFT", danmaku))
-                    return ;
-            }
-            else if (danmaku.is(MSG_ATTENTION))
-            {
-                if (cr->isFilterRejected("FILTER_DANMAKU_ATTENTION", danmaku))
-                    return ;
-            }
-
-            danmakuWindow->slotNewLiveDanmaku(danmaku);
-        });
-
-        connect(this, SIGNAL(signalRemoveDanmaku(LiveDanmaku)), danmakuWindow, SLOT(slotOldLiveDanmakuRemoved(LiveDanmaku)));
-        connect(danmakuWindow, SIGNAL(signalSendMsg(QString)), liveService, SLOT(sendMsg(QString)));
-        connect(danmakuWindow, SIGNAL(signalAddBlockUser(qint64, int, QString)), liveService, SLOT(addBlockUser(qint64, int, QString)));
-        connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
-        connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
-        connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
-        connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
-        connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
-        connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
-            danmakuWindow->deleteLater();
-            danmakuWindow = nullptr;
-            on_actionShow_Live_Danmaku_triggered(); // 重新加载
-        });
-        connect(danmakuWindow, &LiveDanmakuWindow::signalSendMsgToPk, this, [=](QString msg){
-            if (!liveService->pking || liveService->pkRoomId.isEmpty())
-                return ;
-            qInfo() << "发送PK对面消息：" << liveService->pkRoomId << msg;
-            liveService->sendRoomMsg(liveService->pkRoomId, msg);
-        });
-        connect(danmakuWindow, &LiveDanmakuWindow::signalMarkUser, this, [=](qint64 uid){
-            if (judgeRobot)
-                markNotRobot(uid);
-        });
-        connect(danmakuWindow, &LiveDanmakuWindow::signalTransMouse, this, [=](bool enabled){
-            if (enabled)
-                ui->closeTransMouseButton->show();
-            else
-                ui->closeTransMouseButton->hide();
-        });
-        connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
-        connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
-        connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), liveService, SLOT(dismissAdmin(qint64)));
-        danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
-        danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
-        danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
-        danmakuWindow->setWindowIcon(this->windowIcon());
-        danmakuWindow->setWindowTitle(this->windowTitle());
-        danmakuWindow->hide();
-
-        // PK中
-        if (liveService->pkBattleType)
-        {
-            danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
-        }
-
-        // 添加弹幕
-        QTimer::singleShot(0, [=]{
-            danmakuWindow->removeAll();
-            if (liveService->roomDanmakus.size())
-            {
-                for (int i = 0; i < liveService->roomDanmakus.size(); i++)
-                    danmakuWindow->slotNewLiveDanmaku(liveService->roomDanmakus.at(i));
-            }
-            else // 没有之前的弹幕，从API重新pull下来
-            {
-                pullLiveDanmaku();
-            }
-            danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-            danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
-
-            if (liveService->pking)
-            {
-                danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
-            }
-        });
+        initDanmakuWindow();
     }
 
     bool hidding = danmakuWindow->isHidden();

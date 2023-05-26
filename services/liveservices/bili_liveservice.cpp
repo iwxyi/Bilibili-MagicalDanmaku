@@ -4,6 +4,7 @@
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QClipboard>
+#include <QLabel>
 #include "bili_liveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
@@ -1848,6 +1849,30 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
     });
 }
 
+QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
+{
+    switch (type)
+    {
+        case ApiType::PlatformHomePage:
+            return "https://bilibili.com";
+        case ApiType::RoomPage:
+            return "https://live.bilibili.com/" + snum(id);
+        case ApiType::UserSpace:
+            return "https://space.bilibili.com/" + snum(id);
+        case ApiType::UserFollows:
+            return "https://space.bilibili.com/" + snum(id) + "/fans/follow";
+        case ApiType::UserFans:
+            return "https://space.bilibili.com/" + snum(id) + "/fans/fans";
+        case ApiType::UserVideos:
+            return "https://space.bilibili.com/" + snum(id) + "/video";
+        case ApiType::UserArticles:
+            return "https://space.bilibili.com/" + snum(id) + "/article";
+        case ApiType::UserDynamics:
+            return "https://space.bilibili.com/" + snum(id) + "/dynamic";
+    }
+    return "";
+}
+
 void BiliLiveService::getRoomBattleInfo()
 {
     get("https://api.live.bilibili.com/av/v1/Battle/anchorBattleRank",
@@ -2840,4 +2865,202 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
     {
         localNotify("对面直播间被超管切断");
     }
+}
+
+
+void BiliLiveService::showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction *action, QAction *action2) const
+{
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取粉丝失败：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        QString following = TO_SIMPLE_NUMBER(obj.value("following").toInt()); // 关注
+        QString follower = TO_SIMPLE_NUMBER(obj.value("follower").toInt()); // 粉丝
+        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
+        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
+        if (!action2)
+        {
+            action->setText(QString("关注:%1,粉丝:%2").arg(following).arg(follower));
+        }
+        else
+        {
+            action->setText(QString("关注数:%1").arg(following));
+            action2->setText(QString("粉丝数:%1").arg(follower));
+        }
+    });
+    manager->get(*request);
+}
+
+void BiliLiveService::showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction *action, QAction *action2, QAction *action3) const
+{
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取播放量失败：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+//        qDebug() << url;
+//        qDebug() << json;
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+        int achive_view = data.value("archive").toObject().value("view").toInt();
+        int article_view = data.value("article").toObject().value("view").toInt();
+        int article_like = data.value("likes").toInt();
+
+        if (!action2 && !action3)
+        {
+            QStringList sl;
+            if (achive_view)
+                sl << "播放:" + TO_SIMPLE_NUMBER(achive_view);
+            if (article_view)
+                sl << "阅读:" + TO_SIMPLE_NUMBER(article_view);
+            if (article_like)
+                sl << "点赞:" + TO_SIMPLE_NUMBER(article_like);
+
+            if (sl.size())
+                action->setText(sl.join(","));
+            else
+                action->setText("没有投稿");
+        }
+        else
+        {
+            action->setText("播放数:" + TO_SIMPLE_NUMBER(achive_view));
+            if (action2)
+                action2->setText("阅读数:" + TO_SIMPLE_NUMBER(article_view));
+            if (action3)
+                action3->setText("获赞数:" + TO_SIMPLE_NUMBER(article_like));
+        }
+    });
+    manager->get(*request);
+}
+
+void BiliLiveService::showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction *action) const
+{
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
+            +snum(roomId)+"&page=1&ruid="+snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取舰长失败：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+        QJsonObject info = data.value("info").toObject();
+        int num = info.value("num").toInt();
+        action->setText("船员数:" + snum(num));
+    });
+    manager->get(*request);
+}
+
+void BiliLiveService::showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction *actionUser, QAction *actionRank) const
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id="+snum(roomId);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, actionUser, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取PK等级失败：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+        QJsonObject anchor = data.value("anchor_info").toObject();
+        QString uname = anchor.value("base_info").toObject().value("uname").toString();
+        int level = anchor.value("live_info").toObject().value("level").toInt();
+        actionUser->setText(uname + " " + snum(level));
+
+        QJsonObject battle = data.value("battle_rank_entry_info").toObject();
+        QString rankName = battle.value("rank_name").toString();
+        actionRank->setText(rankName);
+    });
+    manager->get(*request);
 }

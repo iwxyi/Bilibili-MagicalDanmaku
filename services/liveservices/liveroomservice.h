@@ -8,17 +8,23 @@
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
+#include "api_type.h"
 
 #define INTERVAL_RECONNECT_WS 5000
 #define INTERVAL_RECONNECT_WS_MAX 60000
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
 
+#define TO_SIMPLE_NUMBER(x) (x > 100000 ? QString(snum(x/10000)+"万") : snum(x))
+
+class QLabel;
+
 class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
 {
     Q_OBJECT
     friend class MainWindow;
     friend class CodeRunner;
+    
 public:
     explicit LiveRoomService(QObject *parent = nullptr);
 
@@ -216,7 +222,7 @@ public:
     virtual void triggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug = false);
     virtual void localNotify(const QString& text, qint64 uid = 0);
     virtual void showError(const QString& title, const QString& desc = "");
-
+    
 public:
     /// 根据Url设置对应的Cookie
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
@@ -225,6 +231,17 @@ public:
     
     QStringList splitLongDanmu(const QString& text, int maxOne) const;
     void sendLongText(QString text);
+
+public:
+    /// 一些接口
+    virtual QString getApiUrl(ApiType type, qint64 id) { return ""; }
+    
+    /// 动作项
+    virtual void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const {}
+    virtual void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const {}
+    virtual void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const {}
+    virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const {}
+
 
 protected:
     // 连接信息
@@ -245,6 +262,7 @@ protected:
     QList<LiveDanmaku> roomDanmakus;
     QPixmap roomCover; // 直播间封面原图
     QPixmap upFace; // 主播头像原图
+    QMap<ApiType, QString> apiUrls;
 
     // 粉丝数量
     QList<FanBean> fansList; // 最近的关注，按时间排序
