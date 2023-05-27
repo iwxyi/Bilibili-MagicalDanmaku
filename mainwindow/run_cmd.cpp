@@ -517,7 +517,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             int giftId = caps.at(1).toInt();
             int num = caps.at(2).toInt();
-            sendGift(giftId, num);
+            liveService->sendGift(giftId, num);
             return true;
         }
     }

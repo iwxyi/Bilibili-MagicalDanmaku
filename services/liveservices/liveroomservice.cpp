@@ -339,6 +339,11 @@ bool LiveRoomService::isLivingOrMayLiving()
     return true;
 }
 
+void LiveRoomService::sendExpireGift()
+{
+    getBagList(24 * 3600 * 2); // 默认赠送两天内过期的
+}
+
 QVariant LiveRoomService::getCookies() const
 {
     return NetInterface::getCookies(ac->browserCookie);
@@ -440,4 +445,14 @@ void LiveRoomService::sendLongText(QString text)
         return ;
     }
     emit signalSendAutoMsg(splitLongDanmu(text, ac->danmuLongest).join("\\n"), LiveDanmaku());
+}
+
+bool LiveRoomService::isInFans(qint64 uid) const
+{
+    foreach (auto fan, fansList)
+    {
+        if (fan.mid == uid)
+            return true;
+    }
+    return false;
 }

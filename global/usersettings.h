@@ -34,6 +34,7 @@ public:
 
     qint64 removeDanmakuInterval = 60000;
     qint64 removeDanmakuTipInterval = 20000;
+    bool adjustDanmakuLongest = true;// 自动调整弹幕最长字数
     bool timerConnectServer = false; // 定时连接
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间
@@ -46,6 +47,7 @@ public:
     bool calculateDailyData = false; // 统计每天数据
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
+    int judgeRobot = 0;              // 判断机器人：0关，1仅关注，2所有
 
     QString open_ai_key;
     QString chatgpt_model_name = "gpt-3.5-turbo";

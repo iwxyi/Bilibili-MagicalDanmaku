@@ -17,6 +17,9 @@
 
 #define TO_SIMPLE_NUMBER(x) (x > 100000 ? QString(snum(x/10000)+"万") : snum(x))
 
+typedef std::function<void(LiveDanmaku)> DanmakuFunc;
+typedef std::function<void(QString)> StringFunc;
+
 class QLabel;
 
 class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
@@ -51,12 +54,12 @@ signals:
 
     void signalNewDanmaku(const LiveDanmaku& danmaku); // 通知外部各种界面
 
+    void signalRobotAccountChanged();
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const QString &uid);
     void signalUpFaceChanged(const QPixmap& pixmap);
     void signalUpInfoChanged();
     void signalUpSignatureChanged(const QString& signature);
-    void signalRobotIdChanged(const QString &uid);
     void signalRoomInfoChanged();
     void signalImUpChanged(bool isUp);
     void signalRoomCoverChanged(const QPixmap &pixmap);
@@ -107,10 +110,14 @@ public slots:
 
     /// 接收到 WS CMD 数据包
     virtual void slotBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
-
     /// 接收到 PK 的 WS CMD 数据包
     virtual void slotPkBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
 
+    /// 发送弹幕
+    virtual void sendMsg(const QString& msg) { Q_UNUSED(msg) }
+    virtual void sendRoomMsg(QString roomId, const QString& msg) { Q_UNUSED(roomId) Q_UNUSED(msg) }
+    /// 恢复之前的弹幕
+    virtual void pullLiveDanmaku() { }
     /// 设置为管理员
     virtual void appointAdmin(qint64 uid) { Q_UNUSED(uid) }
     /// 取消管理员
@@ -130,13 +137,13 @@ public slots:
     /// 私信
     virtual void refreshPrivateMsg() {}
     virtual void receivedPrivateMsg(MyJson session) { Q_UNUSED(session) }
-    /// 发送弹幕
-    virtual void sendMsg(const QString& msg) { Q_UNUSED(msg) }
-    virtual void sendRoomMsg(QString roomId, const QString& msg) { Q_UNUSED(roomId) Q_UNUSED(msg) }
-    /// 恢复之前的弹幕
-    virtual void pullLiveDanmaku() { }
 
 public:
+    /// 获取机器人账号信息
+    virtual void getCookieAccount() = 0;
+    QVariant getCookies() const;
+    /// 获取机器人账号信息
+    virtual void getRobotInfo() = 0;
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
     /// 获取直播间Host信息
@@ -147,12 +154,16 @@ public:
     virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) { Q_UNUSED(socket) Q_UNUSED(roomId) Q_UNUSED(token) }
     /// 连接后定时发送心跳包
     virtual void sendHeartPacket() {}
+    /// 获取直播间与用户的信息
+    virtual void getRoomUserInfo() {}
 
     /// 是否在直播中
     virtual bool isLiving() const;
     /// 是否在直播，或者可能要开播
     virtual bool isLivingOrMayLiving();
+    /// 获取并更新直播间封面
     virtual void getRoomCover(const QString& url) { Q_UNUSED(url) }
+    /// 获取主播信息
     virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
     /// 更新当前舰长
     virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
@@ -164,6 +175,10 @@ public:
     virtual void getGiftList() {}
     /// 获取表情包ID
     virtual void getEmoticonList() {}
+    /// 发送礼物
+    virtual void sendGift(int giftId, int giftNum) {}
+    /// 发送背包中的礼物
+    virtual void sendBagGift(int giftId, int giftNum, qint64 bagId) {}
     /// 每日签到
     virtual void doSign() {}
     /// 天选之人抽奖
@@ -181,10 +196,16 @@ public:
     virtual void wearMedal(qint64 medalId) { Q_UNUSED(medalId) }
     /// 发送私信
     virtual void sendPrivateMsg(QString uid, QString msg) { Q_UNUSED(uid) Q_UNUSED(msg) }
-    /// 参加大乱斗
+    /// 开启大乱斗
     virtual void joinBattle(int type) { Q_UNUSED(type) }
     /// 送礼物后检测勋章升级
     virtual void detectMedalUpgrade(LiveDanmaku danmaku) { Q_UNUSED(danmaku) }
+    /// 触发进入直播间的动作
+    virtual void roomEntryAction() {}
+    /// 背包礼物
+    virtual void sendExpireGift();
+    virtual void getBagList(qint64 sendExpire) {}
+
     /// 修改直播间信息
     virtual void myLiveSelectArea(bool update) { Q_UNUSED(update) }
     virtual void myLiveUpdateArea(QString area) { Q_UNUSED(area) }
@@ -195,6 +216,7 @@ public:
     virtual void myLiveSetDescription() {}
     virtual void myLiveSetCover(QString path = "") { Q_UNUSED(path) }
     virtual void myLiveSetTags() {}
+
     /// 获取PK相关信息
     virtual void showPkMenu() {}
     virtual void showPkAssists() {}
@@ -215,10 +237,11 @@ public:
     /// 根据直播间弹幕，保存当前观众信息
     virtual void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences){ Q_UNUSED(roomId) Q_UNUSED(audiences) }
     virtual void connectPkSocket() { }
+    /// 获取PK对面直播间的信息
+    virtual void getPkMatchInfo() {}
 
-    /// 获取机器人账号信息
-    virtual void getCookieAccount() = 0;
-    QVariant getCookies() const;
+    /// 录播
+    virtual void getRoomLiveVideoUrl(StringFunc func) {}
 
     /// 事件处理
     virtual void processNewDayData() {}
@@ -226,7 +249,7 @@ public:
     virtual void localNotify(const QString& text, qint64 uid = 0);
     virtual void showError(const QString& title, const QString& desc = "");
     
-public:
+    /// 弹幕新增
     void appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus);
     void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
     /// 根据Url设置对应的Cookie
@@ -237,8 +260,7 @@ public:
     QStringList splitLongDanmu(const QString& text, int maxOne) const;
     void sendLongText(QString text);
 
-public:
-    /// 一些接口
+    /// 一些接口的网址
     virtual QString getApiUrl(ApiType type, qint64 id) { return ""; }
     
     /// 动作项
@@ -247,6 +269,13 @@ public:
     virtual void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const {}
     virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const {}
 
+    /// 机器人判断
+    virtual void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) {}
+    virtual void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) {}
+    virtual void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) {}
+
+    /// 一些条件判断
+    bool isInFans(qint64 uid) const;
 
 protected:
     // 连接信息
@@ -351,6 +380,9 @@ protected:
     // flag
     bool _loadingOldDanmakus = false;
     LiveDanmaku lastDanmaku; // 最近一个弹幕
+
+    // 机器人判断
+    MySettings* robotRecord = nullptr;
 };
 
 #endif // LIVEROOMSERVICE_H

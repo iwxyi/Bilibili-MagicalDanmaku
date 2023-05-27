@@ -42,6 +42,125 @@ void BiliLiveService::releaseLiveData(bool prepare)
 }
 
 /**
+ * 通过Cookie获取机器人账号信息
+ * 仅获取UID和昵称
+ */
+void BiliLiveService::getCookieAccount()
+{
+    if (ac->browserCookie.isEmpty())
+        return ;
+    gettingUser = true;
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("登录返回不为0", json.value("message").toString());
+            gettingUser = false;
+            if (!gettingRoom)
+                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
+            emit signalUpdatePermission();
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonObject dataObj = json.value("data").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        ac->cookieUname = dataObj.value("uname").toString();
+        qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
+        emit signalRobotAccountChanged();
+    });
+}
+
+/**
+ * 获取所有用户信息
+ * 目前其实只有头像、弹幕字数
+ */
+void BiliLiveService::getRobotInfo()
+{
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + ac->cookieUid;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取账号信息返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+
+        // 开始下载头像
+        QString face = data.value("face").toString();
+        get(face, [=](QNetworkReply* reply){
+            QByteArray jpegData = reply->readAll();
+            QPixmap pixmap;
+            pixmap.loadFromData(jpegData);
+            if (pixmap.isNull())
+            {
+                showError("获取账号头像出错");
+                return ;
+            }
+
+            // 设置成圆角
+            int side = qMin(pixmap.width(), pixmap.height());
+            QPixmap p(side, side);
+            p.fill(Qt::transparent);
+            QPainter painter(&p);
+            painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+            QPainterPath path;
+            path.addEllipse(0, 0, side, side);
+            painter.setClipPath(path);
+            painter.drawPixmap(0, 0, side, side, pixmap);
+
+            // 设置到Robot头像
+            emit signalRobotHeadChanged(p);
+        });
+    });
+
+    // 检查是否需要用户信息
+    if (!us->adjustDanmakuLongest)
+        return ;
+
+    // 获取弹幕字数
+    url = "https://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
+    get(url, [=](MyJson json) {
+        /*{
+            "code": 0,
+            "msg": "success",
+            "message": "success",
+            "data": {
+                "user": {
+                    "role": 2,
+                    "user_level": 19,
+                    "master_level": 5,
+                    "next_master_level": 6,
+                    "need_master_score": 704,
+                    "master_rank": 100010,
+                    "verify": 0
+                },
+                "feed": {
+                    "fans_count": 7084,
+                    "feed_count": 41,
+                    "is_followed": 0,
+                    "is_following": 0
+                },
+                "room": {
+                    "live_status": 0,
+                    "room_id": 11584296,
+                    "short_room_id": 0,
+                    "title": "用户20285041的直播间",
+                    "cover": "",
+                    "keyframe": "",
+                    "online": 0,
+                    "room_link": "http://live.bilibili.com/11584296?src=draw"
+                },
+                "uid": "20285041"
+            }
+        }*/
+        MyJson data = json.data();
+        ac->cookieULevel = data.o("user").i("user_level");
+        if (us->adjustDanmakuLongest)
+            adjustDanmakuLongest();
+    });
+}
+
+/**
  * 获取直播间信息，然后再开始连接
  * @param reconnect       是否是重新获取信息
  * @param reconnectCount  连接失败的重连次数
@@ -337,6 +456,168 @@ void BiliLiveService::sendHeartPacket()
     liveSocket->sendBinaryMessage(ba);
 }
 
+/**
+ * 获取用户在当前直播间的信息
+ * 会触发进入直播间，就不能偷看了……
+ */
+void BiliLiveService::getRoomUserInfo()
+{
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "user_level": {
+                "level": 13,
+                "next_level": 14,
+                "color": 6406234,
+                "level_rank": ">50000"
+            },
+            "vip": {
+                "vip": 0,
+                "vip_time": "0000-00-00 00:00:00",
+                "svip": 0,
+                "svip_time": "0000-00-00 00:00:00"
+            },
+            "title": {
+                "title": ""
+            },
+            "badge": {
+                "is_room_admin": false
+            },
+            "privilege": {
+                "target_id": 0,
+                "privilege_type": 0,
+                "privilege_uname_color": "",
+                "buy_guard_notice": null,
+                "sub_level": 0,
+                "notice_status": 1,
+                "expired_time": "",
+                "auto_renew": 0,
+                "renew_remind": null
+            },
+            "info": {
+                "uid": 20285041,
+                "uname": "懒一夕智能科技",
+                "uface": "http://i1.hdslb.com/bfs/face/97ae8f0f0e09fbc22fa680c4f5ed93f92678c9eb.jpg",
+                "main_rank": 10000,
+                "bili_vip": 2,
+                "mobile_verify": 1,
+                "identification": 1
+            },
+            "property": {
+                "uname_color": "",
+                "bubble": 0,
+                "danmu": {
+                    "mode": 1,
+                    "color": 16777215,
+                    "length": 20,
+                    "room_id": 13328782
+                },
+                "bubble_color": ""
+            },
+            "recharge": {
+                "status": 0,
+                "type": 1,
+                "value": "",
+                "color": "fb7299",
+                "config_id": 0
+            },
+            "relation": {
+                "is_followed": false,
+                "is_fans": false,
+                "is_in_fansclub": false
+            },
+            "wallet": {
+                "gold": 6100,
+                "silver": 3294
+            },
+            "medal": {
+                "cnt": 16,
+                "is_weared": false,
+                "curr_weared": null,
+                "up_medal": {
+                    "uid": 358629230,
+                    "medal_name": "石乐志",
+                    "medal_color": 6067854,
+                    "level": 1
+                }
+            },
+            "extra_config": {
+                "show_bag": false,
+                "show_vip_broadcast": true
+            },
+            "mailbox": {
+                "switch_status": 0,
+                "red_notice": 0
+            },
+            "user_reward": {
+                "entry_effect": {
+                    "id": 0,
+                    "privilege_type": 0,
+                    "priority": 0,
+                    "web_basemap_url": "",
+                    "web_effective_time": 0,
+                    "web_effect_close": 0,
+                    "web_close_time": 0,
+                    "copy_writing": "",
+                    "copy_color": "",
+                    "highlight_color": "",
+                    "mock_effect": 0,
+                    "business": 0,
+                    "face": "",
+                    "basemap_url": "",
+                    "show_avatar": 0,
+                    "effective_time": 0
+                },
+                "welcome": {
+                    "allow_mock": 1
+                }
+            },
+            "shield_info": {
+                "shield_user_list": [],
+                "keyword_list": [],
+                "shield_rules": {
+                    "rank": 0,
+                    "verify": 0,
+                    "level": 0
+                }
+            },
+            "super_chat_message": {
+                "list": []
+            },
+            "lpl_info": {
+                "lpl": 0
+            },
+            "cd": {
+                "guide_free_medal_cost": 0,
+                "guide_light_medal": 0,
+                "guide_follow": 1,
+                "guard_compensate": 0,
+                "interact_toasts": []
+            }
+        }
+    }*/
+
+    if (ac->browserCookie.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + ac->roomId;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取房间本用户信息返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户在这个房间信息
+        QJsonObject info = json.value("data").toObject().value("info").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
+        ac->cookieUname = info.value("uname").toString();
+        QString uface = info.value("uface").toString(); // 头像地址
+        qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
+    });
+}
+
 void BiliLiveService::getRoomCover(const QString &url)
 {
     get(url, [=](QNetworkReply* reply){
@@ -609,10 +890,6 @@ void BiliLiveService::updateOnlineGoldRank()
     });
 }
 
-void BiliLiveService::getCookieAccount()
-{
-}
-
 void BiliLiveService::getGiftList()
 {
     get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId,
@@ -684,6 +961,101 @@ void BiliLiveService::getEmoticonList()
                 pl->emoticons.insert(e.unique, e);
             }
         } });
+}
+
+void BiliLiveService::sendGift(int giftId, int giftNum)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("赠送礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
+    }
+
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + ac->cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + ac->upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "coin_type=gold";
+    datas << "bag_id=0";
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + ac->roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    QString url("https://api.live.bilibili.com/gift/v2/Live/send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (message != "success")
+        {
+            showError("赠送礼物", message);
+        }
+    });
+}
+
+void BiliLiveService::sendBagGift(int giftId, int giftNum, qint64 bagId)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
+    }
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + ac->cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + ac->upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "bag_id=" + snum(bagId);
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + ac->roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    QString url("https://api.live.bilibili.com/gift/v2/live/bag_send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (message != "success")
+        {
+            showError("赠送包裹礼物失败", message);
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+        }
+    });
 }
 
 void BiliLiveService::doSign()
@@ -1116,6 +1488,118 @@ void BiliLiveService::detectMedalUpgrade(LiveDanmaku danmaku)
             ld.setMedalLevel(level); // 设置为本房间的牌子
             triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
         });
+    });
+}
+
+/**
+ * 触发进入直播间事件
+ * 偶然看到的，未经测试
+ */
+void BiliLiveService::roomEntryAction()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction?room_id="
+            + ac->roomId + "&platform=pc&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=";
+    post(url, QByteArray(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("进入直播间返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+    });
+}
+
+void BiliLiveService::getBagList(qint64 sendExpire)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "list": [
+                {
+                    "bag_id": 232151929,
+                    "gift_id": 30607,
+                    "gift_name": "小心心",
+                    "gift_num": 12,
+                    "gift_type": 5,             // 0 = 普通, 6 = 礼盒, 2 = 加分卡
+                    "expire_at": 1612972800,
+                    "corner_mark": "4天",
+                    "corner_color": "",
+                    "count_map": [
+                        {
+                            "num": 1,
+                            "text": ""
+                        },
+                        {
+                            "num": 12,
+                            "text": "全部"
+                        }
+                    ],
+                    "bind_roomid": 0,
+                    "bind_room_text": "",
+                    "type": 1,
+                    "card_image": "",
+                    "card_gif": "",
+                    "card_id": 0,
+                    "card_record_id": 0,
+                    "is_show_send": false
+                },
+                ......
+    }*/
+
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + ac->roomId;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取包裹返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonArray bagArray = json.value("data").toObject().value("list").toArray();
+
+        if (true)
+        {
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftId = bag.value("gift_id").toInt();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                // qInfo() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
+            }
+        }
+
+        if (sendExpire) // 赠送过期礼物
+        {
+            QList<int> whiteList{1, 6, 30607}; // 辣条、亿圆、小心心
+
+            qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+            qint64 expireTs = timestamp + sendExpire; // 超过这个时间的都送
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                qint64 expire = qint64(bag.value("expire_at").toDouble());
+                int giftId = bag.value("gift_id").toInt();
+                if (!whiteList.contains(giftId) || expire == 0 || expire > expireTs)
+                    continue ;
+
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                qInfo() << "赠送过期礼物：" << giftId << giftName << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
+                sendBagGift(giftId, giftNum, bagId);
+            }
+        }
     });
 }
 
@@ -1747,163 +2231,28 @@ void BiliLiveService::receivedPrivateMsg(MyJson session)
     });
 }
 
-/**
- * 发送单条弹幕的原子操作
- */
-void BiliLiveService::sendMsg(const QString& msg)
-{
-    if (us->localMode)
-    {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
-    }
-
-    sendRoomMsg(ac->roomId, msg);
-}
-
-/**
- * 向指定直播间发送弹幕
- */
-void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
-{
-    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
-    {
-        showError("发送弹幕", "机器人账号未登录");
-#ifdef ZUOQI_ENTRANCE
-        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
-#endif
-        return ;
-    }
-    if (msg.isEmpty() || ac->roomId.isEmpty())
-        return ;
-
-    // 设置数据（JSON的ByteArray）
-    QString s = ac->browserData;
-    int posl = s.indexOf("msg=")+4;
-    int posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, msg);
-
-    posl = s.indexOf("roomid=")+7;
-    posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, roomId);
-
-    QByteArray ba(s.toStdString().data());
-
-    // 连接槽
-    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
-        QString errorMsg = json.value("message").toString();
-        emit signalStatusChanged("");
-        if (!errorMsg.isEmpty())
-        {
-            QString errorDesc = errorMsg;
-            if (errorMsg == "f")
-            {
-                errorDesc = "包含屏蔽词";
-            }
-            else if (errorMsg == "k")
-            {
-                errorDesc = "包含直播间屏蔽词";
-            }
-
-            showError("发送弹幕失败", errorDesc);
-            qWarning() << msg;
-            localNotify(errorDesc + " -> " + msg);
-
-            // 重试
-            if (!us->retryFailedDanmaku)
-                return ;
-
-            if (errorMsg.contains("msg in 1s"))
-            {
-                localNotify("[5s后重试]");
-                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
-            }
-            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
-            {
-                localNotify("[4s后重试]");
-                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
-            }
-            else if (errorMsg.contains("超出限制长度"))
-            {
-                if (msg.length() <= ac->danmuLongest)
-                {
-                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ac->danmuLongest) + "]");
-                }
-                else
-                {
-                    localNotify("[自动分割长度]");
-                    emit signalSendAutoMsgInFirst(splitLongDanmu(msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
-                }
-            }
-            else if (errorMsg == "f") // 系统敏感词
-            {
-            }
-            else if (errorMsg == "k") // 主播设置的直播间敏感词
-            {
-            }
-        }
-    });
-}
-
-void BiliLiveService::pullLiveDanmaku()
-{
-    if (ac->roomId.isEmpty())
-        return ;
-    QString url = "https://api.live.bilibili.com/ajax/msg";
-    QStringList param{"roomid", ac->roomId};
-    connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
-            qCritical() << result;
-            return ;
-        }
-
-        _loadingOldDanmakus = true;
-        QJsonObject json = document.object();
-        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
-        QDateTime time = QDateTime::currentDateTime();
-        qint64 removeTime = time.toMSecsSinceEpoch() - us->removeDanmakuInterval;
-        for (int i = 0; i < danmakus.size(); i++)
-        {
-            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
-            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
-                continue;
-            danmaku.transToDanmu();
-            danmaku.setTime(time);
-            danmaku.setNoReply();
-            appendNewLiveDanmaku(danmaku);
-        }
-        _loadingOldDanmakus = false;
-    });
-}
-
 QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
 {
     switch (type)
     {
-        case ApiType::PlatformHomePage:
-            return "https://bilibili.com";
-        case ApiType::RoomPage:
-            return "https://live.bilibili.com/" + snum(id);
-        case ApiType::UserSpace:
-            return "https://space.bilibili.com/" + snum(id);
-        case ApiType::UserFollows:
-            return "https://space.bilibili.com/" + snum(id) + "/fans/follow";
-        case ApiType::UserFans:
-            return "https://space.bilibili.com/" + snum(id) + "/fans/fans";
-        case ApiType::UserVideos:
-            return "https://space.bilibili.com/" + snum(id) + "/video";
-        case ApiType::UserArticles:
-            return "https://space.bilibili.com/" + snum(id) + "/article";
-        case ApiType::UserDynamics:
-            return "https://space.bilibili.com/" + snum(id) + "/dynamic";
+    case ApiType::PlatformHomePage:
+        return "https://bilibili.com";
+    case ApiType::RoomPage:
+        return "https://live.bilibili.com/" + snum(id);
+    case ApiType::UserSpace:
+        return "https://space.bilibili.com/" + snum(id);
+    case ApiType::UserFollows:
+        return "https://space.bilibili.com/" + snum(id) + "/fans/follow";
+    case ApiType::UserFans:
+        return "https://space.bilibili.com/" + snum(id) + "/fans/fans";
+    case ApiType::UserVideos:
+        return "https://space.bilibili.com/" + snum(id) + "/video";
+    case ApiType::UserArticles:
+        return "https://space.bilibili.com/" + snum(id) + "/article";
+    case ApiType::UserDynamics:
+        return "https://space.bilibili.com/" + snum(id) + "/dynamic";
+    case ApiType::AppStorePage:
+        return "https://play-live.bilibili.com/details/1653383145397";
     }
     return "";
 }
@@ -2254,6 +2603,124 @@ void BiliLiveService::connectPkSocket()
         pkLiveSocket->open(host);
     });
     manager->get(*request);
+}
+
+void BiliLiveService::getPkMatchInfo()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + pkRoomId;
+    get(url, [=](MyJson json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取PK匹配返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        MyJson data = json.data();
+        LiveDanmaku danmaku;
+        danmaku.with(data);
+
+        // 计算高能榜综合
+        qint64 sum = 0;
+        data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
+            sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
+        });
+        danmaku.setTotalCoin(sum); // 高能榜总积分
+        danmaku.setNumber(data.o("online_gold_rank_info_v2").a("list").size()); // 高能榜总人数
+        qInfo() << "对面高能榜积分总和：" << sum;
+        // qDebug() << data.o("online_gold_rank_info_v2").a("list");
+        triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
+    });
+}
+
+void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
+{
+    if (ac->roomId.isEmpty())
+        return ;
+    /*QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
+            + "&quality=4&qn=10000&platform=web&otype=json";
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取视频URL返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取链接
+        QJsonArray array = json.value("data").toObject().value("durl").toArray();
+        /*"url": "http://d1--cn-gotcha04.bilivideo.com/live-bvc/521719/live_688893202_7694436.flv?cdn=cn-gotcha04\\u0026expires=1607505058\\u0026len=0\\u0026oi=1944862322\\u0026pt=\\u0026qn=10000\\u0026trid=40938d869aca4cb39041730f74ff9051\\u0026sigparams=cdn,expires,len,oi,pt,qn,trid\\u0026sign=ac701ba60c346bf3a173e56bcb14b7b9\\u0026ptype=0\\u0026src=9\\u0026sl=1\\u0026order=1",
+          "length": 0,
+          "order": 1,
+          "stream_type": 0,
+          "p2p_type": 0*-/
+        QString url = array.first().toObject().value("url").toString();
+        if (func)
+            func(url);
+    });*/
+
+    QString full_url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + ac->roomId
+            + "&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
+    get(full_url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qWarning() << ("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject play_url = json.value("data").toObject().value("playurl_info").toObject().value("playurl").toObject();
+        QJsonArray streams = play_url.value("stream").toArray();
+        QString url;
+
+        // 先抓取m3u8的视频
+        foreach (auto _stream, streams)
+        {
+            auto stream = _stream.toObject();
+            // m3u8:http_hls, flv:http_stream
+            if (stream.value("protocol_name").toString() != "http_hls")
+                continue;
+
+            auto formats = stream.value("format").toArray(); // 这里有多个可播放的格式
+            foreach (auto _format, formats)
+            {
+                auto format = _format.toObject();
+                auto codecs = format.value("codec").toArray();
+                foreach (auto _codec, codecs)
+                {
+                    auto codec = _codec.toObject();
+                    QString codec_name = codec.value("codec_name").toString();
+                    QString base_url = codec.value("base_url").toString();
+                    auto url_infos = codec.value("url_info").toArray();
+                    foreach (auto _url_info, url_infos)
+                    {
+                        auto url_info = _url_info.toObject();
+                        QString host = url_info.value("host").toString();
+                        QString extra = url_info.value("extra").toString();
+                        qint64 stream_ttl = url_info.value("stream_ttl").toInt();
+
+                        url = host + base_url;
+
+                        if (!url.isEmpty())
+                            break;
+                    }
+                    if (!url.isEmpty())
+                        break;
+                }
+                if (!url.isEmpty())
+                    break;
+            }
+            if (!url.isEmpty())
+                break;
+        }
+
+        if (url.isEmpty())
+        {
+            qWarning() << "录播无法获取下载地址：" << full_url;
+            return ;
+        }
+        if (url.endsWith("?"))
+            url = url.left(url.length() - 1);
+        if (func)
+            func(url);
+    });
 }
 
 void BiliLiveService::startHeartConnection()
@@ -2903,6 +3370,143 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
 }
 
 
+/**
+ * 发送单条弹幕的原子操作
+ */
+void BiliLiveService::sendMsg(const QString& msg)
+{
+    if (us->localMode)
+    {
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
+    }
+
+    sendRoomMsg(ac->roomId, msg);
+}
+
+/**
+ * 向指定直播间发送弹幕
+ */
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
+{
+    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
+    {
+        showError("发送弹幕", "机器人账号未登录");
+#ifdef ZUOQI_ENTRANCE
+        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
+#endif
+        return ;
+    }
+    if (msg.isEmpty() || ac->roomId.isEmpty())
+        return ;
+
+    // 设置数据（JSON的ByteArray）
+    QString s = ac->browserData;
+    int posl = s.indexOf("msg=")+4;
+    int posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, msg);
+
+    posl = s.indexOf("roomid=")+7;
+    posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, roomId);
+
+    QByteArray ba(s.toStdString().data());
+
+    // 连接槽
+    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
+        QString errorMsg = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (!errorMsg.isEmpty())
+        {
+            QString errorDesc = errorMsg;
+            if (errorMsg == "f")
+            {
+                errorDesc = "包含屏蔽词";
+            }
+            else if (errorMsg == "k")
+            {
+                errorDesc = "包含直播间屏蔽词";
+            }
+
+            showError("发送弹幕失败", errorDesc);
+            qWarning() << msg;
+            localNotify(errorDesc + " -> " + msg);
+
+            // 重试
+            if (!us->retryFailedDanmaku)
+                return ;
+
+            if (errorMsg.contains("msg in 1s"))
+            {
+                localNotify("[5s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+            }
+            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
+            {
+                localNotify("[4s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
+            }
+            else if (errorMsg.contains("超出限制长度"))
+            {
+                if (msg.length() <= ac->danmuLongest)
+                {
+                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ac->danmuLongest) + "]");
+                }
+                else
+                {
+                    localNotify("[自动分割长度]");
+                    emit signalSendAutoMsgInFirst(splitLongDanmu(msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
+                }
+            }
+            else if (errorMsg == "f") // 系统敏感词
+            {
+            }
+            else if (errorMsg == "k") // 主播设置的直播间敏感词
+            {
+            }
+        }
+    });
+}
+
+void BiliLiveService::pullLiveDanmaku()
+{
+    if (ac->roomId.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/ajax/msg";
+    QStringList param{"roomid", ac->roomId};
+    connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
+            return ;
+        }
+
+        _loadingOldDanmakus = true;
+        QJsonObject json = document.object();
+        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
+        QDateTime time = QDateTime::currentDateTime();
+        qint64 removeTime = time.toMSecsSinceEpoch() - us->removeDanmakuInterval;
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
+                continue;
+            danmaku.transToDanmu();
+            danmaku.setTime(time);
+            danmaku.setNoReply();
+            appendNewLiveDanmaku(danmaku);
+        }
+        _loadingOldDanmakus = false;
+    });
+}
+
 void BiliLiveService::showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction *action, QAction *action2) const
 {
     QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
@@ -3098,4 +3702,130 @@ void BiliLiveService::showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QA
         actionRank->setText(rankName);
     });
     manager->get(*request);
+}
+
+void BiliLiveService::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    int val = robotRecord->value("robot/" + snum(danmaku.getUid()), 0).toInt();
+    if (val == 1) // 是机器人
+    {
+        if (ifIs)
+            ifIs(danmaku);
+        return ;
+    }
+    else if (val == -1) // 是人
+    {
+        if (ifNot)
+            ifNot(danmaku);
+        return ;
+    }
+    else
+    {
+        if (danmaku.getMedalLevel() > 0 || danmaku.getLevel() > 1) // 使用等级判断
+        {
+            robotRecord->setValue("robot/" + snum(danmaku.getUid()), -1);
+            if (ifNot)
+                ifNot(danmaku);
+            return ;
+        }
+    }
+
+    // 网络判断
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断粉丝", "您没有权限");
+            else
+                showError("机器人判断:粉丝", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int following = obj.value("following").toInt(); // 关注
+        int follower = obj.value("follower").toInt(); // 粉丝
+        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
+        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
+        bool robot =  (following >= 100 && follower <= 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
+        if (robot)
+        {
+            // 进一步使用投稿数量判断
+            judgeUserRobotByUpstate(danmaku, ifNot, ifIs);
+        }
+        else // 不是机器人
+        {
+            robotRecord->setValue("robot/" + snum(danmaku.getUid()), -1);
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
+}
+
+void BiliLiveService::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断:点击量", "您没有权限");
+            else
+                showError("机器人判断:点击量", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int achive_view = obj.value("archive").toObject().value("view").toInt();
+        int article_view = obj.value("article").toObject().value("view").toInt();
+        int article_like = obj.value("article").toObject().value("like").toInt();
+        bool robot = (achive_view + article_view + article_like < 10); // 机器人，或者小号
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
+//                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
+        robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else // 不是机器人
+        {
+            if (ifNot)
+            {
+                ifNot(danmaku);
+            }
+        }
+    });
+}
+
+void BiliLiveService::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    QString url = "http://api.vc.bilibili.com/link_draw/v1/doc/upload_count?uid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断:投稿", "您没有权限");
+            else
+                showError("机器人判断:投稿", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int allCount = obj.value("all_count").toInt();
+        bool robot = (allCount <= 1); // 机器人，或者小号（1是因为有默认成为会员的相簿）
+        qInfo() << "判断机器人：" << danmaku.getNickname() << "    投稿数量：" << allCount << robot;
+        robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else // 不是机器人
+        {
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
 }

@@ -97,9 +97,6 @@ class MainWindow;
 typedef void(MainWindow::*VoidFunc)();
 typedef ListItemInterface*(MainWindow::*InsertItemFunc)(MyJson);
 
-typedef std::function<void(LiveDanmaku)> DanmakuFunc;
-typedef std::function<void(QString)> StringFunc;
-
 class MainWindow : public QMainWindow, public NetInterface
 {
     Q_OBJECT
@@ -757,10 +754,7 @@ private:
 
     void autoSetCookie(const QString &s);
     QVariant getCookies() const;
-    void getCookieAccount();
     QString getDomainPort() const;
-    void getRobotInfo();
-    void getRoomUserInfo();
     void initWS();
     void startConnectIdentityCode();
     void startConnectRoom();
@@ -779,29 +773,17 @@ private:
     bool mergeGiftCombo(const LiveDanmaku &danmaku);
     bool handlePK(QJsonObject json);
     void userComeEvent(LiveDanmaku& danmaku);
-    bool isInFans(qint64 upUid);
-    void sendGift(int giftId, int giftNum);
-    void sendBagGift(int giftId, int giftNum, qint64 bagId);
-    void getRoomLiveVideoUrl(StringFunc func = nullptr);
-    void roomEntryAction();
-    void sendExpireGift();
-    void getBagList(qint64 sendExpire = 0);
     void updateOnlineRankGUI();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
-    void getPkMatchInfo();
     void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
-    void updateWinningStreak(bool emitWinningStreak);
 
     double getPaletteBgProg() const;
     void setPaletteBgProg(double x);
 
     void sendWelcomeIfNotRobot(LiveDanmaku danmaku);
     void sendAttentionThankIfNotRobot(LiveDanmaku danmaku);
-    void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
-    void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
-    void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs = nullptr);
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
@@ -849,8 +831,7 @@ private:
 
     void getPositiveVote();
     void positiveVote();
-
-    void fanfanLogin();
+    void fanfanLogin(bool autoVote = true);
     void fanfanAddOwn();
 
     void startSplash();
@@ -985,7 +966,6 @@ private:
     LiveVideoPlayer* videoPlayer = nullptr;
 
     // 机器人
-    int judgeRobot = 0;
     MySettings* robotRecord;
     QList<QWebSocket*> robots_sockets;
 

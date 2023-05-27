@@ -19,11 +19,14 @@ public:
     void releaseLiveData(bool prepare) override;
 
     /// 直播间连接
+    void getCookieAccount() override;
+    void getRobotInfo() override;
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;
     void startMsgLoop() override;
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
     void sendHeartPacket() override;
+    void getRoomUserInfo() override;
 
     /// 直播间接口
     void getRoomCover(const QString &url) override;
@@ -31,9 +34,10 @@ public:
     void updateExistGuards(int page = 0) override;
     void getGuardCount(const LiveDanmaku &danmaku) override;
     void updateOnlineGoldRank() override;
-    void getCookieAccount() override;
     void getGiftList() override;
     void getEmoticonList() override;
+    void sendGift(int giftId, int giftNum) override;
+    void sendBagGift(int giftId, int giftNum, qint64 bagId) override;
     void doSign() override;
     void joinLOT(qint64 id, bool follow) override;
     void joinStorm(qint64 id) override;
@@ -45,6 +49,9 @@ public:
     void sendPrivateMsg(QString  uid, QString msg) override;
     void joinBattle(int type) override;
     void detectMedalUpgrade(LiveDanmaku danmaku) override;
+    void roomEntryAction() override;
+    void getBagList(qint64 sendExpire) override;
+
     void myLiveSelectArea(bool update) override;
     void myLiveUpdateArea(QString area) override;
     void myLiveStartLive() override;
@@ -54,6 +61,7 @@ public:
     void myLiveSetDescription() override;
     void myLiveSetCover(QString path = "") override;
     void myLiveSetTags() override;
+
     void showPkMenu() override;
     void showPkAssists() override;
     void showPkHistories() override;
@@ -65,6 +73,10 @@ public:
     void connectPkRoom() override;
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences) override;
     void connectPkSocket() override;
+    void getPkMatchInfo() override;
+
+    /// 录播
+    void getRoomLiveVideoUrl(StringFunc func) override;
 
     /// 长链心跳
     void startHeartConnection() override;
@@ -82,9 +94,13 @@ public:
 
 public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
-
     void slotPkBinaryMessageReceived(const QByteArray &message) override;
 
+    /// 弹幕
+    void sendMsg(const QString& msg) override;
+    void sendRoomMsg(QString uid, const QString& msg) override;
+    void pullLiveDanmaku() override;
+    
     /// 用户管理
     void appointAdmin(qint64 uid) override;
     void dismissAdmin(qint64 uid) override;
@@ -96,19 +112,19 @@ public slots:
     /// 私信
     void refreshPrivateMsg() override;
     void receivedPrivateMsg(MyJson session) override;
-    /// 弹幕
-    void sendMsg(const QString& msg) override;
-    void sendRoomMsg(QString uid, const QString& msg) override;
-    void pullLiveDanmaku() override;
     
 public:
     /// 一些接口
-    virtual QString getApiUrl(ApiType type, qint64 id) override;
+    QString getApiUrl(ApiType type, qint64 id) override;
 
-    virtual void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
-    virtual void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
-    virtual void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
-    virtual void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
+    void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
+    void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
+    void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
+    void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
+
+    void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
+    void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
+    void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
     
 private:
     // 直播心跳

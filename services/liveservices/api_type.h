@@ -10,7 +10,8 @@ enum ApiType
     UserFans,
     UserVideos,
     UserArticles,
-    UserDynamics
+    UserDynamics,
+    AppStorePage,
 };
 
 #endif // API_TYPE_H

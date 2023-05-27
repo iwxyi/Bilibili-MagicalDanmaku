@@ -584,7 +584,7 @@ bool MainWindow::handlePK(QJsonObject json)
             "timestamp": 1605748006
         }*/
         // PK结束更新大乱斗信息
-        updateWinningStreak(true);
+        liveService->updateWinningStreak(true);
         return true;
     }
     else if (cmd == "PK_BATTLE_SETTLE_V2")
@@ -879,7 +879,7 @@ void MainWindow::handleMessage(QJsonObject json)
                 if (msg.indexOf(re, 0, &match) > -1 // 自动拉黑
                         && (ui->blockNotOnlyNewbieCheck->isChecked()
                             || (danmaku.getAnchorRoomid() != ac->roomId // 不带有本房间粉丝牌
-                                && !isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
+                                && !liveService->isInFans(uid) // 未刚关注主播（新人一般都是刚关注吧，在第一页）
                                 && medal_level <= 2))) // 勋章不到3级
                 {
                     if (match.capturedTexts().size() >= 1)
