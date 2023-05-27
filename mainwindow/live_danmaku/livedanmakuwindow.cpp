@@ -2506,7 +2506,29 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
+
+    hasGetUserHeader.insert(uid);
+    QPixmap pixmap;
+    QString url = liveService->getApiUrl(UserHead, uid);
+    if (url == WAIT_INIT)
+    {
+        return ;
+    }
+    else if (url.isEmpty())
+    {
+        qWarning() << "用户" << uid << "无法获取弹幕头像";
+        // 一分钟后再试
+        headerApiIsBanned = true;
+        QTimer::singleShot(60000, [=]{
+            headerApiIsBanned = false;
+        });
+        return ;
+    }
+    getUserHeadPortrait(uid, url, item);
+    hasGetUserHeader.remove(uid);
+
+
+    /*QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
     hasGetUserHeader.insert(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -2542,7 +2564,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 
         getUserHeadPortrait(uid, faceUrl, item);
         hasGetUserHeader.remove(uid);
-    });
+    });*/
 }
 
 void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)

@@ -17,6 +17,7 @@ public:
     /// 数据操作
     void readConfig() override;
     void releaseLiveData(bool prepare) override;
+    void initWS();
 
     /// 直播间连接
     void getCookieAccount() override;
@@ -27,7 +28,7 @@ public:
     void getDanmuInfo() override;
     void startMsgLoop() override;
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
-    void sendHeartPacket() override;
+    void sendHeartPacket(QWebSocket *socket) override;
     void getRoomUserInfo() override;
 
     /// 直播间接口

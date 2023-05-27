@@ -61,6 +61,9 @@ MainWindow::MainWindow(QWidget *parent)
     initChatService();
     readConfig();
 
+    // WS连接
+    startConnectRoom();
+
 #ifdef Q_OS_ANDROID
     ui->sideBarWidget->hide();
     ui->verticalLayout->addWidget(ui->robotInfoWidget);
@@ -183,9 +186,6 @@ void MainWindow::initView()
     ui->liveStatusButton->setRadius(rt->fluentRadius);
 
     // 隐藏用不到的工具
-    ui->pushNextCmdButton->hide();
-    ui->timerPushCmdCheck->hide();
-    ui->timerPushCmdSpin->hide();
     ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
     ui->menubar->hide();
@@ -550,7 +550,6 @@ void MainWindow::initObject()
     us = new UserSettings(rt->dataPath + "settings.ini");
     cr->heaps = new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
     cr->extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
-    robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
 
     // 版本
     rt->appVersion = GetFileVertion(QApplication::applicationFilePath()).trimmed();
@@ -770,6 +769,9 @@ void MainWindow::initLiveService()
     });
     connect(liveService, &LiveRoomService::signalStatusChanged, this, [=](const QString& text) {
         statusLabel->setText(text);
+    });
+    connect(liveService, &LiveRoomService::signalLiveStatusChanged, this, [=](const QString& text) {
+        ui->liveStatusButton->setText(text);
     });
 
     // 连接之后
@@ -1555,10 +1557,6 @@ void MainWindow::readConfig()
     ui->timerConnectIntervalSpin->setValue(us->timerConnectInterval = us->value("live/timerConnectInterval", 30).toInt());
     liveService->connectServerTimer->setInterval(us->timerConnectInterval * 60000);
 
-    // WS连接
-    initWS();
-    startConnectRoom();
-
     // 隐藏偷塔
     if (!us->value("danmaku/touta", false).toBool())
     {
@@ -1634,15 +1632,6 @@ void MainWindow::readConfig()
     ui->actionLocal_Mode->setChecked(us->localMode);
     us->debugPrint = us->value("debug/debugPrint", false).toBool();
     ui->actionDebug_Mode->setChecked(us->debugPrint);
-    saveRecvCmds = us->value("debug/saveRecvCmds", false).toBool();
-    ui->saveRecvCmdsCheck->setChecked(saveRecvCmds);
-    if (saveRecvCmds)
-        on_saveRecvCmdsCheck_clicked();
-    ui->saveLogCheck->setChecked(us->value("debug/logFile", false).toBool());
-
-    // 模拟CMDS
-    ui->timerPushCmdCheck->setChecked(us->value("debug/pushCmdsTimer", false).toBool());
-    ui->timerPushCmdSpin->setValue(us->value("debug/pushCmdsInterval", 10).toInt());
 
     if (!us->value("danmaku/copyright", false).toBool())
     {
@@ -2309,9 +2298,6 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 void MainWindow::removeTimeoutDanmaku()
 {
-    if (pushCmdsFile && liveService->roomDanmakus.size() < 1000) // 不移除弹幕
-        return ;
-
     // 移除过期队列，单位：毫秒
     qint64 timestamp = QDateTime::currentMSecsSinceEpoch();
     qint64 removeTime = timestamp - us->removeDanmakuInterval;
@@ -4076,127 +4062,6 @@ void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
     showError("socket", liveService->liveSocket->errorString());
 }
 
-void MainWindow::initWS()
-{
-    liveService->liveSocket = new QWebSocket();
-
-    connect(liveService->liveSocket, &QWebSocket::connected, this, [=]{
-        SOCKET_DEB << "socket connected";
-        ui->connectStateLabel->setText("状态：已连接");
-
-        // 5秒内发送认证包
-        liveService->sendVeriPacket(liveService->liveSocket, ac->roomId, ac->cookieToken);
-
-        // 定时发送心跳包
-        liveService->heartTimer->start();
-        liveService->minuteTimer->start();
-    });
-
-    connect(liveService->liveSocket, &QWebSocket::disconnected, this, [=]{
-        // 正在直播的时候突然断开了
-        if (liveService->isLiving())
-        {
-            qWarning() << "正在直播的时候突然断开，" << (liveService->reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
-            localNotify("[连接断开，重连...]");
-            ac->liveStatus = false;
-            // 尝试5秒钟后重连
-            // TODO: 每次重连间隔翻倍
-            liveService->connectServerTimer->setInterval(liveService->reconnectWSDuration);
-            liveService->reconnectWSDuration *= 2;
-            if (liveService->reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
-                liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
-        }
-
-        SOCKET_DEB << "disconnected";
-        ui->connectStateLabel->setText("状态：未连接");
-        ui->liveStatusButton->setText("");
-
-        liveService->heartTimer->stop();
-        liveService->minuteTimer->stop();
-
-        // 如果不是主动连接的话，这个会断开
-        if (!liveService->connectServerTimer->isActive())
-            liveService->connectServerTimer->start();
-    });
-
-    connect(liveService->liveSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-//        qInfo() << "binaryMessageReceived" << message;
-//        for (int i = 0; i < 100; i++) // 测试内存泄漏
-        try {
-            slotBinaryMessageReceived(message);
-
-            // 保存到CMDS里
-            if (saveRecvCmds && saveCmdsFile)
-            {
-                QByteArray ba = message;
-                ba.replace("\n", "__bmd__n__").replace("\r", "__bmd__r__");
-                saveCmdsFile->write(ba);
-                saveCmdsFile->write("\n");
-            }
-        } catch (...) {
-            qCritical() << "!!!!!!!error:slotBinaryMessageReceived";
-        }
-
-    });
-
-    connect(liveService->liveSocket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
-        qInfo() << "textFrameReceived";
-    });
-
-    connect(liveService->liveSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
-        qInfo() << "textMessageReceived";
-    });
-
-    connect(liveService->liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
-        SOCKET_DEB << "stateChanged" << state;
-        QString str = "未知";
-        if (state == QAbstractSocket::UnconnectedState)
-            str = "未连接";
-        else if (state == QAbstractSocket::ConnectingState)
-            str = "连接中";
-        else if (state == QAbstractSocket::ConnectedState)
-            str = "已连接";
-        else if (state == QAbstractSocket::BoundState)
-            str = "已绑定";
-        else if (state == QAbstractSocket::ClosingState)
-            str = "断开中";
-        else if (state == QAbstractSocket::ListeningState)
-            str = "监听中";
-        ui->connectStateLabel->setText(str);
-    });
-
-    liveService->heartTimer = new QTimer(this);
-    liveService->heartTimer->setInterval(30000);
-    connect(liveService->heartTimer, &QTimer::timeout, this, [=]{
-        if (liveService->liveSocket->state() == QAbstractSocket::ConnectedState)
-            liveService->sendHeartPacket();
-        else if (liveService->liveSocket->state() == QAbstractSocket::UnconnectedState)
-            startConnectRoom();
-
-        // PK Socket
-        if (liveService->pkLiveSocket && liveService->pkLiveSocket->state() == QAbstractSocket::ConnectedState)
-        {
-            QByteArray ba;
-            ba.append("[object Object]");
-            ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
-            liveService->pkLiveSocket->sendBinaryMessage(ba);
-        }
-
-        // 机器人 Socket
-        for (int i = 0; i < robots_sockets.size(); i++)
-        {
-            QWebSocket* socket = robots_sockets.at(i);
-            if (socket->state() == QAbstractSocket::ConnectedState)
-            {
-                QByteArray ba;
-                ba.append("[object Object]");
-                ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
-                socket->sendBinaryMessage(ba);
-            }
-        }
-    });
-}
-
 void MainWindow::startConnectIdentityCode()
 {
     MyJson json;
@@ -5227,9 +5092,9 @@ void MainWindow::markNotRobot(qint64 uid)
 {
     if (!us->judgeRobot)
         return ;
-    int val = robotRecord->value("robot/" + snum(uid), 0).toInt();
+    int val = liveService->robotRecord->value("robot/" + snum(uid), 0).toInt();
     if (val != -1)
-        robotRecord->setValue("robot/" + snum(uid), -1);
+        liveService->robotRecord->setValue("robot/" + snum(uid), -1);
 }
 
 void MainWindow::initTTS()
@@ -7427,17 +7292,6 @@ void MainWindow::releaseLiveData(bool prepare)
 
         liveService->finishSaveDanmuToFile();
 
-        if (ui->saveRecvCmdsCheck->isChecked())
-        {
-            ui->saveRecvCmdsCheck->setChecked(false);
-            on_saveRecvCmdsCheck_clicked();
-        }
-
-        if (pushCmdsFile)
-        {
-            on_pushRecvCmdsButton_clicked();
-        }
-
         ac->cookieGuardLevel = 0;
         if (us->adjustDanmakuLongest)
             liveService->adjustDanmakuLongest();
@@ -8662,12 +8516,12 @@ void MainWindow::on_actionMany_Robots_triggered()
             liveService->sendVeriPacket(socket, liveService->pkRoomId, liveService->pkToken);
         });
         connect(socket, &QWebSocket::disconnected, this, [=]{
-            robots_sockets.removeOne(socket);
+            liveService->robots_sockets.removeOne(socket);
             socket->deleteLater();
         });
         socket->setSslConfiguration(config);
         socket->open(host);
-        robots_sockets.append(socket);
+        liveService->robots_sockets.append(socket);
     }
 }
 
@@ -9745,29 +9599,6 @@ void MainWindow::on_pkAutoMaxGoldCheck_clicked()
     us->setValue("pk/autoMaxGold", ui->pkAutoMaxGoldCheck->isChecked());
 }
 
-void MainWindow::on_saveRecvCmdsCheck_clicked()
-{
-    saveRecvCmds = ui->saveRecvCmdsCheck->isChecked();
-    us->setValue("debug/saveRecvCmds", saveRecvCmds);
-
-    if (saveRecvCmds)
-    {
-        QDir dir;
-        dir.mkdir(rt->dataPath+"websocket_cmds");
-        QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm.ss");
-        saveCmdsFile = new QFile(rt->dataPath+"websocket_cmds/" + ac->roomId + "_" + date + ".txt");
-        saveCmdsFile->open(QIODevice::WriteOnly | QIODevice::Append);
-        qInfo() << "开始保存cmds：" << rt->dataPath+"websocket_cmds/" + ac->roomId + "_" + date + ".txt";
-    }
-    else if (saveCmdsFile)
-    {
-        qInfo() << "结束保存cmds";
-        saveCmdsFile->close();
-        saveCmdsFile->deleteLater();
-        saveCmdsFile = nullptr;
-    }
-}
-
 void MainWindow::on_allowRemoteControlCheck_clicked()
 {
     us->setValue("danmaku/remoteControl", us->remoteControl = ui->allowRemoteControlCheck->isChecked());
@@ -9853,113 +9684,6 @@ void MainWindow::on_giftComboMergeCheck_clicked()
 void MainWindow::on_listenMedalUpgradeCheck_clicked()
 {
     us->setValue("danmaku/listenMedalUpgrade", ui->listenMedalUpgradeCheck->isChecked());
-}
-
-void MainWindow::on_pushRecvCmdsButton_clicked()
-{
-    if (!pushCmdsFile) // 开启模拟输入
-    {
-        // 输入文件
-        QString oldPath = us->value("debug/cmdsPath", "").toString();
-        QString path = QFileDialog::getOpenFileName(this, "选择模拟输入的CMDS文件位置", oldPath, "Text (*.txt)");
-        if (path.isEmpty())
-            return ;
-        us->setValue("debug/cmdsPath", path);
-
-        // 创建文件对象
-        pushCmdsFile = new QFile(path);
-        if (!pushCmdsFile->open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-            QMessageBox::critical(this, "模拟CMDS", "读取文件失败");
-            return ;
-        }
-
-        // 本地模式提示
-        if (!ui->actionLocal_Mode->isChecked())
-        {
-            if (QMessageBox::question(this, "模拟CMDS", "您的[本地模式]未开启，可能会回复奇奇怪怪的内容，是否开启[本地模式]？",
-                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes)
-                ui->actionLocal_Mode->setChecked(us->localMode = true);
-        }
-        ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = false);
-
-        // 定时器
-        if (!pushCmdsTimer)
-        {
-            pushCmdsTimer = new QTimer(this);
-            pushCmdsTimer->setInterval(ui->timerPushCmdSpin->value() * 100);
-            connect(pushCmdsTimer, SIGNAL(timeout()), this, SLOT(on_pushNextCmdButton_clicked()));
-        }
-        pushCmdsTimer->setInterval(ui->timerPushCmdSpin->value() * 100);
-        if (ui->timerPushCmdCheck->isChecked())
-            pushCmdsTimer->start();
-
-        ui->pushRecvCmdsButton->setText("停止");
-        ui->pushNextCmdButton->show();
-        ui->timerPushCmdCheck->show();
-        ui->timerPushCmdSpin->show();
-    }
-    else // 关闭模拟输入
-    {
-        if (ui->actionLocal_Mode->isChecked() && us->value("debug/localDebug", false).toBool())
-            ui->actionLocal_Mode->setChecked(us->localMode = false);
-
-        if (us->value("debug/saveRecvCmds", false).toBool())
-            ui->saveRecvCmdsCheck->setChecked(saveRecvCmds = true);
-
-        if (pushCmdsTimer)
-            pushCmdsTimer->stop();
-
-        ui->pushRecvCmdsButton->setText("输入CMDS");
-        ui->pushNextCmdButton->hide();
-        ui->timerPushCmdCheck->hide();
-        ui->timerPushCmdSpin->hide();
-
-        pushCmdsFile->close();
-        pushCmdsFile->deleteLater();
-        pushCmdsFile = nullptr;
-    }
-}
-
-void MainWindow::on_pushNextCmdButton_clicked()
-{
-    if (!pushCmdsFile)
-        return ;
-
-    QByteArray line = pushCmdsFile->readLine();
-    if (line.isNull())
-    {
-        localNotify("[模拟输入CMDS结束，已退出]");
-        on_pushRecvCmdsButton_clicked();
-        return ;
-    }
-
-    // 处理下一行
-    line.replace("__bmd__n__", "\n").replace("__bmd__r__", "\r");
-    slotBinaryMessageReceived(line);
-}
-
-void MainWindow::on_timerPushCmdCheck_clicked()
-{
-    bool enable = ui->timerPushCmdCheck->isChecked();
-    us->setValue("debug/pushCmdsTimer", enable);
-
-    if (pushCmdsFile && pushCmdsTimer)
-    {
-        if (enable)
-            pushCmdsTimer->start();
-        else
-            pushCmdsTimer->stop();
-    }
-}
-
-void MainWindow::on_timerPushCmdSpin_editingFinished()
-{
-    int val = ui->timerPushCmdSpin->value();
-    us->setValue("debug/pushCmdsInterval", val);
-
-    if (pushCmdsTimer)
-        pushCmdsTimer->setInterval(val * 100);
 }
 
 void MainWindow::on_pkChuanmenCheck_stateChanged(int arg1)

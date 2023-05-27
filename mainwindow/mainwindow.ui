@@ -1840,7 +1840,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>937</width>
-             <height>1433</height>
+             <height>1440</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4527,7 +4527,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>660</y>
               <width>161</width>
-              <height>201</height>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4604,121 +4604,6 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>打印日志</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="CheckBox1" name="saveRecvCmdsCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;保存来自哔哩哔哩WebSocket的cmd&lt;/p&gt;&lt;p&gt;结合输入CMD，用于开发调试&lt;/p&gt;&lt;p&gt;会自动暂停弹幕超时&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string>保存CMD</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_4">
-               <item>
-                <widget class="QPushButton" name="pushRecvCmdsButton">
-                 <property name="cursor">
-                  <cursorShape>PointingHandCursor</cursorShape>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-                 </property>
-                 <property name="text">
-                  <string>输入CMDS</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushNextCmdButton">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="cursor">
-                  <cursorShape>PointingHandCursor</cursorShape>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-                 </property>
-                 <property name="text">
-                  <string>下一条</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="CheckBox1" name="timerPushCmdCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="text">
-                <string>定时下一条</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="timerPushCmdSpin">
-               <property name="styleSheet">
-                <string notr="true">QAbstractSpinBox
-{
-	background: transparent;
-}</string>
-               </property>
-               <property name="frame">
-                <bool>false</bool>
-               </property>
-               <property name="suffix">
-                <string>百毫秒</string>
-               </property>
-               <property name="prefix">
-                <string>每隔</string>
-               </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>600</number>
                </property>
               </widget>
              </item>
@@ -9968,7 +9853,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

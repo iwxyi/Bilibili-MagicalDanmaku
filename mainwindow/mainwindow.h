@@ -484,8 +484,6 @@ private slots:
 
     void on_pkAutoMaxGoldCheck_clicked();
 
-    void on_saveRecvCmdsCheck_clicked();
-
     void on_allowRemoteControlCheck_clicked();
 
     void on_actionJoin_Battle_triggered();
@@ -507,14 +505,6 @@ private slots:
     void on_giftComboMergeCheck_clicked();
 
     void on_listenMedalUpgradeCheck_clicked();
-
-    void on_pushRecvCmdsButton_clicked();
-
-    void on_pushNextCmdButton_clicked();
-
-    void on_timerPushCmdCheck_clicked();
-
-    void on_timerPushCmdSpin_editingFinished();
 
     void on_pkChuanmenCheck_stateChanged(int arg1);
 
@@ -755,7 +745,6 @@ private:
     void autoSetCookie(const QString &s);
     QVariant getCookies() const;
     QString getDomainPort() const;
-    void initWS();
     void startConnectIdentityCode();
     void startConnectRoom();
 
@@ -922,12 +911,6 @@ private:
     LiveDanmakuWindow* danmakuWindow = nullptr;
     QTimer* removeTimer;
 
-    // 调试
-    bool saveRecvCmds = false; // 保存收到的CMD
-    QFile* saveCmdsFile = nullptr;
-    QFile* pushCmdsFile = nullptr;
-    QTimer* pushCmdsTimer = nullptr;
-
     // 点歌
     bool diangeAutoCopy = false;
     QList<Diange> diangeHistory;
@@ -960,10 +943,6 @@ private:
 
     // 视频
     LiveVideoPlayer* videoPlayer = nullptr;
-
-    // 机器人
-    MySettings* robotRecord;
-    QList<QWebSocket*> robots_sockets;
 
     // 点歌
     QStringList orderSongBlackList;

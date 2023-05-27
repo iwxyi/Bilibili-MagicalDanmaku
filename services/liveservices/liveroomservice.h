@@ -20,6 +20,8 @@
 typedef std::function<void(LiveDanmaku)> DanmakuFunc;
 typedef std::function<void(QString)> StringFunc;
 
+#define WAIT_INIT "__WAIT_INIT__"
+
 class QLabel;
 
 class LiveRoomService : public QObject, public NetInterface, public LiveStatisticService
@@ -51,6 +53,7 @@ signals:
     void signalLiveStarted();
     void signalLiveStopped();
     void signalStatusChanged(const QString& text); // 状态或提示改变，修改状态栏
+    void signalLiveStatusChanged(const QString& text); // 直播状态：已开播/未开播
 
     void signalNewDanmaku(const LiveDanmaku& danmaku); // 通知外部各种界面
 
@@ -156,7 +159,7 @@ public:
     /// 初次连接socket，发送认证包
     virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) {}
     /// 连接后定时发送心跳包
-    virtual void sendHeartPacket() {}
+    virtual void sendHeartPacket(QWebSocket* socket) {}
     /// 获取直播间与用户的信息
     virtual void getRoomUserInfo() {}
 
@@ -400,6 +403,9 @@ protected:
 
     // 机器人判断
     MySettings* robotRecord = nullptr;
+
+    // 辅助机器人
+    QList<QWebSocket*> robots_sockets;
 };
 
 #endif // LIVEROOMSERVICE_H

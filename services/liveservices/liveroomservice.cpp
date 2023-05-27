@@ -9,6 +9,9 @@ LiveRoomService::LiveRoomService(QObject *parent)
 
 void LiveRoomService::init()
 {
+    // 配置
+    robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
+
     // 礼物连击
     comboTimer = new QTimer(this);
     comboTimer->setInterval(500);
