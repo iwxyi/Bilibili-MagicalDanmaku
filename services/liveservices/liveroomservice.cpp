@@ -389,12 +389,6 @@ void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
     emit signalNewDanmaku(danmaku);
 }
 
-void LiveRoomService::setUrlCookie(const QString &url, QNetworkRequest *request)
-{
-    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
-}
-
 void LiveRoomService::autoSetCookie(const QString &s)
 {
     us->setValue("danmaku/browserCookie", ac->browserCookie = s);

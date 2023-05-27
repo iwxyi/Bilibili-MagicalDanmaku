@@ -22,6 +22,7 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
         if (isLiving())
             sendXliveHeartBeatX();
     });
+    initialize();
 }
 
 void BiliLiveService::readConfig()
@@ -3828,4 +3829,10 @@ void BiliLiveService::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc if
                 ifNot(danmaku);
         }
     });
+}
+
+void BiliLiveService::setUrlCookie(const QString & url, QNetworkRequest * request)
+{
+    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
+        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
 }

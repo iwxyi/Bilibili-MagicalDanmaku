@@ -126,6 +126,9 @@ public:
     void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
     void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
     
+protected:
+    virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
+    
 private:
     // 直播心跳
     QTimer* xliveHeartBeatTimer = nullptr;
@@ -136,6 +139,9 @@ private:
     QJsonArray xliveHeartBeatSecretRule; // 上次心跳加密间隔（实测每次都一样）
     QString encServer = "http://iwxyi.com:6001/enc";
     int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
+    
+    // wbi加密
+    QByteArray imgUrl, subUrl;
 };
 
 #endif // BILILIVESERVICE_H

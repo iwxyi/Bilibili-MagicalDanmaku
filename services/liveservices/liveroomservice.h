@@ -106,37 +106,37 @@ signals:
 
 public slots:
     /// 通过身份码连接房间
-    virtual void startConnectIdentityCode(const QString &code) { Q_UNUSED(code) }
+    virtual void startConnectIdentityCode(const QString &code) {}
 
     /// 接收到 WS CMD 数据包
-    virtual void slotBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
+    virtual void slotBinaryMessageReceived(const QByteArray& message) {}
     /// 接收到 PK 的 WS CMD 数据包
-    virtual void slotPkBinaryMessageReceived(const QByteArray& message) { Q_UNUSED(message) }
+    virtual void slotPkBinaryMessageReceived(const QByteArray& message) {}
 
     /// 发送弹幕
-    virtual void sendMsg(const QString& msg) { Q_UNUSED(msg) }
-    virtual void sendRoomMsg(QString roomId, const QString& msg) { Q_UNUSED(roomId) Q_UNUSED(msg) }
+    virtual void sendMsg(const QString& msg) {}
+    virtual void sendRoomMsg(QString roomId, const QString& msg) {}
     /// 恢复之前的弹幕
     virtual void pullLiveDanmaku() { }
     /// 设置为管理员
-    virtual void appointAdmin(qint64 uid) { Q_UNUSED(uid) }
+    virtual void appointAdmin(qint64 uid) {}
     /// 取消管理员
-    virtual void dismissAdmin(qint64 uid) { Q_UNUSED(uid) }
+    virtual void dismissAdmin(qint64 uid) {}
     /// 禁言
     virtual void addBlockUser(qint64 uid, int hour, QString msg) { addBlockUser(uid, ac->roomId, hour, msg); }
-    virtual void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) { Q_UNUSED(uid) Q_UNUSED(hour) Q_UNUSED(roomId) Q_UNUSED(msg) }
+    virtual void addBlockUser(qint64 uid, QString roomId, int hour, QString msg) {}
     /// 取消禁言
     virtual void delBlockUser(qint64 uid) { delBlockUser(uid, ac->roomId); }
-    virtual void delBlockUser(qint64 uid, QString roomId) { Q_UNUSED(uid) Q_UNUSED(roomId) }
+    virtual void delBlockUser(qint64 uid, QString roomId) {}
     /// 禁言要通过禁言id来解除禁言，所以有两步操作
-    virtual void delRoomBlockUser(qint64 id) { Q_UNUSED(id) }
+    virtual void delRoomBlockUser(qint64 id) {}
     /// 刷新直播间禁言的用户
     virtual void refreshBlockList() {}
     /// 根据UL等级或者舰长自动调整字数
     virtual void adjustDanmakuLongest() {}
     /// 私信
     virtual void refreshPrivateMsg() {}
-    virtual void receivedPrivateMsg(MyJson session) { Q_UNUSED(session) }
+    virtual void receivedPrivateMsg(MyJson session) {}
 
 public:
     /// 获取机器人账号信息
@@ -151,7 +151,7 @@ public:
     /// 根据获得的Host信息，开始连接socket
     virtual void startMsgLoop() = 0;
     /// 初次连接socket，发送认证包
-    virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) { Q_UNUSED(socket) Q_UNUSED(roomId) Q_UNUSED(token) }
+    virtual void sendVeriPacket(QWebSocket* socket, QString roomId, QString token) {}
     /// 连接后定时发送心跳包
     virtual void sendHeartPacket() {}
     /// 获取直播间与用户的信息
@@ -162,13 +162,13 @@ public:
     /// 是否在直播，或者可能要开播
     virtual bool isLivingOrMayLiving();
     /// 获取并更新直播间封面
-    virtual void getRoomCover(const QString& url) { Q_UNUSED(url) }
+    virtual void getRoomCover(const QString& url) {}
     /// 获取主播信息
-    virtual void getUpInfo(const QString &uid) { Q_UNUSED(uid) }
+    virtual void getUpInfo(const QString &uid) {}
     /// 更新当前舰长
-    virtual void updateExistGuards(int page = 0) override { Q_UNUSED(page) }
+    virtual void updateExistGuards(int page = 0) override {}
     /// 获取舰长数量
-    virtual void getGuardCount(const LiveDanmaku &danmaku) { Q_UNUSED(danmaku) }
+    virtual void getGuardCount(const LiveDanmaku &danmaku) {}
     /// 更新高能榜
     virtual void updateOnlineGoldRank() {}
     /// 获取礼物ID
@@ -182,24 +182,24 @@ public:
     /// 每日签到
     virtual void doSign() {}
     /// 天选之人抽奖
-    virtual void joinLOT(qint64 id, bool arg) { Q_UNUSED(id) Q_UNUSED(arg) }
+    virtual void joinLOT(qint64 id, bool arg) {}
     /// 节奏风暴
-    virtual void joinStorm(qint64 id) { Q_UNUSED(id) }
+    virtual void joinStorm(qint64 id) {}
     /// 打开用户首页
-    virtual void openUserSpacePage(QString uid) { Q_UNUSED(uid) }
+    virtual void openUserSpacePage(QString uid) {}
     /// 打开直播间首页
-    virtual void openLiveRoomPage(QString roomId) { Q_UNUSED(roomId) }
+    virtual void openLiveRoomPage(QString roomId) {}
     /// 打开分区排行
-    virtual void openAreaRankPage(QString areaId, QString parentAreaId) { Q_UNUSED(areaId) Q_UNUSED(parentAreaId) }
+    virtual void openAreaRankPage(QString areaId, QString parentAreaId) {}
     /// 切换勋章至指定的主播ID
-    virtual void switchMedalToUp(QString upId, int page = 1) { Q_UNUSED(upId) Q_UNUSED(page)}
-    virtual void wearMedal(qint64 medalId) { Q_UNUSED(medalId) }
+    virtual void switchMedalToUp(QString upId, int page = 1) {}
+    virtual void wearMedal(qint64 medalId) {}
     /// 发送私信
-    virtual void sendPrivateMsg(QString uid, QString msg) { Q_UNUSED(uid) Q_UNUSED(msg) }
+    virtual void sendPrivateMsg(QString uid, QString msg) {}
     /// 开启大乱斗
-    virtual void joinBattle(int type) { Q_UNUSED(type) }
+    virtual void joinBattle(int type) {}
     /// 送礼物后检测勋章升级
-    virtual void detectMedalUpgrade(LiveDanmaku danmaku) { Q_UNUSED(danmaku) }
+    virtual void detectMedalUpgrade(LiveDanmaku danmaku) {}
     /// 触发进入直播间的动作
     virtual void roomEntryAction() {}
     /// 背包礼物
@@ -207,14 +207,14 @@ public:
     virtual void getBagList(qint64 sendExpire) {}
 
     /// 修改直播间信息
-    virtual void myLiveSelectArea(bool update) { Q_UNUSED(update) }
-    virtual void myLiveUpdateArea(QString area) { Q_UNUSED(area) }
+    virtual void myLiveSelectArea(bool update) {}
+    virtual void myLiveUpdateArea(QString area) {}
     virtual void myLiveStartLive() {}
     virtual void myLiveStopLive() {}
-    virtual void myLiveSetTitle(QString newTitle = "") { Q_UNUSED(newTitle) }
+    virtual void myLiveSetTitle(QString newTitle = "") {}
     virtual void myLiveSetNews() {}
     virtual void myLiveSetDescription() {}
-    virtual void myLiveSetCover(QString path = "") { Q_UNUSED(path) }
+    virtual void myLiveSetCover(QString path = "") {}
     virtual void myLiveSetTags() {}
 
     /// 获取PK相关信息
@@ -229,13 +229,13 @@ public:
     /// 获取大乱斗段位
     virtual void getRoomBattleInfo() {}
     /// 更新大乱斗连胜
-    virtual void updateWinningStreak(bool emitWinningStreak) { Q_UNUSED(emitWinningStreak) }
+    virtual void updateWinningStreak(bool emitWinningStreak) {}
     /// 获取这一把大乱斗的信息
-    virtual void getPkInfoById(const QString& roomId, const QString& pkId) { Q_UNUSED(roomId) Q_UNUSED(pkId) }
+    virtual void getPkInfoById(const QString& roomId, const QString& pkId) {}
     /// 单独socket连接对面直播间
     virtual void connectPkRoom() {}
     /// 根据直播间弹幕，保存当前观众信息
-    virtual void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences){ Q_UNUSED(roomId) Q_UNUSED(audiences) }
+    virtual void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences){}
     virtual void connectPkSocket() { }
     /// 获取PK对面直播间的信息
     virtual void getPkMatchInfo() {}
@@ -253,7 +253,7 @@ public:
     void appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus);
     void appendNewLiveDanmaku(const LiveDanmaku &danmaku);
     /// 根据Url设置对应的Cookie
-    virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
+    virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override {}
     /// 设置全局默认的Cookie变量
     virtual void autoSetCookie(const QString &s);
     
