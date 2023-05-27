@@ -22,6 +22,16 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
         if (isLiving())
             sendXliveHeartBeatX();
     });
+
+    QTimer::singleShot(0, [=]{
+        // 获取wbi加密
+        getNavInfo([=]{
+            if (!ac->cookieUid.isEmpty() && robotFace.isNull())
+                getRobotInfo();
+            if (!ac->upUid.isEmpty() && upFace.isNull())
+                getUpInfo(ac->upUid);
+        });
+    });
 }
 
 void BiliLiveService::readConfig()
@@ -67,13 +77,10 @@ void BiliLiveService::getCookieAccount()
         ac->cookieUname = dataObj.value("uname").toString();
         qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
         
-        // 获取wbi加密
-        getNavInfo([=]{
-            emit signalRobotAccountChanged();
+        emit signalRobotAccountChanged();
 
-            if (!ac->upUid.isEmpty() && upFace.isNull())
-                getUpInfo(ac->upUid);
-        });
+        if (!wbiMixinKey.isEmpty())
+            getRobotInfo();
     });
 }
 
@@ -96,8 +103,8 @@ void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
         match = re.match(sub_url);
         QString wbi_sub_ba = match.captured(1);
         QString wbi_img_sub = wbi_img_ba + wbi_sub_ba;
-        qDebug() << "wbi_img_sub:" << wbi_img_sub;
-        
+        // qInfo() << "wbi_img_sub:" << wbi_img_sub;
+
         QList<int> mixinKeyEncTab = {
             46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
             33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,

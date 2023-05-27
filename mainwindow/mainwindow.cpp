@@ -748,7 +748,6 @@ void MainWindow::initLiveService()
         fakeEntrance->setRobotName(ac->cookieUname);
 #endif
 
-        liveService->getRobotInfo();
         liveService->gettingUser = false;
         if (!liveService->gettingRoom)
             triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());

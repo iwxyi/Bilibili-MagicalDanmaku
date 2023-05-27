@@ -298,6 +298,9 @@ protected:
     QPixmap upFace; // 主播头像原图
     QMap<ApiType, QString> apiUrls;
 
+    // 我的信息
+    QPixmap robotFace; // 自己的原图
+
     // 粉丝数量
     QList<FanBean> fansList; // 最近的关注，按时间排序
 
