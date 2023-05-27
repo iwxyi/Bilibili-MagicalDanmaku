@@ -97,6 +97,9 @@ public:
 
     /// 一些接口
     QString getApiUrl(ApiType type, qint64 id) override;
+    QStringList getRoomShieldKeywordsAsync(bool *ok) override;
+    void addRoomShieldKeywordsAsync(const QString& word) override;
+    void removeRoomShieldKeywordAsync(const QString &word) override;
 
     /// 饭贩
     void updatePositiveVote() override;

@@ -12,6 +12,7 @@ enum ApiType
     UserArticles,
     UserDynamics,
     AppStorePage,
+    UserHead,
 };
 
 #endif // API_TYPE_H

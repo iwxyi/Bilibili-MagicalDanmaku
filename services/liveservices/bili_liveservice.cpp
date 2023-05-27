@@ -2387,8 +2387,46 @@ QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
         return "https://space.bilibili.com/" + snum(id) + "/dynamic";
     case ApiType::AppStorePage:
         return "https://play-live.bilibili.com/details/1653383145397";
+    case ApiType::UserHead:
+        QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + snum(id) + "&platform=web&token=&web_location=1550101");
+        MyJson json(NetUtil::getWebData(url));
+        return json.data().s("face");
     }
     return "";
+}
+
+QStringList BiliLiveService::getRoomShieldKeywordsAsync(bool* ok)
+{
+    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + ac->roomId, ac->userCookies));
+    if (roomSK.code() != 0)
+    {
+        emit signalShowError("获取房间屏蔽词失败", roomSK.msg());
+        if (ok)
+            *ok = false;
+        return QStringList{};
+    }
+    *ok = true;
+    QStringList wordsList;
+    foreach (auto k, roomSK.data().a("keyword_list"))
+        wordsList.append(k.toObject().value("keyword").toString());
+    qInfo() << "当前直播间屏蔽词：" << wordsList.count() << "个";
+    return wordsList;
+}
+
+void BiliLiveService::addRoomShieldKeywordsAsync(const QString &word)
+{
+    MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
+    { "room_id", ac->roomId, "keyword", word, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
+    if (json.code() != 0)
+        qWarning() << "添加直播间屏蔽词失败：" << json.msg();
+}
+
+void BiliLiveService::removeRoomShieldKeywordAsync(const QString &word)
+{
+    MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
+    { "room_id", ac->roomId, "keyword", word, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
+    if (json.code() != 0)
+        qWarning() << "移除直播间屏蔽词失败：" << json.msg();
 }
 
 void BiliLiveService::updatePositiveVote()

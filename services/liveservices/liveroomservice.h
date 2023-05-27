@@ -266,6 +266,9 @@ public:
 
     /// 一些接口的网址
     virtual QString getApiUrl(ApiType type, qint64 id) { return ""; }
+    virtual QStringList getRoomShieldKeywordsAsync(bool* ok) { if (ok) *ok = false; return QStringList(); }
+    virtual void addRoomShieldKeywordsAsync(const QString& word) {}
+    virtual void removeRoomShieldKeywordAsync(const QString& word) {}
     
     /// 获取评价
     virtual void updatePositiveVote() {}
