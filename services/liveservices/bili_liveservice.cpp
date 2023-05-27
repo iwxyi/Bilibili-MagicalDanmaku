@@ -22,7 +22,6 @@ BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
         if (isLiving())
             sendXliveHeartBeatX();
     });
-    initialize();
 }
 
 void BiliLiveService::readConfig()
@@ -67,8 +66,68 @@ void BiliLiveService::getCookieAccount()
         ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         ac->cookieUname = dataObj.value("uname").toString();
         qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
-        emit signalRobotAccountChanged();
+        
+        // 获取wbi加密
+        getNavInfo([=]{
+            emit signalRobotAccountChanged();
+
+            if (!ac->upUid.isEmpty() && upFace.isNull())
+                getUpInfo(ac->upUid);
+        });
     });
+}
+
+void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
+{
+    get("https://api.bilibili.com/x/web-interface/nav", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("获取导航信息返回不为0", json.value("message").toString());
+            return ;
+        }
+        QJsonObject dataObj = json.value("data").toObject();
+        QJsonObject wbi_img_obj = dataObj.value("wbi_img").toObject();
+        QString img_url = wbi_img_obj.value("img_url").toString();
+        QString sub_url = wbi_img_obj.value("sub_url").toString();
+        
+        QRegularExpression re("/(\\w{32})\\.png");
+        QRegularExpressionMatch match = re.match(img_url);
+        QString wbi_img_ba = match.captured(1);
+        match = re.match(sub_url);
+        QString wbi_sub_ba = match.captured(1);
+        QString wbi_img_sub = wbi_img_ba + wbi_sub_ba;
+        qDebug() << "wbi_img_sub:" << wbi_img_sub;
+        
+        QList<int> mixinKeyEncTab = {
+            46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
+            33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
+            61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
+            36, 20, 34, 44, 52
+        };
+        QByteArray newString;
+        for (int i = 0; i < mixinKeyEncTab.size(); i++)
+        {
+            newString.append(wbi_img_sub[mixinKeyEncTab[i]].toLatin1());
+        }
+        this->wbiMixinKey = newString.left(32);
+    }, [=](const QString&){
+        if (finalFunc)
+            finalFunc();
+    });
+}
+
+/**
+ * 使用获取到的 wbiCode 对网址参数进行加密
+ * @param uparams 按字母排序的url参数，例如：mid=1234&token=&platform=web&web_location=1550101
+ * @return
+ */
+QString BiliLiveService::toWbiParam(QString params) const
+{
+    if (!params.contains("wts"))
+        params += "&wts=" + snum(QDateTime::currentSecsSinceEpoch());
+    QString md5 = QCryptographicHash::hash((params + wbiMixinKey).toLocal8Bit(), QCryptographicHash::Md5).toHex().toLower();
+    params += "&w_rid=" + md5;
+    return params;
 }
 
 /**
@@ -77,7 +136,7 @@ void BiliLiveService::getCookieAccount()
  */
 void BiliLiveService::getRobotInfo()
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + ac->cookieUid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + ac->cookieUid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -296,7 +355,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         getRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
-        getUpInfo(ac->upUid);
+        if (!wbiMixinKey.isEmpty())
+            getUpInfo(ac->upUid);
         gettingRoom = false;
         if (!gettingUser)
             emit signalGetRoomAndRobotFinished();
@@ -630,7 +690,7 @@ void BiliLiveService::getRoomCover(const QString &url)
 
 void BiliLiveService::getUpInfo(const QString &uid)
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + uid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {

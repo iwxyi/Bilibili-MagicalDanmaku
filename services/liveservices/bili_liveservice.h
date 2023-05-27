@@ -20,6 +20,8 @@ public:
 
     /// 直播间连接
     void getCookieAccount() override;
+    void getNavInfo(NetVoidFunc func = nullptr);
+    QString toWbiParam(QString params) const;
     void getRobotInfo() override;
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;
@@ -140,8 +142,7 @@ private:
     QString encServer = "http://iwxyi.com:6001/enc";
     int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
     
-    // wbi加密
-    QByteArray imgUrl, subUrl;
+    QByteArray wbiMixinKey; // wbi加密
 };
 
 #endif // BILILIVESERVICE_H
