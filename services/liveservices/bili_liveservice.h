@@ -36,6 +36,7 @@ public:
     void updateExistGuards(int page = 0) override;
     void getGuardCount(const LiveDanmaku &danmaku) override;
     void updateOnlineGoldRank() override;
+    void getPkOnlineGuardPage(int page) override;
     void getGiftList() override;
     void getEmoticonList() override;
     void sendGift(int giftId, int giftNum) override;
@@ -94,6 +95,26 @@ public:
     void uncompressPkBytes(const QByteArray &body);
     void handlePkMessage(QJsonObject json);
 
+    /// 一些接口
+    QString getApiUrl(ApiType type, qint64 id) override;
+
+    /// 饭贩
+    void updatePositiveVote() override;
+    void setPositiveVote() override;
+    void fanfanLogin(bool autoVote = true);
+    void fanfanAddOwn();
+    int getPositiveVoteCount() const override;
+    bool isPositiveVote() const override;
+
+    void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
+    void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
+    void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
+    void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
+
+    void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
+    void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
+    void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
+
 public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
     void slotPkBinaryMessageReceived(const QByteArray &message) override;
@@ -114,20 +135,7 @@ public slots:
     /// 私信
     void refreshPrivateMsg() override;
     void receivedPrivateMsg(MyJson session) override;
-    
-public:
-    /// 一些接口
-    QString getApiUrl(ApiType type, qint64 id) override;
 
-    void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const override;
-    void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const override;
-    void showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction* action) const override;
-    void showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction* actionUser, QAction* actionRank) const override;
-
-    void judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
-    void judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
-    void judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs) override;
-    
 protected:
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
     
@@ -142,7 +150,13 @@ private:
     QString encServer = "http://iwxyi.com:6001/enc";
     int todayHeartMinite = 0; // 今天已经领取的小心心数量（本程序）
     
-    QByteArray wbiMixinKey; // wbi加密
+    // wbi加密
+    QByteArray wbiMixinKey;
+
+    // 饭贩
+    short fanfanLike = 0; // 是否好评，0未知，1好评，-1未好评
+    int fanfanLikeCount = 0; // 饭贩好评数量
+    bool fanfanOwn = false; // 是否已拥有
 };
 
 #endif // BILILIVESERVICE_H

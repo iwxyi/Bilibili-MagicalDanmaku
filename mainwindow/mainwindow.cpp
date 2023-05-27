@@ -1079,6 +1079,15 @@ void MainWindow::initLiveService()
         ui->receivePrivateMsgCheck->setChecked(enabled);
     });
 
+    // 评价
+    connect(liveService, &LiveRoomService::signalPositiveVoteCountChanged, this, [=](const QString& text) {
+        ui->positiveVoteCheck->setText(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalPositiveVoteStateChanged, this, [=](bool like) {
+        ui->positiveVoteCheck->setChecked(like);
+    });
+
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作
@@ -2661,7 +2670,7 @@ void MainWindow::on_testDanmakuButton_clicked()
     }
     else if (text == "测试对面舰长")
     {
-        getPkOnlineGuardPage(0);
+        liveService->getPkOnlineGuardPage(0);
     }
     else if (text == "测试偷塔")
     {
@@ -5840,67 +5849,6 @@ void MainWindow::appendLiveGuard(const LiveDanmaku &danmaku)
     liveService->liveAllGuards.append(danmaku);
 }
 
-void MainWindow::getPkOnlineGuardPage(int page)
-{
-    static int guard1 = 0, guard2 = 0, guard3 = 0;
-    if (page == 0)
-    {
-        page = 1;
-        guard1 = guard2 = guard3 = 0;
-    }
-
-    auto addCount = [=](MyJson user) {
-        int alive = user.i("is_alive");
-        if (!alive)
-            return ;
-        QString username = user.s("username");
-        int guard_level = user.i("guard_level");
-        if (!alive)
-            return ;
-        if (guard_level == 1)
-            guard1++;
-        else if (guard_level == 2)
-            guard2++;
-        else
-            guard3++;
-    };
-
-    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + liveService->pkRoomId
-            +"&page=" + QString::number(page) + "&ruid=" + liveService->pkUid + "&page_size=30";
-    get(url, [=](MyJson json){
-        MyJson data = json.data();
-        // top3
-        if (page == 1)
-        {
-            QJsonArray top3 = data.value("top3").toArray();
-            foreach (QJsonValue val, top3)
-                addCount(val.toObject());
-        }
-
-        // list
-        QJsonArray list = data.value("list").toArray();
-        foreach (QJsonValue val, list)
-            addCount(val.toObject());
-
-        // 下一页
-        QJsonObject info = data.value("info").toObject();
-        int page = info.value("page").toInt();
-        int now = info.value("now").toInt();
-        if (now < page)
-            getPkOnlineGuardPage(now+1);
-        else // 全部完成了
-        {
-            qInfo() << "舰长数量：" << guard1 << guard2 << guard3;
-            LiveDanmaku danmaku;
-            danmaku.setNumber(guard1 + guard2 + guard3);
-            danmaku.extraJson.insert("guard1", guard1);
-            danmaku.extraJson.insert("guard2", guard2);
-            danmaku.extraJson.insert("guard3", guard3);
-            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
-        }
-    });
-}
-
 void MainWindow::setRoomDescription(QString roomDescription)
 {
     ui->roomDescriptionBrowser->setText(roomDescription);
@@ -6799,7 +6747,7 @@ void MainWindow::pkStart(QJsonObject json)
     // 处理对面在线舰长界面
     if (hasEvent("PK_MATCH_ONLINE_GUARD"))
     {
-        getPkOnlineGuardPage(0);
+        liveService->getPkOnlineGuardPage(0);
     }
 }
 
@@ -7598,143 +7546,42 @@ QRect MainWindow::getScreenRect()
 
 void MainWindow::getPositiveVote()
 {
-    get("https://api.live.bilibili.com/xlive/virtual-interface/v1/app/detail?app_id=1653383145397", [=](MyJson json) {
-        if (json.code() != 0)
-        {
-            qWarning() << "获取饭贩商店应用失败：" << json;
-            return ;
-        }
-        MyJson data = json.data();
-        _fanfanOwn = data.b("own");
-        _fanfanLike = data.b("is_like");
-        _fanfanLikeCount = data.i("like_count");
-        ui->positiveVoteCheck->setChecked(_fanfanLike);
-        ui->positiveVoteCheck->setText("好评(" + snum(_fanfanLikeCount) + ")");
+    liveService->updatePositiveVote();
 
-        // 获取到的数值可能是有问题的
-        if (_fanfanLikeCount == 0)
-            return ;
-
-        // 没有评价过的老用户进行提示好评
-        if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 3 * 24 * 3600)
-                && !us->value("ask/positiveVote", false).toBool()
-                && _fanfanLikeCount > 0)
-        {
-            QTimer::singleShot(3000, [=]{
-                if (!ac->cookieUid.isEmpty() && !_fanfanLike)
-                {
-                    auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
-                    noti->setBtn(1, "好评", "god");
-                    noti->setBtn(2, "吐槽", "bad");
-                    connect(noti, &NotificationEntry::signalCardClicked, this, [=] {
-                        qInfo() << "点击好评卡片";
-                        positiveVote();
-                    });
-                    connect(noti, &NotificationEntry::signalBtnClicked, this, [=](int i) {
-                        qInfo() << "点击评价按钮" << i;
-                        if (i != 2)
-                        {
-                            us->setValue("ask/positiveVote", true);
-                            positiveVote();
-                        }
-                        else
-                            openLink("http://live.lyixi.com/");
-                    });
-                    connect(noti, &NotificationEntry::signalTimeout, this, [=] {
-                        qInfo() << "默认好评";
-                        positiveVote();
-                    });
-                    noti->setDefaultBtn(1);
-                    tip_box->createTipCard(noti);
-                }
-            });
-        }
-
-        // 添加到自己的库中
-        if (!_fanfanOwn)
-        {
-            qInfo() << "饭贩商店获取本应用";
-            fanfanAddOwn();
-        }
-    });
-}
-
-/**
- * 饭贩好评
- * 需要 Cookie 带有 PEA_AU 字段
- */
-void MainWindow::positiveVote()
-{
-    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/like";
-    MyJson json;
-    json.insert("app_id", (qint64)1653383145397);
-    json.insert("csrf_token", ac->csrf_token);
-    json.insert("csrf", ac->csrf_token);
-    json.insert("visit_id", "");
-
-    postJson(url, json.toBa(), [=](QNetworkReply* reply){
-        QByteArray ba(reply->readAll());
-        MyJson json(ba);
-        if (json.code() != 0)
-        {
-            qWarning() << "饭贩好评失败";
-            QDesktopServices::openUrl(QUrl("https://play-live.bilibili.com/details/1653383145397"));
-        }
-
-        QTimer::singleShot(0, [=]{
-            getPositiveVote();
+    // 没有评价过的老用户进行提示好评
+    if ((QDateTime::currentSecsSinceEpoch() - us->l("runtime/first_use_time") > 3 * 24 * 3600)
+            && !us->value("ask/positiveVote", false).toBool()
+            && liveService->getPositiveVoteCount() > 0)
+    {
+        QTimer::singleShot(3000, [=]{
+            if (!ac->cookieUid.isEmpty() && !liveService->isPositiveVote())
+            {
+                auto noti = new NotificationEntry("positiveVote", "好评", "您是否觉得神奇弹幕好用？");
+                noti->setBtn(1, "好评", "god");
+                noti->setBtn(2, "吐槽", "bad");
+                connect(noti, &NotificationEntry::signalCardClicked, this, [=] {
+                    qInfo() << "点击好评卡片";
+                    liveService->setPositiveVote();
+                });
+                connect(noti, &NotificationEntry::signalBtnClicked, this, [=](int i) {
+                    qInfo() << "点击评价按钮" << i;
+                    if (i != 2)
+                    {
+                        us->setValue("ask/positiveVote", true);
+                        liveService->setPositiveVote();
+                    }
+                    else
+                        openLink("http://live.lyixi.com/");
+                });
+                connect(noti, &NotificationEntry::signalTimeout, this, [=] {
+                    qInfo() << "默认好评";
+                    liveService->setPositiveVote();
+                });
+                noti->setDefaultBtn(1);
+                tip_box->createTipCard(noti);
+            }
         });
-    });
-}
-
-void MainWindow::fanfanLogin(bool autoVote)
-{
-    post("https://api.live.bilibili.com/xlive/virtual-interface/v1/user/login", "", [=](QNetworkReply* reply){
-        QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
-        QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
-        if (!cookies.size())
-        {
-            qWarning() << "login 没有返回 set cookie。" << variantCookies;
-            return ;
-        }
-        QNetworkCookie cookie = cookies.at(0);
-        QString DataAsString =cookie.toRawForm(); // 转换为QByteArray
-        qInfo() << "饭贩连接：" << DataAsString;
-        autoSetCookie(ac->browserCookie + "; " + DataAsString);
-
-        if (autoVote)
-        {
-            QTimer::singleShot(3000, [=]{
-                if (!_fanfanLike)
-                {
-                    positiveVote();
-                }
-            });
-        }
-    });
-}
-
-void MainWindow::fanfanAddOwn()
-{
-    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/addOwn";
-    MyJson json;
-    json.insert("app_id", (qint64)1653383145397);
-    json.insert("csrf_token", ac->csrf_token);
-    json.insert("csrf", ac->csrf_token);
-    json.insert("visit_id", "");
-
-    postJson(url, json.toBa(), [=](QNetworkReply* reply){
-        QByteArray ba(reply->readAll());
-        MyJson json(ba);
-        if (json.code() == 1666501)
-        {
-            qInfo() << "饭贩已拥有，无需重复添加";
-        }
-        else if (json.code() != 0)
-        {
-            qWarning() << "饭贩添加失败：" << json.msg();
-        }
-    });
+    }
 }
 
 void MainWindow::startSplash()
@@ -10971,8 +10818,7 @@ void MainWindow::on_complexCalcCheck_clicked()
 }
 
 /**
- * 饭贩好评
- * 需要 Cookie 带有 PEA_AU 字段
+ * 好评
  */
 void MainWindow::on_positiveVoteCheck_clicked()
 {
@@ -10983,7 +10829,7 @@ void MainWindow::on_positiveVoteCheck_clicked()
     }
 
     us->setValue("ask/positiveVote", true);
-    if (_fanfanLike > 0) // 取消好评
+    if (liveService->isPositiveVote()) // 取消好评
     {
         if (QMessageBox::question(this, "取消好评", "您已为神奇弹幕点赞，要残忍地取消吗？", QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes)
         {
@@ -10994,14 +10840,7 @@ void MainWindow::on_positiveVoteCheck_clicked()
         }
     }
 
-    if (ac->browserCookie.contains("PEA_AU=")) // 浏览器复制的cookie，一键好评
-    {
-        positiveVote();
-    }
-    else // 先获取登录信息，再进行好评
-    {
-        fanfanLogin();
-    }
+    liveService->setPositiveVote(); // 切换
 }
 
 void MainWindow::on_saveLogCheck_clicked()

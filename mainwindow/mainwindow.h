@@ -776,7 +776,6 @@ private:
     void updateOnlineRankGUI();
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
-    void getPkOnlineGuardPage(int page);
     void setRoomDescription(QString roomDescription);
 
     double getPaletteBgProg() const;
@@ -830,9 +829,6 @@ private:
     QRect getScreenRect();
 
     void getPositiveVote();
-    void positiveVote();
-    void fanfanLogin(bool autoVote = true);
-    void fanfanAddOwn();
 
     void startSplash();
     void loadWebExtensionList();
@@ -994,12 +990,6 @@ private:
 
     // 彩蛋
     QString warmWish;
-
-    // flag
-
-    short _fanfanLike = 0; // 是否好评，0未知，1好评，-1未好评
-    int _fanfanLikeCount = 0; // 饭贩好评数量
-    bool _fanfanOwn = false; // 是否已拥有
 
     // 互动
     BiliLiveOpenService* liveOpenService = nullptr;

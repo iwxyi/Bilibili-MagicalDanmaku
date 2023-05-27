@@ -958,6 +958,72 @@ void BiliLiveService::updateOnlineGoldRank()
     });
 }
 
+void BiliLiveService::getPkOnlineGuardPage(int page)
+{
+    static int guard1 = 0, guard2 = 0, guard3 = 0;
+    if (page == 0)
+    {
+        page = 1;
+        guard1 = guard2 = guard3 = 0;
+    }
+
+    if (pkUid.isEmpty())
+    {
+        return;
+    }
+
+    auto addCount = [=](MyJson user) {
+        int alive = user.i("is_alive");
+        if (!alive)
+            return ;
+        QString username = user.s("username");
+        int guard_level = user.i("guard_level");
+        if (!alive)
+            return ;
+        if (guard_level == 1)
+            guard1++;
+        else if (guard_level == 2)
+            guard2++;
+        else
+            guard3++;
+    };
+
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + pkRoomId
+            +"&page=" + QString::number(page) + "&ruid=" + pkUid + "&page_size=30";
+    get(url, [=](MyJson json){
+        MyJson data = json.data();
+        // top3
+        if (page == 1)
+        {
+            QJsonArray top3 = data.value("top3").toArray();
+            foreach (QJsonValue val, top3)
+                addCount(val.toObject());
+        }
+
+        // list
+        QJsonArray list = data.value("list").toArray();
+        foreach (QJsonValue val, list)
+            addCount(val.toObject());
+
+        // 下一页
+        QJsonObject info = data.value("info").toObject();
+        int page = info.value("page").toInt();
+        int now = info.value("now").toInt();
+        if (now < page)
+            getPkOnlineGuardPage(now+1);
+        else // 全部完成了
+        {
+            qInfo() << "舰长数量：" << guard1 << guard2 << guard3;
+            LiveDanmaku danmaku;
+            danmaku.setNumber(guard1 + guard2 + guard3);
+            danmaku.extraJson.insert("guard1", guard1);
+            danmaku.extraJson.insert("guard2", guard2);
+            danmaku.extraJson.insert("guard3", guard3);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
+        }
+    });
+}
+
 void BiliLiveService::getGiftList()
 {
     get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId,
@@ -2323,6 +2389,137 @@ QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
         return "https://play-live.bilibili.com/details/1653383145397";
     }
     return "";
+}
+
+void BiliLiveService::updatePositiveVote()
+{
+    get("https://api.live.bilibili.com/xlive/virtual-interface/v1/app/detail?app_id=1653383145397", [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            qWarning() << "获取饭贩商店应用失败：" << json;
+            return ;
+        }
+        MyJson data = json.data();
+        fanfanOwn = data.b("own");
+        fanfanLike = data.b("is_like");
+        fanfanLikeCount = data.i("like_count");
+        emit signalPositiveVoteStateChanged(fanfanLike);
+        emit signalPositiveVoteCountChanged("好评(" + snum(fanfanLikeCount) + ")");
+
+
+        // 获取到的数值可能是有问题的
+        if (fanfanLikeCount == 0)
+            return ;
+
+        // 添加到自己的库中
+        if (!fanfanOwn)
+        {
+            qInfo() << "饭贩商店获取本应用";
+            fanfanAddOwn();
+        }
+    });
+}
+
+/**
+ * 饭贩好评
+ * 需要 Cookie 带有 PEA_AU 字段
+ */
+void BiliLiveService::setPositiveVote()
+{
+    // 浏览器复制的cookie，一键好评
+    if (!ac->browserCookie.contains("PEA_AU="))
+    {
+        // 先获取登录信息，再进行好评
+        fanfanLogin(true);
+        return;
+    }
+
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/like";
+    MyJson json;
+    json.insert("app_id", (qint64)1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
+
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() != 0)
+        {
+            qWarning() << "饭贩好评失败";
+            QDesktopServices::openUrl(QUrl("https://play-live.bilibili.com/details/1653383145397"));
+        }
+
+        QTimer::singleShot(0, [=]{
+            updatePositiveVote();
+        });
+    });
+}
+
+void BiliLiveService::fanfanLogin(bool autoVote)
+{
+    post("https://api.live.bilibili.com/xlive/virtual-interface/v1/user/login", "", [=](QNetworkReply* reply){
+        QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
+        QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+        if (!cookies.size())
+        {
+            qWarning() << "login 没有返回 set cookie。" << variantCookies;
+            return ;
+        }
+        QNetworkCookie cookie = cookies.at(0);
+        QString DataAsString =cookie.toRawForm(); // 转换为QByteArray
+        qInfo() << "饭贩连接：" << DataAsString;
+        autoSetCookie(ac->browserCookie + "; " + DataAsString);
+
+        if (!ac->browserCookie.contains("PEA_AU="))
+        {
+            qCritical() << "饭贩登录后不带有PEA_AU信息";
+            return;
+        }
+
+        if (autoVote)
+        {
+            QTimer::singleShot(3000, [=]{
+                if (!fanfanLike)
+                {
+                    setPositiveVote();
+                }
+            });
+        }
+    });
+}
+
+void BiliLiveService::fanfanAddOwn()
+{
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/addOwn";
+    MyJson json;
+    json.insert("app_id", (qint64)1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
+
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() == 1666501)
+        {
+            qInfo() << "饭贩已拥有，无需重复添加";
+        }
+        else if (json.code() != 0)
+        {
+            qWarning() << "饭贩添加失败：" << json.msg();
+        }
+    });
+}
+
+int BiliLiveService::getPositiveVoteCount() const
+{
+    return fanfanLikeCount;
+}
+
+bool BiliLiveService::isPositiveVote() const
+{
+    return fanfanLike;
 }
 
 void BiliLiveService::getRoomBattleInfo()

@@ -97,6 +97,9 @@ signals:
     void signalBattleFinished();
     void signalBattleStartMatch();
 
+    void signalPositiveVoteStateChanged(bool like);
+    void signalPositiveVoteCountChanged(const QString& text);
+
     void signalTriggerCmdEvent(const QString& cmd, const LiveDanmaku& danmaku, bool debug);
     void signalLocalNotify(const QString& text, qint64 uid);
     void signalShowError(const QString& title, const QString& info);
@@ -171,6 +174,7 @@ public:
     virtual void getGuardCount(const LiveDanmaku &danmaku) {}
     /// 更新高能榜
     virtual void updateOnlineGoldRank() {}
+    virtual void getPkOnlineGuardPage(int page) {}
     /// 获取礼物ID
     virtual void getGiftList() {}
     /// 获取表情包ID
@@ -263,6 +267,13 @@ public:
     /// 一些接口的网址
     virtual QString getApiUrl(ApiType type, qint64 id) { return ""; }
     
+    /// 获取评价
+    virtual void updatePositiveVote() {}
+    /// 切换评价，可以是好评也可以是取消好评
+    virtual void setPositiveVote() {}
+    virtual int getPositiveVoteCount() const { return 0; }
+    virtual bool isPositiveVote() const { return false; }
+
     /// 动作项
     virtual void showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr) const {}
     virtual void showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr) const {}
