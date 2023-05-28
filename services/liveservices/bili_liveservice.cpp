@@ -59,7 +59,7 @@ void BiliLiveService::initWS()
 
     connect(liveSocket, &QWebSocket::connected, this, [=]{
         SOCKET_DEB << "socket connected";
-        emit signalStatusChanged("状态：已连接");
+        emit signalStatusChanged("WS状态：已连接");
 
         // 5秒内发送认证包
         sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
@@ -85,7 +85,7 @@ void BiliLiveService::initWS()
         }
 
         SOCKET_DEB << "disconnected";
-        emit signalStatusChanged("状态：未连接");
+        emit signalStatusChanged("WS状态：未连接");
         emit signalLiveStatusChanged("");
 
         heartTimer->stop();
@@ -130,7 +130,7 @@ void BiliLiveService::initWS()
             str = "断开中";
         else if (state == QAbstractSocket::ListeningState)
             str = "监听中";
-        emit signalStatusChanged(str);
+        emit signalConnectionStateTextChanged(str);
     });
 
     heartTimer = new QTimer(this);

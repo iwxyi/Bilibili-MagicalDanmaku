@@ -1627,6 +1627,12 @@ background-repeat:none;</string>
                  <height>16</height>
                 </size>
                </property>
+               <property name="maximumSize">
+                <size>
+                 <width>64</width>
+                 <height>64</height>
+                </size>
+               </property>
                <property name="toolTip">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;大乱斗&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
@@ -1637,7 +1643,7 @@ background-repeat:none;</string>
                 <string/>
                </property>
                <property name="scaledContents">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -1839,8 +1845,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>937</width>
-             <height>1440</height>
+             <width>61</width>
+             <height>16</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9853,7 +9859,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
