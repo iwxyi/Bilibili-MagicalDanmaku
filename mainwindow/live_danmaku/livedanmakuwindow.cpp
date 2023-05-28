@@ -951,6 +951,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (danmaku.isPkLink()) // 这个最置顶前面
         text = (simpleMode ? "[同步] " : "<font color='gray'>[同步]</font> ") + text;
 
+    // 特殊格式
+    text.replace("<%", "&lt;%").replace("%>", "%&gt;"); // 替换HTML中的<% %>为实体
+
     // 文字与大小
     label->setText(text);
     label->adjustSize();
