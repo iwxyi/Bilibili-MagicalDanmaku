@@ -48,7 +48,6 @@
 #include "portraitlabel.h"
 #include "externalblockdialog.h"
 #include "chat_service/chatservice.h"
-#include "liveservices/liveroomservice.h"
 
 #define DANMAKU_JSON_ROLE Qt::UserRole
 #define DANMAKU_STRING_ROLE Qt::UserRole+1
@@ -59,6 +58,8 @@
 #define PORTRAIT_SIDE 24
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
+
+class LiveRoomService;
 
 class LiveDanmakuWindow : public QWidget
 {

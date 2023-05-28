@@ -3051,6 +3051,653 @@ void BiliLiveService::getPkMatchInfo()
     });
 }
 
+void BiliLiveService::pkPre(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_PRE",
+        "pk_status": 101,
+        "pk_id": 100970480,
+        "timestamp": 1607763991,
+        "data": {
+            "battle_type": 1, // 自己开始匹配？
+            "uname": "SLe\\u4e36\\u82cf\\u4e50",
+            "face": "http:\\/\\/i2.hdslb.com\\/bfs\\/face\\/4636d48aeefa1a177bc2bdfb595892d3648b80b1.jpg",
+            "uid": 13330958,
+            "room_id": 271270,
+            "season_id": 30,
+            "pre_timer": 10,
+            "pk_votes_name": "\\u4e71\\u6597\\u503c",
+            "end_win_task": null
+        },
+        "roomid": 22532956
+    }*/
+
+    /*{ 对面匹配过来的情况
+        "cmd": "PK_BATTLE_PRE",
+        "pk_status": 101,
+        "pk_id": 100970387,
+        "timestamp": 1607763565,
+        "data": {
+            "battle_type": 2, // 对面开始匹配？
+            "uname": "\\u519c\\u6751\\u9493\\u9c7c\\u5c0f\\u6b66\\u5929\\u5929\\u76f4\\u64ad",
+            "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/fbaa9cfbc214164236cdbe79a77bcaae5334e9ef.jpg",
+            "uid": 199775659, // 对面用户ID
+            "room_id": 12298098, // 对面房间ID
+            "season_id": 30,
+            "pre_timer": 10,
+            "pk_votes_name": "\\u4e71\\u6597\\u503c", // 乱斗值
+            "end_win_task": null
+        },
+        "roomid": 22532956
+    }*/
+
+    // 大乱斗信息
+    QJsonObject data = json.value("data").toObject();
+    QString uname = data.value("uname").toString();
+    QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
+    QString room_id = QString::number(static_cast<qint64>(data.value("room_id").toDouble()));
+    pkUname = uname;
+    pkRoomId = room_id;
+    pkUid = uid;
+
+    // 大乱斗类型
+    pkBattleType = data.value("battle_type").toInt();
+    if (pkBattleType == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (pkBattleType == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
+
+    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble())  << "    类型：" << pkBattleType;
+    if (rt->danmakuWindow)
+    {
+        if (uname.isEmpty())
+            emit signalDanmakuStatusChanged("大乱斗匹配中...");
+        else if (!pkRoomId.isEmpty())
+        {
+            int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            QString text = "匹配：" + uname;
+            if(pkCount > 0)
+                text += "[" + QString::number(pkCount) + "]";
+            emit signalDanmakuStatusChanged(text);
+            qInfo() << "主播：" << uname << pkUid << pkRoomId;
+            emit signalPKStatusChanged(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+        }
+    }
+    pkToLive = QDateTime::currentSecsSinceEpoch();
+
+    if (pkChuanmenEnable /*&& battle_type == 2*/)
+    {
+        connectPkRoom();
+    }
+    emit signalActionShowPKVideoChanged(true);
+    emit signalActionJoinBattleChanged(false);
+    pkGifts.clear();
+
+    emit signalBattlePrepared();
+}
+
+void BiliLiveService::pkStart(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_START",
+        "data": {
+            "battle_type": 1, // 不知道其他类型是啥
+            "final_hit_votes": 0,
+            "pk_end_time": 1605748342,
+            "pk_frozen_time": 1605748332,
+            "pk_start_time": 1605748032,
+            "pk_votes_add": 0,
+            "pk_votes_name": "乱斗值",
+            "pk_votes_type": 0
+        },
+        "pk_id": 100729281,
+        "pk_status": 201,
+        "timestamp": 1605748032
+    }*/
+
+    QJsonObject data = json.value("data").toObject();
+    pking = true;
+    qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
+    // qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
+    pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
+    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+    qint64 deltaEnd = pkEndTime - currentTime;
+    QString roomId = ac->roomId;
+    oppositeTouta = 0;
+    cmAudience.clear();
+    pkBattleType = data.value("battle_type").toInt();
+    if (pkBattleType == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (pkBattleType == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
+    if (pkVideo)
+    {
+        pkToLive = currentTime;
+    }
+
+    // 结束前x秒
+    pkEndingTimer->start(deltaEnd*1000 - pkJudgeEarly);
+
+    pkTimer->start();
+    qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
+    qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << pkBattleType;
+
+    // 保存PK信息
+    int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+    us->danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+    qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
+
+    // PK提示
+    QString text = "开启大乱斗：" + pkUname;
+    if (pkCount)
+        text += "  PK过" + QString::number(pkCount) + "次";
+    else
+        text += "  初次匹配";
+    localNotify(text, pkUid.toLongLong());
+
+    emit signalBattleStarted();
+}
+
+void BiliLiveService::pkProcess(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_PROCESS",
+        "data": {
+            "battle_type": 1,
+            "init_info": {
+                "best_uname": "我今天超可爱0",
+                "room_id": 22532956,
+                "votes": 132
+            },
+            "match_info": {
+                "best_uname": "银河的偶尔限定女友粉",
+                "room_id": 21398069,
+                "votes": 156
+            }
+        },
+        "pk_id": 100729411,
+        "pk_status": 201,
+        "timestamp": 1605749908
+    }*/
+    QJsonObject data = json.value("data").toObject();
+    int prevMyVotes = myVotes;
+    int prevMatchVotes = matchVotes;
+    if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == ac->roomId)
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+    }
+    else
+    {
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+    }
+
+    if (!pkTimer->isActive())
+        pkTimer->start();
+
+    if (pkEnding)
+    {
+        qInfo() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+
+        // 显示偷塔情况
+        if (prevMyVotes < myVotes)
+        {
+            int delta = myVotes - prevMyVotes;
+            localNotify("[己方偷塔] + " + snum(delta));
+
+            // B站返回的规则改了，偷塔的时候获取不到礼物了
+            pkVoting -= delta;
+            if (pkVoting < 0)
+                pkVoting = 0;
+        }
+        if (prevMatchVotes < matchVotes)
+        {
+            oppositeTouta++;
+            localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+            {
+                // qInfo() << "pk偷塔信息：" << s;
+                if (danmuLogStream)
+                {
+                    /* int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+                    int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
+                    QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
+                                .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(getPkMaxGold(qMax(myVotes, matchVotes))).arg(goldTransPk).arg(oppositeTouta)
+                                .arg(num);
+                    (*danmuLogStream) << s << "\n";
+                    (*danmuLogStream).flush(); // 立刻刷新到文件里 */
+                }
+            }
+        }
+
+        // 反偷塔，防止对方也在最后几秒刷礼物
+        execTouta();
+    }
+    else
+    {
+        qInfo() << "大乱斗进度：" << myVotes << matchVotes;
+    }
+}
+
+void BiliLiveService::pkEnd(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_END",
+        "data": {
+            "battle_type": 1,
+            "init_info": {
+                "best_uname": "我今天超可爱0",
+                "room_id": 22532956,
+                "votes": 10,
+                "winner_type": 2
+            },
+            "match_info": {
+                "best_uname": "",
+                "room_id": 22195813,
+                "votes": 0,
+                "winner_type": -1
+            },
+            "timer": 10
+        },
+        "pk_id": "100729259",
+        "pk_status": 401,
+        "timestamp": 1605748006
+    }*/
+    // winner_type: 2赢，-1输，两边2平局
+
+    QJsonObject data = json.value("data").toObject();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
+    int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
+    int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
+    qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
+    if (pkTimer)
+        pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
+    emit signalBattleFinished();
+
+    QString bestName = "";
+    int winnerType = 0;
+    if (snum(thisRoomId) == ac->roomId) // init是自己
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winnerType = winnerType1;
+    }
+    else // match是自己
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winnerType = winnerType2;
+    }
+
+    bool ping = winnerType1 == winnerType2;
+    bool result = winnerType > 0;
+
+    qint64 bestUid = 0;
+    int winCode = 0;
+    if (!ping)
+        winCode = winnerType;
+    if (myVotes > 0)
+    {
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                bestUid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
+    }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+
+    localNotify(QString("大乱斗 %1：%2 vs %3")
+                                     .arg(ping ? "平局" : (result ? "胜利" : "失败"))
+                                     .arg(myVotes)
+                                     .arg(matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
+    myVotes = 0;
+    matchVotes = 0;
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
+
+    // 保存对面偷塔次数
+    if (oppositeTouta && !pkUname.isEmpty())
+    {
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+    }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
+    pkUname = "";
+    pkUid = "";
+    pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
+    pkVideo = false;
+    emit signalActionShowPKVideoChanged(false);
+    pkBattleType = 0;
+
+    if (ac->cookieUid == ac->upUid)
+        emit signalActionJoinBattleChanged(true);
+
+    if (pkLiveSocket)
+    {
+        try {
+            if (pkLiveSocket->state() == QAbstractSocket::ConnectedState)
+                pkLiveSocket->close(); // 会自动deleterLater
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qCritical() << "delete pkSocket failed";
+        }
+        pkLiveSocket = nullptr;
+    }
+}
+
+void BiliLiveService::pkSettle(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_SETTLE_NEW",
+        "pk_id": 200933662,
+        "pk_status": 601,
+        "timestamp": 1613959764,
+        "data": {
+            "pk_id": 200933662,
+            "pk_status": 601,
+            "settle_status": 1,
+            "punish_end_time": 1613959944,
+            "timestamp": 1613959764,
+            "battle_type": 6,
+            "init_info": {
+                "room_id": 7259049,
+                "result_type": -1,
+                "votes": 0,
+                "assist_info": []
+            },
+            "match_info": {
+                "room_id": 21839758,
+                "result_type": 2,
+                "votes": 3,
+                "assist_info": [
+                    {
+                        "rank": 1,
+                        "uid": 412357310,
+                        "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
+                        "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
+                    }
+                ]
+            },
+            "dm_conf": {
+                "font_color": "#FFE10B",
+                "bg_color": "#72C5E2"
+            }
+        }
+    }*/
+
+    QJsonObject data = json.value("data").toObject();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
+    int winnerType1 = data.value("init_info").toObject().value("result_type").toInt();
+    int winnerType2 = data.value("match_info").toObject().value("result_type").toInt();
+    qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
+    if (pkTimer)
+        pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
+    emit signalBattleFinished();
+
+    QString bestName = "";
+    int winCode = 0;
+    if (snum(thisRoomId) == ac->roomId) // init是自己
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winCode = winnerType1;
+    }
+    else // match是自己
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winCode = winnerType2;
+    }
+
+    qint64 bestUid = 0;
+    if (myVotes > 0)
+    {
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                bestUid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
+    }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+
+    localNotify(QString("大乱斗 %1：%2 vs %3")
+                                     .arg(winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败"))
+                                     .arg(myVotes)
+                                     .arg(matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << myVotes << matchVotes;
+    myVotes = 0;
+    matchVotes = 0;
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
+
+    // 保存对面偷塔次数
+    if (oppositeTouta && !pkUname.isEmpty())
+    {
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+    }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
+    pkUname = "";
+    pkUid = "";
+    pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
+    pkVideo = false;
+    emit signalActionShowPKVideoChanged(false);
+
+    if (ac->cookieUid == ac->upUid)
+        emit signalActionJoinBattleChanged(true);
+
+    if (pkLiveSocket)
+    {
+        try {
+            if (pkLiveSocket->state() == QAbstractSocket::ConnectedState)
+                pkLiveSocket->close(); // 会自动deleterLater
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qCritical() << "delete pkSocket failed";
+        }
+        pkLiveSocket = nullptr;
+    }
+}
+
+void BiliLiveService::slotPkEndingTimeout()
+{
+    if (!pking) // 比如换房间了
+    {
+        qInfo() << "大乱斗结束前，逻辑不正确" << pking << ac->roomId
+                 << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+        return ;
+    }
+
+    pkEndingTimer->stop();
+
+    slotPkEnding();
+}
+
+void BiliLiveService::slotPkEnding()
+{
+    qInfo() << "大乱斗结束前情况：" << myVotes << matchVotes
+             << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+
+    pkEnding = true;
+    pkVoting = 0;
+
+    // 几个吃瓜就能解决的……
+    {
+        QString text = QString("大乱斗尾声：%1 vs %2")
+                .arg(myVotes).arg(matchVotes);
+        if (!pkRoomId.isEmpty())
+        {
+            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
+                text += QString("  偷塔概率:%1/%2")
+                                .arg(toutaCount).arg(totalCount);
+        }
+
+        // localNotify(text);
+    }
+    execTouta();
+
+    triggerCmdEvent("PK_ENDING", LiveDanmaku(), true);
+}
+
+int BiliLiveService::getPkMaxGold(int votes)
+{
+    if (!pkAutoMaxGold)
+        return pkMaxGold;
+    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold / goldTransPk); // 用于计算的价格
+    double prop = pow(money, 1.0/3); // 自动调整的倍率，未限制
+    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
+    maxProp = qMax(1.0, maxProp);
+    prop = qMin(qMax(1.0, prop), maxProp); // 限制倍率是 1 ~ 10 倍之间
+    if (pkAutoMelon && us->debugPrint)
+        qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
+                    +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
+    return int(pkMaxGold * prop);
+}
+
+bool BiliLiveService::execTouta()
+{
+    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
+    if (pkAutoMelon
+            && myVotes + pkVoting <= matchVotes
+            && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
+            /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
+            && !toutaBlankList.contains(pkRoomId)
+            && !magicalRooms.contains(pkRoomId))
+    {
+        // 调用送礼
+        int giftId = 0, giftNum = 0;
+        QString giftName;
+        int giftUnit = 0, giftVote = 0; // 单价和单乱斗值
+        int needVote = matchVotes - myVotes - pkVoting; // 至少需要多少积分才能不输给对面
+
+        if (!toutaGift) // 赠送吃瓜（比对面多1分）
+        {
+            giftId = 20004;
+            giftUnit = 100;
+            giftVote = giftUnit / goldTransPk; // 单个吃瓜有多少乱斗值
+            giftNum = needVote / giftVote + 1; // 需要多少个礼物
+
+            chiguaCount += giftNum;
+        }
+        else // 按类型赠送礼物
+        {
+            int minCost = 0x3f3f3f3f;
+            foreach (auto gift, toutaGifts)
+            {
+                int unit = gift.getTotalCoin(); // 单价
+                int vote = unit / goldTransPk; // 相当于多少乱斗值
+                int num = needVote / vote + 1; // 起码要这个数量
+                int cost = unit * num; // 总价
+                if (cost > maxGold) // 总价超过上限
+                    continue;
+
+                if (toutaGiftCounts.size()) // 数量白名单
+                {
+                    int index = -1;
+                    for (int i = 0; i < toutaGiftCounts.size(); i++)
+                    {
+                        int count = toutaGiftCounts.at(i);
+                        if (count >= num) // 这个数量可以赢
+                        {
+                            int cos = unit * count;
+                            if (cos > maxGold) // 总价超过上限
+                                continue;
+
+                            // 这个可以使用
+                            index = i;
+                            num = count;
+                            cost = cos;
+                            break;
+                        }
+                    }
+                    if (index == -1) // 没有合适的数量
+                        continue;
+                }
+
+                if (cost < minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
+                {
+                    giftId = gift.getGiftId();
+                    giftName = gift.getGiftName();
+                    giftUnit = unit;
+                    giftVote = vote;
+                    giftNum = num;
+                    minCost = cost;
+                }
+            }
+        }
+
+        if (!giftId)
+        {
+            qWarning() << "没有可赠送的合适礼物：" << needVote << "积分";
+            return false;
+        }
+
+        sendGift(giftId, giftNum);
+        localNotify(QString("[") + (oppositeTouta ? "反" : "") + "偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
+        qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
+        if (!us->localMode)
+            pkVoting += giftVote * giftNum; // 正在赠送中
+
+        toutaCount++;
+        toutaGold += giftUnit * giftNum;
+        saveTouta();
+        return true;
+    }
+    return false;
+}
+
+void BiliLiveService::saveTouta()
+{
+    us->setValue("pk/toutaCount", toutaCount);
+    us->setValue("pk/chiguaCount", chiguaCount);
+    us->setValue("pk/toutaGold", toutaGold);
+    QString tooltip = QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold);
+    emit signalAutoMelonMsgChanged(tooltip);
+}
+
 void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
 {
     if (ac->roomId.isEmpty())

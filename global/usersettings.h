@@ -47,7 +47,10 @@ public:
     bool calculateDailyData = false; // 统计每天数据
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
+    bool saveToSqlite = false;       // 保存弹幕数据库
+    bool saveCmdToSqlite = false;    // 保存所有CMD命令到数据库
     int judgeRobot = 0;              // 判断机器人：0关，1仅关注，2所有
+    int giftComboDelay = 3;          // 礼物连击延迟（秒）
 
     QString open_ai_key;
     QString chatgpt_model_name = "gpt-3.5-turbo";

@@ -656,6 +656,21 @@ public:
         return coin_type == "silver";
     }
 
+    bool isGiftFree() const
+    {
+        return coin_type != "gold";
+    }
+
+    bool isGiftMerged() const
+    {
+        return !first;
+    }
+
+    bool isFirst() const
+    {
+        return first;
+    }
+
     qint64 getTotalCoin() const
     {
         return total_coin;

@@ -79,6 +79,16 @@ public:
     void connectPkSocket() override;
     void getPkMatchInfo() override;
 
+    /// PK
+    virtual void pkPre(QJsonObject json) override;
+    virtual void pkStart(QJsonObject json) override;
+    virtual void pkProcess(QJsonObject json) override;
+    virtual void pkEnd(QJsonObject json) override;
+    virtual void pkSettle(QJsonObject json) override;
+    virtual int getPkMaxGold(int votes) override;
+    virtual bool execTouta() override;
+    virtual void saveTouta() override;
+
     /// 录播
     void getRoomLiveVideoUrl(StringFunc func) override;
 
@@ -121,6 +131,12 @@ public:
 
 public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
+    void slotUncompressBytes(const QByteArray &body);
+    void splitUncompressedBody(const QByteArray &unc);
+    bool handleUncompMessage(QString cmd, MyJson json);
+    bool handlePK(QJsonObject json);
+    void handleMessage(QJsonObject json);
+
     void slotPkBinaryMessageReceived(const QByteArray &message) override;
 
     /// 弹幕
@@ -139,6 +155,9 @@ public slots:
     /// 私信
     void refreshPrivateMsg() override;
     void receivedPrivateMsg(MyJson session) override;
+    /// 大乱斗
+    void slotPkEndingTimeout() override;
+    void slotPkEnding() override;
 
 protected:
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;

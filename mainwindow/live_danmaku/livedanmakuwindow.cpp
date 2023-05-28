@@ -6,6 +6,7 @@
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
 #include "string_distance_util.h"
+#include "liveservices/liveroomservice.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );

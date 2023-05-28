@@ -91,7 +91,6 @@ INCLUDEPATH += \
     third_party/m3u8_downloader/
 
 SOURCES += \
-    mainwindow/cmd_process.cpp \
     mainwindow/run_cmd.cpp \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \

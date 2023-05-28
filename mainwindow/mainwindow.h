@@ -125,13 +125,19 @@ protected:
 
 signals:
     void signalRoomChanged(QString roomId);
-    void signalLiveStart(QString roomId);
+    void signalLiveVideoChanged(QString roomId);
     void signalNewDanmaku(const LiveDanmaku& danmaku);
     void signalRemoveDanmaku(LiveDanmaku danmaku);
     void signalCmdEvent(QString cmd, LiveDanmaku danmaku);
 
 public slots:
     void removeTimeoutDanmaku();
+    void slotRoomInfoChanged();
+    void slotTryBlockDanmaku(const LiveDanmaku& danmaku);
+    void slotNewGiftReceived(const LiveDanmaku& danmaku);
+    void slotSendUserWelcome(const LiveDanmaku& danmaku);
+    void slotSendAttentionThank(const LiveDanmaku& danmaku);
+    void slotNewGuardBuy(const LiveDanmaku& danmaku);
 
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
@@ -168,15 +174,8 @@ private slots:
     void slotDiange(const LiveDanmaku &danmaku);
 
     void slotComboSend();
-    void slotPkEndingTimeout();
 
     void slotSocketError(QAbstractSocket::SocketError error);
-
-    void slotBinaryMessageReceived(const QByteArray &message);
-
-    void slotUncompressBytes(const QByteArray &body);
-
-    void splitUncompressedBody(const QByteArray &unc);
 
     void on_autoSendWelcomeCheck_stateChanged(int arg1);
 
@@ -349,8 +348,6 @@ private slots:
     void on_orderSongShuaSpin_editingFinished();
 
     void on_pkMelonValButton_clicked();
-
-    void slotPkEnding();
 
     void slotStartWork();
 
@@ -757,14 +754,8 @@ private:
     void adjustRoomIdWidgetPos();
     void showRoomIdWidget();
     void hideRoomIdWidget();
-    bool handleUncompMessage(QString cmd, MyJson json);
-    void handleMessage(QJsonObject json);
-    bool mergeGiftCombo(const LiveDanmaku &danmaku);
-    bool handlePK(QJsonObject json);
     void userComeEvent(LiveDanmaku& danmaku);
     void updateOnlineRankGUI();
-    void appendLiveGift(const LiveDanmaku& danmaku);
-    void appendLiveGuard(const LiveDanmaku& danmaku);
     void setRoomDescription(QString roomDescription);
 
     double getPaletteBgProg() const;
@@ -775,7 +766,6 @@ private:
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
-    void markNotRobot(qint64 uid);
     void initTTS();
     void speakText(QString text);
     void speakTextQueueNext();
@@ -783,7 +773,6 @@ private:
     void playNetAudio(QString url);
     void showScreenDanmaku(const LiveDanmaku &danmaku);
 
-    void saveTouta();
     void restoreToutaGifts(QString text);
     void initLiveRecord();
     void startLiveRecord();
@@ -800,14 +789,6 @@ private:
     void savePlayingSong();
     void saveOrderSongs(const SongList& songs);
     void saveSongLyrics();
-
-    void pkPre(QJsonObject json);
-    void pkStart(QJsonObject json);
-    void pkProcess(QJsonObject json);
-    void pkEnd(QJsonObject json);
-    void pkSettle(QJsonObject json);
-    int getPkMaxGold(int votes);
-    bool execTouta();
 
     void saveMonthGuard();
     void saveEveryGuard(LiveDanmaku danmaku);
@@ -892,7 +873,6 @@ private:
     LiveRoomService* liveService = nullptr;
 
     // 启动与定时
-    bool justStart = true; // 启动几秒内不进行发送，避免一些尴尬场景
     QTimer* syncTimer = nullptr;
 
     // 动画
@@ -935,9 +915,6 @@ private:
     QString recordLastPath;
     M3u8Downloader m3u8Downloader;
 
-    // 自动禁言
-    QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
-
     // 抽奖机
     LuckyDrawWindow* luckyDrawWindow = nullptr;
 
@@ -974,8 +951,6 @@ private:
     BiliLiveOpenService* liveOpenService = nullptr;
 
     // 数据库
-    bool saveToSqlite = false;
-    bool saveCmdToSqlite = false;
     SqlService sqlService;
 };
 

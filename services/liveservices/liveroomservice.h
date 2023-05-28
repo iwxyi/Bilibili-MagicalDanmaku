@@ -9,6 +9,7 @@
 #include "livestatisticservice.h"
 #include "entities.h"
 #include "api_type.h"
+#include "sqlservice.h"
 
 #define INTERVAL_RECONNECT_WS 5000
 #define INTERVAL_RECONNECT_WS_MAX 60000
@@ -44,6 +45,8 @@ public:
 
     QList<LiveDanmaku> getDanmusByUID(qint64 uid);
 
+    void setSqlService(SqlService* service);
+
 signals:
     void signalStartConnectRoom(); // 通知总的开始连接
     void signalConnectionStarted(); // WebSocket开始连接
@@ -54,8 +57,13 @@ signals:
     void signalLiveStopped();
     void signalStatusChanged(const QString& text); // 状态或提示改变，修改状态栏
     void signalLiveStatusChanged(const QString& text); // 直播状态：已开播/未开播
-
     void signalNewDanmaku(const LiveDanmaku& danmaku); // 通知外部各种界面
+    void signalReceiveDanmakuTotalCountChanged(int count); // 本场直播弹幕总数
+    void signalTryBlockDanmaku(const LiveDanmaku& danmaku); // 判断是否需要屏蔽弹幕
+    void signalNewGiftReceived(const LiveDanmaku& danmaku); // 有人送礼物
+    void signalSendUserWelcome(const LiveDanmaku& danmaku); // 发送欢迎的代码
+    void signalSendAttentionThank(const LiveDanmaku& danmaku); // 发送大些关注
+    void signalNewGuardBuy(const LiveDanmaku& danmaku); // 有人上舰长
 
     void signalRobotAccountChanged();
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
@@ -80,6 +88,8 @@ signals:
     void signalHeartTimeNumberChanged(int num, int minute); // 通过连接一直领取小心心
     void signalDanmuPopularChanged(const QString& text); // 5分钟弹幕人气
     void signalPopularChanged(qint64 count); // 人气值
+    void signalPopularTextChanged(const QString& text);
+    void signalFansCountChanged(qint64 count); // 粉丝数
     void signalSignInfoChanged(const QString& text); // 自动签到
     void signalSignDescChanged(const QString& text);
     void signalLOTInfoChanged(const QString& text); // 天选等活动
@@ -88,6 +98,8 @@ signals:
     void signalRefreshPrivateMsgEnabled(bool enable); // 私信功能开关
     void signalSendAutoMsg(const QString& msg, const LiveDanmaku& danmaku);
     void signalSendAutoMsgInFirst(const QString& msg, const LiveDanmaku& danmaku, int interval);
+    void signalRoomRankChanged(const QString& desc, const QString& color);
+    void signalHotRankChanged(int rank, const QString& area, const QString& msg);
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -96,9 +108,19 @@ signals:
     void signalBattleSeasonInfoChanged(const QString& text);
     void signalBattleNumsChanged(const QString& text);
     void signalBattleScoreChanged(const QString& text);
+    void signalBattlePrepared();
     void signalBattleStarted();
-    void signalBattleFinished();
+    void signalBattleFinished(); // PK结束，关闭一些控件，可能会重复调用
     void signalBattleStartMatch();
+
+    void signalDanmakuStatusChanged(const QString& text);
+    void signalPKStatusChanged(int pkType, qint64 roomId, qint64 upUid, const QString& upUname);
+    void signalDanmakuAddBlockText(const QString& word, int second);
+    void signalMergeGiftCombo(const LiveDanmaku& danmaku, int delay); // 弹幕姬的礼物合并
+    void signalAutoMelonMsgChanged(const QString& msg);
+
+    void signalActionShowPKVideoChanged(bool enable);
+    void signalActionJoinBattleChanged(bool enable);
 
     void signalPositiveVoteStateChanged(bool like);
     void signalPositiveVoteCountChanged(const QString& text);
@@ -143,6 +165,9 @@ public slots:
     /// 私信
     virtual void refreshPrivateMsg() {}
     virtual void receivedPrivateMsg(MyJson session) {}
+    /// 大乱斗
+    virtual void slotPkEndingTimeout() {}
+    virtual void slotPkEnding() {}
 
 public:
     /// 获取机器人账号信息
@@ -212,6 +237,7 @@ public:
     /// 背包礼物
     virtual void sendExpireGift();
     virtual void getBagList(qint64 sendExpire) {}
+    bool mergeGiftCombo(const LiveDanmaku &danmaku);
 
     /// 修改直播间信息
     virtual void myLiveSelectArea(bool update) {}
@@ -246,6 +272,21 @@ public:
     virtual void connectPkSocket() { }
     /// 获取PK对面直播间的信息
     virtual void getPkMatchInfo() {}
+
+    /// PK
+    virtual void pkPre(QJsonObject json) {}
+    virtual void pkStart(QJsonObject json) {}
+    virtual void pkProcess(QJsonObject json) {}
+    virtual void pkEnd(QJsonObject json) {}
+    virtual void pkSettle(QJsonObject json) {}
+    virtual int getPkMaxGold(int votes) { return 0; }
+    virtual bool execTouta() {}
+    virtual void saveTouta() {}
+
+    /// 统计
+    void appendLiveGift(const LiveDanmaku& danmaku);
+    void appendLiveGuard(const LiveDanmaku& danmaku);
+    void userComeEvent(LiveDanmaku &danmaku);
 
     /// 录播
     virtual void getRoomLiveVideoUrl(StringFunc func) {}
@@ -293,6 +334,7 @@ public:
 
     /// 一些条件判断
     bool isInFans(qint64 uid) const;
+    void markNotRobot(qint64 uid);
 
 protected:
     // 连接信息
@@ -314,6 +356,7 @@ protected:
     QPixmap roomCover; // 直播间封面原图
     QPixmap upFace; // 主播头像原图
     QMap<ApiType, QString> apiUrls;
+    QString roomRankDesc;
 
     // 我的信息
     QPixmap robotFace; // 自己的原图
@@ -365,6 +408,9 @@ protected:
     int pkMaxGold = 300; // 单位是金瓜子，积分要/10
     bool pkEnding = false;
     int pkVoting = 0;
+    bool toutaGift = false;
+    bool pkAutoMelon = false;
+    bool pkAutoMaxGold = false;
     int toutaCount = 0;
     int chiguaCount = 0;
     int toutaGold = 0;
@@ -393,6 +439,9 @@ protected:
     // 活动信息
     int currentSeasonId = 0; // 大乱斗赛季，获取连胜需要赛季
     QString pkRuleUrl; // 大乱斗赛季信息
+
+    // 数据库
+    SqlService* sqlService = nullptr;
 
     // 内存管理
     QObjectCleanupHandler cleanupHandler;
