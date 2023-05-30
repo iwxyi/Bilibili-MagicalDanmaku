@@ -1,7 +1,7 @@
 #ifndef BILILIVESERVICE_H
 #define BILILIVESERVICE_H
 
-#include "liveroomservice.h"
+#include "..\liveroomservice.h"
 
 class BiliLiveService : public LiveRoomService
 {

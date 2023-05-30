@@ -1183,6 +1183,29 @@ void MainWindow::readConfig()
     // 平台
     rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
 
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(readTextFile(":/documents/keys").toUtf8(), &error);
+    QJsonObject keysStore = doc.object();
+    QJsonObject keyJson;
+    switch (rt->livePlatform)
+    {
+    case Bilibili:
+        keyJson = keysStore.value("bilibili").toObject();
+        ac->appId = keyJson.value("accessKeyId").toString();
+        break;
+    case Huya:
+        keyJson = keysStore.value("huya").toObject();
+        ac->appId = keyJson.value("appId").toString();
+        ac->appSecret = keyJson.value("appSecret").toString();
+        break;
+    case Douyu:
+        break;
+    case Douyin:
+        break;
+    default:
+        break;
+    }
+
     // 界面效果
     ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 

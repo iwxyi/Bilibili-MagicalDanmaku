@@ -16,6 +16,11 @@ DEFINES += ENABLE_TEXTTOSPEECH
 
 RC_FILE += resources/resource.rc
 
+MOC_DIR += build/moc
+RCC_DIR += build/rcc
+UI_DIR += build/ui
+OBJECTS_DIR += build/obj
+
 # 图片太大，会导致 cc1plus.exe:-1: error: out of memory allocating 4198399 bytes 错误
 CONFIG += resources_big
 
@@ -59,6 +64,7 @@ INCLUDEPATH += \
     mainwindow/ \
     services/ \
     services/liveservices/ \
+    services/liveservices/bilibili \
     services/entities/ \
     services/code_runner/ \
     third_party/utils/ \
@@ -95,9 +101,9 @@ SOURCES += \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
-    services/liveservices/bili_livecmds.cpp \
-    services/liveservices/bili_liveopenservice.cpp \
-    services/liveservices/bili_liveservice.cpp \
+    services/liveservices/bilibili/bili_livecmds.cpp \
+    services/liveservices/bilibili/bili_liveopenservice.cpp \
+    services/liveservices/bilibili/bili_liveservice.cpp \
     services/liveservices/liveroomservice.cpp \
     services/liveservices/livestatisticservice.cpp \
     services/sqlservice.cpp \
@@ -196,8 +202,8 @@ HEADERS += \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
-    services/liveservices/bili_liveopenservice.h \
-    services/liveservices/bili_liveservice.h \
+    services/liveservices/bilibili/bili_liveopenservice.h \
+    services/liveservices/bilibili/bili_liveservice.h \
     services/liveservices/liveroomservice.h \
     services/liveservices/livestatisticservice.h \
     services/sqlservice.h \

@@ -5,7 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QStringList>
-#include "functional"
+#include <functional>
 
 #define jsona(x, y) y = x.a(#y)
 #define JA(x, y) QJsonArray y = x.a(#y)
