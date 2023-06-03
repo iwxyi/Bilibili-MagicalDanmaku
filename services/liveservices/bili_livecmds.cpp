@@ -784,9 +784,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         // !弹幕的时间戳是13位，其他的是10位！
         qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
-        /*QString localName = danmakuWindow->getLocalNickname(uid);
-        if (!localName.isEmpty())
-            username = localName;*/
 
         // 统计弹幕次数
         int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;

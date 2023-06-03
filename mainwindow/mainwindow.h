@@ -695,6 +695,12 @@ private slots:
 
     void on_chatGPTPromptButton_clicked();
 
+    void on_GPTAnalysisPromptButton_clicked();
+
+    void on_GPTAnalysisCheck_clicked();
+
+    void on_GPTAnalysisFormatButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -709,6 +715,7 @@ private:
     void initWebServer();
     void initVoiceService();
     void initChatService();
+    void initDynamicConfigs();
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 

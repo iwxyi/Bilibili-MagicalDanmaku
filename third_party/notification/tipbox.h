@@ -15,7 +15,7 @@
 #define CARDS_INTERVAL 0
 #define MARGIN_PARENT_RIGHT 20
 #define MARGIN_PARENT_BOTTOM 10
-#define CARD_FIXED_WIDTH 200
+#define CARD_FIXED_WIDTH 300
 
 class TipBox : public QWidget
 {

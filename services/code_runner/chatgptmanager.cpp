@@ -65,11 +65,23 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
     userChats.append(ChatBean("user", text));
 
     QList<ChatBean> chats;
-    if (!us->chatgpt_prompt.isEmpty())
+    if (us->chatgpt_analysis)
     {
-        QString rep = us->chatgpt_prompt;
-        rep.replace("%danmu_longest%", snum(ac->danmuLongest));
-        chats.append(ChatBean("system", rep));
+        if (!us->chatgpt_analysis_prompt.isEmpty())
+        {
+            QString rep = us->chatgpt_analysis_prompt;
+            rep.replace("%danmu_longest%", snum(ac->danmuLongest));
+            chats.append(ChatBean("system", rep));
+        }
+    }
+    else
+    {
+        if (!us->chatgpt_prompt.isEmpty())
+        {
+            QString rep = us->chatgpt_prompt;
+            rep.replace("%danmu_longest%", snum(ac->danmuLongest));
+            chats.append(ChatBean("system", rep));
+        }
     }
 
     int count = us->chatgpt_max_context_count;
@@ -87,6 +99,10 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
         // 添加记忆
         chats.insert(0, userChats.at(i));
     }
+
+    if (us->chatgpt_analysis && !us->chatgpt_analysis_format.isEmpty())
+        chats.last().message = us->chatgpt_analysis_format + "\n" + chats.last().message;
+
     chatgpt->getResponse(chats);
 }
 
