@@ -19,9 +19,9 @@ class LiveDanmaku;
 enum LivePlatform
 {
     Bilibili,   // 哔哩哔哩
+    Douyin,     // 抖音
     Huya,       // 虎牙
     Douyu,      // 斗鱼
-    Douyin,     // 抖音
     Kuaishou,   // 快手
 };
 
@@ -31,9 +31,11 @@ public:
     LivePlatform livePlatform = Bilibili;
     bool asPlugin = false;
     bool asFreeOnly = false;
+    bool justStart = false; // 启动几秒内不进行发送，避免一些尴尬场景
 
     QHash<QString, QString> pinyinMap; // 拼音
     QList<LiveDanmaku> allDanmakus;
+    QList<LiveDanmaku> blockedQueue; // 本次自动禁言的用户，用来撤销
 
     const int widgetSizeL = 48;
     const int fluentRadius = int(5 * qApp->devicePixelRatio() + 0.5);
@@ -48,6 +50,7 @@ public:
 
     QString ffmpegPath;
     QWidget* mainwindow = nullptr;
+    QWidget* danmakuWindow = nullptr;
 };
 
 extern RuntimeInfo* rt;

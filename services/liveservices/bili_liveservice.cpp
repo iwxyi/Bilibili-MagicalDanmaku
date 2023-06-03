@@ -4,6 +4,7 @@
 #include <QTableView>
 #include <QStandardItemModel>
 #include <QClipboard>
+#include <QLabel>
 #include "bili_liveservice.h"
 #include "netutil.h"
 #include "bili_api_util.h"
@@ -15,11 +16,23 @@
 
 BiliLiveService::BiliLiveService(QObject *parent) : LiveRoomService(parent)
 {
+    initWS();
+
     xliveHeartBeatTimer = new QTimer(this);
     xliveHeartBeatTimer->setInterval(60000);
     connect(xliveHeartBeatTimer, &QTimer::timeout, this, [=]{
         if (isLiving())
             sendXliveHeartBeatX();
+    });
+
+    QTimer::singleShot(0, [=]{
+        // 获取wbi加密
+        getNavInfo([=]{
+            if (!ac->cookieUid.isEmpty() && robotFace.isNull())
+                getRobotInfo();
+            if (!ac->upUid.isEmpty() && upFace.isNull())
+                getUpInfo(ac->upUid);
+        });
     });
 }
 
@@ -38,6 +51,296 @@ void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
+}
+
+void BiliLiveService::initWS()
+{
+    liveSocket = new QWebSocket();
+
+    connect(liveSocket, &QWebSocket::connected, this, [=]{
+        SOCKET_DEB << "socket connected";
+        emit signalStatusChanged("WS状态：已连接");
+
+        // 5秒内发送认证包
+        sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
+
+        // 定时发送心跳包
+        heartTimer->start();
+        minuteTimer->start();
+    });
+
+    connect(liveSocket, &QWebSocket::disconnected, this, [=]{
+        // 正在直播的时候突然断开了
+        if (isLiving())
+        {
+            qWarning() << "正在直播的时候突然断开，" << (reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+            localNotify("[连接断开，重连...]");
+            ac->liveStatus = false;
+            // 尝试5秒钟后重连
+            // TODO: 每次重连间隔翻倍
+            connectServerTimer->setInterval(reconnectWSDuration);
+            reconnectWSDuration *= 2;
+            if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
+                reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
+        }
+
+        SOCKET_DEB << "disconnected";
+        emit signalStatusChanged("WS状态：未连接");
+        emit signalLiveStatusChanged("");
+
+        heartTimer->stop();
+        minuteTimer->stop();
+
+        // 如果不是主动连接的话，这个会断开
+        if (!connectServerTimer->isActive())
+            connectServerTimer->start();
+    });
+
+    connect(liveSocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
+//        qInfo() << "binaryMessageReceived" << message;
+//        for (int i = 0; i < 100; i++) // 测试内存泄漏
+        try {
+            slotBinaryMessageReceived(message);
+        } catch (...) {
+            qCritical() << "!!!!!!!error:slotBinaryMessageReceived";
+        }
+
+    });
+
+    connect(liveSocket, &QWebSocket::textFrameReceived, this, [=](const QString &frame, bool isLastFrame){
+        qInfo() << "textFrameReceived";
+    });
+
+    connect(liveSocket, &QWebSocket::textMessageReceived, this, [=](const QString &message){
+        qInfo() << "textMessageReceived";
+    });
+
+    connect(liveSocket, &QWebSocket::stateChanged, this, [=](QAbstractSocket::SocketState state){
+        SOCKET_DEB << "stateChanged" << state;
+        QString str = "未知";
+        if (state == QAbstractSocket::UnconnectedState)
+            str = "未连接";
+        else if (state == QAbstractSocket::ConnectingState)
+            str = "连接中";
+        else if (state == QAbstractSocket::ConnectedState)
+            str = "已连接";
+        else if (state == QAbstractSocket::BoundState)
+            str = "已绑定";
+        else if (state == QAbstractSocket::ClosingState)
+            str = "断开中";
+        else if (state == QAbstractSocket::ListeningState)
+            str = "监听中";
+        emit signalConnectionStateTextChanged(str);
+    });
+
+    heartTimer = new QTimer(this);
+    heartTimer->setInterval(30000);
+    connect(heartTimer, &QTimer::timeout, this, [=]{
+        if (liveSocket->state() == QAbstractSocket::ConnectedState)
+        {
+            // 刚刚连接上，发送心跳包
+            sendHeartPacket(liveSocket);
+        }
+        else if (liveSocket->state() == QAbstractSocket::UnconnectedState)
+        {
+            emit signalStartConnectRoom();
+            return;
+        }
+
+        /// 发送其他Socket的心跳包
+        // PK Socket
+        if (pkLiveSocket && pkLiveSocket->state() == QAbstractSocket::ConnectedState)
+        {
+            sendHeartPacket(pkLiveSocket);
+        }
+
+        // 机器人 Socket
+        for (int i = 0; i < robots_sockets.size(); i++)
+        {
+            QWebSocket* socket = robots_sockets.at(i);
+            if (socket->state() == QAbstractSocket::ConnectedState)
+            {
+                sendHeartPacket(socket);
+            }
+        }
+    });
+}
+
+/**
+ * 通过Cookie获取机器人账号信息
+ * 仅获取UID和昵称
+ */
+void BiliLiveService::getCookieAccount()
+{
+    if (ac->browserCookie.isEmpty())
+        return ;
+    gettingUser = true;
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("登录返回不为0", json.value("message").toString());
+            gettingUser = false;
+            if (!gettingRoom)
+                triggerCmdEvent("LOGIN_FINISHED", LiveDanmaku());
+            emit signalUpdatePermission();
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonObject dataObj = json.value("data").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        ac->cookieUname = dataObj.value("uname").toString();
+        qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
+        
+        emit signalRobotAccountChanged();
+
+        if (!wbiMixinKey.isEmpty())
+            getRobotInfo();
+    });
+}
+
+void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
+{
+    get("https://api.bilibili.com/x/web-interface/nav", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("获取导航信息返回不为0", json.value("message").toString());
+            return ;
+        }
+        QJsonObject dataObj = json.value("data").toObject();
+        QJsonObject wbi_img_obj = dataObj.value("wbi_img").toObject();
+        QString img_url = wbi_img_obj.value("img_url").toString();
+        QString sub_url = wbi_img_obj.value("sub_url").toString();
+        
+        QRegularExpression re("/(\\w{32})\\.png");
+        QRegularExpressionMatch match = re.match(img_url);
+        QString wbi_img_ba = match.captured(1);
+        match = re.match(sub_url);
+        QString wbi_sub_ba = match.captured(1);
+        QString wbi_img_sub = wbi_img_ba + wbi_sub_ba;
+        // qInfo() << "wbi_img_sub:" << wbi_img_sub;
+
+        QList<int> mixinKeyEncTab = {
+            46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35, 27, 43, 5, 49,
+            33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13, 37, 48, 7, 16, 24, 55, 40,
+            61, 26, 17, 0, 1, 60, 51, 30, 4, 22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11,
+            36, 20, 34, 44, 52
+        };
+        QByteArray newString;
+        for (int i = 0; i < mixinKeyEncTab.size(); i++)
+        {
+            newString.append(wbi_img_sub[mixinKeyEncTab[i]].toLatin1());
+        }
+        this->wbiMixinKey = newString.left(32);
+        qInfo() << "wbiMixinKey:" << wbiMixinKey;
+    }, [=](const QString&){
+        if (finalFunc)
+            finalFunc();
+    });
+}
+
+/**
+ * 使用获取到的 wbiCode 对网址参数进行加密
+ * @param uparams 按字母排序的url参数，例如：mid=1234&token=&platform=web&web_location=1550101
+ * @return
+ */
+QString BiliLiveService::toWbiParam(QString params) const
+{
+    if (!params.contains("wts"))
+        params += "&wts=" + snum(QDateTime::currentSecsSinceEpoch());
+    QString md5 = QCryptographicHash::hash((params + wbiMixinKey).toLocal8Bit(), QCryptographicHash::Md5).toHex().toLower();
+    params += "&w_rid=" + md5;
+    return params;
+}
+
+/**
+ * 获取所有用户信息
+ * 目前其实只有头像、弹幕字数
+ */
+void BiliLiveService::getRobotInfo()
+{
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + ac->cookieUid + "&platform=web&token=&web_location=1550101");
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取账号信息返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+
+        // 开始下载头像
+        QString face = data.value("face").toString();
+        get(face, [=](QNetworkReply* reply){
+            QByteArray jpegData = reply->readAll();
+            QPixmap pixmap;
+            pixmap.loadFromData(jpegData);
+            if (pixmap.isNull())
+            {
+                showError("获取账号头像出错");
+                return ;
+            }
+
+            // 设置成圆角
+            int side = qMin(pixmap.width(), pixmap.height());
+            QPixmap p(side, side);
+            p.fill(Qt::transparent);
+            QPainter painter(&p);
+            painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+            QPainterPath path;
+            path.addEllipse(0, 0, side, side);
+            painter.setClipPath(path);
+            painter.drawPixmap(0, 0, side, side, pixmap);
+
+            // 设置到Robot头像
+            emit signalRobotHeadChanged(p);
+        });
+    });
+
+    // 检查是否需要用户信息
+    if (!us->adjustDanmakuLongest)
+        return ;
+
+    // 获取弹幕字数
+    url = "https://api.vc.bilibili.com/user_ex/v1/user/detail?uid=" + ac->cookieUid + "&user[]=role&user[]=level&room[]=live_status&room[]=room_link&feed[]=fans_count&feed[]=feed_count&feed[]=is_followed&feed[]=is_following&platform=pc";
+    get(url, [=](MyJson json) {
+        /*{
+            "code": 0,
+            "msg": "success",
+            "message": "success",
+            "data": {
+                "user": {
+                    "role": 2,
+                    "user_level": 19,
+                    "master_level": 5,
+                    "next_master_level": 6,
+                    "need_master_score": 704,
+                    "master_rank": 100010,
+                    "verify": 0
+                },
+                "feed": {
+                    "fans_count": 7084,
+                    "feed_count": 41,
+                    "is_followed": 0,
+                    "is_following": 0
+                },
+                "room": {
+                    "live_status": 0,
+                    "room_id": 11584296,
+                    "short_room_id": 0,
+                    "title": "用户20285041的直播间",
+                    "cover": "",
+                    "keyframe": "",
+                    "online": 0,
+                    "room_link": "http://live.bilibili.com/11584296?src=draw"
+                },
+                "uid": "20285041"
+            }
+        }*/
+        MyJson data = json.data();
+        ac->cookieULevel = data.o("user").i("user_level");
+        if (us->adjustDanmakuLongest)
+            adjustDanmakuLongest();
+    });
 }
 
 /**
@@ -175,7 +478,8 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         getRoomCover(roomInfo.value("cover").toString());
 
         // 获取主播头像
-        getUpInfo(ac->upUid);
+        if (!wbiMixinKey.isEmpty())
+            getUpInfo(ac->upUid);
         gettingRoom = false;
         if (!gettingUser)
             emit signalGetRoomAndRobotFinished();
@@ -327,13 +631,173 @@ void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString
 /**
  * 每隔半分钟发送一次心跳包
  */
-void BiliLiveService::sendHeartPacket()
+void BiliLiveService::sendHeartPacket(QWebSocket* socket)
 {
-    QByteArray ba;
-    ba.append("[object Object]");
-    ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
+    static QByteArray ba = BiliApiUtil::makePack(QByteArray("[object Object]"), OP_HEARTBEAT);
 //    SOCKET_DEB << "发送心跳包：" << ba;
-    liveSocket->sendBinaryMessage(ba);
+    socket->sendBinaryMessage(ba);
+}
+
+/**
+ * 获取用户在当前直播间的信息
+ * 会触发进入直播间，就不能偷看了……
+ */
+void BiliLiveService::getRoomUserInfo()
+{
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "user_level": {
+                "level": 13,
+                "next_level": 14,
+                "color": 6406234,
+                "level_rank": ">50000"
+            },
+            "vip": {
+                "vip": 0,
+                "vip_time": "0000-00-00 00:00:00",
+                "svip": 0,
+                "svip_time": "0000-00-00 00:00:00"
+            },
+            "title": {
+                "title": ""
+            },
+            "badge": {
+                "is_room_admin": false
+            },
+            "privilege": {
+                "target_id": 0,
+                "privilege_type": 0,
+                "privilege_uname_color": "",
+                "buy_guard_notice": null,
+                "sub_level": 0,
+                "notice_status": 1,
+                "expired_time": "",
+                "auto_renew": 0,
+                "renew_remind": null
+            },
+            "info": {
+                "uid": 20285041,
+                "uname": "懒一夕智能科技",
+                "uface": "http://i1.hdslb.com/bfs/face/97ae8f0f0e09fbc22fa680c4f5ed93f92678c9eb.jpg",
+                "main_rank": 10000,
+                "bili_vip": 2,
+                "mobile_verify": 1,
+                "identification": 1
+            },
+            "property": {
+                "uname_color": "",
+                "bubble": 0,
+                "danmu": {
+                    "mode": 1,
+                    "color": 16777215,
+                    "length": 20,
+                    "room_id": 13328782
+                },
+                "bubble_color": ""
+            },
+            "recharge": {
+                "status": 0,
+                "type": 1,
+                "value": "",
+                "color": "fb7299",
+                "config_id": 0
+            },
+            "relation": {
+                "is_followed": false,
+                "is_fans": false,
+                "is_in_fansclub": false
+            },
+            "wallet": {
+                "gold": 6100,
+                "silver": 3294
+            },
+            "medal": {
+                "cnt": 16,
+                "is_weared": false,
+                "curr_weared": null,
+                "up_medal": {
+                    "uid": 358629230,
+                    "medal_name": "石乐志",
+                    "medal_color": 6067854,
+                    "level": 1
+                }
+            },
+            "extra_config": {
+                "show_bag": false,
+                "show_vip_broadcast": true
+            },
+            "mailbox": {
+                "switch_status": 0,
+                "red_notice": 0
+            },
+            "user_reward": {
+                "entry_effect": {
+                    "id": 0,
+                    "privilege_type": 0,
+                    "priority": 0,
+                    "web_basemap_url": "",
+                    "web_effective_time": 0,
+                    "web_effect_close": 0,
+                    "web_close_time": 0,
+                    "copy_writing": "",
+                    "copy_color": "",
+                    "highlight_color": "",
+                    "mock_effect": 0,
+                    "business": 0,
+                    "face": "",
+                    "basemap_url": "",
+                    "show_avatar": 0,
+                    "effective_time": 0
+                },
+                "welcome": {
+                    "allow_mock": 1
+                }
+            },
+            "shield_info": {
+                "shield_user_list": [],
+                "keyword_list": [],
+                "shield_rules": {
+                    "rank": 0,
+                    "verify": 0,
+                    "level": 0
+                }
+            },
+            "super_chat_message": {
+                "list": []
+            },
+            "lpl_info": {
+                "lpl": 0
+            },
+            "cd": {
+                "guide_free_medal_cost": 0,
+                "guide_light_medal": 0,
+                "guide_follow": 1,
+                "guard_compensate": 0,
+                "interact_toasts": []
+            }
+        }
+    }*/
+
+    if (ac->browserCookie.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser?room_id=" + ac->roomId;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取房间本用户信息返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取用户在这个房间信息
+        QJsonObject info = json.value("data").toObject().value("info").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(info.value("uid").toDouble()));
+        ac->cookieUname = info.value("uname").toString();
+        QString uface = info.value("uface").toString(); // 头像地址
+        qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
+    });
 }
 
 void BiliLiveService::getRoomCover(const QString &url)
@@ -347,7 +811,7 @@ void BiliLiveService::getRoomCover(const QString &url)
 
 void BiliLiveService::getUpInfo(const QString &uid)
 {
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + uid;
+    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + uid + "&platform=web&token=&web_location=1550101");
     get(url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -608,8 +1072,70 @@ void BiliLiveService::updateOnlineGoldRank()
     });
 }
 
-void BiliLiveService::getCookieAccount()
+void BiliLiveService::getPkOnlineGuardPage(int page)
 {
+    static int guard1 = 0, guard2 = 0, guard3 = 0;
+    if (page == 0)
+    {
+        page = 1;
+        guard1 = guard2 = guard3 = 0;
+    }
+
+    if (pkUid.isEmpty())
+    {
+        return;
+    }
+
+    auto addCount = [=](MyJson user) {
+        int alive = user.i("is_alive");
+        if (!alive)
+            return ;
+        QString username = user.s("username");
+        int guard_level = user.i("guard_level");
+        if (!alive)
+            return ;
+        if (guard_level == 1)
+            guard1++;
+        else if (guard_level == 2)
+            guard2++;
+        else
+            guard3++;
+    };
+
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?actionKey=appkey&appkey=27eb53fc9058f8c3&roomid=" + pkRoomId
+            +"&page=" + QString::number(page) + "&ruid=" + pkUid + "&page_size=30";
+    get(url, [=](MyJson json){
+        MyJson data = json.data();
+        // top3
+        if (page == 1)
+        {
+            QJsonArray top3 = data.value("top3").toArray();
+            foreach (QJsonValue val, top3)
+                addCount(val.toObject());
+        }
+
+        // list
+        QJsonArray list = data.value("list").toArray();
+        foreach (QJsonValue val, list)
+            addCount(val.toObject());
+
+        // 下一页
+        QJsonObject info = data.value("info").toObject();
+        int page = info.value("page").toInt();
+        int now = info.value("now").toInt();
+        if (now < page)
+            getPkOnlineGuardPage(now+1);
+        else // 全部完成了
+        {
+            qInfo() << "舰长数量：" << guard1 << guard2 << guard3;
+            LiveDanmaku danmaku;
+            danmaku.setNumber(guard1 + guard2 + guard3);
+            danmaku.extraJson.insert("guard1", guard1);
+            danmaku.extraJson.insert("guard2", guard2);
+            danmaku.extraJson.insert("guard3", guard3);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
+        }
+    });
 }
 
 void BiliLiveService::getGiftList()
@@ -683,6 +1209,101 @@ void BiliLiveService::getEmoticonList()
                 pl->emoticons.insert(e.unique, e);
             }
         } });
+}
+
+void BiliLiveService::sendGift(int giftId, int giftNum)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("赠送礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
+    }
+
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + ac->cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + ac->upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "coin_type=gold";
+    datas << "bag_id=0";
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + ac->roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    QString url("https://api.live.bilibili.com/gift/v2/Live/send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (message != "success")
+        {
+            showError("赠送礼物", message);
+        }
+    });
+}
+
+void BiliLiveService::sendBagGift(int giftId, int giftNum, qint64 bagId)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+
+    if (us->localMode)
+    {
+        localNotify("赠送包裹礼物 -> " + snum(giftId) + " x " + snum(giftNum));
+        return ;
+    }
+
+    // 设置数据（JSON的ByteArray）
+    QStringList datas;
+    datas << "uid=" + ac->cookieUid;
+    datas << "gift_id=" + snum(giftId);
+    datas << "ruid=" + ac->upUid;
+    datas << "send_ruid=0";
+    datas << "gift_num=" + snum(giftNum);
+    datas << "bag_id=" + snum(bagId);
+    datas << "platform=pc";
+    datas << "biz_code=live";
+    datas << "biz_id=" + ac->roomId;
+    datas << "rnd=" + snum(QDateTime::currentSecsSinceEpoch());
+    datas << "storm_beat_id=0";
+    datas << "metadata=";
+    datas << "price=0";
+    datas << "csrf_token=" + ac->csrf_token;
+    datas << "csrf=" + ac->csrf_token;
+    datas << "visit_id=";
+
+    QByteArray ba(datas.join("&").toStdString().data());
+
+    QString url("https://api.live.bilibili.com/gift/v2/live/bag_send");
+    post(url, ba, [=](QJsonObject json){
+        QString message = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (message != "success")
+        {
+            showError("赠送包裹礼物失败", message);
+            qCritical() << s8("warning: 发送失败：") << message << datas.join("&");
+        }
+    });
 }
 
 void BiliLiveService::doSign()
@@ -1115,6 +1736,118 @@ void BiliLiveService::detectMedalUpgrade(LiveDanmaku danmaku)
             ld.setMedalLevel(level); // 设置为本房间的牌子
             triggerCmdEvent("MEDAL_UPGRADE", ld.with(json), true);
         });
+    });
+}
+
+/**
+ * 触发进入直播间事件
+ * 偶然看到的，未经测试
+ */
+void BiliLiveService::roomEntryAction()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/roomEntryAction?room_id="
+            + ac->roomId + "&platform=pc&csrf_token=" + ac->csrf_token + "&csrf=" + ac->csrf_token + "&visit_id=";
+    post(url, QByteArray(), [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("进入直播间返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+    });
+}
+
+void BiliLiveService::getBagList(qint64 sendExpire)
+{
+    if (ac->roomId.isEmpty() || ac->browserCookie.isEmpty())
+    {
+        qWarning() << "房间为空，或未登录";
+        return ;
+    }
+    /*{
+        "code": 0,
+        "message": "0",
+        "ttl": 1,
+        "data": {
+            "list": [
+                {
+                    "bag_id": 232151929,
+                    "gift_id": 30607,
+                    "gift_name": "小心心",
+                    "gift_num": 12,
+                    "gift_type": 5,             // 0 = 普通, 6 = 礼盒, 2 = 加分卡
+                    "expire_at": 1612972800,
+                    "corner_mark": "4天",
+                    "corner_color": "",
+                    "count_map": [
+                        {
+                            "num": 1,
+                            "text": ""
+                        },
+                        {
+                            "num": 12,
+                            "text": "全部"
+                        }
+                    ],
+                    "bind_roomid": 0,
+                    "bind_room_text": "",
+                    "type": 1,
+                    "card_image": "",
+                    "card_gif": "",
+                    "card_id": 0,
+                    "card_record_id": 0,
+                    "is_show_send": false
+                },
+                ......
+    }*/
+
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/gift/bag_list?t=1612663775421&room_id=" + ac->roomId;
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取包裹返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonArray bagArray = json.value("data").toObject().value("list").toArray();
+
+        if (true)
+        {
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftId = bag.value("gift_id").toInt();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                // qInfo() << "当前礼物：" << giftName << "×" << giftNum << cornerMark << giftId <<bagId;
+            }
+        }
+
+        if (sendExpire) // 赠送过期礼物
+        {
+            QList<int> whiteList{1, 6, 30607}; // 辣条、亿圆、小心心
+
+            qint64 timestamp = QDateTime::currentSecsSinceEpoch();
+            qint64 expireTs = timestamp + sendExpire; // 超过这个时间的都送
+            foreach (QJsonValue val, bagArray)
+            {
+                QJsonObject bag = val.toObject();
+                qint64 expire = qint64(bag.value("expire_at").toDouble());
+                int giftId = bag.value("gift_id").toInt();
+                if (!whiteList.contains(giftId) || expire == 0 || expire > expireTs)
+                    continue ;
+
+                // 赠送礼物
+                QString giftName = bag.value("gift_name").toString();
+                int giftNum = bag.value("gift_num").toInt();
+                qint64 bagId = qint64(bag.value("bag_id").toDouble());
+                QString cornerMark = bag.value("corner_mark").toString();
+                qInfo() << "赠送过期礼物：" << giftId << giftName << "×" << giftNum << cornerMark << (expire-timestamp)/3600 << "小时";
+                sendBagGift(giftId, giftNum, bagId);
+            }
+        }
     });
 }
 
@@ -1746,106 +2479,201 @@ void BiliLiveService::receivedPrivateMsg(MyJson session)
     });
 }
 
-/**
- * 发送单条弹幕的原子操作
- */
-void BiliLiveService::sendMsg(const QString& msg)
+QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
 {
-    if (us->localMode)
+    switch (type)
     {
-        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
-        return ;
+    case ApiType::PlatformHomePage:
+        return "https://bilibili.com";
+    case ApiType::RoomPage:
+        return "https://live.bilibili.com/" + snum(id);
+    case ApiType::UserSpace:
+        return "https://space.bilibili.com/" + snum(id);
+    case ApiType::UserFollows:
+        return "https://space.bilibili.com/" + snum(id) + "/fans/follow";
+    case ApiType::UserFans:
+        return "https://space.bilibili.com/" + snum(id) + "/fans/fans";
+    case ApiType::UserVideos:
+        return "https://space.bilibili.com/" + snum(id) + "/video";
+    case ApiType::UserArticles:
+        return "https://space.bilibili.com/" + snum(id) + "/article";
+    case ApiType::UserDynamics:
+        return "https://space.bilibili.com/" + snum(id) + "/dynamic";
+    case ApiType::AppStorePage:
+        return "https://play-live.bilibili.com/details/1653383145397";
+    case ApiType::UserHead:
+        if (wbiMixinKey.isEmpty())
+            return WAIT_INIT;
+        QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + snum(id) + "&platform=web&token=&web_location=1550101");
+        MyJson json(NetUtil::getWebData(url));
+        return json.data().s("face");
     }
+    return "";
+}
 
-    sendRoomMsg(ac->roomId, msg);
+QStringList BiliLiveService::getRoomShieldKeywordsAsync(bool* ok)
+{
+    MyJson roomSK(NetUtil::getWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/GetShieldKeywordList?room_id=" + ac->roomId, ac->userCookies));
+    if (roomSK.code() != 0)
+    {
+        emit signalShowError("获取房间屏蔽词失败", roomSK.msg());
+        if (ok)
+            *ok = false;
+        return QStringList{};
+    }
+    *ok = true;
+    QStringList wordsList;
+    foreach (auto k, roomSK.data().a("keyword_list"))
+        wordsList.append(k.toObject().value("keyword").toString());
+    qInfo() << "当前直播间屏蔽词：" << wordsList.count() << "个";
+    return wordsList;
+}
+
+void BiliLiveService::addRoomShieldKeywordsAsync(const QString &word)
+{
+    MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/AddShieldKeyword",
+    { "room_id", ac->roomId, "keyword", word, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
+    if (json.code() != 0)
+        qWarning() << "添加直播间屏蔽词失败：" << json.msg();
+}
+
+void BiliLiveService::removeRoomShieldKeywordAsync(const QString &word)
+{
+    MyJson json(NetUtil::postWebData("https://api.live.bilibili.com/xlive/web-ucenter/v1/banned/DelShieldKeyword",
+    { "room_id", ac->roomId, "keyword", word, "scrf_token", ac->csrf_token, "csrf", ac->csrf_token, "visit_id", ""}, ac->userCookies).toLatin1());
+    if (json.code() != 0)
+        qWarning() << "移除直播间屏蔽词失败：" << json.msg();
+}
+
+void BiliLiveService::updatePositiveVote()
+{
+    get("https://api.live.bilibili.com/xlive/virtual-interface/v1/app/detail?app_id=1653383145397", [=](MyJson json) {
+        if (json.code() != 0)
+        {
+            qWarning() << "获取饭贩商店应用失败：" << json;
+            return ;
+        }
+        MyJson data = json.data();
+        fanfanOwn = data.b("own");
+        fanfanLike = data.b("is_like");
+        fanfanLikeCount = data.i("like_count");
+        emit signalPositiveVoteStateChanged(fanfanLike);
+        emit signalPositiveVoteCountChanged("好评(" + snum(fanfanLikeCount) + ")");
+
+
+        // 获取到的数值可能是有问题的
+        if (fanfanLikeCount == 0)
+            return ;
+
+        // 添加到自己的库中
+        if (!fanfanOwn)
+        {
+            qInfo() << "饭贩商店获取本应用";
+            fanfanAddOwn();
+        }
+    });
 }
 
 /**
- * 向指定直播间发送弹幕
+ * 饭贩好评
+ * 需要 Cookie 带有 PEA_AU 字段
  */
-void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
+void BiliLiveService::setPositiveVote()
 {
-    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
+    // 浏览器复制的cookie，一键好评
+    if (!ac->browserCookie.contains("PEA_AU="))
     {
-        showError("发送弹幕", "机器人账号未登录");
-#ifdef ZUOQI_ENTRANCE
-        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
-#endif
-        return ;
+        // 先获取登录信息，再进行好评
+        fanfanLogin(true);
+        return;
     }
-    if (msg.isEmpty() || ac->roomId.isEmpty())
-        return ;
 
-    // 设置数据（JSON的ByteArray）
-    QString s = ac->browserData;
-    int posl = s.indexOf("msg=")+4;
-    int posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, msg);
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/like";
+    MyJson json;
+    json.insert("app_id", (qint64)1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
 
-    posl = s.indexOf("roomid=")+7;
-    posr = s.indexOf("&", posl);
-    if (posr == -1)
-        posr = s.length();
-    s.replace(posl, posr-posl, roomId);
-
-    QByteArray ba(s.toStdString().data());
-
-    // 连接槽
-    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
-        QString errorMsg = json.value("message").toString();
-        emit signalStatusChanged("");
-        if (!errorMsg.isEmpty())
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() != 0)
         {
-            QString errorDesc = errorMsg;
-            if (errorMsg == "f")
-            {
-                errorDesc = "包含屏蔽词";
-            }
-            else if (errorMsg == "k")
-            {
-                errorDesc = "包含直播间屏蔽词";
-            }
+            qWarning() << "饭贩好评失败";
+            QDesktopServices::openUrl(QUrl("https://play-live.bilibili.com/details/1653383145397"));
+        }
 
-            showError("发送弹幕失败", errorDesc);
-            qWarning() << msg;
-            localNotify(errorDesc + " -> " + msg);
+        QTimer::singleShot(0, [=]{
+            updatePositiveVote();
+        });
+    });
+}
 
-            // 重试
-            if (!us->retryFailedDanmaku)
-                return ;
+void BiliLiveService::fanfanLogin(bool autoVote)
+{
+    post("https://api.live.bilibili.com/xlive/virtual-interface/v1/user/login", "", [=](QNetworkReply* reply){
+        QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
+        QList<QNetworkCookie> cookies = qvariant_cast<QList<QNetworkCookie> >(variantCookies);
+        if (!cookies.size())
+        {
+            qWarning() << "login 没有返回 set cookie。" << variantCookies;
+            return ;
+        }
+        QNetworkCookie cookie = cookies.at(0);
+        QString DataAsString =cookie.toRawForm(); // 转换为QByteArray
+        qInfo() << "饭贩连接：" << DataAsString;
+        autoSetCookie(ac->browserCookie + "; " + DataAsString);
 
-            if (errorMsg.contains("msg in 1s"))
-            {
-                localNotify("[5s后重试]");
-                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
-            }
-            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
-            {
-                localNotify("[4s后重试]");
-                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
-            }
-            else if (errorMsg.contains("超出限制长度"))
-            {
-                if (msg.length() <= ac->danmuLongest)
+        if (!ac->browserCookie.contains("PEA_AU="))
+        {
+            qCritical() << "饭贩登录后不带有PEA_AU信息";
+            return;
+        }
+
+        if (autoVote)
+        {
+            QTimer::singleShot(3000, [=]{
+                if (!fanfanLike)
                 {
-                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ac->danmuLongest) + "]");
+                    setPositiveVote();
                 }
-                else
-                {
-                    localNotify("[自动分割长度]");
-                    emit signalSendAutoMsgInFirst(splitLongDanmu(msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
-                }
-            }
-            else if (errorMsg == "f") // 系统敏感词
-            {
-            }
-            else if (errorMsg == "k") // 主播设置的直播间敏感词
-            {
-            }
+            });
         }
     });
+}
+
+void BiliLiveService::fanfanAddOwn()
+{
+    QString url = "https://api.live.bilibili.com/xlive/virtual-interface/v1/app/addOwn";
+    MyJson json;
+    json.insert("app_id", (qint64)1653383145397);
+    json.insert("csrf_token", ac->csrf_token);
+    json.insert("csrf", ac->csrf_token);
+    json.insert("visit_id", "");
+
+    postJson(url, json.toBa(), [=](QNetworkReply* reply){
+        QByteArray ba(reply->readAll());
+        MyJson json(ba);
+        if (json.code() == 1666501)
+        {
+            qInfo() << "饭贩已拥有，无需重复添加";
+        }
+        else if (json.code() != 0)
+        {
+            qWarning() << "饭贩添加失败：" << json.msg();
+        }
+    });
+}
+
+int BiliLiveService::getPositiveVoteCount() const
+{
+    return fanfanLikeCount;
+}
+
+bool BiliLiveService::isPositiveVote() const
+{
+    return fanfanLike;
 }
 
 void BiliLiveService::getRoomBattleInfo()
@@ -2194,6 +3022,771 @@ void BiliLiveService::connectPkSocket()
         pkLiveSocket->open(host);
     });
     manager->get(*request);
+}
+
+void BiliLiveService::getPkMatchInfo()
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + pkRoomId;
+    get(url, [=](MyJson json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取PK匹配返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        MyJson data = json.data();
+        LiveDanmaku danmaku;
+        danmaku.with(data);
+
+        // 计算高能榜综合
+        qint64 sum = 0;
+        data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
+            sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
+        });
+        danmaku.setTotalCoin(sum); // 高能榜总积分
+        danmaku.setNumber(data.o("online_gold_rank_info_v2").a("list").size()); // 高能榜总人数
+        qInfo() << "对面高能榜积分总和：" << sum;
+        // qDebug() << data.o("online_gold_rank_info_v2").a("list");
+        triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
+    });
+}
+
+void BiliLiveService::pkPre(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_PRE",
+        "pk_status": 101,
+        "pk_id": 100970480,
+        "timestamp": 1607763991,
+        "data": {
+            "battle_type": 1, // 自己开始匹配？
+            "uname": "SLe\\u4e36\\u82cf\\u4e50",
+            "face": "http:\\/\\/i2.hdslb.com\\/bfs\\/face\\/4636d48aeefa1a177bc2bdfb595892d3648b80b1.jpg",
+            "uid": 13330958,
+            "room_id": 271270,
+            "season_id": 30,
+            "pre_timer": 10,
+            "pk_votes_name": "\\u4e71\\u6597\\u503c",
+            "end_win_task": null
+        },
+        "roomid": 22532956
+    }*/
+
+    /*{ 对面匹配过来的情况
+        "cmd": "PK_BATTLE_PRE",
+        "pk_status": 101,
+        "pk_id": 100970387,
+        "timestamp": 1607763565,
+        "data": {
+            "battle_type": 2, // 对面开始匹配？
+            "uname": "\\u519c\\u6751\\u9493\\u9c7c\\u5c0f\\u6b66\\u5929\\u5929\\u76f4\\u64ad",
+            "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/fbaa9cfbc214164236cdbe79a77bcaae5334e9ef.jpg",
+            "uid": 199775659, // 对面用户ID
+            "room_id": 12298098, // 对面房间ID
+            "season_id": 30,
+            "pre_timer": 10,
+            "pk_votes_name": "\\u4e71\\u6597\\u503c", // 乱斗值
+            "end_win_task": null
+        },
+        "roomid": 22532956
+    }*/
+
+    // 大乱斗信息
+    QJsonObject data = json.value("data").toObject();
+    QString uname = data.value("uname").toString();
+    QString uid = QString::number(static_cast<qint64>(data.value("uid").toDouble()));
+    QString room_id = QString::number(static_cast<qint64>(data.value("room_id").toDouble()));
+    pkUname = uname;
+    pkRoomId = room_id;
+    pkUid = uid;
+
+    // 大乱斗类型
+    pkBattleType = data.value("battle_type").toInt();
+    if (pkBattleType == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (pkBattleType == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
+
+    qInfo() << "准备大乱斗，已匹配：" << static_cast<qint64>(json.value("pk_id").toDouble())  << "    类型：" << pkBattleType;
+    if (rt->danmakuWindow)
+    {
+        if (uname.isEmpty())
+            emit signalDanmakuStatusChanged("大乱斗匹配中...");
+        else if (!pkRoomId.isEmpty())
+        {
+            int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+            QString text = "匹配：" + uname;
+            if(pkCount > 0)
+                text += "[" + QString::number(pkCount) + "]";
+            emit signalDanmakuStatusChanged(text);
+            qInfo() << "主播：" << uname << pkUid << pkRoomId;
+            emit signalPKStatusChanged(1, pkRoomId.toLongLong(), pkUid.toLongLong(), pkUname);
+        }
+    }
+    pkToLive = QDateTime::currentSecsSinceEpoch();
+
+    if (pkChuanmenEnable /*&& battle_type == 2*/)
+    {
+        connectPkRoom();
+    }
+    emit signalActionShowPKVideoChanged(true);
+    emit signalActionJoinBattleChanged(false);
+    pkGifts.clear();
+
+    emit signalBattlePrepared();
+}
+
+void BiliLiveService::pkStart(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_START",
+        "data": {
+            "battle_type": 1, // 不知道其他类型是啥
+            "final_hit_votes": 0,
+            "pk_end_time": 1605748342,
+            "pk_frozen_time": 1605748332,
+            "pk_start_time": 1605748032,
+            "pk_votes_add": 0,
+            "pk_votes_name": "乱斗值",
+            "pk_votes_type": 0
+        },
+        "pk_id": 100729281,
+        "pk_status": 201,
+        "timestamp": 1605748032
+    }*/
+
+    QJsonObject data = json.value("data").toObject();
+    pking = true;
+    qint64 startTime = static_cast<qint64>(data.value("pk_start_time").toDouble());
+    // qint64 endTime = static_cast<qint64>(data.value("pk_end_time").toDouble());
+    pkEndTime = startTime + 300; // 因为endTime要延迟10秒，还是用startTime来判断吧
+    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+    qint64 deltaEnd = pkEndTime - currentTime;
+    QString roomId = ac->roomId;
+    oppositeTouta = 0;
+    cmAudience.clear();
+    pkBattleType = data.value("battle_type").toInt();
+    if (pkBattleType == 1) // 普通大乱斗
+        pkVideo = false;
+    else if (pkBattleType == 2) // 视频大乱斗
+        pkVideo = true;
+    else
+        pkVideo = false;
+    if (pkVideo)
+    {
+        pkToLive = currentTime;
+    }
+
+    // 结束前x秒
+    pkEndingTimer->start(deltaEnd*1000 - pkJudgeEarly);
+
+    pkTimer->start();
+    qint64 pkid = static_cast<qint64>(json.value("pk_id").toDouble());
+    qInfo() << "开启大乱斗, id =" << pkid << "  room=" << pkRoomId << "  user=" << pkUid << "   battle_type=" << pkBattleType;
+
+    // 保存PK信息
+    int pkCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt();
+    us->danmakuCounts->setValue("pk/" + pkRoomId, pkCount+1);
+    qInfo() << "保存匹配次数：" << pkRoomId << pkUname << (pkCount+1);
+
+    // PK提示
+    QString text = "开启大乱斗：" + pkUname;
+    if (pkCount)
+        text += "  PK过" + QString::number(pkCount) + "次";
+    else
+        text += "  初次匹配";
+    localNotify(text, pkUid.toLongLong());
+
+    emit signalBattleStarted();
+}
+
+void BiliLiveService::pkProcess(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_PROCESS",
+        "data": {
+            "battle_type": 1,
+            "init_info": {
+                "best_uname": "我今天超可爱0",
+                "room_id": 22532956,
+                "votes": 132
+            },
+            "match_info": {
+                "best_uname": "银河的偶尔限定女友粉",
+                "room_id": 21398069,
+                "votes": 156
+            }
+        },
+        "pk_id": 100729411,
+        "pk_status": 201,
+        "timestamp": 1605749908
+    }*/
+    QJsonObject data = json.value("data").toObject();
+    int prevMyVotes = myVotes;
+    int prevMatchVotes = matchVotes;
+    if (snum(static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble())) == ac->roomId)
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+    }
+    else
+    {
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+    }
+
+    if (!pkTimer->isActive())
+        pkTimer->start();
+
+    if (pkEnding)
+    {
+        qInfo() << "大乱斗进度(偷塔阶段)：" << myVotes << matchVotes << "   等待送到：" << pkVoting;
+
+        // 显示偷塔情况
+        if (prevMyVotes < myVotes)
+        {
+            int delta = myVotes - prevMyVotes;
+            localNotify("[己方偷塔] + " + snum(delta));
+
+            // B站返回的规则改了，偷塔的时候获取不到礼物了
+            pkVoting -= delta;
+            if (pkVoting < 0)
+                pkVoting = 0;
+        }
+        if (prevMatchVotes < matchVotes)
+        {
+            oppositeTouta++;
+            localNotify("[对方偷塔] + " + snum(matchVotes - prevMatchVotes));
+            {
+                // qInfo() << "pk偷塔信息：" << s;
+                if (danmuLogStream)
+                {
+                    /* int melon = 100 / goldTransPk; // 单个吃瓜有多少乱斗值
+                    int num = static_cast<int>((matchVotes-myVotes-pkVoting+melon)/melon);
+                    QString s = QString("myVotes:%1, pkVoting:%2, matchVotes:%3, maxGold:%4, goldTransPk:%5, oppositeTouta:%6, need:%7")
+                                .arg(myVotes).arg(pkVoting).arg(matchVotes).arg(getPkMaxGold(qMax(myVotes, matchVotes))).arg(goldTransPk).arg(oppositeTouta)
+                                .arg(num);
+                    (*danmuLogStream) << s << "\n";
+                    (*danmuLogStream).flush(); // 立刻刷新到文件里 */
+                }
+            }
+        }
+
+        // 反偷塔，防止对方也在最后几秒刷礼物
+        execTouta();
+    }
+    else
+    {
+        qInfo() << "大乱斗进度：" << myVotes << matchVotes;
+    }
+}
+
+void BiliLiveService::pkEnd(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_END",
+        "data": {
+            "battle_type": 1,
+            "init_info": {
+                "best_uname": "我今天超可爱0",
+                "room_id": 22532956,
+                "votes": 10,
+                "winner_type": 2
+            },
+            "match_info": {
+                "best_uname": "",
+                "room_id": 22195813,
+                "votes": 0,
+                "winner_type": -1
+            },
+            "timer": 10
+        },
+        "pk_id": "100729259",
+        "pk_status": 401,
+        "timestamp": 1605748006
+    }*/
+    // winner_type: 2赢，-1输，两边2平局
+
+    QJsonObject data = json.value("data").toObject();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
+    int winnerType1 = data.value("init_info").toObject().value("winner_type").toInt();
+    int winnerType2 = data.value("match_info").toObject().value("winner_type").toInt();
+    qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
+    if (pkTimer)
+        pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
+    emit signalBattleFinished();
+
+    QString bestName = "";
+    int winnerType = 0;
+    if (snum(thisRoomId) == ac->roomId) // init是自己
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winnerType = winnerType1;
+    }
+    else // match是自己
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winnerType = winnerType2;
+    }
+
+    bool ping = winnerType1 == winnerType2;
+    bool result = winnerType > 0;
+
+    qint64 bestUid = 0;
+    int winCode = 0;
+    if (!ping)
+        winCode = winnerType;
+    if (myVotes > 0)
+    {
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                bestUid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
+    }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+
+    localNotify(QString("大乱斗 %1：%2 vs %3")
+                                     .arg(ping ? "平局" : (result ? "胜利" : "失败"))
+                                     .arg(myVotes)
+                                     .arg(matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (ping ? "平局" : (result ? "胜利" : "失败")) << myVotes << matchVotes;
+    myVotes = 0;
+    matchVotes = 0;
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
+
+    // 保存对面偷塔次数
+    if (oppositeTouta && !pkUname.isEmpty())
+    {
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+    }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
+    pkUname = "";
+    pkUid = "";
+    pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
+    pkVideo = false;
+    emit signalActionShowPKVideoChanged(false);
+    pkBattleType = 0;
+
+    if (ac->cookieUid == ac->upUid)
+        emit signalActionJoinBattleChanged(true);
+
+    if (pkLiveSocket)
+    {
+        try {
+            if (pkLiveSocket->state() == QAbstractSocket::ConnectedState)
+                pkLiveSocket->close(); // 会自动deleterLater
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qCritical() << "delete pkSocket failed";
+        }
+        pkLiveSocket = nullptr;
+    }
+}
+
+void BiliLiveService::pkSettle(QJsonObject json)
+{
+    /*{
+        "cmd": "PK_BATTLE_SETTLE_NEW",
+        "pk_id": 200933662,
+        "pk_status": 601,
+        "timestamp": 1613959764,
+        "data": {
+            "pk_id": 200933662,
+            "pk_status": 601,
+            "settle_status": 1,
+            "punish_end_time": 1613959944,
+            "timestamp": 1613959764,
+            "battle_type": 6,
+            "init_info": {
+                "room_id": 7259049,
+                "result_type": -1,
+                "votes": 0,
+                "assist_info": []
+            },
+            "match_info": {
+                "room_id": 21839758,
+                "result_type": 2,
+                "votes": 3,
+                "assist_info": [
+                    {
+                        "rank": 1,
+                        "uid": 412357310,
+                        "face": "http:\\/\\/i0.hdslb.com\\/bfs\\/face\\/e97fbf0e412b936763033055821e1ff5df56565a.jpg",
+                        "uname": "\\u6cab\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8\\u58a8"
+                    }
+                ]
+            },
+            "dm_conf": {
+                "font_color": "#FFE10B",
+                "bg_color": "#72C5E2"
+            }
+        }
+    }*/
+
+    QJsonObject data = json.value("data").toObject();
+    if (pkVideo)
+        pkToLive = QDateTime::currentSecsSinceEpoch();
+    int winnerType1 = data.value("init_info").toObject().value("result_type").toInt();
+    int winnerType2 = data.value("match_info").toObject().value("result_type").toInt();
+    qint64 thisRoomId = static_cast<qint64>(data.value("init_info").toObject().value("room_id").toDouble());
+    if (pkTimer)
+        pkTimer->stop();
+    if (pkEndingTimer)
+        pkEndingTimer->stop();
+    emit signalBattleFinished();
+
+    QString bestName = "";
+    int winCode = 0;
+    if (snum(thisRoomId) == ac->roomId) // init是自己
+    {
+        myVotes = data.value("init_info").toObject().value("votes").toInt();
+        matchVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("init_info").toObject().value("best_uname").toString();
+        winCode = winnerType1;
+    }
+    else // match是自己
+    {
+        matchVotes = data.value("init_info").toObject().value("votes").toInt();
+        myVotes = data.value("match_info").toObject().value("votes").toInt();
+        bestName = data.value("match_info").toObject().value("best_uname").toString();
+        winCode = winnerType2;
+    }
+
+    qint64 bestUid = 0;
+    if (myVotes > 0)
+    {
+        for (int i = pkGifts.size()-1; i >= 0; i--)
+            if (pkGifts.at(i).getNickname() == bestName)
+            {
+                bestUid = pkGifts.at(i).getUid();
+                break;
+            }
+        LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
+        triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
+    }
+    triggerCmdEvent("PK_END", LiveDanmaku(bestName, bestUid, winCode, myVotes).with(data), true);
+
+    localNotify(QString("大乱斗 %1：%2 vs %3")
+                                     .arg(winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败"))
+                                     .arg(myVotes)
+                                     .arg(matchVotes));
+    qInfo() << "大乱斗结束，结果：" << (winCode == 0 ? "平局" : (winCode > 0 ? "胜利" : "失败")) << myVotes << matchVotes;
+    myVotes = 0;
+    matchVotes = 0;
+    QTimer::singleShot(60000, [=]{
+        if (pking) // 下一把PK，已经清空了
+            return ;
+        cmAudience.clear();
+    });
+
+    // 保存对面偷塔次数
+    if (oppositeTouta && !pkUname.isEmpty())
+    {
+        int count = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+        us->danmakuCounts->setValue("touta/" + pkRoomId, count+1);
+    }
+
+    // 清空大乱斗数据
+    pking = false;
+    pkEnding = false;
+    pkVoting = 0;
+    pkEndTime = 0;
+    pkUname = "";
+    pkUid = "";
+    pkRoomId = "";
+    myAudience.clear();
+    oppositeAudience.clear();
+    pkVideo = false;
+    emit signalActionShowPKVideoChanged(false);
+
+    if (ac->cookieUid == ac->upUid)
+        emit signalActionJoinBattleChanged(true);
+
+    if (pkLiveSocket)
+    {
+        try {
+            if (pkLiveSocket->state() == QAbstractSocket::ConnectedState)
+                pkLiveSocket->close(); // 会自动deleterLater
+            // pkSocket->deleteLater();
+        } catch (...) {
+            qCritical() << "delete pkSocket failed";
+        }
+        pkLiveSocket = nullptr;
+    }
+}
+
+void BiliLiveService::slotPkEndingTimeout()
+{
+    if (!pking) // 比如换房间了
+    {
+        qInfo() << "大乱斗结束前，逻辑不正确" << pking << ac->roomId
+                 << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+        return ;
+    }
+
+    pkEndingTimer->stop();
+
+    slotPkEnding();
+}
+
+void BiliLiveService::slotPkEnding()
+{
+    qInfo() << "大乱斗结束前情况：" << myVotes << matchVotes
+             << QDateTime::currentSecsSinceEpoch() << pkEndTime;
+
+    pkEnding = true;
+    pkVoting = 0;
+
+    // 几个吃瓜就能解决的……
+    {
+        QString text = QString("大乱斗尾声：%1 vs %2")
+                .arg(myVotes).arg(matchVotes);
+        if (!pkRoomId.isEmpty())
+        {
+            int totalCount = us->danmakuCounts->value("pk/" + pkRoomId, 0).toInt() - 1;
+            int toutaCount = us->danmakuCounts->value("touta/" + pkRoomId, 0).toInt();
+            if (totalCount > 1) // 开始的时候就已经+1了，上面已经-1
+                text += QString("  偷塔概率:%1/%2")
+                                .arg(toutaCount).arg(totalCount);
+        }
+
+        // localNotify(text);
+    }
+    execTouta();
+
+    triggerCmdEvent("PK_ENDING", LiveDanmaku(), true);
+}
+
+int BiliLiveService::getPkMaxGold(int votes)
+{
+    if (!pkAutoMaxGold)
+        return pkMaxGold;
+    int money = qMax(0, votes / (1000 / goldTransPk) - pkMaxGold / goldTransPk); // 用于计算的价格
+    double prop = pow(money, 1.0/3); // 自动调整的倍率，未限制
+    double maxProp = 10.0 / qMax(1, pkMaxGold / 1000); // 限制最大是10倍；10元及以上则不使用倍率
+    maxProp = qMax(1.0, maxProp);
+    prop = qMin(qMax(1.0, prop), maxProp); // 限制倍率是 1 ~ 10 倍之间
+    if (pkAutoMelon && us->debugPrint)
+        qInfo() << ("[偷塔上限 " + snum(votes) + " => " + snum(int(pkMaxGold * prop)) + "金瓜子, "
+                    +QString::number(pow(money, 1.0/3), 'f', 1)+"倍]");
+    return int(pkMaxGold * prop);
+}
+
+bool BiliLiveService::execTouta()
+{
+    int maxGold = getPkMaxGold(qMax(myVotes, matchVotes));
+    if (pkAutoMelon
+            && myVotes + pkVoting <= matchVotes
+            && myVotes + pkVoting + maxGold/goldTransPk > matchVotes
+            /* && oppositeTouta < 6 // 对面之前未连续偷塔（允许被偷塔五次）（可能是连刷，这时候几个吃瓜偷塔没用） */
+            && !toutaBlankList.contains(pkRoomId)
+            && !magicalRooms.contains(pkRoomId))
+    {
+        // 调用送礼
+        int giftId = 0, giftNum = 0;
+        QString giftName;
+        int giftUnit = 0, giftVote = 0; // 单价和单乱斗值
+        int needVote = matchVotes - myVotes - pkVoting; // 至少需要多少积分才能不输给对面
+
+        if (!toutaGift) // 赠送吃瓜（比对面多1分）
+        {
+            giftId = 20004;
+            giftUnit = 100;
+            giftVote = giftUnit / goldTransPk; // 单个吃瓜有多少乱斗值
+            giftNum = needVote / giftVote + 1; // 需要多少个礼物
+
+            chiguaCount += giftNum;
+        }
+        else // 按类型赠送礼物
+        {
+            int minCost = 0x3f3f3f3f;
+            foreach (auto gift, toutaGifts)
+            {
+                int unit = gift.getTotalCoin(); // 单价
+                int vote = unit / goldTransPk; // 相当于多少乱斗值
+                int num = needVote / vote + 1; // 起码要这个数量
+                int cost = unit * num; // 总价
+                if (cost > maxGold) // 总价超过上限
+                    continue;
+
+                if (toutaGiftCounts.size()) // 数量白名单
+                {
+                    int index = -1;
+                    for (int i = 0; i < toutaGiftCounts.size(); i++)
+                    {
+                        int count = toutaGiftCounts.at(i);
+                        if (count >= num) // 这个数量可以赢
+                        {
+                            int cos = unit * count;
+                            if (cos > maxGold) // 总价超过上限
+                                continue;
+
+                            // 这个可以使用
+                            index = i;
+                            num = count;
+                            cost = cos;
+                            break;
+                        }
+                    }
+                    if (index == -1) // 没有合适的数量
+                        continue;
+                }
+
+                if (cost < minCost || (cost == minCost && num < giftNum)) // 以价格低、数量少的优先
+                {
+                    giftId = gift.getGiftId();
+                    giftName = gift.getGiftName();
+                    giftUnit = unit;
+                    giftVote = vote;
+                    giftNum = num;
+                    minCost = cost;
+                }
+            }
+        }
+
+        if (!giftId)
+        {
+            qWarning() << "没有可赠送的合适礼物：" << needVote << "积分";
+            return false;
+        }
+
+        sendGift(giftId, giftNum);
+        localNotify(QString("[") + (oppositeTouta ? "反" : "") + "偷塔] " + snum(matchVotes-myVotes-pkVoting+1) + "，赠送 " + snum(giftNum) + " 个" + giftName);
+        qInfo() << "大乱斗赠送" << giftNum << "个" << giftName << "：" << myVotes << "vs" << matchVotes;
+        if (!us->localMode)
+            pkVoting += giftVote * giftNum; // 正在赠送中
+
+        toutaCount++;
+        toutaGold += giftUnit * giftNum;
+        saveTouta();
+        return true;
+    }
+    return false;
+}
+
+void BiliLiveService::saveTouta()
+{
+    us->setValue("pk/toutaCount", toutaCount);
+    us->setValue("pk/chiguaCount", chiguaCount);
+    us->setValue("pk/toutaGold", toutaGold);
+    QString tooltip = QString("偷塔次数：%1\n吃瓜数量：%2\n金瓜子数：%3").arg(toutaCount).arg(chiguaCount).arg(toutaGold);
+    emit signalAutoMelonMsgChanged(tooltip);
+}
+
+void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
+{
+    if (ac->roomId.isEmpty())
+        return ;
+    /*QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
+            + "&quality=4&qn=10000&platform=web&otype=json";
+    get(url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取视频URL返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        // 获取链接
+        QJsonArray array = json.value("data").toObject().value("durl").toArray();
+        /*"url": "http://d1--cn-gotcha04.bilivideo.com/live-bvc/521719/live_688893202_7694436.flv?cdn=cn-gotcha04\\u0026expires=1607505058\\u0026len=0\\u0026oi=1944862322\\u0026pt=\\u0026qn=10000\\u0026trid=40938d869aca4cb39041730f74ff9051\\u0026sigparams=cdn,expires,len,oi,pt,qn,trid\\u0026sign=ac701ba60c346bf3a173e56bcb14b7b9\\u0026ptype=0\\u0026src=9\\u0026sl=1\\u0026order=1",
+          "length": 0,
+          "order": 1,
+          "stream_type": 0,
+          "p2p_type": 0*-/
+        QString url = array.first().toObject().value("url").toString();
+        if (func)
+            func(url);
+    });*/
+
+    QString full_url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + ac->roomId
+            + "&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
+    get(full_url, [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            qWarning() << ("返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject play_url = json.value("data").toObject().value("playurl_info").toObject().value("playurl").toObject();
+        QJsonArray streams = play_url.value("stream").toArray();
+        QString url;
+
+        // 先抓取m3u8的视频
+        foreach (auto _stream, streams)
+        {
+            auto stream = _stream.toObject();
+            // m3u8:http_hls, flv:http_stream
+            if (stream.value("protocol_name").toString() != "http_hls")
+                continue;
+
+            auto formats = stream.value("format").toArray(); // 这里有多个可播放的格式
+            foreach (auto _format, formats)
+            {
+                auto format = _format.toObject();
+                auto codecs = format.value("codec").toArray();
+                foreach (auto _codec, codecs)
+                {
+                    auto codec = _codec.toObject();
+                    QString codec_name = codec.value("codec_name").toString();
+                    QString base_url = codec.value("base_url").toString();
+                    auto url_infos = codec.value("url_info").toArray();
+                    foreach (auto _url_info, url_infos)
+                    {
+                        auto url_info = _url_info.toObject();
+                        QString host = url_info.value("host").toString();
+                        QString extra = url_info.value("extra").toString();
+                        qint64 stream_ttl = url_info.value("stream_ttl").toInt();
+
+                        url = host + base_url;
+
+                        if (!url.isEmpty())
+                            break;
+                    }
+                    if (!url.isEmpty())
+                        break;
+                }
+                if (!url.isEmpty())
+                    break;
+            }
+            if (!url.isEmpty())
+                break;
+        }
+
+        if (url.isEmpty())
+        {
+            qWarning() << "录播无法获取下载地址：" << full_url;
+            return ;
+        }
+        if (url.endsWith("?"))
+            url = url.left(url.length() - 1);
+        if (func)
+            func(url);
+    });
 }
 
 void BiliLiveService::startHeartConnection()
@@ -2553,291 +4146,468 @@ void BiliLiveService::processNewDayData()
     us->setValue("danmaku/todayHeartMinite", todayHeartMinite = 0);
 }
 
-void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
+/**
+ * 发送单条弹幕的原子操作
+ */
+void BiliLiveService::sendMsg(const QString& msg)
 {
-
-}
-
-void BiliLiveService::slotPkBinaryMessageReceived(const QByteArray &message)
-{
-    int operation = ((uchar)message[8] << 24)
-            + ((uchar)message[9] << 16)
-            + ((uchar)message[10] << 8)
-            + ((uchar)message[11]);
-    QByteArray body = message.right(message.length() - 16);
-    SOCKET_INF << "pk操作码=" << operation << "  正文=" << (body.left(35)) << "...";
-
-    QJsonParseError error;
-    QJsonDocument document = QJsonDocument::fromJson(body, &error);
-    QJsonObject json;
-    if (error.error == QJsonParseError::NoError)
-        json = document.object();
-
-    if (operation == OP_SEND_MSG_REPLY) // 普通包
+    if (us->localMode)
     {
-        QString cmd;
-        if (!json.isEmpty())
-        {
-            cmd = json.value("cmd").toString();
-            qInfo() << "pk普通CMD：" << cmd;
-            SOCKET_INF << json;
-        }
-
-        if (cmd == "NOTICE_MSG") // 全站广播（不用管）
-        {
-        }
-        else if (cmd == "ROOM_RANK")
-        {
-        }
-        else // 压缩弹幕消息
-        {
-            short protover = (message[6]<<8) + message[7];
-            SOCKET_INF << "pk协议版本：" << protover;
-            if (protover == 2) // 默认协议版本，zlib解压
-            {
-                uncompressPkBytes(body);
-            }
-        }
+        localNotify("发送弹幕 -> " + msg + "  (" + snum(msg.length()) + ")");
+        return ;
     }
 
-//    delete[] body.data();
-//    delete[] message.data();
-    SOCKET_DEB << "PkSocket消息处理结束";
+    sendRoomMsg(ac->roomId, msg);
 }
 
-void BiliLiveService::uncompressPkBytes(const QByteArray &body)
+/**
+ * 向指定直播间发送弹幕
+ */
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
 {
-    QByteArray unc = BiliApiUtil::zlibToQtUncompr(body.data(), body.size()+1);
-    int offset = 0;
-    short headerSize = 16;
-    while (offset < unc.size() - headerSize)
+    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
-        int packSize = ((uchar)unc[offset+0] << 24)
-                + ((uchar)unc[offset+1] << 16)
-                + ((uchar)unc[offset+2] << 8)
-                + (uchar)unc[offset+3];
-        QByteArray jsonBa = unc.mid(offset + headerSize, packSize - headerSize);
+        showError("发送弹幕", "机器人账号未登录");
+#ifdef ZUOQI_ENTRANCE
+        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
+#endif
+        return ;
+    }
+    if (msg.isEmpty() || ac->roomId.isEmpty())
+        return ;
+
+    // 设置数据（JSON的ByteArray）
+    QString s = ac->browserData;
+    int posl = s.indexOf("msg=")+4;
+    int posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, msg);
+
+    posl = s.indexOf("roomid=")+7;
+    posr = s.indexOf("&", posl);
+    if (posr == -1)
+        posr = s.length();
+    s.replace(posl, posr-posl, roomId);
+
+    QByteArray ba(s.toStdString().data());
+
+    // 连接槽
+    post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
+        QString errorMsg = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (!errorMsg.isEmpty())
+        {
+            QString errorDesc = errorMsg;
+            if (errorMsg == "f")
+            {
+                errorDesc = "包含屏蔽词";
+            }
+            else if (errorMsg == "k")
+            {
+                errorDesc = "包含直播间屏蔽词";
+            }
+
+            showError("发送弹幕失败", errorDesc);
+            qWarning() << msg;
+            localNotify(errorDesc + " -> " + msg);
+
+            // 重试
+            if (!us->retryFailedDanmaku)
+                return ;
+
+            if (errorMsg.contains("msg in 1s"))
+            {
+                localNotify("[5s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+            }
+            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
+            {
+                localNotify("[4s后重试]");
+                emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 4200);
+            }
+            else if (errorMsg.contains("超出限制长度"))
+            {
+                if (msg.length() <= ac->danmuLongest)
+                {
+                    localNotify("[错误的弹幕长度：" + snum(msg.length()) + "字，但设置长度" + snum(ac->danmuLongest) + "]");
+                }
+                else
+                {
+                    localNotify("[自动分割长度]");
+                    emit signalSendAutoMsgInFirst(splitLongDanmu(msg, ac->danmuLongest).join("\\n"), LiveDanmaku().withRetry().withRoomId(roomId), 1000);
+                }
+            }
+            else if (errorMsg == "f") // 系统敏感词
+            {
+            }
+            else if (errorMsg == "k") // 主播设置的直播间敏感词
+            {
+            }
+        }
+    });
+}
+
+void BiliLiveService::pullLiveDanmaku()
+{
+    if (ac->roomId.isEmpty())
+        return ;
+    QString url = "https://api.live.bilibili.com/ajax/msg";
+    QStringList param{"roomid", ac->roomId};
+    connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(jsonBa, &error);
+        QJsonDocument document = QJsonDocument::fromJson(result.toUtf8(), &error);
         if (error.error != QJsonParseError::NoError)
         {
-            qCritical() << s8("pk解析解压后的JSON出错：") << error.errorString();
-            qCritical() << s8("pk包数值：") << offset << packSize << "  解压后大小：" << unc.size();
-            qCritical() << s8(">>pk当前JSON") << jsonBa;
-            qCritical() << s8(">>pk解压正文") << unc;
+            qCritical() << "pullLiveDanmaku.ERROR:" << error.errorString();
+            qCritical() << result;
+            return ;
+        }
+
+        _loadingOldDanmakus = true;
+        QJsonObject json = document.object();
+        QJsonArray danmakus = json.value("data").toObject().value("room").toArray();
+        QDateTime time = QDateTime::currentDateTime();
+        qint64 removeTime = time.toMSecsSinceEpoch() - us->removeDanmakuInterval;
+        for (int i = 0; i < danmakus.size(); i++)
+        {
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
+                continue;
+            danmaku.transToDanmu();
+            danmaku.setTime(time);
+            danmaku.setNoReply();
+            appendNewLiveDanmaku(danmaku);
+        }
+        _loadingOldDanmakus = false;
+    });
+}
+
+void BiliLiveService::showFollowCountInAction(qint64 uid, QLabel* statusLabel, QAction *action, QAction *action2) const
+{
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray data = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(data, &error);
+        if (error.error != QJsonParseError::NoError)
+        {
+            qDebug() << "获取粉丝失败：" << error.errorString();
             return ;
         }
         QJsonObject json = document.object();
-        QString cmd = json.value("cmd").toString();
-        SOCKET_INF << "pk解压后获取到CMD：" << cmd;
-        if (cmd != "ROOM_BANNER" && cmd != "ACTIVITY_BANNER_UPDATE_V2" && cmd != "PANEL"
-                && cmd != "ONLINERANK")
-            SOCKET_INF << "pk单个JSON消息：" << offset << packSize << QString(jsonBa);
-        handlePkMessage(json);
 
-        offset += packSize;
-    }
-}
-
-void BiliLiveService::handlePkMessage(QJsonObject json)
-{
-    QString cmd = json.value("cmd").toString();
-    qInfo() << s8(">pk消息命令：") << cmd;
-    if (cmd == "DANMU_MSG" || cmd.startsWith("DANMU_MSG:")) // 收到弹幕
-    {
-        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
             return ;
-        QJsonArray info = json.value("info").toArray();
-        QJsonArray array = info[0].toArray();
-        qint64 textColor = array[3].toInt(); // 弹幕颜色
-        qint64 timestamp = static_cast<qint64>(array[4].toDouble()); // 13位
-        QString msg = info[1].toString();
-        QJsonArray user = info[2].toArray();
-        qint64 uid = static_cast<qint64>(user[0].toDouble());
-        QString username = user[1].toString();
-        QString unameColor = user[7].toString();
-        int level = info[4].toArray()[0].toInt();
-        QJsonArray medal = info[3].toArray();
-        int medal_level = 0;
-
-        // 是否是串门的
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
-                     snum(static_cast<qint64>(medal[3].toDouble())) == ac->roomId));
-
-        // !弹幕的时间戳是13位，其他的是10位！
-        qInfo() << s8("pk接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
-
-        // 添加到列表
-        QString cs = QString::number(textColor, 16);
-        while (cs.size() < 6)
-            cs = "0" + cs;
-        LiveDanmaku danmaku(username, msg, uid, level, QDateTime::fromMSecsSinceEpoch(timestamp),
-                                                 unameColor, "#"+cs);
-        if (medal.size() >= 4)
-        {
-            medal_level = medal[0].toInt();
-            danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
-                    medal[1].toString(), medal_level, medal[2].toString());
         }
-        /*if (noReplyMsgs.contains(msg) && snum(uid) == cookieUid)
+        QJsonObject obj = json.value("data").toObject();
+        QString following = TO_SIMPLE_NUMBER(obj.value("following").toInt()); // 关注
+        QString follower = TO_SIMPLE_NUMBER(obj.value("follower").toInt()); // 粉丝
+        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
+        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
+        if (!action2)
         {
-            danmaku.setNoReply();
-            noReplyMsgs.removeOne(msg);
+            action->setText(QString("关注:%1,粉丝:%2").arg(following).arg(follower));
         }
         else
-            minuteDanmuPopular++;*/
-        danmaku.setToView(toView);
-        danmaku.setPkLink(true);
-        emit signalAppendNewLiveDanmaku(danmaku);
-
-        triggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));
-    }
-    else if (cmd == "SEND_GIFT") // 有人送礼
-    {
-        if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
-            return ;
-        QJsonObject data = json.value("data").toObject();
-        int giftId = data.value("giftId").toInt();
-        int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
-        QString giftName = data.value("giftName").toString();
-        QString username = data.value("uname").toString();
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
-        int num = data.value("num").toInt();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
-        timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
-        QString coinType = data.value("coin_type").toString();
-        int totalCoin = data.value("total_coin").toInt();
-
-        qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
-        QString localName = us->getLocalNickname(uid);
-        /*if (!localName.isEmpty())
-            username = localName;*/
-        LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
-        QString anchorRoomId;
-        if (!data.value("medal_info").isNull())
         {
-            QJsonObject medalInfo = data.value("medal_info").toObject();
-            anchorRoomId = snum(qint64(medalInfo.value("anchor_room_id").toDouble())); // !注意：这个一直为0！
-            QString anchorUname = medalInfo.value("anchor_uname").toString(); // !注意：也是空的
-            int guardLevel = medalInfo.value("guard_level").toInt();
-            int isLighted = medalInfo.value("is_lighted").toInt();
-            int medalColor = medalInfo.value("medal_color").toInt();
-            int medalColorBorder = medalInfo.value("medal_color_border").toInt();
-            int medalColorEnd = medalInfo.value("medal_color_end").toInt();
-            int medalColorStart = medalInfo.value("medal_color_start").toInt();
-            int medalLevel = medalInfo.value("medal_level").toInt();
-            QString medalName = medalInfo.value("medal_name").toString();
-            QString spacial = medalInfo.value("special").toString();
-            QString targetId = snum(qint64(medalInfo.value("target_id").toDouble())); // 目标用户ID
-            if (!medalName.isEmpty())
-            {
-                QString cs = QString::number(medalColor, 16);
-                while (cs.size() < 6)
-                    cs = "0" + cs;
-                danmaku.setMedal(anchorRoomId, medalName, medalLevel, cs, anchorUname);
-            }
+            action->setText(QString("关注数:%1").arg(following));
+            action2->setText(QString("粉丝数:%1").arg(follower));
         }
+    });
+    manager->get(*request);
+}
 
-        // 是否是串门的
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && anchorRoomId == ac->roomId));
+void BiliLiveService::showViewCountInAction(qint64 uid, QLabel* statusLabel, QAction *action, QAction *action2, QAction *action3) const
+{
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
 
-        danmaku.setPkLink(true);
-
-        if (toView) // 自己这边过去送礼物，居心何在！
-            emit signalAppendNewLiveDanmaku(danmaku);
-
-        triggerCmdEvent("PK_" + cmd, danmaku.with(data));
-    }
-    else if (cmd == "INTERACT_WORD")
-    {
-        if (!pkChuanmenEnable) // 可能是中途关了
-            return ;
-        QJsonObject data = json.value("data").toObject();
-        int msgType = data.value("msg_type").toInt(); // 1进入直播间，2关注，3分享直播间，4特别关注
-        qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
-        QString username = data.value("uname").toString();
-        qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble());
-        bool isadmin = data.value("isadmin").toBool();
-        QString unameColor = data.value("uname_color").toString();
-        bool isSpread = data.value("is_spread").toBool();
-        QString spreadDesc = data.value("spread_desc").toString();
-        QString spreadInfo = data.value("spread_info").toString();
-        QJsonObject fansMedal = data.value("fans_medal").toObject();
-        QString roomId = snum(qint64(data.value("room_id").toDouble()));
-        bool toView = pkBattleType &&
-                ((!oppositeAudience.contains(uid) && myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() &&
-                     snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())) == ac->roomId));
-        bool attentionToMyRoom = false;
-        if (!toView) // 不是自己方过去串门的
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
         {
-            if (roomId == ac->roomId && msgType == 2) // 在对面关注当前主播
-                attentionToMyRoom = true;
+            qDebug() << "获取播放量失败：" << error.errorString();
+            return ;
+        }
+        QJsonObject json = document.object();
+//        qDebug() << url;
+//        qDebug() << json;
+
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
+        }
+        QJsonObject data = json.value("data").toObject();
+        int achive_view = data.value("archive").toObject().value("view").toInt();
+        int article_view = data.value("article").toObject().value("view").toInt();
+        int article_like = data.value("likes").toInt();
+
+        if (!action2 && !action3)
+        {
+            QStringList sl;
+            if (achive_view)
+                sl << "播放:" + TO_SIMPLE_NUMBER(achive_view);
+            if (article_view)
+                sl << "阅读:" + TO_SIMPLE_NUMBER(article_view);
+            if (article_like)
+                sl << "点赞:" + TO_SIMPLE_NUMBER(article_like);
+
+            if (sl.size())
+                action->setText(sl.join(","));
             else
-                if (!pkMsgSync || (pkMsgSync == 1 && !pkVideo))
-                    return ;
+                action->setText("没有投稿");
         }
-        if (toView || attentionToMyRoom)
+        else
         {
-            if (!cmAudience.contains(uid))
-                cmAudience.insert(uid, timestamp);
+            action->setText("播放数:" + TO_SIMPLE_NUMBER(achive_view));
+            if (action2)
+                action2->setText("阅读数:" + TO_SIMPLE_NUMBER(article_view));
+            if (action3)
+                action3->setText("获赞数:" + TO_SIMPLE_NUMBER(article_like));
         }
+    });
+    manager->get(*request);
+}
 
-        // qInfo() << s8("pk观众互动：") << username << spreadDesc;
-        QString localName = us->getLocalNickname(uid);
-        LiveDanmaku danmaku(username, uid, QDateTime::fromSecsSinceEpoch(timestamp), isadmin,
-                            unameColor, spreadDesc, spreadInfo);
-        danmaku.setMedal(snum(static_cast<qint64>(fansMedal.value("anchor_roomid").toDouble())),
-                         fansMedal.value("medal_name").toString(),
-                         fansMedal.value("medal_level").toInt(),
-                         QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
-                         "");
-        danmaku.setToView(toView);
-        danmaku.setPkLink(true);
+void BiliLiveService::showGuardInAction(qint64 roomId, qint64 uid, QLabel* statusLabel, QAction *action) const
+{
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
+            +snum(roomId)+"&page=1&ruid="+snum(uid);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
 
-        if (attentionToMyRoom)
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
         {
-            danmaku.transToAttention(timestamp);
-            localNotify("对面的 " + username + " 关注了本直播间 " + snum(uid));
-            triggerCmdEvent("ATTENTION_ON_OPPOSITE", danmaku.with(data));
+            qDebug() << "获取舰长失败：" << error.errorString();
+            return ;
         }
-        else if (msgType == 1)
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
         {
-            if (toView)
-            {
-                localNotify(username + " 跑去对面串门 " + snum(uid)); // 显示一个短通知，就不作为一个弹幕了
-                triggerCmdEvent("CALL_ON_OPPOSITE", danmaku.with(data));
-            }
-            triggerCmdEvent("PK_" + cmd, danmaku.with(data));
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
         }
-        else if (msgType == 2)
+        QJsonObject data = json.value("data").toObject();
+        QJsonObject info = data.value("info").toObject();
+        int num = info.value("num").toInt();
+        action->setText("船员数:" + snum(num));
+    });
+    manager->get(*request);
+}
+
+void BiliLiveService::showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QAction *actionUser, QAction *actionRank) const
+{
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id="+snum(roomId);
+    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
+    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
+    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    connect(manager, &QNetworkAccessManager::finished, actionUser, [=](QNetworkReply* reply){
+        QByteArray ba = reply->readAll();
+        manager->deleteLater();
+        delete request;
+        reply->deleteLater();
+
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error != QJsonParseError::NoError)
         {
-            danmaku.transToAttention(timestamp);
-            if (toView)
-            {
-                localNotify(username + " 关注了对面直播间 " + snum(uid)); // XXX
-                triggerCmdEvent("ATTENTION_OPPOSITE", danmaku.with(data));
-            }
-            triggerCmdEvent("PK_ATTENTION", danmaku.with(data));
+            qDebug() << "获取PK等级失败：" << error.errorString();
+            return ;
         }
-        else if (msgType == 3)
+        QJsonObject json = document.object();
+
+        int code = json.value("code").toInt();
+        if (code != 0)
         {
-            danmaku.transToShare();
-            if (toView)
-            {
-                localNotify(username + " 分享了对面直播间 " + snum(uid)); // XXX
-                triggerCmdEvent("SHARE_OPPOSITE", danmaku.with(data));
-            }
-            triggerCmdEvent("PK_SHARE", danmaku.with(data));
+            statusLabel->setText(json.value("message").toString());
+            if(statusLabel->text().isEmpty() && code == 403)
+                statusLabel->setText("您没有权限");
+            return ;
         }
-        // appendNewLiveDanmaku(danmaku);
-    }
-    else if (cmd == "CUT_OFF")
+        QJsonObject data = json.value("data").toObject();
+        QJsonObject anchor = data.value("anchor_info").toObject();
+        QString uname = anchor.value("base_info").toObject().value("uname").toString();
+        int level = anchor.value("live_info").toObject().value("level").toInt();
+        actionUser->setText(uname + " " + snum(level));
+
+        QJsonObject battle = data.value("battle_rank_entry_info").toObject();
+        QString rankName = battle.value("rank_name").toString();
+        actionRank->setText(rankName);
+    });
+    manager->get(*request);
+}
+
+void BiliLiveService::judgeUserRobotByFans(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    int val = robotRecord->value("robot/" + snum(danmaku.getUid()), 0).toInt();
+    if (val == 1) // 是机器人
     {
-        localNotify("对面直播间被超管切断");
+        if (ifIs)
+            ifIs(danmaku);
+        return ;
     }
+    else if (val == -1) // 是人
+    {
+        if (ifNot)
+            ifNot(danmaku);
+        return ;
+    }
+    else
+    {
+        if (danmaku.getMedalLevel() > 0 || danmaku.getLevel() > 1) // 使用等级判断
+        {
+            robotRecord->setValue("robot/" + snum(danmaku.getUid()), -1);
+            if (ifNot)
+                ifNot(danmaku);
+            return ;
+        }
+    }
+
+    // 网络判断
+    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断粉丝", "您没有权限");
+            else
+                showError("机器人判断:粉丝", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int following = obj.value("following").toInt(); // 关注
+        int follower = obj.value("follower").toInt(); // 粉丝
+        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
+        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
+        bool robot =  (following >= 100 && follower <= 5) || (follower > 0 && following > follower * 100); // 机器人，或者小号
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    粉丝数：" << following << follower << robot;
+        if (robot)
+        {
+            // 进一步使用投稿数量判断
+            judgeUserRobotByUpstate(danmaku, ifNot, ifIs);
+        }
+        else // 不是机器人
+        {
+            robotRecord->setValue("robot/" + snum(danmaku.getUid()), -1);
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
+}
+
+void BiliLiveService::judgeUserRobotByUpstate(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断:点击量", "您没有权限");
+            else
+                showError("机器人判断:点击量", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int achive_view = obj.value("archive").toObject().value("view").toInt();
+        int article_view = obj.value("article").toObject().value("view").toInt();
+        int article_like = obj.value("article").toObject().value("like").toInt();
+        bool robot = (achive_view + article_view + article_like < 10); // 机器人，或者小号
+//        qInfo() << "判断机器人：" << danmaku.getNickname() << "    视频播放量：" << achive_view
+//                 << "  专栏阅读量：" << article_view << "  专栏点赞数：" << article_like << robot;
+        robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else // 不是机器人
+        {
+            if (ifNot)
+            {
+                ifNot(danmaku);
+            }
+        }
+    });
+}
+
+void BiliLiveService::judgeUserRobotByUpload(LiveDanmaku danmaku, DanmakuFunc ifNot, DanmakuFunc ifIs)
+{
+    QString url = "http://api.vc.bilibili.com/link_draw/v1/doc/upload_count?uid=" + snum(danmaku.getUid());
+    get(url, [=](QJsonObject json){
+        int code = json.value("code").toInt();
+        if (code != 0)
+        {
+            if (code == 403)
+                showError("机器人判断:投稿", "您没有权限");
+            else
+                showError("机器人判断:投稿", json.value("message").toString());
+            return ;
+        }
+        QJsonObject obj = json.value("data").toObject();
+        int allCount = obj.value("all_count").toInt();
+        bool robot = (allCount <= 1); // 机器人，或者小号（1是因为有默认成为会员的相簿）
+        qInfo() << "判断机器人：" << danmaku.getNickname() << "    投稿数量：" << allCount << robot;
+        robotRecord->setValue("robot/" + snum(danmaku.getUid()), robot ? 1 : -1);
+        if (robot)
+        {
+            if (ifIs)
+                ifIs(danmaku);
+        }
+        else // 不是机器人
+        {
+            if (ifNot)
+                ifNot(danmaku);
+        }
+    });
+}
+
+void BiliLiveService::setUrlCookie(const QString & url, QNetworkRequest * request)
+{
+    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
+        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
 }

@@ -10,6 +10,7 @@
 #include <QObject>
 #include "myjson.h"
 
+typedef std::function<void()> const NetVoidFunc;
 typedef std::function<void(QString)> const NetStringFunc;
 typedef std::function<void(MyJson)> const NetJsonFunc;
 typedef std::function<void(QNetworkReply*)> const NetReplyFunc;
@@ -58,7 +59,47 @@ public:
                     return ;
                 }
             }
-            func(document.object());
+            if (func)
+                func(document.object());
+        }, cookies);
+    }
+    
+    void get(QString url, NetJsonFunc func, NetStringFunc finalfunc, QVariant cookies = QVariant())
+    {
+        get(url, [=](QNetworkReply* reply){
+            QJsonParseError error;
+            QByteArray ba = reply->readAll();
+            QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+            if (error.error != QJsonParseError::NoError)
+            {
+                // 过于频繁，导致同时回复了两遍JSON
+                if (error.error == QJsonParseError::GarbageAtEnd && ba.contains("}{"))
+                {
+                    int index = ba.indexOf("}{");
+                    ba = ba.right(ba.length() - index - 1);
+
+                    // 再获取一遍
+                    document = QJsonDocument::fromJson(ba, &error);
+                    if (error.error != QJsonParseError::NoError)
+                    {
+                        qDebug() << error.error << error.errorString() << url << QString(ba);
+                        if (finalfunc)
+                            finalfunc(ba);
+                        return ;
+                    }
+                }
+                else
+                {
+                    qDebug() << error.error << error.errorString() << url << QString(ba);
+                    if (finalfunc)
+                        finalfunc(ba);
+                    return ;
+                }
+            }
+            if (func)
+                func(document.object());
+            if (finalfunc)
+                finalfunc(ba);
         }, cookies);
     }
 

@@ -59,6 +59,8 @@
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
+class LiveRoomService;
+
 class LiveDanmakuWindow : public QWidget
 {
     Q_OBJECT
@@ -70,6 +72,7 @@ public:
     LiveDanmakuWindow(QWidget *parent = nullptr);
     ~LiveDanmakuWindow() override;
 
+    void setLiveService(LiveRoomService *service);
     void setChatService(ChatService* service);
 
 protected:
@@ -131,11 +134,6 @@ public slots:
     void setStatusText(QString text);
     void setStatusTooltip(QString tooltip);
     void hideStatusText();
-
-    void showFollowCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr);
-    void showViewCountInAction(qint64 uid, QAction* action, QAction* action2 = nullptr, QAction* action3 = nullptr);
-    void showGuardInAction(qint64 roomId, qint64 uid, QAction* action);
-    void showPkLevelInAction(qint64 roomId, QAction* actionUser, QAction* actionRank);
 
     void releaseLiveData(bool prepare = false);
 
@@ -233,6 +231,7 @@ private:
 
     QString labelStyleSheet;
 
+    LiveRoomService *liveService = nullptr;
     ChatService* chatService = nullptr;
 };
 

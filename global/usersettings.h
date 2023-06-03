@@ -32,6 +32,9 @@ public:
     int imageSimilarPrecision = 8;   // 图片相似度精度，越大越好
     bool closeGui = false;           // 关闭GUI效果
 
+    qint64 removeDanmakuInterval = 60000;
+    qint64 removeDanmakuTipInterval = 20000;
+    bool adjustDanmakuLongest = true;// 自动调整弹幕最长字数
     bool timerConnectServer = false; // 定时连接
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间
@@ -44,6 +47,10 @@ public:
     bool calculateDailyData = false; // 统计每天数据
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
+    bool saveToSqlite = false;       // 保存弹幕数据库
+    bool saveCmdToSqlite = false;    // 保存所有CMD命令到数据库
+    int judgeRobot = 0;              // 判断机器人：0关，1仅关注，2所有
+    int giftComboDelay = 3;          // 礼物连击延迟（秒）
 
     QString open_ai_key;
     QString chatgpt_model_name = "gpt-3.5-turbo";

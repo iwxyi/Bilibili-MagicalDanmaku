@@ -180,13 +180,13 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     }
     else if (msg == "撤销禁言")
     {
-        if (!blockedQueue.size())
+        if (!rt->blockedQueue.size())
         {
             cr->sendNotifyMsg(">没有可撤销的禁言用户");
             return ;
         }
 
-        LiveDanmaku danmaku = blockedQueue.takeLast();
+        LiveDanmaku danmaku = rt->blockedQueue.takeLast();
         liveService->delBlockUser(danmaku.getUid());
         if (us->eternalBlockUsers.contains(EternalBlockUser(danmaku.getUid(), ac->roomId.toLongLong(), "")))
         {
@@ -218,9 +218,9 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         QString nickname = match.captured(1);
 
         // 优先遍历禁言的
-        for (int i = blockedQueue.size()-1; i >= 0; i--)
+        for (int i = rt->blockedQueue.size()-1; i >= 0; i--)
         {
-            const LiveDanmaku danmaku = blockedQueue.at(i);
+            const LiveDanmaku danmaku = rt->blockedQueue.at(i);
             if (!danmaku.is(MSG_DANMAKU))
                 continue;
 
@@ -235,7 +235,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
                 liveService->delBlockUser(danmaku.getUid());
                 cr->sendNotifyMsg(">已解禁：" + nick, true);
-                blockedQueue.removeAt(i);
+                rt->blockedQueue.removeAt(i);
                 return ;
             }
         }
@@ -258,7 +258,7 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
 
                 liveService->delBlockUser(danmaku.getUid());
                 cr->sendNotifyMsg(">已解禁：" + nick, true);
-                blockedQueue.removeAt(i);
+                rt->blockedQueue.removeAt(i);
                 return ;
             }
         }
@@ -517,7 +517,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             int giftId = caps.at(1).toInt();
             int num = caps.at(2).toInt();
-            sendGift(giftId, num);
+            liveService->sendGift(giftId, num);
             return true;
         }
     }
@@ -1303,7 +1303,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QFileInfo info(fileName);
             QDir dir = info.absoluteDir();
             dir.mkpath(dir.absolutePath());
-            appendFileLine(fileName, format, lastDanmaku);
+            appendFileLine(fileName, format, liveService->lastDanmaku);
             qInfo() << "修改文件：" << fileName;
             return true;
         }
@@ -2565,7 +2565,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         if (msg.indexOf(re, 0, &match) > -1)
         {
             if (liveService->pking)
-                execTouta();
+                liveService->execTouta();
             else
                 qWarning() << "不在PK中，无法偷塔";
             return true;

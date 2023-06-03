@@ -6,12 +6,11 @@
 #include "guardonlinedialog.h"
 #include "tx_nlp.h"
 #include "string_distance_util.h"
+#include "liveservices/liveroomservice.h"
 
 QT_BEGIN_NAMESPACE
     extern Q_WIDGETS_EXPORT void qt_blurImage( QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0 );
 QT_END_NAMESPACE
-
-#define TO_SIMPLE_NUMBER(x) (x > 100000 ? QString(snum(x/10000)+"万") : snum(x))
 
 LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     : QWidget(nullptr)
@@ -215,6 +214,11 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 LiveDanmakuWindow::~LiveDanmakuWindow()
 {
     us->setValue("livedanmakuwindow/geometry", this->saveGeometry());
+}
+
+void LiveDanmakuWindow::setLiveService(LiveRoomService *service)
+{
+    this->liveService = service;
 }
 
 void LiveDanmakuWindow::setChatService(ChatService *service)
@@ -947,6 +951,9 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
     if (danmaku.isPkLink()) // 这个最置顶前面
         text = (simpleMode ? "[同步] " : "<font color='gray'>[同步]</font> ") + text;
 
+    // 特殊格式
+    text.replace("<%", "&lt;%").replace("%>", "%&gt;"); // 替换HTML中的<% %>为实体
+
     // 文字与大小
     label->setText(text);
     label->adjustSize();
@@ -1309,8 +1316,8 @@ void LiveDanmakuWindow::showMenu()
                 actionIgnoreColor->setText("恢复颜色");
         }
 
-        showFollowCountInAction(uid, actionFollow);
-        showViewCountInAction(uid, actionView);
+        liveService->showFollowCountInAction(uid, statusLabel, actionFollow);
+        liveService->showViewCountInAction(uid, statusLabel, actionView);
 
         if (danmaku.getNickname().isEmpty())
             actionEternalBlock->setEnabled(false);
@@ -1858,7 +1865,7 @@ void LiveDanmakuWindow::showMenu()
         us->setValue("livedanmakuwindow/chatMode", chatMode = !chatMode);
     });
     connect(actionUserInfo, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(uid)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::UserSpace, uid)));
     });
     connect(actionCopyUid, &QAction::triggered, this, [=]{
         QApplication::clipboard()->setText(snum(uid));
@@ -1867,7 +1874,7 @@ void LiveDanmakuWindow::showMenu()
         QApplication::clipboard()->setText(snum(danmaku.getGiftId()));
     });
     connect(actionMedal, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/" + danmaku.getAnchorRoomid()));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::RoomPage, danmaku.getAnchorRoomid().toLongLong())));
     });
     connect(actionValue, &QAction::triggered, this, [=]{
 
@@ -1876,10 +1883,10 @@ void LiveDanmakuWindow::showMenu()
         showUserMsgHistory(uid, danmaku.getNickname());
     });
     connect(actionFollow, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(uid)+"/fans/follow"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::UserFollows, uid)));
     });
     connect(actionView, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(uid)+"/video"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(ApiType::UserVideos, uid)));
     });
     connect(actionAddBlockTemp, &QAction::triggered, this, [=]{
         emit signalAddBlockUser(uid, 1, msg);
@@ -2093,34 +2100,34 @@ void LiveDanmakuWindow::showPkMenu()
     menu->addAction(actionVideo);
     menu->addAction(actionOnline);
 
-    showPkLevelInAction(pkRoomId, actionUser, actionRank);
-    showFollowCountInAction(pkUid, actionAttention, actionFans);
-    showViewCountInAction(pkUid, actionView, actionRead, actionLike);
-    showGuardInAction(pkRoomId, pkUid, actionGuard);
+    liveService->showPkLevelInAction(pkRoomId, statusLabel, actionUser, actionRank);
+    liveService->showFollowCountInAction(pkUid, statusLabel, actionAttention, actionFans);
+    liveService->showViewCountInAction(pkUid, statusLabel, actionView, actionRead, actionLike);
+    liveService->showGuardInAction(pkRoomId, pkUid, statusLabel, actionGuard);
 
     connect(actionUser, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/" + snum(pkUid)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserSpace, pkUid)));
     });
     connect(actionRank, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/"+snum(pkRoomId)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, pkRoomId)));
     });
     connect(actionGuard, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://live.bilibili.com/"+snum(pkRoomId)));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(RoomPage, pkRoomId)));
     });
     connect(actionAttention, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(pkUid)+"/fans/follow"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserFollows, pkUid)));
     });
     connect(actionFans, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(pkUid)+"/fans/fans"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserFans, pkUid)));
     });
     connect(actionView, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(pkUid)+"/video"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserVideos, pkUid)));
     });
     connect(actionRead, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(pkUid)+"/article"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserArticles, pkUid)));
     });
     connect(actionLike, &QAction::triggered, this, [=]{
-        QDesktopServices::openUrl(QUrl("https://space.bilibili.com/"+snum(pkUid)+"/dynamic"));
+        QDesktopServices::openUrl(QUrl(liveService->getApiUrl(UserDynamics, pkUid)));
     });
     connect(actionVideo, &QAction::triggered, this, [=]{
         emit signalShowPkVideo();
@@ -2361,203 +2368,6 @@ void LiveDanmakuWindow::hideStatusText()
     statusLabel->hide();
 }
 
-void LiveDanmakuWindow::showFollowCountInAction(qint64 uid, QAction *action, QAction *action2)
-{
-    QString url = "https://api.bilibili.com/x/relation/stat?vmid=" + snum(uid);
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
-        QByteArray data = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(data, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取粉丝失败：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject obj = json.value("data").toObject();
-        QString following = TO_SIMPLE_NUMBER(obj.value("following").toInt()); // 关注
-        QString follower = TO_SIMPLE_NUMBER(obj.value("follower").toInt()); // 粉丝
-        // int whisper = obj.value("whisper").toInt(); // 悄悄关注（自己关注）
-        // int black = obj.value("black").toInt(); // 黑名单（自己登录）
-        if (!action2)
-        {
-            action->setText(QString("关注:%1,粉丝:%2").arg(following).arg(follower));
-        }
-        else
-        {
-            action->setText(QString("关注数:%1").arg(following));
-            action2->setText(QString("粉丝数:%1").arg(follower));
-        }
-    });
-    manager->get(*request);
-}
-
-void LiveDanmakuWindow::showViewCountInAction(qint64 uid, QAction *action, QAction *action2, QAction *action3)
-{
-    QString url = "https://api.bilibili.com/x/space/upstat?mid=" + snum(uid);
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取播放量失败：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-//        qDebug() << url;
-//        qDebug() << json;
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        int achive_view = data.value("archive").toObject().value("view").toInt();
-        int article_view = data.value("article").toObject().value("view").toInt();
-        int article_like = data.value("likes").toInt();
-
-        if (!action2 && !action3)
-        {
-            QStringList sl;
-            if (achive_view)
-                sl << "播放:" + TO_SIMPLE_NUMBER(achive_view);
-            if (article_view)
-                sl << "阅读:" + TO_SIMPLE_NUMBER(article_view);
-            if (article_like)
-                sl << "点赞:" + TO_SIMPLE_NUMBER(article_like);
-
-            if (sl.size())
-                action->setText(sl.join(","));
-            else
-                action->setText("没有投稿");
-        }
-        else
-        {
-            action->setText("播放数:" + TO_SIMPLE_NUMBER(achive_view));
-            if (action2)
-                action2->setText("阅读数:" + TO_SIMPLE_NUMBER(article_view));
-            if (action3)
-                action3->setText("获赞数:" + TO_SIMPLE_NUMBER(article_like));
-        }
-    });
-    manager->get(*request);
-}
-
-void LiveDanmakuWindow::showGuardInAction(qint64 roomId, qint64 uid, QAction *action)
-{
-    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList?roomid="
-            +snum(roomId)+"&page=1&ruid="+snum(uid);
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取舰长失败：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        QJsonObject info = data.value("info").toObject();
-        int num = info.value("num").toInt();
-        action->setText("船员数:" + snum(num));
-    });
-    manager->get(*request);
-}
-
-void LiveDanmakuWindow::showPkLevelInAction(qint64 roomId, QAction *actionUser, QAction *actionRank)
-{
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id="+snum(roomId);
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, getCookies());
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
-    connect(manager, &QNetworkAccessManager::finished, actionUser, [=](QNetworkReply* reply){
-        QByteArray ba = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取PK等级失败：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
-        int code = json.value("code").toInt();
-        if (code != 0)
-        {
-            statusLabel->setText(json.value("message").toString());
-            if(statusLabel->text().isEmpty() && code == 403)
-                statusLabel->setText("您没有权限");
-            return ;
-        }
-        QJsonObject data = json.value("data").toObject();
-        QJsonObject anchor = data.value("anchor_info").toObject();
-        QString uname = anchor.value("base_info").toObject().value("uname").toString();
-        int level = anchor.value("live_info").toObject().value("level").toInt();
-        actionUser->setText(uname + " " + snum(level));
-
-        QJsonObject battle = data.value("battle_rank_entry_info").toObject();
-        QString rankName = battle.value("rank_name").toString();
-        actionRank->setText(rankName);
-    });
-    manager->get(*request);
-}
-
 void LiveDanmakuWindow::releaseLiveData(bool prepare)
 {
     QDir(headDir).removeRecursively();
@@ -2700,7 +2510,29 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         return ;
     if (headerApiIsBanned) // 请求已经被拦截了
         return ;
-    QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
+
+    hasGetUserHeader.insert(uid);
+    QPixmap pixmap;
+    QString url = liveService->getApiUrl(UserHead, uid);
+    if (url == WAIT_INIT)
+    {
+        return ;
+    }
+    else if (url.isEmpty())
+    {
+        qWarning() << "用户" << uid << "无法获取弹幕头像";
+        // 一分钟后再试
+        headerApiIsBanned = true;
+        QTimer::singleShot(60000, [=]{
+            headerApiIsBanned = false;
+        });
+        return ;
+    }
+    getUserHeadPortrait(uid, url, item);
+    hasGetUserHeader.remove(uid);
+
+
+    /*QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
     hasGetUserHeader.insert(uid);
     connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
         QJsonParseError error;
@@ -2736,7 +2568,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 
         getUserHeadPortrait(uid, faceUrl, item);
         hasGetUserHeader.remove(uid);
-    });
+    });*/
 }
 
 void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)

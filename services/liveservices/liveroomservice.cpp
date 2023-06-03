@@ -9,6 +9,9 @@ LiveRoomService::LiveRoomService(QObject *parent)
 
 void LiveRoomService::init()
 {
+    // 配置
+    robotRecord = new MySettings(rt->dataPath + "robots.ini", QSettings::Format::IniFormat);
+
     // 礼物连击
     comboTimer = new QTimer(this);
     comboTimer->setInterval(500);
@@ -253,6 +256,11 @@ QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid)
     return dms;
 }
 
+void LiveRoomService::setSqlService(SqlService *service)
+{
+    this->sqlService = service;
+}
+
 bool LiveRoomService::isLiving() const
 {
     return ac->liveStatus == 1;
@@ -339,6 +347,97 @@ bool LiveRoomService::isLivingOrMayLiving()
     return true;
 }
 
+void LiveRoomService::sendExpireGift()
+{
+    getBagList(24 * 3600 * 2); // 默认赠送两天内过期的
+}
+
+/**
+ * 添加本次直播的金瓜子礼物
+ */
+void LiveRoomService::appendLiveGift(const LiveDanmaku &danmaku)
+{
+    if (danmaku.getTotalCoin() == 0)
+    {
+        qWarning() << "添加礼物到liveGift错误：" << danmaku.toString();
+        return ;
+    }
+    for (int i = 0; i < liveAllGifts.size(); i++)
+    {
+        auto his = liveAllGifts.at(i);
+        if (his.getUid() == danmaku.getUid()
+                && his.getGiftId() == danmaku.getGiftId())
+        {
+            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            return ;
+        }
+    }
+
+    // 新建一个
+    liveAllGifts.append(danmaku);
+}
+
+void LiveRoomService::appendLiveGuard(const LiveDanmaku &danmaku)
+{
+    if (!danmaku.is(MSG_GUARD_BUY))
+    {
+        qWarning() << "添加上船到liveGuard错误：" << danmaku.toString();
+        return ;
+    }
+    for (int i = 0; i < liveAllGuards.size(); i++)
+    {
+        auto his = liveAllGuards.at(i);
+        if (his.getUid() == danmaku.getUid()
+                && his.getGiftId() == danmaku.getGiftId())
+        {
+            liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            return ;
+        }
+    }
+
+    // 新建一个
+    liveAllGuards.append(danmaku);
+}
+
+void LiveRoomService::userComeEvent(LiveDanmaku &danmaku)
+{
+    qint64 uid = danmaku.getUid();
+
+    // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
+    // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
+    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
+    danmaku.setNumber(userCome);
+    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+
+    appendNewLiveDanmaku(danmaku);
+
+    userCome++;
+    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
+    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+
+    dailyCome++;
+    if (dailySettings)
+        dailySettings->setValue("come", dailyCome);
+    if (danmaku.isOpposite())
+    {
+        // 加到自己这边来，免得下次误杀（即只提醒一次）
+        // 不过不能这么做，否则不会显示“对面”两个字了
+        // myAudience.insert(uid);
+    }
+    else if (cmAudience.contains(uid))
+    {
+        if (cmAudience.value(uid) > 0)
+        {
+            danmaku.setViewReturn(true);
+            danmaku.setPrevTimestamp(cmAudience[uid]);
+            cmAudience[uid] = 0; // 标记为串门回来
+            localNotify(danmaku.getNickname() + " 去对面串门回来");
+        }
+    }
+
+    emit signalSendUserWelcome(danmaku);
+}
+
 QVariant LiveRoomService::getCookies() const
 {
     return NetInterface::getCookies(ac->browserCookie);
@@ -359,10 +458,29 @@ void LiveRoomService::showError(const QString &title, const QString &desc)
     emit signalShowError(title, desc);
 }
 
-void LiveRoomService::setUrlCookie(const QString &url, QNetworkRequest *request)
+void LiveRoomService::appendNewLiveDanmakus(const QList<LiveDanmaku> &danmakus)
 {
-    if (url.contains("bilibili.com") && !ac->browserCookie.isEmpty())
-        request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
+    // 添加到队列
+    roomDanmakus.append(danmakus);
+    rt->allDanmakus.append(danmakus);
+}
+
+void LiveRoomService::appendNewLiveDanmaku(const LiveDanmaku &danmaku)
+{
+    roomDanmakus.append(danmaku);
+    lastDanmaku = danmaku;
+    rt->allDanmakus.append(danmaku);
+
+    // 保存到文件
+    if (danmuLogStream)
+    {
+        if (danmaku.is(MSG_DEF) && danmaku.getText().startsWith("["))
+            return ;
+        (*danmuLogStream) << danmaku.toString() << "\n";
+        (*danmuLogStream).flush(); // 立刻刷新到文件里
+    }
+
+    emit signalNewDanmaku(danmaku);
 }
 
 void LiveRoomService::autoSetCookie(const QString &s)
@@ -415,4 +533,71 @@ void LiveRoomService::sendLongText(QString text)
         return ;
     }
     emit signalSendAutoMsg(splitLongDanmu(text, ac->danmuLongest).join("\\n"), LiveDanmaku());
+}
+
+bool LiveRoomService::isInFans(qint64 uid) const
+{
+    foreach (auto fan, fansList)
+    {
+        if (fan.mid == uid)
+            return true;
+    }
+    return false;
+}
+
+void LiveRoomService::markNotRobot(qint64 uid)
+{
+    if (!us->judgeRobot)
+        return ;
+    int val = robotRecord->value("robot/" + snum(uid), 0).toInt();
+    if (val != -1)
+        robotRecord->setValue("robot/" + snum(uid), -1);
+}
+
+/**
+ * 合并消息
+ * 在添加到消息队列前调用此函数判断
+ * 若是，则同步合并实时弹幕中的礼物连击
+ */
+bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
+{
+    if (danmaku.getMsgType() != MSG_GIFT)
+        return false;
+
+    // 判断，同人 && 礼物同名 && x秒内
+    qint64 uid = danmaku.getUid();
+    int giftId = danmaku.getGiftId();
+    qint64 time = danmaku.getTimeline().toSecsSinceEpoch();
+    LiveDanmaku* merged = nullptr;
+    int delayTime = us->giftComboDelay; // + 1; // 多出的1秒当做网络延迟了
+
+    // 遍历房间弹幕
+    for (int i = roomDanmakus.size()-1; i >= 0; i--)
+    {
+        LiveDanmaku dm = roomDanmakus.at(i);
+        qint64 t = dm.getTimeline().toSecsSinceEpoch();
+        if (t == 0) // 有些是没带时间的
+            continue;
+        if (t + delayTime < time) // x秒以内
+            return false;
+        if (dm.getMsgType() != MSG_GIFT
+                || dm.getUid() != uid
+                || dm.getGiftId() != giftId)
+            continue;
+
+        // 是这个没错了
+        merged = &roomDanmakus[i];
+        break;
+    }
+    if (!merged)
+        return false;
+
+    // 开始合并
+    qInfo() << "合并相同礼物至：" << merged->toString();
+    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+
+    // 合并实时弹幕
+    emit signalMergeGiftCombo(danmaku, delayTime);
+
+    return true;
 }
