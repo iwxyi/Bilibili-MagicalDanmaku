@@ -10,7 +10,9 @@ SmoothListWidget::SmoothListWidget(QWidget *parent) : QListWidget(parent)
 
 void SmoothListWidget::setSmoothScrollEnabled(bool e)
 {
+#ifdef Q_OS_WIN
     this->enabledSmoothScroll = e;
+#endif
 }
 
 void SmoothListWidget::setSmoothScrollSpeed(int speed)

@@ -481,7 +481,9 @@ void WaterfallScrollArea::updateChildWidgets()
 
 void WaterfallScrollArea::setSmoothScrollEnabled(bool e)
 {
+#ifdef Q_OS_WIN
     this->enabledSmoothScroll = e;
+#endif
 }
 
 void WaterfallScrollArea::setSmoothScrollSpeed(int speed)

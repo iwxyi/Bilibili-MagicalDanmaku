@@ -36,7 +36,11 @@ protected:
     QScrollBar* getScrollBar();
 
 private:
+#ifdef Q_OS_WIN
     bool enabledSmoothScroll = true;
+#else
+    bool enabledSmoothScroll = false;
+#endif
     int smoothScrollSpeed = 64;
     int smoothScrollDuration = 200;
     QList<SmoothScrollBean*> smooth_scrolls;
