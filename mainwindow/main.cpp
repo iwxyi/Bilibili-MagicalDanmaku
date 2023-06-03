@@ -54,6 +54,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("iwxyi.com");
     QCoreApplication::setApplicationName("神奇弹幕");
 
+    // Mac窗口
+    qputenv("QT_MAC_WANTS_LAYER", "1");
+
     // SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler); // 注册异常捕获程序
     // QBreakpadInstance.setDumpPath(QLatin1String("crashes"));
 
