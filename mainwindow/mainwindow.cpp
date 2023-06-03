@@ -2139,6 +2139,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     });
 #else
     QMainWindow::closeEvent(event);
+    qApp->quit(); // 如果不调用，那么程序不会关闭
 #endif
 }
 
