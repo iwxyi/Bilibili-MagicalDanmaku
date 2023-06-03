@@ -20,6 +20,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     {
         margin_hlayout->setSpacing(0);
         QVBoxLayout* main_vlayout = new QVBoxLayout;
+        main_vlayout->setMargin(0);
         {
             main_vlayout->setSpacing(0);
 
@@ -99,7 +100,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
 //    title_label->setFixedHeight(getWidgetHeight(title_label));
     content_label->setFixedWidth(parentWidget()->width()-aop_w*4-TIP_CARD_CONTENT_MARGIN*2);
     content_label->setFixedHeight(getWidgetHeight(content_label));
-    int height = title_label->height() + content_label->height() + aop_h*4 + TIP_CARD_CONTENT_MARGIN*2;
+    int height = title_label->height() + content_label->height() + aop_h*4 + TIP_CARD_CONTENT_MARGIN*2 + margin_hlayout->margin() * 2;
     if (operator1_button != nullptr)
         height += operator1_button->height();
     setMinimumSize(100, max(50, height));

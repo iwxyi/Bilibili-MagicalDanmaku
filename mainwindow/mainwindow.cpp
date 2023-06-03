@@ -137,6 +137,7 @@ void MainWindow::initView()
         button->setFixedSize(QSize(rt->widgetSizeL, rt->widgetSizeL));
         button->setRadius(rt->fluentRadius, rt->fluentRadius);
         button->setIconPaddingProper(0.23);
+        button->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 //        button->setChokingProp(0.08);
 
         if (i == sideButtonList.size() - 1) // 最后面的不是切换页面，不设置

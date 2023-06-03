@@ -507,6 +507,7 @@ FacileMenuItem *FacileMenu::addSeparator()
     item->setFixedHeight(1);
     item->setPaddings(32, 32, 0, 0);
     item->setDisabled(true);
+    item->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 
     main_vlayout->addWidget(item);
     h_separators.append(item);
@@ -571,6 +572,7 @@ FacileMenuItem *FacileMenu::addVSeparator()
     item->setFixedWidth(1);
     item->setPaddings(0, 0, 0, 0);
     item->setDisabled(true);
+    item->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 
     row_hlayouts.last()->addWidget(item);
     v_separators.append(item);
@@ -1043,6 +1045,7 @@ FacileMenuItem *FacileMenu::createMenuItem(QIcon icon, QString text)
             item =  new FacileMenuItem(icon, text, this);
     }
     item->setKey(key);
+    item->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 
     setActionButton(item, adding_horizone);
 

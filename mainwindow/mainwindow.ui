@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1845,8 +1845,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>61</width>
-             <height>16</height>
+             <width>925</width>
+             <height>1414</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -1862,7 +1862,7 @@ margin: 6px;</string>
               <x>10</x>
               <y>10</y>
               <width>151</width>
-              <height>131</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2578,7 +2578,7 @@ QPushButton:pressed
               <x>770</x>
               <y>10</y>
               <width>161</width>
-              <height>131</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="toolTip">
@@ -2713,9 +2713,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>190</x>
-              <y>170</y>
+              <y>160</y>
               <width>151</width>
-              <height>151</height>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2827,7 +2827,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>150</y>
               <width>161</width>
-              <height>181</height>
+              <height>191</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3075,7 +3075,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>350</y>
               <width>181</width>
-              <height>171</height>
+              <height>191</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3296,7 +3296,7 @@ QPushButton:pressed
               <x>190</x>
               <y>320</y>
               <width>161</width>
-              <height>121</height>
+              <height>141</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3542,7 +3542,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>340</y>
               <width>181</width>
-              <height>121</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -3744,7 +3744,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>490</y>
               <width>181</width>
-              <height>151</height>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4192,7 +4192,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>700</y>
               <width>161</width>
-              <height>111</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4619,7 +4619,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>820</y>
+              <y>830</y>
               <width>161</width>
               <height>121</height>
              </rect>
@@ -4720,7 +4720,7 @@ margin: 40px;</string>
               <x>550</x>
               <y>10</y>
               <width>201</width>
-              <height>211</height>
+              <height>231</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5548,7 +5548,7 @@ QPushButton:pressed
               <x>550</x>
               <y>570</y>
               <width>191</width>
-              <height>111</height>
+              <height>121</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5662,7 +5662,7 @@ QPushButton:pressed
               <x>550</x>
               <y>400</y>
               <width>191</width>
-              <height>151</height>
+              <height>181</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5859,7 +5859,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>910</y>
               <width>161</width>
-              <height>121</height>
+              <height>131</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5975,7 +5975,7 @@ margin: 40px;</string>
               <x>550</x>
               <y>850</y>
               <width>161</width>
-              <height>131</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -6336,7 +6336,7 @@ margin: 40px;</string>
               <x>189</x>
               <y>1090</y>
               <width>162</width>
-              <height>71</height>
+              <height>81</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -6410,7 +6410,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>1050</y>
               <width>162</width>
-              <height>101</height>
+              <height>111</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -6622,7 +6622,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>1160</y>
+              <y>1190</y>
               <width>161</width>
               <height>131</height>
              </rect>
@@ -9859,7 +9859,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

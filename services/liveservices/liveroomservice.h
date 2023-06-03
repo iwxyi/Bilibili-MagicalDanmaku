@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 #include <QObjectCleanupHandler>
 #include <QDesktopServices>
+#include <QAction>
 #include "widgets/netinterface.h"
 #include "livestatisticservice.h"
 #include "entities.h"
