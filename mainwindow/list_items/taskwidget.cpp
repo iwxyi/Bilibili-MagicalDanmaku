@@ -16,11 +16,14 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     spin->setSingleStep(10);
     edit->setPlaceholderText("定时发送的文本，多行则随机发送一行");
     int h = btn->sizeHint().height();
-    edit->setMinimumHeight(h);
-    edit->setMaximumHeight(h*5);
     edit->setFixedHeight(h);
     edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    edit->setStyleSheet("QPlainTextEdit{background: transparent;}");
+    edit->setStyleSheet("QPlainTextEdit,QTextEdit{background: transparent;}");
+
+#ifdef Q_OS_MAC
+    spin->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    edit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+#endif
 
     auto sendMsgs = [=](bool manual){
         emit signalSendMsgs(edit->toPlainText(), manual);
@@ -48,7 +51,7 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
 
     connect(edit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
 
-    connect(edit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(edit, &QTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
 }
@@ -90,11 +93,10 @@ void TaskWidget::slotSpinChanged(int val)
 
 void TaskWidget::autoResizeEdit()
 {
-    edit->document()->setPageSize(QSize(this->width(), edit->document()->size().height()));
-    edit->document()->adjustSize();
-    int hh = edit->document()->size().height(); // 应该是高度，为啥是行数？
-    QFontMetrics fm(edit->font());
-    int he = fm.lineSpacing() * (hh + 1);
+    edit->document()->setPageSize(QSize(this->width() - this->layout()->margin() * 2 - edit->contentsRect().left() * 2, 0));
+    //edit->document()->adjustSize();
+    int hh = edit->document()->size().height();
+    int he = hh + edit->contentsRect().top() * 2;
     int top = check->sizeHint().height();
     this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
     edit->setFixedHeight(he);

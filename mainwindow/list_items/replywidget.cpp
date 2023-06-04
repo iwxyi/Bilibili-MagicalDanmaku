@@ -13,11 +13,14 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
     keyEdit->setStyleSheet("QLineEdit{background: transparent;}");
     replyEdit->setPlaceholderText("自动回复，多行则随机发送");
     int h = btn->sizeHint().height();
-    replyEdit->setMinimumHeight(h);
-    replyEdit->setMaximumHeight(h*5);
     replyEdit->setFixedHeight(h);
     replyEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    replyEdit->setStyleSheet("QPlainTextEdit{background: transparent;}");
+    replyEdit->setStyleSheet("QPlainTextEdit,QTextEdit{background: transparent;}");
+
+#ifdef Q_OS_MAC
+    keyEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    replyEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+#endif
 
     keyEdit->setToolTip("正则表达式简单语法\n"
                         "包含关键词：关键词\n"
@@ -41,7 +44,7 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
 
     connect(replyEdit, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)), this, SIGNAL(signalInsertCodeSnippets(const QJsonDocument&)));
 
-    connect(replyEdit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(replyEdit, &QTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
 }
@@ -104,13 +107,12 @@ void ReplyWidget::slotNewDanmaku(const LiveDanmaku &danmaku)
 
 void ReplyWidget::autoResizeEdit()
 {
-    replyEdit->document()->setPageSize(QSize(this->width(), replyEdit->document()->size().height()));
-    replyEdit->document()->adjustSize();
-    int hh = replyEdit->document()->size().height(); // 应该是高度，为啥是行数？
-    QFontMetrics fm(replyEdit->font());
-    int he = fm.lineSpacing() * (hh + 1);
+    replyEdit->document()->setPageSize(QSize(this->width() - this->layout()->margin() * 2 - replyEdit->contentsRect().left() * 2, 0));
+    //replyEdit->document()->adjustSize();
+    int hh = replyEdit->document()->size().height();
+    int he = hh + replyEdit->contentsRect().top() * 2;
     int top = keyEdit->sizeHint().height() + check->sizeHint().height();
-    this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
+    this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*3);
     replyEdit->setFixedHeight(he);
     emit signalResized();
 }

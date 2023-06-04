@@ -12,15 +12,23 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     vlayout = new QVBoxLayout(this);
     setLayout(vlayout);
     vlayout->setMargin(vlayout->margin() + _cardMargin);
+    vlayout->setAlignment(Qt::AlignTop);
 
     check = new QCheckBox("启用", this);
     btn = new InteractiveButtonBase("发送", this);
 
+#ifdef Q_OS_MAC
+    this->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    _bgLabel->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    check->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    btn->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+#endif
+
     hlayout = new QHBoxLayout;
     hlayout->addWidget(check);
+    hlayout->addStretch(1);
     hlayout->addWidget(new QWidget(this));
     hlayout->addWidget(btn);
-    hlayout->setStretch(1, 1);
     hlayout->setMargin(0);
     vlayout->addLayout(hlayout);
 
@@ -56,6 +64,8 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
         _triggering = false;
         update();
     });
+
+    this->setStyleSheet("background: red");
 }
 
 void ListItemInterface::setRow(int row)

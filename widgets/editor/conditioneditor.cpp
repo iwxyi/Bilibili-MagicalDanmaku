@@ -7,7 +7,7 @@
 QStringList ConditionEditor::allCompletes;
 int ConditionEditor::completerWidth = 200;
 
-ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
+ConditionEditor::ConditionEditor(QWidget *parent) : QTextEdit(parent)
 {
     // 设置高亮
     new ConditionHighlighter(document());
@@ -32,12 +32,17 @@ void ConditionEditor::updateCompleterModel()
     completer->setModel(new QStringListModel(allCompletes));
 }
 
+void ConditionEditor::setMaximumBlockCount(int count)
+{
+    Q_UNUSED(0)
+}
+
 void ConditionEditor::keyPressEvent(QKeyEvent *e)
 {
     auto mod = e->modifiers();
     if (mod != Qt::NoModifier && mod != Qt::ShiftModifier)
     {
-        return QPlainTextEdit::keyPressEvent(e);
+        return QTextEdit::keyPressEvent(e);
     }
     auto key = e->key();
 
@@ -94,7 +99,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
         }
     }
 
-    QPlainTextEdit::keyPressEvent(e);
+    QTextEdit::keyPressEvent(e);
 
     // 修改内容后，所有都需要更新
     fullText = toPlainText();
@@ -223,7 +228,7 @@ void ConditionEditor::keyPressEvent(QKeyEvent *e)
 
 void ConditionEditor::inputMethodEvent(QInputMethodEvent *e)
 {
-    QPlainTextEdit::inputMethodEvent(e);
+    QTextEdit::inputMethodEvent(e);
     // 获取当前单词
     QString left = toPlainText().left(textCursor().position());
     QRegularExpressionMatch match;
@@ -249,7 +254,7 @@ void ConditionEditor::insertFromMimeData(const QMimeData *source)
             return ;
         }
     }
-    QPlainTextEdit::insertFromMimeData(source);
+    QTextEdit::insertFromMimeData(source);
 }
 
 void ConditionEditor::showCompleter(QString prefix)

@@ -1,5 +1,6 @@
 #include "eventwidget.h"
 #include "fileutil.h"
+#include <QScrollBar>
 
 QCompleter* EventWidget::completer = nullptr;
 
@@ -10,17 +11,22 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
 
     vlayout->addWidget(eventEdit);
     vlayout->addWidget(actionEdit);
+    vlayout->setStretch(2, 1);
     vlayout->activate();
 
     eventEdit->setPlaceholderText("事件命令");
     eventEdit->setStyleSheet("QLineEdit{background: transparent;}");
     actionEdit->setPlaceholderText("响应动作，多行则随机执行一行");
     int h = btn->sizeHint().height();
-    actionEdit->setMinimumHeight(h);
-    actionEdit->setMaximumHeight(h*5);
     actionEdit->setFixedHeight(h);
     actionEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    actionEdit->setStyleSheet("QPlainTextEdit{background: transparent;}");
+    actionEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    actionEdit->setStyleSheet("QPlainTextEdit,QTextEdit{background: transparent;}");
+
+#ifdef Q_OS_MAC
+    eventEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    actionEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+#endif
 
     auto sendMsgs = [=](bool manual){
         emit signalEventMsgs(actionEdit->toPlainText(), LiveDanmaku(), manual);
@@ -52,7 +58,7 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
         configShortcut();
     });*/
 
-    connect(actionEdit, &QPlainTextEdit::textChanged, this, [=]{
+    connect(actionEdit, &QTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
 
@@ -128,14 +134,13 @@ void EventWidget::triggerAction(LiveDanmaku danmaku)
 
 void EventWidget::autoResizeEdit()
 {
-    actionEdit->document()->setPageSize(QSize(this->width(), actionEdit->document()->size().height()));
-    actionEdit->document()->adjustSize();
-    int hh = actionEdit->document()->size().height(); // 应该是高度，为啥是行数？
-    QFontMetrics fm(actionEdit->font());
-    int he = fm.lineSpacing() * (hh + 1);
-    int top = eventEdit->sizeHint().height() + check->sizeHint().height();
-    this->setFixedHeight(top + he + layout()->margin()*2 + layout()->spacing()*2);
-    actionEdit->setFixedHeight(he);
+    actionEdit->document()->setPageSize(QSize(this->width() - this->layout()->margin() * 2 - actionEdit->contentsRect().left() * 2, 0));
+    //actionEdit->document()->adjustSize();
+    int hh = actionEdit->document()->size().height();
+    int codeDocHeight = hh + actionEdit->contentsRect().top() * 2;
+    int codeEditTop = eventEdit->sizeHint().height() + check->sizeHint().height();
+    this->setFixedHeight(codeEditTop + codeDocHeight + layout()->margin()*2 + layout()->spacing()*3);
+    actionEdit->setFixedHeight(codeDocHeight);
     emit signalResized();
 }
 

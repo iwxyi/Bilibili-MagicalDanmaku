@@ -1,19 +1,20 @@
 #ifndef CONDITIONEDITOR_H
 #define CONDITIONEDITOR_H
 
-#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QSyntaxHighlighter>
 #include <QRegularExpression>
 #include <QCompleter>
 #include "myjson.h"
 
-class ConditionEditor : public QPlainTextEdit
+class ConditionEditor : public QTextEdit
 {
     Q_OBJECT
 public:
     ConditionEditor(QWidget* parent = nullptr);
 
     void updateCompleterModel();
+    void setMaximumBlockCount(int count);
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
