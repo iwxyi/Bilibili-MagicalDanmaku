@@ -2036,7 +2036,7 @@ margin: 40px;</string>
               <x>190</x>
               <y>10</y>
               <width>151</width>
-              <height>131</height>
+              <height>161</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2154,6 +2154,19 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>发送失败重试</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="removeLongerRandomDanmakuCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;如果弹幕候选项中有多条弹幕，将忽略其中过长的弹幕，仅在剩下的候选项中随机选择一条发送。&lt;/p&gt;&lt;p&gt;仅针对发送弹幕有效，如果是可执行的命令或带有变量，则不会被忽略，高优先级强制执行。&lt;/p&gt;&lt;p&gt;此项将无视优先级的设置，即过长的高优先级弹幕可能会变为低优先级，从而避免发送为两条弹幕。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>忽略过长随机弹幕</string>
                </property>
               </widget>
              </item>

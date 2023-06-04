@@ -1488,6 +1488,7 @@ void MainWindow::readConfig()
     ui->stringSimilarCheck->setChecked(us->useStringSimilar = us->value("programming/stringSimilar", false).toBool());
     us->stringSimilarThreshold = us->value("programming/stringSimilarThreshold", 80).toInt();
     us->danmuSimilarJudgeCount = us->value("programming/danmuSimilarJudgeCount", 10).toInt();
+    ui->removeLongerRandomDanmakuCheck->setChecked(us->removeLongerRandomDanmaku = us->value("us/removeLongerRandomDanmaku", us->removeLongerRandomDanmaku).toBool());
 
     // 大乱斗自动赠送吃瓜
     bool melon = us->value("pk/autoMelon", false).toBool();
@@ -10511,4 +10512,10 @@ void MainWindow::on_GPTAnalysisFormatButton_clicked()
 
     us->chatgpt_analysis_format = s;
     us->setValue("chatgpt/analysis_format", s);
+}
+
+void MainWindow::on_removeLongerRandomDanmakuCheck_clicked()
+{
+    us->removeLongerRandomDanmaku = ui->removeLongerRandomDanmakuCheck->isChecked();
+    us->setValue("us/removeLongerRandomDanmaku", us->removeLongerRandomDanmaku);
 }
