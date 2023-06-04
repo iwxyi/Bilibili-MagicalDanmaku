@@ -1835,7 +1835,7 @@ void MainWindow::initDanmakuWindow()
     connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
     connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
     connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
-    connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
+    connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, LiveDanmaku)), this, SLOT(slotAIReplyed(QString, LiveDanmaku)));
     connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
     connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
         danmakuWindow->deleteLater();
@@ -8825,38 +8825,39 @@ void MainWindow::on_AIReplyMsgCheck_clicked()
         ui->AIReplyMsgCheck->setText("回复弹幕(仅单条)");
 }
 
-void MainWindow::slotAIReplyed(QString reply, qint64 uid)
+void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
 {
-    if (us->AIReplyMsgSend)
+    if (!us->AIReplyMsgSend)
+        return ;
+
+    qint64 uid = danmaku.getUid();
+    // 机器人自动发送的不回复（不然自己和自己打起来了）
+    if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
+        return ;
+
+    if (us->chatgpt_analysis)
     {
-        // 机器人自动发送的不回复（不然自己和自己打起来了）
-        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
+        /// 直接发送JSON
+        MyJson json(reply.toLocal8Bit());
+        triggerCmdEvent("GPT_RESPONSE", danmaku.with(json));
+    }
+    else
+    {
+        // AI回复长度上限，以及过滤
+        if (us->AIReplyMsgSend == 1 && reply.length() > ac->danmuLongest)
             return ;
 
-        if (us->chatgpt_analysis)
+        // 自动断句
+        qInfo() << "发送AI回复：" << reply;
+        QStringList sl;
+        int len = reply.length();
+        const int maxOne = ac->danmuLongest;
+        int count = (len + maxOne - 1) / maxOne;
+        for (int i = 0; i < count; i++)
         {
-            /// 直接发送JSON
-            MyJson json(reply.toLocal8Bit());
-            triggerCmdEvent("GPT_RESPONSE", LiveDanmaku().with(json));
+            sl << reply.mid(i * maxOne, maxOne);
         }
-        else
-        {
-            // AI回复长度上限，以及过滤
-            if (us->AIReplyMsgSend == 1 && reply.length() > ac->danmuLongest)
-                return ;
-
-            // 自动断句
-            qInfo() << "发送AI回复：" << reply;
-            QStringList sl;
-            int len = reply.length();
-            const int maxOne = ac->danmuLongest;
-            int count = (len + maxOne - 1) / maxOne;
-            for (int i = 0; i < count; i++)
-            {
-                sl << reply.mid(i * maxOne, maxOne);
-            }
-            cr->sendAutoMsg(sl.join("\\n"), LiveDanmaku());
-        }
+        cr->sendAutoMsg(sl.join("\\n"), danmaku);
     }
 }
 

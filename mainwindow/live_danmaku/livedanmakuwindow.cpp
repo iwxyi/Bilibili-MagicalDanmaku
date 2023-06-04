@@ -2213,8 +2213,7 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         if (answer.isEmpty())
             return ;
 
-        emit signalAIReplyed(answer, uid);
-
+        emit signalAIReplyed(answer, danmaku);
 
         if (us->AIReplyMsgSend) // 要回复了，不需要再本地显示
             return ;

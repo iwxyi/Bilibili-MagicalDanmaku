@@ -409,7 +409,7 @@ private slots:
 
     void on_AIReplyMsgCheck_clicked();
 
-    void slotAIReplyed(QString reply, qint64 uid);
+    void slotAIReplyed(QString reply, LiveDanmaku danmaku);
 
     void on_danmuLongestSpin_editingFinished();
 
