@@ -63,8 +63,8 @@ INCLUDEPATH += \
     global/ \
     mainwindow/ \
     services/ \
-    services/liveservices/ \
-    services/liveservices/bilibili \
+    services/live_services/ \
+    services/live_services/bilibili \
     services/entities/ \
     services/code_runner/ \
     third_party/utils/ \
@@ -101,11 +101,11 @@ SOURCES += \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
-    services/liveservices/bilibili/bili_livecmds.cpp \
-    services/liveservices/bilibili/bili_liveopenservice.cpp \
-    services/liveservices/bilibili/bili_liveservice.cpp \
-    services/liveservices/liveroomservice.cpp \
-    services/liveservices/livestatisticservice.cpp \
+    services/live_services/bilibili/bili_livecmds.cpp \
+    services/live_services/bilibili/bili_liveopenservice.cpp \
+    services/live_services/bilibili/bili_liveservice.cpp \
+    services/live_services/liveroomservice.cpp \
+    services/live_services/livestatisticservice.cpp \
     services/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
@@ -202,10 +202,10 @@ HEADERS += \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
-    services/liveservices/bilibili/bili_liveopenservice.h \
-    services/liveservices/bilibili/bili_liveservice.h \
-    services/liveservices/liveroomservice.h \
-    services/liveservices/livestatisticservice.h \
+    services/live_services/bilibili/bili_liveopenservice.h \
+    services/live_services/bilibili/bili_liveservice.h \
+    services/live_services/liveroomservice.h \
+    services/live_services/livestatisticservice.h \
     services/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
