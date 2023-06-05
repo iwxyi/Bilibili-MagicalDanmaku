@@ -532,6 +532,10 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 
         // 获取礼物
         getGiftList();
+
+        // 如果是管理员，可以获取禁言的用户
+        if (us->enableBlock)
+            refreshBlockList();
     });
     emit signalConnectionStateTextChanged("获取房间信息...");
 }

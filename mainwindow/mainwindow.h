@@ -695,6 +695,8 @@ private slots:
 
     void on_chatGPTPromptButton_clicked();
 
+    void on_platformButton_clicked();
+
 private:
     void initView();
     void initStyle();

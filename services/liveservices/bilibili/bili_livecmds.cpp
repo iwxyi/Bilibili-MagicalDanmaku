@@ -731,7 +731,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
     {
         emit signalLiveStopped();
 
-
         releaseLiveData(true);
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
@@ -776,33 +775,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             // 唔，好吧，啥都不用做
         }
 
-        // 判断对面直播间
-        bool opposite = pking &&
-                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
-                     snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
-
-        // !弹幕的时间戳是13位，其他的是10位！
-        qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
-        /*QString localName = danmakuWindow->getLocalNickname(uid);
-        if (!localName.isEmpty())
-            username = localName;*/
-
-        // 统计弹幕次数
-        int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
-        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
-        dailyDanmaku++;
-        if (dailySettings)
-            dailySettings->setValue("danmaku", dailyDanmaku);
-
-        // 等待通道
-        if (uid != ac->cookieUid.toLongLong())
-        {
-            for (int i = 0; i < CHANNEL_COUNT; i++)
-                cr->msgWaits[i]++;
-        }
-
-        // 添加到列表
+        // 设置弹幕信息
         QString cs = QString::number(textColor, 16);
         while (cs.size() < 6)
             cs = "0" + cs;
@@ -823,24 +796,13 @@ void BiliLiveService::handleMessage(QJsonObject json)
         }
         else
             minuteDanmuPopul++;
-        danmaku.setOpposite(opposite);
-        appendNewLiveDanmaku(danmaku);
 
-        // 弹幕总数
-        emit signalReceiveDanmakuTotalCountChanged(++(cr->liveTotalDanmaku));
+        // !弹幕的时间戳是13位，其他的是10位！
+        qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
 
-        // 新人发言
-        if (danmuCount == 1)
-        {
-            dailyNewbieMsg++;
-            if (dailySettings)
-                dailySettings->setValue("newbie_msg", dailyNewbieMsg);
-        }
+        onNewDanmuReceived(danmaku.with(json));
 
-        // 新人小号禁言
-        emit signalTryBlockDanmaku(danmaku);
-
-        triggerCmdEvent("DANMU_MSG", danmaku.with(json));
+        triggerCmdEvent("DANMU_MSG", danmaku);
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {

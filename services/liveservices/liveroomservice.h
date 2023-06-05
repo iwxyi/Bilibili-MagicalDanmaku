@@ -177,8 +177,6 @@ public:
     virtual void getRobotInfo() = 0;
     /// 获取直播间信息
     virtual void getRoomInfo(bool reconnect, int reconnectCount = 0) = 0;
-    /// 获取直播间Host信息
-    virtual void getDanmuInfo() = 0;
     /// 根据获得的Host信息，开始连接socket
     virtual void startMsgLoop() = 0;
     /// 初次连接socket，发送认证包
@@ -335,6 +333,9 @@ public:
     /// 一些条件判断
     bool isInFans(qint64 uid) const;
     void markNotRobot(qint64 uid);
+
+protected:
+    virtual void onNewDanmuReceived(const LiveDanmaku& danmaku);
 
 protected:
     // 连接信息

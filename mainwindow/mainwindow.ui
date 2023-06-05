@@ -193,6 +193,23 @@
         </spacer>
        </item>
        <item>
+        <widget class="WaterZoomButton" name="platformButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>直播论坛：提问/反馈/建议</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/platforms/bilibili</normaloff>:/platforms/bilibili</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="WaterZoomButton" name="forumButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -1845,8 +1862,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>61</width>
-             <height>16</height>
+             <width>100</width>
+             <height>30</height>
             </rect>
            </property>
            <property name="styleSheet">

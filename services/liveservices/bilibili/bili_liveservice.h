@@ -25,7 +25,7 @@ public:
     QString toWbiParam(QString params) const;
     void getRobotInfo() override;
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
-    void getDanmuInfo() override;
+    void getDanmuInfo(); // 获取直播间弹幕信息
     void startMsgLoop() override;
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
     void sendHeartPacket(QWebSocket *socket) override;

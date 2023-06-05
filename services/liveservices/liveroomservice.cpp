@@ -1,5 +1,6 @@
 #include <QRegularExpression>
 #include "liveroomservice.h"
+#include "coderunner.h"
 
 LiveRoomService::LiveRoomService(QObject *parent) 
     : QObject(parent), NetInterface(this), LiveStatisticService(this)
@@ -552,6 +553,48 @@ void LiveRoomService::markNotRobot(qint64 uid)
     int val = robotRecord->value("robot/" + snum(uid), 0).toInt();
     if (val != -1)
         robotRecord->setValue("robot/" + snum(uid), -1);
+}
+
+void LiveRoomService::onNewDanmuReceived(const LiveDanmaku &danmaku)
+{
+    qint64 uid = danmaku.getUid();
+
+    // 判断对面直播间
+    bool opposite = pking &&
+            ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
+             || (!pkRoomId.isEmpty() && danmaku.getAnchorRoomid() == pkRoomId));
+    danmaku.setOpposite(opposite);
+
+    // 统计弹幕次数
+    int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+    us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+    dailyDanmaku++;
+    if (dailySettings)
+        dailySettings->setValue("danmaku", dailyDanmaku);
+
+    // 等待通道
+    if (uid != ac->cookieUid.toLongLong())
+    {
+        for (int i = 0; i < CHANNEL_COUNT; i++)
+            cr->msgWaits[i]++;
+    }
+
+    // 添加到列表
+    appendNewLiveDanmaku(danmaku);
+
+    // 弹幕总数
+    emit signalReceiveDanmakuTotalCountChanged(++(cr->liveTotalDanmaku));
+
+    // 新人发言
+    if (danmuCount == 1)
+    {
+        dailyNewbieMsg++;
+        if (dailySettings)
+            dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+    }
+
+    // 新人小号禁言
+    emit signalTryBlockDanmaku(danmaku);
 }
 
 /**

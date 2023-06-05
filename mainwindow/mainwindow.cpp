@@ -122,13 +122,15 @@ void MainWindow::initView()
     ui->menubar->setStyleSheet("QMenuBar:item{background:transparent;}QMenuBar{background:transparent;}");
 
     sideButtonList = { ui->roomPageButton,
-                  ui->danmakuPageButton,
-                  ui->thankPageButton,
-                  ui->musicPageButton,
-                  ui->extensionPageButton,
-                  ui->preferencePageButton,
-                  ui->forumButton
+                       ui->danmakuPageButton,
+                       ui->thankPageButton,
+                       ui->musicPageButton,
+                       ui->extensionPageButton,
+                       ui->preferencePageButton,
+                       ui->forumButton,
+                       ui->platformButton
                 };
+    const int notPageCount = 2;
     for (int i = 0; i < sideButtonList.size(); i++)
     {
         auto button = sideButtonList.at(i);
@@ -139,7 +141,7 @@ void MainWindow::initView()
         button->setIconPaddingProper(0.23);
 //        button->setChokingProp(0.08);
 
-        if (i == sideButtonList.size() - 1) // 最后面的不是切换页面，不设置
+        if (i >= sideButtonList.size() - notPageCount) // 最后面的几个不是切换页面，不设置
             continue;
 
         connect(button, &InteractiveButtonBase::clicked, this, [=]{
@@ -1181,7 +1183,7 @@ void MainWindow::initLiveService()
 void MainWindow::readConfig()
 {
     // 平台
-    rt->livePlatform = (LivePlatform)(us->value("platform/live", 0).toInt());
+    rt->livePlatform = (LivePlatform)(us->value("global/live_platform", 0).toInt());
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(readTextFile(":/documents/keys").toUtf8(), &error);
@@ -1307,7 +1309,7 @@ void MainWindow::readConfig()
     ui->AIReplyMsgCheck->setEnabled(reply);
 
     // 黑名单管理
-    ui->enableBlockCheck->setChecked(us->value("block/enableBlock", false).toBool());
+    ui->enableBlockCheck->setChecked(us->enableBlock = us->value("block/enableBlock", false).toBool());
     ui->syncShieldKeywordCheck->setChecked(us->value("block/syncShieldKeyword", false).toBool());
 
     // 新人提示
@@ -1357,7 +1359,7 @@ void MainWindow::readConfig()
     if (posr == -1) posr = ac->browserCookie.length();
     ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
     ac->userCookies = getCookies();
-    QTimer::singleShot(0, [=]{
+    QTimer::singleShot(100, [=]{
         liveService->getCookieAccount();
     });
 
@@ -1858,7 +1860,7 @@ void MainWindow::initDanmakuWindow()
     connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
     connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
     connect(danmakuWindow, SIGNAL(signalDismissAdmin(qint64)), liveService, SLOT(dismissAdmin(qint64)));
-    danmakuWindow->setEnableBlock(ui->enableBlockCheck->isChecked());
+    danmakuWindow->setEnableBlock(us->enableBlock);
     danmakuWindow->setNewbieTip(ui->newbieTipCheck->isChecked());
     danmakuWindow->setIds(ac->upUid.toLongLong(), ac->roomId.toLongLong());
     danmakuWindow->setWindowIcon(this->windowIcon());
@@ -4491,40 +4493,33 @@ void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
 
 void MainWindow::startConnectIdentityCode()
 {
-    MyJson json;
-    json.insert("code", ac->identityCode); // 主播身份码
-    json.insert("app_id", (qint64)BILI_APP_ID);
-    liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
-        if (json.code() != 0)
-        {
-            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
-            return ;
-        }
+    if (rt->livePlatform == Bilibili)
+    {
+        MyJson json;
+        json.insert("code", ac->identityCode); // 主播身份码
+        json.insert("app_id", (qint64)BILI_APP_ID);
+        liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+            if (json.code() != 0)
+            {
+                showError("解析身份码出错", snum(json.code()) + " " + json.msg());
+                return ;
+            }
 
-        auto data = json.data();
-        auto anchor = data.o("anchor_info");
-        qint64 roomId = anchor.l("room_id");
+            auto data = json.data();
+            auto anchor = data.o("anchor_info");
+            qint64 roomId = anchor.l("room_id");
 
-        // 通过房间号连接
-        ui->roomIdEdit->setText(snum(roomId));
-        on_roomIdEdit_editingFinished();
-    });
+            // 通过房间号连接
+            ui->roomIdEdit->setText(snum(roomId));
+            on_roomIdEdit_editingFinished();
+        });
+    }
 }
 
 void MainWindow::startConnectRoom()
 {
     if (ac->roomId.isEmpty())
         return ;
-
-    // 判断是身份码还是房间号
-    bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
-    if (!isPureRoomId)
-    {
-        QTimer::singleShot(100, [=]{
-            startConnectIdentityCode();
-        });
-        return ;
-    }
 
     // 初始化主播数据
     ac->currentFans = 0;
@@ -4540,12 +4535,25 @@ void MainWindow::startConnectRoom()
     if (us->calculateDailyData)
         liveService->startCalculateDailyData();
 
-    // 开始获取房间信息
-    liveService->getRoomInfo(true);
+    if (rt->livePlatform == Bilibili)
+    {
+        // 判断是身份码还是房间号
+        bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
+        if (!isPureRoomId)
+        {
+            QTimer::singleShot(100, [=]{
+                startConnectIdentityCode();
+            });
+            return ;
+        }
 
-    // 如果是管理员，可以获取禁言的用户
-    if (ui->enableBlockCheck->isChecked())
-        liveService->refreshBlockList();
+        // 开始获取房间信息
+        liveService->getRoomInfo(true);
+    }
+    else
+    {
+
+    }
 }
 
 void MainWindow::updatePermission()
@@ -6132,7 +6140,7 @@ void MainWindow::detectEternalBlockUsers()
 void MainWindow::on_enableBlockCheck_clicked()
 {
     bool enable = ui->enableBlockCheck->isChecked();
-    us->setValue("block/enableBlock", enable);
+    us->setValue("block/enableBlock", us->enableBlock = enable);
     if (danmakuWindow)
         danmakuWindow->setEnableBlock(enable);
 
@@ -10455,4 +10463,32 @@ void MainWindow::on_chatGPTPromptButton_clicked()
 
     us->chatgpt_prompt = s;
     us->setValue("chatgpt/prompt", s);
+}
+
+void MainWindow::on_platformButton_clicked()
+{
+    auto switchToPlatform = [=](LivePlatform pl) {
+        us->setValue("global/live_platform", pl);
+        tip_box->createTipCard(new NotificationEntry("", "切换直播平台", "重启生效"));
+    };
+
+    newFacileMenu;
+    menu->addAction(QIcon(":/platforms/bilibili"), "哔哩哔哩", [=]{
+        switchToPlatform(Bilibili);
+    })->check(rt->livePlatform == Bilibili);
+    menu->split();
+    menu->addAction(QIcon(":/platforms/huya"), "虎牙", [=]{
+        switchToPlatform(Huya);
+    })->check(rt->livePlatform == Huya);
+    menu->addAction(QIcon(":/platforms/douyu"), "斗鱼", [=]{
+        switchToPlatform(Douyu);
+    })->check(rt->livePlatform == Douyu)->disable();
+    menu->split();
+    menu->addAction(QIcon(":/platforms/douyin"), "抖音", [=]{
+        switchToPlatform(Douyin);
+    })->check(rt->livePlatform == Douyin)->disable();
+    menu->addAction(QIcon(":/platforms/kuaishou"), "快手", [=]{
+        switchToPlatform(Kuaishou);
+    })->check(rt->livePlatform == Kuaishou)->disable();
+    menu->exec();
 }

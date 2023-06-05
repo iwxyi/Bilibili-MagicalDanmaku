@@ -200,4 +200,11 @@
         <file alias="unchecked_press">widgets/unchecked_press.png</file>
         <file alias="unchecked_hover">widgets/unckeced_hover.png</file>
     </qresource>
+    <qresource prefix="/platforms">
+        <file alias="bilibili">icons/platform/bilibili.png</file>
+        <file alias="douyin">icons/platform/douyin.png</file>
+        <file alias="douyu">icons/platform/douyu.png</file>
+        <file alias="huya">icons/platform/huya.png</file>
+        <file alias="kuaishou">icons/platform/kuaishou.png</file>
+    </qresource>
 </RCC>
