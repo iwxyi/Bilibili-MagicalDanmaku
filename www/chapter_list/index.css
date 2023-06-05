@@ -1,0 +1,104 @@
+body {
+    background-color: #14141f;
+    font-family: Arial, sans-serif;
+}
+.container {
+    margin: 20px auto;
+    background: transparent;
+    border: 5px solid #00ffff;
+    padding: 20px;
+    max-width: 800px;
+    box-shadow: 0 0 10px #00ffff;
+}
+h1 {
+    text-align: center;
+    color: #00ffff;
+    font-weight: bold;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px #00ffff;
+    margin-bottom: 20px;
+}
+ol {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: transparent;
+}
+li {
+    text-align: center;
+    padding: 10px;
+    color: #00ffff;
+    font-size: 1.5em;
+    border: 2px solid transparent;
+    background-color: transparent;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 10px #00ffff;
+}
+li:hover {
+    border-color: #00ffff;
+    color: #14141f;
+    background-color: #00ffff;
+    text-shadow: none;
+}
+li.active {
+    background-color: #00ffff;
+    border-color: #14141f;
+    color: #14141f;
+    font-size: 1.8em;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px #14141f;
+    text-shadow: none;
+}
+/* 按钮样式 */
+.btn {
+    display: inline-block;
+    background-color: #00ffff;
+    color: #14141f;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px #00ffff;
+    margin-right: 10px;
+    text-shadow: none;
+}
+.btn:hover {
+    background-color: #14141f;
+    color: #00ffff;
+    box-shadow: 0 0 10px #14141f;
+    text-shadow: 0 0 10px #00ffff;
+}
+.btn:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+.btn:focus {
+    outline: none;
+}
+
+/* 输入框样式 */
+.input {
+    display: inline-block;
+    background-color: #00ffff;
+    color: #14141f;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #00ffff;
+    margin-right: 10px;
+    text-shadow: none;
+}
+.input:focus {
+    outline: none;
+    box-shadow: 0 0 10px #14141f;
+}

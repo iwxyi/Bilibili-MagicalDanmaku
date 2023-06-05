@@ -1,0 +1,97 @@
+<head>
+    <title>节目单</title>
+    <script src="../js/jquery.js"></script>
+    <link rel="stylesheet" href="index.css" media="screen" type="text/css" />
+    <link rel="stylesheet" href="index_custom.css" media="screen" type="text/css" />
+</head>
+
+<body>
+    <div class="container">
+		<h1>节目单</h1>
+		<ol id="program-list">
+			<li>1. 节目1</li>
+			<li>2. 节目2</li>
+			<li>3. 节目3</li>
+			<li>4. 节目4</li>
+			<li>5. 节目5</li>
+		</ol>
+	</div>
+
+    <div class="button-container">
+        <button class="button" id="prev-button">上一个</button>
+        <button class="button" id="next-button">下一个</button>
+    </div>
+
+    <script>
+		// 获取节目列表和当前节目
+		var programList = document.getElementById("program-list");
+		var programItems = programList.getElementsByTagName("li");
+		var currentProgramIndex = 0;
+
+		// 设置当前节目
+		function setIndex(index) {
+            if (index < 0 || index >= programItems.length) {
+                return;
+            }
+			// 取消之前的高亮
+			programItems[currentProgramIndex].classList.remove("active");
+			// 设置新的高亮
+			currentProgramIndex = index;
+			programItems[currentProgramIndex].classList.add("active");
+		}
+
+		// 给所有节目添加点击事件
+		for (var i = 0; i < programItems.length; i++) {
+			programItems[i].addEventListener("click", function() {
+				setIndex(Array.prototype.indexOf.call(programItems, this));
+			});
+		}
+
+		// 初始化当前节目
+		setIndex(0);
+
+        // 获取上一个和下一个按钮
+        var prevButton = document.getElementById("prev-button");
+        var nextButton = document.getElementById("next-button");
+
+        // 给上一个按钮添加点击事件
+        prevButton.addEventListener("click", function() {
+            if (currentProgramIndex > 0) {
+                setIndex(currentProgramIndex - 1);
+            }
+        });
+
+        // 给下一个按钮添加点击事件
+        nextButton.addEventListener("click", function() {
+            if (currentProgramIndex < programItems.length - 1) {
+                setIndex(currentProgramIndex + 1);
+            }
+        });
+	</script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ws = new WebSocket("ws://__DOMAIN__:__WS_PORT__");
+            ws.onopen = function() {
+                ws.send('{"cmd": "cmds", "data": ["CHAPTER_LIST"]}');
+            };
+            ws.onmessage = function(e) {
+                // console.log(e.data);
+                var json = JSON.parse(e.data);
+                var cmd = json['cmd'];
+                switch (cmd) {
+                    case 'CURRENT_CHAPTER':
+                        var index = json['data']['index'];
+                        setIndex(index - 1);
+                        break;
+                    case "PREV_CHAPTER":
+                        setIndex(currentProgramIndex - 1);
+                        break;
+                    case "NEXT_CHAPTER":
+                        setIndex(currentProgramIndex + 1);
+                        break;
+                }
+            };
+        });
+    </script>
+</body>
