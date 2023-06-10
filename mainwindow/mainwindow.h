@@ -703,6 +703,8 @@ private slots:
 
     void on_removeLongerRandomDanmakuCheck_clicked();
 
+    void on_GPTAnalysisEventButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -736,6 +738,8 @@ private:
     void connectAutoReplyEvent(ReplyWidget* rw, QListWidgetItem* item);
     void saveReplyList();
     void restoreReplyList();
+    bool hasReply(const QString& text);
+    void gotoReply(const QString& text);
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
     EventWidget *addEventAction(const MyJson &json);
@@ -743,6 +747,7 @@ private:
     void saveEventList();
     void restoreEventList();
     bool hasEvent(const QString &cmd) const;
+    void gotoEvent(const QString& text);
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);

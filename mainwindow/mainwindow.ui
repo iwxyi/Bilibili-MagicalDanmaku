@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1017</width>
-    <height>1811</height>
+    <height>1854</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1845,8 +1845,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>925</width>
-             <height>1654</height>
+             <width>937</width>
+             <height>1716</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2582,6 +2582,195 @@ QPushButton:pressed
                 </widget>
                </item>
               </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="GPTAnalysisSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>1380</y>
+              <width>211</width>
+              <height>301</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#GPTAnalysisSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_87">
+             <item>
+              <widget class="QLabel" name="label_76">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>功能型GPT</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_44" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_77">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用GPT来识别弹幕。会覆盖AI自动回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="GPTAnalysisCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>提前体验新版特性，可能会有未预料的问题</string>
+               </property>
+               <property name="text">
+                <string>启用</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="GPTAnalysisPromptButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>功能提示词</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="GPTAnalysisFormatButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>强制结果语句</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="GPTAnalysisEventButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>前往事件</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_78">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>识别结果将触发“GPT_RESPONSE”事件</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -6771,165 +6960,6 @@ QPushButton:pressed
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="GPTAnalysisSettingsCard" native="true">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>1380</y>
-              <width>211</width>
-              <height>281</height>
-             </rect>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">#GPTAnalysisSettingsCard
-{
-	background: #f7f7ff;
-	border: none;
-	border-radius: 5px;
-}</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_87">
-             <item>
-              <widget class="QLabel" name="label_76">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font-size: 14px;
-font-weight: 500;</string>
-               </property>
-               <property name="text">
-                <string>功能型GPT</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget_44" native="true">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>1</height>
-                </size>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">background: lightgray;
-margin: 40px;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_77">
-               <property name="styleSheet">
-                <string notr="true">color: gray;</string>
-               </property>
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用GPT来识别弹幕并进行相应的操作。会覆盖弹幕回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="CheckBox1" name="GPTAnalysisCheck">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="toolTip">
-                <string>提前体验新版特性，可能会有未预料的问题</string>
-               </property>
-               <property name="text">
-                <string>启用</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="GPTAnalysisPromptButton">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-               </property>
-               <property name="text">
-                <string>功能提示词</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="GPTAnalysisFormatButton">
-               <property name="cursor">
-                <cursorShape>PointingHandCursor</cursorShape>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton
-{
-	background: transparent;
-	border: 1px solid lightgray;
-	padding: 2px 8px 2px 8px;
-}
-
-QPushButton:hover
-{
-	background: #eeeeee;
-}
-
-QPushButton:pressed
-{
-	background: #cccccc;
-}
-
-</string>
-               </property>
-               <property name="text">
-                <string>强制结果语句</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_78">
-               <property name="styleSheet">
-                <string notr="true">color: gray;</string>
-               </property>
-               <property name="text">
-                <string>建议识别结果使用JSON格式，将触发“GPT_RESPONSE”事件</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
           </widget>
          </widget>
         </item>
@@ -10031,7 +10061,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

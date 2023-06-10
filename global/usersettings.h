@@ -64,6 +64,7 @@ public:
     bool chatgpt_analysis = false;
     QString chatgpt_analysis_prompt;
     QString chatgpt_analysis_format;
+    QString chatgpt_analysis_action;
 
     bool localMode = false;   // 本地调试模式
     bool debugPrint = false;  // 调试输出模式
