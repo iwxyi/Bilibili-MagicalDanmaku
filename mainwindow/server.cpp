@@ -946,6 +946,14 @@ void MainWindow::addCloudShieldKeyword(QString keyword)
 
 void MainWindow::downloadNewPackage(QString version, QString packageUrl)
 {
+    // 判断名字
+    if (QCoreApplication::applicationName() != "神奇弹幕")
+    {
+        qWarning() << "非默认APP名字，不自动更新";
+        return ;
+    }
+
+    // 开始下载
     static bool downloaded = false;
     if (!downloaded)
         downloaded = true;

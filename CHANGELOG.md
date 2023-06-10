@@ -1,6 +1,10 @@
-### v4.10.1 [GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)优化
+### v4.10.1 [GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)
 
+- 新增“功能型GPT”：智能识别弹幕类型并进行操作
 - 新增 AIReply 命令支持自动调用 ChatGPT
+- 优化部分界面
+- 修复头像接口问题
+- 修复弹幕姬中“<% %>”无法显示的问题
 
 
 
