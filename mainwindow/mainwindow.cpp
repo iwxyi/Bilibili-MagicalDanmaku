@@ -3920,30 +3920,34 @@ bool MainWindow::hasReply(const QString &text)
     return false;
 }
 
-void MainWindow::gotoReply(const QString &text)
+bool MainWindow::gotoReply(const QString &text)
 {
     for (int row = 0; row < ui->replyListWidget->count(); row++)
     {
         auto item = ui->replyListWidget->item(row);
         auto widget = ui->replyListWidget->itemWidget(item);
         auto tw = static_cast<ReplyWidget*>(widget);
-        if (tw->isEnabled() && !tw->isMatch(text))
+        if (tw->isEnabled() && tw->isMatch(text))
         {
             int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
             ui->stackedWidget->setCurrentIndex(page_index);
             adjustPageSize(page_index);
             switchPageAnimation(page_index);
-            ui->tabWidget->setCurrentWidget(ui->replyListWidget);
-            int content_height = ui->replyListWidget->contentsRect().height();
-            int item_top = ui->replyListWidget->visualItemRect(item).top(); // 与底部的距离
-            int item_height = ui->replyListWidget->visualItemRect(item).height();
-            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
-                item_height = content_height;
-            ui->replyListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
-            return;
+            QTimer::singleShot(500, [=]{
+                ui->tabWidget->setCurrentWidget(ui->replyListWidget);
+                int page_height = ui->replyListWidget->verticalScrollBar()->pageStep();
+                int content_height = ui->replyListWidget->contentsRect().height();
+                int item_top = ui->replyListWidget->visualItemRect(item).top(); // 与底部的距离
+                int item_height = ui->replyListWidget->visualItemRect(item).height();
+                if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                    item_height = content_height;
+                ui->replyListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height - page_height);
+            });
+            return true;
         }
     }
     qWarning() << "不存在reply.items：" << text;
+    return false;
 }
 
 void MainWindow::addListItemOnCurrentPage()
@@ -4135,31 +4139,35 @@ bool MainWindow::hasEvent(const QString &cmd) const
     return false;
 }
 
-void MainWindow::gotoEvent(const QString &text)
+bool MainWindow::gotoEvent(const QString &text)
 {
     for (int row = 0; row < ui->eventListWidget->count(); row++)
     {
         auto item = ui->eventListWidget->item(row);
         auto widget = ui->eventListWidget->itemWidget(item);
         auto ew = static_cast<EventWidget*>(widget);
-        if (ew->isEnabled() && !ew->isMatch(text))
+        if (ew->isEnabled() && ew->isMatch(text))
         {
             qInfo() << "滚动到：" << text;
             int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
             ui->stackedWidget->setCurrentIndex(page_index);
             adjustPageSize(page_index);
             switchPageAnimation(page_index);
-            ui->tabWidget->setCurrentWidget(ui->eventListWidget);
-            int content_height = ui->eventListWidget->contentsRect().height();
-            int item_top = ui->eventListWidget->visualItemRect(item).top(); // 与底部的距离
-            int item_height = ui->eventListWidget->visualItemRect(item).height();
-            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
-                item_height = content_height;
-            ui->eventListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
-            return;
+            QTimer::singleShot(500, [=]{
+                ui->tabWidget->setCurrentWidget(ui->eventListWidget);
+                int content_height = ui->eventListWidget->contentsRect().height();
+                int page_height = ui->eventListWidget->verticalScrollBar()->pageStep();
+                int item_top = ui->eventListWidget->visualItemRect(item).top(); // 与底部的距离
+                int item_height = ui->eventListWidget->visualItemRect(item).height();
+                if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                    item_height = content_height;
+                ui->eventListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height - page_height);
+            });
+            return true;
         }
     }
     qWarning() << "不存在event.items：" << text;
+    return false;
 }
 
 void MainWindow::addCodeSnippets(const QJsonDocument &doc)

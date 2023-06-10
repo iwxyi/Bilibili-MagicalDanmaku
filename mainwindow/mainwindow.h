@@ -739,7 +739,7 @@ private:
     void saveReplyList();
     void restoreReplyList();
     bool hasReply(const QString& text);
-    void gotoReply(const QString& text);
+    bool gotoReply(const QString& text);
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
     EventWidget *addEventAction(const MyJson &json);
@@ -747,7 +747,7 @@ private:
     void saveEventList();
     void restoreEventList();
     bool hasEvent(const QString &cmd) const;
-    void gotoEvent(const QString& text);
+    bool gotoEvent(const QString& text);
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);
