@@ -202,7 +202,7 @@ void BiliLiveService::getCookieAccount()
 void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
 {
     get("https://api.bilibili.com/x/web-interface/nav", [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
+        if (json.value("code").toInt() != 0 && !json.value("data").toObject().contains("wbi_img"))
         {
             showError("获取导航信息返回不为0", json.value("message").toString());
             return ;

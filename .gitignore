@@ -62,6 +62,7 @@ Thumbs.db
 *.Debug
 *.Release
 *.key
+keys.json
 *.tmp
 
 # Python byte code

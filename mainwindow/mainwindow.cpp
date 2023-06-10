@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
     initVoiceService();
     initChatService();
     readConfig();
+    initDynamicConfigs();
 
     // WS连接
     startConnectRoom();
@@ -1187,6 +1188,26 @@ void MainWindow::readConfig()
     // 界面效果
     ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 
+    // 默认配置
+    if (isFileExist(rt->dataPath + "dynamic_config.json"))
+    {
+        // 目前是从文件里读取，但是应当联网更新的
+        QString text = readTextFileAutoCodec(rt->dataPath + "dynamic_config.json");
+        if (!text.isEmpty())
+        {
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &error);
+            if (error.error == QJsonParseError::NoError)
+            {
+                us->dynamicConfigs = doc.object();
+            }
+            else
+            {
+                qWarning() << "读取动态配置出错：" << error.errorString();
+            }
+        }
+    }
+
     // 标签组
     int tabIndex = us->value("mainwindow/tabIndex", 0).toInt();
     if (tabIndex >= 0 && tabIndex < ui->tabWidget->count())
@@ -1279,10 +1300,11 @@ void MainWindow::readConfig()
     ui->languageAutoTranslateCheck->setChecked(trans);
 
     // 自动回复
-    bool reply = us->value("danmaku/aiReply", false).toBool();
-    ui->AIReplyCheck->setChecked(reply);
-    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->value("danmaku/aiReplyMsg", 0).toInt()));
-    ui->AIReplyMsgCheck->setEnabled(reply);
+    us->AIReplyMsgLocal = us->value("danmaku/aiReply", false).toBool();
+    us->AIReplyMsgSend = us->value("danmaku/aiReplyMsg", 0).toInt();
+    ui->AIReplyCheck->setChecked(us->AIReplyMsgLocal);
+    ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->AIReplyMsgSend));
+    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(us->value("block/enableBlock", false).toBool());
@@ -1467,6 +1489,7 @@ void MainWindow::readConfig()
     ui->stringSimilarCheck->setChecked(us->useStringSimilar = us->value("programming/stringSimilar", false).toBool());
     us->stringSimilarThreshold = us->value("programming/stringSimilarThreshold", 80).toInt();
     us->danmuSimilarJudgeCount = us->value("programming/danmuSimilarJudgeCount", 10).toInt();
+    ui->removeLongerRandomDanmakuCheck->setChecked(us->removeLongerRandomDanmaku = us->value("us/removeLongerRandomDanmaku", us->removeLongerRandomDanmaku).toBool());
 
     // 大乱斗自动赠送吃瓜
     bool melon = us->value("pk/autoMelon", false).toBool();
@@ -1598,6 +1621,10 @@ void MainWindow::readConfig()
     ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
     ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
     ui->chatGPTMaxContextCountSpin->setValue(us->chatgpt_max_context_count = us->value("chatgpt/max_context_count", us->chatgpt_max_context_count).toInt());
+
+    ui->GPTAnalysisCheck->setChecked(us->chatgpt_analysis = us->value("chatgpt/analysis", false).toBool());
+    us->chatgpt_analysis_prompt = us->value("chatgpt/analysis_prompt").toString();
+    us->chatgpt_analysis_format = us->value("chatgpt/analysis_format").toString();
 
     // 腾讯闲聊
     QString TXSecretId = us->value("tx_nlp/secretId").toString();
@@ -1810,7 +1837,7 @@ void MainWindow::initDanmakuWindow()
     connect(danmakuWindow, SIGNAL(signalDelBlockUser(qint64)), liveService, SLOT(delBlockUser(qint64)));
     connect(danmakuWindow, SIGNAL(signalEternalBlockUser(qint64,QString,QString)), this, SLOT(eternalBlockUser(qint64,QString,QString)));
     connect(danmakuWindow, SIGNAL(signalCancelEternalBlockUser(qint64)), this, SLOT(cancelEternalBlockUser(qint64)));
-    connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, qint64)), this, SLOT(slotAIReplyed(QString, qint64)));
+    connect(danmakuWindow, SIGNAL(signalAIReplyed(QString, LiveDanmaku)), this, SLOT(slotAIReplyed(QString, LiveDanmaku)));
     connect(danmakuWindow, SIGNAL(signalShowPkVideo()), this, SLOT(on_actionShow_PK_Video_triggered()));
     connect(danmakuWindow, &LiveDanmakuWindow::signalChangeWindowMode, this, [=]{
         danmakuWindow->deleteLater();
@@ -1862,7 +1889,7 @@ void MainWindow::initDanmakuWindow()
             liveService->pullLiveDanmaku();
         }
         danmakuWindow->setAutoTranslate(ui->languageAutoTranslateCheck->isChecked());
-        danmakuWindow->setAIReply(ui->AIReplyCheck->isChecked());
+        danmakuWindow->setAIReply(us->AIReplyMsgLocal);
 
         if (liveService->pking)
         {
@@ -1935,6 +1962,22 @@ void MainWindow::initChatService()
 {
     chatService = new ChatService(this);
     chatService->setLiveService(this->liveService);
+}
+
+void MainWindow::initDynamicConfigs()
+{
+    if (us->dynamicConfigs.contains("chatgpt"))
+    {
+        QJsonObject cfg = us->dynamicConfigs.value("chatgpt").toObject();
+        if (us->chatgpt_prompt.isEmpty() && cfg.contains("prompt"))
+            us->chatgpt_prompt = cfg.value("prompt").toString();
+        if (us->chatgpt_analysis_prompt.isEmpty() && cfg.contains("analysis_prompt"))
+            us->chatgpt_analysis_prompt = cfg.value("analysis_prompt").toString();
+        if (us->chatgpt_analysis_format.isEmpty() && cfg.contains("analysis_format"))
+            us->chatgpt_analysis_format = cfg.value("analysis_format").toString();
+        if (us->chatgpt_analysis_action.isEmpty() && cfg.contains("analysis_action"))
+            us->chatgpt_analysis_action = cfg.value("analysis_action").toString();
+    }
 }
 
 void MainWindow::adjustPageSize(int page)
@@ -3583,12 +3626,12 @@ void MainWindow::on_SendMsgButton_clicked()
 
 void MainWindow::on_AIReplyCheck_stateChanged(int)
 {
-    bool reply = ui->AIReplyCheck->isChecked();
-    us->setValue("danmaku/aiReply", reply);
+    us->AIReplyMsgLocal = ui->AIReplyCheck->isChecked();
+    us->setValue("danmaku/aiReply", us->AIReplyMsgLocal);
     if (danmakuWindow)
-        danmakuWindow->setAIReply(reply);
+        danmakuWindow->setAIReply(us->AIReplyMsgLocal);
 
-    ui->AIReplyMsgCheck->setEnabled(reply);
+    ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
 }
 
 void MainWindow::on_testDanmakuEdit_returnPressed()
@@ -3865,6 +3908,44 @@ void MainWindow::restoreReplyList()
     }
 }
 
+bool MainWindow::hasReply(const QString &text)
+{
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
+        auto tw = static_cast<ReplyWidget*>(widget);
+        if (tw->isEnabled() && !tw->isMatch(text))
+            return true;
+    }
+    return false;
+}
+
+void MainWindow::gotoReply(const QString &text)
+{
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto item = ui->replyListWidget->item(row);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        auto tw = static_cast<ReplyWidget*>(widget);
+        if (tw->isEnabled() && !tw->isMatch(text))
+        {
+            int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
+            ui->stackedWidget->setCurrentIndex(page_index);
+            adjustPageSize(page_index);
+            switchPageAnimation(page_index);
+            ui->tabWidget->setCurrentWidget(ui->replyListWidget);
+            int content_height = ui->replyListWidget->contentsRect().height();
+            int item_top = ui->replyListWidget->visualItemRect(item).top(); // 与底部的距离
+            int item_height = ui->replyListWidget->visualItemRect(item).height();
+            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                item_height = content_height;
+            ui->replyListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
+            return;
+        }
+    }
+    qWarning() << "不存在reply.items：" << text;
+}
+
 void MainWindow::addListItemOnCurrentPage()
 {
     auto w = ui->tabWidget->currentWidget();
@@ -4052,6 +4133,33 @@ bool MainWindow::hasEvent(const QString &cmd) const
             return true;
     }
     return false;
+}
+
+void MainWindow::gotoEvent(const QString &text)
+{
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto item = ui->eventListWidget->item(row);
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto ew = static_cast<EventWidget*>(widget);
+        if (ew->isEnabled() && !ew->isMatch(text))
+        {
+            qInfo() << "滚动到：" << text;
+            int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
+            ui->stackedWidget->setCurrentIndex(page_index);
+            adjustPageSize(page_index);
+            switchPageAnimation(page_index);
+            ui->tabWidget->setCurrentWidget(ui->eventListWidget);
+            int content_height = ui->eventListWidget->contentsRect().height();
+            int item_top = ui->eventListWidget->visualItemRect(item).top(); // 与底部的距离
+            int item_height = ui->eventListWidget->visualItemRect(item).height();
+            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                item_height = content_height;
+            ui->eventListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
+            return;
+        }
+    }
+    qWarning() << "不存在event.items：" << text;
 }
 
 void MainWindow::addCodeSnippets(const QJsonDocument &doc)
@@ -8778,6 +8886,7 @@ void MainWindow::on_eternalBlockListButton_clicked()
 void MainWindow::on_AIReplyMsgCheck_clicked()
 {
     Qt::CheckState state = ui->AIReplyMsgCheck->checkState();
+    us->AIReplyMsgSend = (int)state;
     us->setValue("danmaku/aiReplyMsg", state);
     if (state != Qt::PartiallyChecked)
         ui->AIReplyMsgCheck->setText("回复弹幕");
@@ -8785,17 +8894,26 @@ void MainWindow::on_AIReplyMsgCheck_clicked()
         ui->AIReplyMsgCheck->setText("回复弹幕(仅单条)");
 }
 
-void MainWindow::slotAIReplyed(QString reply, qint64 uid)
+void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
 {
-    if (ui->AIReplyMsgCheck->checkState() != Qt::Unchecked)
-    {
-        // 机器人自己的不回复（不然自己和自己打起来了）
-        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
-            return ;
+    if (!us->AIReplyMsgSend)
+        return ;
 
+    qint64 uid = danmaku.getUid();
+    // 机器人自动发送的不回复（不然自己和自己打起来了）
+    if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
+        return ;
+
+    if (us->chatgpt_analysis)
+    {
+        /// 直接发送JSON
+        MyJson json(reply.toLocal8Bit());
+        triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
+    }
+    else
+    {
         // AI回复长度上限，以及过滤
-        if (ui->AIReplyMsgCheck->checkState() == Qt::PartiallyChecked
-                && reply.length() > ac->danmuLongest)
+        if (us->AIReplyMsgSend == 1 && reply.length() > ac->danmuLongest)
             return ;
 
         // 自动断句
@@ -8808,7 +8926,7 @@ void MainWindow::slotAIReplyed(QString reply, qint64 uid)
         {
             sl << reply.mid(i * maxOne, maxOne);
         }
-        cr->sendAutoMsg(sl.join("\\n"), LiveDanmaku());
+        cr->sendAutoMsg(sl.join("\\n"), danmaku);
     }
 }
 
@@ -10428,10 +10546,59 @@ void MainWindow::on_chatTxRadio_clicked()
 void MainWindow::on_chatGPTPromptButton_clicked()
 {
     bool ok = false;
-    QString s = QInputDialog::getText(this, "prompt", "设置ChatGPT的prompt", QLineEdit::Normal, us->chatgpt_prompt, &ok);
+    QString s = TextInputDialog::getText(this, "prompt", "设置ChatGPT的prompt", us->chatgpt_prompt, &ok);
     if (!ok)
         return ;
 
     us->chatgpt_prompt = s;
     us->setValue("chatgpt/prompt", s);
+}
+
+void MainWindow::on_GPTAnalysisPromptButton_clicked()
+{
+    bool ok = false;
+    QString s = TextInputDialog::getText(this, "prompt", "设置ChatGPT的prompt\n建议返回结果设置为JSON格式，并将触发“" + GPT_TASK_RESPONSE_EVENT + "”事件", us->chatgpt_analysis_prompt, &ok);
+    if (!ok)
+        return ;
+
+    us->chatgpt_analysis_prompt = s;
+    us->setValue("chatgpt/analysis_prompt", s);
+}
+
+void MainWindow::on_GPTAnalysisCheck_clicked()
+{
+    us->chatgpt_analysis = ui->GPTAnalysisCheck->isChecked();
+    us->setValue("chatgpt/analysis", us->chatgpt_analysis);
+}
+
+void MainWindow::on_GPTAnalysisFormatButton_clicked()
+{
+    bool ok = false;
+    QString s = TextInputDialog::getText(this, "规则强制语句", "此语句会放在弹幕的消息前，用来强制设置GPT回复的规则", us->chatgpt_analysis_format, &ok);
+    if (!ok)
+        return ;
+
+    us->chatgpt_analysis_format = s;
+    us->setValue("chatgpt/analysis_format", s);
+}
+
+void MainWindow::on_removeLongerRandomDanmakuCheck_clicked()
+{
+    us->removeLongerRandomDanmaku = ui->removeLongerRandomDanmakuCheck->isChecked();
+    us->setValue("us/removeLongerRandomDanmaku", us->removeLongerRandomDanmaku);
+}
+
+void MainWindow::on_GPTAnalysisEventButton_clicked()
+{
+    if (!hasEvent(GPT_TASK_RESPONSE_EVENT))
+    {
+        // 创建事件
+        addEventAction(true, GPT_TASK_RESPONSE_EVENT, us->chatgpt_analysis_action);
+        gotoEvent(GPT_TASK_RESPONSE_EVENT);
+    }
+    else
+    {
+        // 前往事件
+        gotoEvent(GPT_TASK_RESPONSE_EVENT);
+    }
 }

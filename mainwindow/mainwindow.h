@@ -409,7 +409,7 @@ private slots:
 
     void on_AIReplyMsgCheck_clicked();
 
-    void slotAIReplyed(QString reply, qint64 uid);
+    void slotAIReplyed(QString reply, LiveDanmaku danmaku);
 
     void on_danmuLongestSpin_editingFinished();
 
@@ -695,6 +695,16 @@ private slots:
 
     void on_chatGPTPromptButton_clicked();
 
+    void on_GPTAnalysisPromptButton_clicked();
+
+    void on_GPTAnalysisCheck_clicked();
+
+    void on_GPTAnalysisFormatButton_clicked();
+
+    void on_removeLongerRandomDanmakuCheck_clicked();
+
+    void on_GPTAnalysisEventButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -709,6 +719,7 @@ private:
     void initWebServer();
     void initVoiceService();
     void initChatService();
+    void initDynamicConfigs();
     void adjustPageSize(int page);
     void switchPageAnimation(int page);
 
@@ -727,6 +738,8 @@ private:
     void connectAutoReplyEvent(ReplyWidget* rw, QListWidgetItem* item);
     void saveReplyList();
     void restoreReplyList();
+    bool hasReply(const QString& text);
+    void gotoReply(const QString& text);
 
     EventWidget *addEventAction(bool enable, QString cmd, QString action, int index= -1);
     EventWidget *addEventAction(const MyJson &json);
@@ -734,6 +747,7 @@ private:
     void saveEventList();
     void restoreEventList();
     bool hasEvent(const QString &cmd) const;
+    void gotoEvent(const QString& text);
 
     template<class T>
     void showListMenu(QListWidget* listWidget, QString listKey, VoidFunc saveFunc);

@@ -109,6 +109,11 @@ QString EventWidget::body() const
     return actionEdit->toPlainText();
 }
 
+bool EventWidget::isMatch(const QString &text) const
+{
+    return cmdKey == text;
+}
+
 void EventWidget::triggerCmdEvent(QString cmd, LiveDanmaku danmaku)
 {
     if (!check->isChecked() || cmdKey != cmd)

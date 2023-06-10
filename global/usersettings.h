@@ -35,6 +35,7 @@ public:
     qint64 removeDanmakuInterval = 60000;
     qint64 removeDanmakuTipInterval = 20000;
     bool adjustDanmakuLongest = true;// 自动调整弹幕最长字数
+    bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的（无视优先级），否则长弹幕会自动分割成多条短的
     bool timerConnectServer = false; // 定时连接
     int startLiveHour = -1;          // 最早上班的时间
     int endLiveHour = -1;            // 最晚下播的时间
@@ -51,6 +52,8 @@ public:
     bool saveCmdToSqlite = false;    // 保存所有CMD命令到数据库
     int judgeRobot = 0;              // 判断机器人：0关，1仅关注，2所有
     int giftComboDelay = 3;          // 礼物连击延迟（秒）
+    bool AIReplyMsgLocal = false;    // AI回复本地显示
+    int AIReplyMsgSend = 0;          // AI回复发送弹幕，0关闭，1仅少量，2全部
 
     QString open_ai_key;
     QString chatgpt_model_name = "gpt-3.5-turbo";
@@ -58,10 +61,15 @@ public:
     int chatgpt_max_token_count = 2048;
     int chatgpt_max_context_count = 16;
     QString chatgpt_prompt;
+    bool chatgpt_analysis = false;
+    QString chatgpt_analysis_prompt;
+    QString chatgpt_analysis_format;
+    QString chatgpt_analysis_action;
 
     bool localMode = false;   // 本地调试模式
     bool debugPrint = false;  // 调试输出模式
     bool complexCalc = false; // 启动复杂计算（禁用，有大bug）
+    QJsonObject dynamicConfigs;  // 一些默认配置
 
     QString getLocalNickname(qint64 uid) const
     {

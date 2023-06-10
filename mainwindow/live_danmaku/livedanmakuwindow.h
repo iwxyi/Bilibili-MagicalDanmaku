@@ -94,7 +94,7 @@ signals:
     void signalEternalBlockUser(qint64 uid, QString uname, QString msg);
     void signalCancelEternalBlockUser(qint64 uid);
     void signalChangeWindowMode();
-    void signalAIReplyed(QString msg, qint64 uid);
+    void signalAIReplyed(QString msg, LiveDanmaku danmaku);
     void signalShowPkVideo();
     void signalTransMouse(bool enabled);
     void signalAddCloudShieldKeyword(QString text);

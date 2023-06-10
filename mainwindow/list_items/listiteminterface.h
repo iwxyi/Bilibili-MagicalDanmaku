@@ -49,6 +49,11 @@ public:
         return title().isEmpty() && body().isEmpty();
     }
 
+    virtual bool isMatch(const QString& text) const
+    {
+        return false;
+    }
+
 signals:
     void signalResized();
     void signalInsertCodeSnippets(const QJsonDocument& doc);

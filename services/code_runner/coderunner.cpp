@@ -579,7 +579,7 @@ QStringList CodeRunner::getEditConditionStringList(QString plainText, LiveDanmak
     }
 
     // 判断超过长度的
-    if (removeLongerRandomDanmaku)
+    if (us->removeLongerRandomDanmaku)
     {
         for (int i = 0; i < result.size() && result.size() > 1; i++)
         {

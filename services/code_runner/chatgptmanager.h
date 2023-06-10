@@ -7,6 +7,8 @@
 #include "netinterface.h"
 #include "liveroomservice.h"
 
+#define GPT_TASK_RESPONSE_EVENT QString("GPT_RESPONSE")
+
 class ChatGPTManager : public QObject
 {
 public:

@@ -2196,12 +2196,11 @@ void LiveDanmakuWindow::setAIReply(bool reply)
     // qInfo() << "智能闲聊开关：" << reply;
 }
 
-/// 腾讯AI开放平台 https://ai.qq.com/console/home
 void LiveDanmakuWindow::startReply(QListWidgetItem *item)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     qint64 uid = danmaku.getUid();
-    if (!uid || us->notReplyUsers.contains(uid))
+    if (!uid || us->notReplyUsers.contains(uid) || danmaku.isNoReply())
         return ;
     QString msg = danmaku.getText();
     if (msg.isEmpty())
@@ -2214,8 +2213,10 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
         if (answer.isEmpty())
             return ;
 
-        emit signalAIReplyed(answer, uid);
+        emit signalAIReplyed(answer, danmaku);
 
+        if (us->AIReplyMsgSend) // 要回复了，不需要再本地显示
+            return ;
         if (!isItemExist(item))
             return ;
 

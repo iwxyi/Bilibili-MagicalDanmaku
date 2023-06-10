@@ -18,9 +18,7 @@ TipCard::TipCard(QWidget *parent, NotificationEntry *noti)
     // 初始化布局
     QHBoxLayout* margin_hlayout = new QHBoxLayout(this);
     {
-        margin_hlayout->setSpacing(0);
         QVBoxLayout* main_vlayout = new QVBoxLayout;
-        main_vlayout->setMargin(0);
         {
             main_vlayout->setSpacing(0);
 

@@ -138,7 +138,6 @@ public:
     MySettings* heaps;
     MySettings* extSettings;
     bool enableFilter = true; // 过滤器总开关
-    bool removeLongerRandomDanmaku = true; // 随机弹幕自动移除过长的，否则长弹幕会自动分割成多条短的
 
     // 过滤器（已废弃方案）
     QString filter_musicOrder; // 点歌过滤
