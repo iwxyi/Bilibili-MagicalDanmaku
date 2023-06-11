@@ -47,10 +47,9 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
 
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseFinished, this, [=]{
-
+        chatgpt->stopAndDelete();
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseText, this, [=](const QString& text) {
-        chatgpt->stopAndDelete();
         func(text);
         if (!usersChats.contains(uid))
             usersChats.insert(uid, QList<ChatBean>());
