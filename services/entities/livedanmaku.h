@@ -133,7 +133,7 @@ public:
     {
         LiveDanmaku danmaku;
         danmaku.text = object.value("text").toString();
-        danmaku.uid = object.value("uid").toInt();
+        danmaku.uid = static_cast<qint64>(object.value("uid").toDouble());
         danmaku.nickname = object.value("nickname").toString();
         danmaku.uname_color = object.value("uname_color").toString();
         danmaku.text_color = object.value("text_color").toString();

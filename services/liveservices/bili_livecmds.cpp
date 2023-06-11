@@ -1631,6 +1631,10 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
             triggerCmdEvent("SPECIAL_ATTENTION", danmaku.with(data)); // !这个是单独修改的
         }
+        else if (msgType == 5)
+        {
+            // TODO:没懂是啥，难道是取关？
+        }
         else
         {
             qWarning() << "~~~~~~~~~~~~~~~~~~~~~~~~新的进入msgType" << msgType << json;
