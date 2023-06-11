@@ -731,7 +731,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
     {
         emit signalLiveStopped();
 
-
         releaseLiveData(true);
         triggerCmdEvent(cmd, LiveDanmaku().with(json.value("data").toObject()));
     }
@@ -2510,6 +2509,14 @@ void BiliLiveService::handleMessage(QJsonObject json)
                 "version": 1678105731045
             }
         }*/
+    }
+    else if (cmd == "POPULAR_RANK_CHANGED")
+    {
+        // {"cmd":"POPULAR_RANK_CHANGED","data":{"cache_key":"rank_change:0d70f402c7fd4794952cdebd4f404e7f","countdown":2722,"rank":45,"timestamp":1686467679,"uid":27314812}}
+        MyJson data = json.value("data").toObject();
+        int rank = data.i("rank");
+        int countdown = data.i("countdown");
+        // localNotify("人气榜：" + snum(rank) + "/" + snum(countdown));
     }
     else
     {
