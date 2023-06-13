@@ -31,6 +31,7 @@ public:
     virtual bool isEnabled() const override;
     virtual QString title() const override;
     virtual QString body() const override;
+    virtual bool isMatch(const QString &text) const override;
 
 signals:
     void signalReplyMsgs(QString msgs, LiveDanmaku danmaku, bool manual);

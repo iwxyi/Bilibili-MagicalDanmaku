@@ -1189,13 +1189,14 @@ void MainWindow::readConfig()
     ui->closeGuiCheck->setChecked(us->closeGui = us->value("mainwindow/closeGui", false).toBool());
 
     // 默认配置
+    if (isFileExist(rt->dataPath + "dynamic_config.json"))
     {
-        QString text = readTextFileIfExist(rt->dataPath + "dynamic_config.json");
+        // 目前是从文件里读取，但是应当联网更新的
+        QString text = readTextFileAutoCodec(rt->dataPath + "dynamic_config.json");
         if (!text.isEmpty())
         {
-            QJsonDocument doc;
             QJsonParseError error;
-            doc.fromJson(text.toLocal8Bit(), &error);
+            QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8(), &error);
             if (error.error == QJsonParseError::NoError)
             {
                 us->dynamicConfigs = doc.object();
@@ -1968,12 +1969,14 @@ void MainWindow::initDynamicConfigs()
     if (us->dynamicConfigs.contains("chatgpt"))
     {
         QJsonObject cfg = us->dynamicConfigs.value("chatgpt").toObject();
-        if (cfg.contains("prompt") && us->chatgpt_prompt.isEmpty())
+        if (us->chatgpt_prompt.isEmpty() && cfg.contains("prompt"))
             us->chatgpt_prompt = cfg.value("prompt").toString();
-        if (cfg.contains("prompt_analysis") && us->chatgpt_analysis_prompt.isEmpty())
-            us->chatgpt_analysis_prompt = cfg.value("prompt_format").toString();
-        if (cfg.contains("prompt_format") && us->chatgpt_analysis_format.isEmpty())
-            us->chatgpt_analysis_format = cfg.value("prompt_format").toString();
+        if (us->chatgpt_analysis_prompt.isEmpty() && cfg.contains("analysis_prompt"))
+            us->chatgpt_analysis_prompt = cfg.value("analysis_prompt").toString();
+        if (us->chatgpt_analysis_format.isEmpty() && cfg.contains("analysis_format"))
+            us->chatgpt_analysis_format = cfg.value("analysis_format").toString();
+        if (us->chatgpt_analysis_action.isEmpty() && cfg.contains("analysis_action"))
+            us->chatgpt_analysis_action = cfg.value("analysis_action").toString();
     }
 }
 
@@ -3905,6 +3908,44 @@ void MainWindow::restoreReplyList()
     }
 }
 
+bool MainWindow::hasReply(const QString &text)
+{
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
+        auto tw = static_cast<ReplyWidget*>(widget);
+        if (tw->isEnabled() && !tw->isMatch(text))
+            return true;
+    }
+    return false;
+}
+
+void MainWindow::gotoReply(const QString &text)
+{
+    for (int row = 0; row < ui->replyListWidget->count(); row++)
+    {
+        auto item = ui->replyListWidget->item(row);
+        auto widget = ui->replyListWidget->itemWidget(item);
+        auto tw = static_cast<ReplyWidget*>(widget);
+        if (tw->isEnabled() && !tw->isMatch(text))
+        {
+            int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
+            ui->stackedWidget->setCurrentIndex(page_index);
+            adjustPageSize(page_index);
+            switchPageAnimation(page_index);
+            ui->tabWidget->setCurrentWidget(ui->replyListWidget);
+            int content_height = ui->replyListWidget->contentsRect().height();
+            int item_top = ui->replyListWidget->visualItemRect(item).top(); // 与底部的距离
+            int item_height = ui->replyListWidget->visualItemRect(item).height();
+            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                item_height = content_height;
+            ui->replyListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
+            return;
+        }
+    }
+    qWarning() << "不存在reply.items：" << text;
+}
+
 void MainWindow::addListItemOnCurrentPage()
 {
     auto w = ui->tabWidget->currentWidget();
@@ -4092,6 +4133,33 @@ bool MainWindow::hasEvent(const QString &cmd) const
             return true;
     }
     return false;
+}
+
+void MainWindow::gotoEvent(const QString &text)
+{
+    for (int row = 0; row < ui->eventListWidget->count(); row++)
+    {
+        auto item = ui->eventListWidget->item(row);
+        auto widget = ui->eventListWidget->itemWidget(item);
+        auto ew = static_cast<EventWidget*>(widget);
+        if (ew->isEnabled() && !ew->isMatch(text))
+        {
+            qInfo() << "滚动到：" << text;
+            int page_index = ui->stackedWidget->indexOf(ui->extensionPage);
+            ui->stackedWidget->setCurrentIndex(page_index);
+            adjustPageSize(page_index);
+            switchPageAnimation(page_index);
+            ui->tabWidget->setCurrentWidget(ui->eventListWidget);
+            int content_height = ui->eventListWidget->contentsRect().height();
+            int item_top = ui->eventListWidget->visualItemRect(item).top(); // 与底部的距离
+            int item_height = ui->eventListWidget->visualItemRect(item).height();
+            if (item_height > content_height) // 如果内容超过一页，则聚焦到开头
+                item_height = content_height;
+            ui->eventListWidget->verticalScrollBar()->setSliderPosition(item_top + item_height);
+            return;
+        }
+    }
+    qWarning() << "不存在event.items：" << text;
 }
 
 void MainWindow::addCodeSnippets(const QJsonDocument &doc)
@@ -8840,7 +8908,7 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
     {
         /// 直接发送JSON
         MyJson json(reply.toLocal8Bit());
-        triggerCmdEvent("GPT_RESPONSE", danmaku.with(json));
+        triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
     }
     else
     {
@@ -10489,7 +10557,7 @@ void MainWindow::on_chatGPTPromptButton_clicked()
 void MainWindow::on_GPTAnalysisPromptButton_clicked()
 {
     bool ok = false;
-    QString s = TextInputDialog::getText(this, "prompt", "设置ChatGPT的prompt\n建议返回结果设置为JSON格式，并将触发“GPT_RESPONSE”事件", us->chatgpt_analysis_prompt, &ok);
+    QString s = TextInputDialog::getText(this, "prompt", "设置ChatGPT的prompt\n建议返回结果设置为JSON格式，并将触发“" + GPT_TASK_RESPONSE_EVENT + "”事件", us->chatgpt_analysis_prompt, &ok);
     if (!ok)
         return ;
 
@@ -10518,4 +10586,19 @@ void MainWindow::on_removeLongerRandomDanmakuCheck_clicked()
 {
     us->removeLongerRandomDanmaku = ui->removeLongerRandomDanmakuCheck->isChecked();
     us->setValue("us/removeLongerRandomDanmaku", us->removeLongerRandomDanmaku);
+}
+
+void MainWindow::on_GPTAnalysisEventButton_clicked()
+{
+    if (!hasEvent(GPT_TASK_RESPONSE_EVENT))
+    {
+        // 创建事件
+        addEventAction(true, GPT_TASK_RESPONSE_EVENT, us->chatgpt_analysis_action);
+        gotoEvent(GPT_TASK_RESPONSE_EVENT);
+    }
+    else
+    {
+        // 前往事件
+        gotoEvent(GPT_TASK_RESPONSE_EVENT);
+    }
 }

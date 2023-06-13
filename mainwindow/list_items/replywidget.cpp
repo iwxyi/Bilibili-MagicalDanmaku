@@ -78,6 +78,11 @@ QString ReplyWidget::body() const
     return replyEdit->toPlainText();
 }
 
+bool ReplyWidget::isMatch(const QString &text) const
+{
+    return keyRe.isValid() && text.indexOf(keyRe) > -1;
+}
+
 void ReplyWidget::slotNewDanmaku(const LiveDanmaku &danmaku)
 {
     if (!check->isChecked() || !danmaku.is(MSG_DANMAKU) || danmaku.isNoReply())
