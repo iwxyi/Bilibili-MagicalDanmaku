@@ -1,3 +1,16 @@
+### v4.10.2 [GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.2)
+
+- 新增在已实现关键词回复时不进行AI回复
+- 新增在点歌开启时点歌格式忽略AI回复
+- 修复GPT容易崩溃的问题
+- 修复UID很长时无法复制的问题
+- 修复Mac下图标问题
+- 修复下播信号丢失的问题
+
+
+
+
+
 ### v4.10.1 [GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)
 
 - 新增“功能型GPT”：智能识别弹幕类型并进行操作

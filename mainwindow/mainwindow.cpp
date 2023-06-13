@@ -3909,15 +3909,27 @@ void MainWindow::restoreReplyList()
     }
 }
 
+/**
+ * 是否有代码中用户自己实现的回复功能
+ * 排除通用格式：.+   (.+)
+ */
 bool MainWindow::hasReply(const QString &text)
 {
     for (int row = 0; row < ui->replyListWidget->count(); row++)
     {
         auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
         auto tw = static_cast<ReplyWidget*>(widget);
-        if (tw->isEnabled() && tw->isMatch(text))
+        if (tw->isEnabled() && tw->isMatch(text)
+                && tw->title() != ".+" && tw->title() != "(.+)")
             return true;
     }
+
+    // 点歌
+    if (diangeAutoCopy && text.contains(QRegularExpression(diangeFormatString)))
+    {
+        return true;
+    }
+
     return false;
 }
 
