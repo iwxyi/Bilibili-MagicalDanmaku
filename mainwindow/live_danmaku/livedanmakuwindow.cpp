@@ -1125,7 +1125,7 @@ void LiveDanmakuWindow::showMenu()
 {
     auto item = listWidget->currentItem();
     auto danmaku = item ? LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject()) : LiveDanmaku();
-    qDebug() << "菜单信息：" << danmaku.toString();
+    qInfo() << "菜单信息：" << danmaku.toString();
     QString msg = danmaku.getText();
     qint64 uid = danmaku.getUid();
     MessageType type = danmaku.getMsgType();

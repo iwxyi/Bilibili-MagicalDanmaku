@@ -912,7 +912,7 @@ void MainWindow::initLiveService()
         slotStartWork(); // 每个房间第一次开始工作
     });
 
-    connect(liveService, &LiveRoomService::signalLiveStarted, this, [=]{
+    connect(liveService, &LiveRoomService::signalLiveStopped, this, [=]{
         finishLiveRecord();
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
 

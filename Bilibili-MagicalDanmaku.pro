@@ -15,6 +15,9 @@ DEFINES += ENABLE_TEXTTOSPEECH
 #DEFINES += ZUOQI_ENTRANCE
 
 RC_FILE += resources/resource.rc
+unix {
+    ICON = resources/icons/appicon.ico
+}
 
 # 图片太大，会导致 cc1plus.exe:-1: error: out of memory allocating 4198399 bytes 错误
 CONFIG += resources_big

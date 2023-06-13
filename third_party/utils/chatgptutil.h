@@ -197,6 +197,11 @@ public:
         if (use_stream) // 使用流的形式
         {
             connect(reply, &QNetworkReply::readyRead, this, [=]() {
+                if (force_stop)
+                {
+                    qWarning() << "已阻止结束的GPT线程";
+                    return;
+                }
                 QString ba = QString(reply->readAll());
                 QStringList list = ba.split("\n\n");
                 foreach (auto str, list)
@@ -229,8 +234,8 @@ public:
             QByteArray ba = reply->readAll();
             parseResponse(ba);
         }
-        emit signalResponseFinished();
         waiting = false;
+        emit signalResponseFinished();
     }
 
     void stop()
@@ -242,13 +247,13 @@ public:
 
     void stopAndDelete()
     {
-        if (waiting)
+        if (!waiting)
         {
             deleteLater();
         }
         else
         {
-            connect(this, SIGNAL(signalResponseFinished()), this, SLOT(deleteLater()));
+            // connect(this, SIGNAL(signalResponseFinished()), this, SLOT(deleteLater()));
             stop();
         }
     }
