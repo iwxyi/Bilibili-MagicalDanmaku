@@ -59,6 +59,8 @@
 #define DANMAKU_WIDGET_PORTRAIT 0
 #define DANMAKU_WIDGET_LABEL 1
 
+typedef std::function<bool(const QString&)> FuncJudgeTextType;
+
 class LiveRoomService;
 
 class LiveDanmakuWindow : public QWidget
@@ -233,6 +235,8 @@ private:
 
     LiveRoomService *liveService = nullptr;
     ChatService* chatService = nullptr;
+
+    FuncJudgeTextType hasReply = nullptr;
 };
 
 #endif // LIVEDANMAKUWINDOW_H

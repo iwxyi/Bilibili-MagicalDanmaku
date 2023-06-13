@@ -30,16 +30,16 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
             {
                 int code = json.value("code").toInt();
                 QString type = json.value("type").toString();
-                QMessageBox::critical(rt->mainwindow, label, json.value("message").toString() + "\n\n错误码：" + snum(code) + "  " + type);
+                qCritical() << (json.value("message").toString() + "\n\n错误码：" + snum(code) + "  " + type);
             }
             else
             {
-                QMessageBox::critical(rt->mainwindow, label, QString(ba));
+                qCritical() << QString(ba);
             }
         }
         else
         {
-            QMessageBox::critical(rt->mainwindow, label, QString(ba));
+            qCritical() << QString(ba);
         }
     });
 
@@ -47,7 +47,10 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
 
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseFinished, this, [=]{
-        chatgpt->stopAndDelete();
+
+    });
+    connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
+        chatgpt->deleteLater();
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseText, this, [=](const QString& text) {
         func(text);

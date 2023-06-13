@@ -547,41 +547,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
             // AI回复
             if (aiReply)
             {
-                // 过滤重复消息
-                bool repeat = false;
-                QString msg = danmaku.getText();
-                int count = us->danmuSimilarJudgeCount;
-                for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
-                {
-                    const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
-                    if (!danmaku.is(MessageType::MSG_DANMAKU))
-                        continue;
-                    if (!us->useStringSimilar)
-                    {
-                        if (danmaku.getText() == msg)
-                        {
-                            repeat = true;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
-                        if (similar >= us->stringSimilarThreshold)
-                        {
-                            qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
-                            repeat = true;
-                            break;
-                        }
-                    }
-                    if (--count <= 0)
-                        break;
-                }
-
-                if (!repeat)
-                    startReply(item);
-                else
-                    qInfo() << "AI回复：忽略重复的弹幕";
+                startReply(item);
             }
         }
     }
@@ -2205,6 +2171,57 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;
+
+    // 判断重复文本
+    // 过滤重复消息
+    bool repeat = false;
+    int count = us->danmuSimilarJudgeCount;
+    for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+    {
+        const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+        if (!danmaku.is(MessageType::MSG_DANMAKU))
+            continue;
+        if (!us->useStringSimilar)
+        {
+            if (danmaku.getText() == msg)
+            {
+                repeat = true;
+                break;
+            }
+        }
+        else
+        {
+            double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+            if (similar >= us->stringSimilarThreshold)
+            {
+                qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                repeat = true;
+                break;
+            }
+        }
+        if (--count <= 0)
+            break;
+    }
+
+    if (repeat)
+    {
+        qInfo() << "AI回复：忽略重复的弹幕";
+        return;
+    }
+
+    // 判断是否不回复
+    if (hasReply)
+    {
+        if (hasReply(msg))
+        {
+            qInfo() << "AI回复：忽略指定处理的回复";
+            return;
+        }
+    }
+    else
+    {
+        qWarning() << "未设置HasReply回调";
+    }
 
     // 优化消息文本
     // msg.replace(QRegularExpression("\\s+"), "，");

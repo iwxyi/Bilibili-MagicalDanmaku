@@ -1805,6 +1805,7 @@ void MainWindow::initDanmakuWindow()
     rt->danmakuWindow = danmakuWindow;
     danmakuWindow->setLiveService(this->liveService);
     danmakuWindow->setChatService(this->chatService);
+    danmakuWindow->hasReply = [=](const QString& text) { return hasReply(text); };
 
     connect(liveService, &LiveRoomService::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
         if (danmaku.is(MSG_DANMAKU))
@@ -3914,7 +3915,7 @@ bool MainWindow::hasReply(const QString &text)
     {
         auto widget = ui->replyListWidget->itemWidget(ui->replyListWidget->item(row));
         auto tw = static_cast<ReplyWidget*>(widget);
-        if (tw->isEnabled() && !tw->isMatch(text))
+        if (tw->isEnabled() && tw->isMatch(text))
             return true;
     }
     return false;
@@ -4133,7 +4134,7 @@ bool MainWindow::hasEvent(const QString &cmd) const
     {
         auto widget = ui->eventListWidget->itemWidget(ui->eventListWidget->item(row));
         auto tw = static_cast<EventWidget*>(widget);
-        if (tw->eventEdit->text() == cmd && tw->check->isChecked())
+        if (tw->isEnabled() && tw->isMatch(cmd))
             return true;
     }
     return false;
@@ -8915,7 +8916,20 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
     if (us->chatgpt_analysis)
     {
         /// 直接发送JSON
-        MyJson json(reply.toLocal8Bit());
+        if (!reply.startsWith("{"))
+        {
+            int index = reply.indexOf("{");
+            if (index > -1)
+            {
+                reply = reply.right(reply.length() - index);
+            }
+        }
+        MyJson json(reply.toUtf8());
+        if (json.isEmpty())
+        {
+            qWarning() << "无法解析的GPT回复格式：" << reply.toUtf8();
+            return;
+        }
         triggerCmdEvent(GPT_TASK_RESPONSE_EVENT, danmaku.with(json));
     }
     else
@@ -10602,6 +10616,7 @@ void MainWindow::on_GPTAnalysisEventButton_clicked()
     {
         // 创建事件
         addEventAction(true, GPT_TASK_RESPONSE_EVENT, us->chatgpt_analysis_action);
+        saveEventList();
         gotoEvent(GPT_TASK_RESPONSE_EVENT);
     }
     else

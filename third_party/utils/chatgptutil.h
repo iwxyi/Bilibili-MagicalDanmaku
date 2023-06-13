@@ -46,6 +46,7 @@ signals:
 public:
     ChatGPTUtil(QObject* parent = nullptr) : QThread(parent)
     {
+
     }
 
     void setStream(bool stream)
