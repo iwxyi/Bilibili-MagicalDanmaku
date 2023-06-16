@@ -22,7 +22,7 @@ MicrosoftTTS::MicrosoftTTS(QString dataPath, QString areaCode, QString key, QObj
     refreshTimer->start();
 
     timeoutTimer = new QTimer(this);
-    timeoutTimer->setInterval(10 * 1000); // MS语音合成+下载的超时时间
+    timeoutTimer->setInterval(30 * 1000); // MS语音合成+下载的超时时间
     timeoutTimer->setSingleShot(true);
     connect(timeoutTimer, &QTimer::timeout, this, [=]{
         qWarning() << "MicroSoftTTS 超时";
@@ -37,7 +37,7 @@ void MicrosoftTTS::speakSSML(QString ssml)
     speakQueue.append(ssml);
     if (isDownloadingOrSpeaking())
     {
-        qDebug() << "播放 SSML 进入队列，当前数量：" << speakQueue.size();
+        qInfo() << "播放 SSML 进入队列，当前数量：" << speakQueue.size();
         return ;
     }
 
@@ -79,7 +79,7 @@ void MicrosoftTTS::speakNext()
     // getting = false;
     if (!timeoutTimer->isActive())
     {
-        qDebug() << "超时，停止语音，播放下一个";
+        qWarning() << "超时，停止语音，播放下一个";
         reply->abort();
         reply->deleteLater();
         speakNext();
@@ -104,6 +104,7 @@ void MicrosoftTTS::speakNext()
     reply->deleteLater();
     if (ba.isEmpty())
     {
+        qWarning() << "MicrosoftTTS 空音频文件";
         speakNext();
         return ;
     }
@@ -116,7 +117,7 @@ void MicrosoftTTS::speakNext()
     stream << ba;
     file.flush();
     file.close();
-    // qDebug() << "MicrosoftTTS 保存文件：" << filePath;
+    qInfo() << "MicrosoftTTS 保存文件：" << ba.size() << filePath;
 
     // 播放音频
     playFile(filePath, true);
