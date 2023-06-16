@@ -243,6 +243,7 @@ void LiveRoomService::releaseLiveData(bool prepare)
     {
         cleanupHandler.clear(); // 清理泄露的内存
     }
+    _guardJudged = false;
 }
 
 QList<LiveDanmaku> LiveRoomService::getDanmusByUID(qint64 uid)

@@ -450,6 +450,7 @@ protected:
     // flag
     bool _loadingOldDanmakus = false;
     LiveDanmaku lastDanmaku; // 最近一个弹幕
+    bool _guardJudged = false; // 每次开播/启动判断舰长的信号
 
     // 机器人判断
     MySettings* robotRecord = nullptr;

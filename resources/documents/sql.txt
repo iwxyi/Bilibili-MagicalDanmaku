@@ -110,23 +110,29 @@ select strftime('%H', create_time) as hour, sum(total_coin) / 1000 as RMB from g
 
 -------------------------------------- 舰长 --------------------------------------
 
--- 查看历史舰长记录
+-- 查看历史舰长购买记录
 select uid, uname, gift_name as guard, number, price * number/1000 as RMB, datetime(create_time) as time from guard where room_id = %room_id% order by create_time desc
 
--- 查看当月舰长记录
-select uid, uname, gift_name as guard, number, price * number/1000 as RMB, datetime(create_time), datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month') and datetime('now','start of month','+1 month') order by create_time desc
+-- 查看当月舰长购买记录
+select uid, uname, gift_name as guard, number, price * number/1000 as RMB, datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month') and datetime('now','start of month','+1 month') order by create_time desc
 
--- 查看上个月舰长记录
-select uid, uname, gift_name as guard, number, price * number/1000 as RMB, datetime(create_time), datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month') order by create_time desc
+-- 查看上个月舰长购买记录
+select uid, uname, gift_name as guard, number, price * number/1000 as RMB, datetime(create_time) as time from guard where room_id = %room_id% and create_time between datetime('now','start of month','-1 month') and datetime('now','start of month','+0 month') order by create_time desc
 
 -- 按上舰次数排序
 select uid, uname, sum(number) as count, create_time as first_time from guard where room_id = %room_id% group by uid order by count desc
 
 -- 查看某人上船记录（全部房间）
-select uid, uname, gift_name, number, datetime(start_time) as start, datetime(end_time) as end, datetime(create_time) as time from guard where uid = "要查询的ID" order by create_time desc
+select uid, uname, gift_name, number, strftime('%Y-%m-%d', start_time) as start, strftime('%Y-%m-%d', start_time, '+' || number || ' month') as end, datetime(create_time) as time from guard where uid = "要查询的ID" order by create_time desc
 
 -- 统计每月购买舰长数量
 select strftime('%Y-%m', create_time) as month, sum(number) as num from guard where room_id = %room_id% group by month order by month desc
+
+-- 查看当前舰长（覆盖当前时间的舰长购买信息）
+SELECT uid, uname, gift_name AS guard, number, strftime('%Y-%m-%d', start_time) as start, strftime('%Y-%m-%d', start_time, '+' || number || ' month') as end FROM guard WHERE room_id = %room_id% and strftime('%Y-%m-%d', 'now') BETWEEN start AND end
+
+-- 查看快过期的舰长，按到期时间排序
+SELECT uid, uname, gift_name AS guard, number, strftime('%Y-%m-%d', start_time) as start, strftime('%Y-%m-%d', start_time, '+' || number || ' month') as end FROM guard WHERE room_id = %room_id% and strftime('%Y-%m-%d', 'now') BETWEEN start AND end order by end
 
 -------------------------------------- 点歌 --------------------------------------
 
@@ -153,4 +159,4 @@ select strftime('%Y-%m-%d', time) as day, sum(price) / 1000 as RMB from (select 
 -------------------------------------- CMD --------------------------------------
 
 -- 查询CMD（仅供调试）
-select cmd, data, create_time from cmd
+select cmd, data, create_time from cmd order by create_time desc

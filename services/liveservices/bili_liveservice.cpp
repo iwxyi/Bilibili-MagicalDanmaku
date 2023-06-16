@@ -881,7 +881,8 @@ void BiliLiveService::updateExistGuards(int page)
         QString username = user.value("username").toString();
         qint64 uid = static_cast<qint64>(user.value("uid").toDouble());
         int guardLevel = user.value("guard_level").toInt();
-        guardInfos.append(LiveDanmaku(guardLevel, username, uid, QDateTime::currentDateTime()));
+        LiveDanmaku guardInfo(guardLevel, username, uid, QDateTime::currentDateTime());
+        guardInfos.append(guardInfo);
         ac->currentGuards[uid] = username;
 
         // 自己是自己的舰长
@@ -905,6 +906,11 @@ void BiliLiveService::updateExistGuards(int page)
                 qWarning() << "错误舰长等级：" << username << uid << guardLevel;
             us->danmakuCounts->setValue("guard/" + snum(uid), count);
             // qInfo() << "设置舰长：" << username << uid << count;
+        }
+
+        if (!_guardJudged)
+        {
+            // triggerCmdEvent("GUARD_INFO", guardInfo);
         }
     };
 
@@ -942,6 +948,7 @@ void BiliLiveService::updateExistGuards(int page)
             updateExistGuards(page + 1);
         else // 全部结束了
         {
+            _guardJudged = false;
             emit signalGuardsChanged();
         }
     });
