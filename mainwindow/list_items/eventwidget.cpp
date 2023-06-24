@@ -71,6 +71,9 @@ EventWidget::EventWidget(QWidget *parent) : ListItemInterface(parent)
     }
 
     eventEdit->setCompleter(completer);
+
+    eventEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    actionEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 }
 
 /// 仅在粘贴时生效

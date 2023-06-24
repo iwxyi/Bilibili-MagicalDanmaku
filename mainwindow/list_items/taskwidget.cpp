@@ -51,6 +51,9 @@ TaskWidget::TaskWidget(QWidget *parent) : ListItemInterface(parent)
     connect(edit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
+
+    spin->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    edit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 }
 
 void TaskWidget::fromJson(MyJson json)

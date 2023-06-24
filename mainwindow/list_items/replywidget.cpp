@@ -44,6 +44,9 @@ ReplyWidget::ReplyWidget(QWidget *parent) : ListItemInterface(parent)
     connect(replyEdit, &QPlainTextEdit::textChanged, this, [=]{
         autoResizeEdit();
     });
+
+    keyEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    replyEdit->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 }
 
 void ReplyWidget::fromJson(MyJson json)

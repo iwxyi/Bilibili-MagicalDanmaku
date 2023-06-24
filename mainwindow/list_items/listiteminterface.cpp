@@ -12,9 +12,10 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     vlayout = new QVBoxLayout(this);
     setLayout(vlayout);
     vlayout->setMargin(vlayout->margin() + _cardMargin);
+    vlayout->setSpacing(2);
 
     check = new QCheckBox("启用", this);
-    btn = new InteractiveButtonBase("发送", this);
+    btn = new InteractiveButtonBase(QIcon(":/icons/run"), this);
 
     hlayout = new QHBoxLayout;
     hlayout->addWidget(check);
@@ -26,6 +27,7 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
 
     btn->setBorderColor(Qt::black);
     btn->setCursor(Qt::PointingHandCursor);
+    btn->setSquareSize();
     btn->setFixedForePos();
     check->setCursor(Qt::PointingHandCursor);
 
@@ -56,6 +58,11 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
         _triggering = false;
         update();
     });
+
+    this->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    check->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    btn->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+    _bgLabel->setAttribute(Qt::WA_LayoutUsesWidgetRect);
 }
 
 void ListItemInterface::setRow(int row)
