@@ -418,6 +418,11 @@ void ConditionEditor::showContextMenu(const QPoint &pos)
         actionExplainCode();
     })->disable(us->open_ai_key.isEmpty());
 
+    menu->addAction("检查代码", [=]{
+        menu->close();
+        actionCheckCode();
+    })->disable(us->open_ai_key.isEmpty());
+
     menu->exec();
 }
 
@@ -456,6 +461,13 @@ void ConditionEditor::actionModifyCode()
 void ConditionEditor::actionExplainCode()
 {
     chat("你是一个解释代码的机器人，负责帮程序员解释代码片段。", "解释下面的代码，阐明语法和语义：\n```\n" + toPlainText() + "\n```", [=](QString text) {
+        QMessageBox::information(this, "解释结果", text);
+    });
+}
+
+void ConditionEditor::actionCheckCode()
+{
+    chat("你是一个检查代码的机器人，负责帮程序员审阅代码片段。", "审阅下面的代码，找出潜在的语法错误或者逻辑错误：\n```\n" + toPlainText() + "\n```", [=](QString text) {
         QMessageBox::information(this, "解释结果", text);
     });
 }
@@ -513,5 +525,6 @@ void ConditionEditor::chat(const QString &prompt, const QString &userContent, Ne
     chats.append(ChatBean("system", codeSyntax));
     chats.append(ChatBean("user", userContent));
 
+    qInfo() << prompt;
     chatgpt->getResponse(chats);
 }

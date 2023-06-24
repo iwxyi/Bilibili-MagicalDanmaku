@@ -29,6 +29,7 @@ private slots:
     void actionGenerateCode();
     void actionModifyCode();
     void actionExplainCode();
+    void actionCheckCode();
     void chat(const QString& prompt, const QString& def, NetStringFunc func);
 
 signals:
