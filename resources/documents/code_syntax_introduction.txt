@@ -1,0 +1,178 @@
+这是一个在直播间按条件发送弹幕或执行命令的脚本，有以下的语法：
+
+【格式】一行一句“[条件]命令1\n命令2\n命令3”（这里的“\n”表示弹幕/命令分隔符而不是换行），满足条件的行中挑选优先级最高的，随机执行一条；如果命令部分为空，则什么都不做。
+
+【条件】方括号[]里面的表达式为执行条件，在一行开头且最多只有一个，例如 `[%text%=条件文本,%guard%=1]`，多个条件的“与”关系用“ && ”分隔，“或”关系用“ || ”分隔，“或”的优先级高于“与”（关系不支持括号嵌套，可以通过多行`[条件]命令`来实现复合条件）。
+
+【优先级】条件后面可添加星号，其数量表示优先级，从0开始越多则优先级越高，最低无星号（默认），例如`[%gift_number%>10]***数量大于10`优先级为3。可以通过`[条件]****`这样的高优先级空命令来实现`if(条件) return`的效果。
+
+【数据类型】仅字符串、纯数字两种类型，字符串不需要添加双引号。
+
+【存储】使用`>setValue(key, value)`来永久保存数据到ini文件，使用`%{key}%`来获取值，默认为空字符串或者0，使用`%{key|def}%`来设置默认值
+
+【命令】每个命令默认为弹幕字符串，不需要带双引号，但如果是大于号“>”开头，且符合“>命令名(参数列表)”的格式，则会执行操作。多条命令使用“\n”分隔，将会依次发送弹幕/执行命令。
+
+【运算符】四则运算支持 +、-、*、/ 四种，其中除法向下取整；字符串正则匹配操作符`~`(如 `[%text% ~ 测试]`，不需要套在`/str/`中)也可以作为包含的比较；数值比较 >、<、>=、<=、==、!=
+
+【变量】有以下可用的变量，每个变量在用的时候必须包裹在两个“%”中间，如 `%room_id%`：
+ai_name 针对用户全名进行智能缩短的昵称
+uname 用户昵称
+text 用户弹幕
+gift_name 礼物名字
+gift_num 礼物数量
+total_coin 礼物价值，单位瓜子（1000瓜子=1元）
+gift_gold 金瓜子数量
+gift_silver 银瓜子数量
+level 用户等级（进入直播间没有）
+room_id 直播间ID
+room_name 直播间名字
+up_uid 主播UID
+up_uname 主播昵称
+my_uid 我（机器人）的UID
+my_uname 自己的昵称
+come_count 用户进入次数
+guard 是否为当前直播间的船员（1总督，2提督，3舰长）
+guard_name 船员等级名称：舰长/提督/总督
+guard_first 第一次上船
+anchor_room_id 粉丝勋章房间ID
+medal_name 勋章名称
+medal_level 勋章等级
+medal_up 勋章主播昵称
+new_attention 最近50个关注内
+guard_buy_count 以前的上船次数（舰长1，梯度10，总督100），不包含本次
+pking 大乱斗中
+pk_room_id 对面直播间ID
+pk_uid 对面主播ID
+pk_uname 对面主播昵称
+pk_opposite 是对面的人
+pk_view_return 自己这边的人去对面回来
+pk_count 和对面主播的大乱斗次数
+pk_my_votes 大乱斗己方积分
+pk_match_votes 对方积分
+guard_count 大航海人数
+fans_count 粉丝数
+fans_club 粉丝团人数
+admin 是否是房管
+time_hour 当前小时
+time_minute 当前分钟
+time_second 当前秒
+time_day 当前每月第几天
+time_month 当前月份
+time_year 当前年份
+time_day_week 当前星期
+time_day_year 今年第几天
+timestamp 10位时间戳
+timestamp 13位时间戳
+living 是否在直播中
+is_up 发弹幕的人是否是当前主播
+is_me 是否是自己
+is_room_medal 是否戴当前直播间的勋章
+care 是否是特别关心
+strong_notify 是否有强提醒
+not_welcome 是否不欢迎
+not_reply 是否不回复
+blocked 是否被禁言
+plaing_song 当前播放的歌曲
+spread 推广方式
+
+【函数】有以下可用的函数，以两个百分号且以“>”开头的格式，如`%>time(yy-M-d)%`：
+>time(format) 格式化当前时间，如yyyy-MM-dd
+>unameToUid(uname) 通过昵称的一部分获取最近的UID
+>strlen(str) 文本长度
+>random(min, max) 取范围内随机数
+>abs(x)
+>log2(x)
+>log10(x)
+>pow2(x)
+>pow(x,a)
+>pasteText() 剪贴板文字
+
+【操作】有以下命令以及参数，与函数的区别是每个命令前后没有百分号，且不能有其他弹幕：>localNotify(text) 打印文字
+>sendRoomDanmaku(roomId,text) 发送指定直播间的弹幕
+>setValue(key,val) 永久保存到ini配置文件，使用`%{key}%`来读取，自动识别类型不需要做转换。注意：读取的值在下一次条件判断的时候才开始生效
+>block(uid,hour) 禁言hour小时
+>unblock(uid) 解除禁言
+>appointAdmin(uid) 任命房管
+>dismissAdmin(uid) 撤销房管
+>delay(ms) 延迟毫秒
+>sendPrivateMsg(uid,msg) 发送私信
+>speakText(text) 播放语音
+>connectNet(url) get方式联网
+>getData(url,callback) get方式获取网页数据，触发callback事件（可省略）
+>postData(url,data,callback)
+>postJson(url,json,callback)
+>postHeaderData(url,headers,data,callback) 多个header用header1=val1&header2=val2的形式连接
+>downloadFile(url)
+>messageBox(msg)
+>writeTextFile(path,text)
+removeFile(path)
+>triggerEvent(event)
+>orderSong(name) 歌名点歌
+>simulateKey(keys) 模拟按键，比如“ctrl+a”
+>copyText(text)
+
+有以下几个模块：
+【定时任务】定时x秒执行其中的代码
+【自动回复】根据接收的弹幕正则表达式来作为条件，在代码中用`%$0%`为整条弹幕，`%$1%`为正则捕获的第一组内容，以此推类
+【事件动作】在某些操作后由程序自动触发，如观众进入事件、送礼物事件等，以及用户自定义事件 callback。
+
+有以下事件：
+START_UP 程序启动
+START_WORK 开始工作
+NEW_HOUR 每小时0分
+NEW_DAY 每天0点
+NEW_DAY_FIRST 每天0点或每天第一次启动程序
+DAY_END 每天结束
+NEW_MONTH
+NEW_MONTH_FIRST
+MONTH_END
+NEW_YEAR
+NEW_YEAR_FIRST
+YEAR_END
+NEW_WEEK
+NEW_WEEK_FIRST
+WEEK_END
+LIVE 开播
+PREPARING 下播
+DANMU_MSG 收到弹幕（同自动回复）
+SEND_GIFT 有人送礼
+ENTRY_EFFECT 高能榜观众进入
+INTERACT_WORD 观众进入
+ATTENTION 观众关注
+SHARE 观众分享直播间
+SPECIAL_ATTENTION 观众特别关注直播间
+SUPER_CHAT_MESSAGE 醒目留言
+ROOM_BLOCK_MSG 用户被禁言
+GUARD_BUY 观众上船
+FIRST_GUARD 第一次上船
+NEW_GUARD_COUNT 船员数量改变
+MEDAL_UPGRADE 勋章升级
+PK_BATTLE_PRE 大乱斗即将开始
+PK_BATTLE_START 开始大乱斗
+PK_BATTLE_PROCESS 双方PK积分进度
+PK_ENDING 大乱斗即将结束
+PK_BATTLE_END 大乱斗结束，%level%判断胜负，-1输，0平，1赢
+PK_BEST_UNAME 大乱斗最佳助攻
+CALL_ON_OPPOSITE 观众跑去对面串门
+ATTENTION_OPPOSITE 观众关注对面主播
+SHARE_OPPOSITE 观众分享对面直播间
+ATTENTION_ON_OPPOSITE 对面观众跑过来串门
+PK_MATCH_INFO 获取对面信息，%gift_coin%获取高能榜总积分（金瓜子），%number%获取高能榜人数
+PK_MATCH_ONLINE_GUARD 
+PK_WINNING_STREAK 大乱斗连胜，%number%获取次数
+
+【计算】使用“%[”和“]%”将要计算的部分包括起来，组成`%[算式]%`这样的格式才会识别为四则运算，比如`>setValue(price, %[%gift_gold%/1000]%)`。注意，所有的计算包裹，否则会识别为字符串。
+
+【注释】每行使用两个斜杠开头，将整一行进行注释
+
+【注意点1】所有变量、计算的值都是在开始一瞬间就替换的，如果在前面用setValue保存计算后的值，但同一个变量在后面的值依旧是保存前的大小，要再计算一遍
+
+【注意点2】如果生成多段代码，不需要索引数字、列表标记
+
+用上述的语法生成、修改或解释代码
+
+示例1：统计每个用户弹幕包含“测试”的次数：
+[%text% ~ 测试]>setValue(%uid%_count, %[%{%uid%_count}%+1]%)\n当前次数：%[%{%uid%_count}%+1]%
+
+示例2：收到“总督”礼物，发送时间
+[%gift_name% = 总督]>localNotify(感谢总督！纪念时间：%>time(MM-dd)%)

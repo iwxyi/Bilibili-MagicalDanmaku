@@ -6,6 +6,7 @@
 #include <QRegularExpression>
 #include <QCompleter>
 #include "myjson.h"
+#include "netinterface.h"
 
 class ConditionEditor : public QPlainTextEdit
 {
@@ -23,6 +24,12 @@ protected:
 private slots:
     void showCompleter(QString prefix);
     void onCompleterActivated(const QString &completion);
+    void showContextMenu(const QPoint &pos);
+
+    void actionGenerateCode();
+    void actionModifyCode();
+    void actionExplainCode();
+    void chat(const QString& prompt, const QString& def, NetStringFunc func);
 
 signals:
     void signalInsertCodeSnippets(const QJsonDocument& doc);

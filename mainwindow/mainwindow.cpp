@@ -4634,7 +4634,7 @@ void MainWindow::startConnectRoom()
     bool isPureRoomId = (ac->roomId.contains(QRegularExpression("^\\d+$")));
     if (!isPureRoomId)
     {
-        QTimer::singleShot(100, [=]{
+        QTimer::singleShot(10, this, [=]{
             startConnectIdentityCode();
         });
         return ;
@@ -4655,11 +4655,15 @@ void MainWindow::startConnectRoom()
         liveService->startCalculateDailyData();
 
     // 开始获取房间信息
-    liveService->getRoomInfo(true);
+    QTimer::singleShot(10, this, [=]{
+        liveService->getRoomInfo(true);
+    });
 
     // 如果是管理员，可以获取禁言的用户
-    if (ui->enableBlockCheck->isChecked())
-        liveService->refreshBlockList();
+    QTimer::singleShot(200, this, [=]{
+        if (ui->enableBlockCheck->isChecked())
+            liveService->refreshBlockList();
+    });
 }
 
 void MainWindow::updatePermission()

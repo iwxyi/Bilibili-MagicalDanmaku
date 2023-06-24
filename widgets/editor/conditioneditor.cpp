@@ -2,7 +2,14 @@
 #include <QAbstractItemView>
 #include <QStringListModel>
 #include <QMimeData>
+#include <QClipboard>
+#include <QMessageBox>
+#include <QInputDialog>
 #include "conditioneditor.h"
+#include "facilemenu.h"
+#include "usersettings.h"
+#include "chatgptutil.h"
+#include "fileutil.h"
 
 QStringList ConditionEditor::allCompletes;
 int ConditionEditor::completerWidth = 200;
@@ -25,6 +32,9 @@ ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
         QFontMetrics fm(this->font());
         completerWidth = fm.horizontalAdvance(">QwertyuiopAsdfghjklZxcvbnm");
     }
+
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &ConditionEditor::customContextMenuRequested, this, &ConditionEditor::showContextMenu);
 }
 
 void ConditionEditor::updateCompleterModel()
@@ -312,10 +322,6 @@ void ConditionEditor::onCompleterActivated(const QString &completion)
     }
 }
 
-ConditionHighlighter::ConditionHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
-{
-}
-
 void ConditionHighlighter::highlightBlock(const QString &text)
 {
     static auto getTCF = [](QColor c) {
@@ -368,4 +374,144 @@ void ConditionHighlighter::highlightBlock(const QString &text)
             setFormat(match.capturedStart(), match.capturedLength(), rule.format);
         }
     }
+}
+
+ConditionHighlighter::ConditionHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
+{
+}
+
+/**************************** 代码生成 ********************************/
+
+void ConditionEditor::showContextMenu(const QPoint &pos)
+{
+    newFacileMenu;
+
+    const QString& selectedText = this->textCursor().selectedText();
+    const QString& clipboardText = QApplication::clipboard()->text();
+
+
+    menu->addAction("复制", [=]{
+        QApplication::clipboard()->setText(selectedText);
+    })->disable(selectedText.isEmpty());
+
+    menu->addAction("粘贴", [=]{
+        if ((clipboardText.startsWith("{") && clipboardText.endsWith("}"))
+                || (clipboardText.startsWith("[") && clipboardText.endsWith("]"))) {
+            // TODO: 发送信号到外面，让外层来统一粘贴代码片段
+            QMessageBox::information(this, "粘贴提示", "疑似JSON对象，请从外层控件的菜单粘贴，或者选择主菜单中的“粘贴代码片段”");
+        }
+        this->paste();
+    })->disable(clipboardText.isEmpty());
+
+    menu->split()->addAction("生成代码", [=]{
+        menu->close();
+        actionGenerateCode();
+    })->disable(us->open_ai_key.isEmpty());
+
+    menu->addAction("修改代码", [=]{
+        menu->close();
+        actionModifyCode();
+    })->disable(us->open_ai_key.isEmpty());
+
+    menu->addAction("解释代码", [=]{
+        menu->close();
+        actionExplainCode();
+    })->disable(us->open_ai_key.isEmpty());
+
+    menu->exec();
+}
+
+void ConditionEditor::actionGenerateCode()
+{
+    bool ok;
+    QString inputText = QInputDialog::getText(this, "生成代码", "请输入需要执行的命令", QLineEdit::Normal, "", &ok);
+    if (!ok)
+        return;
+    qInfo() << "输入内容：" << inputText;
+
+    chat("你是一个生成代码的机器人，负责帮程序员生成代码片段。", inputText, [=](QString text) {
+        this->insertPlainText(text);
+    });
+}
+
+void ConditionEditor::actionModifyCode()
+{
+    bool ok;
+    QString inputText = QInputDialog::getText(this, "修改代码", "请输入需要修改的操作", QLineEdit::Normal, "", &ok);
+    if (!ok)
+        return;
+    qInfo() << "输入内容：" << inputText;
+
+    chat("你是一个修改代码的机器人，负责帮程序员修改代码片段。", inputText + "\n根据上述要求，对下面的代码进行修改，仅需返回代码内容：\n```\n" + toPlainText() + "\n```", [=](QString text) {
+        if (text.contains("```"))
+        {
+            text = text.mid(text.indexOf("```\n") + 4);
+            text = text.left(text.lastIndexOf("\n```"));
+        }
+        this->selectAll();
+        this->insertPlainText(text);
+    });
+}
+
+void ConditionEditor::actionExplainCode()
+{
+    chat("你是一个解释代码的机器人，负责帮程序员解释代码片段。", "解释下面的代码，阐明语法和语义：\n```\n" + toPlainText() + "\n```", [=](QString text) {
+        QMessageBox::information(this, "解释结果", text);
+    });
+}
+
+void ConditionEditor::chat(const QString &prompt, const QString &userContent, NetStringFunc func)
+{
+    /// 初始化ChatGPT
+    ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
+    chatgpt->setStream(false);
+
+    connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
+        QJsonParseError error;
+        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
+        if (error.error == QJsonParseError::NoError)
+        {
+            QJsonObject json = document.object();
+            if (json.contains("error") && json.value("error").isObject())
+                json = json.value("error").toObject();
+            if (json.contains("message"))
+            {
+                int code = json.value("code").toInt();
+                QString type = json.value("type").toString();
+                qCritical() << (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type);
+            }
+            else
+            {
+                qCritical() << QString(ba);
+            }
+        }
+        else
+        {
+            qCritical() << QString(ba);
+        }
+    });
+
+    connect(chatgpt, &ChatGPTUtil::signalRequestStarted, this, [=]{
+
+    });
+    connect(chatgpt, &ChatGPTUtil::signalResponseFinished, this, [=]{
+
+    });
+    connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
+        chatgpt->deleteLater();
+    });
+    connect(chatgpt, &ChatGPTUtil::signalResponseText, this, [=](const QString& text) {
+        func(text);
+    });
+
+    /// 获取上下文
+    QString codeSyntax = readTextFile(":/documents/code_syntax_introduction");
+    if (!prompt.isEmpty())
+        codeSyntax = prompt + "\n" + codeSyntax;
+
+    QList<ChatBean> chats;
+    chats.append(ChatBean("system", codeSyntax));
+    chats.append(ChatBean("user", userContent));
+
+    chatgpt->getResponse(chats);
 }

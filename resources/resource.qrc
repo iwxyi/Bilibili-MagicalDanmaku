@@ -181,8 +181,9 @@
         <file alias="server_urls">documents/server_urls.txt</file>
         <file alias="translation_events">documents/translation_events.txt</file>
         <file alias="sql">documents/sql.txt</file>
+        <file alias="dynamic_config">documents/dynamic_config.json</file>
+        <file alias="code_syntax_introduction">documents/code_syntax_introduction.txt</file>
         <file>resource.rc</file>
-        <file>documents/dynamic_config.json</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
