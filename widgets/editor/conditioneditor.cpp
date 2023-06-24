@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QProgressDialog>
 #include "conditioneditor.h"
 #include "facilemenu.h"
 #include "usersettings.h"
@@ -478,6 +479,11 @@ void ConditionEditor::chat(const QString &prompt, const QString &userContent, Ne
     ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
     chatgpt->setStream(false);
 
+    QProgressDialog* progressDialog = new QProgressDialog(this);
+    progressDialog->setLabelText("加载中...");
+    progressDialog->setCancelButton(nullptr);
+    progressDialog->setRange(0, 100);
+
     connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
         QJsonParseError error;
         QJsonDocument document = QJsonDocument::fromJson(ba, &error);
@@ -491,23 +497,26 @@ void ConditionEditor::chat(const QString &prompt, const QString &userContent, Ne
                 int code = json.value("code").toInt();
                 QString type = json.value("type").toString();
                 qCritical() << (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type);
+                QMessageBox::critical(this, "ChatGPT Error", (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type));
             }
             else
             {
                 qCritical() << QString(ba);
+                QMessageBox::critical(this, "ChatGPT Error", ba);
             }
         }
         else
         {
             qCritical() << QString(ba);
+            QMessageBox::critical(this, "ChatGPT Error", ba);
         }
     });
 
     connect(chatgpt, &ChatGPTUtil::signalRequestStarted, this, [=]{
-
+        progressDialog->exec();
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseFinished, this, [=]{
-
+        progressDialog->accept();
     });
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();
