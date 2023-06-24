@@ -69,7 +69,7 @@ timestamp 10位时间戳
 timestamp 13位时间戳
 living 是否在直播中
 is_up 发弹幕的人是否是当前主播
-is_me 是否是自己
+is_me 是否是自己（当前机器人账号）
 is_room_medal 是否戴当前直播间的勋章
 care 是否是特别关心
 strong_notify 是否有强提醒
@@ -78,8 +78,6 @@ not_reply 是否不回复
 blocked 是否被禁言
 plaing_song 当前播放的歌曲
 spread 推广方式
-greet 和时间有关的打招呼，例如“早上好”
-all_greet 更自然的语气，例如中午时会是“午饭吃了吗”
 tone “啊”或“呀”
 lela “了”或“啦”
 punc 标点，~或！

@@ -390,12 +390,13 @@ void ConditionEditor::showContextMenu(const QPoint &pos)
     const QString& selectedText = this->textCursor().selectedText();
     const QString& clipboardText = QApplication::clipboard()->text();
 
+    const QString& gptTip = "需要启用GPT后才可以使用该功能";
 
-    menu->addAction("复制", [=]{
+    menu->addAction("复制 (&C)", [=]{
         QApplication::clipboard()->setText(selectedText);
     })->disable(selectedText.isEmpty());
 
-    menu->addAction("粘贴", [=]{
+    menu->addAction("粘贴 (&V)", [=]{
         if ((clipboardText.startsWith("{") && clipboardText.endsWith("}"))
                 || (clipboardText.startsWith("[") && clipboardText.endsWith("]"))) {
             // TODO: 发送信号到外面，让外层来统一粘贴代码片段
@@ -404,25 +405,31 @@ void ConditionEditor::showContextMenu(const QPoint &pos)
         this->paste();
     })->disable(clipboardText.isEmpty());
 
-    menu->split()->addAction("生成代码", [=]{
+    menu->split();
+
+    menu->addAction("生成代码 (&G)", [=]{
         menu->close();
         actionGenerateCode();
-    })->disable(us->open_ai_key.isEmpty());
+    })->disable(us->open_ai_key.isEmpty())
+            ->tooltip(us->open_ai_key.isEmpty(), gptTip);
 
-    menu->addAction("修改代码", [=]{
+    menu->addAction("修改代码 (&M)", [=]{
         menu->close();
         actionModifyCode();
-    })->disable(us->open_ai_key.isEmpty());
+    })->disable(us->open_ai_key.isEmpty())
+            ->tooltip(us->open_ai_key.isEmpty(), gptTip);
 
-    menu->addAction("解释代码", [=]{
+    menu->addAction("解释代码 (&E)", [=]{
         menu->close();
         actionExplainCode();
-    })->disable(us->open_ai_key.isEmpty());
+    })->disable(us->open_ai_key.isEmpty())
+            ->tooltip(us->open_ai_key.isEmpty(), gptTip);
 
-    menu->addAction("检查代码", [=]{
+    menu->addAction("检查代码 (&F)", [=]{
         menu->close();
         actionCheckCode();
-    })->disable(us->open_ai_key.isEmpty());
+    })->disable(us->open_ai_key.isEmpty())
+            ->tooltip(us->open_ai_key.isEmpty(), gptTip);
 
     menu->exec();
 }
