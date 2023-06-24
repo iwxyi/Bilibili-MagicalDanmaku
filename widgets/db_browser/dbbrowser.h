@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QSettings>
 #include <QSqlQueryModel>
+#include <QListWidgetItem>
 #include "sqlservice.h"
 
 namespace Ui {
@@ -28,11 +29,19 @@ private slots:
 
     void on_resultTable_customContextMenuRequested(const QPoint &pos);
 
+    void on_tabWidget_currentChanged(int index);
+
+    void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+
+private:
+    void initVisualList();
+
 private:
     Ui::DBBrowser *ui;
     SqlService* service = nullptr;
     QSettings* settings = nullptr;
     QSqlQueryModel* model = nullptr;
+    QString cacheCode;
 };
 
 #endif // DBBROWSER_H

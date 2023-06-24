@@ -7,46 +7,115 @@
     <x>0</x>
     <y>0</y>
     <width>493</width>
-    <height>454</height>
+    <height>462</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>神奇弹幕-数据库查询</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="execButton">
-       <property name="text">
-        <string>执行当前行/选中行</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
+   <property name="leftMargin">
+    <number>6</number>
+   </property>
+   <property name="topMargin">
+    <number>6</number>
+   </property>
+   <property name="rightMargin">
+    <number>6</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="SQLEditor" name="queryEdit">
-      <property name="placeholderText">
-       <string>SQL语句</string>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>100</height>
+       </size>
       </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="sqlSourceTab">
+       <attribute name="title">
+        <string>源码</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="execButton">
+            <property name="text">
+             <string>执行当前行/选中行</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="SQLEditor" name="queryEdit">
+          <property name="placeholderText">
+           <string>SQL语句</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="sqlListTab">
+       <attribute name="title">
+        <string>可视化</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QListWidget" name="listWidget"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
      <widget class="QTableView" name="resultTable"/>
     </widget>

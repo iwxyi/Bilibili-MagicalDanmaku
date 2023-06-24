@@ -63,7 +63,11 @@ MainWindow::MainWindow(QWidget *parent)
     initDynamicConfigs();
 
     // WS连接
-    startConnectRoom();
+    QTimer::singleShot(10, this, [=]{
+        // 延时是为了不让联网操作阻塞下面的界面
+        // 虽然有事件处理，但还是会阻塞后面代码
+        startConnectRoom();
+    });
 
 #ifdef Q_OS_ANDROID
     ui->sideBarWidget->hide();
@@ -1357,7 +1361,7 @@ void MainWindow::readConfig()
     if (posr == -1) posr = ac->browserCookie.length();
     ac->csrf_token = ac->browserCookie.mid(posl, posr - posl);
     ac->userCookies = getCookies();
-    QTimer::singleShot(0, [=]{
+    QTimer::singleShot(10, [=]{
         liveService->getCookieAccount();
     });
 
@@ -4305,7 +4309,9 @@ void MainWindow::autoSetCookie(const QString &s)
         return ;
 
     ac->userCookies = getCookies();
-    liveService->getCookieAccount();
+    QTimer::singleShot(10, [=]{
+        liveService->getCookieAccount();
+    });
 
     // 自动设置弹幕格式
     int posl = ac->browserCookie.indexOf("bili_jct=") + 9;

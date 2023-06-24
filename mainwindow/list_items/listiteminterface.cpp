@@ -29,6 +29,8 @@ ListItemInterface::ListItemInterface(QWidget *parent) : QWidget(parent)
     btn->setCursor(Qt::PointingHandCursor);
     btn->setSquareSize();
     btn->setFixedForePos();
+    btn->setToolTip("发送/执行");
+    check->setToolTip("该功能的开关，如果关闭则不会自动执行\n（除非手动点击右边的发送/执行按钮）");
     check->setCursor(Qt::PointingHandCursor);
 
     const int radius = 5;
