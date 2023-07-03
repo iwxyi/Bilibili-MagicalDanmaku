@@ -62,7 +62,10 @@ void BiliLiveService::initWS()
         emit signalStatusChanged("WS状态：已连接");
 
         // 5秒内发送认证包
-        sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
+        // 这里延时是为了等机器人账号登录
+        QTimer::singleShot(3000, [=]{
+            sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
+        });
 
         // 定时发送心跳包
         heartTimer->start();
@@ -622,7 +625,7 @@ void BiliLiveService::startMsgLoop()
 void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString token)
 {
     QByteArray ba;
-    ba.append("{\"uid\": 0, \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
+    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);
