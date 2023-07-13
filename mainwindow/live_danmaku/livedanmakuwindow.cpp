@@ -22,13 +22,16 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
 #else
     if (us->value("livedanmakuwindow/jiWindow", false).toBool())
     {
+#ifdef Q_OS_MAC
+#else
         this->setWindowFlags(Qt::FramelessWindowHint);
         this->setAttribute(Qt::WA_TranslucentBackground, false);
+#endif
     }
     else
     {
-        this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);      //设置为无边框置顶窗口
-        this->setAttribute(Qt::WA_TranslucentBackground, true); // 设置窗口透明
+        this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool); //设置为无边框置顶窗口
+        this->setAttribute(Qt::WA_TranslucentBackground, true);   // 设置窗口透明
     }
 
     bool onTop = us->value("livedanmakuwindow/onTop", true).toBool();
@@ -66,6 +69,11 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     moveBar->setMinimumHeight(boundaryWidth / 4);
     moveBar->setMaximumHeight(boundaryWidth / 2);
     moveBar->setCursor(Qt::SizeAllCursor);
+
+    if (!(this->windowFlags() & Qt::FramelessWindowHint))
+    {
+        moveBar->hide();
+    }
 
     listWidget = new QListWidget(this);
     lineEdit = new TransparentEdit(this);
