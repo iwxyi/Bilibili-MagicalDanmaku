@@ -388,6 +388,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         ac->upName = anchorInfo.value("base_info").toObject().value("uname").toString();
         ac->roomDescription = roomInfo.value("description").toString();
         ac->roomTags = roomInfo.value("tags").toString().split(",", QString::SkipEmptyParts);
+        ac->liveStartTime = roomInfo.value("live_start_time").toDouble();
 
 #ifdef ZUOQI_ENTRANCE
         fakeEntrance->setRoomName(ac->roomTitle);

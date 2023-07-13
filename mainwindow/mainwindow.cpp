@@ -518,6 +518,28 @@ void MainWindow::initView()
     connect(tip_box, &TipBox::signalBtnClicked, [=](NotificationEntry* n){
         qInfo() << "卡片按钮点击：" << n->toString();
     });
+
+    // 直播时间
+    liveTimeTimer = new QTimer(this);
+    liveTimeTimer->setSingleShot(0);
+    liveTimeTimer->setInterval(1000);
+    connect(liveTimeTimer, &QTimer::timeout, this, [=]{
+        if (liveService->isLiving() && ac->liveStartTime > 0)
+        {
+            qint64 delta = QDateTime::currentSecsSinceEpoch() - ac->liveStartTime;
+            if (delta < 0)
+                return;
+            int second = delta;
+            int hours = delta / 3600;
+            int minutes = (delta % 3600) / 60;
+            int seconds = delta % 60;
+
+            QString timeStr = QString("%1:%2:%3").arg(hours)
+                    .arg(minutes, 2, 10, QLatin1Char('0'))
+                    .arg(seconds, 2, 10, QLatin1Char('0'));
+            ui->liveStatusButton->setText(timeStr);
+        }
+    });
 }
 
 void MainWindow::initStyle()
@@ -890,9 +912,11 @@ void MainWindow::initLiveService()
         if (ui->recordCheck->isChecked())
             startLiveRecord();
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
+        ac->liveStartTime = QDateTime::currentSecsSinceEpoch();
+        this->liveTimeTimer->start();
         emit signalLiveVideoChanged(ac->roomId);
 
-        if (liveService->isLiving() || liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+        /* if (liveService->isLiving() || liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
         {
             qInfo() << "忽视PK导致的开播情况";
             // 大乱斗时突然断联后恢复
@@ -903,7 +927,7 @@ void MainWindow::initLiveService()
                 slotStartWork();
             }
             return ;
-        }
+        } */
 
         QString text = ui->startLiveWordsEdit->text();
         if (ui->startLiveSendCheck->isChecked() && !text.trimmed().isEmpty()
@@ -919,6 +943,8 @@ void MainWindow::initLiveService()
     connect(liveService, &LiveRoomService::signalLiveStopped, this, [=]{
         finishLiveRecord();
         liveService->reconnectWSDuration = INTERVAL_RECONNECT_WS;
+        this->liveTimeTimer->stop();
+        ac->liveStartTime = 0;
 
         if (liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
             return ;
@@ -7008,6 +7034,9 @@ void MainWindow::releaseLiveData(bool prepare)
         ui->giftListWidget->clear();
         ui->onlineRankListWidget->clear();
         pl->allGiftMap.clear();
+
+        ac->liveStartTime = 0;
+        this->liveTimeTimer->stop();
     }
     else // 下播，依旧保持连接
     {
@@ -8506,6 +8535,10 @@ void MainWindow::slotStartWork()
 
     // 获取舰长
     liveService->updateExistGuards(0);
+
+    // 直播
+    if (liveService->isLiving())
+        liveTimeTimer->start();
 
     triggerCmdEvent("START_WORK", LiveDanmaku(), true);
 

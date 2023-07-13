@@ -888,6 +888,7 @@ private:
 
     // 启动与定时
     QTimer* syncTimer = nullptr;
+    QTimer* liveTimeTimer = nullptr;
 
     // 动画
     double paletteProg = 0;

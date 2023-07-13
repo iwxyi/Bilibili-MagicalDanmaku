@@ -42,6 +42,7 @@ public:
     int winningStreak = 0;   // 连胜
     int currentPopul = 0;    // 人气值
     qint64 lastMatchRoomId;  // 最后匹配的直播间
+    qint64 liveStartTime = 0; // 开播时间（10位时间戳）
 
     // 主播信息
     QString upUid;                 // 主播的UID
