@@ -25,9 +25,9 @@ public:
     qint16 serverPort = 0;
     QDir wwwDir;
     QHash<QString, QString> contentTypeMap;
-    QWebSocketServer* danmakuSocketServer = nullptr;
-    QList<QWebSocket*> danmakuSockets;
-    QHash<QWebSocket*, QStringList> danmakuCmdsMaps;
+    QWebSocketServer* extensionSocketServer = nullptr;
+    QList<QWebSocket*> extensionSockets;
+    QHash<QWebSocket*, QStringList> extensionCmdsMaps;
 
     bool sendSongListToSockets = false;
     bool sendLyricListToSockets = false;

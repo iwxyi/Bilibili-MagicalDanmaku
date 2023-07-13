@@ -1206,8 +1206,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             data = cr->toMultiLine(data);
 
             qInfo() << "执行命令：" << caps;
-            if (webServer->danmakuSockets.size())
-                sendTextToSockets(cmd, data.toUtf8(), webServer->danmakuSockets.last());
+            if (webServer->extensionSockets.size())
+                sendTextToSockets(cmd, data.toUtf8(), webServer->extensionSockets.last());
             return true;
         }
     }

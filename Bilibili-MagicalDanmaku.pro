@@ -28,8 +28,9 @@ CONFIG += resources_big
 # DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32{
-    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
+    DEFINES += ENABLE_SHORTCUT ENABLE_TRAY
 }
+DEFINES += ENABLE_HTTP_SERVER
 #unix:!macx{
 #    DEFINES += ENABLE_SHORTCUT ENABLE_HTTP_SERVER ENABLE_TRAY
 #}
@@ -91,7 +92,8 @@ INCLUDEPATH += \
     third_party/notification/ \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/ \
-    third_party/m3u8_downloader/
+    third_party/m3u8_downloader/\
+    third_party/http-parser/
 
 SOURCES += \
     mainwindow/run_cmd.cpp \
@@ -113,6 +115,7 @@ SOURCES += \
     third_party/facile_menu/facilemenuitem.cpp \
     third_party/gif/avilib.cpp \
     third_party/gif/gif.cpp \
+    third_party/http-parser/http_parser.c \
     third_party/interactive_buttons/appendbutton.cpp \
     third_party/interactive_buttons/generalbuttoninterface.cpp \
     third_party/interactive_buttons/infobutton.cpp \
@@ -217,6 +220,7 @@ HEADERS += \
     third_party/facile_menu/facilemenuitem.h \
     third_party/gif/avilib.h \
     third_party/gif/gif.h \
+    third_party/http-parser/http_parser.h \
     third_party/interactive_buttons/appendbutton.h \
     third_party/interactive_buttons/generalbuttoninterface.h \
     third_party/interactive_buttons/infobutton.h \
@@ -354,6 +358,14 @@ HEADERS += \
     third_party/qhttpserver/qhttpserver.h \
     third_party/qhttpserver/qhttpserverapi.h \
     third_party/qhttpserver/qhttpserverfwd.h
+
+SOURCES += \
+    third_party/qhttpserver/qhttpconnection.cpp \
+    third_party/qhttpserver/qhttprequest.cpp \
+    third_party/qhttpserver/qhttpresponse.cpp \
+    third_party/qhttpserver/qhttpserver.cpp
+
+INCLUDEPATH += qhttpserver/
 }
 
 # Default rules for deployment.
@@ -390,12 +402,6 @@ contains(ANDROID_TARGET_ARCH,) {
 
 android: include(third_party/android_openssl/openssl.pri)
 
-contains(DEFINES, ENABLE_HTTP_SERVER) {
-    LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
-
-    INCLUDEPATH += $$PWD/third_party/libs \
-        qhttpserver/
-}
 win32: LIBS += -lversion
 
 DEPENDPATH += $$PWD/third_party/libs
