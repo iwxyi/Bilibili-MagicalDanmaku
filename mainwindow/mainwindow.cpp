@@ -7986,12 +7986,13 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         "3.6.3",
         "4.6.0",
         "4.8.2",
+        "4.10.3",
         rt->appVersion // 最后一个一定是最新版本
     };
     int index = 0;
     while (index < versions.size())
     {
-        if (versions.at(index) < oldVersion)
+        if (compareVersion(versions.at(index), oldVersion) < 0)
             index++;
         else
             break;
@@ -8028,6 +8029,34 @@ void MainWindow::upgradeOneVersionData(QString beforeVersion)
     else if (beforeVersion == "4.8.2")
     {
         deleteDir(rt->dataPath + "musics");
+    }
+    else if (beforeVersion == "4.10.3")
+    {
+        QTimer::singleShot(3000, [=]{
+            bool fixed = false;
+            for (int row = 0; row < ui->eventListWidget->count(); row++)
+            {
+                auto item = ui->eventListWidget->item(row);
+                auto widget = ui->eventListWidget->itemWidget(item);
+                if (!widget)
+                    continue;
+                QSize size(ui->eventListWidget->contentsRect().width() - ui->eventListWidget->verticalScrollBar()->width(), widget->height());
+                auto eventWidget = static_cast<EventWidget*>(widget);
+                QString event = eventWidget->title();
+                if (event == "PK_MATCH_ONLINE_GUARD")
+                {
+                    QString code = eventWidget->body();
+                    code.replace("贡献%>simpleNum(%{online_rank_num}%)%分", "贡献%>simpleNum(%{online_rank_gold}%)%分");
+                    eventWidget->actionEdit->setPlainText(code);
+                    fixed = true;
+                }
+            }
+            if (fixed)
+            {
+                qInfo() << "修复贡献榜积分问题";
+                saveEventList();
+            }
+        });
     }
 }
 
