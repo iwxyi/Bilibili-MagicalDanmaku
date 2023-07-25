@@ -62,9 +62,10 @@ INCLUDEPATH += \
     global/ \
     mainwindow/ \
     services/ \
-    services/liveservices/ \
+    services/live_services/ \
     services/entities/ \
     services/code_runner/ \
+    services/sql_service/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -100,12 +101,12 @@ SOURCES += \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
-    services/liveservices/bili_livecmds.cpp \
-    services/liveservices/bili_liveopenservice.cpp \
-    services/liveservices/bili_liveservice.cpp \
-    services/liveservices/liveroomservice.cpp \
-    services/liveservices/livestatisticservice.cpp \
-    services/sqlservice.cpp \
+    services/live_services/bili_livecmds.cpp \
+    services/live_services/bili_liveopenservice.cpp \
+    services/live_services/bili_liveservice.cpp \
+    services/live_services/liveroomservice.cpp \
+    services/live_services/livestatisticservice.cpp \
+    services/sql_service/sqlservice.cpp \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
     services/web_server/webserver.cpp \
@@ -202,11 +203,11 @@ HEADERS += \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
-    services/liveservices/bili_liveopenservice.h \
-    services/liveservices/bili_liveservice.h \
-    services/liveservices/liveroomservice.h \
-    services/liveservices/livestatisticservice.h \
-    services/sqlservice.h \
+    services/live_services/bili_liveopenservice.h \
+    services/live_services/bili_liveservice.h \
+    services/live_services/liveroomservice.h \
+    services/live_services/livestatisticservice.h \
+    services/sql_service/sqlservice.h \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
     services/web_server/webserver.h \

@@ -313,6 +313,31 @@ bool BiliLiveService::handleUncompMessage(QString cmd, MyJson json)
             }
         }*/
     }
+    else if (cmd == "MESSAGEBOX_USER_MEDAL_CHANGE") // 太久没发言，点亮粉丝牌
+    {
+        /*{
+            "cmd": "MESSAGEBOX_USER_MEDAL_CHANGE",
+            "data": {
+                "guard_level": 0,
+                "is_lighted": 1,
+                "medal_color_border": 1725515,
+                "medal_color_end": 5414290,
+                "medal_color_start": 1725515,
+                "medal_level": 22,
+                "medal_name": "莓钱啦",
+                "multi_unlock_level": "",
+                "type": 2,
+                "uid": 20285041,
+                "unlock": 0,
+                "unlock_level": 0,
+                "up_uid": 1654676647,
+                "upper_bound_content": ""
+            },
+            "is_report": false,
+            "msg_id": "916936486563841",
+            "send_time": 1690302797554
+        }*/
+    }
     else
     {
         qWarning() << "未处理的未压缩命令=" << cmd << "   正文=" << json;
