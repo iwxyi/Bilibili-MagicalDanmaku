@@ -510,14 +510,77 @@ void LiveRoomService::autoSetCookie(const QString &s)
     qInfo() << "设置弹幕格式：" << ac->browserData;
 }
 
+/**
+ * 自动（智能）分割长弹幕
+ * 如果有标点，那么会首先按照标点进行分割
+ * 如果有一条语句不满足，那就直接按照等分长度
+ */
 QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) const
 {
     QStringList sl;
-    int len = text.length();
-    int count = (len + maxOne - 1) / maxOne;
+
+    // 根据各个标点进行分割句子长度
+    QRegularExpression re("。|！|？|\\n");
+    int prevPos = 0;
+    int findPos = text.indexOf(re, prevPos);
+    bool isOk = findPos > -1;
+    while (findPos != -1)
+    {
+        if (findPos != -1)
+        {
+            sl.append(text.mid(prevPos, findPos - prevPos + 1));
+            findPos++;
+            if (sl.last().size() > maxOne)
+            {
+                isOk = false;
+                sl.clear();
+                break;
+            }
+        }
+        else
+        {
+            findPos = text.length();
+            if (findPos <= prevPos + 1)
+                break;
+            sl.append(text.mid(prevPos, findPos - prevPos + 1));
+            if (sl.last().size() > maxOne)
+            {
+                isOk = false;
+                sl.clear();
+                break;
+            }
+            break;
+        }
+        prevPos = findPos;
+        findPos = text.indexOf(re, prevPos);
+    }
+
+    if (isOk)
+    {
+        // 合并长度允许的两句话
+        for (int i = 0; i < sl.size() - 1; i++)
+        {
+            if (sl.at(i).size() + sl.at(i + 1).size() <= maxOne)
+            {
+                sl[i] = sl.at(i) + sl.at(i + 1);
+                sl.removeAt(i + 1);
+                i--;
+            }
+        }
+        return sl;
+    }
+    else
+    {
+        sl.clear();
+    }
+
+    // 不符合智能分割的场景，按字数平均值分割
+    int totalLen = text.length();
+    int count = (totalLen + maxOne - 1) / maxOne;
+    int everyLen = (totalLen + count - 1) / count;
     for (int i = 0; i < count; i++)
     {
-        sl << text.mid(i * maxOne, maxOne);
+        sl << text.mid(i * everyLen, everyLen);
     }
     return sl;
 }

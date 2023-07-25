@@ -306,6 +306,7 @@ public:
     /// 设置全局默认的Cookie变量
     virtual void autoSetCookie(const QString &s);
     
+    /// 分割长弹幕
     QStringList splitLongDanmu(const QString& text, int maxOne) const;
     void sendLongText(QString text);
 
