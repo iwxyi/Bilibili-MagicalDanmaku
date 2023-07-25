@@ -208,6 +208,7 @@ LiveDanmakuWindow::LiveDanmakuWindow(QWidget *parent)
     blockComingMsg = us->value("livedanmakuwindow/blockComingMsg", blockComingMsg).toBool();
     blockSpecialGift = us->value("livedanmakuwindow/blockSpecialGift", blockSpecialGift).toBool();
     blockCommonNotice = us->value("livedanmakuwindow/blockCommonNotice", blockCommonNotice).toBool();
+    hideGiftPrice = us->value("livedanmakuwindow/hideGiftPrice", hideGiftPrice).toBool();
 
     headDir = rt->dataPath + "headers/";
     QDir().mkpath(headDir);
@@ -750,7 +751,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         }
 
         // 醒目留言
-        if (msgType == MSG_SUPER_CHAT && !simpleMode)
+        if (msgType == MSG_SUPER_CHAT && !simpleMode && !hideGiftPrice)
         {
             qint64 coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
@@ -769,7 +770,7 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         if (danmaku.getNumber() > 1)
             text += "×" + snum(danmaku.getNumber());
         text += "</center>";
-        if (danmaku.isGoldCoin() && !simpleMode)
+        if (danmaku.isGoldCoin() && !simpleMode && !hideGiftPrice)
         {
             qint64 coin = danmaku.getTotalCoin();
             text += " <hr><center><span style='font-weight: bold;'>￥ ";
@@ -1164,6 +1165,7 @@ void LiveDanmakuWindow::showMenu()
     QMenu* blockMenu = new QMenu("消息屏蔽", settingMenu);
     QAction* actionBlockComing = new QAction("屏蔽用户进入消息", this);
     QAction* actionBlockSpecialGift = new QAction("屏蔽节奏风暴/天选弹幕", this);
+    QAction* actionHideGiftPrice = new QAction("隐藏礼物价格", this);
 
     QAction* actionSendMsg = new QAction("发送框", this);
     QAction* actionDialogSend = new QAction("快速触发", this);
@@ -1215,6 +1217,8 @@ void LiveDanmakuWindow::showMenu()
     actionBlockComing->setChecked(blockComingMsg);
     actionBlockSpecialGift->setCheckable(true);
     actionBlockSpecialGift->setChecked(blockSpecialGift);
+    actionHideGiftPrice->setCheckable(true);
+    actionHideGiftPrice->setChecked(hideGiftPrice);
 
     if (uid != 0)
     {
@@ -1406,6 +1410,7 @@ void LiveDanmakuWindow::showMenu()
 
     blockMenu->addAction(actionBlockComing);
     blockMenu->addAction(actionBlockSpecialGift);
+    blockMenu->addAction(actionHideGiftPrice);
 
     settingMenu->addMenu(blockMenu);
     settingMenu->addSeparator();
@@ -1513,6 +1518,10 @@ void LiveDanmakuWindow::showMenu()
     connect(actionBlockSpecialGift, &QAction::triggered, this, [=]{
         blockSpecialGift = !blockSpecialGift;
         us->setValue("livedanmakuwindow/blockSpecialGift", blockSpecialGift);
+    });
+    connect(actionHideGiftPrice, &QAction::triggered, this, [=]{
+        hideGiftPrice = !hideGiftPrice;
+        us->setValue("livedanmakuwindow/hideGiftPrice", hideGiftPrice);
     });
     connect(actionAddCare, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更

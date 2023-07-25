@@ -1,3 +1,18 @@
+### v4.10.4 [弹幕姬优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.4)
+
+- 新增显示直播间开播时长
+- 新增隐藏礼物价格
+- 新增Mac下弹幕姬支持原生窗口模式
+- 新增Mac下插件功能的支持
+- 新增智能分割超长弹幕进行发送
+- 新增 ChatGPT 命令
+- 调整 AIChat 和 TXChat
+- 修复PK贡献分数问题
+
+
+
+
+
 ### v4.10.3 [AI生成脚本](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.3)
 
 - 新增GPT-16k模型的支持
