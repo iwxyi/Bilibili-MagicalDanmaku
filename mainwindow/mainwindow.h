@@ -337,6 +337,8 @@ private slots:
 
     void on_autoSpeekDanmakuCheck_clicked();
 
+    void on_speakUsernameCheck_clicked();
+
     void on_diangeFormatEdit_textEdited(const QString &text);
 
     void on_diangeNeedMedalCheck_clicked();

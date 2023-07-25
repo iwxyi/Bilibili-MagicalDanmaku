@@ -1592,6 +1592,7 @@ void MainWindow::readConfig()
 
     // 文字转语音
     ui->autoSpeekDanmakuCheck->setChecked(us->value("danmaku/autoSpeek", false).toBool());
+    ui->speakUsernameCheck->setChecked(us->value("danmaku/speakUsername", false).toBool());
     ui->dontSpeakOnPlayingSongCheck->setChecked(us->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
@@ -1944,12 +1945,17 @@ void MainWindow::initEvent()
     connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 大乱斗对面的弹幕不朗读
             return ;
+
+        // 语音朗读
         if (!liveService->_loadingOldDanmakus && ui->autoSpeekDanmakuCheck->isChecked() && danmaku.getMsgType() == MSG_DANMAKU
                 && cr->shallSpeakText())
         {
             if (cr->hasSimilarOldDanmaku(danmaku.getText()))
                 return ;
-            speakText(danmaku.getText());
+            QString content = danmaku.getText();
+            if (ui->speakUsernameCheck->isChecked())
+                content = danmaku.getNickname() + "说：" + danmaku.getText();
+            speakText(content);
         }
     });
 }
@@ -8470,6 +8476,11 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
     if (!voiceService->tts && ui->autoSpeekDanmakuCheck->isChecked())
         initTTS();
 #endif
+}
+
+void MainWindow::on_speakUsernameCheck_clicked()
+{
+    us->setValue("danmaku/speakUsername", ui->speakUsernameCheck->isChecked());
 }
 
 void MainWindow::on_diangeFormatEdit_textEdited(const QString &text)

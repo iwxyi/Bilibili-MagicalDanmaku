@@ -5284,7 +5284,7 @@ QPushButton:pressed
               <x>550</x>
               <y>230</y>
               <width>241</width>
-              <height>151</height>
+              <height>191</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5385,6 +5385,21 @@ QPushButton:pressed
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="speakUsernameCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>点歌姬在播放歌曲时不朗读弹幕
+仅限于弹幕、欢迎、关注、答谢礼物等自动朗读的场景
+不包括回复/事件等手动调用“&gt;speakText()”的情况</string>
+               </property>
+               <property name="text">
+                <string>朗读发送者昵称</string>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="CheckBox1" name="dontSpeakOnPlayingSongCheck">
