@@ -2101,6 +2101,29 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
 
         if (match.isValid())
         {
+            if (ui->chatGPTRadio->isChecked())
+            {
+                msg.replace(QRegularExpression("(?:ai|AI)Chat\\("), "ChatGPT(0,");
+            }
+            else
+            {
+                msg.replace(QRegularExpression("(?:ai|AI)Chat"), "TXChat");
+            }
+            return execFunc(msg, danmaku, res, resVal);
+        }
+    }
+
+    if (msg.contains("txChat") || msg.contains("TXChat"))
+    {
+        re = RE("(?:ai|AI|tx|TX)Chat\\s*\\(\\s*\"(.+?)\"\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) == -1)
+        {
+            re = RE("(?:ai|AI|tx|TX)Chat\\s*\\(\\s*(.+?)\\s*,\\s*(.+)\\s*\\)");
+            msg.indexOf(re, 0, &match);
+        }
+
+        if (match.isValid())
+        {
             QStringList caps = match.capturedTexts();
             qInfo() << "执行命令：" << caps;
             QString text = caps.at(1).trimmed();
@@ -2108,6 +2131,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 return true;
             QString code = caps.at(2);
             code = cr->toRunableCode(cr->toMultiLine(code));
+
             chatService->txNlp->chat(text, [=](QString result) {
                 LiveDanmaku dmk = danmaku;
                 dmk.setText(result);
@@ -2122,7 +2146,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
 
     if (msg.contains("ChatGPT") || msg.contains("ChatGPT.chat"))
     {
-        re = RE("ChatGPT(\\.chat)?\\s*\\(\\s*(\\d+?)\\s*,\\s*(.+)\\s*\\)");
+        re = RE("ChatGPT(?:\\.chat)?\\s*\\(\\s*(\\d*?)\\s*,\\s*(.+?)\\s*,\\s*(.+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -2131,8 +2155,41 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString text = caps.at(2).trimmed();
             if (text.isEmpty())
                 return true;
+            QString code = caps.at(3);
+            code = cr->toRunableCode(cr->toMultiLine(code));
 
+            chatService->chatgpt->chat(uid, text, [=](QString result){
+                // 处理代码
+                if (us->chatgpt_analysis)
+                {
+                    // 如果开启了功能型GPT，那么回复会是JSON格式
+                    QString reply = result;
+                    if (!reply.startsWith("{"))
+                    {
+                        int index = reply.indexOf("{");
+                        if (index > -1)
+                        {
+                            reply = reply.right(reply.length() - index);
+                        }
+                    }
+                    MyJson json(reply.toUtf8());
+                    if (json.isEmpty())
+                    {
+                        qWarning() << "无法解析的GPT回复格式：" << reply.toUtf8();
+                        return;
+                    }
+                    result = json.value("msg").toString();
+                }
 
+                // 发送弹幕
+                LiveDanmaku dmk = danmaku;
+                dmk.setText(result);
+                qDebug() << code << dmk.toJson();
+                QStringList sl = cr->getEditConditionStringList(code, dmk);
+                qDebug() << sl;
+                if (!sl.empty())
+                    cr->sendAutoMsg(sl.first(), dmk);
+            });
 
             return true;
         }
