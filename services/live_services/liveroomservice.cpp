@@ -520,16 +520,17 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
     QStringList sl;
 
     // 根据各个标点进行分割句子长度
-    QRegularExpression re("。|！|？|\\n");
+    QRegularExpression re("，|；|。|！|？|,|\\?|!|\\. |\\n");
+    QRegularExpressionMatch match;
     int prevPos = 0;
-    int findPos = text.indexOf(re, prevPos);
+    int findPos = text.indexOf(re, prevPos, &match);
     bool isOk = findPos > -1;
     while (findPos != -1)
     {
         if (findPos != -1)
         {
-            sl.append(text.mid(prevPos, findPos - prevPos + 1));
-            findPos++;
+            sl.append(text.mid(prevPos, findPos - prevPos + match.capturedLength()));
+            findPos += match.capturedLength();
             if (sl.last().size() > maxOne)
             {
                 isOk = false;
@@ -542,7 +543,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
             findPos = text.length();
             if (findPos <= prevPos + 1)
                 break;
-            sl.append(text.mid(prevPos, findPos - prevPos + 1));
+            sl.append(text.mid(prevPos, findPos - prevPos + match.capturedLength()));
             if (sl.last().size() > maxOne)
             {
                 isOk = false;
@@ -552,11 +553,34 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
             break;
         }
         prevPos = findPos;
-        findPos = text.indexOf(re, prevPos);
+        findPos = text.indexOf(re, prevPos, &match);
     }
-
+qDebug() << sl;
     if (isOk)
     {
+        // 优先合并逗号分隔的
+        for (int i = 0; i < sl.size() - 1; i++)
+        {
+            if (sl.at(i).contains(QRegularExpression("(，|,)$"))
+                    && sl.at(i).size() + sl.at(i + 1).size() <= maxOne)
+            {
+                sl[i] = sl.at(i) + sl.at(i + 1);
+                sl.removeAt(i + 1);
+                i--;
+            }
+        }
+        // 其次是分号分隔的
+        for (int i = 0; i < sl.size() - 1; i++)
+        {
+            if (sl.at(i).contains(QRegularExpression("(；|;)$"))
+                    && sl.at(i).size() + sl.at(i + 1).size() <= maxOne)
+            {
+                sl[i] = sl.at(i) + sl.at(i + 1);
+                sl.removeAt(i + 1);
+                i--;
+            }
+        }
+
         // 合并长度允许的两句话
         for (int i = 0; i < sl.size() - 1; i++)
         {
