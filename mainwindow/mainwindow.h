@@ -57,6 +57,7 @@
 #include "web_server/webserver.h"
 #include "voice_service/voiceservice.h"
 #include "chat_service/chatservice.h"
+#include "emailutil.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -707,6 +708,16 @@ private slots:
 
     void on_GPTAnalysisEventButton_clicked();
 
+    void on_emailDriverCombo_activated(const QString &arg1);
+
+    void on_emailHostEdit_editingFinished();
+
+    void on_emailPortSpin_editingFinished();
+
+    void on_emailFromEdit_editingFinished();
+
+    void on_emailPasswordEdit_editingFinished();
+
 private:
     void initView();
     void initStyle();
@@ -866,6 +877,8 @@ private:
     void initDbService();
     void showSqlQueryResult(QString sql);
 
+    void sendEmail(const QString& to, const QString& subject, const QString& body);
+
 private:
     // 应用信息
     Ui::MainWindow *ui;
@@ -969,6 +982,9 @@ private:
 
     // 数据库
     SqlService sqlService;
+
+    // 邮件
+    EmailUtil* emailService = nullptr;
 };
 
 class RequestBodyHelper : public QObject

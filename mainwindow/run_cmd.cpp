@@ -2765,7 +2765,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
     // 图片相关的
     if (msg.contains("saveScreenShot"))
     {
-        re = RE("saveScreenShot\\s*\\((\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(.+)\\)");
+        re = RE("saveScreenShot\\s*\\(\\s*(\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\-?\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(.+)\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();
@@ -2886,6 +2886,22 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             int h = caps[5].toInt();
             MoveWindow(hWnd, x, y, w, h, true);
 #endif
+            return true;
+        }
+    }
+
+    // 邮件服务
+    if (msg.contains("sendEmail"))
+    {
+        re = RE("sendEmail\\s*\\(\\s*(\\S+)\\s*,\\s*(.*?)\\s*,\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            qInfo() << "执行命令：" << caps;
+            QString to = caps.at(1);
+            QString subject = caps.at(2);
+            QString body = caps.at(3);
+            sendEmail(to, subject, body);
             return true;
         }
     }

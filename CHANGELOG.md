@@ -1,4 +1,4 @@
-### v4.10.4 [弹幕姬优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.4)
+### v4.10.4 [弹幕姬优化、邮件服务](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.4)
 
 - 新增显示直播间开播时长
 - 新增语音朗读发送者昵称开关
@@ -9,6 +9,7 @@
 - 新增显示全屏弹幕的命令 showScreenDanmu
 - 新增 ChatGPT 命令，调用 GPT 进行回复
 - 调整 AIChat 和 TXChat，进行适当拆分
+- 新增邮件服务，发送邮件命令 sendEmail
 - 修复PK贡献分数问题
 
 

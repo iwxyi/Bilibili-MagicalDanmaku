@@ -78,8 +78,9 @@ private slots:
                 _sendRcptTo = true;
                 sendCommand("RCPT TO: <" + to + ">");
             }
-            else if (_sendFrom && _sendRcptTo)
+            else if (_sendFrom && _sendRcptTo && !_sendData)
             {
+                _sendData = true;
                 sendData(); // 触发 354 End data with <CR><LF>.<CR><LF>
             }
         }
@@ -104,7 +105,7 @@ private slots:
         else if (response.startsWith("354"))
         {
             // sendData();
-            // sendCommand("QUIT");
+            sendCommand("QUIT");
         }
         else if (response.startsWith("221"))
         {

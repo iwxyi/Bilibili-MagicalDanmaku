@@ -93,4 +93,4 @@ GPT聊天=ChatGPT
 显示窗口=showWindow
 发送窗口消息=sendWindowMessage
 移动窗口=moveWindow
-
+发送邮件=sendEmail

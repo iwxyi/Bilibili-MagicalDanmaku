@@ -34,6 +34,7 @@
 #include "string_distance_util.h"
 #include "bili_api_util.h"
 #include "pixmaputil.h"
+#include "emailutil.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -1784,6 +1785,13 @@ void MainWindow::readConfig()
                         +QByteArray::fromBase64("44CR5Li65oKo5pyN5Yqhfg=="));
         } */
     }
+
+    // 邮件服务
+    ui->emailDriverCombo->setCurrentText(us->value("email/driver", ui->emailDriverCombo->currentText()).toString());
+    ui->emailHostEdit->setText(us->value("email/host").toString());
+    ui->emailPortSpin->setValue(us->value("email/port", ui->emailPortSpin->value()).toInt());
+    ui->emailFromEdit->setText(us->value("email/from").toString());
+    ui->emailPasswordEdit->setText(us->value("email/password").toString());
 
     // 开启服务端
     bool enableServer = us->value("server/enabled", false).toBool();
@@ -8262,6 +8270,41 @@ void MainWindow::showSqlQueryResult(QString sql)
     dbb->show();
 }
 
+void MainWindow::sendEmail(const QString &to, const QString &subject, const QString &body)
+{
+    if (to.isEmpty())
+    {
+        showError("发送邮件", "请填收件人地址");
+        return;
+    }
+    if (subject.trimmed().isEmpty() && body.trimmed().isEmpty())
+    {
+        showError("发送邮件", "不允许发送空内容");
+        return;
+    }
+
+    if (emailService == nullptr)
+    {
+        emailService = new EmailUtil(this);
+    }
+
+    if (ui->emailHostEdit->text().isEmpty()
+            || ui->emailFromEdit->text().isEmpty()
+            || ui->emailPasswordEdit->text().isEmpty())
+    {
+        return showError("发送邮件", "请在设置中完善邮件服务信息");
+    }
+
+    emailService->sendEmail(ui->emailHostEdit->text(),
+                            ui->emailPortSpin->value(),
+                            ui->emailFromEdit->text(),
+                            ui->emailPasswordEdit->text(),
+                            ui->emailFromEdit->text(),
+                            to,
+                            subject,
+                            body);
+}
+
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!liveService->hostList.size()) // 未连接
@@ -10719,4 +10762,29 @@ void MainWindow::on_GPTAnalysisEventButton_clicked()
         // 前往事件
         gotoEvent(GPT_TASK_RESPONSE_EVENT);
     }
+}
+
+void MainWindow::on_emailDriverCombo_activated(const QString &arg1)
+{
+    us->setValue("email/driver", arg1);
+}
+
+void MainWindow::on_emailHostEdit_editingFinished()
+{
+    us->setValue("email/host", ui->emailHostEdit->text());
+}
+
+void MainWindow::on_emailPortSpin_editingFinished()
+{
+    us->setValue("email/port", snum(ui->emailPortSpin->value()));
+}
+
+void MainWindow::on_emailFromEdit_editingFinished()
+{
+    us->setValue("email/from", ui->emailFromEdit->text());
+}
+
+void MainWindow::on_emailPasswordEdit_editingFinished()
+{
+    us->setValue("email/password", ui->emailPasswordEdit->text());
 }
