@@ -255,6 +255,7 @@ HEADERS += \
     third_party/utils/bili_api_util.h \
     third_party/utils/chatgptutil.h \
     third_party/utils/conditionutil.h \
+    third_party/utils/emailutil.h \
     third_party/utils/httpuploader.h \
     third_party/utils/microsofttts.h \
     third_party/utils/mysettings.h \
