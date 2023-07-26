@@ -6,6 +6,7 @@
 - 新增Mac下弹幕姬支持原生窗口模式
 - 新增Mac下对H5插件功能的支持
 - 新增智能分割超长弹幕进行发送
+- 新增显示全屏弹幕的命令 showScreenDanmu
 - 新增 ChatGPT 命令，调用 GPT 进行回复
 - 调整 AIChat 和 TXChat，进行适当拆分
 - 修复PK贡献分数问题

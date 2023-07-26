@@ -774,6 +774,24 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    // 发送全屏弹幕
+    if (msg.contains("showScreenDanmu"))
+    {
+        re = RE("showScreenDanmu\\s*\\(\\s*(.*)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString msg = caps.at(1);
+            if (msg.isEmpty())
+                return true;
+            qInfo() << "执行命令：" << caps;
+            LiveDanmaku dmk;
+            dmk.setText(msg);
+            showScreenDanmaku(dmk);
+            return true;
+        }
+    }
+
     // 定时操作
     if (msg.contains("timerShot"))
     {

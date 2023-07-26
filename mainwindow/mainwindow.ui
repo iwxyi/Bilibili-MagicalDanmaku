@@ -5011,8 +5011,11 @@ margin: 40px;</string>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;是否显示除了弹幕之外提示类型的信息&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="text">
-                <string>显示信息</string>
+                <string>显示提示</string>
                </property>
               </widget>
              </item>

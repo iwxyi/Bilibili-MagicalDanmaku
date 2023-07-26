@@ -555,7 +555,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
         prevPos = findPos;
         findPos = text.indexOf(re, prevPos, &match);
     }
-qDebug() << sl;
+
     if (isOk)
     {
         // 优先合并逗号分隔的
