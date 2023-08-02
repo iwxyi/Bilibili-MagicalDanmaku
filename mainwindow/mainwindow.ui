@@ -1846,7 +1846,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>925</width>
-             <height>1682</height>
+             <height>1676</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2285,8 +2285,14 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QRadioButton" name="chatTxRadio">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;因业务调整该接口将于北京时间2023年8月1日0点下线，届时该产品功能将无法正常使用。详见：https://cloud.tencent.com/document/product/271/907111&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>腾讯</string>
@@ -2780,6 +2786,9 @@ QPushButton:pressed
             </layout>
            </widget>
            <widget class="QWidget" name="TxNLPSettingsCard" native="true">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="geometry">
              <rect>
               <x>770</x>
@@ -10292,7 +10301,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>37</height>
+     <height>43</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

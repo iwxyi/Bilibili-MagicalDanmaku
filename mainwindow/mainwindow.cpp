@@ -5797,6 +5797,7 @@ void MainWindow::playNetAudio(QString url)
         if (reply1->error() != QNetworkReply::NoError)
         {
             qWarning() << "获取网络音频错误：" << reply1->errorString();
+            showError("获取音频错误", reply1->errorString());
             return ;
         }
 
