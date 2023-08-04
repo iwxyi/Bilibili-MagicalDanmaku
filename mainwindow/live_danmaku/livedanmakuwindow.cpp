@@ -1743,7 +1743,7 @@ void LiveDanmakuWindow::showMenu()
         if (listWidget->currentItem() != item) // 当前项变更
             return ;
         // 翻译
-        startReply(item);
+        startReply(item, true);
     });
     connect(actionFreeCopy, &QAction::triggered, this, [=]{
         if (listWidget->currentItem() != item) // 当前项变更
@@ -2179,7 +2179,7 @@ void LiveDanmakuWindow::setAIReply(bool reply)
     // qInfo() << "智能闲聊开关：" << reply;
 }
 
-void LiveDanmakuWindow::startReply(QListWidgetItem *item)
+void LiveDanmakuWindow::startReply(QListWidgetItem *item, bool manual)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     qint64 uid = danmaku.getUid();
@@ -2192,32 +2192,35 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item)
     // 判断重复文本
     // 过滤重复消息
     bool repeat = false;
-    int count = us->danmuSimilarJudgeCount;
-    for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
+    if (!manual)
     {
-        const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
-        if (!danmaku.is(MessageType::MSG_DANMAKU))
-            continue;
-        if (!us->useStringSimilar)
+        int count = us->danmuSimilarJudgeCount;
+        for (int i = rt->allDanmakus.size() - 2; i >= 0; i--)
         {
-            if (danmaku.getText() == msg)
+            const LiveDanmaku& danmaku = rt->allDanmakus.at(i);
+            if (!danmaku.is(MessageType::MSG_DANMAKU))
+                continue;
+            if (!us->useStringSimilar)
             {
-                repeat = true;
-                break;
+                if (danmaku.getText() == msg)
+                {
+                    repeat = true;
+                    break;
+                }
             }
-        }
-        else
-        {
-            double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
-            if (similar >= us->stringSimilarThreshold)
+            else
             {
-                qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
-                repeat = true;
-                break;
+                double similar = StringDistanceUtil::getSimilarity(danmaku.getText(), msg);
+                if (similar >= us->stringSimilarThreshold)
+                {
+                    qInfo() << "相似度：" << similar << " 相对于 “" << danmaku.getText() << "”";
+                    repeat = true;
+                    break;
+                }
             }
+            if (--count <= 0)
+                break;
         }
-        if (--count <= 0)
-            break;
     }
 
     if (repeat)

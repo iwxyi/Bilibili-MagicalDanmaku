@@ -9079,14 +9079,7 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
 
         // 自动断句
         qInfo() << "发送AI回复：" << reply;
-        QStringList sl;
-        int len = reply.length();
-        const int maxOne = ac->danmuLongest;
-        int count = (len + maxOne - 1) / maxOne;
-        for (int i = 0; i < count; i++)
-        {
-            sl << reply.mid(i * maxOne, maxOne);
-        }
+        QStringList sl = liveService->splitLongDanmu(reply, ac->danmuLongest);
         cr->sendAutoMsg(sl.join("\\n"), danmaku);
     }
 }

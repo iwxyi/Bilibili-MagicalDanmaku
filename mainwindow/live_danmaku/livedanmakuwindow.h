@@ -122,7 +122,7 @@ public slots:
     void setAutoTranslate(bool trans);
     void startTranslate(QListWidgetItem* item);
     void setAIReply(bool reply);
-    void startReply(QListWidgetItem* item);
+    void startReply(QListWidgetItem* item, bool manual = false);
     void setEnableBlock(bool enable);
     void setListWidgetItemSpacing(int x);
     void setNewbieTip(bool tip);
