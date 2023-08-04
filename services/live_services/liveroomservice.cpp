@@ -520,7 +520,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
     QStringList sl;
 
     // 根据各个标点进行分割句子长度
-    QRegularExpression re("，|；|。|！|？|,|\\?|!|\\. |\\n");
+    QRegularExpression re("，|；|。|！|？|,|\\?|!|\\n");
     QRegularExpressionMatch match;
     int prevPos = 0;
     int findPos = text.indexOf(re, prevPos, &match);
