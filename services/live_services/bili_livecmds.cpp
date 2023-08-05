@@ -2243,7 +2243,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             else
             {
                 LiveDanmaku danmaku = LiveDanmaku(text).with(json);
-                qInfo() << "NOTICE:" << text;
+                qInfo() << "NOTICE:" << array;
                 if (cr->isFilterRejected("FILTER_DANMAKU_NOTICE", danmaku))
                     return ;
                 text.replace("<$", "").replace("$>", "");
@@ -2548,6 +2548,21 @@ void BiliLiveService::handleMessage(QJsonObject json)
         int rank = data.i("rank");
         int countdown = data.i("countdown");
         // localNotify("人气榜：" + snum(rank) + "/" + snum(countdown));
+    }
+    else if (cmd == "LIKE_INFO_V3_UPDATE") // 点赞数量
+    {
+        /*{
+            "cmd": "LIKE_INFO_V3_UPDATE",
+            "data": {
+                "click_count": 159
+            },
+            "is_report": false,
+            "msg_id": "1413957529653760",
+            "send_time": 1691250789961
+        }*/
+        MyJson data = json.value("data").toObject();
+        int rank = data.i("click_count");
+        localNotify("点赞：" + snum(rank));
     }
     else
     {
