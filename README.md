@@ -2370,18 +2370,19 @@ tips：
 
 若有多行，同其他代码一样，随机获取一行；其他弹幕或命令正常发送。
 
-| 过滤事件                 | 说明（reject时）                                      |
-| ------------------------ | ----------------------------------------------------- |
-| FILTER_MUSIC_ORDER       | 阻止点歌                                              |
-| FILTER_AUTO_REPLY        | 阻止所有的自动回复                                    |
-| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上                            |
-| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上                            |
-| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上                       |
-| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上                            |
-| FILTER_DANMAKU_NOTICE    | 阻止普通通知(Common Notice)显示在弹幕姬上             |
-| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                                    |
-| FILTER_API_EVENT         | 阻止HTTP触发事件的接口，`%text%`获取事件名字          |
-| FILTER_AI_REPLY          | 阻止AI弹幕回复，`%text%` 获取弹幕，`%reply%` 获取回复 |
+| 过滤事件                 | 说明（reject时）                                             |
+| ------------------------ | ------------------------------------------------------------ |
+| FILTER_MUSIC_ORDER       | 阻止点歌                                                     |
+| FILTER_AUTO_REPLY        | 阻止所有的自动回复                                           |
+| FILTER_DANMAKU_MSG       | 阻止弹幕消息显示在弹幕姬上                                   |
+| FILTER_DANMAKU_COME      | 阻止进入消息显示在弹幕姬上                                   |
+| FILTER_DANMAKU_GIFT      | 阻止礼物/上船消息显示在弹幕姬上                              |
+| FILTER_DANMAKU_ATTENTION | 阻止关注消息显示在弹幕姬上                                   |
+| FILTER_DANMAKU_NOTICE    | 阻止普通通知(Common Notice)显示在弹幕姬上                    |
+| FILTER_KEYWORD_BLOCK     | 阻止关键词自动禁言                                           |
+| FILTER_API_EVENT         | 阻止HTTP触发事件的接口，`%text%`获取事件名字                 |
+| FILTER_AI_REPLY          | 阻止触发AI回复，`%text%` 获取弹幕<br />避免不必要的回复可节约消耗，提升性能 |
+| FILTER_AI_REPLY_MSG      | 阻止AI回复发送弹幕，`%text%` 获取弹幕，`%reply%` 获取回复内容 |
 
 若有多个相同过滤器，只要**任意其中一个**包括 `>reject()` 命令，则本操作不允许。
 

@@ -98,6 +98,7 @@ public:
                     CALC_DEB << "比较字符串" << s1 << op << s2;
                     if (op == "~")
                     {
+                        // qDebug() << "比较正则表达式：" << s1 << op << s2;
                         if (s2.contains("~") && !s2.endsWith("~")) // 特殊格式判断：文字1~文字2 ~ 文字3 [\u4e00-\u9fa5]+[\w]{3}
                         {
                             QString full = caps.at(0);

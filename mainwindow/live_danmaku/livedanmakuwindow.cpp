@@ -2189,6 +2189,13 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item, bool manual)
     if (msg.isEmpty())
         return ;
 
+    // 判断过滤器
+    if (rejectReply && rejectReply(danmaku))
+    {
+        qInfo() << "不自动回复弹幕：" << danmaku.getText();
+        return;
+    }
+
     // 判断重复文本
     // 过滤重复消息
     bool repeat = false;

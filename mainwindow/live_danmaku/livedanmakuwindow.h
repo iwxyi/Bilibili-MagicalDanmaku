@@ -60,6 +60,7 @@
 #define DANMAKU_WIDGET_LABEL 1
 
 typedef std::function<bool(const QString&)> FuncJudgeTextType;
+typedef std::function<bool(const LiveDanmaku&)> FuncJudgeDanmakuType;
 
 class LiveRoomService;
 
@@ -238,6 +239,7 @@ private:
     ChatService* chatService = nullptr;
 
     FuncJudgeTextType hasReply = nullptr;
+    FuncJudgeDanmakuType rejectReply = nullptr; // 弹幕是否触发AI回复
 };
 
 #endif // LIVEDANMAKUWINDOW_H

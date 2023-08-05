@@ -520,7 +520,7 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
     QStringList sl;
 
     // 根据各个标点进行分割句子长度
-    QRegularExpression re("，|；|。|！|？|,|\\?|!|\\n");
+    QRegularExpression re("，|；|。|！|？|,|\\?|!|\\n|\n");
     QRegularExpressionMatch match;
     int prevPos = 0;
     int findPos = text.indexOf(re, prevPos, &match);
@@ -593,18 +593,21 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
         }
         return sl;
     }
-    else
-    {
-        sl.clear();
-    }
 
     // 不符合智能分割的场景，按字数平均值分割
-    int totalLen = text.length();
-    int count = (totalLen + maxOne - 1) / maxOne;
-    int everyLen = (totalLen + count - 1) / count;
-    for (int i = 0; i < count; i++)
+    sl.clear();
+    QString lines = text;
+    lines.replace("\r", "\n");
+    QStringList lineList = lines.split("\n", QString::SkipEmptyParts);
+    foreach (QString line, lineList) // 遍历每一行
     {
-        sl << text.mid(i * everyLen, everyLen);
+        int totalLen = line.length();
+        int count = (totalLen + maxOne - 1) / maxOne;
+        int everyLen = (totalLen + count - 1) / count;
+        for (int i = 0; i < count; i++)
+        {
+            sl << line.mid(i * everyLen, everyLen);
+        }
     }
     return sl;
 }

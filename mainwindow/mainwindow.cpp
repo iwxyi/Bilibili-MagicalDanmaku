@@ -1845,6 +1845,7 @@ void MainWindow::initDanmakuWindow()
     danmakuWindow->setLiveService(this->liveService);
     danmakuWindow->setChatService(this->chatService);
     danmakuWindow->hasReply = [=](const QString& text) { return hasReply(text); };
+    danmakuWindow->rejectReply = [=](const LiveDanmaku& danmaku) { return cr->isFilterRejected("FILTER_AI_REPLY", danmaku); };
 
     connect(liveService, &LiveRoomService::signalNewDanmaku, danmakuWindow, [=](const LiveDanmaku &danmaku) {
         if (danmaku.is(MSG_DANMAKU))
@@ -9054,7 +9055,7 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
 
     // 过滤器
     danmaku.setReply(reply);
-    if (cr->isFilterRejected("FILTER_AI_REPLY", danmaku))
+    if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", danmaku))
     {
         qInfo() << "过滤器已阻止AI回复：" << danmaku.getText() << danmaku.getReply();
         return;
