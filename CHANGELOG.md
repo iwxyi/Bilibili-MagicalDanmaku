@@ -9,6 +9,7 @@
 - 新增显示全屏弹幕的命令 showScreenDanmu
 - 新增 ChatGPT 命令，调用 GPT 进行回复
 - 调整 AIChat 和 TXChat，进行适当拆分
+- 新增AI回复过滤器：FILTER_AI_REPLY
 - 新增邮件服务，发送邮件命令 sendEmail（目前仅支持腾讯企业邮箱）
 - 优化AI回复对长弹幕的分割粒度
 - 修复PK贡献分数问题

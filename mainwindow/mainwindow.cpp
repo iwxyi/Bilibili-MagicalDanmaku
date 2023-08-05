@@ -9052,6 +9052,14 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
     if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(reply))
         return ;
 
+    // 过滤器
+    danmaku.setReply(reply);
+    if (cr->isFilterRejected("FILTER_AI_REPLY", danmaku))
+    {
+        qInfo() << "过滤器已阻止AI回复：" << danmaku.getText() << danmaku.getReply();
+        return;
+    }
+
     if (us->chatgpt_analysis)
     {
         /// 直接发送JSON

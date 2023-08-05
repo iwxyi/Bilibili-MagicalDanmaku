@@ -534,6 +534,11 @@ public:
         this->faceUrl = url;
     }
 
+    void setReply(const QString& reply)
+    {
+        this->reply = reply;
+    }
+
     QString getText() const
     {
         return text;
@@ -831,6 +836,11 @@ public:
         return faceUrl;
     }
 
+    QString getReply() const
+    {
+        return reply;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -893,6 +903,7 @@ private:
 
     QString roomId;
     int retry = 0;
+    QString reply;
 
 public:
     QStringList args;

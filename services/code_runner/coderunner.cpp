@@ -1062,9 +1062,18 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(local.length() + (us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName()).length());
     }
 
+    // 弹幕相关
     else if (key == "%danmu_longest")
     {
         return snum(ac->danmuLongest);
+    }
+    else if (key == "%reply%")
+    {
+        return danmaku.getReply();
+    }
+    else if (key == "%sub_account_index%")
+    {
+        return "";
     }
 
     // 是否新关注
