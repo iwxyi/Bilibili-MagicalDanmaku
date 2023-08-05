@@ -1071,6 +1071,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     {
         return toSingleLine(danmaku.getReply());
     }
+    else if (key == "%reply_len%")
+    {
+        return snum(danmaku.getReply().length());
+    }
     else if (key == "%sub_account_index%")
     {
         return "";

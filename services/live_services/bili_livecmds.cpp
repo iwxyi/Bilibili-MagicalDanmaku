@@ -843,7 +843,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
             cr->noReplyMsgs.removeOne(msg);
         }
         else
+        {
             minuteDanmuPopul++;
+        }
         danmaku.setOpposite(opposite);
         appendNewLiveDanmaku(danmaku);
 
@@ -2677,13 +2679,6 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        /*if (noReplyMsgs.contains(msg) && snum(uid) == cookieUid)
-        {
-            danmaku.setNoReply();
-            noReplyMsgs.removeOne(msg);
-        }
-        else
-            minuteDanmuPopular++;*/
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
         appendNewLiveDanmaku(danmaku);
