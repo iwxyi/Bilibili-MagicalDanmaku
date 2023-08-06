@@ -627,6 +627,7 @@ void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString
 {
     QByteArray ba;
     ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
+    qInfo() << "发送认证信息：" << ba;
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);

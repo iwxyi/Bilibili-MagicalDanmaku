@@ -24,16 +24,17 @@
 - 新增GPT-16k模型的支持
 - 新增GPT生成/修改/解释/审阅代码
 - 新增数据库可视化列表和按钮
+- 修复认证包UID问题
 - 修复微软语音偶尔超时的问题
 
 
 
 
-
-### v4.10.2 [GPT优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.2)
+### v4.10.2 [GPT问题修复](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.2)
 
 - 新增在已实现关键词回复时不进行AI回复
 - 新增在点歌开启时点歌格式忽略AI回复
+- 新增保存自动生成的GPT事件
 - 修复GPT容易崩溃的问题
 - 修复UID很长时无法复制的问题
 - 修复Mac下图标问题
@@ -43,7 +44,7 @@
 
 
 
-### v4.10.1 [GPT增强](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)
+### v4.10.1 [功能型GPT](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.1)
 
 - 新增“功能型GPT”：智能识别弹幕类型并进行操作
 - 新增 AIReply 命令支持自动调用 ChatGPT

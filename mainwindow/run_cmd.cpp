@@ -2830,7 +2830,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             HWND hWnd = (HWND)pointer.toLongLong();
             if (hWnd == nullptr)
             {
-                showError("showWindow", "找不到该窗口");
+                showError("showWindow", "找不到该窗口：" + pointer);
                 return true;
             }
             ShowWindow(hWnd, type);
@@ -2852,7 +2852,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             HWND hWnd = (HWND)pointer.toLongLong();
             if (hWnd == nullptr)
             {
-                showError("sendWindowMessage", "找不到该窗口");
+                showError("sendWindowMessage", "找不到该窗口：" + pointer);
                 return true;
             }
             for(QChar c: text)
@@ -2877,7 +2877,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             HWND hWnd = (HWND)pointer.toLongLong();
             if (hWnd == nullptr)
             {
-                showError("sendWindowMessage", "找不到该窗口");
+                showError("moveWindow", "找不到该窗口：" + pointer);
                 return true;
             }
             int x = caps[2].toInt();
