@@ -663,7 +663,7 @@ void MainWindow::initObject()
         rt->justStart = false;
     });
 
-    // 读取拼音1
+    // 读取拼音
     QtConcurrent::run([=]{
         QFile pinyinFile(":/documents/pinyin");
         pinyinFile.open(QIODevice::ReadOnly);
@@ -6999,6 +6999,7 @@ void MainWindow::appendFileLine(QString filePath, QString format, LiveDanmaku da
 
 void MainWindow::releaseLiveData(bool prepare)
 {
+    qInfo() << "释放直播数据" << prepare;
     if (!prepare) // 切换房间或者断开连接
     {
         ui->guardCountLabel->setText("0");
