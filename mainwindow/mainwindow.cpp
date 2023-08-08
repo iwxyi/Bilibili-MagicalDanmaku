@@ -8021,6 +8021,12 @@ void MainWindow::upgradeVersionToLastest(QString oldVersion)
         upgradeOneVersionData(ver);
         sqlService.upgradeDb(versions.at(i+1));
     }
+
+    if (rt->dataPath != QApplication::applicationDirPath() + "/")
+    {
+        if (isFileExist("www"))
+            copyDir("www", rt->dataPath + "www");
+    }
 }
 
 void MainWindow::upgradeOneVersionData(QString beforeVersion)
