@@ -885,7 +885,6 @@ void MainWindow::initLiveService()
 
     connect(liveService, &LiveRoomService::signalPopularTextChanged, this, [=](const QString& text){
         ui->popularityLabel->setToolTip(text);
-        ui->popularityTextLabel->setToolTip(text);
     });
 
     connect(liveService, &LiveRoomService::signalFansCountChanged, this, [=](qint64 count){
@@ -1008,6 +1007,14 @@ void MainWindow::initLiveService()
         ui->roomRankLabel->setText(snum(rank));
         ui->roomRankTextLabel->setText(area + "榜");
         ui->roomRankLabel->setToolTip(msg);
+    });
+
+    connect(liveService, &LiveRoomService::signalWatchCountChanged, this, [=](const QString& text) {
+        ui->watchedLabel->setToolTip(text);
+    });
+
+    connect(liveService, &LiveRoomService::signalLikeChanged, this, [=](int count) {
+        ui->popularityTextLabel->setToolTip("点赞数量：" + snum(count));
     });
 
     /// 信号传递

@@ -101,6 +101,8 @@ signals:
     void signalSendAutoMsgInFirst(const QString& msg, const LiveDanmaku& danmaku, int interval);
     void signalRoomRankChanged(const QString& desc, const QString& color);
     void signalHotRankChanged(int rank, const QString& area, const QString& msg);
+    void signalWatchCountChanged(const QString& text);
+    void signalLikeChanged(int like);
 
     void signalBattleEnabled(bool enable);
     void signalBattleRankGot();
@@ -273,6 +275,8 @@ public:
     virtual void connectPkSocket() { }
     /// 获取PK对面直播间的信息
     virtual void getPkMatchInfo() {}
+    /// 获取PK对面的高能榜信息
+    virtual void getPkOnlineGoldPage(int page = 0) {}
 
     /// PK
     virtual void pkPre(QJsonObject json) {}
@@ -391,7 +395,7 @@ protected:
     QHash<QString, LiveDanmaku> giftCombos;
     QTimer* comboTimer = nullptr;
 
-    // PK
+    // PK变量
     bool pking = false;
     int pkBattleType = 0;
     qint64 pkId = 0;
@@ -403,6 +407,7 @@ protected:
     int pkJudgeEarly = 2000;
     bool pkVideo = false;
     QList<LiveDanmaku> pkGifts;
+    LiveDanmaku pkRoomInfo;
 
     // PK结尾
     QTimer* pkEndingTimer = nullptr;

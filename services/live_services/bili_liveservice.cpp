@@ -457,7 +457,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
         // 看过
         ac->watchedShow = dataObj.value("watched_show").toObject().value("text_small").toString();
 
-        // 获取大乱斗段位（现在可能是空了）
+        // 获取大乱斗段位（现在null了）
         QJsonObject battleRankEntryInfo = dataObj.value("battle_rank_entry_info").toObject();
         if (!battleRankEntryInfo.isEmpty())
         {
@@ -3047,19 +3047,80 @@ void BiliLiveService::getPkMatchInfo()
         }
 
         MyJson data = json.data();
-        LiveDanmaku danmaku;
-        danmaku.with(data);
+        pkRoomInfo = LiveDanmaku();
+        pkRoomInfo.with(data);
 
         // 计算高能榜综合
+        int number = data.o("online_gold_rank_info_v2").a("list").size();
         qint64 sum = 0;
         data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
             sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
         });
-        danmaku.setTotalCoin(sum); // 高能榜总积分
-        danmaku.setNumber(data.o("online_gold_rank_info_v2").a("list").size()); // 高能榜总人数
-        qInfo() << "对面高能榜积分总和：" << sum;
-        // qDebug() << data.o("online_gold_rank_info_v2").a("list");
-        triggerCmdEvent("PK_MATCH_INFO", danmaku, true);
+        pkRoomInfo.setTotalCoin(sum); // 高能榜总积分
+        pkRoomInfo.setNumber(number); // 高能榜总人数
+
+        // B站房间信息里上限就是7个
+        if (number >= 7)
+        {
+            // 继续加载高能榜
+            getPkOnlineGoldPage();
+        }
+        else
+        {
+            qInfo() << "对面高能榜积分总和：" << sum;
+            // qDebug() << data.o("online_gold_rank_info_v2").a("list");
+            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
+        }
+    });
+}
+
+void BiliLiveService::getPkOnlineGoldPage(int page)
+{
+    if (page == 0)
+    {
+        page = 1;
+    }
+
+    if (pkUid.isEmpty())
+    {
+        return;
+    }
+    int pageSize = 50;
+
+    QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid=" + pkUid + "&roomId=" + pkRoomId + "&page=" + snum(page) + "&pageSize=" + snum(pageSize);
+    get(url, [=](MyJson json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取PK高能榜返回结果不为0：") << json.value("message").toString() << url;
+            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
+            return ;
+        }
+
+        MyJson data = json.data();
+        int number = data.i("onlineNum");
+        // 计算高能榜总和，第一页开始重置
+        qint64 sum = pkRoomInfo.getTotalCoin();
+        if (page <= 1)
+        {
+            sum = 0;
+            pkRoomInfo.setNumber(number); // 高能榜总人数
+        }
+        data.each("OnlineRankItem", [&](MyJson usr){
+            sum += usr.l("score");
+        });
+        pkRoomInfo.setTotalCoin(sum); // 高能榜总积分
+
+        int pageCount = (number + pageSize - 1) / pageSize;
+        if (page < pageCount)
+        {
+            getPkOnlineGoldPage(page + 1);
+        }
+        else
+        {
+            qInfo() << "对面高能榜人数：" << number << "，积分总和：" << sum;
+            // qDebug() << data.o("online_gold_rank_info_v2").a("list");
+            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
+        }
     });
 }
 

@@ -78,6 +78,7 @@ public:
     void getRoomCurrentAudiences(QString roomId, QSet<qint64> &audiences) override;
     void connectPkSocket() override;
     void getPkMatchInfo() override;
+    void getPkOnlineGoldPage(int page = 0) override;
 
     /// PK
     virtual void pkPre(QJsonObject json) override;

@@ -2256,16 +2256,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
             qWarning() << "未处理的 COMMON_NOTICE_DANMAKU：" << json;
         }
     }
-    else if (cmd == "WATCHED_CHANGE")
-    {
-        MyJson data = json.value("data").toObject();
-        // int num = data.i("num");
-        QString textLarge = data.s("text_large");
-        // QString textSmall = data.s("text_small");
-        emit signalPopularTextChanged(textLarge);
-
-        triggerCmdEvent(cmd, data);
-    }
     else if (cmd == "VIDEO_CONNECTION_MSG")
     {
         MyJson data = json.value("data").toObject();
@@ -2314,7 +2304,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         }*/
         MyJson data = json.value("data").toObject();
         QString textLarge = data.s("text_large");
-        emit signalPopularTextChanged(textLarge);
+        emit signalWatchCountChanged(textLarge);
 
         triggerCmdEvent(cmd, data);
     }
@@ -2561,8 +2551,8 @@ void BiliLiveService::handleMessage(QJsonObject json)
             "send_time": 1691250789961
         }*/
         MyJson data = json.value("data").toObject();
-        int rank = data.i("click_count");
-        localNotify("点赞：" + snum(rank));
+        int count = data.i("click_count");
+        emit signalLikeChanged(count);
     }
     else
     {
