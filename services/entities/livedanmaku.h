@@ -156,6 +156,7 @@ public:
         danmaku.number = object.value("number").toInt();
         danmaku.coin_type = object.value("coin_type").toString();
         danmaku.total_coin = qint64(object.value("total_coin").toDouble());
+        danmaku.discount_price = qint64(object.value("discount_price").toDouble());
         danmaku.spread_desc = object.value("spread_desc").toString();
         danmaku.spread_info = object.value("spread_info").toString();
         danmaku.fans = object.value("fans").toInt();
@@ -217,6 +218,10 @@ public:
                 object.insert("guard_level", guard);
                 object.insert("first", first);
             }
+            if (discount_price != 0)
+            {
+                object.insert("discount_price", discount_price);
+            }
         }
         else if (msgType == MSG_WELCOME)
         {
@@ -256,6 +261,7 @@ public:
         {
             object.insert("level", level);
             object.insert("total_coin", total_coin);
+            object.insert("discount_price", discount_price);
         }
 
         object.insert("timeline", timeline.toString("yyyy-MM-dd hh:mm:ss"));
@@ -471,16 +477,22 @@ public:
         this->pk_link = link;
     }
 
-    void addGift(int count, qint64 total, QDateTime time)
+    void addGift(int count, qint64 total, qint64 discountPrice, QDateTime time)
     {
         this->number += count;
         this->total_coin += total;
+        this->discount_price += discountPrice;
         this->timeline = time;
     }
 
     void setTotalCoin(qint64 coin)
     {
         this->total_coin = coin;
+    }
+
+    void setDiscountPrice(qint64 discountPrice)
+    {
+        this->discount_price = discountPrice;
     }
 
     void setTime(QDateTime time)
@@ -679,6 +691,11 @@ public:
     qint64 getTotalCoin() const
     {
         return total_coin;
+    }
+
+    qint64 getDiscountPrice() const
+    {
+        return discount_price;
     }
 
     QString getSpreadDesc() const
@@ -881,6 +898,7 @@ private:
     int number = 0;
     QString coin_type;
     qint64 total_coin = 0;
+    qint64 discount_price = 0;
 
     QString spread_desc; // 星光推广
     QString spread_info; // 颜色

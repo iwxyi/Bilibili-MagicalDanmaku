@@ -20,6 +20,7 @@ URL编码的弹幕消息=url_text
 礼物银瓜子=gift_silver
 礼物瓜子=gift_coin
 是金瓜子礼物=coin_gold
+礼物实际价值=discount_price
 礼物名字=gift_name
 礼物原始名字=origin_gift_name
 礼物数量=gift_num

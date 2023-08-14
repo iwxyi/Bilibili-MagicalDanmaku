@@ -369,7 +369,7 @@ void LiveRoomService::appendLiveGift(const LiveDanmaku &danmaku)
         if (his.getUid() == danmaku.getUid()
                 && his.getGiftId() == danmaku.getGiftId())
         {
-            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            liveAllGifts[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
             return ;
         }
     }
@@ -391,7 +391,7 @@ void LiveRoomService::appendLiveGuard(const LiveDanmaku &danmaku)
         if (his.getUid() == danmaku.getUid()
                 && his.getGiftId() == danmaku.getGiftId())
         {
-            liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+            liveAllGuards[i].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
             return ;
         }
     }
@@ -685,7 +685,7 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
 
     // 开始合并
     qInfo() << "合并相同礼物至：" << merged->toString();
-    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+    merged->addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
 
     // 合并实时弹幕
     emit signalMergeGiftCombo(danmaku, delayTime);

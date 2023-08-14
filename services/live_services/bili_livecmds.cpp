@@ -1025,13 +1025,15 @@ void BiliLiveService::handleMessage(QJsonObject json)
         qint64 timestamp = static_cast<qint64>(data.value("timestamp").toDouble()); // 秒
         timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
         QString coinType = data.value("coin_type").toString();
-        int totalCoin = data.value("total_coin").toInt();
+        qint64 totalCoin = data.value("total_coin").toDouble();
+        qint64 discountPrice = data.value("discount_price").toDouble();
 
-        qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << coinType;
+        qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << discountPrice << coinType;
         QString localName = us->getLocalNickname(uid);
         /*if (!localName.isEmpty())
             username = localName;*/
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
+        danmaku.setDiscountPrice(discountPrice);
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();

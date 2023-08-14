@@ -2748,7 +2748,7 @@ void MainWindow::slotNewGiftReceived(const LiveDanmaku &danmaku)
         {
             if (liveService->giftCombos.contains(batchComboId)) // 已经连击了，合并
             {
-                liveService->giftCombos[batchComboId].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), QDateTime::currentDateTime());
+                liveService->giftCombos[batchComboId].addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), QDateTime::currentDateTime());
             }
             else // 创建新的连击
             {

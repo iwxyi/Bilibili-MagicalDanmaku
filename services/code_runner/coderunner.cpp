@@ -893,6 +893,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%coin_gold%")
         return danmaku.isGoldCoin() ? "1" : "0";
 
+    // 盲盒实际价值
+    else if (key == "%discount_price%" || key == "%real_price%" || key == "%real_coin%")
+        return snum(danmaku.getDiscountPrice());
+
     // 本次送礼名字
     else if (key == "%gift_name%")
         return us->giftAlias.contains(danmaku.getGiftId()) ? us->giftAlias.value(danmaku.getGiftId()) : danmaku.getGiftName();

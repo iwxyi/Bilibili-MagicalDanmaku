@@ -1078,7 +1078,7 @@ void LiveDanmakuWindow::mergeGift(const LiveDanmaku &danmaku, int delayTime)
             continue;
 
         // 是这个没错了
-        dm.addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getTimeline());
+        dm.addGift(danmaku.getNumber(), danmaku.getTotalCoin(), danmaku.getDiscountPrice(), danmaku.getTimeline());
         item->setData(DANMAKU_JSON_ROLE, dm.toJson());
         item->setData(DANMAKU_STRING_ROLE, dm.toString());
         setItemWidgetText(item);
