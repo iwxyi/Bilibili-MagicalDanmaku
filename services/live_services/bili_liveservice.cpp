@@ -4248,6 +4248,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
     }
     if (msg.isEmpty() || ac->roomId.isEmpty())
         return ;
+    QString urlMsg = urlEncode(msg);
 
     // 设置数据（JSON的ByteArray）
     QString s = ac->browserData;
@@ -4255,7 +4256,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
     int posr = s.indexOf("&", posl);
     if (posr == -1)
         posr = s.length();
-    s.replace(posl, posr-posl, msg);
+    s.replace(posl, posr-posl, urlMsg);
 
     posl = s.indexOf("roomid=")+7;
     posr = s.indexOf("&", posl);
@@ -4282,7 +4283,6 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
             }
 
             showError("发送弹幕失败", errorDesc);
-            qWarning() << msg;
             localNotify(errorDesc + " -> " + msg);
 
             // 重试

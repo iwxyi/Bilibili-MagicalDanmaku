@@ -2,22 +2,22 @@
 
 - 新增显示直播间开播时长
 - 新增语音朗读发送者昵称开关
-- 新增隐藏礼物价格
+- 新增隐藏礼物价格开关
 - 新增Mac下弹幕姬支持原生窗口模式
 - 新增Mac下对H5插件功能的支持
 - 新增智能分割超长弹幕进行发送
-- 新增显示全屏弹幕的命令 showScreenDanmu
+- 新增显示全屏弹幕的命令 `showScreenDanmu(text)`
 - 新增 `ChatGPT()` 命令，调用GPT进行回复
-- 调整 `AIChat()` 拆分为 `TXChat()`，进行适当拆分
-- 新增AI回复过滤器：FILTER_AI_REPLY 和 FILTER_AI_REPLY_MSG，控制回复时机
-- 新增邮件服务，发送邮件命令 sendEmail（目前仅支持腾讯企业邮箱）
+- 调整 `AIChat()` 细化为 `TXChat()` 和 `ChatGPT()` 两项
+- 新增AI回复过滤器：`FILTER_AI_REPLY` 和 `FILTER_AI_REPLY_MSG`，控制回复时机
+- 新增邮件服务，发送邮件命令 `sendEmail()`（目前仅支持腾讯企业邮箱）
 - 优化AI回复对长弹幕的分割粒度
 - 优化弹幕姬菜单中的手动AI回复
 - 修复PK贡献分数问题
 
 
 
-
+​	
 
 ### v4.10.3 [AI生成脚本](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.3)
 
