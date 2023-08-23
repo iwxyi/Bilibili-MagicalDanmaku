@@ -2357,7 +2357,7 @@ MainWindow::~MainWindow()
     {
         if (info.lastModified().toSecsSinceEpoch() < overdue)
         {
-            qInfo() << "删除备份：" << info.absoluteFilePath();
+            qInfo() << "删除备份：" << info.baseName();
             deleteFile(info.absoluteFilePath());
         }
     }

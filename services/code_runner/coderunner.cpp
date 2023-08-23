@@ -2668,7 +2668,7 @@ QString CodeRunner::toFilePath(const QString &fileName) const
  */
 QString CodeRunner::toSingleLine(QString text) const
 {
-    return text.replace("\n", "%n%").replace("\\n", "%m%");
+    return text.replace("\n", "%n%").replace("\\n", "%m%").replace("\"", "\\\"");
 }
 
 /**
@@ -2676,7 +2676,7 @@ QString CodeRunner::toSingleLine(QString text) const
  */
 QString CodeRunner::toMultiLine(QString text) const
 {
-    return text.replace("%n%", "\n").replace("%m%", "\\n");
+    return text.replace("%n%", "\n").replace("%m%", "\\n").replace("\\\"", "\"");
 }
 
 QString CodeRunner::toRunableCode(QString text) const
