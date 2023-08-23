@@ -2616,11 +2616,19 @@ void MainWindow::slotTryBlockDanmaku(const LiveDanmaku &danmaku)
     };
     if (!us->debugPrint && (snum(uid) == ac->upUid || snum(uid) == ac->cookieUid)) // 是自己或UP主的，不屏蔽
     {
+        // 如果自动回复有对应的命令，则自动回复优先
+        if (hasReply(msg))
+            return;
+
         // 不仅不屏蔽，反而支持主播特权
         processRemoteCmd(msg);
     }
     else if (admin && ui->allowAdminControlCheck->isChecked()) // 房管特权
     {
+        // 如果自动回复有对应的命令，则自动回复优先
+        if (hasReply(msg))
+            return;
+
         // 开放给房管的特权
         processRemoteCmd(msg);
     }

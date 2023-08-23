@@ -9807,7 +9807,7 @@ QTabBar::tab:selected
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;默认仅机器人账号与主播有效，可开启右边的“房管控制”&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;默认仅机器人账号与主播有效，可开启右边的“房管控制”给予其他房管权限&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>启用弹幕控制</string>
@@ -9833,7 +9833,7 @@ QTabBar::tab:selected
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="toolTip">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许房管通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;允许房管通过直播间弹幕来发送命令控制神奇弹幕&lt;/p&gt;&lt;p&gt;例如：开启欢迎、禁言 xxx、撤销禁言&lt;/p&gt;&lt;p&gt;主播、机器人 这两个账号一直会被允许&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>允许房管控制</string>

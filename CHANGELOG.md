@@ -1,3 +1,11 @@
+### v4.10.5 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.5)
+
+- 新增自动回复可覆盖内置弹幕控制命令，不再重复执行
+
+
+
+
+
 ### v4.10.4 [ChatGPT控制、弹幕姬优化、邮件服务](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.4)
 
 - 新增显示直播间开播时长
