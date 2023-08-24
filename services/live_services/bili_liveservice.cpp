@@ -82,7 +82,7 @@ void BiliLiveService::initWS()
             // 尝试5秒钟后重连
             // TODO: 每次重连间隔翻倍
             connectServerTimer->setInterval(reconnectWSDuration);
-            reconnectWSDuration *= 2;
+            reconnectWSDuration *= 1.2;
             if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
                 reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }
@@ -4293,6 +4293,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
             {
                 localNotify("[5s后重试]");
                 emit signalSendAutoMsgInFirst(msg, LiveDanmaku().withRetry().withRoomId(roomId), 5000);
+                // TODO:发送这个信号后会强制识别为自动发送的弹幕，应该看情况要去掉no reply
             }
             else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
             {

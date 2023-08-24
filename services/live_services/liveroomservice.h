@@ -12,7 +12,7 @@
 #include "api_type.h"
 #include "sqlservice.h"
 
-#define INTERVAL_RECONNECT_WS 5000
+#define INTERVAL_RECONNECT_WS 3000
 #define INTERVAL_RECONNECT_WS_MAX 60000
 #define SOCKET_DEB if (0) qDebug() // 输出调试信息
 #define SOCKET_INF if (0) qDebug() // 输出数据包信息
