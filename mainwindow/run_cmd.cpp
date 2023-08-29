@@ -2121,7 +2121,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         {
             if (ui->chatGPTRadio->isChecked())
             {
-                msg.replace(QRegularExpression("(?:ai|AI)Chat\\("), "ChatGPT(0,");
+                msg.replace(QRegularExpression("(?:ai|AI)Chat\\("), "ChatGPT(" + snum(danmaku.getUid()) + ",");
             }
             else
             {
@@ -2151,8 +2151,16 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             code = cr->toRunableCode(cr->toMultiLine(code));
 
             chatService->txNlp->chat(text, [=](QString result) {
+                // 过滤回复后的内容
                 LiveDanmaku dmk = danmaku;
-                dmk.setText(result);
+                dmk.setReply(result);
+                if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", dmk))
+                {
+                    qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getReply();
+                    return;
+                }
+
+                dmk.setText(result); // 这个是用来适配旧版，新的已经添加 reply 字段了
                 QStringList sl = cr->getEditConditionStringList(code, dmk);
                 if (!sl.empty())
                     cr->sendAutoMsg(sl.first(), dmk);
@@ -2197,6 +2205,17 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                         return;
                     }
                     result = json.value("msg").toString();
+                }
+                else
+                {
+                    // 过滤回复后的内容
+                    LiveDanmaku dmk = danmaku;
+                    dmk.setReply(result);
+                    if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", dmk))
+                    {
+                        qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getReply();
+                        return;
+                    }
                 }
 
                 // 发送弹幕
