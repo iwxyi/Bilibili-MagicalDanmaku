@@ -873,7 +873,6 @@ private:
     void showNotify(QString title, QString s) const;
     void showNotify(QString s) const;
 
-    void initLiveOpenService();
     void initDbService();
     void showSqlQueryResult(QString sql);
 
@@ -976,9 +975,6 @@ private:
 
     // 彩蛋
     QString warmWish;
-
-    // 互动
-    BiliLiveOpenService* liveOpenService = nullptr;
 
     // 数据库
     SqlService sqlService;

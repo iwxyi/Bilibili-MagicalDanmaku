@@ -100,6 +100,7 @@ SOURCES += \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
     services/live_services/bili_livecmds.cpp \
+    services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
     services/live_services/bili_liveservice.cpp \
     services/live_services/liveroomservice.cpp \

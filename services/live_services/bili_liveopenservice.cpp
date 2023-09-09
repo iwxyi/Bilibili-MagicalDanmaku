@@ -3,7 +3,7 @@
 #include "accountinfo.h"
 #include "fileutil.h"
 
-BiliLiveOpenService::BiliLiveOpenService(QObject *parent) : QObject(parent)
+BiliLiveOpenService::BiliLiveOpenService(QObject *parent) : BiliLiveService(parent)
 {
     heartTimer = new QTimer(this);
     heartTimer->setInterval(20000);
@@ -21,10 +21,81 @@ bool BiliLiveOpenService::isPlaying() const
     return heartTimer->isActive();
 }
 
-void BiliLiveOpenService::start()
+/**
+ * [已废弃]
+ */
+void BiliLiveOpenService::startConnectIdentityCode(const QString &code)
+{
+    /* MyJson json;
+    json.insert("code", code); // 主播身份码
+    json.insert("app_id", (qint64)BILI_APP_ID);
+    post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
+            return ;
+        }
+
+        auto data = json.data();
+        auto anchor = data.o("anchor_info");
+        qint64 roomId = anchor.l("room_id");
+
+        ac->roomId = snum(roomId);
+        qInfo() << "身份码对应房间号：" << ac->roomId;
+        getRoomInfo(true);
+    }); */
+    apiStart();
+}
+
+void BiliLiveOpenService::startConnect()
+{
+    apiStart();
+}
+
+void BiliLiveOpenService::sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token)
+{
+    qInfo() << "开平Socket::connected，发送认证" << authBody;
+    QByteArray ba = BiliApiUtil::makePack(authBody, OP_AUTH);
+    liveSocket->sendBinaryMessage(ba);
+}
+
+void BiliLiveOpenService::sendHeartPacket(QWebSocket *socket)
+{
+    if (gameId.isEmpty())
+    {
+        qWarning() << "未开启互动玩法，无法发送心跳";
+        BiliLiveService::sendHeartPacket(socket);
+        return ;
+    }
+
+    MyJson json;
+    json.insert("game_id", gameId);
+    post(BILI_API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
+            if (json.code() == 7003) // 心跳过期或者gameId出错，都没必要继续了
+                heartTimer->stop();
+            return ;
+        }
+        qInfo() << "互动玩法：心跳发送成功";
+    });
+}
+
+void BiliLiveOpenService::getDanmuInfo()
+{
+    startMsgLoop();
+    updateExistGuards(0);
+    updateOnlineGoldRank();
+}
+
+void BiliLiveOpenService::apiStart()
 {
     if (!isValid())
+    {
+        qWarning() << "未设置身份码";
         return ;
+    }
 
     MyJson json;
     json.insert("code", ac->identityCode); // 主播身份码
@@ -38,6 +109,11 @@ void BiliLiveOpenService::start()
         }
 
         auto data = json.data();
+        auto anchor = data.o("anchor_info");
+        qint64 roomId = anchor.l("room_id");
+
+        ac->roomId = snum(roomId);
+        qInfo() << "身份码对应房间号：" << ac->roomId;
 
         // 游戏（不一定有）
         auto info = data.o("game_info");
@@ -53,11 +129,20 @@ void BiliLiveOpenService::start()
         emit signalStart(true);
 
         // 长链
-        /* auto wsInfo = data.o("websocket_info");
-        auto authBody = wsInfo.s("auth_body").toLatin1();
+        auto wsInfo = data.o("websocket_info");
+        this->authBody = wsInfo.s("auth_body").toLatin1();
         auto links = wsInfo.a("wss_link");
-        auto link = links.size() ? links.first().toString() : "";
-        connectWS(link, authBody); */
+
+        hostList.clear();
+        for (int i = 0; i < links.size(); i++)
+        {
+            hostList.append(HostInfo(links.at(i).toString()));
+        }
+
+        BiliLiveService::getRoomInfo(true);
+
+        // auto link = links.size() ? links.first().toString() : "";
+        // connectWS(link, authBody);
     });
 
     /* {
@@ -86,7 +171,7 @@ void BiliLiveOpenService::start()
     } */
 }
 
-void BiliLiveOpenService::end()
+void BiliLiveOpenService::apiEnd()
 {
     if (gameId.isEmpty())
     {
@@ -137,32 +222,12 @@ void BiliLiveOpenService::sendHeart()
 void BiliLiveOpenService::endIfStarted()
 {
     if (isPlaying())
-        end();
+        apiEnd();
 }
 
 void BiliLiveOpenService::connectWS(const QString &url, const QByteArray &authBody)
 {
-    if (!websocket)
-    {
-        websocket = new QWebSocket;
 
-        connect(websocket, &QWebSocket::connected, this, [=]{
-            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：connected";
-            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：发送认证" << authBody;
-            QByteArray ba = BiliApiUtil::makePack(authBody, OP_AUTH);
-            websocket->sendBinaryMessage(ba);
-        });
-
-        connect(websocket, &QWebSocket::disconnected, this, [=]{
-            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：disconnected";
-        });
-
-        connect(websocket, &QWebSocket::binaryMessageReceived, this, [=](const QByteArray &message){
-            LIVE_OPEN_SOCKET_DEB << "互动玩法Socket：接收" << message;
-        });
-    }
-
-    websocket->open(url);
 }
 
 void BiliLiveOpenService::sendWSHeart()
@@ -170,10 +235,13 @@ void BiliLiveOpenService::sendWSHeart()
     QByteArray ba;
     ba.append("[object Object]");
     ba = BiliApiUtil::makePack(ba, OP_HEARTBEAT);
-    websocket->sendBinaryMessage(ba);
+    liveSocket->sendBinaryMessage(ba);
     LIVE_OPEN_SOCKET_DEB << "互动玩法发送心跳包：" << ba;
 }
 
+/**
+ * 开平专有的加密格式
+ */
 void BiliLiveOpenService::post(QString url, MyJson json, NetJsonFunc func)
 {
     // 秘钥

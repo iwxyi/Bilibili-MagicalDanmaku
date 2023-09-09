@@ -1,5 +1,6 @@
 #include <QRegularExpression>
 #include "liveroomservice.h"
+#include "coderunner.h"
 
 LiveRoomService::LiveRoomService(QObject *parent) 
     : QObject(parent), NetInterface(this), LiveStatisticService(this)
@@ -400,45 +401,6 @@ void LiveRoomService::appendLiveGuard(const LiveDanmaku &danmaku)
     liveAllGuards.append(danmaku);
 }
 
-void LiveRoomService::userComeEvent(LiveDanmaku &danmaku)
-{
-    qint64 uid = danmaku.getUid();
-
-    // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
-    // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
-    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
-    danmaku.setNumber(userCome);
-    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
-
-    appendNewLiveDanmaku(danmaku);
-
-    userCome++;
-    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
-    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
-
-    dailyCome++;
-    if (dailySettings)
-        dailySettings->setValue("come", dailyCome);
-    if (danmaku.isOpposite())
-    {
-        // 加到自己这边来，免得下次误杀（即只提醒一次）
-        // 不过不能这么做，否则不会显示“对面”两个字了
-        // myAudience.insert(uid);
-    }
-    else if (cmAudience.contains(uid))
-    {
-        if (cmAudience.value(uid) > 0)
-        {
-            danmaku.setViewReturn(true);
-            danmaku.setPrevTimestamp(cmAudience[uid]);
-            cmAudience[uid] = 0; // 标记为串门回来
-            localNotify(danmaku.getNickname() + " 去对面串门回来");
-        }
-    }
-
-    emit signalSendUserWelcome(danmaku);
-}
-
 QVariant LiveRoomService::getCookies() const
 {
     return NetInterface::getCookies(ac->browserCookie);
@@ -691,4 +653,123 @@ bool LiveRoomService::mergeGiftCombo(const LiveDanmaku &danmaku)
     emit signalMergeGiftCombo(danmaku, delayTime);
 
     return true;
+}
+
+/**
+ * WS连接收到弹幕消息
+ */
+void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
+{
+    int uid = danmaku.getUid();
+    QString uname = danmaku.getNickname();
+    QString msg = danmaku.getText();
+
+    // !弹幕的时间戳是13位，其他的是10位！
+    qInfo() << s8("接收到弹幕：") << uname << msg;
+
+    // 等待通道
+    if (uid != ac->cookieUid.toLongLong())
+    {
+        for (int i = 0; i < CHANNEL_COUNT; i++)
+            cr->msgWaits[i]++;
+    }
+
+    // 统计弹幕次数
+    int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
+    us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+    dailyDanmaku++;
+    if (dailySettings)
+        dailySettings->setValue("danmaku", dailyDanmaku);
+
+    if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(msg))
+    {
+        danmaku.setNoReply();
+        danmaku.setAutoSend();
+        cr->noReplyMsgs.removeOne(msg);
+    }
+    else
+    {
+        minuteDanmuPopul++;
+    }
+
+    // 判断对面直播间
+    bool opposite = pking &&
+            ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
+             || (!pkRoomId.isEmpty() &&
+                 danmaku.getAnchorRoomid() == pkRoomId));
+    danmaku.setOpposite(opposite);
+
+    appendNewLiveDanmaku(danmaku);
+
+    // 弹幕总数
+    emit signalReceiveDanmakuTotalCountChanged(++(cr->liveTotalDanmaku));
+
+    // 新人发言
+    if (danmuCount == 1)
+    {
+        dailyNewbieMsg++;
+        if (dailySettings)
+            dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+    }
+
+    // 新人小号禁言
+    emit signalTryBlockDanmaku(danmaku);
+    triggerCmdEvent("DANMU_MSG", danmaku);
+}
+
+void LiveRoomService::receiveGift(LiveDanmaku &danmaku)
+{
+    qint64 uid = danmaku.getUid();
+
+    danmaku.setFirst(mergeGiftCombo(danmaku) ? 0 : 1);// 如果有合并，则合并到之前的弹幕上面
+    if (!danmaku.isGiftMerged())
+    {
+        appendNewLiveDanmaku(danmaku);
+    }
+
+    emit signalNewGiftReceived(danmaku);
+
+    // 都送礼了，总该不是机器人了吧
+    markNotRobot(uid);
+
+    triggerCmdEvent("SEND_GIFT", danmaku);
+}
+
+void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
+{
+    qint64 uid = danmaku.getUid();
+
+    // [%come_time% > %timestamp%-3600]*%ai_name%，你回来了~ // 一小时内
+    // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
+    int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
+    danmaku.setNumber(userCome);
+    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+
+    appendNewLiveDanmaku(danmaku);
+
+    userCome++;
+    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
+    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+
+    dailyCome++;
+    if (dailySettings)
+        dailySettings->setValue("come", dailyCome);
+    if (danmaku.isOpposite())
+    {
+        // 加到自己这边来，免得下次误杀（即只提醒一次）
+        // 不过不能这么做，否则不会显示“对面”两个字了
+        // myAudience.insert(uid);
+    }
+    else if (cmAudience.contains(uid))
+    {
+        if (cmAudience.value(uid) > 0)
+        {
+            danmaku.setViewReturn(true);
+            danmaku.setPrevTimestamp(cmAudience[uid]);
+            cmAudience[uid] = 0; // 标记为串门回来
+            localNotify(danmaku.getNickname() + " 去对面串门回来");
+        }
+    }
+
+    emit signalSendUserWelcome(danmaku);
 }

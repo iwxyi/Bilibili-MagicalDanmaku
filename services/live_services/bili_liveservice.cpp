@@ -346,6 +346,11 @@ void BiliLiveService::getRobotInfo()
     });
 }
 
+void BiliLiveService::startConnect()
+{
+    getRoomInfo(true);
+}
+
 /**
  * 获取直播间信息，然后再开始连接
  * @param reconnect       是否是重新获取信息
@@ -353,6 +358,12 @@ void BiliLiveService::getRobotInfo()
  */
 void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 {
+    if (ac->roomId.isEmpty() || ac->roomId == "0")
+    {
+        qCritical() << "没有房间号，无法获取直播间信息";
+        return;
+    }
+
     gettingRoom = true;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
     get(url, [=](QJsonObject json) {
@@ -576,12 +587,12 @@ void BiliLiveService::getDanmuInfo()
         foreach (auto val, hostArray)
         {
             QJsonObject o = val.toObject();
-            hostList.append(HostInfo{
+            hostList.append(HostInfo(
                                 o.value("host").toString(),
                                 o.value("port").toInt(),
                                 o.value("wss_port").toInt(),
-                                o.value("ws_port").toInt(),
-                            });
+                                o.value("ws_port").toInt()
+                            ));
         }
         SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
 
@@ -599,6 +610,7 @@ void BiliLiveService::getDanmuInfo()
  */
 void BiliLiveService::startMsgLoop()
 {
+    qInfo() << "开始WS消息循环";
     // 开启保存房间弹幕
     if (us->saveDanmakuToFile && !danmuLogFile)
         startSaveDanmakuToFile();
@@ -611,7 +623,8 @@ void BiliLiveService::startMsgLoop()
     us->setValue("live/hostIndex", hostUseIndex);
     hostUseIndex++; // 准备用于尝试下一次的遍历，连接成功后-1
 
-    QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
+    QString host = hostServer.getLink();
+    qInfo() << "连接服务器：" << host;
     SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
 
     // 设置安全套接字连接模式（不知道有啥用）
@@ -803,6 +816,31 @@ void BiliLiveService::getRoomUserInfo()
         QString uface = info.value("uface").toString(); // 头像地址
         qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
     });
+}
+
+/**
+ * 从身份码获取到直播间信息
+ * 然后再从 roomId 来进行连接
+ */
+void BiliLiveService::startConnectIdentityCode(const QString &code)
+{
+    MyJson json;
+    json.insert("code", code); // 主播身份码
+    json.insert("app_id", (qint64)BILI_APP_ID);
+    /* post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
+            return ;
+        }
+
+        auto data = json.data();
+        auto anchor = data.o("anchor_info");
+        qint64 roomId = anchor.l("room_id");
+
+        // 通过房间号连接
+        emit signalRoomIdChanged(snum(roomId));
+    }); */
 }
 
 void BiliLiveService::getRoomCover(const QString &url)

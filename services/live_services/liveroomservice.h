@@ -136,6 +136,7 @@ signals:
     void signalUpdatePermission();
 
 public slots:
+    virtual void startConnect() {}
     /// 通过身份码连接房间
     virtual void startConnectIdentityCode(const QString &code) {}
 
@@ -253,6 +254,11 @@ public:
     virtual void myLiveSetCover(QString path = "") {}
     virtual void myLiveSetTags() {}
 
+    /// CMD事件信息
+    virtual void receiveDanmaku(LiveDanmaku& danmaku);
+    virtual void receiveGift(LiveDanmaku& danmaku);
+    virtual void receiveUserCome(LiveDanmaku& danmaku);
+
     /// 获取PK相关信息
     virtual void showPkMenu() {}
     virtual void showPkAssists() {}
@@ -291,7 +297,6 @@ public:
     /// 统计
     void appendLiveGift(const LiveDanmaku& danmaku);
     void appendLiveGuard(const LiveDanmaku& danmaku);
-    void userComeEvent(LiveDanmaku &danmaku);
 
     /// 录播
     virtual void getRoomLiveVideoUrl(StringFunc func) {}

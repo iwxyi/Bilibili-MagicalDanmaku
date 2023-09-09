@@ -54,7 +54,6 @@ MainWindow::MainWindow(QWidget *parent)
     initObject();
     initLiveService();
     initEvent();
-    initLiveOpenService();
     initDbService();
     initCodeRunner();
     initWebServer();
@@ -764,7 +763,7 @@ void MainWindow::initPath()
 
 void MainWindow::initLiveService()
 {
-    liveService = new BiliLiveService(this);
+    liveService = new BiliLiveOpenService(this);
     cr->setLiveService(liveService);
     liveService->setSqlService(&sqlService);
 
@@ -3559,14 +3558,6 @@ void MainWindow::on_testDanmakuButton_clicked()
                     }";
         sendTextToSockets("COMBO_SEND", ba);
     }
-    else if (text == "开启互动玩法")
-    {
-        liveOpenService->start();
-    }
-    else if (text == "关闭互动玩法")
-    {
-        liveOpenService->end();
-    }
     else if (text == "昵称简化测试")
     {
         auto query = sqlService.getQuery("select distinct uname from interact where msg_type = 1");
@@ -4659,12 +4650,15 @@ void MainWindow::slotSocketError(QAbstractSocket::SocketError error)
     showError("socket", liveService->liveSocket->errorString());
 }
 
+/**
+ * 从身份码获取到用户信息
+ */
 void MainWindow::startConnectIdentityCode()
 {
     MyJson json;
     json.insert("code", ac->identityCode); // 主播身份码
     json.insert("app_id", (qint64)BILI_APP_ID);
-    liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+    /* liveOpenService->post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
         if (json.code() != 0)
         {
             showError("解析身份码出错", snum(json.code()) + " " + json.msg());
@@ -4678,7 +4672,7 @@ void MainWindow::startConnectIdentityCode()
         // 通过房间号连接
         ui->roomIdEdit->setText(snum(roomId));
         on_roomIdEdit_editingFinished();
-    });
+    }); */
 }
 
 void MainWindow::startConnectRoom()
@@ -4691,7 +4685,7 @@ void MainWindow::startConnectRoom()
     if (!isPureRoomId)
     {
         QTimer::singleShot(10, this, [=]{
-            startConnectIdentityCode();
+            liveService->startConnectIdentityCode(ac->identityCode);
         });
         return ;
     }
@@ -4712,7 +4706,7 @@ void MainWindow::startConnectRoom()
 
     // 开始获取房间信息
     QTimer::singleShot(10, this, [=]{
-        liveService->getRoomInfo(true);
+        liveService->startConnect();
     });
 
     // 如果是管理员，可以获取禁言的用户
@@ -7103,14 +7097,14 @@ void MainWindow::releaseLiveData(bool prepare)
     }
 
     // 结束游戏
-    if (liveOpenService->isPlaying())
+    /* if (liveOpenService->isPlaying())
     {
         qInfo() << "退出前结束互动玩法...";
         QEventLoop loop;
         connect(liveOpenService, SIGNAL(signalEnd(bool)), &loop, SLOT(quit()));
         liveOpenService->end();
         loop.exec();
-    }
+    } */
 
     ui->actionShow_Live_Video->setEnabled(false);
     ui->actionShow_PK_Video->setEnabled(false);
@@ -8251,15 +8245,6 @@ void MainWindow::showNotify(QString s) const
     tip_box->createTipCard(new NotificationEntry("", "", s));
 }
 
-void MainWindow::initLiveOpenService()
-{
-    if (liveOpenService)
-        return ;
-
-    // 初始化
-    liveOpenService = new BiliLiveOpenService(this);
-}
-
 void MainWindow::initDbService()
 {
     // TODO: 可更换路径
@@ -8653,10 +8638,10 @@ void MainWindow::slotStartWork()
     pullRoomShieldKeyword();
 
     // 开始工作
-    if (ui->liveOpenCheck->isChecked())
-    {
-        liveOpenService->start();
-    }
+//    if (ui->liveOpenCheck->isChecked())
+//    {
+//        liveOpenService->start();
+//    }
 }
 
 void MainWindow::on_autoSwitchMedalCheck_clicked()
@@ -10482,16 +10467,16 @@ void MainWindow::on_actionShow_Gift_List_triggered()
 void MainWindow::on_liveOpenCheck_clicked()
 {
     us->set("live-open/enabled", ui->liveOpenCheck->isChecked());
-    if (ui->liveOpenCheck->isChecked())
-    {
-        if (liveService->isLiving())
-            liveOpenService->start();
-    }
-    else
-    {
-        if (liveOpenService)
-            liveOpenService->endIfStarted();
-    }
+//    if (ui->liveOpenCheck->isChecked())
+//    {
+//        if (liveService->isLiving())
+//            liveOpenService->start();
+//    }
+//    else
+//    {
+//        if (liveOpenService)
+//            liveOpenService->endIfStarted();
+//    }
 }
 
 void MainWindow::on_identityCodeEdit_editingFinished()

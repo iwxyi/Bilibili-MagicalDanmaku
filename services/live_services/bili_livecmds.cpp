@@ -800,30 +800,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
             // 唔，好吧，啥都不用做
         }
 
-        // 判断对面直播间
-        bool opposite = pking &&
-                ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
-                 || (!pkRoomId.isEmpty() && medal.size() >= 4 &&
-                     snum(static_cast<qint64>(medal[3].toDouble())) == pkRoomId));
-
-        // !弹幕的时间戳是13位，其他的是10位！
-        qInfo() << s8("接收到弹幕：") << username << msg << QDateTime::fromMSecsSinceEpoch(timestamp);
-
-        // 统计弹幕次数
-        int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
-        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
-        dailyDanmaku++;
-        if (dailySettings)
-            dailySettings->setValue("danmaku", dailyDanmaku);
-
-        // 等待通道
-        if (uid != ac->cookieUid.toLongLong())
-        {
-            for (int i = 0; i < CHANNEL_COUNT; i++)
-                cr->msgWaits[i]++;
-        }
-
-        // 添加到列表
         QString cs = QString::number(textColor, 16);
         while (cs.size() < 6)
             cs = "0" + cs;
@@ -836,34 +812,8 @@ void BiliLiveService::handleMessage(QJsonObject json)
             danmaku.setMedal(snum(static_cast<qint64>(medal[3].toDouble())),
                     medal[1].toString(), medal_level, medal[2].toString());
         }
-        if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(msg))
-        {
-            danmaku.setNoReply();
-            danmaku.setAutoSend();
-            cr->noReplyMsgs.removeOne(msg);
-        }
-        else
-        {
-            minuteDanmuPopul++;
-        }
-        danmaku.setOpposite(opposite);
-        appendNewLiveDanmaku(danmaku);
 
-        // 弹幕总数
-        emit signalReceiveDanmakuTotalCountChanged(++(cr->liveTotalDanmaku));
-
-        // 新人发言
-        if (danmuCount == 1)
-        {
-            dailyNewbieMsg++;
-            if (dailySettings)
-                dailySettings->setValue("newbie_msg", dailyNewbieMsg);
-        }
-
-        // 新人小号禁言
-        emit signalTryBlockDanmaku(danmaku);
-
-        triggerCmdEvent("DANMU_MSG", danmaku.with(json));
+        receiveDanmaku(danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
     {
@@ -1058,15 +1008,10 @@ void BiliLiveService::handleMessage(QJsonObject json)
             }
         }
 
-        danmaku.setFirst(mergeGiftCombo(danmaku) ? 0 : 1);// 如果有合并，则合并到之前的弹幕上面
-        if (!danmaku.isGiftMerged())
-        {
-            appendNewLiveDanmaku(danmaku);
-        }
+        // 触发事件
+        receiveGift(danmaku.with(json));
 
-        danmaku.with(data);
-        emit signalNewGiftReceived(danmaku);
-
+        // 进行统计
         if (coinType == "silver")
         {
             qint64 userSilver = us->danmakuCounts->value("silver/" + snum(uid)).toLongLong();
@@ -1105,11 +1050,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
 //                }
             }
         }
-
-        // 都送礼了，总该不是机器人了吧
-        markNotRobot(uid);
-
-        triggerCmdEvent(cmd, danmaku);
     }
     else if (cmd == "COMBO_SEND") // 连击礼物
     {
@@ -1630,7 +1570,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
 
         if (msgType == 1) // 进入直播间
         {
-            userComeEvent(danmaku);
+            receiveUserCome(danmaku);
 
             triggerCmdEvent(cmd, danmaku.with(data));
         }
