@@ -78,7 +78,7 @@ void BiliLiveOpenService::sendHeartPacket(QWebSocket *socket)
                 heartTimer->stop();
             return ;
         }
-        qInfo() << "互动玩法：心跳发送成功";
+        // qInfo() << "互动玩法：心跳发送成功";
     });
 }
 
@@ -87,6 +87,12 @@ void BiliLiveOpenService::getDanmuInfo()
     startMsgLoop();
     updateExistGuards(0);
     updateOnlineGoldRank();
+}
+
+void BiliLiveOpenService::releaseLiveData(bool prepare)
+{
+    endIfStarted();
+    BiliLiveService::releaseLiveData(prepare);
 }
 
 void BiliLiveOpenService::apiStart()
@@ -104,6 +110,7 @@ void BiliLiveOpenService::apiStart()
         if (json.code() != 0)
         {
             qCritical() << "互动玩法开启出错：" << json.code() << json.msg();
+            showError("连接出错", snum(json.code()) + " " + json.msg());
             emit signalStart(false);
             return ;
         }
@@ -215,14 +222,20 @@ void BiliLiveOpenService::sendHeart()
                 heartTimer->stop();
             return ;
         }
-        qInfo() << "互动玩法：心跳发送成功";
+        // qInfo() << "互动玩法：心跳发送成功";
     });
 }
 
 void BiliLiveOpenService::endIfStarted()
 {
     if (isPlaying())
+    {
+        qInfo() << "结束游戏：" << gameId;
+        QEventLoop loop;
+        connect(this, SIGNAL(signalEnd(bool)), &loop, SLOT(quit()));
         apiEnd();
+        loop.exec();
+    }
 }
 
 void BiliLiveOpenService::connectWS(const QString &url, const QByteArray &authBody)

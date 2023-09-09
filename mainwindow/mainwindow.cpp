@@ -2311,6 +2311,8 @@ void MainWindow::switchPageAnimation(int page)
 
 MainWindow::~MainWindow()
 {
+    liveService->releaseLiveData(false);
+
     // 保存配置
     if (liveService->danmuLogFile)
     {
@@ -7009,6 +7011,7 @@ void MainWindow::appendFileLine(QString filePath, QString format, LiveDanmaku da
 void MainWindow::releaseLiveData(bool prepare)
 {
     qInfo() << "释放直播数据" << prepare;
+    liveService->releaseLiveData(prepare);
     if (!prepare) // 切换房间或者断开连接
     {
         ui->guardCountLabel->setText("0");

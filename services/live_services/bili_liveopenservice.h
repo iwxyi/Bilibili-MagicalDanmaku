@@ -29,6 +29,7 @@ public:
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
     void sendHeartPacket(QWebSocket *socket) override;
     void getDanmuInfo() override;
+    void releaseLiveData(bool prepare) override;
 
 signals:
     void signalStart(bool sucess);
@@ -43,7 +44,7 @@ public slots:
 
     void connectWS(const QString& url, const QByteArray &authBody);
     void sendWSHeart();
-    virtual bool handleUncompMessage(QString cmd, MyJson json);
+    virtual bool handleUncompMessage(QString cmd, MyJson json) override;
 
 public:
     void post(QString url, MyJson json, NetJsonFunc func);

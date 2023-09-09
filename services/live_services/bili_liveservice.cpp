@@ -51,6 +51,7 @@ void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
+    LiveRoomService::releaseLiveData(prepare);
 }
 
 void BiliLiveService::initWS()
@@ -77,17 +78,23 @@ void BiliLiveService::initWS()
         if (isLiving())
         {
             qWarning() << "正在直播的时候突然断开，" << (reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+        }
+        else
+        {
+            qInfo() << "WS已断开";
+        }
+
+        if (isLiving() || !us->timerConnectServer)
+        {
             localNotify("[连接断开，重连...]");
             ac->liveStatus = false;
             // 尝试5秒钟后重连
-            // TODO: 每次重连间隔翻倍
             connectServerTimer->setInterval(reconnectWSDuration);
             reconnectWSDuration *= 1.2;
             if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
                 reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }
 
-        SOCKET_DEB << "disconnected";
         emit signalStatusChanged("WS状态：未连接");
         emit signalLiveStatusChanged("");
 
