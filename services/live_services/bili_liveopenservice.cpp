@@ -5,10 +5,7 @@
 
 BiliLiveOpenService::BiliLiveOpenService(QObject *parent) : BiliLiveService(parent)
 {
-    heartTimer = new QTimer(this);
     heartTimer->setInterval(20000);
-    heartTimer->setSingleShot(false);
-    connect(heartTimer, SIGNAL(timeout()), this, SLOT(sendHeart()));
 }
 
 qint64 BiliLiveOpenService::getAppId() const
@@ -200,29 +197,6 @@ void BiliLiveOpenService::apiEnd()
         heartTimer->stop();
         qInfo() << "关闭互动玩法";
         emit signalEnd(true);
-    });
-}
-
-void BiliLiveOpenService::sendHeart()
-{
-    if (gameId.isEmpty())
-    {
-        qWarning() << "未开启互动玩法，无法发送心跳";
-        heartTimer->stop();
-        return ;
-    }
-
-    MyJson json;
-    json.insert("game_id", gameId);
-    post(BILI_API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
-        if (json.code() != 0)
-        {
-            qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
-            if (json.code() == 7003) // 心跳过期或者gameId出错，都没必要继续了
-                heartTimer->stop();
-            return ;
-        }
-        // qInfo() << "互动玩法：心跳发送成功";
     });
 }
 

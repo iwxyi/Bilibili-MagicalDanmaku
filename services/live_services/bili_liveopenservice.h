@@ -39,7 +39,6 @@ signals:
 public slots:
     void apiStart();
     void apiEnd();
-    void sendHeart();
     void endIfStarted();
 
     void connectWS(const QString& url, const QByteArray &authBody);
@@ -52,7 +51,6 @@ public:
 
 private:
     QString gameId;
-    QTimer* heartTimer = nullptr;
     QByteArray authBody;
 };
 
