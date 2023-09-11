@@ -676,7 +676,10 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
 
     // 统计弹幕次数
     int danmuCount = us->danmakuCounts->value("danmaku/"+snum(uid), 0).toInt()+1;
-    us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+    if (uid > 0)
+    {
+        us->danmakuCounts->setValue("danmaku/"+snum(uid), danmuCount);
+    }
     dailyDanmaku++;
     if (dailySettings)
         dailySettings->setValue("danmaku", dailyDanmaku);
@@ -743,13 +746,19 @@ void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
     // [%come_time%>0, %come_time%<%timestamp%-3600*24]*%ai_name%，你终于来喽！
     int userCome = us->danmakuCounts->value("come/" + snum(uid)).toInt();
     danmaku.setNumber(userCome);
-    danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+    if (uid > 0)
+    {
+        danmaku.setPrevTimestamp(us->danmakuCounts->value("comeTime/"+snum(uid), 0).toLongLong());
+    }
 
     appendNewLiveDanmaku(danmaku);
 
     userCome++;
-    us->danmakuCounts->setValue("come/"+snum(uid), userCome);
-    us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+    if (uid > 0)
+    {
+        us->danmakuCounts->setValue("come/"+snum(uid), userCome);
+        us->danmakuCounts->setValue("comeTime/"+snum(uid), danmaku.getTimeline().toSecsSinceEpoch());
+    }
 
     dailyCome++;
     if (dailySettings)
@@ -760,7 +769,7 @@ void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
         // 不过不能这么做，否则不会显示“对面”两个字了
         // myAudience.insert(uid);
     }
-    else if (cmAudience.contains(uid))
+    else if (uid > 0 && cmAudience.contains(uid))
     {
         if (cmAudience.value(uid) > 0)
         {

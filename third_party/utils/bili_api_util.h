@@ -103,6 +103,9 @@ public:
         return qUncompress(qByteArray);
     }
 
+    /**
+     * （用不了）只解压出8字节
+     */
     static QByteArray brotliDecode(const QByteArray& ba)
     {
         QByteArray output;
@@ -122,7 +125,7 @@ public:
 
         // Prepare output buffer
         uint8_t* outputBuffer = new uint8_t[4096];
-        size_t availableOutput = sizeof(outputBuffer);
+        size_t availableOutput = sizeof(outputBuffer); // 这是下一步的位置，每次遍历后会自动修改，直至0
         size_t totalOutput = 0;
 
         // Decompress input data
@@ -130,8 +133,13 @@ public:
         int index = 0;
         do
         {
-            qDebug() << index++ << availableInput << ba.size();
+            if (availableInput == 0)
+            {
+                break;
+            }
             result = BrotliDecoderDecompressStream(state, &availableInput, &inputBuffer, &availableOutput, &outputBuffer, &totalOutput);
+            qDebug() << "Brolit解压" << index++ << ":" << availableInput << "/" << ba.size();
+
             if (result == BROTLI_DECODER_RESULT_ERROR)
             {
                 qCritical() << "Brotli decoding error";
@@ -140,6 +148,7 @@ public:
 
             // Append decompressed data to output
             output.append(reinterpret_cast<const char*>(outputBuffer), totalOutput);
+            qDebug() << "解压结果 len:" << totalOutput << ", output:" << output;
             totalOutput = 0;
         } while (result != BROTLI_DECODER_RESULT_SUCCESS);
 
@@ -147,6 +156,75 @@ public:
         BrotliDecoderDestroyInstance(state);
 
         return output;
+    }
+
+    /**
+     * （用不了）直接报解压失败
+     */
+    static QByteArray brotliDecompress(const QByteArray& compressedData)
+    {
+        size_t compressedSize = compressedData.size();
+        const uint8_t* compressedBuffer = reinterpret_cast<const uint8_t*>(compressedData.constData());
+
+        size_t decompressedSize = 2 * compressedSize; // 估计解压后的大小
+        uint8_t* decompressedBuffer = new uint8_t[decompressedSize];
+
+        int result = BrotliDecoderDecompress(compressedSize, compressedBuffer, &decompressedSize, decompressedBuffer);
+        if (result != BROTLI_DECODER_RESULT_SUCCESS) {
+            qCritical() << "Brotli解压失败" << result;
+            delete[] decompressedBuffer;
+            return QByteArray(); // 解压失败
+        }
+
+        QByteArray decompressedData = QByteArray(reinterpret_cast<char*>(decompressedBuffer), decompressedSize);
+        return decompressedData;
+    }
+
+    /**
+     * 貌似能用的解压
+     */
+    static QByteArray decompressData(const char* inputData, size_t inputSize) {
+        const size_t outputBufferSize = 4096; // 设置输出缓冲区大小
+        QByteArray outputData; // 存储解压缩后的数据
+
+        BrotliDecoderState* brotliState = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
+        if (!brotliState) {
+            // 创建Brotli解压缩实例失败
+            return outputData;
+        }
+
+        // 解压缩循环
+        size_t availableInput = inputSize;
+        const uint8_t* nextInput = reinterpret_cast<const uint8_t*>(inputData);
+        int index = 0;
+        do {
+            // qDebug() << "Brotli解压遍历：" << index++ << brotliState << availableInput << nextInput;
+            if (availableInput <= 1)
+                break;
+
+            uint8_t outputBuffer[outputBufferSize];
+            size_t availableOutput = outputBufferSize;
+            uint8_t* nextOutput = outputBuffer;
+
+            BrotliDecoderResult result = BrotliDecoderDecompressStream(
+                brotliState, &availableInput, &nextInput,
+                &availableOutput, &nextOutput, nullptr
+            );
+
+            if (result == BROTLI_DECODER_RESULT_SUCCESS ||
+                result == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT) {
+                // 将解压缩的数据添加到输出数据中
+                outputData.append(reinterpret_cast<char*>(outputBuffer), outputBufferSize - availableOutput);
+            } else {
+                // 解压缩失败
+                qCritical() << "Brotli遍历解压失败" << result;
+                break;
+            }
+        } while (availableInput > 0);
+
+        BrotliDecoderDestroyInstance(brotliState);
+
+        return outputData;
     }
 };
 

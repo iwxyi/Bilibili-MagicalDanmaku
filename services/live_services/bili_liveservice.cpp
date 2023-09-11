@@ -65,7 +65,6 @@ void BiliLiveService::initWS()
         // 5秒内发送认证包
         // 这里延时是为了等机器人账号登录
         QTimer::singleShot((ac->cookieToken.isEmpty() || ac->buvid.isEmpty()) ? 3000 : 100, [=]{
-            qInfo() << "准备发送认证包：" << ac->roomId;
             sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
         });
 
@@ -608,6 +607,7 @@ void BiliLiveService::getDanmuInfo()
 
         QJsonObject data = json.value("data").toObject();
         ac->cookieToken = data.value("token").toString();
+        qInfo() << "Token:" << ac->cookieToken;
         QJsonArray hostArray = data.value("host_list").toArray();
         hostList.clear();
         foreach (auto val, hostArray)
@@ -670,7 +670,7 @@ void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString
 {
     QByteArray ba;
     // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 3, \"platform\": \"web\", \"type\": 2, \"key\": \""+token+"\"}");
+    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 3, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");
     // , \"buvid\":\"" + ac->buvid + "\"
     qInfo() << "认证包内容：" << QString(ba);
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
