@@ -92,7 +92,8 @@ INCLUDEPATH += \
     third_party/notification/ \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/ \
-    third_party/m3u8_downloader/
+    third_party/m3u8_downloader/ \
+    third_party/brotli/include/
 
 SOURCES += \
     mainwindow/run_cmd.cpp \
@@ -109,6 +110,37 @@ SOURCES += \
     order_player/importsongsdialog.cpp \
     services/voice_service/voiceservice.cpp \
     services/web_server/webserver.cpp \
+    third_party/brotli/common/constants.c \
+    third_party/brotli/common/context.c \
+    third_party/brotli/common/dictionary.c \
+    third_party/brotli/common/platform.c \
+    third_party/brotli/common/shared_dictionary.c \
+    third_party/brotli/common/transform.c \
+    third_party/brotli/dec/bit_reader.c \
+    third_party/brotli/dec/decode.c \
+    third_party/brotli/dec/huffman.c \
+    third_party/brotli/dec/state.c \
+    third_party/brotli/enc/backward_references.c \
+    third_party/brotli/enc/backward_references_hq.c \
+    third_party/brotli/enc/bit_cost.c \
+    third_party/brotli/enc/block_splitter.c \
+    third_party/brotli/enc/brotli_bit_stream.c \
+    third_party/brotli/enc/cluster.c \
+    third_party/brotli/enc/command.c \
+    third_party/brotli/enc/compound_dictionary.c \
+    third_party/brotli/enc/compress_fragment.c \
+    third_party/brotli/enc/compress_fragment_two_pass.c \
+    third_party/brotli/enc/dictionary_hash.c \
+    third_party/brotli/enc/encode.c \
+    third_party/brotli/enc/encoder_dict.c \
+    third_party/brotli/enc/entropy_encode.c \
+    third_party/brotli/enc/fast_log.c \
+    third_party/brotli/enc/histogram.c \
+    third_party/brotli/enc/literal_cost.c \
+    third_party/brotli/enc/memory.c \
+    third_party/brotli/enc/metablock.c \
+    third_party/brotli/enc/static_dict.c \
+    third_party/brotli/enc/utf8_util.c \
     third_party/color_octree/coloroctree.cpp \
     third_party/color_octree/coloroctreeutil.cpp \
     third_party/facile_menu/facilemenu.cpp \
@@ -209,6 +241,66 @@ HEADERS += \
     order_player/importsongsdialog.h \
     services/voice_service/voiceservice.h \
     services/web_server/webserver.h \
+    third_party/brotli/common/constants.h \
+    third_party/brotli/common/context.h \
+    third_party/brotli/common/dictionary.h \
+    third_party/brotli/common/platform.h \
+    third_party/brotli/common/shared_dictionary_internal.h \
+    third_party/brotli/common/transform.h \
+    third_party/brotli/common/version.h \
+    third_party/brotli/dec/bit_reader.h \
+    third_party/brotli/dec/huffman.h \
+    third_party/brotli/dec/prefix.h \
+    third_party/brotli/dec/state.h \
+    third_party/brotli/enc/backward_references.h \
+    third_party/brotli/enc/backward_references_hq.h \
+    third_party/brotli/enc/backward_references_inc.h \
+    third_party/brotli/enc/bit_cost.h \
+    third_party/brotli/enc/bit_cost_inc.h \
+    third_party/brotli/enc/block_encoder_inc.h \
+    third_party/brotli/enc/block_splitter.h \
+    third_party/brotli/enc/block_splitter_inc.h \
+    third_party/brotli/enc/brotli_bit_stream.h \
+    third_party/brotli/enc/cluster.h \
+    third_party/brotli/enc/cluster_inc.h \
+    third_party/brotli/enc/command.h \
+    third_party/brotli/enc/compound_dictionary.h \
+    third_party/brotli/enc/compress_fragment.h \
+    third_party/brotli/enc/compress_fragment_two_pass.h \
+    third_party/brotli/enc/dictionary_hash.h \
+    third_party/brotli/enc/encoder_dict.h \
+    third_party/brotli/enc/entropy_encode.h \
+    third_party/brotli/enc/entropy_encode_static.h \
+    third_party/brotli/enc/fast_log.h \
+    third_party/brotli/enc/find_match_length.h \
+    third_party/brotli/enc/hash.h \
+    third_party/brotli/enc/hash_composite_inc.h \
+    third_party/brotli/enc/hash_forgetful_chain_inc.h \
+    third_party/brotli/enc/hash_longest_match64_inc.h \
+    third_party/brotli/enc/hash_longest_match_inc.h \
+    third_party/brotli/enc/hash_longest_match_quickly_inc.h \
+    third_party/brotli/enc/hash_rolling_inc.h \
+    third_party/brotli/enc/hash_to_binary_tree_inc.h \
+    third_party/brotli/enc/histogram.h \
+    third_party/brotli/enc/histogram_inc.h \
+    third_party/brotli/enc/literal_cost.h \
+    third_party/brotli/enc/memory.h \
+    third_party/brotli/enc/metablock.h \
+    third_party/brotli/enc/metablock_inc.h \
+    third_party/brotli/enc/params.h \
+    third_party/brotli/enc/prefix.h \
+    third_party/brotli/enc/quality.h \
+    third_party/brotli/enc/ringbuffer.h \
+    third_party/brotli/enc/state.h \
+    third_party/brotli/enc/static_dict.h \
+    third_party/brotli/enc/static_dict_lut.h \
+    third_party/brotli/enc/utf8_util.h \
+    third_party/brotli/enc/write_bits.h \
+    third_party/brotli/include/brotli/decode.h \
+    third_party/brotli/include/brotli/encode.h \
+    third_party/brotli/include/brotli/port.h \
+    third_party/brotli/include/brotli/shared_dictionary.h \
+    third_party/brotli/include/brotli/types.h \
     third_party/calculator/Digit.h \
     third_party/calculator/calculator_util.h \
     third_party/calculator/func_define.h \

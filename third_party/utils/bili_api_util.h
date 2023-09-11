@@ -3,6 +3,8 @@
 
 #include <QByteArray>
 #include <zlib.h>
+#include <QDebug>
+#include "brotli/decode.h"
 
 enum Operation
 {
@@ -99,6 +101,52 @@ public:
         QByteArray qByteArray(pQtData, dataLen + 4);
         delete[] pQtData;
         return qUncompress(qByteArray);
+    }
+
+    static QByteArray brotliDecode(const QByteArray& ba)
+    {
+        QByteArray output;
+
+        // Create Brotli decoder state
+        BrotliDecoderState* state = BrotliDecoderCreateInstance(NULL, NULL, NULL);
+        if (!state)
+        {
+            qCritical() << "Failed to create Brotli decoder state";
+            return output;
+        }
+
+        // Prepare input buffer
+        const uint8_t* inputBuffer = reinterpret_cast<const uint8_t*>(ba.constData());
+        size_t availableInput = ba.size();
+        size_t totalInput = 0;
+
+        // Prepare output buffer
+        uint8_t* outputBuffer = new uint8_t[4096];
+        size_t availableOutput = sizeof(outputBuffer);
+        size_t totalOutput = 0;
+
+        // Decompress input data
+        BrotliDecoderResult result;
+        int index = 0;
+        do
+        {
+            qDebug() << index++ << availableInput << ba.size();
+            result = BrotliDecoderDecompressStream(state, &availableInput, &inputBuffer, &availableOutput, &outputBuffer, &totalOutput);
+            if (result == BROTLI_DECODER_RESULT_ERROR)
+            {
+                qCritical() << "Brotli decoding error";
+                break;
+            }
+
+            // Append decompressed data to output
+            output.append(reinterpret_cast<const char*>(outputBuffer), totalOutput);
+            totalOutput = 0;
+        } while (result != BROTLI_DECODER_RESULT_SUCCESS);
+
+        // Cleanup
+        BrotliDecoderDestroyInstance(state);
+
+        return output;
     }
 };
 

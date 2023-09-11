@@ -64,8 +64,8 @@ void BiliLiveService::initWS()
 
         // 5秒内发送认证包
         // 这里延时是为了等机器人账号登录
-        QTimer::singleShot(3000, [=]{
-            qInfo() << "准备发送认证包：" << ac->roomId << ac->cookieToken;
+        QTimer::singleShot((ac->cookieToken.isEmpty() || ac->buvid.isEmpty()) ? 3000 : 100, [=]{
+            qInfo() << "准备发送认证包：" << ac->roomId;
             sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
         });
 
@@ -204,6 +204,8 @@ void BiliLiveService::getCookieAccount()
         qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
         
         emit signalRobotAccountChanged();
+
+        getBuVID();
 
         if (!wbiMixinKey.isEmpty())
             getRobotInfo();
@@ -351,6 +353,22 @@ void BiliLiveService::getRobotInfo()
         ac->cookieULevel = data.o("user").i("user_level");
         if (us->adjustDanmakuLongest)
             adjustDanmakuLongest();
+    });
+}
+
+void BiliLiveService::getBuVID()
+{
+    get("https://api.bilibili.com/x/frontend/finger/spi", [=](const MyJson& json) {
+        /*{
+            "code": 0,
+            "data": {
+                "b_3": "DE04FB9D-9A3C-09E7-3B1E-A0FBF55CE62833464infoc",
+                "b_4": "8219B8B6-66F0-4831-90E5-D01DB16B356C33464-023091121-ee9bM9FACMa+pR2By/Ilvg=="
+            },
+            "message": "ok"
+        }*/
+        ac->buvid = json.data().s("b_3");
+        qInfo() << "BuVID:" << ac->buvid;
     });
 }
 
@@ -644,12 +662,17 @@ void BiliLiveService::startMsgLoop()
     liveSocket->open(host);
 }
 
+/**
+ * 发送认证包
+ *
+ */
 void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString token)
 {
     QByteArray ba;
     // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
     ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 3, \"platform\": \"web\", \"type\": 2, \"key\": \""+token+"\"}");
-    qInfo() << "发送认证信息：" << ba;
+    // , \"buvid\":\"" + ac->buvid + "\"
+    qInfo() << "认证包内容：" << QString(ba);
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);

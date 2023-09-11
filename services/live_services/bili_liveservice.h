@@ -27,6 +27,7 @@ public:
     void getNavInfo(NetVoidFunc func = nullptr);
     QString toWbiParam(QString params) const;
     void getRobotInfo() override;
+    void getBuVID();
     void startConnect() override;
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;

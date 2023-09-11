@@ -50,7 +50,10 @@ void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
         }
         else if (protover == 3) // brotli解压
         {
-
+            qDebug() << "协议3：" << body;
+            // QApplication::clipboard()->setText(body);
+            qDebug() << BiliApiUtil::brotliDecode(body);
+            // splitUncompressedBody(BiliApiUtil::brotliDecode(body));
         }
         else if (protover == 0)
         {
