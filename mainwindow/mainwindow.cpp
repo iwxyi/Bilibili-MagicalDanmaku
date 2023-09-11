@@ -763,7 +763,8 @@ void MainWindow::initPath()
 
 void MainWindow::initLiveService()
 {
-    liveService = new BiliLiveOpenService(this);
+    liveService = new BiliLiveService(this);
+    // liveService = new BiliLiveOpenService(this);
     cr->setLiveService(liveService);
     liveService->setSqlService(&sqlService);
 
@@ -8317,6 +8318,9 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
                             body);
 }
 
+/**
+ * [已废弃]没任何作用
+ */
 void MainWindow::on_actionMany_Robots_triggered()
 {
     if (!liveService->hostList.size()) // 未连接

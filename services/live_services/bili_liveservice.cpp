@@ -65,6 +65,7 @@ void BiliLiveService::initWS()
         // 5秒内发送认证包
         // 这里延时是为了等机器人账号登录
         QTimer::singleShot(3000, [=]{
+            qInfo() << "准备发送认证包：" << ac->roomId << ac->cookieToken;
             sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
         });
 
@@ -646,7 +647,8 @@ void BiliLiveService::startMsgLoop()
 void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString token)
 {
     QByteArray ba;
-    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
+    // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
+    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 3, \"platform\": \"web\", \"type\": 2, \"key\": \""+token+"\"}");
     qInfo() << "发送认证信息：" << ba;
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;

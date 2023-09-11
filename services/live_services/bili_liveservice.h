@@ -137,7 +137,6 @@ public:
 
 public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
-    void slotUncompressBytes(const QByteArray &body);
     void splitUncompressedBody(const QByteArray &unc);
     virtual bool handleUncompMessage(QString cmd, MyJson json);
     bool handlePK(QJsonObject json);

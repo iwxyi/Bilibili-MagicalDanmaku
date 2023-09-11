@@ -46,7 +46,11 @@ void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
 
         if (protover == 2) // 默认协议版本，zlib解压
         {
-            slotUncompressBytes(body);
+            splitUncompressedBody(BiliApiUtil::zlibToQtUncompr(body.data(), body.size()+1));
+        }
+        else if (protover == 3) // brotli解压
+        {
+
         }
         else if (protover == 0)
         {
@@ -88,11 +92,6 @@ void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
 //    delete[] body.data();
 //    delete[] message.data();
     SOCKET_DEB << "消息处理结束";
-}
-
-void BiliLiveService::slotUncompressBytes(const QByteArray &body)
-{
-    splitUncompressedBody(BiliApiUtil::zlibToQtUncompr(body.data(), body.size()+1));
 }
 
 void BiliLiveService::splitUncompressedBody(const QByteArray &unc)
