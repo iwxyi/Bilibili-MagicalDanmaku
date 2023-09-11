@@ -51,32 +51,34 @@ void BiliLiveOpenService::startConnect()
 
 void BiliLiveOpenService::sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token)
 {
-    qInfo() << "开平Socket::connected，发送认证" << authBody;
+    // qInfo() << "开平Socket::connected，发送认证" << authBody;
     QByteArray ba = BiliApiUtil::makePack(authBody, OP_AUTH);
     liveSocket->sendBinaryMessage(ba);
 }
 
 void BiliLiveOpenService::sendHeartPacket(QWebSocket *socket)
 {
-    if (gameId.isEmpty())
-    {
-        qWarning() << "未开启互动玩法，无法发送心跳";
-        BiliLiveService::sendHeartPacket(socket);
-        return ;
-    }
+    // 发送长连心跳（30秒一次）
+    socket->sendBinaryMessage(BiliApiUtil::makePack(authBody, OP_HEARTBEAT));
+    // qInfo() << "互动玩法：Proto心跳发送成功" << authBody;
+    return;
 
-    MyJson json;
-    json.insert("game_id", gameId);
-    post(BILI_API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
-        if (json.code() != 0)
-        {
-            qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
-            if (json.code() == 7003) // 心跳过期或者gameId出错，都没必要继续了
-                heartTimer->stop();
-            return ;
-        }
-        // qInfo() << "互动玩法：心跳发送成功";
-    });
+    if (!gameId.isEmpty())
+    {
+        // 保持项目心跳（20秒一次）
+        MyJson json;
+        json.insert("game_id", gameId);
+        post(BILI_API_DOMAIN + "/v2/app/heartbeat", json, [=](MyJson json){
+            if (json.code() != 0)
+            {
+                qCritical() << "互动玩法心跳出错:" << json.code() << json.msg() << gameId;
+                if (json.code() == 7003) // 心跳过期或者gameId出错，都没必要继续了
+                    heartTimer->stop();
+                return ;
+            }
+            // qInfo() << "互动玩法：心跳发送成功";
+        });
+    }
 }
 
 void BiliLiveOpenService::getDanmuInfo()
