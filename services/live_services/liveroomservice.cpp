@@ -517,6 +517,10 @@ QStringList LiveRoomService::splitLongDanmu(const QString& text, int maxOne) con
         prevPos = findPos;
         findPos = text.indexOf(re, prevPos, &match);
     }
+    if (prevPos >= 0 && prevPos < text.length() && findPos == -1)
+    {
+        sl.append(text.mid(prevPos, text.length() - prevPos));
+    }
 
     if (isOk)
     {
