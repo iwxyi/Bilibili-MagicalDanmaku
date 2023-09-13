@@ -2495,6 +2495,10 @@ void BiliLiveService::handleMessage(QJsonObject json)
         int count = data.i("click_count");
         emit signalLikeChanged(count);
     }
+    else if (cmd == "USER_TASK_PROGRESS_V2")
+    {
+
+    }
     else
     {
         qWarning() << "未处理的命令：" << cmd << json;

@@ -1,6 +1,12 @@
 ### v4.10.5 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.5)
 
+- 修复无法读取弹幕的问题
+- 添加盲盒礼物实际价值 `%discount_price%`
 - 新增自动回复可覆盖内置弹幕控制命令，不再重复执行
+- 新增AIChat()命令的回复也使用FILTER_AI_REPLY_MSG过滤器
+- 优化更快速度重连直播间
+- 优化多行代码中对英文双引号的处理
+- 修复带&符号无法发送的问题
 
 
 

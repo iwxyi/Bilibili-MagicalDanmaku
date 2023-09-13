@@ -583,8 +583,39 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 void BiliLiveService::getDanmuInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+ac->roomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
+    get(url, [=](QJsonObject json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取弹幕信息返回结果不为0：") << json.value("message").toString();
+            return ;
+        }
+
+        QJsonObject data = json.value("data").toObject();
+        ac->cookieToken = data.value("token").toString();
+        qInfo() << "Token:" << ac->cookieToken;
+        QJsonArray hostArray = data.value("host_list").toArray();
+        hostList.clear();
+        foreach (auto val, hostArray)
+        {
+            QJsonObject o = val.toObject();
+            hostList.append(HostInfo(
+                                o.value("host").toString(),
+                                o.value("port").toInt(),
+                                o.value("wss_port").toInt(),
+                                o.value("ws_port").toInt()
+                            ));
+        }
+        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
+
+        startMsgLoop();
+
+        updateExistGuards(0);
+        updateOnlineGoldRank();
+    });
+
+    /* QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
+    request->setHeader(QNetworkRequest::CookieHeader, ac->browserCookie);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray dataBa = reply->readAll();
         manager->deleteLater();
@@ -627,7 +658,7 @@ void BiliLiveService::getDanmuInfo()
         updateExistGuards(0);
         updateOnlineGoldRank();
     });
-    manager->get(*request);
+    manager->get(*request); */
     emit signalConnectionStateTextChanged("获取弹幕信息...");
 }
 
@@ -670,7 +701,7 @@ void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString
 {
     QByteArray ba;
     // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 3, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");
+    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");
     // , \"buvid\":\"" + ac->buvid + "\"
     qInfo() << "认证包内容：" << QString(ba);
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
@@ -685,6 +716,7 @@ void BiliLiveService::sendHeartPacket(QWebSocket* socket)
 {
     static QByteArray ba = BiliApiUtil::makePack(QByteArray("[object Object]"), OP_HEARTBEAT);
 //    SOCKET_DEB << "发送心跳包：" << ba;
+    qDebug() << "发送心跳包：" << ba;
     socket->sendBinaryMessage(ba);
 }
 
