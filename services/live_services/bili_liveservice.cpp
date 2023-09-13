@@ -612,53 +612,6 @@ void BiliLiveService::getDanmuInfo()
         updateExistGuards(0);
         updateOnlineGoldRank();
     });
-
-    /* QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    request->setHeader(QNetworkRequest::CookieHeader, ac->browserCookie);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取弹幕信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取弹幕信息返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-
-        QJsonObject data = json.value("data").toObject();
-        ac->cookieToken = data.value("token").toString();
-        qInfo() << "Token:" << ac->cookieToken;
-        QJsonArray hostArray = data.value("host_list").toArray();
-        hostList.clear();
-        foreach (auto val, hostArray)
-        {
-            QJsonObject o = val.toObject();
-            hostList.append(HostInfo(
-                                o.value("host").toString(),
-                                o.value("port").toInt(),
-                                o.value("wss_port").toInt(),
-                                o.value("ws_port").toInt()
-                            ));
-        }
-        SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
-
-        startMsgLoop();
-
-        updateExistGuards(0);
-        updateOnlineGoldRank();
-    });
-    manager->get(*request); */
     emit signalConnectionStateTextChanged("获取弹幕信息...");
 }
 
@@ -3090,29 +3043,12 @@ void BiliLiveService::connectPkSocket()
     if (pkRoomId.isEmpty())
         return ;
 
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
-    url += "?id="+pkRoomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取弹幕信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+pkRoomId+"&type=0";
+    get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("pk对面直播间返回结果不为0：") << json.value("message").toString();
-            return ;
+            return;
         }
 
         QJsonObject data = json.value("data").toObject();
@@ -3133,7 +3069,6 @@ void BiliLiveService::connectPkSocket()
         pkLiveSocket->setSslConfiguration(config);
         pkLiveSocket->open(host);
     });
-    manager->get(*request);
 }
 
 void BiliLiveService::getPkMatchInfo()
