@@ -769,6 +769,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QString roomId = caps.at(1);
             QString msg = caps.at(2);
             qInfo() << "执行命令：" << caps;
+            if (roomId == ac->roomId)
+                cr->addNoReplyDanmakuText(msg);
             liveService->sendRoomMsg(roomId, msg);
             return true;
         }
