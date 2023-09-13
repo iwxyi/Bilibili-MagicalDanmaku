@@ -9,6 +9,20 @@ struct HostInfo
     int port;
     int wss_port;
     int ws_port;
+    QString full;
+
+    HostInfo(QString host, int port, int wss_port, int ws_port)
+        : host(host), port(port), wss_port(wss_port), ws_port(ws_port)
+    {}
+
+    HostInfo(QString full) : full(full) {}
+
+    QString getLink() const
+    {
+        if (!full.isEmpty())
+            return full;
+        return QString("wss://%1:%2/sub").arg(host).arg(wss_port);
+    }
 };
 
 struct HeaderStruct

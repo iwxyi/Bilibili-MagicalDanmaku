@@ -3,6 +3,9 @@
 
 #include "liveroomservice.h"
 
+#define BILI_API_DOMAIN QString("https://live-open.biliapi.com")
+#define BILI_APP_ID 1659569945917
+
 class BiliLiveService : public LiveRoomService
 {
     Q_OBJECT
@@ -24,12 +27,15 @@ public:
     void getNavInfo(NetVoidFunc func = nullptr);
     QString toWbiParam(QString params) const;
     void getRobotInfo() override;
+    void getBuVID();
+    void startConnect() override;
     void getRoomInfo(bool reconnect, int reconnectCount = 0) override;
     void getDanmuInfo() override;
     void startMsgLoop() override;
     void sendVeriPacket(QWebSocket *liveSocket, QString roomId, QString token) override;
     void sendHeartPacket(QWebSocket *socket) override;
     void getRoomUserInfo() override;
+    void startConnectIdentityCode(const QString &code) override;
 
     /// 直播间接口
     void getRoomCover(const QString &url) override;
@@ -132,9 +138,8 @@ public:
 
 public slots:
     void slotBinaryMessageReceived(const QByteArray &message) override;
-    void slotUncompressBytes(const QByteArray &body);
     void splitUncompressedBody(const QByteArray &unc);
-    bool handleUncompMessage(QString cmd, MyJson json);
+    virtual bool handleUncompMessage(QString cmd, MyJson json);
     bool handlePK(QJsonObject json);
     void handleMessage(QJsonObject json);
 

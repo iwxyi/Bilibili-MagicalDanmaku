@@ -184,6 +184,7 @@
         <file alias="dynamic_config">documents/dynamic_config.json</file>
         <file alias="code_syntax_introduction">documents/code_syntax_introduction.txt</file>
         <file>resource.rc</file>
+        <file alias="kk">documents/kk.key</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>

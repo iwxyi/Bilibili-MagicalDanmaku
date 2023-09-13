@@ -51,6 +51,7 @@ void BiliLiveService::releaseLiveData(bool prepare)
 {
     liveTimestamp = QDateTime::currentMSecsSinceEpoch();
     xliveHeartBeatTimer->stop();
+    LiveRoomService::releaseLiveData(prepare);
 }
 
 void BiliLiveService::initWS()
@@ -63,7 +64,7 @@ void BiliLiveService::initWS()
 
         // 5秒内发送认证包
         // 这里延时是为了等机器人账号登录
-        QTimer::singleShot(3000, [=]{
+        QTimer::singleShot((ac->cookieToken.isEmpty() || ac->buvid.isEmpty()) ? 3000 : 100, [=]{
             sendVeriPacket(liveSocket, ac->roomId, ac->cookieToken);
         });
 
@@ -77,17 +78,23 @@ void BiliLiveService::initWS()
         if (isLiving())
         {
             qWarning() << "正在直播的时候突然断开，" << (reconnectWSDuration/1000) << "秒后重连..." << "    " << QDateTime::currentDateTime().toString("HH:mm:ss");
+        }
+        else
+        {
+            qInfo() << "WS已断开";
+        }
+
+        if (isLiving() || !us->timerConnectServer)
+        {
             localNotify("[连接断开，重连...]");
             ac->liveStatus = false;
             // 尝试5秒钟后重连
-            // TODO: 每次重连间隔翻倍
             connectServerTimer->setInterval(reconnectWSDuration);
             reconnectWSDuration *= 1.2;
             if (reconnectWSDuration > INTERVAL_RECONNECT_WS_MAX)
                 reconnectWSDuration = INTERVAL_RECONNECT_WS_MAX;
         }
 
-        SOCKET_DEB << "disconnected";
         emit signalStatusChanged("WS状态：未连接");
         emit signalLiveStatusChanged("");
 
@@ -196,6 +203,8 @@ void BiliLiveService::getCookieAccount()
         qInfo() << "当前账号：" << ac->cookieUid << ac->cookieUname;
         
         emit signalRobotAccountChanged();
+
+        getBuVID();
 
         if (!wbiMixinKey.isEmpty())
             getRobotInfo();
@@ -346,6 +355,27 @@ void BiliLiveService::getRobotInfo()
     });
 }
 
+void BiliLiveService::getBuVID()
+{
+    get("https://api.bilibili.com/x/frontend/finger/spi", [=](const MyJson& json) {
+        /*{
+            "code": 0,
+            "data": {
+                "b_3": "DE04FB9D-9A3C-09E7-3B1E-A0FBF55CE62833464infoc",
+                "b_4": "8219B8B6-66F0-4831-90E5-D01DB16B356C33464-023091121-ee9bM9FACMa+pR2By/Ilvg=="
+            },
+            "message": "ok"
+        }*/
+        ac->buvid = json.data().s("b_3");
+        qInfo() << "BuVID:" << ac->buvid;
+    });
+}
+
+void BiliLiveService::startConnect()
+{
+    getRoomInfo(true);
+}
+
 /**
  * 获取直播间信息，然后再开始连接
  * @param reconnect       是否是重新获取信息
@@ -353,6 +383,12 @@ void BiliLiveService::getRobotInfo()
  */
 void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 {
+    if (ac->roomId.isEmpty() || ac->roomId == "0")
+    {
+        qCritical() << "没有房间号，无法获取直播间信息";
+        return;
+    }
+
     gettingRoom = true;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
     get(url, [=](QJsonObject json) {
@@ -547,22 +583,7 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
 void BiliLiveService::getDanmuInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+ac->roomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取弹幕信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
+    get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("获取弹幕信息返回结果不为0：") << json.value("message").toString();
@@ -571,17 +592,18 @@ void BiliLiveService::getDanmuInfo()
 
         QJsonObject data = json.value("data").toObject();
         ac->cookieToken = data.value("token").toString();
+        qInfo() << "Token:" << ac->cookieToken;
         QJsonArray hostArray = data.value("host_list").toArray();
         hostList.clear();
         foreach (auto val, hostArray)
         {
             QJsonObject o = val.toObject();
-            hostList.append(HostInfo{
+            hostList.append(HostInfo(
                                 o.value("host").toString(),
                                 o.value("port").toInt(),
                                 o.value("wss_port").toInt(),
-                                o.value("ws_port").toInt(),
-                            });
+                                o.value("ws_port").toInt()
+                            ));
         }
         SOCKET_DEB << s8("getDanmuInfo: host数量=") << hostList.size() << "  token=" << ac->cookieToken;
 
@@ -590,7 +612,6 @@ void BiliLiveService::getDanmuInfo()
         updateExistGuards(0);
         updateOnlineGoldRank();
     });
-    manager->get(*request);
     emit signalConnectionStateTextChanged("获取弹幕信息...");
 }
 
@@ -599,6 +620,7 @@ void BiliLiveService::getDanmuInfo()
  */
 void BiliLiveService::startMsgLoop()
 {
+    qInfo() << "开始WS消息循环";
     // 开启保存房间弹幕
     if (us->saveDanmakuToFile && !danmuLogFile)
         startSaveDanmakuToFile();
@@ -611,7 +633,8 @@ void BiliLiveService::startMsgLoop()
     us->setValue("live/hostIndex", hostUseIndex);
     hostUseIndex++; // 准备用于尝试下一次的遍历，连接成功后-1
 
-    QString host = QString("wss://%1:%2/sub").arg(hostServer.host).arg(hostServer.wss_port);
+    QString host = hostServer.getLink();
+    qInfo() << "连接服务器：" << host;
     SOCKET_DEB << "hostServer:" << host << "   hostIndex:" << (hostUseIndex-1);
 
     // 设置安全套接字连接模式（不知道有啥用）
@@ -623,11 +646,16 @@ void BiliLiveService::startMsgLoop()
     liveSocket->open(host);
 }
 
+/**
+ * 发送认证包
+ *
+ */
 void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString token)
 {
     QByteArray ba;
-    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
-    qInfo() << "发送认证信息：" << ba;
+    // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
+    ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");
+    qInfo() << "认证包内容：" << QString(ba);
     ba = BiliApiUtil::makePack(ba, OP_AUTH);
     SOCKET_DEB << "发送认证包：" << ba;
     socket->sendBinaryMessage(ba);
@@ -803,6 +831,31 @@ void BiliLiveService::getRoomUserInfo()
         QString uface = info.value("uface").toString(); // 头像地址
         qInfo() << "当前cookie用户：" << ac->cookieUid << ac->cookieUname;
     });
+}
+
+/**
+ * 从身份码获取到直播间信息
+ * 然后再从 roomId 来进行连接
+ */
+void BiliLiveService::startConnectIdentityCode(const QString &code)
+{
+    MyJson json;
+    json.insert("code", code); // 主播身份码
+    json.insert("app_id", (qint64)BILI_APP_ID);
+    /* post(BILI_API_DOMAIN + "/v2/app/start", json, [=](MyJson json){
+        if (json.code() != 0)
+        {
+            showError("解析身份码出错", snum(json.code()) + " " + json.msg());
+            return ;
+        }
+
+        auto data = json.data();
+        auto anchor = data.o("anchor_info");
+        qint64 roomId = anchor.l("room_id");
+
+        // 通过房间号连接
+        emit signalRoomIdChanged(snum(roomId));
+    }); */
 }
 
 void BiliLiveService::getRoomCover(const QString &url)
@@ -2990,29 +3043,12 @@ void BiliLiveService::connectPkSocket()
     if (pkRoomId.isEmpty())
         return ;
 
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo";
-    url += "?id="+pkRoomId+"&type=0";
-    QNetworkAccessManager* manager = new QNetworkAccessManager;
-    QNetworkRequest* request = new QNetworkRequest(url);
-    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
-        QByteArray dataBa = reply->readAll();
-        manager->deleteLater();
-        delete request;
-        reply->deleteLater();
-
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(dataBa, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qCritical() << "获取弹幕信息出错：" << error.errorString();
-            return ;
-        }
-        QJsonObject json = document.object();
-
+    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+pkRoomId+"&type=0";
+    get(url, [=](QJsonObject json) {
         if (json.value("code").toInt() != 0)
         {
             qCritical() << s8("pk对面直播间返回结果不为0：") << json.value("message").toString();
-            return ;
+            return;
         }
 
         QJsonObject data = json.value("data").toObject();
@@ -3033,7 +3069,6 @@ void BiliLiveService::connectPkSocket()
         pkLiveSocket->setSslConfiguration(config);
         pkLiveSocket->open(host);
     });
-    manager->get(*request);
 }
 
 void BiliLiveService::getPkMatchInfo()

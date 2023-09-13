@@ -2554,7 +2554,7 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 {
     if (hasGetUserHeader.contains(uid)) // 避免重复获取头像
         return ;
-    if (headerApiIsBanned) // 请求已经被拦截了
+    if (uid == 0 || headerApiIsBanned) // 请求已经被拦截了
         return ;
 
     hasGetUserHeader.insert(uid);

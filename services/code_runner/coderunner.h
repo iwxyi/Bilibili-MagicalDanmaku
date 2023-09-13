@@ -164,8 +164,8 @@ public:
 
     // 弹幕记录
     const int debugLastCount = 20;
-    QStringList lastConditionDanmu;
-    QStringList lastCandidateDanmaku;
+    QStringList lastConditionDanmu;   // 替换变量后的代码
+    QStringList lastCandidateDanmaku; // 要执行的代码
     int robotTotalSendMsg = 0; // 机器人发送的弹幕数量
     int liveTotalDanmaku = 0; // 本场直播的弹幕数量
 
