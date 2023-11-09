@@ -1219,7 +1219,7 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(ac->liveStatus);
     else if (key == "%room_id%")
         return ac->roomId;
-    else if (key == "%room_name%")
+    else if (key == "%room_name%" || key == "%room_title%")
         return ac->roomTitle;
     else if (key == "%up_name%" || key == "%up_uname%")
         return ac->upName;
@@ -1237,6 +1237,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return ac->parentAreaId;
     else if (key == "%parent_area_name%")
         return ac->parentAreaName;
+    else if (key == "%live_start_timestamp%")
+        return snum(ac->liveStartTime);
+    else if (key == "%live_duration_second%")
+        return snum(QDateTime::currentSecsSinceEpoch() - ac->liveStartTime);
 
     // 是主播
     else if (key == "%is_up%")
