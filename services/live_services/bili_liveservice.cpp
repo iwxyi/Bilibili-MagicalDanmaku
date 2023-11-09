@@ -652,6 +652,11 @@ void BiliLiveService::startMsgLoop()
  */
 void BiliLiveService::sendVeriPacket(QWebSocket *socket, QString roomId, QString token)
 {
+    if (ac->cookieUid.toLongLong() == 0)
+    {
+        showError("WebSocket认证", "当前账号未登录，获取弹幕受限");
+        localNotify("当前账号未登录，获取弹幕受限");
+    }
     QByteArray ba;
     // ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"clientver\": \"1.14.3\", \"type\": 2, \"key\": \""+token+"\"}");
     ba.append("{\"uid\": " + snum(ac->cookieUid.toLongLong()) +", \"roomid\": "+roomId+", \"protover\": 2, \"platform\": \"web\", \"type\": 2, \"key\": \""+ac->cookieToken+"\", \"buvid\":\"" + ac->buvid + "\"}");

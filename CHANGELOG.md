@@ -1,4 +1,13 @@
-### v4.10.5 [优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.5)
+### v4.10.6 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6)
+
+- 新增在标题栏显示版本号
+- 新增未登录连接直播间时的受限提示
+
+
+
+
+
+### v4.10.5 [修复弹幕接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.5)
 
 - 修复无法读取弹幕的问题
 - 添加盲盒礼物实际价值 `%discount_price%`

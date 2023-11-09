@@ -599,6 +599,7 @@ void MainWindow::initObject()
         });
     }
     ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
+    this->setWindowTitle(ui->appNameLabel->text());
 
     // 编译时间
     QString dateTime = __DATE__;
