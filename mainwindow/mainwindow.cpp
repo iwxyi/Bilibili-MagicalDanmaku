@@ -5704,6 +5704,9 @@ void MainWindow::speakText(QString text)
 {
     // 处理特殊字符
     text.replace("_", " ");
+    text.replace("\\n", "\n");
+    text.replace("%m%", "\n");
+    text.replace("%n%", "\n");
 
     switch (voiceService->voicePlatform) {
     case VoiceLocal:
