@@ -192,7 +192,6 @@ void MainWindow::initView()
     ui->liveStatusButton->setRadius(rt->fluentRadius);
 
     // 隐藏用不到的工具
-    ui->closeTransMouseButton->hide();
     ui->pkMelonValButton->hide();
     ui->menubar->hide();
     ui->statusbar->hide();
@@ -1905,9 +1904,13 @@ void MainWindow::initDanmakuWindow()
     });
     connect(danmakuWindow, &LiveDanmakuWindow::signalTransMouse, this, [=](bool enabled){
         if (enabled)
-            ui->closeTransMouseButton->show();
+        {
+            ui->closeTransMouseButton->setText("关闭鼠标穿透");
+        }
         else
-            ui->closeTransMouseButton->hide();
+        {
+            ui->closeTransMouseButton->setText("开启鼠标穿透");
+        }
     });
     connect(danmakuWindow, &LiveDanmakuWindow::signalAddCloudShieldKeyword, this, &MainWindow::addCloudShieldKeyword);
     connect(danmakuWindow, SIGNAL(signalAppointAdmin(qint64)), liveService, SLOT(appointAdmin(qint64)));
@@ -9423,7 +9426,7 @@ void MainWindow::on_exportDailyButton_clicked()
 void MainWindow::on_closeTransMouseButton_clicked()
 {
     if (danmakuWindow)
-        danmakuWindow->closeTransMouse();
+        danmakuWindow->switchTransMouse();
 }
 
 void MainWindow::on_pkAutoMaxGoldCheck_clicked()

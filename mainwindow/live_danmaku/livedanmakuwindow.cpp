@@ -2437,9 +2437,9 @@ void LiveDanmakuWindow::releaseLiveData(bool prepare)
     blockedTexts.clear();
 }
 
-void LiveDanmakuWindow::closeTransMouse()
+void LiveDanmakuWindow::switchTransMouse()
 {
-    const bool trans = false;
+    bool trans = !us->value("livedanmakuwindow/transMouse", false).toBool();
     setAttribute(Qt::WA_TransparentForMouseEvents, trans);
     us->setValue("livedanmakuwindow/transMouse", trans);
     emit signalTransMouse(trans);

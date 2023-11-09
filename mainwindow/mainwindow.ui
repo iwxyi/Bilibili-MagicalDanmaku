@@ -3603,7 +3603,7 @@ QPushButton:pressed
 </string>
                </property>
                <property name="text">
-                <string>关闭鼠标穿透</string>
+                <string>开启鼠标穿透</string>
                </property>
               </widget>
              </item>

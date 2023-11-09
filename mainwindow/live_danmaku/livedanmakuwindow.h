@@ -140,7 +140,7 @@ public slots:
 
     void releaseLiveData(bool prepare = false);
 
-    void closeTransMouse();
+    void switchTransMouse();
     void restart();
 
     void addBlockText(QString text);
