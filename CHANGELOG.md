@@ -4,6 +4,7 @@
 - 新增未登录连接直播间时的受限提示
 - 新增变量：开播时间戳 `%live_start_timestamp%`
 - 新增变量：开播时长 `%live_duration_second%`
+- 新增默认的自定义变量配置：`%upname% = %up_uname%`
 - 优化鼠标穿透在设置中直接切换开关
 
 

@@ -5310,6 +5310,13 @@ void MainWindow::restoreCustomVariant(QString text)
 {
     us->customVariant.clear();
     QStringList sl = text.split("\n", QString::SkipEmptyParts);
+
+    // 设置默认值
+    if (sl.size() == 0)
+    {
+        sl.append("%upname% = %up_uname%");
+    }
+    
     bool settedUpname = true;
     foreach (QString s, sl)
     {
