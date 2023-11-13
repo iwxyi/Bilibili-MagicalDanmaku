@@ -46,6 +46,7 @@ public:
     bool autoDoSign = false;         // 每天自动签到
     bool autoJoinLOT = false;        // 自动参加天选
     bool calculateDailyData = false; // 统计每天数据
+    bool calculateCurrentLiveData = false; // 统计本场直播数据
     bool retryFailedDanmaku = true;  // 发送失败的弹幕自动重试
     bool remoteControl = true;       // 是否允许弹幕命令控制
     bool saveToSqlite = false;       // 保存弹幕数据库

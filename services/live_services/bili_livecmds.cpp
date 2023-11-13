@@ -190,6 +190,12 @@ bool BiliLiveService::handleUncompMessage(QString cmd, MyJson json)
             dailySettings->setValue("new_fans", dailyNewFans);
             dailySettings->setValue("total_fans", ac->currentFans);
         }
+        currentLiveNewFans += delta_fans;
+        if (currentLiveSettings)
+        {
+            currentLiveSettings->setValue("new_fans", currentLiveNewFans);
+            currentLiveSettings->setValue("total_fans", ac->currentFans);
+        }
         emit signalFansCountChanged(fans);
     }
     else if (cmd == "WIDGET_BANNER") // 无关的横幅广播
@@ -1020,6 +1026,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
             dailyGiftSilver += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_silver", dailyGiftSilver);
+            currentLiveGiftSilver += totalCoin;
+            if (currentLiveSettings)
+                currentLiveSettings->setValue("gift_silver", currentLiveGiftSilver);
         }
         if (coinType == "gold")
         {
@@ -1030,6 +1039,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
             dailyGiftGold += totalCoin;
             if (dailySettings)
                 dailySettings->setValue("gift_gold", dailyGiftGold);
+            currentLiveGiftGold += totalCoin;
+            if (currentLiveSettings)
+                currentLiveSettings->setValue("gift_gold", currentLiveGiftGold);
 
             // 正在PK，保存弹幕历史
             // 因为最后的大乱斗最佳助攻只提供名字，所以这里需要保存 uname->uid 的映射
@@ -1672,6 +1684,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
         dailyGuard += num;
         if (dailySettings)
             dailySettings->setValue("guard", dailyGuard);
+        currentLiveGuard += num;
+        if (currentLiveSettings)
+            currentLiveSettings->setValue("guard", currentLiveGuard);
 
         triggerCmdEvent(cmd, danmaku.with(data));
     }

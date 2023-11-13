@@ -41,6 +41,7 @@ void LiveStatisticService::startCalculateDailyData()
     dir.mkdir(rt->dataPath + "live_daily");
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd");
     dailySettings = new QSettings(rt->dataPath + "live_daily/" + ac->roomId + "_" + date + ".ini", QSettings::Format::IniFormat);
+    qInfo() << "保存每日直播统计：" << rt->dataPath + "live_daily/" + ac->roomId + "_" + date + ".ini";
 
     dailyCome = dailySettings->value("come", 0).toInt();
     dailyPeopleNum = dailySettings->value("people_num", 0).toInt();
@@ -74,6 +75,61 @@ void LiveStatisticService::saveCalculateDailyData()
         dailySettings->setValue("guard", dailyGuard);
         if (ac->currentGuards.size())
             dailySettings->setValue("guard_count", ac->currentGuards.size());
+    }
+}
+
+void LiveStatisticService::startCalculateCurrentLiveData()
+{
+    if (currentLiveSettings)
+    {
+        saveCalculateCurrentLiveData();
+        currentLiveSettings->deleteLater();
+    }
+
+    QDir dir;
+    dir.mkdir(rt->dataPath + "live_current");
+    currentLiveStartTimestamp = ac->liveStartTime;
+    if (currentLiveStartTimestamp == 0) // 未开播，就不进行保存了
+    {
+        qInfo() << "未开播，忽略本场直播数据";
+        return ;
+    }
+    QString time = QDateTime::fromSecsSinceEpoch(currentLiveStartTimestamp).toString("yyyy-MM-dd HH-mm-ss");
+    currentLiveSettings = new QSettings(rt->dataPath + "live_current/" + ac->roomId + "_" + time + ".ini", QSettings::Format::IniFormat);
+    qInfo() << "保存本场直播统计：" << rt->dataPath + "live_current/" + ac->roomId + "_" + time + ".ini";
+
+    currentLiveCome = currentLiveSettings->value("come", 0).toInt();
+    currentLivePeopleNum = currentLiveSettings->value("people_num", 0).toInt();
+    currentLiveDanmaku = currentLiveSettings->value("danmaku", 0).toInt();
+    currentLiveNewbieMsg = currentLiveSettings->value("newbie_msg", 0).toInt();
+    currentLiveNewFans = currentLiveSettings->value("new_fans", 0).toInt();
+    currentLiveTotalFans = currentLiveSettings->value("total_fans", 0).toInt();
+    currentLiveGiftSilver = currentLiveSettings->value("gift_silver", 0).toInt();
+    currentLiveGiftGold = currentLiveSettings->value("gift_gold", 0).toInt();
+    currentLiveGuard = currentLiveSettings->value("guard", 0).toInt();
+    currentLiveMaxPopul = currentLiveSettings->value("max_popularity", 0).toInt();
+    currentLiveAvePopul = 0;
+    if (ac->currentGuards.size())
+        currentLiveSettings->setValue("guard_count", ac->currentGuards.size());
+    else
+        updateExistGuards(0);
+}
+
+void LiveStatisticService::saveCalculateCurrentLiveData()
+{
+    if (currentLiveSettings)
+    {
+        currentLiveSettings->setValue("come", currentLiveCome);
+        currentLiveSettings->setValue("people_num", qMax(currentLiveSettings->value("people_num").toInt(), us->userComeTimes.size()));
+        currentLiveSettings->setValue("danmaku", currentLiveDanmaku);
+        currentLiveSettings->setValue("newbie_msg", currentLiveNewbieMsg);
+        currentLiveSettings->setValue("new_fans", currentLiveNewFans);
+        currentLiveSettings->setValue("total_fans", ac->currentFans);
+        currentLiveSettings->setValue("gift_silver", currentLiveGiftSilver);
+        currentLiveSettings->setValue("gift_gold", currentLiveGiftGold);
+        currentLiveSettings->setValue("guard", currentLiveGuard);
+        if (ac->currentGuards.size())
+            currentLiveSettings->setValue("guard_count", ac->currentGuards.size());
     }
 }
 
