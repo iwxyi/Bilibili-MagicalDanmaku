@@ -848,7 +848,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString text = cr->toMultiLine(caps.at(1));
             qInfo() << "执行命令：" << caps;
-            speakText(text);
+            voiceService->speakText(text);
             return true;
         }
 
@@ -879,7 +879,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             {
                 VoicePlatform temp = voiceService->voicePlatform;
                 voiceService->voicePlatform = VoiceMS;
-                initTTS();
+                voiceService->initTTS();
                 voiceService->voicePlatform = temp;
             }
             voiceService->msTTS->speakSSML(text);
@@ -892,7 +892,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             QStringList caps = match.capturedTexts();
             QString link = caps.at(1).trimmed();
             qInfo() << "执行命令：" << caps;
-            playNetAudio(link);
+            voiceService->playNetAudio(link);
             return true;
         }
     }

@@ -1608,35 +1608,26 @@ void MainWindow::readConfig()
     ui->dontSpeakOnPlayingSongCheck->setChecked(us->value("danmaku/dontSpeakOnPlayingSong", false).toBool());
     if (ui->sendWelcomeVoiceCheck->isChecked() || ui->sendGiftVoiceCheck->isChecked()
             || ui->sendAttentionVoiceCheck->isChecked() || ui->autoSpeekDanmakuCheck->isChecked())
-        initTTS();
+        voiceService->initTTS();
 
     voiceService->voicePlatform = static_cast<VoicePlatform>(us->value("voice/platform", 0).toInt());
-    if (voiceService->voicePlatform == VoiceLocal)
-    {
-        ui->voiceLocalRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("voice/localName").toString());
-    }
-    else if (voiceService->voicePlatform == VoiceXfy)
-    {
-        ui->voiceXfyRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("xfytts/name").toString());
-        ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
-        ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
-        ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
-    }
-    else if (voiceService->voicePlatform == VoiceMS)
-    {
-        ui->voiceConfigSettingsCard->hide();
-        ui->voiceMSRadio->setChecked(true);
-        ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
-        ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
-        voiceService->msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
-    }
-    else if (voiceService->voicePlatform == VoiceCustom)
-    {
-        ui->voiceCustomRadio->setChecked(true);
-        ui->voiceNameEdit->setText(us->value("voice/customName").toString());
-    }
+    ui->voiceLocalRadio->setChecked(true);
+    ui->voiceNameEdit->setText(us->value("voice/localName").toString());
+
+    ui->voiceXfyRadio->setChecked(true);
+    ui->voiceNameEdit->setText(us->value("xfytts/name").toString());
+    ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
+    ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
+    ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
+    
+    ui->voiceConfigSettingsCard->hide();
+    ui->voiceMSRadio->setChecked(true);
+    ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
+    ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
+    voiceService->msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
+
+    ui->voiceCustomRadio->setChecked(true);
+    ui->voiceNameEdit->setText(us->value("voice/customName").toString());
 
     ui->voicePitchSlider->setSliderPosition(us->value("voice/pitch", 50).toInt());
     ui->voiceSpeedSlider->setSliderPosition(us->value("voice/speed", 50).toInt());
@@ -1979,7 +1970,7 @@ void MainWindow::initEvent()
             QString content = danmaku.getText();
             if (ui->speakUsernameCheck->isChecked())
                 content = danmaku.getNickname() + "说：" + danmaku.getText();
-            speakText(content);
+            voiceService->speakText(content);
         }
     });
 }
@@ -1998,7 +1989,7 @@ void MainWindow::initCodeRunner()
         showError(title, info);
     });
     connect(cr, &CodeRunner::signalSpeakText, this, [=](const QString& text) {
-        speakText(text);
+        voiceService->speakText(text);
     });
 
     cr->execFuncCallback = [=](QString msg, LiveDanmaku &danmaku, CmdResponse &res, int &resVal) -> bool{
@@ -2017,6 +2008,9 @@ void MainWindow::initVoiceService()
 {
     voiceService = new VoiceService(this);
     cr->setVoiceService(voiceService);
+    connect(voiceService, &VoiceService::signalError, this, [=](QString title, QString msg) {
+        showError(title, msg);
+    });
 }
 
 void MainWindow::initChatService()
@@ -5645,126 +5639,6 @@ void MainWindow::judgeRobotAndMark(LiveDanmaku danmaku)
     });
 }
 
-void MainWindow::initTTS()
-{
-    switch (voiceService->voicePlatform) {
-    case VoiceLocal:
-#if defined(ENABLE_TEXTTOSPEECH)
-        if (!voiceService->tts)
-        {
-            qInfo() << "初始化TTS语音模块";
-            voiceService->tts = new QTextToSpeech(this);
-            voiceService->tts->setRate( (voiceService->voiceSpeed = us->value("voice/speed", 50).toInt() - 50) / 50.0 );
-            voiceService->tts->setPitch( (voiceService->voicePitch = us->value("voice/pitch", 50).toInt() - 50) / 50.0 );
-            voiceService->tts->setVolume( (voiceService->voiceVolume = us->value("voice/volume", 50).toInt()) / 100.0 );
-            connect(voiceService->tts, &QTextToSpeech::stateChanged, this, [=](QTextToSpeech::State state){
-                if (state == QTextToSpeech::Ready)
-                    speakTextQueueNext();
-            });
-        }
-#endif
-        break;
-    case VoiceXfy:
-        if (!voiceService->xfyTTS)
-        {
-            qInfo() << "初始化讯飞语音模块";
-            voiceService->xfyTTS = new XfyTTS(rt->dataPath,
-                                us->value("xfytts/appid").toString(),
-                                us->value("xfytts/apikey").toString(),
-                                us->value("xfytts/apisecret").toString(),
-                                this);
-            ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
-            ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
-            ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
-            voiceService->xfyTTS->setName( voiceService->voiceName = us->value("xfytts/name", "xiaoyan").toString() );
-            voiceService->xfyTTS->setPitch( voiceService->voicePitch = us->value("voice/pitch", 50).toInt() );
-            voiceService->xfyTTS->setSpeed( voiceService->voiceSpeed = us->value("voice/speed", 50).toInt() );
-            voiceService->xfyTTS->setVolume( voiceService->voiceSpeed = us->value("voice/speed", 50).toInt() );
-        }
-        break;
-    case VoiceMS:
-        if (!voiceService->msTTS)
-        {
-            qInfo() << "初始化微软语音模块";
-            voiceService->msTTS = new MicrosoftTTS(rt->dataPath,
-                                     us->value("mstts/areaCode").toString(),
-                                     us->value("mstts/subscriptionKey").toString(),
-                                     this);
-            connect(voiceService->msTTS, &MicrosoftTTS::signalError, this, [=](QString err) {
-                showError("微软语音", err);
-            });
-            ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
-            ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
-            voiceService->msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
-            // TODO: 设置音调等内容
-        }
-        break;
-    case VoiceCustom:
-        break;
-    }
-}
-
-void MainWindow::speakText(QString text)
-{
-    // 处理特殊字符
-    text.replace("_", " ");
-    text.replace("\\n", "\n");
-    text.replace("%m%", "\n");
-    text.replace("%n%", "\n");
-
-    switch (voiceService->voicePlatform) {
-    case VoiceLocal:
-#if defined(ENABLE_TEXTTOSPEECH)
-        if (!voiceService->tts)
-            initTTS();
-        else if (voiceService->tts->state() != QTextToSpeech::Ready)
-        {
-            voiceService->ttsQueue.append(text);
-            return ;
-        }
-        voiceService->tts->say(text);
-#endif
-        break;
-    case VoiceXfy:
-        if (!voiceService->xfyTTS)
-            initTTS();
-        voiceService->xfyTTS->speakText(text);
-        break;
-    case VoiceMS:
-    {
-        if (!voiceService->msTTS)
-            initTTS();
-
-        // 替换文本
-        if (!text.startsWith("<speak"))
-        {
-            QString rpl = voiceService->msTTSFormat;
-            text = rpl.replace("%text%", text);
-        }
-        voiceService->msTTS->speakSSML(text);
-    }
-        break;
-    case VoiceCustom:
-        if (voiceService->ttsDownloading || (voiceService->ttsPlayer && voiceService->ttsPlayer->state() == QMediaPlayer::State::PlayingState))
-        {
-            voiceService->ttsQueue.append(text);
-        }
-        else
-        {
-            voiceDownloadAndSpeak(text);
-        }
-        break;
-    }
-}
-
-void MainWindow::speakTextQueueNext()
-{
-    if (!voiceService->ttsQueue.size())
-        return ;
-    QString text = voiceService->ttsQueue.takeFirst();
-    speakText(text);
-}
-
 /**
  * 快速设置自定义语音的类型
  */
@@ -5796,101 +5670,6 @@ aue：3为mp3（必须）"
     }
     menu->addTitle("鼠标悬浮可查看参数");
     menu->exec();
-}
-
-
-/**
- * 针对返回是JSON/音频字节的类型
- * 自动判断
- */
-void MainWindow::voiceDownloadAndSpeak(QString text)
-{
-    QString url = ui->voiceCustomUrlEdit->text();
-    if (url.isEmpty())
-        return ;
-    url = url.replace("%1", text).replace("%text%", text);
-    url = url.replace("%url_text%", QString::fromUtf8(text.toUtf8().toPercentEncoding()));
-    playNetAudio(url);
-}
-
-void MainWindow::playNetAudio(QString url)
-{
-    qInfo() << "播放网络音频：" << url;
-    const QString filePath = rt->dataPath + "tts";
-    QDir dir(filePath);
-    dir.mkpath(filePath);
-
-    voiceService->ttsDownloading = true;
-    get(url, [=](QNetworkReply* reply1){
-        voiceService->ttsDownloading = false;
-        QByteArray fileData;
-
-        if (reply1->error() != QNetworkReply::NoError)
-        {
-            qWarning() << "获取网络音频错误：" << reply1->errorString();
-            showError("获取音频错误", reply1->errorString());
-            return ;
-        }
-
-        auto contentType = reply1->header(QNetworkRequest::ContentTypeHeader).toString();
-        if (contentType.contains("json"))
-        {
-            // https://ai.baidu.com/aidemo?type=tns&per=4119&spd=6&pit=5&vol=5&aue=3&tex=这是一个测试文本
-            QByteArray ba = reply1->readAll();
-            MyJson json(ba);
-            QString s = json.s("data");
-            if (s.startsWith("data:audio") && s.contains(","))
-            {
-                QStringList sl = s.split(",");
-                fileData = sl.at(1).toUtf8();
-                if (sl.at(0).contains("base64"))
-                    fileData = QByteArray::fromBase64(fileData);
-            }
-            else
-            {
-                qWarning() << "无法解析的语音返回：" << json;
-                showError("在线音频", json.errOrMsg());
-                return ;
-            }
-        }
-        else
-        {
-            // http://120.24.87.124/cgi-bin/ekho2.pl?cmd=SPEAK&voice=EkhoMandarin&speedDelta=0&pitchDelta=0&volumeDelta=0&text=这是一个测试文本
-            fileData = reply1->readAll();
-        }
-
-        if (fileData.isEmpty())
-        {
-            qWarning() << "网络音频为空";
-            return ;
-        }
-
-        // 保存文件
-        QString path = filePath + "/" + snum(QDateTime::currentMSecsSinceEpoch()) + ".mp3";
-        QFile file(path);
-        file.open(QFile::WriteOnly);
-        QDataStream stream(&file);
-        stream << fileData;
-        file.flush();
-        file.close();
-
-        // 播放文件
-        if (!voiceService->ttsPlayer)
-        {
-            voiceService->ttsPlayer = new QMediaPlayer(this);
-            connect(voiceService->ttsPlayer, &QMediaPlayer::stateChanged, this, [=](QMediaPlayer::State state){
-                if (state == QMediaPlayer::StoppedState)
-                {
-                    QFile file(path);
-                    file.remove();
-                    speakTextQueueNext();
-                }
-            });
-        }
-        voiceService->ttsPlayer->setMedia(QUrl::fromLocalFile(path));
-
-        voiceService->ttsPlayer->play();
-    });
 }
 
 void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
@@ -8480,7 +8259,7 @@ void MainWindow::on_sendWelcomeVoiceCheck_clicked()
     us->setValue("danmaku/sendWelcomeVoice", ui->sendWelcomeVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!voiceService->tts && ui->sendWelcomeVoiceCheck->isChecked())
-        initTTS();
+        voiceService->initTTS();
 #endif
 }
 
@@ -8494,7 +8273,7 @@ void MainWindow::on_sendGiftVoiceCheck_clicked()
     us->setValue("danmaku/sendGiftVoice", ui->sendGiftVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!voiceService->tts && ui->sendGiftVoiceCheck->isChecked())
-        initTTS();
+        voiceService->initTTS();
 #endif
 }
 
@@ -8508,7 +8287,7 @@ void MainWindow::on_sendAttentionVoiceCheck_clicked()
     us->setValue("danmaku/sendAttentionVoice", ui->sendAttentionVoiceCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!voiceService->tts && ui->sendAttentionVoiceCheck->isChecked())
-        initTTS();
+        voiceService->initTTS();
 #endif
 }
 
@@ -8581,7 +8360,7 @@ void MainWindow::on_autoSpeekDanmakuCheck_clicked()
     us->setValue("danmaku/autoSpeek", ui->autoSpeekDanmakuCheck->isChecked());
 #if defined(ENABLE_TEXTTOSPEECH)
     if (!voiceService->tts && ui->autoSpeekDanmakuCheck->isChecked())
-        initTTS();
+        voiceService->initTTS();
 #endif
 }
 
@@ -8989,7 +8768,7 @@ void MainWindow::on_voiceVolumeSlider_valueChanged(int value)
 
 void MainWindow::on_voicePreviewButton_clicked()
 {
-    speakText("这是一个语音合成示例");
+    voiceService->speakText("这是一个语音合成示例");
 }
 
 void MainWindow::on_voiceLocalRadio_clicked()
@@ -8998,7 +8777,7 @@ void MainWindow::on_voiceLocalRadio_clicked()
     QTimer::singleShot(100, [=]{
         if (!voiceService->tts)
         {
-            initTTS();
+            voiceService->initTTS();
         }
         else
         {
@@ -9015,7 +8794,7 @@ void MainWindow::on_voiceXfyRadio_clicked()
     QTimer::singleShot(100, [=]{
         if (!voiceService->xfyTTS)
         {
-            initTTS();
+            voiceService->initTTS();
         }
         else
         {
@@ -9032,7 +8811,7 @@ void MainWindow::on_voiceMSRadio_clicked()
     QTimer::singleShot(100, [=]{
         if (!voiceService->msTTS)
         {
-            initTTS();
+            voiceService->initTTS();
         }
         else
         {
@@ -9046,7 +8825,7 @@ void MainWindow::on_voiceMSRadio_clicked()
 void MainWindow::on_voiceCustomRadio_clicked()
 {
     QTimer::singleShot(100, [=]{
-        initTTS();
+        voiceService->initTTS();
     });
 }
 
