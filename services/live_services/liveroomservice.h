@@ -355,7 +355,7 @@ protected:
     QTimer* heartTimer;
     QTimer* connectServerTimer;
     int reconnectWSDuration = INTERVAL_RECONNECT_WS; // WS重连间隔，每次上播/下播重置
-    qint64 liveTimestamp = 0;
+    qint64 liveTimestamp = 0; // 开始工作的时间（开播/连接时已开播）
 
     // 状态变量
     bool gettingRoom = false;

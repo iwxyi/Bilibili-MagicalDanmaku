@@ -215,7 +215,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1846,7 +1846,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>925</width>
-             <height>1682</height>
+             <height>1697</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2307,7 +2307,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>1120</y>
+              <y>1140</y>
               <width>171</width>
               <height>231</height>
              </rect>
@@ -4408,7 +4408,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>700</y>
               <width>161</width>
-              <height>121</height>
+              <height>191</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -4497,7 +4497,7 @@ margin: 40px;</string>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
-                <widget class="QPushButton" name="pushButton">
+                <widget class="QPushButton" name="dailyStatisticButton">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -4537,6 +4537,119 @@ QPushButton:pressed
                </item>
                <item>
                 <widget class="QPushButton" name="exportDailyButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;导出当前房间的所有记录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string>导出</string>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
+               <item>
+                <widget class="CheckBox1" name="calculateCurrentLiveDataCheck">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>保存每天的直播信息（进来多少人、弹幕总数、送礼总数等）</string>
+                 </property>
+                 <property name="text">
+                  <string>本场数据统计</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="InteractiveButtonBase" name="calculateCurrentLiveDataButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;打开记录文件所在位置&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources/resource.qrc">
+                   <normaloff>:/icons/folder</normaloff>:/icons/folder</iconset>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_79">
+               <item>
+                <widget class="QPushButton" name="currentLiveStatisticButton">
+                 <property name="cursor">
+                  <cursorShape>PointingHandCursor</cursorShape>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 8px 2px 8px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+                 </property>
+                 <property name="text">
+                  <string>本场</string>
+                 </property>
+                 <property name="autoDefault">
+                  <bool>true</bool>
+                 </property>
+                 <property name="default">
+                  <bool>false</bool>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="exportCurrentLiveButton">
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -4835,7 +4948,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>830</y>
+              <y>880</y>
               <width>161</width>
               <height>121</height>
              </rect>
@@ -6448,7 +6561,7 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>980</y>
+              <y>1010</y>
               <width>161</width>
               <height>121</height>
              </rect>
@@ -10301,7 +10414,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>37</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

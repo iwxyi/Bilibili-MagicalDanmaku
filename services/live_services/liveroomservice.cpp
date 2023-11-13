@@ -50,12 +50,18 @@ void LiveRoomService::initTimeTasks()
             dailyAvePopul = int(sumPopul / countPopul);
             if (dailySettings)
                 dailySettings->setValue("average_popularity", dailyAvePopul);
+            currentLiveAvePopul = dailyAvePopul;
+            if (currentLiveSettings)
+                currentLiveSettings->setValue("average_popularity", currentLiveAvePopul);
         }
         if (dailyMaxPopul < ac->currentPopul)
         {
             dailyMaxPopul = ac->currentPopul;
             if (dailySettings)
                 dailySettings->setValue("max_popularity", dailyMaxPopul);
+            currentLiveMaxPopul = dailyMaxPopul;
+            if (currentLiveSettings)
+                currentLiveSettings->setValue("max_popularity", currentLiveMaxPopul);
         }
 
         // 弹幕人气
@@ -65,7 +71,6 @@ void LiveRoomService::initTimeTasks()
         if (danmuPopulQueue.size() > 5)
             danmuPopulValue -= danmuPopulQueue.takeFirst();
         emit signalDanmuPopularChanged("5分钟弹幕人气：" + snum(danmuPopulValue) + "，平均人气：" + snum(dailyAvePopul));
-
 
         triggerCmdEvent("DANMU_POPULARITY", LiveDanmaku(), false);
     });
@@ -687,6 +692,9 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
     dailyDanmaku++;
     if (dailySettings)
         dailySettings->setValue("danmaku", dailyDanmaku);
+    currentLiveDanmaku++;
+    if (currentLiveSettings)
+        currentLiveSettings->setValue("danmaku", currentLiveDanmaku);
 
     if (snum(uid) == ac->cookieUid && cr->noReplyMsgs.contains(msg))
     {
@@ -717,6 +725,9 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
         dailyNewbieMsg++;
         if (dailySettings)
             dailySettings->setValue("newbie_msg", dailyNewbieMsg);
+        currentLiveNewbieMsg++;
+        if (currentLiveSettings)
+            currentLiveSettings->setValue("newbie_msg", currentLiveNewbieMsg);
     }
 
     // 新人小号禁言
@@ -767,6 +778,9 @@ void LiveRoomService::receiveUserCome(LiveDanmaku &danmaku)
     dailyCome++;
     if (dailySettings)
         dailySettings->setValue("come", dailyCome);
+    currentLiveCome++;
+    if (currentLiveSettings)
+        currentLiveSettings->setValue("come", currentLiveCome);
     if (danmaku.isOpposite())
     {
         // 加到自己这边来，免得下次误杀（即只提醒一次）
