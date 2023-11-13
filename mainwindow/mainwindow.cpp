@@ -341,6 +341,8 @@ void MainWindow::initView()
     ui->saveDanmakuToFileButton->setRadius(rt->fluentRadius);
     ui->calculateDailyDataButton->setSquareSize();
     ui->calculateDailyDataButton->setRadius(rt->fluentRadius);
+    ui->calculateCurrentLiveDataButton->setSquareSize();
+    ui->calculateCurrentLiveDataButton->setRadius(rt->fluentRadius);
     ui->recordDataButton->setSquareSize();
     ui->recordDataButton->setRadius(rt->fluentRadius);
     ui->ffmpegButton->setSquareSize();
@@ -862,6 +864,8 @@ void MainWindow::initLiveService()
 
         if (liveService->dailySettings)
             liveService->dailySettings->setValue("guard_count", ac->currentGuards.size());
+        if (liveService->currentLiveSettings)
+            liveService->currentLiveSettings->setValue("guard_count", ac->currentGuards.size());
         liveService->updateGuarding = false;
         ui->guardCountLabel->setText(snum(ac->currentGuards.size()));
     });
@@ -1405,8 +1409,8 @@ void MainWindow::readConfig()
     // 每日数据
     us->calculateDailyData = us->value("live/calculateDaliyData", true).toBool();
     ui->calculateDailyDataCheck->setChecked(us->calculateDailyData);
-    if (us->calculateDailyData)
-        liveService->startCalculateDailyData();
+    us->calculateCurrentLiveData = us->value("live/calculateCurrentLiveData", true).toBool();
+    ui->calculateCurrentLiveDataCheck->setChecked(us->calculateCurrentLiveData);
 
     // PK串门提示
     liveService->pkChuanmenEnable = us->value("pk/chuanmen", false).toBool();
@@ -6408,10 +6412,12 @@ void MainWindow::on_calculateDailyDataCheck_clicked()
     us->calculateDailyData = ui->calculateDailyDataCheck->isChecked();
     us->setValue("live/calculateDaliyData", us->calculateDailyData);
     if (us->calculateDailyData)
+    {
         liveService->startCalculateDailyData();
+    }
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_dailyStatisticButton_clicked()
 {
     QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd\n");
     text += "\n进来人次：" + snum(liveService->dailyCome);
@@ -6424,6 +6430,34 @@ void MainWindow::on_pushButton_clicked()
     text += "\n上船次数：" + snum(liveService->dailyGuard);
     text += "\n最高人气：" + snum(liveService->dailyMaxPopul);
     text += "\n平均人气：" + snum(liveService->dailyAvePopul);
+
+    text += "\n\n累计粉丝：" + snum(ac->currentFans);
+    QMessageBox::information(this, "今日数据", text);
+}
+
+void MainWindow::on_calculateCurrentLiveDataCheck_clicked()
+{
+    us->calculateCurrentLiveData = ui->calculateCurrentLiveDataCheck->isChecked();
+    us->setValue("live/calculateDaliyData", us->calculateCurrentLiveData);
+    if (us->calculateCurrentLiveData)
+    {
+        liveService->startCalculateCurrentLiveData();
+    }
+}
+
+void MainWindow::on_currentLiveStatisticButton_clicked()
+{
+    QString text = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss\n");
+    text += "\n进来人次：" + snum(liveService->currentLiveCome);
+    text += "\n观众人数：" + snum(us->userComeTimes.count());
+    text += "\n弹幕数量：" + snum(liveService->currentLiveDanmaku);
+    text += "\n新人弹幕：" + snum(liveService->currentLiveNewbieMsg);
+    text += "\n新增关注：" + snum(liveService->currentLiveNewFans);
+    text += "\n银瓜子数：" + snum(liveService->currentLiveGiftSilver);
+    text += "\n金瓜子数：" + snum(liveService->currentLiveGiftGold);
+    text += "\n上船次数：" + snum(liveService->currentLiveGuard);
+    text += "\n最高人气：" + snum(liveService->currentLiveMaxPopul);
+    text += "\n平均人气：" + snum(liveService->currentLiveAvePopul);
 
     text += "\n\n累计粉丝：" + snum(ac->currentFans);
     QMessageBox::information(this, "今日数据", text);
@@ -8645,6 +8679,8 @@ void MainWindow::slotStartWork()
 
     // 本次直播数据
     liveService->liveAllGifts.clear();
+    if (us->calculateCurrentLiveData)
+        liveService->startCalculateCurrentLiveData();
 
     // 获取舰长
     liveService->updateExistGuards(0);
@@ -9415,6 +9451,53 @@ void MainWindow::on_exportDailyButton_clicked()
         QString day = files.at(i);
         day.replace(ac->roomId + "_", "").replace(".ini", "");
         stream << day << ","
+               << st.value("come", 0).toInt() << ","
+               << st.value("people_num", 0).toInt() << ","
+               << st.value("danmaku", 0).toInt() << ","
+               << st.value("newbie_msg", 0).toInt() << ","
+               << st.value("new_fans", 0).toInt() << ","
+               << st.value("total_fans", 0).toInt() << ","
+               << st.value("gift_gold", 0).toInt() << ","
+               << st.value("gift_silver", 0).toInt() << ","
+               << st.value("guard", 0).toInt() << ","
+               << st.value("guard_count", 0).toInt()  << ","
+               << st.value("average_popularity", 0).toInt() << ","
+               << st.value("max_popularity", 0).toInt()
+               << "\n";
+    }
+
+    file.close();
+}
+
+void MainWindow::on_exportCurrentLiveButton_clicked()
+{
+    if (ac->roomId.isEmpty())
+        return ;
+
+    QString oldPath = us->value("danmaku/exportPath", "").toString();
+    QString path = QFileDialog::getSaveFileName(this, "选择导出位置", oldPath, "Tables (*.csv *.txt)");
+    if (path.isEmpty())
+        return ;
+    us->setValue("danmaku/exportPath", path);
+    QFile file(path);
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+    stream.setGenerateByteOrderMark(true);
+    if (!liveService->recordFileCodec.isEmpty())
+        stream.setCodec(liveService->recordFileCodec.toUtf8());
+
+    // 拼接数据
+    QString dirPath = rt->dataPath + "live_current";
+    QDir dir(dirPath);
+    auto files = dir.entryList(QStringList{ac->roomId + "_*.ini"}, QDir::Files | QDir::NoDotAndDotDot, QDir::Name);
+    stream << QString("时间,进入人次,进入人数,弹幕数量,新人弹幕,新增关注,关注总数,总金瓜子,总银瓜子,上船人数,船员总数,平均人气,最高人气\n").toUtf8();
+    for (int i = 0; i < files.size(); i++)
+    {
+        QStringList sl;
+        QSettings st(dirPath + "/" + files.at(i), QSettings::Format::IniFormat);
+        QString time = files.at(i);
+        time.replace(ac->roomId + "_", "").replace(".ini", "");
+        stream << time << ","
                << st.value("come", 0).toInt() << ","
                << st.value("people_num", 0).toInt() << ","
                << st.value("danmaku", 0).toInt() << ","
@@ -10368,6 +10451,12 @@ void MainWindow::on_saveDanmakuToFileButton_clicked()
 void MainWindow::on_calculateDailyDataButton_clicked()
 {
     QDir dir(rt->dataPath + "live_daily");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainWindow::on_calculateCurrentLiveDataButton_clicked()
+{
+    QDir dir(rt->dataPath + "live_current");
     QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }
 

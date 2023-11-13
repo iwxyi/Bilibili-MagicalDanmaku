@@ -238,7 +238,11 @@ private slots:
 
     void on_calculateDailyDataCheck_clicked();
 
-    void on_pushButton_clicked();
+    void on_dailyStatisticButton_clicked();
+
+    void on_calculateCurrentLiveDataCheck_clicked();
+
+    void on_currentLiveStatisticButton_clicked();
 
     void on_removeDanmakuTipIntervalSpin_valueChanged(int arg1);
 
@@ -480,6 +484,8 @@ private slots:
 
     void on_exportDailyButton_clicked();
 
+    void on_exportCurrentLiveButton_clicked();
+
     void on_closeTransMouseButton_clicked();
 
     void on_pkAutoMaxGoldCheck_clicked();
@@ -643,6 +649,8 @@ private slots:
     void on_saveDanmakuToFileButton_clicked();
 
     void on_calculateDailyDataButton_clicked();
+
+    void on_calculateCurrentLiveDataButton_clicked();
 
     void on_syntacticSugarCheck_clicked();
 
