@@ -82,17 +82,6 @@ QT_END_NAMESPACE
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
-#define DEFAULT_MS_TTS_SSML_FORMAT "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\"\n\
-        xmlns:mstts=\"https://www.w3.org/2001/mstts\" xml:lang=\"zh-CN\">\n\
-     <voice name=\"zh-CN-XiaoxiaoNeural\">\n\
-        <mstts:express-as style=\"affectionate\" >\n\
-            <prosody rate=\"0%\" pitch=\"0%\">\n\
-                %text%\n\
-            </prosody>\n\
-        </mstts:express-as>\n\
-     </voice>\n\
-</speak>"
-
 class MainWindow;
 
 typedef void(MainWindow::*VoidFunc)();
@@ -801,11 +790,6 @@ private:
     void sendWelcome(LiveDanmaku danmaku);
     void sendAttentionThans(LiveDanmaku danmaku);
     void judgeRobotAndMark(LiveDanmaku danmaku);
-    void initTTS();
-    void speakText(QString text);
-    void speakTextQueueNext();
-    void voiceDownloadAndSpeak(QString text);
-    void playNetAudio(QString url);
     void showScreenDanmaku(const LiveDanmaku &danmaku);
 
     void restoreToutaGifts(QString text);
