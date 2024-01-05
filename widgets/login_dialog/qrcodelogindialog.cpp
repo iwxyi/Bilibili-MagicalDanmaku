@@ -28,12 +28,12 @@ QRCodeLoginDialog::~QRCodeLoginDialog()
 
 void QRCodeLoginDialog::getLoginUrl()
 {
-    get("https://passport.bilibili.com/qrcode/getLoginUrl", [=](MyJson json){
+    get("https://passport.bilibili.com/x/passport-login/web/qrcode/generate", [=](MyJson json){
         if (json.code())
             return error("code不为0：" + QString::number(json.code()));
         MyJson data = json.data();
         QString jsons(data, url);
-        this->jsons(data, oauthKey);
+        this->jsons(data, qrcode_key);
 
         // 生成QRCode
         QRcode* qrcode = QRcode_encodeString(url.toUtf8(), 2, QR_ECLEVEL_Q, QR_MODE_8, 1);
@@ -70,22 +70,14 @@ void QRCodeLoginDialog::getLoginUrl()
 
 void QRCodeLoginDialog::getLoginInfo()
 {
-    post("https://passport.bilibili.com/qrcode/getLoginInfo", QStringList{"oauthKey", oauthKey}, [=](QNetworkReply* reply){
+    get("https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key=" + qrcode_key, [=](QNetworkReply* reply){
         MyJson json(reply->readAll());
-        int jsonb(json, status);
-        QString jsons(json, message);
+        if (json.code())
+            return error("code不为0：" + QString::number(json.code()));
 
-        if (!status)
-        {
-            int jsoni(json, data);
-            if (data == -1)
-                ui->statusLabel->setText("秘钥错误");
-            else if (data == -4) // 秘钥正确但未扫描
-                ui->statusLabel->setText("等待扫描");
-            else if (data == -5) // 扫描成功但未确认
-                ui->statusLabel->setText("等待确认");
-        }
-        else // 成功
+        MyJson data = json.data();
+        int jsoni(data, code);
+        if (code == 0) // 成功
         {
             ui->statusLabel->setText("扫描成功，5秒钟后登录");
             QVariant variantCookies = reply->header(QNetworkRequest::SetCookieHeader);
@@ -102,6 +94,18 @@ void QRCodeLoginDialog::getLoginInfo()
                 emit logined(sl.join(";"));
                 this->close();
             });
+        }
+        else if(code == 86038) // 二维码已失效
+        {
+            ui->statusLabel->setText("二维码已失效");
+        }
+        else if(code == 86090) // 已扫描但未确认
+        {
+            ui->statusLabel->setText("等待确认");
+        }
+        else if(code == 86101) // 未扫描
+        {
+            ui->statusLabel->setText("等待扫描");
         }
     });
 }
