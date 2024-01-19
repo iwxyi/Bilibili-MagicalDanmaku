@@ -28,8 +28,8 @@ signals:
 
 private:
     Ui::QRCodeLoginDialog *ui;
-
-    QString oauthKey;
+    
+    QString qrcode_key;
     QTimer* queryTimer;
 };
 
