@@ -971,9 +971,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
             }
         }*/
         QJsonObject data = json.value("data").toObject();
-        int giftId = data.value("giftId").toInt();
+        int giftId = data.value("giftId").toInt(); // 盲盒是爆出来的ID
         int giftType = data.value("giftType").toInt(); // 不知道是啥，金瓜子1，银瓜子（小心心、辣条）5？
-        QString giftName = data.value("giftName").toString();
+        QString giftName = data.value("giftName").toString(); // 盲盒是爆出来的礼物名字
         QString username = data.value("uname").toString();
         qint64 uid = static_cast<qint64>(data.value("uid").toDouble());
         int num = data.value("num").toInt();

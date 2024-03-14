@@ -709,7 +709,8 @@ border-image: url(C:/Path/To/Image.png)
 | come_count       | 用户进入次数      | 长时间没来会被清空                                           |
 | come_time        | 用户上次进入时间  | 10位时间戳，第一次进来是0；自动清理一周没来的。如果是串门回来，则是刚跑到对面串门的时间 |
 | come_time_delta  | 进入时间差        | 当前时间 - 用户上次进入时间                                  |
-| gift_gold        | 礼物金瓜子        | 非送礼答谢则没有                                             |
+| gift_id          | 礼物ID            | 盲盒是爆出来的礼物                                           |
+| gift_gold        | 礼物金瓜子        | 非送礼答谢则没有，盲盒是原始价格                             |
 | gift_silver      | 礼物银瓜子        |                                                              |
 | gift_coin        | 礼物瓜子          | 不分金瓜子银瓜子                                             |
 | coin_gold        | 是金瓜子礼物      | 金瓜子是1，银瓜子是0                                         |

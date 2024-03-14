@@ -1,5 +1,6 @@
 ### v4.10.6 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6)
 
+- 修复无法扫码登录问题
 - 新增在标题栏显示版本号
 - 新增未登录连接直播间时的受限提示
 - 新增本场直播的数据统计与导出
