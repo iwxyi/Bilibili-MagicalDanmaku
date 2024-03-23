@@ -9106,7 +9106,7 @@ void MainWindow::on_startOnRebootCheck_clicked()
 
     QString appName = QApplication::applicationName();
     QString appPath = QDir::toNativeSeparators(QApplication::applicationFilePath());
-    QSettings *reg=new QSettings("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    QSettings *reg=new QSettings("HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
     QString val = reg->value(appName).toString();// 如果此键不存在，则返回的是空字符串
     if (enable)
         reg->setValue(appName, appPath);// 如果移除的话
