@@ -981,7 +981,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         timestamp = QDateTime::currentSecsSinceEpoch(); // *不管送出礼物的时间，只管机器人接收到的时间
         QString coinType = data.value("coin_type").toString();
         qint64 totalCoin = data.value("total_coin").toDouble();
-        qint64 discountPrice = data.value("discount_price").toDouble();
+        qint64 discountPrice = data.value("discount_price").toDouble(); // 盲盒实际爆出的单个礼物价值
 
         qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << discountPrice << coinType;
         QString localName = us->getLocalNickname(uid);

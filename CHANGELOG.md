@@ -1,3 +1,11 @@
+### v4.10.6.1 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6.1)
+
+- 新增礼物ID变量 `%gift_id`
+
+
+
+
+
 ### v4.10.6 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6)
 
 - 修复无法扫码登录问题
