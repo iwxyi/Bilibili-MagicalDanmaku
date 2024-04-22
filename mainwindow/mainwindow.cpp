@@ -1611,28 +1611,41 @@ void MainWindow::readConfig()
         voiceService->initTTS();
 
     voiceService->voicePlatform = static_cast<VoicePlatform>(us->value("voice/platform", 0).toInt());
-    ui->voiceLocalRadio->setChecked(true);
     ui->voiceNameEdit->setText(us->value("voice/localName").toString());
 
-    ui->voiceXfyRadio->setChecked(true);
     ui->voiceNameEdit->setText(us->value("xfytts/name").toString());
     ui->xfyAppIdEdit->setText(us->value("xfytts/appid").toString());
     ui->xfyApiKeyEdit->setText(us->value("xfytts/apikey").toString());
     ui->xfyApiSecretEdit->setText(us->value("xfytts/apisecret").toString());
     
     ui->voiceConfigSettingsCard->hide();
-    ui->voiceMSRadio->setChecked(true);
     ui->MSAreaCodeEdit->setText(us->value("mstts/areaCode").toString());
     ui->MSSubscriptionKeyEdit->setText(us->value("mstts/subscriptionKey").toString());
     voiceService->msTTSFormat = us->value("mstts/format", DEFAULT_MS_TTS_SSML_FORMAT).toString();
 
-    ui->voiceCustomRadio->setChecked(true);
     ui->voiceNameEdit->setText(us->value("voice/customName").toString());
 
     ui->voicePitchSlider->setSliderPosition(us->value("voice/pitch", 50).toInt());
     ui->voiceSpeedSlider->setSliderPosition(us->value("voice/speed", 50).toInt());
     ui->voiceVolumeSlider->setSliderPosition(us->value("voice/volume", 50).toInt());
     ui->voiceCustomUrlEdit->setText(us->value("voice/customUrl", "").toString());
+
+    switch (voiceService->voicePlatform) {
+    case VoiceLocal:
+#if defined(ENABLE_TEXTTOSPEECH)
+        ui->voiceLocalRadio->setChecked(true);
+#endif
+        break;
+    case VoiceXfy:
+        ui->voiceXfyRadio->setChecked(true);
+        break;
+    case VoiceCustom:
+        ui->voiceCustomRadio->setChecked(true);
+        break;
+    case VoiceMS:
+        ui->voiceMSRadio->setChecked(true);
+        break;
+    }
 
     // AI回复
     chatService->chatPlatform = static_cast<ChatPlatform>(us->value("chat/platform", 0).toInt());

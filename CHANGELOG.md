@@ -1,6 +1,8 @@
-### v4.10.6.1 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6.1)
+### v4.10.7 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.7)
 
 - 新增礼物ID变量 `%gift_id`
+- 修复弹幕头像的问题
+- 修复语音设置启动后会变回“其他”的问题
 
 
 
