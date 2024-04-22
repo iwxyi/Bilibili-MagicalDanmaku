@@ -2576,6 +2576,10 @@ QString BiliLiveService::getApiUrl(ApiType type, qint64 id)
             return WAIT_INIT;
         QString url = "https://api.bilibili.com/x/space/wbi/acc/info?" + toWbiParam("mid=" + snum(id) + "&platform=web&token=&web_location=1550101");
         MyJson json(NetUtil::getWebData(url));
+        if (json.code() != 0)
+        {
+            qWarning() << "获取头像失败：" << json.msg();
+        }
         return json.data().s("face");
     }
     return "";
@@ -4366,6 +4370,7 @@ void BiliLiveService::pullLiveDanmaku()
 {
     if (ac->roomId.isEmpty())
         return ;
+    qInfo() << "获取直播间历史弹幕";
     QString url = "https://api.live.bilibili.com/ajax/msg";
     QStringList param{"roomid", ac->roomId};
     connect(new NetUtil(url, param), &NetUtil::finished, this, [=](QString result){
@@ -4385,12 +4390,14 @@ void BiliLiveService::pullLiveDanmaku()
         qint64 removeTime = time.toMSecsSinceEpoch() - us->removeDanmakuInterval;
         for (int i = 0; i < danmakus.size(); i++)
         {
-            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(danmakus.at(i).toObject());
+            MyJson dmk = danmakus.at(i).toObject();
+            LiveDanmaku danmaku = LiveDanmaku::fromDanmakuJson(dmk);
             if (danmaku.getTimeline().toMSecsSinceEpoch() < removeTime)
                 continue;
             danmaku.transToDanmu();
             danmaku.setTime(time);
             danmaku.setNoReply();
+            danmaku.setFaceUrl(dmk.o("user").o("base").s("face"));
             appendNewLiveDanmaku(danmaku);
         }
         _loadingOldDanmakus = false;

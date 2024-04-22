@@ -818,6 +818,14 @@ void BiliLiveService::handleMessage(QJsonObject json)
                     medal[1].toString(), medal_level, medal[2].toString());
         }
 
+        if (info.at(0).toArray().size() >= 16) // 截止2024.04.20是18个，信息字段在下标15
+        {
+            MyJson detail = info.at(0).toArray().at(15).toObject();
+            MyJson user = detail.o("user");
+            MyJson base = user.o("base");
+            danmaku.setFaceUrl(base.s("face"));
+        }
+
         receiveDanmaku(danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -2646,6 +2654,13 @@ void BiliLiveService::handlePkMessage(QJsonObject json)
         }
         danmaku.setToView(toView);
         danmaku.setPkLink(true);
+        if (info.at(0).toArray().size() >= 16)
+        {
+            MyJson detail = info.at(0).toArray().at(15).toObject();
+            MyJson user = detail.o("user");
+            MyJson base = user.o("base");
+            danmaku.setFaceUrl(base.s("face"));
+        }
         appendNewLiveDanmaku(danmaku);
 
         triggerCmdEvent("PK_DANMU_MSG", danmaku.with(json));

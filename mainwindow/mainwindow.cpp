@@ -1923,7 +1923,7 @@ void MainWindow::initDanmakuWindow()
         danmakuWindow->setPkStatus(1, liveService->pkRoomId.toLongLong(), liveService->pkUid.toLongLong(), liveService->pkUname);
     }
 
-    // 添加弹幕
+    // 添加创建窗口之前的弹幕
     QTimer::singleShot(0, [=]{
         danmakuWindow->removeAll();
         if (liveService->roomDanmakus.size())

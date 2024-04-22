@@ -183,6 +183,7 @@ public:
         danmaku.first = object.value("first").toInt();
         danmaku.special = object.value("special").toInt();
         danmaku.extraJson = object.value("extra").toObject();
+        danmaku.faceUrl = object.value("face_url").toString();
         return danmaku;
     }
 
@@ -288,6 +289,8 @@ public:
             object.insert("prev_timestamp", prev_timestamp);
         if (!extraJson.isEmpty())
             object.insert("extra", extraJson);
+        if (!faceUrl.isEmpty())
+            object.insert("face_url", faceUrl);
         return object;
     }
 

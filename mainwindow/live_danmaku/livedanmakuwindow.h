@@ -151,7 +151,7 @@ private:
     PortraitLabel* getItemWidgetPortrait(QListWidgetItem *item);
     QLabel *getItemWidgetLabel(QListWidgetItem *item);
     void adjustItemTextDynamic(QListWidgetItem* item);
-    void getUserInfo(qint64 uid, QListWidgetItem *item);
+    void getUserInfo(LiveDanmaku danmaku, QListWidgetItem *item);
     void getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem *item);
     QString headPath(qint64 uid) const;
     void showUserMsgHistory(qint64 uid, QString title);
