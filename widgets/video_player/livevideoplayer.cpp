@@ -189,7 +189,7 @@ void LiveVideoPlayer::refreshPlayUrl()
         return ;
     QString url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + roomId
             + "&no_playurl=0&mask=1&qn=" + QString::number(qn) + "&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
-    qInfo() << "视频流链接：" << url;
+    qInfo() << "视频流接口链接：" << url;
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
@@ -277,7 +277,7 @@ void LiveVideoPlayer::parsePlayUrl(const QByteArray &data)
                     QString extra = url_info.value("extra").toString();
                     qint64 stream_ttl = url_info.value("stream_ttl").toInt();
 
-                    url = host + base_url;
+                    url = host + base_url + extra;
 
                     if (!url.isEmpty())
                         break;
@@ -294,7 +294,7 @@ void LiveVideoPlayer::parsePlayUrl(const QByteArray &data)
 
     if (url.endsWith("?"))
         url = url.left(url.length() - 1);
-    qInfo() << "playUrl:" << url;
+    qInfo() << "播放地址：" << url;
     setPlayUrl(url);
 }
 

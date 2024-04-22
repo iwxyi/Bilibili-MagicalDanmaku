@@ -3819,29 +3819,10 @@ void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
 {
     if (ac->roomId.isEmpty())
         return ;
-    /*QString url = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid=" + ac->roomId
-            + "&quality=4&qn=10000&platform=web&otype=json";
-    get(url, [=](QJsonObject json){
-        if (json.value("code").toInt() != 0)
-        {
-            qCritical() << s8("获取视频URL返回结果不为0：") << json.value("message").toString();
-            return ;
-        }
-
-        // 获取链接
-        QJsonArray array = json.value("data").toObject().value("durl").toArray();
-        /*"url": "http://d1--cn-gotcha04.bilivideo.com/live-bvc/521719/live_688893202_7694436.flv?cdn=cn-gotcha04\\u0026expires=1607505058\\u0026len=0\\u0026oi=1944862322\\u0026pt=\\u0026qn=10000\\u0026trid=40938d869aca4cb39041730f74ff9051\\u0026sigparams=cdn,expires,len,oi,pt,qn,trid\\u0026sign=ac701ba60c346bf3a173e56bcb14b7b9\\u0026ptype=0\\u0026src=9\\u0026sl=1\\u0026order=1",
-          "length": 0,
-          "order": 1,
-          "stream_type": 0,
-          "p2p_type": 0*-/
-        QString url = array.first().toObject().value("url").toString();
-        if (func)
-            func(url);
-    });*/
 
     QString full_url = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=" + ac->roomId
             + "&no_playurl=0&mask=1&qn=10000&platform=web&protocol=0,1&format=0,1,2&codec=0,1&dolby=5&panorama=1";
+    qInfo() << "播放信息接口：" << full_url;
     get(full_url, [=](QJsonObject json){
         if (json.value("code").toInt() != 0)
         {
@@ -3879,8 +3860,7 @@ void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
                         QString extra = url_info.value("extra").toString();
                         qint64 stream_ttl = url_info.value("stream_ttl").toInt();
 
-                        url = host + base_url;
-
+                        url = host + base_url + extra;
                         if (!url.isEmpty())
                             break;
                     }
@@ -3901,6 +3881,7 @@ void BiliLiveService::getRoomLiveVideoUrl(StringFunc func)
         }
         if (url.endsWith("?"))
             url = url.left(url.length() - 1);
+        qInfo() << "视频M3U8链接：" << url;
         if (func)
             func(url);
     });
