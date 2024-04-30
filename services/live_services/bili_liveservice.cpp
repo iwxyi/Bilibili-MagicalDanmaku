@@ -1023,11 +1023,12 @@ void BiliLiveService::updateExistGuards(int page)
  */
 void BiliLiveService::getGuardCount(const LiveDanmaku &danmaku)
 {
-    QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + ac->roomId;
+    QString url = "https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topListNew?roomid=" + ac->roomId + "&page=1&ruid=" + ac->upUid + "&page_size=20&typ=0";
     get(url, [=](MyJson json) {
-        int count = json.data().o("guard_info").i("count");
+        int count = json.data().o("info").i("num");
         LiveDanmaku ld = danmaku;
         ld.setNumber(count);
+        qInfo() << "舰长数量：" << count;
         triggerCmdEvent("NEW_GUARD_COUNT", ld.with(json.data()), true);
     });
 }
