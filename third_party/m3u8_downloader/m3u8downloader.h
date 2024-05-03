@@ -5,6 +5,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QFile>
+#include "liveroomservice.h"
 
 class M3u8Downloader : public QObject
 {
@@ -14,6 +15,8 @@ public:
     virtual ~M3u8Downloader();
 
     bool isDownloading() const;
+
+    void SetLiveRoomService(LiveRoomService* live_room_service);
 
 signals:
     void signalStarted();
@@ -31,6 +34,12 @@ private:
     void parseM3u8(const QByteArray& data);
     void downloadTs(int seq, QString url);
 
+    void UpdateUrl();
+    void UpdateTsExpiresTimestamps(qint64 new_ts_record_expires_timestamps);
+    void UpdateTsRecordTimestampsCurrent(qint64 new_ts_record_timestamps_current);
+
+    bool parseUrl(QString url);
+
 private slots:
     void nextSeq();
 
@@ -46,6 +55,13 @@ private:
     QList<QPair<int, QString>> ts_urls;
     qint64 start_timestamp = 0;
     qint64 total_size = 0;
+
+    // 记录当前ts录制时间戳，初始为0
+    qint64 ts_record_timestamps_current = 0;
+    // 录制参数里的expires
+    qint64 ts_record_expires_timestamps = 0;
+
+    LiveRoomService* ptr_live_room_service = nullptr;
 };
 
 #endif // M3U8DOWNLOADER_H
