@@ -36,7 +36,7 @@ void M3u8Downloader::start(QString url, QString file)
 
     int pos = url.indexOf("://");
     pos += 3;
-    pos = url.lastIndexOf("/", pos);
+    pos = url.lastIndexOf("/");
     if (pos > 0)
     {
         this->domain_url = url.left(pos);
