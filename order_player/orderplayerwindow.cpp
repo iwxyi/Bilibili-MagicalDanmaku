@@ -26,6 +26,11 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     starting = true;
     ui->setupUi(this);
     ui->lyricWidget->setSettings(&settings);
+    
+    NETEASE_SERVER = settings.value("service/netease", NETEASE_SERVER).toString();
+    QQMUSIC_SERVER = settings.value("service/qqmusic", QQMUSIC_SERVER).toString();
+    MIGU_SERVER = settings.value("service/migu", MIGU_SERVER).toString();
+    KUGOU_SERVER = settings.value("service/kugou", KUGOU_SERVER).toString();
 
     connect(ui->lyricWidget, SIGNAL(signalRowChanged()), this, SIGNAL(signalLyricChanged()));
 

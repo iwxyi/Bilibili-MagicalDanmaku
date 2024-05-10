@@ -11,10 +11,10 @@ namespace Ui {
 class LoginDialog;
 }
 
-#define NETEASE_SERVER QString("http://iwxyi.com:3000")
-#define QQMUSIC_SERVER QString("http://iwxyi.com:3300")
-#define MIGU_SERVER QString("http://iwxyi.com:3400")
-#define KUGOU_SERVER QString("") // 这个暂时不固定
+extern QString NETEASE_SERVER;
+extern QString QQMUSIC_SERVER;
+extern QString MIGU_SERVER;
+extern QString KUGOU_SERVER;
 
 class LoginDialog : public QDialog, public NetInterface
 {

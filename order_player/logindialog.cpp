@@ -3,6 +3,11 @@
 #include "ui_logindialog.h"
 #include "stringutil.h"
 
+QString NETEASE_SERVER = QString("http://iwxyi.com:3000");
+QString QQMUSIC_SERVER = QString("http://iwxyi.com:3300");
+QString MIGU_SERVER = QString("http://iwxyi.com:3400");
+QString KUGOU_SERVER = QString(""); // 这个暂时不固定
+
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent), NetInterface(this),
     ui(new Ui::LoginDialog)
