@@ -905,6 +905,10 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%origin_gift_name%")
         return danmaku.getGiftName();
 
+    // 礼物ID
+    else if (key == "%gift_id%")
+        return snum(danmaku.getGiftId());
+
     // 本次送礼数量
     else if (key == "%gift_num%")
         return snum(danmaku.getNumber());

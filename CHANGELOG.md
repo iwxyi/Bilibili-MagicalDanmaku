@@ -1,8 +1,10 @@
 ### v4.10.7 [修复接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.7)
 
+- 新增礼物ID变量 `%gift_id`
 - 新增点歌姬支持本地/自定义API
 - 修复弹幕头像问题
 - 修复舰长数量问题
+- 修复语音设置启动后会变回“其他”的问题
 
 
 
@@ -10,6 +12,7 @@
 
 ### v4.10.6 [小优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.6)
 
+- 修复无法扫码登录问题
 - 新增在标题栏显示版本号
 - 新增未登录连接直播间时的受限提示
 - 新增本场直播的数据统计与导出

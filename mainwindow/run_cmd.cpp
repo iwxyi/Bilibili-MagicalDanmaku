@@ -2040,9 +2040,9 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
 
     // 开关定时任务: enableTimerTask(id, time)
     // time=1开，0关，>1修改时间
-    if (msg.contains("enableTimerTask"))
+    if (msg.contains("enableTimerTask") || msg.contains("setTimerTask"))
     {
-        re = RE("enableTimerTask\\s*\\(\\s*(.+)\\s*,\\s*(-?\\d+)\\s*\\)");
+        re = RE("(?:enable|set)TimerTask\\s*\\(\\s*(.+)\\s*,\\s*(-?\\d+)\\s*\\)");
         if (msg.indexOf(re, 0, &match) > -1)
         {
             QStringList caps = match.capturedTexts();

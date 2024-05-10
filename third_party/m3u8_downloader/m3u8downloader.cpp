@@ -36,7 +36,7 @@ void M3u8Downloader::start(QString url, QString file)
 
     int pos = url.indexOf("://");
     pos += 3;
-    pos = url.indexOf("/", pos);
+    pos = url.lastIndexOf("/", pos);
     if (pos > 0)
     {
         this->domain_url = url.left(pos);
@@ -134,7 +134,7 @@ void M3u8Downloader::parseM3u8(const QByteArray &data)
         line_pos = data.indexOf("\n", find_pos);
         QString ts_url = data.mid(find_pos, line_pos - find_pos);
         if (!ts_url.startsWith("http"))
-            ts_url = domain_url + ts_url;
+            ts_url = domain_url + (domain_url.endsWith("/") ? "" : "/") + ts_url;
 
         // 下一个
         find_pos = data.indexOf(s, find_pos);

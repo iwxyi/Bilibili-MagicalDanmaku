@@ -508,7 +508,7 @@ void LiveDanmakuWindow::slotNewLiveDanmaku(LiveDanmaku danmaku)
         if (hasPortrait)
             portrait->setPixmap(QPixmap(path));
         else
-            getUserInfo(danmaku.getUid(), item);
+            getUserInfo(danmaku, item);
     }
     else
     {
@@ -2550,8 +2550,9 @@ void LiveDanmakuWindow::adjustItemTextDynamic(QListWidgetItem *item)
     }
 }
 
-void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
+void LiveDanmakuWindow::getUserInfo(LiveDanmaku danmaku, QListWidgetItem* item)
 {
+    qint64 uid = danmaku.getUid();
     if (hasGetUserHeader.contains(uid)) // 避免重复获取头像
         return ;
     if (uid == 0 || headerApiIsBanned) // 请求已经被拦截了
@@ -2559,9 +2560,12 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
 
     hasGetUserHeader.insert(uid);
     QPixmap pixmap;
-    QString url = liveService->getApiUrl(UserHead, uid);
+    QString url = danmaku.getFaceUrl();
+    if (url.isEmpty())
+        url = liveService->getApiUrl(UserHead, uid);
     if (url == WAIT_INIT)
     {
+        qDebug() << "获取头像：等待初始化 WAIT_INIT";
         return ;
     }
     else if (url.isEmpty())
@@ -2574,47 +2578,9 @@ void LiveDanmakuWindow::getUserInfo(qint64 uid, QListWidgetItem* item)
         });
         return ;
     }
+    // 下载头像
     getUserHeadPortrait(uid, url, item);
     hasGetUserHeader.remove(uid);
-
-
-    /*QString url = "https://api.bilibili.com/x/space/wbi/acc/info?mid=" + QString::number(uid); // 这个接口很频繁
-    hasGetUserHeader.insert(uid);
-    connect(new NetUtil(url), &NetUtil::finished, this, [=](QString result){
-        QJsonParseError error;
-        QByteArray ba = result.toUtf8();
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error != QJsonParseError::NoError)
-        {
-            qDebug() << "获取用户信息失败：" << error.errorString();
-            headerApiIsBanned = true;
-            QTimer::singleShot(60000, [=]{
-                headerApiIsBanned = false;
-            });
-            return ;
-
-        }
-        QJsonObject json = document.object();
-        if (json.value("code").toInt() != 0)
-        {
-            qWarning() << "用户" << uid << "信息返回结果不为0：" << json.value("message").toString();
-            if (json.value("message").toString().contains("拦截"))
-            {
-                // 一分钟后再试
-                headerApiIsBanned = true;
-                QTimer::singleShot(60000, [=]{
-                    headerApiIsBanned = false;
-                });
-            }
-            return ;
-        }
-
-        QJsonObject data = json.value("data").toObject();
-        QString faceUrl = data.value("face").toString();
-
-        getUserHeadPortrait(uid, faceUrl, item);
-        hasGetUserHeader.remove(uid);
-    });*/
 }
 
 void LiveDanmakuWindow::getUserHeadPortrait(qint64 uid, QString url, QListWidgetItem* item)

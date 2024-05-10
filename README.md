@@ -709,7 +709,8 @@ border-image: url(C:/Path/To/Image.png)
 | come_count       | 用户进入次数      | 长时间没来会被清空                                           |
 | come_time        | 用户上次进入时间  | 10位时间戳，第一次进来是0；自动清理一周没来的。如果是串门回来，则是刚跑到对面串门的时间 |
 | come_time_delta  | 进入时间差        | 当前时间 - 用户上次进入时间                                  |
-| gift_gold        | 礼物金瓜子        | 非送礼答谢则没有                                             |
+| gift_id          | 礼物ID            | 盲盒是爆出来的礼物                                           |
+| gift_gold        | 礼物金瓜子        | 非送礼答谢则没有，盲盒是原始价格                             |
 | gift_silver      | 礼物银瓜子        |                                                              |
 | gift_coin        | 礼物瓜子          | 不分金瓜子银瓜子                                             |
 | coin_gold        | 是金瓜子礼物      | 金瓜子是1，银瓜子是0                                         |
@@ -1260,7 +1261,7 @@ tips：
 | call(event, arg1, arg2...)                         | 调用             | 触发事件，可以传递若干个参数，使用 `%$1%`这样的指令来获取参数 |
 | getReplyExecutionResult(msg)                       | 获取回复执行结果 | 获取**第一个**符合 `msg`弹幕的回复的执行结果，并返回最终**弹幕**的拼凑结果，使用 `%n%`连接（写入到文件时会替换为换行）。该回复的代码中的命令会被立刻执行；若没有相应的回复，返回空字符串 |
 | getEventExecutionResult(event)                     | 获取事件执行结果 | 同上                                                         |
-| setTimerTask(id, time)                             | 开启定时任务     | id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间 |
+| setTimerTask(id, time)                             | 开启定时任务     | id为单行注释的文字，格式：//id。time：<-1时重置时间，=-1时关闭，=0时切换开关，=1时开启，>1时设置为对应秒数并重置时间（关闭的话不会开启）。不建议设置1秒，因为弹幕冷却2秒 |
 | orderSong(songName, uname)                         | 点歌             | 自动点歌，uname可以为任意字符                                |
 | addBannedWord(word, anchor)                        | 添加违禁词       | 在指定"\|anchor"处插入"\|word"                               |
 | showCSV(filePath)                                  | 显示CSV          | 显示表格文件，自动判定编码                                   |
