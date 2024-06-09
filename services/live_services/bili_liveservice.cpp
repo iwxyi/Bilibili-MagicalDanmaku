@@ -1145,6 +1145,8 @@ void BiliLiveService::updateOnlineGoldRank()
 
 void BiliLiveService::getPkOnlineGuardPage(int page)
 {
+    getPkOnlineGuardPageNew2();
+    return;
     static int guard1 = 0, guard2 = 0, guard3 = 0;
     if (page == 0)
     {
@@ -1199,6 +1201,144 @@ void BiliLiveService::getPkOnlineGuardPage(int page)
         else // 全部完成了
         {
             qInfo() << "舰长数量：" << guard1 << guard2 << guard3;
+            LiveDanmaku danmaku;
+            danmaku.setNumber(guard1 + guard2 + guard3);
+            danmaku.extraJson.insert("guard1", guard1);
+            danmaku.extraJson.insert("guard2", guard2);
+            danmaku.extraJson.insert("guard3", guard3);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
+        }
+    });
+}
+
+void BiliLiveService::getPkOnlineGuardPageNew(int page)
+{
+    static int guard1 = 0, guard2 = 0, guard3 = 0;
+    if (page == 0)
+    {
+        page = 1;
+        guard1 = guard2 = guard3 = 0;
+    }
+
+    if (pkUid.isEmpty())
+    {
+        return;
+    }
+    auto addCount = [=](MyJson user) {
+        int guard_level = user.i("guard_level");
+        if (guard_level == 1)
+            guard1++;
+        else if (guard_level == 2)
+            guard2++;
+        else if (guard_level == 3)
+            guard3++;
+    };
+    int pageSize = 50;
+
+    QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid=" + pkUid + "&roomId=" + pkRoomId + "&page=" + snum(page) + "&pageSize=" + snum(pageSize);
+    get(url, [=](MyJson json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取PK高能榜返回结果不为0：") << json.value("message").toString() << url;
+            return ;
+        }
+
+        MyJson data = json.data();
+        // list
+        QJsonArray list = data.value("OnlineRankItem").toArray();
+        foreach (QJsonValue val, list)
+        {
+            addCount(val.toObject());
+        }
+
+        int number = data.i("onlineNum");
+
+
+        int pageCount = (number + pageSize - 1) / pageSize;
+        if (page < pageCount)
+        {
+            getPkOnlineGuardPageNew(page + 1);
+        }
+        else
+        {
+            qInfo() << "舰长数量：总督:" << guard1 <<",提督:"<< guard2 <<",舰长:"<< guard3;
+            LiveDanmaku danmaku;
+            danmaku.setNumber(guard1 + guard2 + guard3);
+            danmaku.extraJson.insert("guard1", guard1);
+            danmaku.extraJson.insert("guard2", guard2);
+            danmaku.extraJson.insert("guard3", guard3);
+            triggerCmdEvent("PK_MATCH_ONLINE_GUARD", danmaku, true);
+        }
+    });
+}
+
+void BiliLiveService::getPkOnlineGuardPageNew2(int page)
+{
+    static int guard1 = 0, guard2 = 0, guard3 = 0;
+    static QSet<QString> uid_qset;
+    if (page == 0)
+    {
+        page = 1;
+        guard1 = guard2 = guard3 = 0;
+        uid_qset.clear();
+    }
+
+    if (pkUid.isEmpty())
+    {
+        return;
+    }
+    auto addCount = [=](MyJson user) {
+        int guard_level = user.i("guard_level");
+        QString uid = snum(user["uid"].toInt());
+        if (guard_level <= 0)
+        {
+            return ;
+        }
+        if (uid_qset.find(uid) != uid_qset.end())
+        {
+            return;
+        }
+        uid_qset.insert(uid);
+        if (guard_level == 1)
+            guard1++;
+        else if (guard_level == 2)
+            guard2++;
+        else if (guard_level == 3)
+            guard3++;
+    };
+    int pageSize = 100;
+    QString url = "https://api.live.bilibili.com/xlive/general-interface/v1/rank/queryContributionRank?ruid=" + pkUid
+            + "&room_id=" + pkRoomId
+            + "&page=" + snum(page)
+            + "&page_size=" + snum(pageSize)
+            + "&type=online_rank&switch=contribution_rank&platform=web";
+
+    get(url, [=](MyJson json) {
+        if (json.value("code").toInt() != 0)
+        {
+            qCritical() << s8("获取PK高能榜返回结果不为0：") << json.value("message").toString() << url;
+            return ;
+        }
+
+        MyJson data = json.data();
+        // list
+        QJsonArray list = data.value("item").toArray();
+        foreach (QJsonValue val, list)
+        {
+            addCount(val.toObject());
+        }
+
+        int number = data.i("count");
+
+
+        int pageCount = (number + pageSize - 1) / pageSize;
+        if (page < pageCount)
+        {
+            getPkOnlineGuardPageNew2(page + 1);
+        }
+        else
+        {
+            qInfo() << "舰长数量：总督:" << guard1 <<",提督:"<< guard2 <<",舰长:"<< guard3;
             LiveDanmaku danmaku;
             danmaku.setNumber(guard1 + guard2 + guard3);
             danmaku.extraJson.insert("guard1", guard1);

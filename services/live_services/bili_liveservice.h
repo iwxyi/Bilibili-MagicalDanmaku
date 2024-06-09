@@ -167,7 +167,32 @@ public slots:
 
 protected:
     virtual void setUrlCookie(const QString& url, QNetworkRequest* request) override;
-    
+
+private:
+
+    /*
+     * 原接口https://api.live.bilibili.com/xlive/app-room/v2/guardTab/topList 应该是用来获取大航海榜单的。
+     * 返回数据里的字段"is_alive"，应该是表明用户是否在直播间。目前貌似永远是0。
+     * 所以此接口暂时无法用于获取在直播间的大航海用户。
+     * getPkOnlineGuardPageNew方法 改为和getPkOnlineGoldPage一样的接口
+     * 即https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank
+     * 此接口在返回在线用户时，还有个字段告知用户在此直播间的大航海等级
+     * */
+    void getPkOnlineGuardPageNew(int page = 0);
+    /*
+     * 因为b站改版，高能用户分为，在线榜单(再细分为按贡献和按进房间排序)，
+     * 日榜(再细分为今日和昨日)，
+     * 周榜(再分为当周和上周)，
+     * 月榜(再分为当月和上月)
+     * 接口是https://api.live.bilibili.com/xlive/general-interface/v1/rank/queryContributionRank
+     * 那另一个接口https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank 会不会可能被废弃掉
+     *
+     * 此接口特殊，当获取到最后一页时，会将前一页的部分数据一同带回来。默认的pagesize是100
+     * 例如总用户是250人，第1页100，第2页100，第3页应该只是50人，但实际上还是100人，把第2页的后50人给带过来了。
+     * */
+    void getPkOnlineGuardPageNew2(int page = 0);
+
+
 private:
     // 直播心跳
     QTimer* xliveHeartBeatTimer = nullptr;
