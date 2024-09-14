@@ -170,7 +170,12 @@ void LiveRoomService::initTimeTasks()
         triggerCmdEvent("NEW_DAY", LiveDanmaku(), true);
         triggerCmdEvent("NEW_DAY_FIRST", LiveDanmaku(), true);
         us->setValue("runtime/open_day", currDate.day());
-        emit signalUpdatePermission();
+
+        // 延迟以避免服务器瞬间承受压力过大
+        int second = (qrand() % 3600);
+        QTimer::singleShot(second * 1000, this, [=]{
+            emit signalUpdatePermission();
+        });
 
         processNewDayData();
         qInfo() << "当前 month =" << currDate.month() << ", day =" << currDate.day() << ", week =" << currDate.dayOfWeek();
