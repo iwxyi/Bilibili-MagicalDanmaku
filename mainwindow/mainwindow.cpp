@@ -950,8 +950,10 @@ void MainWindow::initLiveService()
         this->liveTimeTimer->stop();
         ac->liveStartTime = 0;
 
-        if (liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
-            return ;
+        // 之前B站的bug，PK会导致强制下播，这里做了判断进行适应
+        // 后来修复了，这串代码应该用不到了
+        /* if (liveService->pking || liveService->pkToLive + 30 > QDateTime::currentSecsSinceEpoch()) // PK导致的开播下播情况
+            return ; */
 
         QString text = ui->endLiveWordsEdit->text();
         if (ui->startLiveSendCheck->isChecked() &&!text.trimmed().isEmpty()
@@ -960,6 +962,7 @@ void MainWindow::initLiveService()
         ui->liveStatusButton->setText("已下播");
         ac->liveStatus = 0;
 
+        // 重新定时连接
         if (ui->timerConnectServerCheck->isChecked() && !liveService->connectServerTimer->isActive())
             liveService->connectServerTimer->start();
     });
