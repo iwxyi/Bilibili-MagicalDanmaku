@@ -26,6 +26,27 @@ OrderPlayerWindow::OrderPlayerWindow(QString dataPath, QWidget *parent)
     starting = true;
     ui->setupUi(this);
     ui->lyricWidget->setSettings(&settings);
+    
+    if (settings.contains("server/netease"))
+    {
+        NETEASE_SERVER = settings.value("server/netease", NETEASE_SERVER).toString();
+        qInfo() << "网易云音乐服务器：" << NETEASE_SERVER;
+    }
+    if (settings.contains("server/qqmusic"))
+    {
+        QQMUSIC_SERVER = settings.value("server/qqmusic", QQMUSIC_SERVER).toString();
+        qInfo() << "QQ音乐服务器：" << QQMUSIC_SERVER;
+    }
+    if (settings.contains("server/migu"))
+    {
+        MIGU_SERVER = settings.value("server/migu", MIGU_SERVER).toString();
+        qInfo() << "咪咕音乐服务器：" << MIGU_SERVER;
+    }
+    if (settings.contains("server/kugou"))
+    {
+        KUGOU_SERVER = settings.value("server/kugou", KUGOU_SERVER).toString();
+        qInfo() << "酷狗音乐服务器：" << KUGOU_SERVER;
+    }
 
     connect(ui->lyricWidget, SIGNAL(signalRowChanged()), this, SIGNAL(signalLyricChanged()));
 
@@ -4378,6 +4399,42 @@ void OrderPlayerWindow::on_settingsButton_clicked()
             settings.setValue("music/qqmusicCookies", "");
         }
     })->text(!qqmusicNickname.isEmpty(), qqmusicNickname)->disable(qqmusicCookies.isEmpty());
+    
+    accountMenu->split();
+    auto apiMenu = accountMenu->addMenu("自定义API");
+    apiMenu->addAction("网易云音乐", [=]{
+        menu->close();
+        bool ok;
+        QString url = QInputDialog::getText(this, "网易云API", "请输入网易云音乐API地址\n仅支持 Binaryify/NeteaseCloudMusicApi\n例如：http://127.0.0.1:3000", QLineEdit::Normal, NETEASE_SERVER, &ok);
+        if (!ok)
+            return ;
+        
+        settings.setValue("server/netease", NETEASE_SERVER = url);
+        settings.sync();
+        qInfo() << "网易云音乐API地址：" << NETEASE_SERVER;
+    });
+    apiMenu->addAction("QQ音乐", [=]{
+        menu->close();
+        bool ok;
+        QString url = QInputDialog::getText(this, "QQ音乐API", "请输入QQ音乐API地址\n仅支持 jsososo/QQMusicApi\n例如：http://127.0.0.1:3300", QLineEdit::Normal, QQMUSIC_SERVER, &ok);
+        if (!ok)
+            return ;
+        
+        settings.setValue("server/qqmusic", QQMUSIC_SERVER = url);
+        settings.sync();
+        qInfo() << "QQ音乐API地址：" << QQMUSIC_SERVER;
+    });
+    apiMenu->addAction("咪咕音乐", [=]{
+        menu->close();
+        bool ok;
+        QString url = QInputDialog::getText(this, "咪咕音乐API", "请输入咪咕音乐API地址\n仅支持 jsososo/MiguMusicApi\n例如：http://127.0.0.1:3400", QLineEdit::Normal, MIGU_SERVER, &ok);
+        if (!ok)
+            return ;
+        
+        settings.setValue("server/migu", MIGU_SERVER = url);
+        settings.sync();
+        qInfo() << "咪咕音乐API地址：" << MIGU_SERVER;
+    });
 
     FacileMenu* playMenu = menu->addMenu("播放");
 

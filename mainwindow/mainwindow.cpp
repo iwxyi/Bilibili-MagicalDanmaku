@@ -5184,6 +5184,8 @@ void MainWindow::startRecordUrl(QString url)
     recordTimer->start();
     startRecordTime = QDateTime::currentMSecsSinceEpoch();
 
+    // 开始下载前 给m3u8Downloader挂载BiliLiveService
+    m3u8Downloader.SetLiveRoomService(liveService);
     // 开始下载
     m3u8Downloader.start(url, path);
 
