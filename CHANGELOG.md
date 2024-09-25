@@ -1,6 +1,7 @@
 ### v4.10.7 [修复接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.7)
 
-- 新增礼物ID变量 `%gift_id`
+- 新增支持@用户的弹幕
+- 新增礼物ID变量 `%gift_id%`
 - 新增点歌姬支持本地/自定义API
 - 修复弹幕头像问题
 - 修复舰长数量问题

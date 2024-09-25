@@ -184,6 +184,12 @@ public:
         danmaku.special = object.value("special").toInt();
         danmaku.extraJson = object.value("extra").toObject();
         danmaku.faceUrl = object.value("face_url").toString();
+        danmaku.show_reply = object.value("show_reply").toBool();
+        danmaku.reply_mid = static_cast<qint64>(object.value("reply_mid").toDouble());
+        danmaku.reply_uname = object.value("reply_uname").toString();
+        danmaku.reply_uname_color = object.value("reply_uname_color").toString();
+        danmaku.reply_is_mystery = object.value("reply_is_mystery").toBool();
+        danmaku.reply_type_enum = object.value("reply_type_enum").toInt();
         return danmaku;
     }
 
@@ -291,6 +297,15 @@ public:
             object.insert("extra", extraJson);
         if (!faceUrl.isEmpty())
             object.insert("face_url", faceUrl);
+        if (show_reply && reply_mid > 0)
+        {
+            object.insert("show_reply", show_reply);
+            object.insert("reply_mid", reply_mid);
+            object.insert("reply_uname", reply_uname);
+            object.insert("reply_uname_color", reply_uname_color);
+            object.insert("reply_is_mystery", reply_is_mystery);
+            object.insert("reply_type_enum", reply_type_enum);
+        }
         return object;
     }
 

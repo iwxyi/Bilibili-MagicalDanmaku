@@ -866,7 +866,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                 "esports_jump_url": ""
             }
             */
-            MyJson extra = MyJson::from(extra_s.toLatin1());
+            MyJson extra = MyJson::from(extra_s.toLocal8Bit());
             if (!extra.isEmpty())
             {
                 bool show_reply = extra.b("show_reply");
@@ -875,7 +875,6 @@ void BiliLiveService::handleMessage(QJsonObject json)
                 QString reply_uname_color = extra.s("reply_uname_color");
                 bool reply_is_mystery = extra.b("reply_is_mystery");
                 int reply_type_enum = extra.i("reply_type_enum");
-
                 danmaku.setReplyInfo(show_reply, reply_mid, reply_uname, reply_uname_color, reply_is_mystery, reply_type_enum);
             }
             else

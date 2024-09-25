@@ -717,6 +717,15 @@ void LiveDanmakuWindow::setItemWidgetText(QListWidgetItem *item)
         // 安全过滤
         if (!allowH5)
             msg = filterH5(msg);
+
+        // @人
+        if (danmaku.isShowReply() && danmaku.getReplyMid() > 0)
+        {
+            QString at = "@" + danmaku.getReplyUname();
+            QString colorful_at = "<font color='" + danmaku.getReplyUnameColor() + "'>" + at + "</font>";
+            msg = colorful_at + " " + msg;
+        }
+
         // 彩色消息
         QString colorfulMsg = msg;
         if (simpleMode) // 简洁模式，不管颜色
