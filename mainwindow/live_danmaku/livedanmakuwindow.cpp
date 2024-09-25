@@ -1117,6 +1117,7 @@ void LiveDanmakuWindow::showMenu()
     QMenu* menu = new QMenu(this);
     QAction* actionUserInfo = new QAction(QIcon(":/danmaku/home"), "用户主页", this);
     QAction* actionCopyUid = new QAction(QIcon(":/icons/code"), "复制UID", this);
+    QAction* actionReplyUser = new QAction(QIcon(":/icons/at"), "@TA", this);
     QAction* actionCopyGiftId = new QAction(QIcon(":/icons/code"), "复制礼物ID", this);
     QAction* actionMedal = new QAction(QIcon(":/danmaku/medal"), "粉丝勋章", this);
     QAction* actionValue = new QAction(QIcon(":/icons/egg"), "礼物价值", this);
@@ -1312,6 +1313,7 @@ void LiveDanmakuWindow::showMenu()
     else // 包括 item == nullptr
     {
         actionCopyUid->setText("复制UID");
+        actionReplyUser->setEnabled(false);
         actionUserInfo->setEnabled(false);
         actionCopyUid->setEnabled(false);
         actionHistory->setEnabled(false);
@@ -1339,6 +1341,7 @@ void LiveDanmakuWindow::showMenu()
     {
         operMenu->setEnabled(false);
         actionCopyUid->setEnabled(false);
+        actionReplyUser->setEnabled(false);
         actionCopyGiftId->setEnabled(false);
         actionAddCare->setEnabled(false);
         actionStrongNotify->setEnabled(false);
@@ -1356,6 +1359,7 @@ void LiveDanmakuWindow::showMenu()
 
     menu->addAction(actionUserInfo);
     menu->addAction(actionCopyUid);
+    menu->addAction(actionReplyUser);
     if (danmaku.getGiftId())
         menu->addAction(actionCopyGiftId);
     menu->addAction(actionMedal);
@@ -1861,6 +1865,10 @@ void LiveDanmakuWindow::showMenu()
     });
     connect(actionCopyUid, &QAction::triggered, this, [=]{
         QApplication::clipboard()->setText(snum(uid));
+    });
+    connect(actionReplyUser, &QAction::triggered, this, [=]{
+        lineEdit->setText(lineEdit->text() + "@" + snum(uid) + " ");
+        lineEdit->setFocus();
     });
     connect(actionCopyGiftId, &QAction::triggered, this, [=]{
         QApplication::clipboard()->setText(snum(danmaku.getGiftId()));

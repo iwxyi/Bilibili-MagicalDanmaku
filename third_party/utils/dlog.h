@@ -18,7 +18,11 @@ void myMsgOutput(QtMsgType type, const QMessageLogContext &context, const QStrin
     switch(type)
     {
     case QtDebugMsg:
+#ifdef QT_DEBUG
         mmsg=QString("%1: Debug:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
+#else
+        mmsg="";
+#endif
         break;
     case QtInfoMsg:
         mmsg=QString("%1: Info:\t%2").arg(time).arg(msg);

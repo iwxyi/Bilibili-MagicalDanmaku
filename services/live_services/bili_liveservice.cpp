@@ -4262,7 +4262,7 @@ void BiliLiveService::sendMsg(const QString& msg)
 /**
  * 向指定直播间发送弹幕
  */
-void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
@@ -4272,27 +4272,98 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& msg)
 #endif
         return ;
     }
-    if (msg.isEmpty() || ac->roomId.isEmpty())
+    if (_msg.isEmpty() || ac->roomId.isEmpty())
         return ;
-    QString urlMsg = urlEncode(msg);
+    QString msg = _msg;
 
-    // 设置数据（JSON的ByteArray）
+    // #处理内建的一些msg逻辑
+    // @对象：@uname+空格 或者 @uid
+    QString reply_mid = "";
+    // @uid
+    QRegularExpression re("@(\\d+)");
+    QRegularExpressionMatch match = re.match(msg);
+    if (match.hasMatch())
+    {
+        msg.replace(match.captured(0), "");
+        reply_mid = match.captured(1);
+    }
+    
+    // @uname
+    re = QRegularExpression("@(\\S+)( |^)");
+    match = re.match(msg);
+    if (match.hasMatch())
+    {
+        msg.replace(match.captured(0), "");
+        QString uname = match.captured(1);
+        // 根据uname在最近弹幕中倒找uid
+        for (int i = roomDanmakus.size()-1; i >= 0; i--)
+        {
+            const LiveDanmaku danmaku = roomDanmakus.at(i);
+
+            QString nick = danmaku.getNickname();
+            if (nick != uname)
+                continue ;
+
+            // 就是这个人
+            reply_mid = snum(danmaku.getUid());
+            break;
+        }
+        if (reply_mid.isEmpty())
+        {
+            qWarning() << "未找到@的用户：" << uname;
+        }
+    }
+
+    // #设置数据（JSON的ByteArray）
+    QString urlMsg = urlEncode(msg);
     QString s = ac->browserData;
-    int posl = s.indexOf("msg=")+4;
+    int posl = s.indexOf("msg=");
+    if (posl == -1)
+    {
+        s += "&msg=";
+        posl = s.length();
+    }
+    else
+        posl += 4;
     int posr = s.indexOf("&", posl);
     if (posr == -1)
         posr = s.length();
     s.replace(posl, posr-posl, urlMsg);
 
-    posl = s.indexOf("roomid=")+7;
+    posl = s.indexOf("roomid=");
+    if (posl == -1)
+    {
+        s += "&roomid=";
+        posl = s.length();
+    }
+    else
+        posl += 7;
     posr = s.indexOf("&", posl);
     if (posr == -1)
         posr = s.length();
     s.replace(posl, posr-posl, roomId);
 
+    if (!reply_mid.isEmpty())
+    {
+        qInfo() << "回复用户：" << reply_mid;
+        posl = s.indexOf("reply_mid=");
+        if (posl == -1)
+        {
+            s += "&reply_mid=";
+            posl = s.length();
+        }
+        else
+            posl += 10;
+        posr = s.indexOf("&", posl);
+        if (posr == -1)
+            posr = s.length();
+        s.replace(posl, posr-posl, reply_mid);
+    }
+
+    // 转换为ByteArray
     QByteArray ba(s.toStdString().data());
 
-    // 连接槽
+    // #连接槽
     post("https://api.live.bilibili.com/msg/send", ba, [=](QJsonObject json){
         QString errorMsg = json.value("message").toString();
         emit signalStatusChanged("");
