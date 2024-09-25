@@ -8915,10 +8915,10 @@ void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)
         return ;
 
     // 过滤器
-    danmaku.setReply(reply);
+    danmaku.setAIReply(reply);
     if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", danmaku))
     {
-        qInfo() << "过滤器已阻止AI回复：" << danmaku.getText() << danmaku.getReply();
+        qInfo() << "过滤器已阻止AI回复：" << danmaku.getText() << danmaku.getAIReply();
         return;
     }
 

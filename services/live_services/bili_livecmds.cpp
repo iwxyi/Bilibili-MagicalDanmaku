@@ -824,6 +824,67 @@ void BiliLiveService::handleMessage(QJsonObject json)
             MyJson user = detail.o("user");
             MyJson base = user.o("base");
             danmaku.setFaceUrl(base.s("face"));
+
+            QString extra_s = detail.s("extra");
+            /*
+            {
+                "send_from_me": false,
+                "mode": 0,
+                "color": 16772431,
+                "dm_type": 0,
+                "font_size": 25,
+                "player_mode": 1,
+                "show_player_type": 0,
+                "content": " 居然还能@人了",
+                "user_hash": "3676333332",
+                "emoticon_unique": "",
+                "bulge_display": 0,
+                "recommend_score": 3,
+                "main_state_dm_color": "",
+                "objective_state_dm_color": "",
+                "direction": 0,
+                "pk_direction": 0,
+                "quartet_direction": 0,
+                "anniversary_crowd": 0,
+                "yeah_space_type": "",
+                "yeah_space_url": "",
+                "jump_to_url": "",
+                "space_type": "",
+                "space_url": "",
+                "animation": {},
+                "emots": null,
+                "is_audited": false,
+                "id_str": "5b07eaab49ab75ed743f954e8566f3b694",
+                "icon": null,
+                "show_reply": true,
+                "reply_mid": 20285041,
+                "reply_uname": "懒一夕智能科技官方",
+                "reply_uname_color": "#FB7299",
+                "reply_is_mystery": false,
+                "reply_type_enum": 1,
+                "hit_combo": 0,
+                "esports_jump_url": ""
+            }
+            */
+            MyJson extra = MyJson::from(extra_s.toLatin1());
+            if (!extra.isEmpty())
+            {
+                bool show_reply = extra.b("show_reply");
+                qint64 reply_mid = extra.l("reply_mid");
+                QString reply_uname = extra.s("reply_uname");
+                QString reply_uname_color = extra.s("reply_uname_color");
+                bool reply_is_mystery = extra.b("reply_is_mystery");
+                int reply_type_enum = extra.i("reply_type_enum");
+
+                danmaku.setReplyInfo(show_reply, reply_mid, reply_uname, reply_uname_color, reply_is_mystery, reply_type_enum);
+            }
+            else
+            {
+                if (!extra_s.isEmpty())
+                {
+                    qWarning() << "解析reply失败：" << extra_s;
+                }
+            }
         }
 
         receiveDanmaku(danmaku.with(json));

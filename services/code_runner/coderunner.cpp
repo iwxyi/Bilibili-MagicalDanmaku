@@ -1077,11 +1077,11 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     }
     else if (key == "%reply%")
     {
-        return toSingleLine(danmaku.getReply());
+        return toSingleLine(danmaku.getAIReply());
     }
     else if (key == "%reply_len%")
     {
-        return snum(danmaku.getReply().length());
+        return snum(danmaku.getAIReply().length());
     }
     else if (key == "%sub_account_index%")
     {

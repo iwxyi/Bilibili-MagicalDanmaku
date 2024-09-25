@@ -549,9 +549,19 @@ public:
         this->faceUrl = url;
     }
 
-    void setReply(const QString& reply)
+    void setAIReply(const QString& reply)
     {
-        this->reply = reply;
+        this->ai_reply = reply;
+    }
+
+    void setReplyInfo(bool show, qint64 mid, QString uname, QString unameColor, bool mystery, int type)
+    {
+        this->show_reply = show;
+        this->reply_mid = mid;
+        this->reply_uname = uname;
+        this->reply_uname_color = unameColor;
+        this->reply_is_mystery = mystery;
+        this->reply_type_enum = type;
     }
 
     QString getText() const
@@ -856,9 +866,39 @@ public:
         return faceUrl;
     }
 
-    QString getReply() const
+    QString getAIReply() const
     {
-        return reply;
+        return ai_reply;
+    }
+
+    bool isShowReply() const
+    {
+        return show_reply;
+    }
+
+    qint64 getReplyMid() const
+    {
+        return reply_mid;
+    }
+
+    QString getReplyUname() const
+    {
+        return reply_uname;
+    }
+
+    QString getReplyUnameColor() const
+    {
+        return reply_uname_color;
+    }
+
+    bool isReplyMystery() const
+    {
+        return reply_is_mystery;
+    }
+
+    int getReplyTypeEnum() const
+    {
+        return reply_type_enum;
     }
 
 private:
@@ -924,7 +964,14 @@ private:
 
     QString roomId;
     int retry = 0;
-    QString reply;
+    QString ai_reply;
+
+    bool show_reply = false;
+    qint64 reply_mid = 0;
+    QString reply_uname;
+    QString reply_uname_color;
+    bool reply_is_mystery = false;
+    int reply_type_enum = 0;
 
 public:
     QStringList args;

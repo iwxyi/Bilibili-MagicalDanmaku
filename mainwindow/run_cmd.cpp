@@ -2155,10 +2155,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             chatService->txNlp->chat(text, [=](QString result) {
                 // 过滤回复后的内容
                 LiveDanmaku dmk = danmaku;
-                dmk.setReply(result);
+                dmk.setAIReply(result);
                 if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", dmk))
                 {
-                    qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getReply();
+                    qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getAIReply();
                     return;
                 }
 
@@ -2212,10 +2212,10 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
                 {
                     // 过滤回复后的内容
                     LiveDanmaku dmk = danmaku;
-                    dmk.setReply(result);
+                    dmk.setAIReply(result);
                     if (cr->isFilterRejected("FILTER_AI_REPLY_MSG", dmk))
                     {
-                        qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getReply();
+                        qInfo() << "过滤器已阻止指定文本的AI回复：" << dmk.getText() << dmk.getAIReply();
                         return;
                     }
                 }
