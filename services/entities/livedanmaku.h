@@ -190,6 +190,7 @@ public:
         danmaku.reply_uname_color = object.value("reply_uname_color").toString();
         danmaku.reply_is_mystery = object.value("reply_is_mystery").toBool();
         danmaku.reply_type_enum = object.value("reply_type_enum").toInt();
+        danmaku.wealth_level = object.value("honor_level").toInt();
         return danmaku;
     }
 
@@ -305,6 +306,10 @@ public:
             object.insert("reply_uname_color", reply_uname_color);
             object.insert("reply_is_mystery", reply_is_mystery);
             object.insert("reply_type_enum", reply_type_enum);
+        }
+        if (wealth_level > 0)
+        {
+            object.insert("honor_level", wealth_level);
         }
         return object;
     }
@@ -577,6 +582,11 @@ public:
         this->reply_uname_color = unameColor;
         this->reply_is_mystery = mystery;
         this->reply_type_enum = type;
+    }
+
+    void setWealthLevel(int level)
+    {
+        this->wealth_level = level;
     }
 
     QString getText() const
@@ -916,6 +926,11 @@ public:
         return reply_type_enum;
     }
 
+    int getWealthLevel() const
+    {
+        return wealth_level;
+    }
+
 private:
     MessageType msgType = MSG_DANMAKU;
 
@@ -950,6 +965,7 @@ private:
     qint64 check_info_ts;
     QString check_info_ct;
     int lpl = 0;
+    int wealth_level = 0;
 
     int giftId = 0;
     QString giftName;

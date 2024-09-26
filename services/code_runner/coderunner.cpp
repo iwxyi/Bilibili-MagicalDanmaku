@@ -877,6 +877,11 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
         return snum(danmaku.getPrevTimestamp());
     }
 
+    else if (key == "%wealth_level%")
+    {
+        return snum(danmaku.getWealthLevel());
+    }
+
     // 本次送礼金瓜子
     else if (key == "%gift_gold%")
         return snum(danmaku.isGoldCoin() ? danmaku.getTotalCoin() : 0);

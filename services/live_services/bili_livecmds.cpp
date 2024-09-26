@@ -886,6 +886,16 @@ void BiliLiveService::handleMessage(QJsonObject json)
             }
         }
 
+        if (info.size() > 16)
+        {
+            QJsonArray levels = info.at(16).toArray();
+            if (levels.size() > 0)
+            {
+                int level = levels.at(0).toInt();
+                danmaku.setWealthLevel(level);
+            }
+        }
+
         receiveDanmaku(danmaku.with(json));
     }
     else if (cmd == "SEND_GIFT") // 有人送礼
@@ -1050,6 +1060,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
         QString coinType = data.value("coin_type").toString();
         qint64 totalCoin = data.value("total_coin").toDouble();
         qint64 discountPrice = data.value("discount_price").toDouble(); // 盲盒实际爆出的单个礼物价值
+        int wealth_level = data.value("wealth_level").toInt();
 
         qInfo() << s8("接收到送礼：") << username << giftId << giftName << num << s8("  总价值：") << totalCoin << discountPrice << coinType;
         QString localName = us->getLocalNickname(uid);
@@ -1057,6 +1068,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
             username = localName;*/
         LiveDanmaku danmaku(username, giftId, giftName, num, uid, QDateTime::fromSecsSinceEpoch(timestamp), coinType, totalCoin);
         danmaku.setDiscountPrice(discountPrice);
+        danmaku.setWealthLevel(wealth_level);
         if (!data.value("medal_info").isNull())
         {
             QJsonObject medalInfo = data.value("medal_info").toObject();
@@ -1614,6 +1626,9 @@ void BiliLiveService::handleMessage(QJsonObject json)
         QString spreadInfo = data.value("spread_info").toString();
         QJsonObject fansMedal = data.value("fans_medal").toObject();
         QString roomId = snum(qint64(data.value("room_id").toDouble()));
+        QJsonObject uinfo = data.value("uinfo").toObject();
+        QJsonObject wealth = uinfo.value("wealth").toObject();
+        int wealth_level = wealth.value("level").toInt();
 
         qInfo() << s8("观众交互：") << username << msgType;
         QString localName = us->getLocalNickname(uid);
@@ -1626,6 +1641,7 @@ void BiliLiveService::handleMessage(QJsonObject json)
                          fansMedal.value("medal_level").toInt(),
                          QString("#%1").arg(fansMedal.value("medal_color").toInt(), 6, 16, QLatin1Char('0')),
                          "");
+        danmaku.setWealthLevel(wealth_level);
 
         bool opposite = pking &&
                 ((oppositeAudience.contains(uid) && !myAudience.contains(uid))
