@@ -2775,7 +2775,7 @@ QString CodeRunner::uidToName(qint64 uid)
 
     localNotify("[未找到用户：" + snum(uid) + "]");
     triggerCmdEvent("NOT_FIND_USER_BY_UID", LiveDanmaku(snum(uid)), true);
-    return "";
+    return snum(uid);
 }
 
 /**
