@@ -4739,9 +4739,23 @@ void MainWindow::startConnectRoom()
 
 void MainWindow::updatePermission()
 {
+    qInfo() << "当前信息：房间=" << ac->roomId << "  主播ID=" << ac->upUid << "  机器人ID=" << ac->cookieUid;
+    static int retry_count = 0;
     permissionLevel = 0;
     if (liveService->gettingRoom || liveService->gettingUser)
+    {
+        qDebug() << "仍在获取信息：room=" << liveService->gettingRoom << ", user=" << liveService->gettingUser;
+        QTimer::singleShot(5000, this, [=]{
+            if (++retry_count > 3)
+            {
+                retry_count = 0;
+                return;
+            }
+            qDebug() << "尝试刷新信息" << retry_count;
+            updatePermission();
+        });
         return ;
+    }
     QString userId = ac->cookieUid;
     get(serverPath + "pay/isVip", {"room_id", ac->roomId, "user_id", userId}, [=](MyJson json) {
         MyJson jdata = json.data();
@@ -8430,6 +8444,7 @@ void MainWindow::on_pkMelonValButton_clicked()
  */
 void MainWindow::slotStartWork()
 {
+    qInfo() << "开始工作";
     // 初始化开播数据
     liveService->liveTimestamp = QDateTime::currentMSecsSinceEpoch();
 
