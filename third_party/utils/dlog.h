@@ -21,6 +21,7 @@ void myMsgOutput(QtMsgType type, const QMessageLogContext &context, const QStrin
 #ifdef QT_DEBUG
         mmsg=QString("%1: Debug:\t%2 (file:%3, line:%4, func: %5)").arg(time).arg(msg).arg(QString(context.file)).arg(context.line).arg(QString(context.function));
 #else
+        mutex.unlock();
         return;
 #endif
         break;
