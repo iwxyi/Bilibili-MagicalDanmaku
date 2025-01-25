@@ -56,7 +56,7 @@ public:
     bool AIReplyMsgLocal = false;    // AI回复本地显示
     int AIReplyMsgSend = 0;          // AI回复发送弹幕，0关闭，1仅少量，2全部
 
-    QString chatgpt_endpiont;
+    QString chatgpt_endpiont = "https://api.deepseek.com/chat/completions";
     QString open_ai_key;
     QString chatgpt_model_name = "deepseek-chat";
     bool chatgpt_history_input = false;
