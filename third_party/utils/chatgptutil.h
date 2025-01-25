@@ -98,6 +98,13 @@ public:
 
     void getResponse(const QJsonObject& paramJson)
     {
+        if (us->chatgpt_endpiont.isEmpty())
+        {
+            qWarning() << "未设置API地址";
+            emit signalResponseFinished();
+            return ;
+        }
+
         if (us->open_ai_key.isEmpty())
         {
             qWarning() << "未设置OpenAI秘钥";
@@ -105,15 +112,15 @@ public:
             return ;
         }
 
-        if (us->open_ai_key.startsWith("fk"))
-            url = "https://stream.api2d.net/v1/chat/completions";
-        else if (us->open_ai_key.startsWith("sk"))
-            url = "https://api.openai.com/v1/chat/completions";
-        else
-        {
-            url = "https://api.openai.com/v1/chat/completions";
-            qWarning() << "设置的不正确的key：" << us->open_ai_key;
-        }
+        url = us->chatgpt_endpiont;
+//        if (us->open_ai_key.startsWith("fk"))
+//            url = "https://stream.api2d.net/v1/chat/completions";
+//        else if (us->open_ai_key.startsWith("sk"))
+//            url = "https://api.openai.com/v1/chat/completions";
+//        else
+//        {
+//            // qWarning() << "设置的不正确的key：" << us->open_ai_key;
+//        }
 
         this->param_json = paramJson;
 

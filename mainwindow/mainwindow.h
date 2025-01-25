@@ -713,6 +713,8 @@ private slots:
 
     void on_emailFromEdit_editingFinished();
 
+    void on_chatGPTEndpointEdit_textEdited(const QString &arg1);
+
     void on_emailPasswordEdit_editingFinished();
 
 private:
