@@ -1667,6 +1667,7 @@ void MainWindow::readConfig()
 
     // chatgpt
     us->chatgpt_prompt = us->value("chatgpt/prompt").toString();
+    ui->chatGPTEndpointEdit->setText(us->chatgpt_endpiont = us->value("chatgpt/endpoint", us->chatgpt_endpiont).toString());
     ui->chatGPTKeyEdit->setText(us->open_ai_key = us->value("chatgpt/open_ai_key", us->open_ai_key).toString());
     ui->chatGPTModelNameCombo->setCurrentText(us->chatgpt_model_name = us->value("chatgpt/model_name", us->chatgpt_model_name).toString());
     ui->chatGPTMaxTokenCountSpin->setValue(us->chatgpt_max_token_count = us->value("chatgpt/max_token_count", us->chatgpt_max_token_count).toInt());
@@ -10577,6 +10578,11 @@ void MainWindow::on_closeGuiCheck_clicked()
             delete widget;
         }
     }
+}
+
+void MainWindow::on_chatGPTEndpointEdit_textEdited(const QString &arg1)
+{
+    us->setValue("chatgpt/endpoin", us->chatgpt_endpiont = arg1);
 }
 
 void MainWindow::on_chatGPTKeyEdit_textEdited(const QString &arg1)

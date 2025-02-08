@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1017</width>
-    <height>1854</height>
+    <height>1962</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1845,8 +1845,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>925</width>
-             <height>1697</height>
+             <width>937</width>
+             <height>1846</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2309,7 +2309,7 @@ margin: 40px;</string>
               <x>10</x>
               <y>1140</y>
               <width>171</width>
-              <height>231</height>
+              <height>301</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2427,63 +2427,7 @@ QPushButton:pressed
              </item>
              <item>
               <layout class="QGridLayout" name="gridLayout_6">
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_73">
-                 <property name="text">
-                  <string>token</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QComboBox" name="chatGPTModelNameCombo">
-                 <item>
-                  <property name="text">
-                   <string>gpt-3.5-turbo</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-3.5-turbo-16k</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-3.5-turbo-16k-0613</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-4</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>gpt-4-0613</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_71">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="text">
-                  <string>秘钥</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_72">
-                 <property name="toolTip">
-                  <string/>
-                 </property>
-                 <property name="text">
-                  <string>模型</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
+               <item row="3" column="1">
                 <widget class="QSpinBox" name="chatGPTMaxTokenCountSpin">
                  <property name="contextMenuPolicy">
                   <enum>Qt::NoContextMenu</enum>
@@ -2524,7 +2468,68 @@ QPushButton:pressed
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="chatGPTKeyEdit">
+                 <property name="toolTip">
+                  <string>ChatGPT 秘钥
+支持OpenAI、API2D的秘钥</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QLineEdit
+{
+	background: transparent;
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="chatGPTModelNameCombo">
+                 <item>
+                  <property name="text">
+                   <string>deepseek-chat</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo-16k</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-3.5-turbo-16k-0613</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>gpt-4-0613</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_71">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>秘钥</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
                 <widget class="QSpinBox" name="chatGPTMaxContextCountSpin">
                  <property name="contextMenuPolicy">
                   <enum>Qt::NoContextMenu</enum>
@@ -2565,7 +2570,14 @@ QPushButton:pressed
                  </property>
                 </widget>
                </item>
-               <item row="3" column="0">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_81">
+                 <property name="text">
+                  <string>API</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
                 <widget class="QLabel" name="label_75">
                  <property name="toolTip">
                   <string/>
@@ -2575,20 +2587,27 @@ QPushButton:pressed
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="chatGPTKeyEdit">
-                 <property name="toolTip">
-                  <string>ChatGPT 秘钥
-支持OpenAI、API2D的秘钥</string>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_73">
+                 <property name="text">
+                  <string>token</string>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">QLineEdit
-{
-	background: transparent;
-}</string>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_72">
+                 <property name="toolTip">
+                  <string/>
                  </property>
                  <property name="text">
-                  <string/>
+                  <string>模型</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="chatGPTEndpointEdit">
+                 <property name="text">
+                  <string>https://api.deepseek.com/chat/completions</string>
                  </property>
                 </widget>
                </item>
@@ -2600,7 +2619,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>1380</y>
+              <y>1460</y>
               <width>211</width>
               <height>301</height>
              </rect>
