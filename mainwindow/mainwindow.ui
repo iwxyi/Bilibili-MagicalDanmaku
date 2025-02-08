@@ -2494,6 +2494,11 @@ QPushButton:pressed
                  </item>
                  <item>
                   <property name="text">
+                   <string>deepseek-reasoner</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
                    <string>gpt-3.5-turbo</string>
                   </property>
                  </item>

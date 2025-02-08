@@ -1,4 +1,12 @@
-### v4.10.7 [修复接口](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.7)
+### v4.10.8 [支持DeepSeek]
+
+- 新增DeepSeek接口（感谢github/hot1989hot）
+
+
+
+
+
+### v4.10.7 [修复接口、@用户](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.7)
 
 - 新增支持@用户的弹幕
 - 新增弹幕姬的右键菜单直接@用户
