@@ -1845,8 +1845,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>937</width>
-             <height>1846</height>
+             <width>935</width>
+             <height>1790</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2278,8 +2278,11 @@ margin: 40px;</string>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
+                 <property name="toolTip">
+                  <string>支持与GPT相同接口的所有AI（例如第三方GPT接口、DeepSeek等）</string>
+                 </property>
                  <property name="text">
-                  <string>ChatGPT</string>
+                  <string>GPT类</string>
                  </property>
                 </widget>
                </item>
@@ -10438,7 +10441,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>22</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
