@@ -1197,6 +1197,8 @@ tips：
 | execRemoteCommand(cmd, 0)                          | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
 | sendPrivateMsg(uid, msg)                           | 发送私信         | 向指定用户发送私信                                           |
 | sendRoomMsg(roomId, msg)                           | 发送直播间弹幕   | 向指定直播间发送弹幕                                         |
+| sendRoomEmoji(roomId, emojiId)                     | 发送直播间表情   | 向指定直播间发送表情                                         |
+| sendEmoji(emojiId)                                 | 发送表情         | 上面命令的省略房号版                                         |
 | showScreenDanmu(text)                              | 显示全屏弹幕     | 将text作为本地全屏移动的弹幕显示，受相关设置影响，需打开“全屏弹幕” |
 | timerShot(msecond, msg)                            | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令，多个命令使用 `%m%` 分隔） |
 | localNotify(msg)                                   | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |

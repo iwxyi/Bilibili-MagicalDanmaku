@@ -147,7 +147,8 @@ public slots:
 
     /// 弹幕
     void sendMsg(const QString& msg) override;
-    void sendRoomMsg(QString uid, const QString& msg) override;
+    void sendRoomMsg(QString roomId, const QString& msg) override;
+    void sendRoomEmoji(QString roomId, const QString& id) override;
     void pullLiveDanmaku() override;
     
     /// 用户管理

@@ -4555,6 +4555,76 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
             else if (errorMsg == "k") // 主播设置的直播间敏感词
             {
             }
+            else
+            {
+                localNotify("[错误]" + errorMsg);
+            }
+        }
+    });
+}
+
+/**
+ * 发送直播间表情
+ * 示例：https://api.live.bilibili.com/msg/send,
+ * bubble=0&msg=official_147&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%room_id%&csrf=%csrf%&csrf_token=%csrf%
+ */
+void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
+{
+    if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
+    {
+        showError("发送弹幕", "机器人账号未登录");
+#ifdef ZUOQI_ENTRANCE
+        QMessageBox::warning(this, "发送弹幕", "请点击登录按钮，登录机器人账号方可发送弹幕");
+#endif
+        return ;
+    }
+    if (ac->roomId.isEmpty())
+        return ;
+
+    QString data = QString("bubble=0&msg=%1&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%2&csrf=%3&csrf_token=%4")
+        .arg(id).arg(roomId).arg(ac->csrf_token).arg(ac->csrf_token);
+
+    // #连接槽
+    post("https://api.live.bilibili.com/msg/send", data.toStdString().data(), [=](QJsonObject json){
+        QString errorMsg = json.value("message").toString();
+        emit signalStatusChanged("");
+        if (!errorMsg.isEmpty())
+        {
+            QString errorDesc = errorMsg;
+            if (errorMsg == "f")
+            {
+                errorDesc = "包含屏蔽词";
+            }
+            else if (errorMsg == "k")
+            {
+                errorDesc = "包含直播间屏蔽词";
+            }
+
+            showError("发送弹幕失败", errorDesc);
+            localNotify(errorDesc + " -> " + id);
+
+            // 重试
+            if (!us->retryFailedDanmaku)
+                return ;
+
+            if (errorMsg.contains("msg in 1s"))
+            {
+                localNotify("[5s后手动重试]");
+            }
+            else if (errorMsg.contains("msg repeat") || errorMsg.contains("频率过快"))
+            {
+                localNotify("[4s后手动重试]");
+            }
+            else if (errorMsg == "f") // 系统敏感词
+            {
+            }
+            else if (errorMsg == "k") // 主播设置的直播间敏感词
+            {
+            }
+            else
+            {
+                localNotify("[错误]" + errorMsg);
+            }
         }
     });
 }

@@ -148,6 +148,7 @@ public slots:
     /// 发送弹幕
     virtual void sendMsg(const QString& msg) {}
     virtual void sendRoomMsg(QString roomId, const QString& msg) {}
+    virtual void sendRoomEmoji(QString roomId, const QString& id) {}
     /// 恢复之前的弹幕
     virtual void pullLiveDanmaku() { }
     /// 设置为管理员

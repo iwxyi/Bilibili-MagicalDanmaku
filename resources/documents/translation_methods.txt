@@ -16,6 +16,8 @@
 执行远程命令=execRemoteCommand
 发送私信=sendPrivateMsg
 发送直播间弹幕=sendRoomMsg
+发送直播间表情=sendRoomEmoji
+发送表情=sendEmoji
 显示全屏弹幕=showScreenDanmu
 延迟发送=timerShot
 本地通知=localNotify

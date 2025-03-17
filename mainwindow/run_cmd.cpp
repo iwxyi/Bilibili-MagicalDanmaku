@@ -776,6 +776,37 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
         }
     }
 
+    // 发送指定直播间表情
+    if (msg.contains("sendRoomEmoji"))
+    {
+        // 带房间号
+        re = RE("sendRoomEmoji\\s*\\(\\s*(\\d+)\\s*,\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString roomId = caps.at(1);
+            QString msg = caps.at(2);
+            qInfo() << "执行命令：" << caps;
+            if (roomId == ac->roomId)
+                cr->addNoReplyDanmakuText(msg);
+            liveService->sendRoomEmoji(roomId, msg);
+            return true;
+        }
+    }
+    if (msg.contains("sendRoomEmoji"))
+    {
+        // 不带房间号
+        re = RE("sendEmoji\\s*\\(\\s*(.+)\\s*\\)");
+        if (msg.indexOf(re, 0, &match) > -1)
+        {
+            QStringList caps = match.capturedTexts();
+            QString msg = caps.at(1);
+            qInfo() << "执行命令：" << caps;
+            liveService->sendRoomEmoji(ac->roomId, msg);
+            return true;
+        }
+    }
+
     // 发送全屏弹幕
     if (msg.contains("showScreenDanmu"))
     {
