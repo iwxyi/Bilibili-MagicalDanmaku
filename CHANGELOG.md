@@ -1,4 +1,17 @@
-### v4.10.8 [支持DeepSeek]
+### v4.10.8.1
+
+- 自定义变量支持正则表达式，以此衍生的自定义函数功能
+> 示例：自定义发送表情的函数，自定义变量添加：
+> ```
+> >发送表情\((.+?)\) = >postData(https://api.live.bilibili.com/msg/send, bubble=0&msg=\1&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%room_id%&csrf=%csrf%&csrf_token=%csrf%)
+> ```
+> 之后就可以在代码框中使用 `>发送表情(official_147)` 这样的格式来快速写发送表情。
+
+
+
+
+
+### v4.10.8 [支持DeepSeek](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.8)
 
 - 新增DeepSeek接口（感谢github/hot1989hot）
 

@@ -656,7 +656,7 @@ QString CodeRunner::processDanmakuVariants(QString msg, const LiveDanmaku& danma
     // 自定义变量
     for (auto it = us->customVariant.begin(); it != us->customVariant.end(); ++it)
     {
-        msg.replace(it->first, it->second);
+        msg.replace(QRegularExpression(it->first), it->second);
     }
 
     // 翻译

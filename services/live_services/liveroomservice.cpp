@@ -679,7 +679,7 @@ void LiveRoomService::receiveDanmaku(LiveDanmaku &danmaku)
     QString msg = danmaku.getText();
 
     // !弹幕的时间戳是13位，其他的是10位！
-    qInfo() << s8("接收到弹幕：") << uname << msg;
+    qInfo() << s8("接收到弹幕：") << uname << msg << (danmaku.isNoReply() ? "(无需回复)" : "");
 
     // 等待通道
     if (uid != ac->cookieUid.toLongLong())
