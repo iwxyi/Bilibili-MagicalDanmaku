@@ -2200,8 +2200,13 @@ void LiveDanmakuWindow::startReply(QListWidgetItem *item, bool manual)
 {
     auto danmaku = LiveDanmaku::fromDanmakuJson(item->data(DANMAKU_JSON_ROLE).toJsonObject());
     qint64 uid = danmaku.getUid();
+    // 无需回复的消息
     if (!uid || us->notReplyUsers.contains(uid) || danmaku.isNoReply())
         return ;
+    // 不回复自己的消息
+    if (!us->AIReplySelf && danmaku.getUid() == ac->cookieUid.toLongLong())
+        return;
+
     QString msg = danmaku.getText();
     if (msg.isEmpty())
         return ;

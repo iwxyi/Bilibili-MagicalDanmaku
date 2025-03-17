@@ -1347,9 +1347,11 @@ void MainWindow::readConfig()
     // 自动回复
     us->AIReplyMsgLocal = us->value("danmaku/aiReply", false).toBool();
     us->AIReplyMsgSend = us->value("danmaku/aiReplyMsg", 0).toInt();
+    us->AIReplySelf = us->value("danmaku/aiReplySelf", false).toBool();
     ui->AIReplyCheck->setChecked(us->AIReplyMsgLocal);
     ui->AIReplyMsgCheck->setCheckState(static_cast<Qt::CheckState>(us->AIReplyMsgSend));
     ui->AIReplyMsgCheck->setEnabled(us->AIReplyMsgLocal);
+    ui->AIReplySelfCheck->setChecked(us->AIReplySelf);
 
     // 黑名单管理
     ui->enableBlockCheck->setChecked(us->value("block/enableBlock", false).toBool());
@@ -8918,6 +8920,13 @@ void MainWindow::on_AIReplyMsgCheck_clicked()
         ui->AIReplyMsgCheck->setText("回复弹幕");
     else
         ui->AIReplyMsgCheck->setText("回复弹幕(仅单条)");
+}
+
+void MainWindow::on_AIReplySelfCheck_clicked()
+{
+    bool check = ui->AIReplySelfCheck->isChecked();
+    us->AIReplySelf = check;
+    us->setValue("danmaku/aiReplySelf", check);
 }
 
 void MainWindow::slotAIReplyed(QString reply, LiveDanmaku danmaku)

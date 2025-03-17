@@ -2181,7 +2181,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>10</y>
               <width>171</width>
-              <height>151</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -2265,6 +2265,25 @@ margin: 40px;</string>
                </property>
                <property name="tristate">
                 <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="AIReplySelfCheck">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要显示实时弹幕&lt;/p&gt;&lt;p&gt;开启后，发送AI回复的弹幕&lt;/p&gt;&lt;p&gt;否则只是本地显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>回复自己</string>
+               </property>
+               <property name="tristate">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -3206,7 +3225,7 @@ QPushButton:pressed
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>160</y>
+              <y>180</y>
               <width>161</width>
               <height>151</height>
              </rect>
