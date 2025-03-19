@@ -29,6 +29,7 @@ public slots:
     void insertDanmaku(const LiveDanmaku& danmaku);
     void insertMusic(const LiveDanmaku& danmaku);
     void insertCmd(const QString& cmd, const QString &data);
+    void insertFansArchive(const QString& roomId, const QString& uid, const QString& uname, const QString& archive);
     bool exec(const QString& sql);
     bool tryExec(const QString& sql);
 

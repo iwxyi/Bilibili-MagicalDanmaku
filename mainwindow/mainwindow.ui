@@ -163,6 +163,23 @@
         </widget>
        </item>
        <item>
+        <widget class="WaterZoomButton" name="fansPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;扩展&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/fans</normaloff>:/icons/fans</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="WaterZoomButton" name="preferencePageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -215,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -10143,6 +10160,7 @@ QTabBar::tab:selected
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="archivePage"/>
       <widget class="QWidget" name="preferencePage">
        <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,1">
         <property name="spacing">

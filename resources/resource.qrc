@@ -129,6 +129,7 @@
         <file alias="video4">icons/video4.png</file>
         <file alias="run">icons/run.png</file>
         <file alias="at">icons/at.png</file>
+        <file alias="fans">icons/fans.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>

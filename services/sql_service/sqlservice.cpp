@@ -210,6 +210,19 @@ cmd TEXT,\
 data TEXT,\
 create_time time NOT NULL)");
     }
+
+    // AI粉丝档案
+    if (!hasTable("fans_archive"))
+    {
+        createTable("CREATE TABLE fans_archive(\
+id INTEGER PRIMARY KEY AUTOINCREMENT,\
+room_id TEXT NOT NULL,\
+uid TEXT NOT NULL,\
+uname TEXT NOT NULL,\
+archive TEXT NOT NULL,\
+create_time time NOT NULL,\
+update_time time NOT NULL)");
+    }
 }
 
 /**
@@ -359,6 +372,24 @@ void SqlService::insertCmd(const QString &cmd, const QString &data)
 (cmd, data, create_time) VALUES(?,?,?)");
     query.addBindValue(cmd);
     query.addBindValue(data);
+    query.addBindValue(QDateTime::currentDateTime());
+
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+    }
+}
+
+void SqlService::insertFansArchive(const QString &roomId, const QString &uid, const QString &uname, const QString &archive)
+{
+    QSqlQuery query;
+    query.prepare("INSERT INTO fans_archive\
+(room_id, uid, uname, archive, create_time, update_time) VALUES(?,?,?,?,?,?)");
+    query.addBindValue(roomId);
+    query.addBindValue(uid);
+    query.addBindValue(uname);
+    query.addBindValue(archive);
+    query.addBindValue(QDateTime::currentDateTime());
     query.addBindValue(QDateTime::currentDateTime());
 
     if (!query.exec())
