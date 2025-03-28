@@ -12,6 +12,11 @@ SqlService::~SqlService()
     close();
 }
 
+bool SqlService::isOpen() const
+{
+    return db.isOpen();
+}
+
 void SqlService::setDbPath(const QString &path)
 {
     this->dbPath = path;
@@ -79,20 +84,20 @@ void SqlService::initTables()
     // 弹幕
     if (!hasTable("danmu"))
     {
-        createTable("CREATE TABLE danmu(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-uid TEXT NOT NULL,\
-msg TEXT NOT NULL,\
-ulevel INTEGER,\
-admin BOOLEAN,\
-guard INTEGER,\
-anchor_room_id TEXT,\
-medal_name TEXT,\
-medal_level INTEGER,\
-medal_up TEXT,\
-price INTEGER,\
+        createTable(R"(CREATE TABLE danmu(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT NOT NULL,
+uname TEXT NOT NULL,
+uid TEXT NOT NULL,
+msg TEXT NOT NULL,
+ulevel INTEGER,
+admin BOOLEAN,
+guard INTEGER,
+anchor_room_id TEXT,
+medal_name TEXT,
+medal_level INTEGER,
+medal_up TEXT,
+price INTEGER,
 create_time time NOT NULL)");
     }
     else
@@ -103,24 +108,24 @@ create_time time NOT NULL)");
     // 送礼（不包括舰长）
     if (!hasTable("gift"))
     {
-        createTable("CREATE TABLE gift(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-uid TEXT NOT NULL,\
-gift_name TEXT NOT NULL,\
-gift_id INTEGER NOT NULL,\
-gift_type INTEGER,\
-coin_type TEXT,\
-total_coin INTEGER NOT NULL,\
-number INTEGER NOT NULL,\
-ulevel INTEGER,\
-admin BOOLEAN,\
-guard INTEGER,\
-anchor_room_id TEXT,\
-medal_name TEXT,\
-medal_level INTEGER,\
-medal_up TEXT,\
+        createTable(R"(CREATE TABLE gift(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT NOT NULL,
+uname TEXT NOT NULL,
+uid TEXT NOT NULL,
+gift_name TEXT NOT NULL,
+gift_id INTEGER NOT NULL,
+gift_type INTEGER,
+coin_type TEXT,
+total_coin INTEGER NOT NULL,
+number INTEGER NOT NULL,
+ulevel INTEGER,
+admin BOOLEAN,
+guard INTEGER,
+anchor_room_id TEXT,
+medal_name TEXT,
+medal_level INTEGER,
+medal_up TEXT,
 create_time time NOT NULL)");
     }
     else
@@ -131,39 +136,39 @@ create_time time NOT NULL)");
     // 舰长
     if (!hasTable("guard"))
     {
-        createTable("CREATE TABLE guard(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-uid TEXT NOT NULL,\
-gift_name TEXT NOT NULL,\
-gift_id INTEGER NOT NULL,\
-guard_level INTEGER NOT NULL,\
-price INTEGER,\
-number INTEGER,\
-start_time TIMESTAMP,\
-end_time TIMESTAMP,\
+        createTable(R"(CREATE TABLE guard(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT NOT NULL,
+uname TEXT NOT NULL,
+uid TEXT NOT NULL,
+gift_name TEXT NOT NULL,
+gift_id INTEGER NOT NULL,
+guard_level INTEGER NOT NULL,
+price INTEGER,
+number INTEGER,
+start_time TIMESTAMP,
+end_time TIMESTAMP,
 create_time time NOT NULL)");
     }
 
     // 进入/关注
     if (!hasTable("interact"))
     {
-        createTable("CREATE TABLE interact(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-uid TEXT NOT NULL,\
-msg_type INTEGER NOT NULL,\
-admin BOOLEAN,\
-guard INTEGER,\
-anchor_room_id TEXT,\
-medal_name TEXT,\
-medal_level INTEGER,\
-medal_up TEXT,\
-special INTEGER,\
-spread_desc TEXT,\
-spread_info TEXT,\
+        createTable(R"(CREATE TABLE interact(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT NOT NULL,
+uname TEXT NOT NULL,
+uid TEXT NOT NULL,
+msg_type INTEGER NOT NULL,
+admin BOOLEAN,
+guard INTEGER,
+anchor_room_id TEXT,
+medal_name TEXT,
+medal_level INTEGER,
+medal_up TEXT,
+special INTEGER,
+spread_desc TEXT,
+spread_info TEXT,
 create_time time NOT NULL)");
     }
     else
@@ -174,31 +179,31 @@ create_time time NOT NULL)");
     // 勋章
     if (!hasTable("medal"))
     {
-        createTable("CREATE TABLE medal(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-anchor_room_id TEXT,\
-medal_name TEXT,\
-medal_level INTEGER,\
-medal_up TEXT,\
+        createTable(R"(CREATE TABLE medal(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+anchor_room_id TEXT,
+medal_name TEXT,
+medal_level INTEGER,
+medal_up TEXT,
 create_time time NOT NULL)");
     }
 
     // 点歌
     if (!hasTable("music"))
     {
-        createTable("CREATE TABLE music(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-uid TEXT NOT NULL,\
-music_name TEXT NOT NULL,\
-ulevel INTEGER,\
-admin BOOLEAN,\
-guard INTEGER,\
-anchor_room_id TEXT,\
-medal_name TEXT,\
-medal_level INTEGER,\
-medal_up TEXT,\
+        createTable(R"(CREATE TABLE music(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT NOT NULL,
+uname TEXT NOT NULL,
+uid TEXT NOT NULL,
+music_name TEXT NOT NULL,
+ulevel INTEGER,
+admin BOOLEAN,
+guard INTEGER,
+anchor_room_id TEXT,
+medal_name TEXT,
+medal_level INTEGER,
+medal_up TEXT,
 create_time time NOT NULL)");
     }
     else
@@ -209,22 +214,22 @@ create_time time NOT NULL)");
     // cmd
     if (!hasTable("cmd"))
     {
-        createTable("CREATE TABLE cmd(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-cmd TEXT,\
-data TEXT,\
+        createTable(R"(CREATE TABLE cmd(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+cmd TEXT,
+data TEXT,
 create_time time NOT NULL)");
     }
 
     // AI粉丝档案
     if (!hasTable("fans_archive"))
     {
-        createTable("CREATE TABLE fans_archive(\
-id INTEGER PRIMARY KEY AUTOINCREMENT,\
-uid TEXT NOT NULL,\
-uname TEXT NOT NULL,\
-archive TEXT,\
-create_time time NOT NULL,\
+        createTable(R"(CREATE TABLE fans_archive(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+uid TEXT NOT NULL,
+uname TEXT NOT NULL,
+archive TEXT,
+create_time time NOT NULL,
 update_time time NOT NULL)");
     }
 }
@@ -507,7 +512,7 @@ bool SqlService::createTable(const QString &sql)
 
 /**
  * 获取一个未处理过的粉丝档案目标
- * @return 需要处理的uid
+ * @return 需要处理的uid。如果没有，返回空字符串
  * 目标要求：
  * - 7天内发过弹幕
  * - 总弹幕数量超过30条
@@ -517,16 +522,74 @@ QString SqlService::getUnprocessedFansArchive()
 {
     // 获取没有处理过的粉丝档案
     // 要求：
-    // - 档案表中没有对应的id
+    // - 档案表中没有对应的uid，且uid不为0
     // - 7天内发过弹幕
     // - 总弹幕数量超过30条
-    static QString getUnprocessedFansArchiveSql = "SELECT uid FROM danmu ";
+    static QString getUnprocessedFansArchiveSql = R"(
+SELECT 
+    d.uid,
+    MAX(d.uname) AS uname,
+    COUNT(*) AS danmu_count,
+    MAX(d.create_time) AS last_danmu_time
+FROM danmu d
+WHERE 
+    d.uid NOT IN (SELECT uid FROM fans_archive)
+    AND d.uid != '0'
+GROUP BY d.uid
+HAVING 
+    danmu_count > 30 
+    AND last_danmu_time >= datetime('now', '-7 days')
+ORDER BY last_danmu_time DESC
+LIMIT 1;
+)";
 
     // 获取需要处理的粉丝档案
     // 要求：
-    // - 处理过且超过1小时
+    // - 处理过且1小时内没有弹幕
     // - 未处理的总弹幕数量超过10条
-    static QString getNeededFansArchiveSql = "SELECT room_id, uid FROM fans_archive WHERE processed = 1 AND update_time - create_time > 3600 AND danmu_count > 10";
+    static QString getNeedUpdateFansArchiveSql = R"(
+WITH update_candidates AS (
+  SELECT 
+    d.uid,
+    MAX(d.create_time) AS last_danmu_time,
+    MAX(fa.update_time) AS last_update_time,
+    COUNT(*) AS new_danmu_count
+  FROM danmu d
+  JOIN fans_archive fa ON d.uid = fa.uid
+  WHERE d.create_time > fa.update_time
+  GROUP BY d.uid
+  HAVING 
+    new_danmu_count > 10
+    AND datetime(last_danmu_time) <= datetime('now', '-1 hour')
+)
+SELECT 
+  uc.uid,
+  fa.uname,
+  fa.archive AS current_archive,
+  uc.last_update_time,
+  uc.last_danmu_time,
+  uc.new_danmu_count
+FROM update_candidates uc
+JOIN fans_archive fa ON uc.uid = fa.uid
+ORDER BY uc.last_danmu_time DESC;
+)";
 
-    
+    // #开始执行
+    // 优先处理没有处理过的粉丝档案
+    QSqlQuery query;
+    query.exec(getUnprocessedFansArchiveSql);
+    if (query.next())
+    {
+        qInfo() << "优先处理没有处理过的粉丝档案：" << query.value(0).toString();
+        return query.value(0).toString();
+    }
+
+    // 然后处理已经处理过的
+    query.exec(getNeedUpdateFansArchiveSql);
+    if (query.next())
+    {
+        qInfo() << "处理已经处理过的粉丝档案：" << query.value(0).toString();
+        return query.value(0).toString();
+    }
+    return "";
 }

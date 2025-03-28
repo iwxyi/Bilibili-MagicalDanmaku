@@ -15,6 +15,7 @@
 #define snum(x) QString::number(x)
 
 class LiveDanmaku;
+class FansDanmakuWaitBean;
 
 enum LivePlatform
 {

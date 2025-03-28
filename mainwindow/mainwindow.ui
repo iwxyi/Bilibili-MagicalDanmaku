@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1863,7 +1863,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>935</width>
-             <height>1790</height>
+             <height>1803</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -7376,6 +7376,89 @@ margin: 40px;</string>
              </item>
             </layout>
            </widget>
+           <widget class="QWidget" name="fansArchivesSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>430</x>
+              <y>1350</y>
+              <width>161</width>
+              <height>91</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>每次更新后显示更新了什么</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#fansArchivesSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_89">
+             <item>
+              <widget class="QLabel" name="label_86">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>粉丝档案</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_46" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="fansArchivesCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>保存以下交互操作到数据库，随时查询与统计：
+- 弹幕
+- 礼物
+- 舰长
+- 进入
+- 点歌
+
+数据库默认位置：安装目录/database.db</string>
+               </property>
+               <property name="text">
+                <string>启用【捐赠版】</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -10478,7 +10561,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

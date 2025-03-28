@@ -58,6 +58,7 @@
 #include "voice_service/voiceservice.h"
 #include "chat_service/chatservice.h"
 #include "emailutil.h"
+#include "fans_archives/fansarchivesservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -719,6 +720,8 @@ private slots:
 
     void on_emailPasswordEdit_editingFinished();
 
+    void on_fansArchivesCheck_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -874,6 +877,8 @@ private:
 
     void sendEmail(const QString& to, const QString& subject, const QString& body);
 
+    void initFansArchivesService();
+
 private:
     // 应用信息
     Ui::MainWindow *ui;
@@ -977,6 +982,9 @@ private:
 
     // 邮件
     EmailUtil* emailService = nullptr;
+
+    // 粉丝档案
+    FansArchivesService* fansArchivesService = nullptr;
 };
 
 class RequestBodyHelper : public QObject

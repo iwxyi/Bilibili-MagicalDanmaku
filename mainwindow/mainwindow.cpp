@@ -1858,6 +1858,11 @@ void MainWindow::readConfig2()
     ui->saveCmdToSqliteCheck->setEnabled(us->saveToSqlite);
     if (us->saveToSqlite)
         sqlService.open();
+
+    // 粉丝档案
+    ui->fansArchivesCheck->setChecked(us->fansArchives = us->value("us/fansArchives", false).toBool());
+    if (us->fansArchives)
+        initFansArchivesService();
 }
 
 void MainWindow::initDanmakuWindow()
@@ -8114,8 +8119,13 @@ void MainWindow::showNotify(QString s) const
 
 void MainWindow::initDbService()
 {
-    // TODO: 可更换路径
-    sqlService.setDbPath(rt->dataPath + "database.db");
+    // 可更换路径
+    QString customPath = us->value("custom/databasePath", "").toString();
+    if (customPath.isEmpty())
+        customPath = rt->dataPath + "database.db";
+    else
+        qInfo() << "自定义数据库路径：" << customPath;
+    sqlService.setDbPath(customPath);
     if (us->saveToSqlite)
         sqlService.open();
 
@@ -8161,6 +8171,7 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
 
     if (emailService == nullptr)
     {
+        qInfo() << "初始化邮件服务";
         emailService = new EmailUtil(this);
     }
 
@@ -8179,6 +8190,21 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
                             to,
                             subject,
                             body);
+}
+
+void MainWindow::initFansArchivesService()
+{
+    if (!sqlService.isOpen())
+    {
+        qWarning() << "数据库未打开，无法初始化粉丝档案服务";
+        QMessageBox::warning(this, "警告", "数据库未打开，无法初始化粉丝档案服务");
+        return;
+    }
+
+    if (fansArchivesService)
+        return;
+    qInfo() << "初始化粉丝档案服务";
+    fansArchivesService = new FansArchivesService(&sqlService, this);
 }
 
 /**
@@ -10736,3 +10762,18 @@ void MainWindow::on_emailPasswordEdit_editingFinished()
 {
     us->setValue("email/password", ui->emailPasswordEdit->text());
 }
+
+void MainWindow::on_fansArchivesCheck_clicked()
+{
+    if (ui->fansArchivesCheck->isChecked() && !hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        ui->fansArchivesCheck->setChecked(false);
+        return ;
+    }
+
+    us->fansArchives = ui->fansArchivesCheck->isChecked();
+    us->setValue("us/fansArchives", us->fansArchives);
+    initFansArchivesService();
+}
+

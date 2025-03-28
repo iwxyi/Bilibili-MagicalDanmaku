@@ -14,6 +14,7 @@ public:
     explicit SqlService(QObject *parent = nullptr);
     virtual ~SqlService();
 
+    bool isOpen() const;
     void setDbPath(const QString& dbDir);
     QString getDbPath() const;
     QSqlDatabase getDb() const;
