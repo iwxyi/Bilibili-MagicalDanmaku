@@ -391,9 +391,8 @@ void SqlService::insertCmd(const QString &cmd, const QString &data)
 
 void SqlService::insertFansArchive(const QString &uid, const QString &uname, const QString &archive)
 {
-    QSqlQuery query;
-
     // 判断是否存在
+    QSqlQuery query;
     query.prepare("SELECT COUNT(*) FROM fans_archive WHERE uid = ?");
     query.addBindValue(uid);
     if (!query.exec())
@@ -559,8 +558,8 @@ WITH update_candidates AS (
   WHERE d.create_time > fa.update_time
   GROUP BY d.uid
   HAVING 
-    new_danmu_count > 10
-    AND datetime(last_danmu_time) <= datetime('now', '-1 hour')
+    new_danmu_count >= 10
+    AND datetime(last_danmu_time) <= datetime('now', '-1 hour', 'localtime')
 )
 SELECT 
   uc.uid,

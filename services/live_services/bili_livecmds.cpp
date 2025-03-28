@@ -2598,9 +2598,13 @@ void BiliLiveService::handleMessage(QJsonObject json)
     {
 
     }
+    else if (cmd == "UNIVERSAL_EVENT_GIFT" || cmd == "UNIVERSAL_EVENT_GIFT_V2")
+    {
+
+    }
     else
     {
-        qWarning() << "未处理的命令：" << cmd << json;
+        // qDebug() << "未处理的命令：" << cmd << json;
         triggerCmdEvent(cmd, LiveDanmaku().with(json));
     }
 }

@@ -27,7 +27,12 @@ void FansArchivesService::onTimer()
     
     QString uid = sqlService->getNextFansArchive();
     if (uid.isEmpty())
+    {
+        qInfo() << "没有找到需要处理的粉丝档案，暂缓工作";
+        timer->setInterval(60000); // 60秒判断一次
+        timer->start();
         return;
+    }
     if (uid == "0")
     {
         qWarning() << "使用了'0'作为uid的粉丝档案";
@@ -59,30 +64,31 @@ void FansArchivesService::onTimer()
             lastUname = danmaku.s("uname");
         danmakuListStr.append(danmaku.s("create_time") + "  " + danmaku.s("uname") + "：" + danmaku.s("msg"));
     }
+    qInfo() << "待处理的用户信息：" << lastUname << "弹幕数量：" << danmakuList.size();
 
     // 组合发送的文本
     QString prompt = R"(
-你是一个专业的观众心理分析师，请根据用户所有历史弹幕内容，按以下维度生成中文字段的纯文本档案：
+你是一个专业的观众心理分析师，请根据用户所有历史弹幕内容，按以下维度生成中文字段的纯文本档案（请勿使用Markdown等）：
 分析要求：
-【基础信息】  
-* 用户类型：活跃粉丝/潜水观众/节奏带动者  
-* 互动热度：0-100分（根据发言频率和互动反馈计算）  
+【基础信息】
+* 用户类型：活跃粉丝/潜水观众/节奏带动者
+* 互动热度：0-100分（根据发言频率和互动反馈计算）
 
-【性格特征】  
+【性格特征】
 1. 核心性格：形容词+证据（如"社牛型（使用58个emoji/平均每句1.2个感叹号）"）  
 2. 次要特质：带具体行为的关键词（如"细节控（常追问产品参数）"）  
 
-【兴趣图谱】  
+【兴趣图谱】
 - 近期高频兴趣：按时间衰减权重排序（如"3C数码→机械键盘（近7天讨论6次）"）  
 - 潜在兴趣：根据关联话题推测（如"讨论键鼠时多次提及二次元角色→可能喜欢IP联名款"）  
 
-【偏好触发点】  
-> 当主播做以下行为时，该用户互动率提升：  
-① 使用"卧槽"等标志性口头禅（触发概率+80%）  
-② 展示限定皮肤（停留时长提升3倍）  
+【偏好触发点】
+> 当主播做以下行为时，该用户互动率提升：
+① 使用"卧槽"等标志性口头禅（触发概率+80%）
+② 展示限定皮肤（停留时长提升3倍）
 
-【特殊关注】  
-! 矛盾特征标注（如"70%倾向理性消费，但曾为限量款冲动消费3次"）  
+【特殊关注】
+! 矛盾特征标注（如"70%倾向理性消费，但曾为限量款冲动消费3次"）
 ! 禁止使用真实个人信息\n\n
     )";
 
@@ -123,6 +129,9 @@ void FansArchivesService::onTimer()
     });
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();
+
+        timer->setInterval(3000); // 3秒后继续处理下一个粉丝档案
+        timer->start();
     });
     connect(chatgpt, &ChatGPTUtil::signalResponseText, this, [=](const QString& text) {
         qInfo() << "AI生成档案：" << text;
