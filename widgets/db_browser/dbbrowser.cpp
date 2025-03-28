@@ -1,6 +1,9 @@
 #include <QTextBlock>
 #include <QLabel>
 #include <QPushButton>
+#include <QRegularExpression>
+#include <QLineEdit>
+#include <QFormLayout>
 #include "dbbrowser.h"
 #include "ui_dbbrowser.h"
 #include "fileutil.h"
@@ -106,6 +109,9 @@ void DBBrowser::on_tabWidget_currentChanged(int index)
     us->setValue("recent/sql_tab", index);
 }
 
+/**
+ * 为SQL源码列表创建一个可视化的可直接点击的列表
+ */
 void DBBrowser::initVisualList()
 {
     QString text = ui->queryEdit->toPlainText();
@@ -124,22 +130,67 @@ void DBBrowser::initVisualList()
     }
 
     // 添加单个item及其widget
+    // 并且给code中的[]变量（多个）添加对应的输入框
     auto generalWidget = [&](const QString& title, const QString& code) {
         QWidget* widget = new QWidget(ui->listWidget);
         QLabel* label = new QLabel(title, widget);
         InteractiveButtonBase* btn = new InteractiveButtonBase(QIcon(":/icons/run"), widget);
         btn->setSquareSize();
-        QHBoxLayout* layout = new QHBoxLayout(widget);
-        layout->addWidget(label);
-        layout->addWidget(btn);
+        btn->setRadius(5);
 
+        QHBoxLayout* main_hlayout = new QHBoxLayout(widget);
+
+        // 标题
+        QVBoxLayout* content_vlayout = new QVBoxLayout();
+        content_vlayout->addWidget(label);
+        content_vlayout->setAlignment(Qt::AlignLeft);
+
+        // 遍历code，找到[]变量，添加输入框
+        // 格式：[变量名:string(默认)/number]
+        QRegularExpression re("\\[([^:]+)(?::([^]]+))?\\]");
+        QRegularExpressionMatchIterator matchIterator = re.globalMatch(code);
+        while (matchIterator.hasNext())
+        {
+            // 获取下一个变量
+            QRegularExpressionMatch match = matchIterator.next();
+            QString variable = match.captured(1);
+            QString type = match.captured(2);
+            if (type.isEmpty())
+                type = "string";
+
+            // 添加输入框
+            QLabel* label = new QLabel(variable, widget);
+            label->setStyleSheet("color: #888888;"); // 设置为灰色字体
+            QLineEdit* lineEdit = new QLineEdit(widget);
+            QHBoxLayout* hlayout = new QHBoxLayout();
+            hlayout->addWidget(label);
+            hlayout->addWidget(lineEdit);
+            hlayout->addStretch();
+            content_vlayout->addLayout(hlayout);
+
+            // 恢复与保存数据
+            QString key = "sql_variable/" + variable;
+            lineEdit->setText(us->value(key).toString());
+            connect(lineEdit, &QLineEdit::textChanged, widget, [&, key, type]{
+                us->setValue(key, lineEdit->text());
+            });
+            lineEdit->setMaximumWidth(200);
+        }
+
+        main_hlayout->addLayout(content_vlayout);
+        main_hlayout->addStretch();
+        main_hlayout->addWidget(btn);
+
+        // 添加到列表
         QListWidgetItem* item = new QListWidgetItem(ui->listWidget);
         ui->listWidget->addItem(item);
         ui->listWidget->setItemWidget(item, widget);
         item->setSizeHint(widget->sizeHint());
 
+        // 点击按钮
         connect(btn, &InteractiveButtonBase::clicked, widget, [&, code]{
             QString c = code;
+            // 替换[]变量为输入框的值
             emit signalProcessVariant(c);
             showQueryResult(c);
         });
