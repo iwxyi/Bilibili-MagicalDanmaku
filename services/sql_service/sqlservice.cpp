@@ -22,6 +22,11 @@ QString SqlService::getDbPath() const
     return dbPath;
 }
 
+QSqlDatabase SqlService::getDb() const
+{
+    return db;
+}
+
 QSqlQuery SqlService::getQuery(const QString &sql) const
 {
     QSqlQuery query;
@@ -216,10 +221,9 @@ create_time time NOT NULL)");
     {
         createTable("CREATE TABLE fans_archive(\
 id INTEGER PRIMARY KEY AUTOINCREMENT,\
-room_id TEXT NOT NULL,\
 uid TEXT NOT NULL,\
 uname TEXT NOT NULL,\
-archive TEXT NOT NULL,\
+archive TEXT,\
 create_time time NOT NULL,\
 update_time time NOT NULL)");
     }
@@ -380,12 +384,41 @@ void SqlService::insertCmd(const QString &cmd, const QString &data)
     }
 }
 
-void SqlService::insertFansArchive(const QString &roomId, const QString &uid, const QString &uname, const QString &archive)
+void SqlService::insertFansArchive(const QString &uid, const QString &uname, const QString &archive)
 {
     QSqlQuery query;
+
+    // 判断是否存在
+    query.prepare("SELECT COUNT(*) FROM fans_archive WHERE uid = ?");
+    query.addBindValue(uid);
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+    }
+    if (query.next())
+    {
+        if (query.value(0).toInt() > 0)
+        {
+            // 更新
+            query.prepare("UPDATE fans_archive SET archive = ?, update_time = ? WHERE uid = ?");
+            query.addBindValue(archive);
+            query.addBindValue(QDateTime::currentDateTime());
+            query.addBindValue(uid);
+            if (!query.exec())
+            {
+                qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+            }
+            return ;
+        }
+        else
+        {
+            qWarning() << "粉丝档案不存在：" << uid << "，进行插入";
+        }
+    }
+    
+    // 插入
     query.prepare("INSERT INTO fans_archive\
-(room_id, uid, uname, archive, create_time, update_time) VALUES(?,?,?,?,?,?)");
-    query.addBindValue(roomId);
+                    (uid, uname, archive, create_time, update_time) VALUES(?,?,?,?,?)");
     query.addBindValue(uid);
     query.addBindValue(uname);
     query.addBindValue(archive);
@@ -470,4 +503,30 @@ bool SqlService::createTable(const QString &sql)
         qInfo() << "创建Table：" << (sql.left(sql.indexOf("(")));
         return true;
     }
+}
+
+/**
+ * 获取一个未处理过的粉丝档案目标
+ * @return 需要处理的uid
+ * 目标要求：
+ * - 7天内发过弹幕
+ * - 总弹幕数量超过30条
+ * - 没有处理过（即没有档案，优先处理）；或处理过但超过1小时且弹幕超过10条（archives.update_time - danmu.create_time > 1小时）
+ */
+QString SqlService::getUnprocessedFansArchive()
+{
+    // 获取没有处理过的粉丝档案
+    // 要求：
+    // - 档案表中没有对应的id
+    // - 7天内发过弹幕
+    // - 总弹幕数量超过30条
+    static QString getUnprocessedFansArchiveSql = "SELECT uid FROM danmu ";
+
+    // 获取需要处理的粉丝档案
+    // 要求：
+    // - 处理过且超过1小时
+    // - 未处理的总弹幕数量超过10条
+    static QString getNeededFansArchiveSql = "SELECT room_id, uid FROM fans_archive WHERE processed = 1 AND update_time - create_time > 3600 AND danmu_count > 10";
+
+    
 }

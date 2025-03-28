@@ -57,6 +57,12 @@ void DBBrowser::showQueryResult(QString sql)
 
     if (model)
         delete model;
+
+    // 设置字符集
+    QSqlQuery charset(service->getDb());
+    charset.exec("SET NAMES utf8mb4");
+    
+    // 获取数据库
     model = new QSqlQueryModel(this);
     QSqlQuery query(sql);
     model->setQuery(query);
@@ -79,10 +85,10 @@ void DBBrowser::on_execButton_clicked()
     if (cursor.hasSelection()) // 选中代码
     {
         code = cursor.selectedText();
-        // 替换 Unicode 段落分隔符 (U+2029) 为空格
-        code = code.replace(QChar(0x2029), " ");
-        // 处理可能存在的其他换行符
-        code = code.replace("\n", " ").replace("\r", " ");
+        // 替换每一行--结尾的注释
+        code = code.replace(QRegularExpression("--.*$"), "");
+        // 替换 Unicode 段落分隔符 (U+2029) 为空格，以及可能存在的其他换行符
+        code = code.replace(QRegularExpression("\\s*[\\n\\r\u2029]\\s*"), " ");
     }
     else // 当前行
     {

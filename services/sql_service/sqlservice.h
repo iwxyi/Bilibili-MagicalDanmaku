@@ -16,7 +16,10 @@ public:
 
     void setDbPath(const QString& dbDir);
     QString getDbPath() const;
+    QSqlDatabase getDb() const;
     QSqlQuery getQuery(const QString& sql) const;
+
+    QString getUnprocessedFansArchive();
 
 signals:
     void signalError(const QString& err);
@@ -29,7 +32,7 @@ public slots:
     void insertDanmaku(const LiveDanmaku& danmaku);
     void insertMusic(const LiveDanmaku& danmaku);
     void insertCmd(const QString& cmd, const QString &data);
-    void insertFansArchive(const QString& roomId, const QString& uid, const QString& uname, const QString& archive);
+    void insertFansArchive(const QString& uid, const QString& uname, const QString& archive);
     bool exec(const QString& sql);
     bool tryExec(const QString& sql);
 
