@@ -13,6 +13,11 @@ class FansArchivesService : public QObject
 public:
     FansArchivesService(SqlService* sqlService, QObject* parent = nullptr);
 
+    void start();
+
+signals:
+    void signalError(const QString& err); // 错误信号，会停止处理，除非再手动点开
+
 private slots:
     void onTimer();
 

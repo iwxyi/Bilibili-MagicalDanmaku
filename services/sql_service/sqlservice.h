@@ -5,7 +5,9 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QJsonObject>
 #include "livedanmaku.h"
+#include "myjson.h"
 
 class SqlService : public QObject
 {
@@ -20,7 +22,9 @@ public:
     QSqlDatabase getDb() const;
     QSqlQuery getQuery(const QString& sql) const;
 
-    QString getUnprocessedFansArchive();
+    QString getNextFansArchive();
+    MyJson getFansArchives(const QString &uid);
+    QList<MyJson> getUserDanmakuList(const QString &uid, qint64 startTime, int maxCount = 100);
 
 signals:
     void signalError(const QString& err);

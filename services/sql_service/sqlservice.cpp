@@ -1,10 +1,10 @@
 #include <QDebug>
 #include "sqlservice.h"
 #include "accountinfo.h"
+#include "myjson.h"
 
 SqlService::SqlService(QObject *parent) : QObject(parent)
 {
-
 }
 
 SqlService::~SqlService()
@@ -98,7 +98,7 @@ medal_name TEXT,
 medal_level INTEGER,
 medal_up TEXT,
 price INTEGER,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
     else
     {
@@ -126,7 +126,7 @@ anchor_room_id TEXT,
 medal_name TEXT,
 medal_level INTEGER,
 medal_up TEXT,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
     else
     {
@@ -148,7 +148,7 @@ price INTEGER,
 number INTEGER,
 start_time TIMESTAMP,
 end_time TIMESTAMP,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
 
     // 进入/关注
@@ -169,7 +169,7 @@ medal_up TEXT,
 special INTEGER,
 spread_desc TEXT,
 spread_info TEXT,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
     else
     {
@@ -185,7 +185,7 @@ anchor_room_id TEXT,
 medal_name TEXT,
 medal_level INTEGER,
 medal_up TEXT,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
 
     // 点歌
@@ -204,7 +204,7 @@ anchor_room_id TEXT,
 medal_name TEXT,
 medal_level INTEGER,
 medal_up TEXT,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
     else
     {
@@ -218,7 +218,7 @@ create_time time NOT NULL)");
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 cmd TEXT,
 data TEXT,
-create_time time NOT NULL)");
+create_time time NOT NULL))");
     }
 
     // AI粉丝档案
@@ -230,7 +230,7 @@ uid TEXT NOT NULL,
 uname TEXT NOT NULL,
 archive TEXT,
 create_time time NOT NULL,
-update_time time NOT NULL)");
+update_time time NOT NULL))");
     }
 }
 
@@ -518,7 +518,7 @@ bool SqlService::createTable(const QString &sql)
  * - 总弹幕数量超过30条
  * - 没有处理过（即没有档案，优先处理）；或处理过但超过1小时且弹幕超过10条（archives.update_time - danmu.create_time > 1小时）
  */
-QString SqlService::getUnprocessedFansArchive()
+QString SqlService::getNextFansArchive()
 {
     // 获取没有处理过的粉丝档案
     // 要求：
@@ -580,7 +580,7 @@ ORDER BY uc.last_danmu_time DESC;
     query.exec(getUnprocessedFansArchiveSql);
     if (query.next())
     {
-        qInfo() << "优先处理没有处理过的粉丝档案：" << query.value(0).toString();
+        qInfo() << "找到没有处理过的粉丝档案：" << query.value(0).toString();
         return query.value(0).toString();
     }
 
@@ -588,8 +588,78 @@ ORDER BY uc.last_danmu_time DESC;
     query.exec(getNeedUpdateFansArchiveSql);
     if (query.next())
     {
-        qInfo() << "处理已经处理过的粉丝档案：" << query.value(0).toString();
+        qInfo() << "更新已经处理过的粉丝档案：" << query.value(0).toString();
         return query.value(0).toString();
     }
     return "";
+}
+
+/**
+ * 获取指定用户的粉丝档案信息
+ * @param uid 用户ID
+ * @return 包含档案信息的QJsonObject。如果未找到返回空对象
+ */
+MyJson SqlService::getFansArchives(const QString &uid)
+{
+    if (!db.isOpen())
+    {
+        qWarning() << "未打开数据库";
+        return MyJson();
+    }
+
+    QSqlQuery query;
+    query.prepare("SELECT uid, uname, archive, create_time, update_time FROM fans_archive WHERE uid = ?");
+    query.addBindValue(uid);
+    
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+        return MyJson();
+    }
+
+    if (query.next())
+    {
+        MyJson result;
+        result.insert("uid", query.value("uid").toString());
+        result.insert("uname", query.value("uname").toString());
+        result.insert("archive", query.value("archive").toString());
+        result.insert("create_time", query.value("create_time").toDateTime().toString(Qt::ISODate));
+        result.insert("update_time", query.value("update_time").toDateTime().toString(Qt::ISODate));
+        return result;
+    }
+
+    return MyJson();
+}
+
+/**
+ * 获取指定用户的最近弹幕记录
+ * @param uid 用户ID
+ * @param startTime 开始时间，一直到最新一条
+ * @return 包含弹幕信息的QList<QJsonObject>。如果未找到返回空列表
+ */
+QList<MyJson> SqlService::getUserDanmakuList(const QString &uid, qint64 startTime, int maxCount)
+{
+    QList<MyJson> result;
+    QSqlQuery query;
+    query.prepare("SELECT uname, uid, msg, create_time FROM danmu WHERE uid = ? AND create_time >= ? ORDER BY create_time DESC LIMIT ?");
+    query.addBindValue(uid);
+    query.addBindValue(startTime);
+    query.addBindValue(maxCount);
+
+    if (!query.exec())
+    {
+        qWarning() << "执行SQL语句失败：" << query.lastError() << query.executedQuery();
+        return result;
+    }
+    
+    while (query.next())
+    {
+        MyJson item;
+        item.insert("uname", query.value("uname").toString());
+        item.insert("uid", query.value("uid").toString());
+        item.insert("msg", query.value("msg").toString());
+        item.insert("create_time", query.value("create_time").toDateTime().toString(Qt::ISODate));
+        result.append(item);
+    }
+    return result;
 }

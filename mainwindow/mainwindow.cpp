@@ -8202,9 +8202,22 @@ void MainWindow::initFansArchivesService()
     }
 
     if (fansArchivesService)
+    {
+        fansArchivesService->start();
         return;
+    }
     qInfo() << "初始化粉丝档案服务";
     fansArchivesService = new FansArchivesService(&sqlService, this);
+
+    // 连接信号
+    connect(fansArchivesService, &FansArchivesService::signalError, this, [=](const QString& error) {
+        showError("粉丝档案", error);
+        us->fansArchives = false;
+        ui->fansArchivesCheck->setChecked(false);
+    });
+
+    // 开始运行
+    fansArchivesService->start();
 }
 
 /**
