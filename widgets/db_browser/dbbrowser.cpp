@@ -79,7 +79,10 @@ void DBBrowser::on_execButton_clicked()
     if (cursor.hasSelection()) // 选中代码
     {
         code = cursor.selectedText();
-        code = code.replace(" \n", " ").replace("\n", " "); // 允许多行
+        // 替换 Unicode 段落分隔符 (U+2029) 为空格
+        code = code.replace(QChar(0x2029), " ");
+        // 处理可能存在的其他换行符
+        code = code.replace("\n", " ").replace("\r", " ");
     }
     else // 当前行
     {
