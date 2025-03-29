@@ -33,6 +33,8 @@ private slots:
 
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_askAIButton_clicked();
+
 private:
     void initVisualList();
 

@@ -189,6 +189,7 @@
         <file>resource.rc</file>
         <file alias="kk">documents/kk.key</file>
         <file alias="archives_prompt">documents/archives_prompt.txt</file>
+        <file alias="ask_sql_prompt">documents/ask_sql_prompt.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>

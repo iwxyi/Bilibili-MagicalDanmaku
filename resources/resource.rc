@@ -25,10 +25,10 @@ VS_VERSION_INFO VERSIONINFO
                 VALUE "FileDescription", "ÉñÆæµ¯Ä»"
                 VALUE "FileVersion", "1.0"
                 VALUE "InternalName", "MagicalDanmaku"
-                VALUE "LegalCopyright", "Copyright (C)2020-2023"
+                VALUE "LegalCopyright", "Copyright (C)2020-2025"
                 VALUE "OriginalFilename", "MagicalDanmaku.exe"
                 VALUE "ProductName", "ÉñÆæµ¯Ä»"
-                VALUE "ProductVersion", "4.10.8"
+                VALUE "ProductVersion", "5.0.0"
             END
         END
         BLOCK "VarFileInfo"

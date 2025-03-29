@@ -2861,7 +2861,7 @@ QPushButton:pressed
              </rect>
             </property>
             <property name="toolTip">
-             <string>每次更新后显示更新了什么</string>
+             <string>腾讯AI（已失效）</string>
             </property>
             <property name="styleSheet">
              <string notr="true">#TxNLPSettingsCard
@@ -7038,7 +7038,7 @@ margin: 40px;</string>
              </rect>
             </property>
             <property name="toolTip">
-             <string>每次更新后显示更新了什么</string>
+             <string>当前直播间的专属数据库</string>
             </property>
             <property name="styleSheet">
              <string notr="true">#databaseSettingsCard
@@ -7386,7 +7386,7 @@ margin: 40px;</string>
              </rect>
             </property>
             <property name="toolTip">
-             <string>每次更新后显示更新了什么</string>
+             <string>每一位粉丝的独立档案</string>
             </property>
             <property name="styleSheet">
              <string notr="true">#fansArchivesSettingsCard

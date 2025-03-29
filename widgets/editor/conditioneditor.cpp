@@ -492,31 +492,7 @@ void ConditionEditor::chat(const QString &prompt, const QString &userContent, Ne
     progressDialog->setRange(0, 100);
 
     connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error == QJsonParseError::NoError)
-        {
-            QJsonObject json = document.object();
-            if (json.contains("error") && json.value("error").isObject())
-                json = json.value("error").toObject();
-            if (json.contains("message"))
-            {
-                int code = json.value("code").toInt();
-                QString type = json.value("type").toString();
-                qCritical() << (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type);
-                QMessageBox::critical(this, "ChatGPT Error", (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type));
-            }
-            else
-            {
-                qCritical() << QString(ba);
-                QMessageBox::critical(this, "ChatGPT Error", ba);
-            }
-        }
-        else
-        {
-            qCritical() << QString(ba);
-            QMessageBox::critical(this, "ChatGPT Error", ba);
-        }
+        QMessageBox::critical(this, "ChatGPT Error", ba);
     });
 
     connect(chatgpt, &ChatGPTUtil::signalRequestStarted, this, [=]{

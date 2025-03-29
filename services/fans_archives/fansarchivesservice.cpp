@@ -86,28 +86,7 @@ void FansArchivesService::onTimer()
     ChatGPTUtil* chatgpt = new ChatGPTUtil(this);
     chatgpt->setStream(false);
     connect(chatgpt, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& ba) {
-        QJsonParseError error;
-        QJsonDocument document = QJsonDocument::fromJson(ba, &error);
-        if (error.error == QJsonParseError::NoError)
-        {
-            QJsonObject json = document.object();
-            if (json.contains("error") && json.value("error").isObject())
-                json = json.value("error").toObject();
-            if (json.contains("message"))
-            {
-                int code = json.value("code").toInt();
-                QString type = json.value("type").toString();
-                qCritical() << (json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type);
-            }
-            else
-            {
-                qCritical() << QString(ba);
-            }
-        }
-        else
-        {
-            qCritical() << QString(ba);
-        }
+        qCritical() << QString(ba);
     });
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();

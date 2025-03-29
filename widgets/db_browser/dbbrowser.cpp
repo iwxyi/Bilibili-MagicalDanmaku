@@ -9,6 +9,7 @@
 #include "fileutil.h"
 #include "usersettings.h"
 #include "interactivebuttonbase.h"
+#include "chatgptutil.h"
 
 DBBrowser::DBBrowser(SqlService *service, QSettings* settings, QWidget *parent) :
     QWidget(parent),
@@ -281,3 +282,64 @@ void DBBrowser::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
     }
 
 }
+
+/**
+ * 点击按钮进行询问
+ */
+void DBBrowser::on_askAIButton_clicked()
+{
+    QString askText = ui->questionTextEdit->toPlainText();
+    if (askText.isEmpty())
+    {
+        QMessageBox::warning(this, "提示", "请输入要询问的问题");
+        return;
+    }
+    
+    // 调用ChatGPTUtil进行询问
+    ChatGPTUtil* chatGPTUtil = new ChatGPTUtil(this);
+    connect(chatGPTUtil, &ChatGPTUtil::signalResponseText, this, [=](const QString& text){
+        QString formatedText = text;
+        // 提取```之间的内容
+        if (formatedText.contains("```"))
+        {
+            int start = formatedText.indexOf("```");
+            if (start != -1)
+            {
+                int line = formatedText.indexOf("\n", start + 1);
+                if (line != -1)
+                    start = line + 1;
+            }
+            int end = formatedText.indexOf("```", start + 1);
+            if (start != -1 && end != -1)
+            {
+                formatedText = formatedText.mid(start, end - start);
+                qInfo() << "设置SQL：" << formatedText;
+            }
+            else
+            {
+                qWarning() << "无法提取回答的SQL";
+            }
+        }
+        ui->answerTextEdit->setPlainText(formatedText);
+
+        // 如果是select，则直接执行；否则需要手动执行
+        if (formatedText.trimmed().toUpper().startsWith("SELECT"))
+        {
+            showQueryResult(formatedText);
+        }
+    });
+    connect(chatGPTUtil, &ChatGPTUtil::signalResponseError, this, [=](const QByteArray& error){
+        QMessageBox::warning(this, "提示", "查询失败：" + error);
+    });
+    connect(chatGPTUtil, &ChatGPTUtil::finished, this, [=]{
+        ui->askAIButton->setEnabled(true);
+        ui->askAIButton->setText("询问AI");
+    });
+    QList<ChatBean> chats;
+    chats.append(ChatBean("system", readTextFile(":/documents/ask_sql_prompt")));
+    chats.append(ChatBean("user", askText));
+    chatGPTUtil->getResponse(chats);
+    ui->askAIButton->setEnabled(false);
+    ui->askAIButton->setText("询问中...");
+}
+
