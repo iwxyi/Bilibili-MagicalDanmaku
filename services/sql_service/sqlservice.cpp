@@ -515,10 +515,41 @@ bool SqlService::createTable(const QString &sql)
  * 目标要求：
  * - 7天内发过弹幕
  * - 总弹幕数量超过30条
- * - 没有处理过（即没有档案，优先处理）；或处理过但超过1小时且弹幕超过10条（archives.update_time - danmu.create_time > 1小时）
+ * - 有档案且正在活跃的（最优先）；没有处理过（即没有档案，优先处理）；或处理过但超过1小时且弹幕超过10条
  */
 QString SqlService::getNextFansArchive()
 {
+    // 获取当前正在活跃的用户
+    // 要求：
+    // - 处理过，即档案表中存在的
+    // - 未处理弹幕超过上限（100条）
+    static QString getActiveFansSql = R"(
+WITH update_candidates AS (
+  SELECT 
+    d.uid,
+    COUNT(*) AS danmu_count
+  FROM danmu d
+  JOIN fans_archive fa 
+    ON d.uid = fa.uid 
+    AND d.create_time > fa.update_time
+  GROUP BY d.uid
+  HAVING COUNT(*) > 100
+)
+SELECT 
+  uc.uid,
+  fa.uname,
+  fa.update_time AS last_update_time,
+  uc.danmu_count,
+  MAX(d.create_time) AS last_danmu_time
+FROM update_candidates uc
+JOIN fans_archive fa ON uc.uid = fa.uid
+JOIN danmu d ON uc.uid = d.uid
+WHERE d.create_time > fa.update_time
+GROUP BY uc.uid
+ORDER BY danmu_count DESC
+LIMIT 1;
+    )";
+    
     // 获取没有处理过的粉丝档案
     // 要求：
     // - 档案表中没有对应的uid，且uid不为0
@@ -574,12 +605,20 @@ ORDER BY uc.last_danmu_time DESC;
 )";
 
     // #开始执行
-    // 优先处理没有处理过的粉丝档案
+    // 优先处理正在活跃的粉丝档案
     QSqlQuery query;
+    query.exec(getActiveFansSql);
+    if (query.next())
+    {
+        qInfo() << "找到急需更新的活跃粉丝档案：" << query.value(0).toString();
+        return query.value(0).toString();
+    }
+    
+    // 再次处理没有处理过的粉丝档案
     query.exec(getUnprocessedFansArchiveSql);
     if (query.next())
     {
-        qInfo() << "找到没有处理过的粉丝档案：" << query.value(0).toString();
+        qInfo() << "找到尚未处理过的粉丝档案：" << query.value(0).toString();
         return query.value(0).toString();
     }
 

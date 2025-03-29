@@ -163,19 +163,19 @@
         </widget>
        </item>
        <item>
-        <widget class="WaterZoomButton" name="fansPageButton">
+        <widget class="WaterZoomButton" name="dataPageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;扩展&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;数据中心&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string/>
          </property>
          <property name="icon">
           <iconset resource="../resources/resource.qrc">
-           <normaloff>:/icons/fans</normaloff>:/icons/fans</iconset>
+           <normaloff>:/icons/big_data</normaloff>:/icons/big_data</iconset>
          </property>
         </widget>
        </item>
@@ -1863,7 +1863,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>935</width>
-             <height>1803</height>
+             <height>1790</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2334,7 +2334,7 @@ margin: 40px;</string>
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;因业务调整该接口将于北京时间2023年8月1日0点下线，届时该产品功能将无法正常使用。详见：https://cloud.tencent.com/document/product/271/907111&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
-                  <string>腾讯</string>
+                  <string>（失效）</string>
                  </property>
                 </widget>
                </item>
@@ -10561,7 +10561,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>24</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

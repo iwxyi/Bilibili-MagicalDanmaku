@@ -131,7 +131,7 @@ void MainWindow::initView()
                   ui->thankPageButton,
                   ui->musicPageButton,
                   ui->extensionPageButton,
-                  ui->fansPageButton,
+                  ui->dataPageButton,
                   ui->preferencePageButton,
                   ui->forumButton
                 };

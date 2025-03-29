@@ -130,6 +130,7 @@
         <file alias="run">icons/run.png</file>
         <file alias="at">icons/at.png</file>
         <file alias="fans">icons/fans.png</file>
+        <file alias="big_data">icons/big_data.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
@@ -187,6 +188,7 @@
         <file alias="code_syntax_introduction">documents/code_syntax_introduction.txt</file>
         <file>resource.rc</file>
         <file alias="kk">documents/kk.key</file>
+        <file alias="archives_prompt">documents/archives_prompt.txt</file>
     </qresource>
     <qresource prefix="/bubbles">
         <file alias="bubble1">bubbles/bubble1.png</file>
