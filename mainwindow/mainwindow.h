@@ -78,7 +78,8 @@ QT_END_NAMESPACE
 #define PAGE_THANK 2
 #define PAGE_MUSIC 3
 #define PAGE_EXTENSION 4
-#define PAGE_PREFENCE 5
+#define PAGE_DATA 5
+#define PAGE_PREFENCE 6
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
@@ -725,6 +726,8 @@ private slots:
 
     void on_databaseTabButton_clicked();
 
+    void on_refreshFansArchivesButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -881,6 +884,8 @@ private:
     void sendEmail(const QString& to, const QString& subject, const QString& body);
 
     void initFansArchivesService();
+    void updateFansArchivesListView();
+    void loadFansArchives(QString uid);
 
 private:
     // 应用信息

@@ -502,6 +502,9 @@ void MainWindow::initView()
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(rt->fluentRadius);
 
+    // 数据中心页面
+
+
     // 网页
     ui->refreshExtensionListButton->setSquareSize();
 
@@ -2336,6 +2339,15 @@ void MainWindow::switchPageAnimation(int page)
                              QRect(g.left(), ui->tabWidget->height(), g.width(), g.height()), g,
                              400, QEasingCurve::OutBack);
         }
+    }
+    else if (page == PAGE_DATA)
+    {
+        QRect g(ui->dataCenterTopTabGroup->geometry());
+        startGeometryAni(ui->dataCenterTopTabGroup,
+                         QRect(g.center().x(), g.top(), 1, g.height()), g);
+
+        // 需要更新数据中心的显示数据
+        updateFansArchivesListView();
     }
     else if (page == PAGE_PREFENCE)
     {
@@ -8242,6 +8254,77 @@ void MainWindow::initFansArchivesService()
 }
 
 /**
+ * 更新数据中心显示的用户
+ * 同步为数据库查找到的档案列表的昵称字段
+ */
+void MainWindow::updateFansArchivesListView()
+{
+    if (!sqlService.isOpen()) // 可能是还没初始化
+        return;
+
+    // 创建数据模型
+    QSqlQueryModel* model = new QSqlQueryModel(this);
+    
+    // 执行SQL查询,只获取nickname字段
+    model->setQuery("SELECT DISTINCT uid, uname FROM fans_archive ORDER BY update_time DESC", sqlService.getDb());
+    
+    if (model->lastError().isValid()) {
+        showError("数据库查询失败", model->lastError().text());
+        return;
+    }
+
+    // 设置列标题(可选)
+    model->setHeaderData(0, Qt::Horizontal, "UID");
+    model->setHeaderData(1, Qt::Horizontal, "昵称");
+    
+    // 将model设置到tableView
+    ui->fansArchivesTableView->setModel(model);
+
+    // 隐藏UID列
+    ui->fansArchivesTableView->hideColumn(0);
+    
+    // 设置表格样式
+    ui->fansArchivesTableView->setSelectionBehavior(QAbstractItemView::SelectRows);  // 整行选择
+    ui->fansArchivesTableView->setSelectionMode(QAbstractItemView::SingleSelection); // 单行选择
+    ui->fansArchivesTableView->horizontalHeader()->setStretchLastSection(true);      // 最后一列自动拉伸
+
+    // 变化信号
+    connect(ui->fansArchivesTableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this, [=](const QModelIndex &current, const QModelIndex &previous){
+        if (!current.isValid())
+        {
+            loadFansArchives("");
+            return;
+        }
+
+        QString uid = ui->fansArchivesTableView->model()->index(current.row(), 0).data().toString();
+        qInfo() << "选择粉丝档案：" << uid;
+        loadFansArchives(uid);
+    });
+}
+
+/**
+ * 加载用户的档案
+ */
+void MainWindow::loadFansArchives(QString uid)
+{
+    if (uid.isEmpty()) // 清空
+    {
+        ui->fansArchivesTextEdit->clear();
+        return;
+    }
+
+    MyJson json = sqlService.getFansArchives(uid);
+    if (json.isEmpty())
+    {
+        QMessageBox::warning(this, "警告", "粉丝档案不存在");
+        return;
+    }
+
+    QString archives = json.s("archive");
+    ui->fansArchivesTextEdit->setPlainText(archives);
+}
+
+/**
  * [已废弃]没任何作用
  */
 void MainWindow::on_actionMany_Robots_triggered()
@@ -10839,5 +10922,11 @@ void MainWindow::on_databaseTabButton_clicked()
     }
     dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(themeSbg);
     dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(themeSfg);
+}
+
+
+void MainWindow::on_refreshFansArchivesButton_clicked()
+{
+    updateFansArchivesListView();
 }
 
