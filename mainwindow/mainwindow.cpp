@@ -8252,6 +8252,34 @@ void MainWindow::initFansArchivesService()
     fansArchivesService = new FansArchivesService(&sqlService, this);
 
     // 连接信号
+    connect(fansArchivesService, &FansArchivesService::signalFansArchivesUpdated, this, [=](QString uid){
+        // 判断没有选中或者选中了第一个？
+        // 如果是第一个，刷新之后，自动选中第一个；
+        // 如更哦不是第一个，那么自动恢复至原先选中的UID
+        int selectRow = ui->fansArchivesTableView->currentIndex().row();
+        QString selectUid = ui->fansArchivesTableView->model()->index(selectRow, 0).data().toString();
+        
+        updateFansArchivesListView();
+
+        if (selectRow == 0 || selectRow == 1)
+        {
+            // 刷新之后，自动选中第一个
+            if (ui->fansArchivesTableView->model()->rowCount() > 0)
+                ui->fansArchivesTableView->setCurrentIndex(ui->fansArchivesTableView->model()->index(0, 0));
+        }
+        else if (!selectUid.isEmpty() && selectUid != uid)
+        {
+            //  重新定位到UID这一行
+            for (int row = 0; row < ui->fansArchivesTableView->model()->rowCount(); row++)
+            {
+                if (ui->fansArchivesTableView->model()->index(row, 0).data().toString() == uid)
+                {
+                    ui->fansArchivesTableView->setCurrentIndex(ui->fansArchivesTableView->model()->index(row, 0));
+                    break;
+                }
+            }
+        }
+    });
     connect(fansArchivesService, &FansArchivesService::signalError, this, [=](const QString& error) {
         showError("粉丝档案", error);
         us->fansArchives = false;

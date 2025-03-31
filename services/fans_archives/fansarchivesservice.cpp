@@ -108,6 +108,7 @@ void FansArchivesService::onTimer()
         }
         // 保存档案
         sqlService->insertFansArchive(uid, lastUname, formatText);
+        emit signalFansArchivesUpdated(uid);
     });
 
     // 生成data
