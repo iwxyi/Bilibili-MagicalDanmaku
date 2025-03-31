@@ -10992,16 +10992,16 @@ void MainWindow::on_clearFansArchivesButton_clicked()
 {
     newFacileMenu;
     menu->addAction("清除当前直播间的档案", [&]{
-        sqlService.clearFansArchivesByRoomId(ac->roomId);
-        emit fansArchivesService->signalFansArchivesUpdated("");
+        fansArchivesService->clearFansArchivesByRoomId(ac->roomId);
+        fansArchivesService->start();
     })->tooltip("只清除当前直播间的档案，不影响“不区分直播间”、其他直播间的档案\n如果总开关保持开启，将会重新生成");
     menu->addAction("清除不区分直播间的档案", [&]{
-        sqlService.clearFansArchivesByNoRoom();
-        emit fansArchivesService->signalFansArchivesUpdated("");
+        fansArchivesService->clearFansArchivesByNoRoom();
+        fansArchivesService->start();
     })->tooltip("只清除“不区分直播间”的档案，不影响指定直播间的档案\n如果总开关保持开启，将会重新生成");
     menu->addAction("清除所有档案", [&]{
-        sqlService.clearFansArchivesAll();
-        emit fansArchivesService->signalFansArchivesUpdated("");
+        fansArchivesService->clearFansArchivesAll();
+        fansArchivesService->start();
     })->tooltip("清除所有粉丝档案\n如果总开关保持开启，将会重新生成");
     menu->exec();
 }

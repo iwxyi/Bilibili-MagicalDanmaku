@@ -17,6 +17,7 @@ FansArchivesService::FansArchivesService(SqlService* sqlService, QObject* parent
 
 void FansArchivesService::start()
 {
+    timer->setInterval(INTERVAL_WORK);
     timer->start();
 }
 
@@ -36,6 +37,10 @@ void FansArchivesService::onTimer()
         {
             qInfo() << "没有找到需要处理的粉丝档案，暂缓工作";
             emit signalFansArchivesLoadingStatusChanged("档案生成完毕");
+        }
+        else
+        {
+            emit signalFansArchivesLoadingStatusChanged("");
         }
         timer->setInterval(INTERVAL_WAIT); // 60秒判断一次
         timer->start();
@@ -122,4 +127,25 @@ void FansArchivesService::onTimer()
     if (!sendText.isEmpty())
         chats.append(ChatBean("user", sendText));
     chatgpt->getResponse(chats);
+}
+
+void FansArchivesService::clearFansArchivesAll()
+{
+    sqlService->clearFansArchivesAll();
+    emit signalFansArchivesUpdated("");
+    emit signalFansArchivesLoadingStatusChanged("所有档案已清除");
+}
+
+void FansArchivesService::clearFansArchivesByRoomId(const QString& roomId)
+{
+    sqlService->clearFansArchivesByRoomId(roomId);
+    emit signalFansArchivesUpdated("");
+    emit signalFansArchivesLoadingStatusChanged("指定直播间档案已清除");
+}
+
+void FansArchivesService::clearFansArchivesByNoRoom()
+{
+    sqlService->clearFansArchivesByNoRoom();
+    emit signalFansArchivesUpdated("");
+    emit signalFansArchivesLoadingStatusChanged("未指定直播间档案已清除");
 }

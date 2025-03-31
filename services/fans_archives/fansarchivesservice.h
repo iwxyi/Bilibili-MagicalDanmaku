@@ -14,6 +14,9 @@ public:
     FansArchivesService(SqlService* sqlService, QObject* parent = nullptr);
 
     void start();
+    void clearFansArchivesAll();
+    void clearFansArchivesByRoomId(const QString& roomId);
+    void clearFansArchivesByNoRoom();
 
 signals:
     void signalFansArchivesLoadingStatusChanged(const QString& status);
