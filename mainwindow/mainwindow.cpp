@@ -2348,6 +2348,13 @@ void MainWindow::switchPageAnimation(int page)
 
         // 需要更新数据中心的显示数据
         updateFansArchivesListView();
+        // 如果数据库还没加载，那么延迟5秒钟加载
+        if (!sqlService.isOpen())
+        {
+            QTimer::singleShot(3000, this, [=]{
+                updateFansArchivesListView();
+            });
+        }
     }
     else if (page == PAGE_PREFENCE)
     {
@@ -2453,6 +2460,7 @@ void MainWindow::showEvent(QShowEvent *event)
 
         // 恢复窗口位置
         restoreGeometry(us->value("mainwindow/geometry").toByteArray());
+        ui->fansArchivesSplitter->restoreState(us->value("mainwindow/fansArchivesSplitterState").toByteArray());
 
         // 显示启动动画
         startSplash();
@@ -2471,6 +2479,7 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     us->setValue("mainwindow/geometry", this->saveGeometry());
+    us->setValue("mainwindow/fansArchivesSplitterState", ui->fansArchivesSplitter->saveState());
     us->sync();
 
 #if defined(ENABLE_TRAY)
