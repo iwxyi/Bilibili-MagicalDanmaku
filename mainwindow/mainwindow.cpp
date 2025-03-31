@@ -8319,6 +8319,10 @@ void MainWindow::updateFansArchivesListView()
 
     // 隐藏UID列
     ui->fansArchivesTableView->hideColumn(0);
+
+    // 隐藏横纵标题和序号
+    ui->fansArchivesTableView->horizontalHeader()->hide();
+    ui->fansArchivesTableView->verticalHeader()->hide();
     
     // 设置表格样式
     ui->fansArchivesTableView->setSelectionBehavior(QAbstractItemView::SelectRows);  // 整行选择
@@ -8347,6 +8351,7 @@ void MainWindow::loadFansArchives(QString uid)
     if (uid.isEmpty()) // 清空
     {
         ui->fansArchivesTextEdit->clear();
+        ui->fansArchiveStatusLabel->clear();
         return;
     }
 
@@ -8359,6 +8364,7 @@ void MainWindow::loadFansArchives(QString uid)
 
     QString archives = json.s("archive");
     ui->fansArchivesTextEdit->setPlainText(archives);
+    ui->fansArchiveStatusLabel->setText(json.s("update_time"));
 }
 
 /**

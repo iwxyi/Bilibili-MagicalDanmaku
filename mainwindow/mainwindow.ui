@@ -10360,7 +10360,7 @@ QTabBar::tab:selected
            <number>0</number>
           </property>
           <widget class="QWidget" name="fansArchivesPage">
-           <layout class="QVBoxLayout" name="verticalLayout_91" stretch="1,0">
+           <layout class="QVBoxLayout" name="verticalLayout_93">
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -10375,16 +10375,36 @@ QTabBar::tab:selected
             </property>
             <item>
              <widget class="QSplitter" name="fansArchivesSplitter">
+              <property name="styleSheet">
+               <string notr="true">QTableView, QPlainTextEdit
+{
+	background: #88FFFFFF;
+	border-radius: 5px;
+}</string>
+              </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
-              <widget class="QTableView" name="fansArchivesTableView">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>16777215</height>
-                </size>
-               </property>
+              <widget class="QWidget" name="verticalLayoutWidget">
+               <layout class="QVBoxLayout" name="verticalLayout_91">
+                <item>
+                 <widget class="QTableView" name="fansArchivesTableView">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="fansArchiveStatusLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
               <widget class="QPlainTextEdit" name="fansArchivesTextEdit"/>
              </widget>
@@ -10779,7 +10799,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>24</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">
