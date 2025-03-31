@@ -365,6 +365,20 @@ void MainWindow::initView()
     ui->thankTopTabGroup->setFixedHeight(ui->thankTopTabGroup->sizeHint().height());
     ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
+    // 数据中心页面
+    dataCenterTabButtons = {
+        ui->fansArchivesTabButton,
+        ui->databaseTabButton
+    };
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setAutoTextColor(false);
+        btn->setPaddings(18, 18, 0, 0);
+    }
+    ui->dataCenterTopTabGroup->layout()->activate();
+    ui->dataCenterTopTabGroup->setFixedHeight(ui->dataCenterTopTabGroup->sizeHint().height());
+    ui->dataCenterTopTabGroup->setStyleSheet("#dataCenterTabGroup { background: white; border-radius: " + snum(ui->dataCenterTopTabGroup->height() / 2) + "px; }");
+
     customVarsButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->thankPage);
     customVarsButton->setRadius(rt->fluentRadius);
     customVarsButton->setSquareSize();
@@ -4926,6 +4940,8 @@ void MainWindow::setRoomThemeByCover(double val)
                                        [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(sbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(sfg);
     ui->showLiveDanmakuWindowButton->setBgColor(sbg);
     ui->showLiveDanmakuWindowButton->setTextColor(sfg);
     ui->SendMsgButton->setTextColor(fg);
@@ -8128,6 +8144,8 @@ void MainWindow::initDbService()
     sqlService.setDbPath(customPath);
     if (us->saveToSqlite)
         sqlService.open();
+    ui->databaseWidget->setService(&sqlService);
+    ui->databaseWidget->show();
 
     connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 不包含PK同步的弹幕
@@ -8144,7 +8162,10 @@ void MainWindow::initDbService()
 
 void MainWindow::showSqlQueryResult(QString sql)
 {
-    DBBrowser* dbb = new DBBrowser(&sqlService, us, nullptr);
+    DBBrowser* dbb = new DBBrowser(nullptr);
+    dbb->setWindowFlags(Qt::Dialog);
+    dbb->setAttribute(Qt::WA_DeleteOnClose, true);
+    dbb->setService(&sqlService);
     dbb->setGeometry(this->geometry());
     connect(dbb, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
         code = cr->processDanmakuVariants(code, LiveDanmaku());
@@ -10788,5 +10809,35 @@ void MainWindow::on_fansArchivesCheck_clicked()
     us->fansArchives = ui->fansArchivesCheck->isChecked();
     us->setValue("us/fansArchives", us->fansArchives);
     initFansArchivesService();
+}
+
+
+void MainWindow::on_fansArchivesTabButton_clicked()
+{
+    ui->dataCenterStackedWidget->setCurrentIndex(0);
+    us->setValue("mainwindow/dataCentetStackIndex", 0);
+
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
+    }
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(themeSfg);
+}
+
+
+void MainWindow::on_databaseTabButton_clicked()
+{
+    ui->dataCenterStackedWidget->setCurrentIndex(1);
+    us->setValue("mainwindow/dataCentetStackIndex", 1);
+
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
+    }
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(themeSfg);
 }
 

@@ -721,6 +721,10 @@ private slots:
 
     void on_fansArchivesCheck_clicked();
 
+    void on_fansArchivesTabButton_clicked();
+
+    void on_databaseTabButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -888,6 +892,7 @@ private:
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;
     QList<WaterFloatButton*> thankTabButtons;
+    QList<WaterFloatButton*> dataCenterTabButtons;
     InteractiveButtonBase* customVarsButton;
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;

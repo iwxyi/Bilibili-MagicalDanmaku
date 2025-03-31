@@ -11,42 +11,28 @@
 #include "interactivebuttonbase.h"
 #include "chatgptutil.h"
 
-DBBrowser::DBBrowser(SqlService *service, QSettings* settings, QWidget *parent) :
+DBBrowser::DBBrowser(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::DBBrowser),
-    service(service),
-    settings(settings)
+    ui(new Ui::DBBrowser)
 {
     ui->setupUi(this);
-    setWindowFlags(Qt::Window);
-    setAttribute(Qt::WA_DeleteOnClose, true);
-    ui->splitter->restoreState(settings->value("sql/view_splitter_state").toByteArray());
-    ui->splitter->restoreGeometry(settings->value("sql/view_splitter_geometry").toByteArray());
-
-    QString codes = settings->value("sql/codes").toString();
-    if (codes.isEmpty())
-    {
-        // 设置一些示例
-        codes = readTextFile(":/documents/sql");
-    }
-    ui->queryEdit->setPlainText(codes);
-
-    int recentTabIndex = us->value("recent/sql_tab", 1).toInt();
-    ui->tabWidget->setCurrentIndex(recentTabIndex);
-    if (recentTabIndex == 1)
-        initVisualList();
 }
 
 DBBrowser::~DBBrowser()
 {
     // 保存代码
     QString full = ui->queryEdit->toPlainText();
-    settings->setValue("sql/codes", full);
+    us->setValue("sql/codes", full);
 
     // 保存状态
-    settings->setValue("sql/view_splitter_state", ui->splitter->saveState());
-    settings->setValue("sql/view_splitter_geometry", ui->splitter->saveGeometry());
+    us->setValue("sql/view_splitter_state", ui->splitter->saveState());
+    us->setValue("sql/view_splitter_geometry", ui->splitter->saveGeometry());
     delete ui;
+}
+
+void DBBrowser::setService(SqlService* service)
+{
+    this->service = service;
 }
 
 void DBBrowser::showQueryResult(QString sql)
@@ -54,6 +40,15 @@ void DBBrowser::showQueryResult(QString sql)
     sql = sql.trimmed();
     if (sql.trimmed().isEmpty())
         return ;
+    if (!service)
+    {
+        QMessageBox::warning(this, "提示", "请先设置数据库服务");
+        return;
+    }
+
+    // 替换%%变量的值，从外部获取
+    emit signalProcessVariant(sql);
+
     qInfo() << "SQL查询：" << sql;
 
     if (model)
@@ -76,10 +71,36 @@ void DBBrowser::showQueryResult(QString sql)
     }
 }
 
+void DBBrowser::showEvent(QShowEvent *event)
+{
+    if (!inited)
+    {
+        inited = true;
+        ui->splitter->restoreState(us->value("sql/view_splitter_state").toByteArray());
+        ui->splitter->restoreGeometry(us->value("sql/view_splitter_geometry").toByteArray());
+
+        QString codes = us->value("sql/codes").toString();
+        if (codes.isEmpty())
+        {
+            // 设置一些示例
+            codes = readTextFile(":/documents/sql");
+        }
+        ui->queryEdit->setPlainText(codes);
+
+        int recentTabIndex = us->value("recent/sql_tab", 1).toInt();
+        ui->tabWidget->setCurrentIndex(recentTabIndex);
+        if (recentTabIndex == 1)
+            initVisualList();
+    }
+
+
+    QWidget::showEvent(event);
+}
+
 void DBBrowser::on_execButton_clicked()
 {
     QString full = ui->queryEdit->toPlainText();
-    settings->setValue("sql/codes", full);
+    us->setValue("sql/codes", full);
 
     QString code;
     QTextCursor cursor = ui->queryEdit->textCursor();
@@ -100,7 +121,6 @@ void DBBrowser::on_execButton_clicked()
             right = full.length();
         code = full.mid(left, right - left);
     }
-    emit signalProcessVariant(code);
 
     showQueryResult(code);
 }
@@ -148,12 +168,14 @@ void DBBrowser::initVisualList()
         btn->setSquareSize();
         btn->setRadius(5);
 
+        QMap<QString, QString> *map = new QMap<QString, QString>;
         QHBoxLayout* main_hlayout = new QHBoxLayout(widget);
 
         // 标题
         QVBoxLayout* content_vlayout = new QVBoxLayout();
         content_vlayout->addWidget(label);
         content_vlayout->setAlignment(Qt::AlignLeft);
+
 
         // 遍历code，找到[]变量，添加输入框
         // 格式：[变量名:string(默认)/number]
@@ -181,8 +203,11 @@ void DBBrowser::initVisualList()
             // 恢复与保存数据
             QString key = "sql_variable/" + variable;
             lineEdit->setText(us->value(key).toString());
-            connect(lineEdit, &QLineEdit::textChanged, widget, [&, key, type]{
-                us->setValue(key, lineEdit->text());
+            connect(lineEdit, &QLineEdit::textChanged, widget, [=]{
+                QString value = lineEdit->text();
+                us->setValue(key, value);
+                qDebug() << "输入值：" << variable << value;
+                map->insert(variable, value);
             });
             lineEdit->setMaximumWidth(200);
         }
@@ -198,12 +223,20 @@ void DBBrowser::initVisualList()
         item->setSizeHint(widget->sizeHint());
 
         // 点击按钮
-        connect(btn, &InteractiveButtonBase::clicked, widget, [&, code]{
+        connect(btn, &InteractiveButtonBase::clicked, widget, [=]{
             QString c = code;
             // 替换[]变量为输入框的值
-            emit signalProcessVariant(c);
+            foreach (QString key, map->keys())
+            {
+                QString value = map->value(key);
+                qDebug() << "替换：" << key << value;
+                c.replace(QRegularExpression("\\[" + key + "(:[^]]+)?\\]"), value);
+            }
             showQueryResult(c);
         });
+        /*connect(btn, &QWidget::destroyed, this, [=]{
+            delete map;
+        });*/
         item->setData(Qt::UserRole, code);
     };
 
@@ -341,5 +374,12 @@ void DBBrowser::on_askAIButton_clicked()
     chatGPTUtil->getResponse(chats);
     ui->askAIButton->setEnabled(false);
     ui->askAIButton->setText("询问中...");
+}
+
+
+void DBBrowser::on_runSqlButton_clicked()
+{
+    QString sql = ui->answerTextEdit->toPlainText();
+    showQueryResult(sql);
 }
 

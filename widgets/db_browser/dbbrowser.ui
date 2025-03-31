@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>神奇弹幕-数据库查询</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QPlainTextEdit, QTextEdit, QTableView, QListWidget
+{
+	background: #88FFFFFF;
+	border-radius: 5px;
+}</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="leftMargin">
     <number>6</number>
@@ -159,13 +166,24 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QPlainTextEdit" name="questionTextEdit"/>
+             <widget class="QPlainTextEdit" name="questionTextEdit">
+              <property name="placeholderText">
+               <string>示例：查询25年3月份的弹幕、进入直播间最多的观众的送礼记录、所有舰长的送礼记录</string>
+              </property>
+             </widget>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <property name="topMargin">
                <number>10</number>
               </property>
+              <item>
+               <widget class="QPushButton" name="askAIButton">
+                <property name="text">
+                 <string>询问</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <spacer name="horizontalSpacer_2">
                 <property name="orientation">
@@ -178,13 +196,6 @@
                  </size>
                 </property>
                </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="askAIButton">
-                <property name="text">
-                 <string>询问</string>
-                </property>
-               </widget>
               </item>
              </layout>
             </item>
@@ -211,13 +222,24 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QPlainTextEdit" name="answerTextEdit"/>
+             <widget class="QPlainTextEdit" name="answerTextEdit">
+              <property name="placeholderText">
+               <string>由AI生成的SQL语句，可自行调整</string>
+              </property>
+             </widget>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <property name="topMargin">
                <number>10</number>
               </property>
+              <item>
+               <widget class="QPushButton" name="runSqlButton">
+                <property name="text">
+                 <string>执行</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <spacer name="horizontalSpacer_3">
                 <property name="orientation">
@@ -230,13 +252,6 @@
                  </size>
                 </property>
                </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="runSqlButton">
-                <property name="text">
-                 <string>执行</string>
-                </property>
-               </widget>
               </item>
              </layout>
             </item>
