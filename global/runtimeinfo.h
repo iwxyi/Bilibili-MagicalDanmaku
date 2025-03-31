@@ -6,6 +6,10 @@
 #include <QApplication>
 #include <QDir>
 
+#define APP_ID 0
+#define APP_VERSION "4.10.9"
+#define LOCAL_MODE 0
+
 #if true
 #define s8(x) QString(x)
 #else
@@ -13,6 +17,7 @@
 #endif
 
 #define snum(x) QString::number(x)
+
 
 class LiveDanmaku;
 class FansDanmakuWaitBean;

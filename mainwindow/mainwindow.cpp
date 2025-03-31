@@ -600,7 +600,7 @@ void MainWindow::initObject()
             }
         });
     }
-    ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion);
+    ui->appNameLabel->setText("神奇弹幕 v" + rt->appVersion + (LOCAL_MODE ? "(本地调试模式)" : ""));
     this->setWindowTitle(ui->appNameLabel->text());
 
     // 编译时间

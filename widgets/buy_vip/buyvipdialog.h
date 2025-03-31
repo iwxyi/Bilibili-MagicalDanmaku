@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "netinterface.h"
+#include "runtimeinfo.h"
 
 namespace Ui {
 class BuyVIPDialog;
@@ -57,7 +58,7 @@ private:
 
     bool firstShow = true;
     bool mayPayed = false;
-    const QString serverPath = "http://iwxyi.com:8102/server/";
+    const QString serverPath = QString(LOCAL_MODE ? "http://localhost:8102" : "http://iwxyi.com:8102") + "/server/";
 
     double unit1 = 49;
     double unit2 = 69;
