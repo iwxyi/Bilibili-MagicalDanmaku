@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -7471,6 +7471,9 @@ margin: 40px;</string>
              </item>
              <item>
               <widget class="CheckBox1" name="fansArchivesByRoomCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -10385,7 +10388,10 @@ QTabBar::tab:selected
            <number>0</number>
           </property>
           <widget class="QWidget" name="fansArchivesPage">
-           <layout class="QVBoxLayout" name="verticalLayout_93">
+           <layout class="QVBoxLayout" name="verticalLayout_93" stretch="1,0">
+            <property name="spacing">
+             <number>2</number>
+            </property>
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -10444,6 +10450,13 @@ QTabBar::tab:selected
                <number>0</number>
               </property>
               <item>
+               <widget class="QLabel" name="fansArchiveLoadingLabel">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer_47">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -10460,6 +10473,13 @@ QTabBar::tab:selected
                <widget class="QPushButton" name="refreshFansArchivesButton">
                 <property name="text">
                  <string>刷新</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="clearFansArchivesButton">
+                <property name="text">
+                 <string>清空</string>
                 </property>
                </widget>
               </item>

@@ -63,7 +63,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 room_id TEXT NOT NULL,
 uname TEXT NOT NULL,
 uid TEXT NOT NULL,
-msg_type INTEGER NOT NULL,
+msg_type INTEGER NOT NULL,  -- 1进入直播间，2关注，3分享直播间，4特别关注
 admin BOOLEAN,
 guard INTEGER,
 anchor_room_id TEXT,

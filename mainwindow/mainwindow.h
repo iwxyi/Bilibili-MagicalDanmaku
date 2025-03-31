@@ -730,6 +730,8 @@ private slots:
 
     void on_fansArchivesByRoomCheck_clicked();
 
+    void on_clearFansArchivesButton_clicked();
+
 private:
     void initView();
     void initStyle();

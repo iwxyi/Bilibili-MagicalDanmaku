@@ -16,6 +16,7 @@ public:
     void start();
 
 signals:
+    void signalFansArchivesLoadingStatusChanged(const QString& status);
     void signalFansArchivesUpdated(QString uid);
     void signalError(const QString& err); // 错误信号，会停止处理，除非再手动点开
 

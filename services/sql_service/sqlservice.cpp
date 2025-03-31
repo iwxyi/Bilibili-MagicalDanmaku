@@ -702,3 +702,18 @@ QList<MyJson> SqlService::getUserDanmakuList(const QString &uid, qint64 startTim
     }
     return result;
 }
+
+void SqlService::clearFansArchivesAll()
+{
+    exec("DELETE FROM fans_archive");
+}
+
+void SqlService::clearFansArchivesByRoomId(const QString& roomId)
+{
+    exec(QString("DELETE FROM fans_archive WHERE room_id = '%1'").arg(roomId));
+}
+
+void SqlService::clearFansArchivesByNoRoom()
+{
+    exec("DELETE FROM fans_archive WHERE room_id IS NULL");
+}

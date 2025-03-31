@@ -379,6 +379,10 @@ void MainWindow::initView()
     ui->dataCenterTopTabGroup->setFixedHeight(ui->dataCenterTopTabGroup->sizeHint().height());
     ui->dataCenterTopTabGroup->setStyleSheet("#dataCenterTabGroup { background: white; border-radius: " + snum(ui->dataCenterTopTabGroup->height() / 2) + "px; }");
 
+    connect(ui->databaseWidget, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
+        code = cr->processDanmakuVariants(code, LiveDanmaku());
+    });
+
     customVarsButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->thankPage);
     customVarsButton->setRadius(rt->fluentRadius);
     customVarsButton->setSquareSize();
@@ -8167,7 +8171,6 @@ void MainWindow::initDbService()
     if (us->saveToSqlite)
         sqlService.open();
     ui->databaseWidget->setService(&sqlService);
-    ui->databaseWidget->show();
 
     connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 不包含PK同步的弹幕
@@ -8253,6 +8256,9 @@ void MainWindow::initFansArchivesService()
     fansArchivesService = new FansArchivesService(&sqlService, this);
 
     // 连接信号
+    connect(fansArchivesService, &FansArchivesService::signalFansArchivesLoadingStatusChanged, this, [=](const QString& status){
+        ui->fansArchiveLoadingLabel->setText(status);
+    });
     connect(fansArchivesService, &FansArchivesService::signalFansArchivesUpdated, this, [=](QString uid){
         // 判断没有选中或者选中了第一个？
         // 如果是第一个，刷新之后，自动选中第一个；
@@ -10979,5 +10985,24 @@ void MainWindow::on_databaseTabButton_clicked()
 void MainWindow::on_refreshFansArchivesButton_clicked()
 {
     updateFansArchivesListView();
+}
+
+
+void MainWindow::on_clearFansArchivesButton_clicked()
+{
+    newFacileMenu;
+    menu->addAction("清除当前直播间的档案", [&]{
+        sqlService.clearFansArchivesByRoomId(ac->roomId);
+        emit fansArchivesService->signalFansArchivesUpdated("");
+    })->tooltip("只清除当前直播间的档案，不影响“不区分直播间”、其他直播间的档案\n如果总开关保持开启，将会重新生成");
+    menu->addAction("清除不区分直播间的档案", [&]{
+        sqlService.clearFansArchivesByNoRoom();
+        emit fansArchivesService->signalFansArchivesUpdated("");
+    })->tooltip("只清除“不区分直播间”的档案，不影响指定直播间的档案\n如果总开关保持开启，将会重新生成");
+    menu->addAction("清除所有档案", [&]{
+        sqlService.clearFansArchivesAll();
+        emit fansArchivesService->signalFansArchivesUpdated("");
+    })->tooltip("清除所有粉丝档案\n如果总开关保持开启，将会重新生成");
+    menu->exec();
 }
 

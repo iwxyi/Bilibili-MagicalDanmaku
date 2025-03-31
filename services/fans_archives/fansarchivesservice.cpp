@@ -24,8 +24,8 @@ void FansArchivesService::onTimer()
 {
     if (!sqlService || !sqlService->isOpen())
     {
-        qWarning() << "数据库未打开，无法处理粉丝档案";
-        emit signalError("数据库未打开，无法处理粉丝档案");
+        qWarning() << "数据库未打开，停止处理粉丝档案";
+        emit signalError("数据库未打开，停止处理粉丝档案");
         return;
     }
     
@@ -33,7 +33,10 @@ void FansArchivesService::onTimer()
     if (uid.isEmpty())
     {
         if (timer->interval() != INTERVAL_WAIT)
+        {
             qInfo() << "没有找到需要处理的粉丝档案，暂缓工作";
+            emit signalFansArchivesLoadingStatusChanged("档案生成完毕");
+        }
         timer->setInterval(INTERVAL_WAIT); // 60秒判断一次
         timer->start();
         return;
@@ -70,6 +73,7 @@ void FansArchivesService::onTimer()
         danmakuListStr.append(danmaku.s("create_time") + "  " + danmaku.s("uname") + "：" + danmaku.s("msg"));
     }
     qInfo() << "待处理的用户信息：" << lastUname << "弹幕数量：" << danmakuList.size();
+    emit signalFansArchivesLoadingStatusChanged("正在生成【" + lastUname + "】的档案，参考弹幕：" + QString::number(danmakuList.size()) + "条");
 
     // 组合发送的文本
     QString prompt = readTextFile(":/documents/archives_prompt");
@@ -109,6 +113,7 @@ void FansArchivesService::onTimer()
         // 保存档案
         sqlService->insertFansArchive(uid, lastUname, formatText);
         emit signalFansArchivesUpdated(uid);
+        emit signalFansArchivesLoadingStatusChanged("粉丝【" + lastUname + "】档案生成完毕");
     });
 
     // 生成data
