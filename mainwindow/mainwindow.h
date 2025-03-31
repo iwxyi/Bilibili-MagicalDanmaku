@@ -63,7 +63,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-#define LOCAL_MODE 0
 #define CALC_DEB if (0) qDebug() // 输出计算相关的信息
 #define SERVER_DEB if (0) qDebug() // 输出服务器功能相关信息
 

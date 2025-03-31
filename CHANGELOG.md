@@ -1,4 +1,4 @@
-### v4.10.8.1 [发送表情命令]
+### v4.10.9 [发送表情命令]
 
 - 新增AI“回复自己”的开关，避免死循环（默认关闭，不会回复）
 - 新增发送表情命令：`>sendEmoji(emojiID)`、`>sendRoomEmoji(roomID, emojiID)`

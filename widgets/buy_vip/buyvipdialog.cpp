@@ -147,7 +147,8 @@ void BuyVIPDialog::updatePrice()
     auto snum = [=](qint64 val){ return QString::number(val); };
     get(serverPath + "pay/getPrice",
         {"vip_type", snum(vipType), "vip_level", snum(vipLevel),
-         "month", snum(vipMonth), "coupon", couponCode},
+         "month", snum(vipMonth), "coupon", couponCode,
+         "app_id", APP_ID, "app_verion", APP_VERSION},
         [=](MyJson json) {
         if (json.code() != 0)
         {
@@ -164,6 +165,41 @@ void BuyVIPDialog::updatePrice()
         }
 
         MyJson data = json.data();
+
+        // 设置各个单价
+        MyJson priceData = data.o("unitPrices");
+        double discount1 = unit1, discount2 = unit2, discount3 = unit3;
+        if (!priceData.isEmpty())
+        {
+            MyJson unit1Data = priceData.o("price_1");
+            if (!unit1Data.isEmpty())
+            {
+                unit1 = unit1Data.d("price");
+                discount1 = unit1Data.d("discountPrice");
+                if (discount1 < 1e-4)
+                    discount1 = unit1;
+            }
+            MyJson unit2Data = priceData.o("price_2");
+            if (!unit2Data.isEmpty())
+            {
+                unit2 = unit2Data.d("price");
+                discount2 = unit2Data.d("discountPrice");
+                if (discount2 < 1e-4)
+                    discount2 = unit2;
+            }
+            MyJson unit3Data = priceData.o("price_3");
+            if (!unit3Data.isEmpty())
+            {
+                unit3 = unit3Data.d("price");
+                discount3 = unit3Data.d("discountPrice");
+                if (discount3 < 1e-4)
+                    discount3 = unit3;
+            }
+        }
+        else
+        {
+            qWarning() << "获取价格失败，请检查服务器是否正常";
+        }
 
         // 设置价格
         double price = data.d("totalPrice");
@@ -195,13 +231,13 @@ void BuyVIPDialog::updatePrice()
             {
                 this->couponDiscount = discount;
                 ui->typeRRPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
-                                              .arg(snum(int(unit1 * discount)))
+                                              .arg(snum(int(discount1 * discount)))
                                               .arg(snum(int(unit1))));
                 ui->typeRoomPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
-                                              .arg(snum(int(unit2 * discount)))
+                                              .arg(snum(int(discount2 * discount)))
                                               .arg(snum(int(unit2))));
                 ui->typeRobotPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
-                                              .arg(snum(int(unit3 * discount)))
+                                              .arg(snum(int(discount3 * discount)))
                                               .arg(snum(int(unit3))));
 
                 {
@@ -216,9 +252,24 @@ void BuyVIPDialog::updatePrice()
             }
             else
             {
-                ui->typeRRPriceLabel->setText(snum(int(unit1)) + "元/月");
-                ui->typeRoomPriceLabel->setText(snum(int(unit2)) + "元/月");
-                ui->typeRobotPriceLabel->setText(snum(int(unit3)) + "元/月");
+                if (qAbs(unit1 - discount1) < 1e-4) // 没有差价，显示原价
+                    ui->typeRRPriceLabel->setText(snum(int(unit1)) + "元/月");
+                else // 有差价，同时显示两个价格
+                    ui->typeRRPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(discount1)))
+                                              .arg(snum(int(unit1))));
+                if (qAbs(unit2 - discount2) < 1e-4)
+                    ui->typeRoomPriceLabel->setText(snum(int(unit2)) + "元/月");
+                else
+                    ui->typeRoomPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(discount2)))
+                                              .arg(snum(int(unit2))));
+                if (qAbs(unit3 - discount3) < 1e-4)
+                    ui->typeRobotPriceLabel->setText(snum(int(unit3)) + "元/月");
+                else
+                    ui->typeRobotPriceLabel->setText(QString("%1<sub><s><font color='gray'>%2</font></s>元/月</sub>")
+                                              .arg(snum(int(discount3)))
+                                              .arg(snum(int(unit3))));
                 ui->couponButton->setToolTip("");
             }
         }
@@ -325,7 +376,8 @@ void BuyVIPDialog::on_payButton_clicked()
         { "room_id", roomId, "up_id", upId, "user_id", userId,
          "room_title", roomTitle, "up_name", upName, "username", username,
          "vip_type", snum(vipType), "vip_level", snum(vipLevel),
-         "month", snum(vipMonth), "coupon", couponCode },
+         "month", snum(vipMonth), "coupon", couponCode,
+         "app_id", APP_ID, "app_verion", APP_VERSION },
         [=](MyJson json){
 
         QString html = json.s("data");
