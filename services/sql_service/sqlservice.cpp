@@ -226,6 +226,7 @@ create_time time NOT NULL))");
     {
         createTable(R"(CREATE TABLE fans_archive(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
+room_id TEXT,
 uid TEXT NOT NULL,
 uname TEXT NOT NULL,
 archive TEXT,

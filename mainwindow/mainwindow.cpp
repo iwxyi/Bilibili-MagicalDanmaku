@@ -1878,6 +1878,7 @@ void MainWindow::readConfig2()
 
     // 粉丝档案
     ui->fansArchivesCheck->setChecked(us->fansArchives = us->value("us/fansArchives", false).toBool());
+    ui->fansArchivesByRoomCheck->setChecked(us->fansArchivesByRoom = us->value("us/fansArchivesByRoom", false).toBool());
     if (us->fansArchives)
         initFansArchivesService();
 }
@@ -10935,6 +10936,13 @@ void MainWindow::on_fansArchivesCheck_clicked()
     us->fansArchives = ui->fansArchivesCheck->isChecked();
     us->setValue("us/fansArchives", us->fansArchives);
     initFansArchivesService();
+}
+
+
+void MainWindow::on_fansArchivesByRoomCheck_clicked()
+{
+    us->fansArchivesByRoom = ui->fansArchivesByRoomCheck->isChecked();
+    us->setValue("us/fansArchivesByRoom", us->fansArchivesByRoom);
 }
 
 
