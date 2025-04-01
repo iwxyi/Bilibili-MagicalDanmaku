@@ -14,6 +14,7 @@
 #include <QList>
 #include <QBitmap>
 #include <QtMath>
+#include <QSvgRenderer>
 
 #define PI 3.1415926
 #define GOLDEN_RATIO 0.618
@@ -84,6 +85,27 @@ public:
     };
 
     /**
+     * 四周边界的padding
+     * 调整按钮大小时：宽度+左右、高度+上下
+     */
+    struct EdgeVal
+    {
+        EdgeVal() {}
+        EdgeVal(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
+        int left = 0, top = 0, right = 0, bottom = 0; // 四个边界的空白距离
+
+        bool operator==(const EdgeVal& another)
+        {
+            return left == another.left && top == another.top && right == another.right && bottom == another.right;
+        }
+
+        bool operator!= (const EdgeVal& another)
+        {
+            return !((*this) == another);
+        }
+    };
+
+    /**
      * 前景额外的图标（可以多个）
      * 可能是角标（比如展开箭头）
      * 可能是前缀（图例）
@@ -91,11 +113,14 @@ public:
     struct PaintAddin
     {
         PaintAddin() : enable(false) {}
+        PaintAddin(QIcon i, Qt::Alignment a, QSize s) : enable(true), icon(i), align(a), size(s) {}
         PaintAddin(QPixmap p, Qt::Alignment a, QSize s) : enable(true), pixmap(p), align(a), size(s) {}
         bool enable;         // 是否启用
+        QIcon icon;          // 不可变色图标（优先）
         QPixmap pixmap;      // 可变色图标
         Qt::Alignment align; // 对齐方式
         QSize size;          // 固定大小
+        EdgeVal padding;     // 四边大小
     };
 
     /**
@@ -127,17 +152,6 @@ public:
         bool finished;            // 是否结束。结束后改为渐变消失
     };
 
-    /**
-     * 四周边界的padding
-     * 调整按钮大小时：宽度+左右、高度+上下
-     */
-    struct EdgeVal
-    {
-        EdgeVal() {}
-        EdgeVal(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
-        int left, top, right, bottom; // 四个边界的空白距离
-    };
-
     enum NolinearType
     {
         Linear,
@@ -153,7 +167,11 @@ public:
     virtual void setIcon(QIcon icon);
     virtual void setPixmapPath(QString path);
     virtual void setPixmap(QPixmap pixmap);
+    virtual void setSvgPath(QString path);
+    virtual void setPaintAddin(QIcon icon, Qt::Alignment align = Qt::AlignRight, QSize size = QSize(32, 32));
     virtual void setPaintAddin(QPixmap pixmap, Qt::Alignment align = Qt::AlignRight, QSize size = QSize(0, 0));
+    virtual void setPaintAddinPadding(int horizonal, int vertival);
+    virtual void setPaintAddinPadding(int left, int top, int right, int bottom);
 
     void setSelfEnabled(bool e = true);
     void setParentEnabled(bool e = false);
@@ -279,6 +297,7 @@ protected:
 
     double getNolinearProg(int p, NolinearType type);
     QIcon::Mode getIconMode();
+    void reloadSvgColor();
 
 signals:
     void showAniFinished();
@@ -308,8 +327,10 @@ public slots:
 protected:
     PaintModel model;
     QIcon icon;
+    QString svg_path;
     QString text;
     QPixmap pixmap;
+    QSvgRenderer* svg_render = nullptr;
     PaintAddin paint_addin;
     EdgeVal fore_paddings;
 

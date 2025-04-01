@@ -100,6 +100,13 @@ void FansArchivesService::onTimer()
     connect(chatgpt, &ChatGPTUtil::finished, this, [=]{
         chatgpt->deleteLater();
 
+        if (!us->fansArchives)
+        {
+            qInfo() << "粉丝档案功能未开启，停止处理粉丝档案";
+            emit signalFansArchivesLoadingStatusChanged("粉丝档案功能已关闭");
+            return;
+        }
+
         timer->setInterval(INTERVAL_WORK); // 3秒后继续处理下一个粉丝档案
         timer->start();
     });

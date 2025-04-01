@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1313,6 +1313,9 @@ background-repeat:none;</string>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_21" stretch="0,0,0,1">
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <property name="leftMargin">
            <number>6</number>
           </property>
@@ -1321,20 +1324,26 @@ background-repeat:none;</string>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_51">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <property name="leftMargin">
              <number>6</number>
             </property>
             <property name="topMargin">
-             <number>6</number>
+             <number>2</number>
             </property>
             <property name="rightMargin">
              <number>6</number>
             </property>
             <property name="bottomMargin">
-             <number>6</number>
+             <number>2</number>
             </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_53">
+              <property name="spacing">
+               <number>0</number>
+              </property>
               <item>
                <widget class="QWidget" name="roomIdSpacingWidget_3" native="true">
                 <property name="minimumSize">
@@ -2693,7 +2702,7 @@ QPushButton:pressed
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>功能型GPT</string>
+                <string>功能型AI</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -2726,7 +2735,7 @@ margin: 40px;</string>
                 <string notr="true">color: gray;</string>
                </property>
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用GPT来识别弹幕。会覆盖AI自动回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用AI来识别弹幕类型，并进行不同的操作。会覆盖AI自动回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -7041,9 +7050,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>1190</y>
-              <width>161</width>
-              <height>141</height>
+              <y>1170</y>
+              <width>181</width>
+              <height>191</height>
              </rect>
             </property>
             <property name="toolTip">
@@ -7095,6 +7104,19 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_87">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;精确保存直播间多种数据，便于查询与统计&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -7392,9 +7414,9 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>430</x>
-              <y>1350</y>
+              <y>1370</y>
               <width>161</width>
-              <height>91</height>
+              <height>151</height>
              </rect>
             </property>
             <property name="toolTip">
@@ -7446,6 +7468,19 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_88">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;基于数据库的统计功能，需要足量弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

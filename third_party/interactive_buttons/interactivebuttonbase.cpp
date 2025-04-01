@@ -200,6 +200,8 @@ void InteractiveButtonBase::setIcon(QIcon icon)
         setAlign(Qt::AlignCenter);
     }
     this->icon = icon;
+    this->svg_path = "";
+    this->svg_render = nullptr;
     if (parent_enabled)
         QPushButton::setIcon(icon);
     update();
@@ -240,8 +242,31 @@ void InteractiveButtonBase::setPixmap(QPixmap pixmap)
         icon_text_size = fm.lineSpacing();
     }
     this->pixmap = getMaskPixmap(pixmap, isEnabled() ? icon_color : getOpacityColor(icon_color));
+    this->svg_path = "";
+    this->svg_render = nullptr;
     if (parent_enabled)
         QPushButton::setIcon(QIcon(pixmap));
+    update();
+}
+
+void InteractiveButtonBase::setSvgPath(QString path)
+{
+    svg_path = path;
+    svg_render = new QSvgRenderer();
+    reloadSvgColor();
+    if (model == PaintModel::None)
+        model = PaintModel::Icon;
+    else if (model == PaintModel::Text)
+        model = PaintModel::IconText;
+    else
+        model = PaintModel::Icon;
+    icon = QIcon(path);
+    update();
+}
+
+void InteractiveButtonBase::setPaintAddin(QIcon icon, Qt::Alignment align, QSize size)
+{
+    paint_addin = PaintAddin(icon, align, size);
     update();
 }
 
@@ -258,6 +283,20 @@ void InteractiveButtonBase::setPaintAddin(QPixmap pixmap, Qt::Alignment align, Q
     pixmap.setMask(mask);
     paint_addin = PaintAddin(pixmap, align, size);
     update();
+}
+
+void InteractiveButtonBase::setPaintAddinPadding(int horizonal, int vertival)
+{
+    paint_addin.padding.left = paint_addin.padding.right = horizonal;
+    paint_addin.padding.top = paint_addin.padding.bottom = vertival;
+}
+
+void InteractiveButtonBase::setPaintAddinPadding(int left, int top, int right, int bottom)
+{
+    paint_addin.padding.left = left;
+    paint_addin.padding.top = top;
+    paint_addin.padding.right = right;
+    paint_addin.padding.bottom = bottom;
 }
 
 /**
@@ -430,7 +469,6 @@ void InteractiveButtonBase::setBgColor(QColor hover, QColor press)
 void InteractiveButtonBase::setNormalColor(QColor color)
 {
     normal_bg = color;
-    update();
 }
 
 /**
@@ -440,8 +478,6 @@ void InteractiveButtonBase::setNormalColor(QColor color)
 void InteractiveButtonBase::setBorderColor(QColor color)
 {
     border_bg = color;
-    if (border_width == 0)
-        border_width = 1;
 }
 
 /**
@@ -476,10 +512,19 @@ void InteractiveButtonBase::setIconColor(QColor color)
         pixmap = getMaskPixmap(pixmap, isEnabled() ? icon_color : getOpacityColor(icon_color));
     }
 
+    // 修改svg的颜色
+    if (svg_render)
+    {
+        reloadSvgColor();
+    }
+
     // 绘制额外角标（如果有的话）
     if (paint_addin.enable)
     {
-        paint_addin.pixmap = getMaskPixmap(paint_addin.pixmap, isEnabled() ? icon_color : getOpacityColor(icon_color));
+        if (!paint_addin.pixmap.isNull())
+        {
+            paint_addin.pixmap = getMaskPixmap(paint_addin.pixmap, isEnabled() ? icon_color : getOpacityColor(icon_color));
+        }
     }
 
     update();
@@ -535,7 +580,7 @@ void InteractiveButtonBase::setFontSize(int f)
         ani->setStartValue(font_size);
         ani->setEndValue(f);
         ani->setDuration(click_ani_duration);
-        connect(ani, &QPropertyAnimation::finished, [=] {
+        connect(ani, &QPropertyAnimation::finished, this, [=] {
             QFontMetrics fm(this->font());
             icon_text_size = fm.lineSpacing();
             ani->deleteLater();
@@ -698,7 +743,7 @@ void InteractiveButtonBase::setPaddings(int x)
 
 /**
  * 设置Icon模式旁边空多少
- * @param x 0~0.5，越大越空
+ * @param x 0~1.0，越大越空
  */
 void InteractiveButtonBase::setIconPaddingProper(double x)
 {
@@ -1372,6 +1417,13 @@ void InteractiveButtonBase::paintEvent(QPaintEvent *event)
         if (paint_addin.enable)
         {
             int l = fore_paddings.left, t = fore_paddings.top, r = width() - fore_paddings.right, b = height() - fore_paddings.bottom;
+            if (paint_addin.padding != EdgeVal(0, 0, 0, 0))
+            {
+                l = paint_addin.padding.left;
+                t = paint_addin.padding.top;
+                r = width() - paint_addin.padding.right;
+                b = height() - paint_addin.padding.bottom;
+            }
             int small_edge = min(height(), width());
             int pw = paint_addin.size.width() ? paint_addin.size.width() : small_edge * 4 / 5;
             int ph = paint_addin.size.height() ? paint_addin.size.height() : small_edge * 4 / 5;
@@ -1393,7 +1445,14 @@ void InteractiveButtonBase::paintEvent(QPaintEvent *event)
                 t = height() / 2 - ph / 2;
                 b = t + ph;
             }
-            painter.drawPixmap(QRect(l, t, r - l, b - t), paint_addin.pixmap);
+            if (!paint_addin.icon.isNull())
+            {
+                painter.drawPixmap(QRect(l, t, r - l, b - t), paint_addin.icon.pixmap(paint_addin.size));
+            }
+            else if (!paint_addin.pixmap.isNull())
+            {
+                painter.drawPixmap(QRect(l, t, r - l, b - t), paint_addin.pixmap);
+            }
         }
 
         QRectF &rect = paint_rect;
@@ -1490,7 +1549,14 @@ void InteractiveButtonBase::paintEvent(QPaintEvent *event)
         }
         else if (model == Icon) // 绘制图标
         {
-            icon.paint(&painter, rect.toRect(), align, getIconMode());
+            if (svg_render)
+            {
+                svg_render->render(&painter, rect.toRect());
+            }
+            else
+            {
+                icon.paint(&painter, rect.toRect(), align, getIconMode());
+            }
         }
         else if (model == PixmapMask)
         {
@@ -1534,9 +1600,20 @@ void InteractiveButtonBase::paintEvent(QPaintEvent *event)
 void InteractiveButtonBase::drawIconBeforeText(QPainter &painter, QRect icon_rect)
 {
     if (model == IconText)
-        icon.paint(&painter, icon_rect, align, getIconMode());
+    {
+        if (svg_render)
+        {
+            svg_render->render(&painter, icon_rect);
+        }
+        else
+        {
+            icon.paint(&painter, icon_rect, align, getIconMode());
+        }
+    }
     else if (model == PixmapText)
+    {
         painter.drawPixmap(icon_rect, pixmap);
+    }
 }
 
 /**
@@ -1817,16 +1894,30 @@ QColor InteractiveButtonBase::getOpacityColor(QColor color, double level)
 
 /**
  * 获取对应颜色的图标 pixmap
+ * 以此实现图标跟随主题变色的功能
  * @param  p 图标
  * @param  c 颜色
  * @return   对应颜色的图标
  */
 QPixmap InteractiveButtonBase::getMaskPixmap(QPixmap p, QColor c)
 {
-    QBitmap mask = p.mask();
-    p.fill(c);
-    p.setMask(mask);
-    return p;
+    // 创建一个新的 QPixmap 对象，用于修改颜色
+    QPixmap newPixmap(p.size());
+    newPixmap.fill(Qt::transparent); // 设置背景为透明
+
+    QPainter painter(&newPixmap);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.drawPixmap(0, 0, p); // 将原始图片绘制到新的 QPixmap 上
+
+    painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+    painter.fillRect(newPixmap.rect(), c); // 以指定颜色填充整个 QPixmap
+
+    painter.setCompositionMode(QPainter::CompositionMode_DestinationOver);
+    painter.drawPixmap(0, 0, p); // 将原始图片再次绘制到新的 QPixmap 上，覆盖指定颜色
+
+    painter.end();
+
+    return newPixmap;
 }
 
 double InteractiveButtonBase::getNolinearProg(int p, InteractiveButtonBase::NolinearType type)
@@ -1863,6 +1954,31 @@ double InteractiveButtonBase::getNolinearProg(int p, InteractiveButtonBase::Noli
 QIcon::Mode InteractiveButtonBase::getIconMode()
 {
     return isEnabled() ? (getState() ? QIcon::Selected : (hovering || pressing ? QIcon::Active : QIcon::Normal)) : QIcon::Disabled;
+}
+
+void InteractiveButtonBase::reloadSvgColor()
+{
+    if (icon_color.isValid())
+    {
+        QFile file(svg_path);
+        if (file.open(QIODevice::ReadOnly))
+        {
+            QByteArray data = file.readAll();
+            QString str(data);
+            // 替换fill="xxx"为当前颜色
+            str.replace(QRegExp("fill=\"#?\\w+\""), "fill=\"" + icon_color.name() + "\"");
+            svg_render->load(str.toUtf8());
+            file.close();
+        }
+        else
+        {
+            qWarning() << "Could not open SVG file:" << svg_path;
+        }
+    }
+    else
+    {
+        svg_render->load(svg_path);
+    }
 }
 
 /**
