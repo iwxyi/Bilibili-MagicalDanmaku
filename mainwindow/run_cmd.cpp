@@ -793,7 +793,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             return true;
         }
     }
-    if (msg.contains("sendRoomEmoji"))
+    if (msg.contains("sendEmoji"))
     {
         // 不带房间号
         re = RE("sendEmoji\\s*\\(\\s*(.+)\\s*\\)");
