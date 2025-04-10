@@ -732,6 +732,8 @@ private slots:
 
     void on_clearFansArchivesButton_clicked();
 
+    void on_screenMonitorCombo_activated(int index);
+
 private:
     void initView();
     void initStyle();
@@ -833,6 +835,7 @@ private:
 
     void releaseLiveData(bool prepare = false);
     QRect getScreenRect();
+    void loadScreenMonitors();
 
     void getPositiveVote();
 
@@ -980,6 +983,7 @@ private:
     QFont screenDanmakuFont;
     QColor screenDanmakuColor;
     QList<QLabel*> screenLabels;
+    int screenDanmakuIndex = -1;
 
     // 服务端
     WebServer* webServer;

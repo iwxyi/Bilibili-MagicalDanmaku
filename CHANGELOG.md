@@ -7,6 +7,7 @@
 - 新增SQL查询支持注释
 - 新增SQL查询支持中文字符集
 - 新增数据库路径可自定义：setting.ini中 `[custom]` 下添加 `databasePath=xxxx(需包含文件名)`
+- 新增全屏弹幕的显示器选择
 - 修复SQL浏览器无法执行多行的问题
     > 因为该文本格式中，换行符使用的是特殊的 Unicode 字符 U+2029 (Paragraph Separator)，而不是常规的 \n 字符
 

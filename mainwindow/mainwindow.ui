@@ -232,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -5124,7 +5124,7 @@ margin: 40px;</string>
               <x>550</x>
               <y>10</y>
               <width>201</width>
-              <height>231</height>
+              <height>261</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5401,6 +5401,9 @@ QPushButton:pressed
                  <property name="singleStep">
                   <number>5</number>
                  </property>
+                 <property name="value">
+                  <number>5</number>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -5434,6 +5437,9 @@ QPushButton:pressed
                  </property>
                  <property name="singleStep">
                   <number>5</number>
+                 </property>
+                 <property name="value">
+                  <number>60</number>
                  </property>
                 </widget>
                </item>
@@ -5476,12 +5482,26 @@ QPushButton:pressed
                </property>
               </widget>
              </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_83" stretch="0,1">
+               <item>
+                <widget class="QLabel" name="label_89">
+                 <property name="text">
+                  <string>显示器</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="screenMonitorCombo"/>
+               </item>
+              </layout>
+             </item>
             </layout>
            </widget>
            <widget class="QWidget" name="voiceMainSettingsCard" native="true">
             <property name="geometry">
              <rect>
-              <x>550</x>
+              <x>770</x>
               <y>230</y>
               <width>241</width>
               <height>191</height>

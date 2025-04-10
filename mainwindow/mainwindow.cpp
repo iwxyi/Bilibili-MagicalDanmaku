@@ -1756,7 +1756,7 @@ void MainWindow::readConfig()
     // 粉丝勋章
     ui->autoSwitchMedalCheck->setChecked(us->value("danmaku/autoSwitchMedal", false).toBool());
 
-    // 滚屏
+    // 滚屏（全屏弹幕）
     ui->enableScreenDanmakuCheck->setChecked(us->value("screendanmaku/enableDanmaku", false).toBool());
     ui->enableScreenMsgCheck->setChecked(us->value("screendanmaku/enableMsg", false).toBool());
     ui->screenDanmakuWithNameCheck->setChecked(us->value("screendanmaku/showName", true).toBool());
@@ -1771,6 +1771,7 @@ void MainWindow::readConfig()
     if (!danmakuFontString.isEmpty())
         screenDanmakuFont.fromString(danmakuFontString);
     screenDanmakuColor = qvariant_cast<QColor>(us->value("screendanmaku/color", QColor(0, 0, 0)));
+    loadScreenMonitors();
 
     // 自动签到
     ui->autoDoSignCheck->setChecked(us->autoDoSign = us->value("danmaku/autoDoSign", false).toBool());
@@ -5816,6 +5817,7 @@ void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
         sx = right - label->width();
         ex = left;
     }
+qDebug() << "计算sx" << right << label->width() << sx << ex;
 
     // 避免重叠
     auto isOverlap = [=](int x, int y, int height){
@@ -5835,7 +5837,7 @@ void MainWindow::showScreenDanmaku(const LiveDanmaku &danmaku)
         if (++forCount >= 32) // 最多循环32遍（如果弹幕极多，可能会必定叠在一起）
             break;
     } while (isOverlap(sx, y, label->height()));
-
+    qDebug() << "坐标位置：" << sx << "->" << ex << "屏幕大小：" << rect;
     label->move(QPoint(sx, y));
     screenLabels.append(label);
     QPropertyAnimation* ani = new QPropertyAnimation(label, "pos");
@@ -7065,9 +7067,47 @@ void MainWindow::releaseLiveData(bool prepare)
 
 QRect MainWindow::getScreenRect()
 {
-    QScreen *screen = QGuiApplication::primaryScreen();
+    // 获取screenDanmakuIndex对应的显示器
+    if (screenDanmakuIndex < 0 || screenDanmakuIndex >= ui->screenMonitorCombo->count())
+    {
+        return QGuiApplication::primaryScreen()->availableVirtualGeometry();
+    }
+    QScreen *screen = QGuiApplication::screens().at(screenDanmakuIndex);
     QRect screenRect = screen->availableVirtualGeometry();
     return screenRect;
+}
+
+void MainWindow::loadScreenMonitors()
+{
+    // 获取所有显示器，并显示名字在Combo中
+    QList<QScreen*> screens = QGuiApplication::screens();
+    ui->screenMonitorCombo->clear();
+    foreach (QScreen* screen, screens)
+    {
+        QString displayInfo;
+        QString manufacturer = screen->manufacturer();
+        QString model = screen->model();
+        QRect geometry = screen->geometry();
+        
+        // 组合显示器信息
+        if (!manufacturer.isEmpty() && !model.isEmpty())
+            displayInfo = QString("%1 %2").arg(manufacturer).arg(model);
+        else if (!manufacturer.isEmpty())
+            displayInfo = manufacturer;
+        else if (!model.isEmpty())
+            displayInfo = model;
+        else
+            displayInfo = QString("显示器 %1 (%2x%3)").arg(screens.indexOf(screen) + 1)
+                                 .arg(geometry.width()).arg(geometry.height());
+        
+        ui->screenMonitorCombo->addItem(displayInfo);
+    }
+
+    // 恢复之前的配置，如果为空或者不存在，那么就是第一个
+    int index = us->value("screendanmaku/monitor", 0).toInt();
+    if (index < 0 || index >= ui->screenMonitorCombo->count())
+        index = 0;
+    ui->screenMonitorCombo->setCurrentIndex(index);
 }
 
 void MainWindow::getPositiveVote()
@@ -11004,5 +11044,17 @@ void MainWindow::on_clearFansArchivesButton_clicked()
         fansArchivesService->start();
     })->tooltip("清除所有粉丝档案\n如果总开关保持开启，将会重新生成");
     menu->exec();
+}
+
+
+void MainWindow::on_screenMonitorCombo_activated(int index)
+{
+    // 更新显示器，毕竟显示器是可以热插拔的
+    loadScreenMonitors();
+
+    // 保存设置
+    screenDanmakuIndex = index;
+    us->setValue("screendanmaku/monitor", index);
+    qInfo() << "设置显示器：" << index;
 }
 
