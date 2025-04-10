@@ -1873,9 +1873,9 @@ void MainWindow::readConfig()
 void MainWindow::readConfig2()
 {
     // 数据库
-    us->saveToSqlite = hasPermission() && us->value("db/sqlite").toBool();
+    us->saveToSqlite = hasPermission() && us->value("db/sqlite", true).toBool();
     ui->saveToSqliteCheck->setChecked(us->saveToSqlite);
-    ui->saveCmdToSqliteCheck->setChecked(us->saveCmdToSqlite = us->value("db/cmd").toBool());
+    ui->saveCmdToSqliteCheck->setChecked(us->saveCmdToSqlite = us->value("db/cmd", false).toBool());
     ui->saveCmdToSqliteCheck->setEnabled(us->saveToSqlite);
     if (us->saveToSqlite)
         sqlService.open();
