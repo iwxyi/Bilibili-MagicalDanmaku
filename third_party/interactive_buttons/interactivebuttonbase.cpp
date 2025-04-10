@@ -445,7 +445,6 @@ void InteractiveButtonBase::setUnifyGeomerey(bool enable)
 void InteractiveButtonBase::setBgColor(QColor bg)
 {
     setNormalColor(bg);
-    update();
 }
 
 /**
@@ -459,7 +458,6 @@ void InteractiveButtonBase::setBgColor(QColor hover, QColor press)
         setHoverColor(hover);
     if (press != Qt::black)
         setPressColor(press);
-    update();
 }
 
 /**
@@ -469,6 +467,7 @@ void InteractiveButtonBase::setBgColor(QColor hover, QColor press)
 void InteractiveButtonBase::setNormalColor(QColor color)
 {
     normal_bg = color;
+    update();
 }
 
 /**
@@ -478,6 +477,7 @@ void InteractiveButtonBase::setNormalColor(QColor color)
 void InteractiveButtonBase::setBorderColor(QColor color)
 {
     border_bg = color;
+    update();
 }
 
 /**
@@ -487,6 +487,7 @@ void InteractiveButtonBase::setBorderColor(QColor color)
 void InteractiveButtonBase::setHoverColor(QColor color)
 {
     hover_bg = color;
+    update();
 }
 
 /**
@@ -496,6 +497,7 @@ void InteractiveButtonBase::setHoverColor(QColor color)
 void InteractiveButtonBase::setPressColor(QColor color)
 {
     press_bg = color;
+    update();
 }
 
 /**
