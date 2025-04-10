@@ -4420,7 +4420,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
     // @对象：@uname+空格 或者 @uid
     QString reply_mid = "";
     // @uid
-    QRegularExpression re("@(\\d+)");
+    QRegularExpression re("(?<!\\\\)@(\\d+)");
     QRegularExpressionMatch match = re.match(msg);
     if (match.hasMatch())
     {
@@ -4429,7 +4429,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
     }
     
     // @uname
-    re = QRegularExpression("@(\\S+)( |^)");
+    re = QRegularExpression("(?<!\\\\)@(\\S+)( |^)");
     match = re.match(msg);
     if (match.hasMatch())
     {
@@ -4453,6 +4453,9 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
             qWarning() << "未找到@的用户：" << uname;
         }
     }
+
+    // 替换@符号
+    msg.replace("\\@", "@");
 
     // #设置数据（JSON的ByteArray）
     QString urlMsg = urlEncode(msg);
