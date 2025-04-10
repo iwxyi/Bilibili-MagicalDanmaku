@@ -7,7 +7,7 @@
 #include <QDir>
 
 #define APP_ID 0
-#define APP_VERSION "4.10.9"
+#define APP_VERSION "5.0.0"
 #define LOCAL_MODE 0
 
 #if true
@@ -20,6 +20,7 @@
 
 
 class LiveDanmaku;
+class FansDanmakuWaitBean;
 
 enum LivePlatform
 {

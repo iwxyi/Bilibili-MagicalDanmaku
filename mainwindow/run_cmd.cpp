@@ -304,6 +304,20 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             cr->sendNotifyMsg(">已关闭弹幕回复");
     }
+    else if (msg == "开启粉丝档案")
+    {
+        ui->fansArchivesCheck->setChecked(true);
+        on_fansArchivesCheck_clicked();
+        if (response)
+            cr->sendNotifyMsg(">已开启粉丝档案");
+    }
+    else if (msg == "关闭粉丝档案")
+    {
+        ui->fansArchivesCheck->setChecked(false);
+        on_fansArchivesCheck_clicked();
+        if (response)
+            cr->sendNotifyMsg(">已关闭粉丝档案");
+    }
     else
         return ;
     qInfo() << "执行远程命令：" << msg;
@@ -793,7 +807,7 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             return true;
         }
     }
-    if (msg.contains("sendRoomEmoji"))
+    if (msg.contains("sendEmoji"))
     {
         // 不带房间号
         re = RE("sendEmoji\\s*\\(\\s*(.+)\\s*\\)");

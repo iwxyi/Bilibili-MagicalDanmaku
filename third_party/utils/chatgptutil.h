@@ -175,7 +175,19 @@ public:
         else
         {
             qDebug() << ("无法解析ChatGPT回复：" + QString(ba));
-            emit signalResponseError(ba);
+            // 解析错误
+            if (json.contains("error") && json.value("error").isObject())
+                json = json.value("error").toObject();
+            if (json.contains("message"))
+            {
+                int code = json.value("code").toInt();
+                QString type = json.value("type").toString();
+                emit signalResponseError((json.value("message").toString() + "\n\n错误码：" + QString::number(code) + "  " + type).toUtf8());
+            }
+            else
+            {
+                emit signalResponseError(ba);
+            }
         }
     }
 

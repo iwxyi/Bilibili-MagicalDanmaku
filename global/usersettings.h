@@ -56,6 +56,8 @@ public:
     bool AIReplyMsgLocal = false;    // AI回复本地显示
     int AIReplyMsgSend = 0;          // AI回复发送弹幕，0关闭，1仅少量，2全部
     bool AIReplySelf = false;        // AI回复自己（避免死循环）
+    bool fansArchives = false;       // 是否开启粉丝档案
+    bool fansArchivesByRoom = false; // 粉丝档案区分直播间
 
     QString chatgpt_endpiont = "https://api.deepseek.com/chat/completions";
     QString open_ai_key;

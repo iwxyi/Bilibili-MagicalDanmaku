@@ -43,13 +43,13 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
     nor_btn->setFocus();
     esc_btn->banEnter();
 
-    connect(nor_btn, &HoverButton::clicked, [=]{ // 接受（不进行任何操作）
+    connect(nor_btn, &HoverButton::clicked, this, [=]{ // 接受（不进行任何操作）
         if (!exchanged)
             this->reject();
         else
             this->accept();
     });
-    connect(esc_btn, &HoverButton::clicked, [=]{ // 拒绝（点不到的操作）
+    connect(esc_btn, &HoverButton::clicked, this, [=]{ // 拒绝（点不到的操作）
         if (!exchanged)
             this->accept();
         else
@@ -58,17 +58,17 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
 
     connect(esc_btn, SIGNAL(signalEntered(QPoint)), this, SLOT(slotPosEntered(QPoint))); // 进入按钮（移动按钮或者交换位置）
 
-    connect(esc_btn, &HoverButton::signalLeaved, [=](QPoint){ // 离开按钮（如果两个按钮互换了，换回来）
+    connect(esc_btn, &HoverButton::signalLeaved, this, [=](QPoint){ // 离开按钮（如果两个按钮互换了，换回来）
         if (exchanged)
             slotExchangeButton();
     });
 
-    connect(esc_btn, &HoverButton::signalMousePressed, [=]{ // 没有交换的情况下还是被点到了，赶紧跑掉
+    connect(esc_btn, &HoverButton::signalMousePressed, this, [=]{ // 没有交换的情况下还是被点到了，赶紧跑掉
         if (!exchanged)
             slotEscapeButton();
     });
 
-    connect(esc_btn, &HoverButton::signalKeyPressed, [=](QKeyEvent* event){ // 内部屏蔽回车键，外部转移焦点至另一个按钮
+    connect(esc_btn, &HoverButton::signalKeyPressed, this, [=](QKeyEvent* event){ // 内部屏蔽回车键，外部转移焦点至另一个按钮
         if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
         {
             nor_btn->setFocus();
@@ -76,7 +76,7 @@ EscapeDialog::EscapeDialog(QString title, QString msg, QString esc, QString nor,
         }
     });
 
-    /*connect(nor_btn, &HoverButton::signalKeyPressed, [=](QKeyEvent* event){ // 内部屏蔽回车键，外部转移焦点至另一个按钮
+    /*connect(nor_btn, &HoverButton::signalKeyPressed, this, [=](QKeyEvent* event){ // 内部屏蔽回车键，外部转移焦点至另一个按钮
         if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return)
         {
             esc_btn->setFocus();

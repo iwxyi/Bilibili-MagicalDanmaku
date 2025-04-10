@@ -163,6 +163,23 @@
         </widget>
        </item>
        <item>
+        <widget class="WaterZoomButton" name="dataPageButton">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;数据中心&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resource.qrc">
+           <normaloff>:/icons/big_data</normaloff>:/icons/big_data</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="WaterZoomButton" name="preferencePageButton">
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -215,7 +232,7 @@
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="roomPage">
        <layout class="QHBoxLayout" name="horizontalLayout_65">
@@ -1296,6 +1313,9 @@ background-repeat:none;</string>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_21" stretch="0,0,0,1">
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <property name="leftMargin">
            <number>6</number>
           </property>
@@ -1304,20 +1324,26 @@ background-repeat:none;</string>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_51">
+            <property name="spacing">
+             <number>0</number>
+            </property>
             <property name="leftMargin">
              <number>6</number>
             </property>
             <property name="topMargin">
-             <number>6</number>
+             <number>2</number>
             </property>
             <property name="rightMargin">
              <number>6</number>
             </property>
             <property name="bottomMargin">
-             <number>6</number>
+             <number>2</number>
             </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_53">
+              <property name="spacing">
+               <number>0</number>
+              </property>
               <item>
                <widget class="QWidget" name="roomIdSpacingWidget_3" native="true">
                 <property name="minimumSize">
@@ -2317,7 +2343,7 @@ margin: 40px;</string>
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;因业务调整该接口将于北京时间2023年8月1日0点下线，届时该产品功能将无法正常使用。详见：https://cloud.tencent.com/document/product/271/907111&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
-                  <string>腾讯</string>
+                  <string>（失效）</string>
                  </property>
                 </widget>
                </item>
@@ -2505,6 +2531,9 @@ QPushButton:pressed
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                 </property>
                 </widget>
                </item>
                <item row="2" column="1">
@@ -2673,7 +2702,7 @@ QPushButton:pressed
 font-weight: 500;</string>
                </property>
                <property name="text">
-                <string>功能型GPT</string>
+                <string>功能型AI</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -2706,7 +2735,7 @@ margin: 40px;</string>
                 <string notr="true">color: gray;</string>
                </property>
                <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用GPT来识别弹幕。会覆盖AI自动回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用AI来识别弹幕类型，并进行不同的操作。会覆盖AI自动回复的配置，是否发送弹幕取决于事件实现&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -2844,7 +2873,7 @@ QPushButton:pressed
              </rect>
             </property>
             <property name="toolTip">
-             <string>每次更新后显示更新了什么</string>
+             <string>腾讯AI（已失效）</string>
             </property>
             <property name="styleSheet">
              <string notr="true">#TxNLPSettingsCard
@@ -5734,6 +5763,9 @@ margin: 40px;</string>
 	background: transparent;
 }</string>
                  </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                 </property>
                 </widget>
                </item>
                <item row="2" column="0">
@@ -5757,6 +5789,9 @@ margin: 40px;</string>
 {
 	background: transparent;
 }</string>
+                 </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
                  </property>
                 </widget>
                </item>
@@ -7015,13 +7050,13 @@ margin: 40px;</string>
             <property name="geometry">
              <rect>
               <x>370</x>
-              <y>1190</y>
-              <width>161</width>
-              <height>141</height>
+              <y>1170</y>
+              <width>181</width>
+              <height>191</height>
              </rect>
             </property>
             <property name="toolTip">
-             <string>每次更新后显示更新了什么</string>
+             <string>当前直播间的专属数据库</string>
             </property>
             <property name="styleSheet">
              <string notr="true">#databaseSettingsCard
@@ -7069,6 +7104,19 @@ font-weight: 500;</string>
                <property name="styleSheet">
                 <string notr="true">background: lightgray;
 margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_87">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;精确保存直播间多种数据，便于查询与统计&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -7353,9 +7401,124 @@ margin: 40px;</string>
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="echoMode">
+                  <enum>QLineEdit::PasswordEchoOnEdit</enum>
+                 </property>
                 </widget>
                </item>
               </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="fansArchivesSettingsCard" native="true">
+            <property name="geometry">
+             <rect>
+              <x>430</x>
+              <y>1370</y>
+              <width>161</width>
+              <height>151</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>每一位粉丝的独立档案</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#fansArchivesSettingsCard
+{
+	background: #f7f7ff;
+	border: none;
+	border-radius: 5px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_89">
+             <item>
+              <widget class="QLabel" name="label_86">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font-size: 14px;
+font-weight: 500;</string>
+               </property>
+               <property name="text">
+                <string>粉丝档案</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget_46" native="true">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>1</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background: lightgray;
+margin: 40px;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_88">
+               <property name="styleSheet">
+                <string notr="true">color: gray;</string>
+               </property>
+               <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;基于数据库的统计功能，需要足量弹幕&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="fansArchivesCheck">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>保存以下交互操作到数据库，随时查询与统计：
+- 弹幕
+- 礼物
+- 舰长
+- 进入
+- 点歌
+
+数据库默认位置：安装目录/database.db</string>
+               </property>
+               <property name="text">
+                <string>启用【捐赠版】</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="CheckBox1" name="fansArchivesByRoomCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>如果开启，则只会分析当前直播间的弹幕；否则检测所有直播间的弹幕</string>
+               </property>
+               <property name="text">
+                <string>区分直播间</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -10143,6 +10306,266 @@ QTabBar::tab:selected
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="archivePage">
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <property name="spacing">
+         <number>-1</number>
+        </property>
+        <property name="leftMargin">
+         <number>9</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>6</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_80">
+          <item>
+           <spacer name="horizontalSpacer_44">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QWidget" name="dataCenterTopTabGroup" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>90</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">#thankTopTabGroup
+{
+	background: white;
+	border-radius: 10px;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_81">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="WaterFloatButton" name="fansArchivesTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>粉丝档案</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="WaterFloatButton" name="databaseTabButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>数据库</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_45">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>6</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_46">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="dataCenterStackedWidget">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="fansArchivesPage">
+           <layout class="QVBoxLayout" name="verticalLayout_93" stretch="1,0">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QSplitter" name="fansArchivesSplitter">
+              <property name="styleSheet">
+               <string notr="true">QTableView, QPlainTextEdit
+{
+	background: #88FFFFFF;
+	border-radius: 5px;
+}</string>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <widget class="QWidget" name="verticalLayoutWidget">
+               <layout class="QVBoxLayout" name="verticalLayout_91">
+                <item>
+                 <widget class="QTableView" name="fansArchivesTableView">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="fansArchiveStatusLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QPlainTextEdit" name="fansArchivesTextEdit">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_82">
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="fansArchiveLoadingLabel">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_47">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="refreshFansArchivesButton">
+                <property name="text">
+                 <string>刷新</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="clearFansArchivesButton">
+                <property name="text">
+                 <string>清空</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="databasePage">
+           <layout class="QVBoxLayout" name="verticalLayout_90">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QWidget" name="databaseCenterWidget" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_92">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="DBBrowser" name="databaseWidget" native="true"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="preferencePage">
        <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,1">
         <property name="spacing">
@@ -11005,6 +11428,12 @@ font-weight: 500;</string>
    <class>CheckBox1</class>
    <extends>QCheckBox</extends>
    <header>checkbox1.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DBBrowser</class>
+   <extends>QWidget</extends>
+   <header>dbbrowser.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

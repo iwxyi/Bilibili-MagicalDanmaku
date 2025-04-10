@@ -131,6 +131,7 @@ void MainWindow::initView()
                   ui->thankPageButton,
                   ui->musicPageButton,
                   ui->extensionPageButton,
+                  ui->dataPageButton,
                   ui->preferencePageButton,
                   ui->forumButton
                 };
@@ -364,6 +365,24 @@ void MainWindow::initView()
     ui->thankTopTabGroup->setFixedHeight(ui->thankTopTabGroup->sizeHint().height());
     ui->thankTopTabGroup->setStyleSheet("#thankTopTabGroup { background: white; border-radius: " + snum(ui->thankTopTabGroup->height() / 2) + "px; }");
 
+    // 数据中心页面
+    dataCenterTabButtons = {
+        ui->fansArchivesTabButton,
+        ui->databaseTabButton
+    };
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setAutoTextColor(false);
+        btn->setPaddings(18, 18, 0, 0);
+    }
+    ui->dataCenterTopTabGroup->layout()->activate();
+    ui->dataCenterTopTabGroup->setFixedHeight(ui->dataCenterTopTabGroup->sizeHint().height());
+    ui->dataCenterTopTabGroup->setStyleSheet("#dataCenterTabGroup { background: white; border-radius: " + snum(ui->dataCenterTopTabGroup->height() / 2) + "px; }");
+
+    connect(ui->databaseWidget, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
+        code = cr->processDanmakuVariants(code, LiveDanmaku());
+    });
+
     customVarsButton = new InteractiveButtonBase(QIcon(":/icons/settings"), ui->thankPage);
     customVarsButton->setRadius(rt->fluentRadius);
     customVarsButton->setSquareSize();
@@ -486,6 +505,9 @@ void MainWindow::initView()
 
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(rt->fluentRadius);
+
+    // 数据中心页面
+
 
     // 网页
     ui->refreshExtensionListButton->setSquareSize();
@@ -1851,12 +1873,18 @@ void MainWindow::readConfig()
 void MainWindow::readConfig2()
 {
     // 数据库
-    us->saveToSqlite = hasPermission() && us->value("db/sqlite").toBool();
+    us->saveToSqlite = hasPermission() && us->value("db/sqlite", true).toBool();
     ui->saveToSqliteCheck->setChecked(us->saveToSqlite);
-    ui->saveCmdToSqliteCheck->setChecked(us->saveCmdToSqlite = us->value("db/cmd").toBool());
+    ui->saveCmdToSqliteCheck->setChecked(us->saveCmdToSqlite = us->value("db/cmd", false).toBool());
     ui->saveCmdToSqliteCheck->setEnabled(us->saveToSqlite);
     if (us->saveToSqlite)
         sqlService.open();
+
+    // 粉丝档案
+    ui->fansArchivesCheck->setChecked(us->fansArchives = us->value("us/fansArchives", false).toBool());
+    ui->fansArchivesByRoomCheck->setChecked(us->fansArchivesByRoom = us->value("us/fansArchivesByRoom", false).toBool());
+    if (us->fansArchives)
+        initFansArchivesService();
 }
 
 void MainWindow::initDanmakuWindow()
@@ -2317,6 +2345,22 @@ void MainWindow::switchPageAnimation(int page)
                              400, QEasingCurve::OutBack);
         }
     }
+    else if (page == PAGE_DATA)
+    {
+        QRect g(ui->dataCenterTopTabGroup->geometry());
+        startGeometryAni(ui->dataCenterTopTabGroup,
+                         QRect(g.center().x(), g.top(), 1, g.height()), g);
+
+        // 需要更新数据中心的显示数据
+        updateFansArchivesListView();
+        // 如果数据库还没加载，那么延迟5秒钟加载
+        if (!sqlService.isOpen())
+        {
+            QTimer::singleShot(3000, this, [=]{
+                updateFansArchivesListView();
+            });
+        }
+    }
     else if (page == PAGE_PREFENCE)
     {
         QRect g(ui->label_36->geometry());
@@ -2421,6 +2465,7 @@ void MainWindow::showEvent(QShowEvent *event)
 
         // 恢复窗口位置
         restoreGeometry(us->value("mainwindow/geometry").toByteArray());
+        ui->fansArchivesSplitter->restoreState(us->value("mainwindow/fansArchivesSplitterState").toByteArray());
 
         // 显示启动动画
         startSplash();
@@ -2439,6 +2484,7 @@ void MainWindow::showEvent(QShowEvent *event)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     us->setValue("mainwindow/geometry", this->saveGeometry());
+    us->setValue("mainwindow/fansArchivesSplitterState", ui->fansArchivesSplitter->saveState());
     us->sync();
 
 #if defined(ENABLE_TRAY)
@@ -4920,6 +4966,8 @@ void MainWindow::setRoomThemeByCover(double val)
                                        [=]{QColor c = themeSbg; c.setAlpha(255); return c;}());
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setNormalColor(sbg);
     thankTabButtons.at(ui->thankStackedWidget->currentIndex())->setTextColor(sfg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(sbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(sfg);
     ui->showLiveDanmakuWindowButton->setBgColor(sbg);
     ui->showLiveDanmakuWindowButton->setTextColor(sfg);
     ui->SendMsgButton->setTextColor(fg);
@@ -8113,10 +8161,16 @@ void MainWindow::showNotify(QString s) const
 
 void MainWindow::initDbService()
 {
-    // TODO: 可更换路径
-    sqlService.setDbPath(rt->dataPath + "database.db");
+    // 可更换路径
+    QString customPath = us->value("custom/databasePath", "").toString();
+    if (customPath.isEmpty())
+        customPath = rt->dataPath + "database.db";
+    else
+        qInfo() << "自定义数据库路径：" << customPath;
+    sqlService.setDbPath(customPath);
     if (us->saveToSqlite)
         sqlService.open();
+    ui->databaseWidget->setService(&sqlService);
 
     connect(liveService, &LiveRoomService::signalNewDanmaku, this, [=](const LiveDanmaku &danmaku){
         if (danmaku.isPkLink()) // 不包含PK同步的弹幕
@@ -8133,7 +8187,10 @@ void MainWindow::initDbService()
 
 void MainWindow::showSqlQueryResult(QString sql)
 {
-    DBBrowser* dbb = new DBBrowser(&sqlService, us, nullptr);
+    DBBrowser* dbb = new DBBrowser(nullptr);
+    dbb->setWindowFlags(Qt::Dialog);
+    dbb->setAttribute(Qt::WA_DeleteOnClose, true);
+    dbb->setService(&sqlService);
     dbb->setGeometry(this->geometry());
     connect(dbb, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
         code = cr->processDanmakuVariants(code, LiveDanmaku());
@@ -8160,6 +8217,7 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
 
     if (emailService == nullptr)
     {
+        qInfo() << "初始化邮件服务";
         emailService = new EmailUtil(this);
     }
 
@@ -8178,6 +8236,142 @@ void MainWindow::sendEmail(const QString &to, const QString &subject, const QStr
                             to,
                             subject,
                             body);
+}
+
+void MainWindow::initFansArchivesService()
+{
+    if (!sqlService.isOpen())
+    {
+        qWarning() << "数据库未打开，无法初始化粉丝档案服务";
+        QMessageBox::warning(this, "警告", "数据库未打开，无法初始化粉丝档案服务");
+        return;
+    }
+
+    if (fansArchivesService)
+    {
+        fansArchivesService->start();
+        return;
+    }
+    qInfo() << "初始化粉丝档案服务";
+    fansArchivesService = new FansArchivesService(&sqlService, this);
+
+    // 连接信号
+    connect(fansArchivesService, &FansArchivesService::signalFansArchivesLoadingStatusChanged, this, [=](const QString& status){
+        ui->fansArchiveLoadingLabel->setText(status);
+    });
+    connect(fansArchivesService, &FansArchivesService::signalFansArchivesUpdated, this, [=](QString uid){
+        // 判断没有选中或者选中了第一个？
+        // 如果是第一个，刷新之后，自动选中第一个；
+        // 如更哦不是第一个，那么自动恢复至原先选中的UID
+        int selectRow = ui->fansArchivesTableView->currentIndex().row();
+        QString selectUid = ui->fansArchivesTableView->model()->index(selectRow, 0).data().toString();
+        
+        updateFansArchivesListView();
+
+        if (selectRow == 0 || selectRow == 1)
+        {
+            // 刷新之后，自动选中第一个
+            if (ui->fansArchivesTableView->model()->rowCount() > 0)
+                ui->fansArchivesTableView->setCurrentIndex(ui->fansArchivesTableView->model()->index(0, 0));
+        }
+        else if (!selectUid.isEmpty() && selectUid != uid)
+        {
+            //  重新定位到UID这一行
+            for (int row = 0; row < ui->fansArchivesTableView->model()->rowCount(); row++)
+            {
+                if (ui->fansArchivesTableView->model()->index(row, 0).data().toString() == uid)
+                {
+                    ui->fansArchivesTableView->setCurrentIndex(ui->fansArchivesTableView->model()->index(row, 0));
+                    break;
+                }
+            }
+        }
+    });
+    connect(fansArchivesService, &FansArchivesService::signalError, this, [=](const QString& error) {
+        showError("粉丝档案", error);
+        us->fansArchives = false;
+        ui->fansArchivesCheck->setChecked(false);
+    });
+
+    // 开始运行
+    fansArchivesService->start();
+}
+
+/**
+ * 更新数据中心显示的用户
+ * 同步为数据库查找到的档案列表的昵称字段
+ */
+void MainWindow::updateFansArchivesListView()
+{
+    if (!sqlService.isOpen()) // 可能是还没初始化
+        return;
+
+    // 创建数据模型
+    QSqlQueryModel* model = new QSqlQueryModel(this);
+    
+    // 执行SQL查询,只获取nickname字段
+    model->setQuery("SELECT DISTINCT uid, uname FROM fans_archive ORDER BY update_time DESC", sqlService.getDb());
+    
+    if (model->lastError().isValid()) {
+        showError("数据库查询失败", model->lastError().text());
+        return;
+    }
+
+    // 设置列标题(可选)
+    model->setHeaderData(0, Qt::Horizontal, "UID");
+    model->setHeaderData(1, Qt::Horizontal, "昵称");
+    
+    // 将model设置到tableView
+    ui->fansArchivesTableView->setModel(model);
+
+    // 隐藏UID列
+    ui->fansArchivesTableView->hideColumn(0);
+
+    // 隐藏横纵标题和序号
+    ui->fansArchivesTableView->horizontalHeader()->hide();
+    ui->fansArchivesTableView->verticalHeader()->hide();
+    
+    // 设置表格样式
+    ui->fansArchivesTableView->setSelectionBehavior(QAbstractItemView::SelectRows);  // 整行选择
+    ui->fansArchivesTableView->setSelectionMode(QAbstractItemView::SingleSelection); // 单行选择
+    ui->fansArchivesTableView->horizontalHeader()->setStretchLastSection(true);      // 最后一列自动拉伸
+
+    // 变化信号
+    connect(ui->fansArchivesTableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this, [=](const QModelIndex &current, const QModelIndex &previous){
+        if (!current.isValid())
+        {
+            loadFansArchives("");
+            return;
+        }
+
+        QString uid = ui->fansArchivesTableView->model()->index(current.row(), 0).data().toString();
+        qInfo() << "选择粉丝档案：" << uid;
+        loadFansArchives(uid);
+    });
+}
+
+/**
+ * 加载用户的档案
+ */
+void MainWindow::loadFansArchives(QString uid)
+{
+    if (uid.isEmpty()) // 清空
+    {
+        ui->fansArchivesTextEdit->clear();
+        ui->fansArchiveStatusLabel->clear();
+        return;
+    }
+
+    MyJson json = sqlService.getFansArchives(uid);
+    if (json.isEmpty())
+    {
+        QMessageBox::warning(this, "警告", "粉丝档案不存在");
+        return;
+    }
+
+    QString archives = json.s("archive");
+    ui->fansArchivesTextEdit->setPlainText(archives);
+    ui->fansArchiveStatusLabel->setText(json.s("update_time"));
 }
 
 /**
@@ -10735,3 +10929,80 @@ void MainWindow::on_emailPasswordEdit_editingFinished()
 {
     us->setValue("email/password", ui->emailPasswordEdit->text());
 }
+
+void MainWindow::on_fansArchivesCheck_clicked()
+{
+    if (ui->fansArchivesCheck->isChecked() && !hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        ui->fansArchivesCheck->setChecked(false);
+        return ;
+    }
+
+    us->fansArchives = ui->fansArchivesCheck->isChecked();
+    us->setValue("us/fansArchives", us->fansArchives);
+    initFansArchivesService();
+}
+
+
+void MainWindow::on_fansArchivesByRoomCheck_clicked()
+{
+    us->fansArchivesByRoom = ui->fansArchivesByRoomCheck->isChecked();
+    us->setValue("us/fansArchivesByRoom", us->fansArchivesByRoom);
+}
+
+
+void MainWindow::on_fansArchivesTabButton_clicked()
+{
+    ui->dataCenterStackedWidget->setCurrentIndex(0);
+    us->setValue("mainwindow/dataCentetStackIndex", 0);
+
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
+    }
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(themeSfg);
+}
+
+
+void MainWindow::on_databaseTabButton_clicked()
+{
+    ui->dataCenterStackedWidget->setCurrentIndex(1);
+    us->setValue("mainwindow/dataCentetStackIndex", 1);
+
+    foreach (auto btn, dataCenterTabButtons)
+    {
+        btn->setNormalColor(Qt::transparent);
+        btn->setTextColor(Qt::black);
+    }
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setNormalColor(themeSbg);
+    dataCenterTabButtons.at(ui->dataCenterStackedWidget->currentIndex())->setTextColor(themeSfg);
+}
+
+
+void MainWindow::on_refreshFansArchivesButton_clicked()
+{
+    updateFansArchivesListView();
+}
+
+
+void MainWindow::on_clearFansArchivesButton_clicked()
+{
+    newFacileMenu;
+    menu->addAction("清除当前直播间的档案", [&]{
+        fansArchivesService->clearFansArchivesByRoomId(ac->roomId);
+        fansArchivesService->start();
+    })->tooltip("只清除当前直播间的档案，不影响“不区分直播间”、其他直播间的档案\n如果总开关保持开启，将会重新生成");
+    menu->addAction("清除不区分直播间的档案", [&]{
+        fansArchivesService->clearFansArchivesByNoRoom();
+        fansArchivesService->start();
+    })->tooltip("只清除“不区分直播间”的档案，不影响指定直播间的档案\n如果总开关保持开启，将会重新生成");
+    menu->addAction("清除所有档案", [&]{
+        fansArchivesService->clearFansArchivesAll();
+        fansArchivesService->start();
+    })->tooltip("清除所有粉丝档案\n如果总开关保持开启，将会重新生成");
+    menu->exec();
+}
+

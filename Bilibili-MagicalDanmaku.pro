@@ -1,4 +1,4 @@
-QT       += core gui network websockets multimedia multimediawidgets sql
+QT       += core gui network websockets multimedia multimediawidgets sql svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -66,6 +66,7 @@ INCLUDEPATH += \
     services/entities/ \
     services/code_runner/ \
     services/sql_service/ \
+    services/fans_archives/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -100,6 +101,7 @@ SOURCES += \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \
     services/code_runner/coderunner.cpp \
+    services/fans_archives/fansarchivesservice.cpp \
     services/live_services/bili_livecmds.cpp \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
@@ -233,6 +235,8 @@ HEADERS += \
     services/code_runner/coderunner.h \
     services/entities/emoticon.h \
     services/entities/entities.h \
+    services/fans_archives/fansarchivesservice.h \
+    services/fans_archives/fansdanmakuwaitbean.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
     services/live_services/liveroomservice.h \

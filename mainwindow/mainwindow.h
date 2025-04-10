@@ -58,6 +58,7 @@
 #include "voice_service/voiceservice.h"
 #include "chat_service/chatservice.h"
 #include "emailutil.h"
+#include "fans_archives/fansarchivesservice.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -77,7 +78,8 @@ QT_END_NAMESPACE
 #define PAGE_THANK 2
 #define PAGE_MUSIC 3
 #define PAGE_EXTENSION 4
-#define PAGE_PREFENCE 5
+#define PAGE_DATA 5
+#define PAGE_PREFENCE 6
 
 #define UPDATE_TOOL_NAME "UpUpTool.exe"
 
@@ -718,6 +720,18 @@ private slots:
 
     void on_emailPasswordEdit_editingFinished();
 
+    void on_fansArchivesCheck_clicked();
+
+    void on_fansArchivesTabButton_clicked();
+
+    void on_databaseTabButton_clicked();
+
+    void on_refreshFansArchivesButton_clicked();
+
+    void on_fansArchivesByRoomCheck_clicked();
+
+    void on_clearFansArchivesButton_clicked();
+
 private:
     void initView();
     void initStyle();
@@ -873,6 +887,10 @@ private:
 
     void sendEmail(const QString& to, const QString& subject, const QString& body);
 
+    void initFansArchivesService();
+    void updateFansArchivesListView();
+    void loadFansArchives(QString uid);
+
 private:
     // 应用信息
     Ui::MainWindow *ui;
@@ -883,6 +901,7 @@ private:
     QWidget* roomIdBgWidget;
     InteractiveButtonBase* roomSelectorBtn;
     QList<WaterFloatButton*> thankTabButtons;
+    QList<WaterFloatButton*> dataCenterTabButtons;
     InteractiveButtonBase* customVarsButton;
     InteractiveButtonBase* extensionButton;
     CustomPaintWidget* musicTitleDecorateWidget;
@@ -976,6 +995,9 @@ private:
 
     // 邮件
     EmailUtil* emailService = nullptr;
+
+    // 粉丝档案
+    FansArchivesService* fansArchivesService = nullptr;
 };
 
 class RequestBodyHelper : public QObject

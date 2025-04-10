@@ -1515,8 +1515,8 @@ void BiliLiveService::handleMessage(QJsonObject json)
             QStringList results = QRegularExpression("^欢迎(尊享用户)?\\s*<%(.+)%>").match(copy_writing).capturedTexts();
             if (results.size() < 2)
             {
-                qWarning() << "识别舰长进入失败：" << copy_writing;
-                qWarning() << data;
+                // qWarning() << "识别舰长进入失败：" << copy_writing;
+                // qWarning() << data;
                 return ;
             }
 
@@ -2598,9 +2598,13 @@ void BiliLiveService::handleMessage(QJsonObject json)
     {
 
     }
+    else if (cmd == "UNIVERSAL_EVENT_GIFT" || cmd == "UNIVERSAL_EVENT_GIFT_V2")
+    {
+
+    }
     else
     {
-        qWarning() << "未处理的命令：" << cmd << json;
+        // qDebug() << "未处理的命令：" << cmd << json;
         triggerCmdEvent(cmd, LiveDanmaku().with(json));
     }
 }
