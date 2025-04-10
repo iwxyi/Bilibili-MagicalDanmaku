@@ -16,7 +16,7 @@
   <property name="styleSheet">
    <string notr="true">QPlainTextEdit, QTextEdit, QTableView, QListWidget
 {
-	background: #88FFFFFF;
+	background: #EEFFFFFF;
 	border-radius: 5px;
 }</string>
   </property>

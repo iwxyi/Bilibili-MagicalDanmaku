@@ -560,6 +560,8 @@ private slots:
 
     void on_vipExtensionButton_clicked();
 
+    void on_vipDatabaseButton_clicked();
+
     void on_enableTrayCheck_clicked();
 
     void on_toutaGiftCheck_clicked();

@@ -377,7 +377,7 @@ void MainWindow::initView()
     }
     ui->dataCenterTopTabGroup->layout()->activate();
     ui->dataCenterTopTabGroup->setFixedHeight(ui->dataCenterTopTabGroup->sizeHint().height());
-    ui->dataCenterTopTabGroup->setStyleSheet("#dataCenterTabGroup { background: white; border-radius: " + snum(ui->dataCenterTopTabGroup->height() / 2) + "px; }");
+    ui->dataCenterTopTabGroup->setStyleSheet("#dataCenterTopTabGroup { background: white; border-radius: " + snum(ui->dataCenterTopTabGroup->height() / 2) + "px; }");
 
     connect(ui->databaseWidget, &DBBrowser::signalProcessVariant, this, [=](QString& code) {
         code = cr->processDanmakuVariants(code, LiveDanmaku());
@@ -505,6 +505,8 @@ void MainWindow::initView()
 
     ui->vipExtensionButton->setBgColor(Qt::white);
     ui->vipExtensionButton->setRadius(rt->fluentRadius);
+    ui->vipDatabaseButton->setBgColor(Qt::white);
+    ui->vipDatabaseButton->setRadius(rt->fluentRadius);
 
     // 数据中心页面
 
@@ -4861,6 +4863,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(themeSfg);
             ui->droplight->setToolTip("剩余时长：" + snum((deadline - timestamp) / (24 * 3600)) + "天");
             ui->vipExtensionButton->hide();
+            ui->vipDatabaseButton->hide();
             ui->heartTimeSpin->setMaximum(1440); // 允许挂机24小时
 
             qint64 tm = deadline - timestamp;
@@ -4876,6 +4879,7 @@ void MainWindow::updatePermission()
             ui->droplight->setTextColor(Qt::black);
             ui->droplight->setToolTip("点击解锁新功能");
             ui->vipExtensionButton->show();
+            ui->vipDatabaseButton->show();
             ui->heartTimeSpin->setMaximum(120); // 仅允许刚好获取完小心心
             permissionTimer->stop();
         }
@@ -9917,6 +9921,11 @@ void MainWindow::on_vipExtensionButton_clicked()
         return ;
     }
     on_actionBuy_VIP_triggered();
+}
+
+void MainWindow::on_vipDatabaseButton_clicked()
+{
+    on_vipExtensionButton_clicked();
 }
 
 void MainWindow::on_enableTrayCheck_clicked()
