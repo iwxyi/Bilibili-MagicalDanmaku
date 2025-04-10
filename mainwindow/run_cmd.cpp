@@ -304,6 +304,20 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
         if (response)
             cr->sendNotifyMsg(">已关闭弹幕回复");
     }
+    else if (msg == "开启粉丝档案")
+    {
+        ui->fansArchivesCheck->setChecked(true);
+        on_fansArchivesCheck_clicked();
+        if (response)
+            cr->sendNotifyMsg(">已开启粉丝档案");
+    }
+    else if (msg == "关闭粉丝档案")
+    {
+        ui->fansArchivesCheck->setChecked(false);
+        on_fansArchivesCheck_clicked();
+        if (response)
+            cr->sendNotifyMsg(">已关闭粉丝档案");
+    }
     else
         return ;
     qInfo() << "执行远程命令：" << msg;
