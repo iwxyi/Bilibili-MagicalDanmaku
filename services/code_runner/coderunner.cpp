@@ -84,7 +84,7 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
     {
         QString code = msg.mid(3);
         QString result = jsEngine->runCode(danmaku, code);
-        sendCdMsg(result, danmaku, 0, channel, true, false, manual);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
         return true;
     }
     
