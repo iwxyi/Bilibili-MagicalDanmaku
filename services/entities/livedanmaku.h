@@ -543,6 +543,11 @@ public:
         this->admin = admin;
     }
 
+    void setLevel(int level)
+    {
+        this->level = level;
+    }
+
     void setArgs(QStringList args)
     {
         this->args = args;
@@ -931,7 +936,7 @@ public:
         return wealth_level;
     }
 
-private:
+protected:
     MessageType msgType = MSG_DANMAKU;
 
     QString text;

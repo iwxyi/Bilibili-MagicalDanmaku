@@ -23,6 +23,12 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(autoMsgTimer, &QTimer::timeout, this, [=]{
         slotSendAutoMsg(true);
     });
+
+    // 编程引擎
+    jsEngine = new JSEngine(this);
+    connect(jsEngine, &JSEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("JS引擎", err);
+    });
 }
 
 void CodeRunner::setLiveService(LiveRoomService *service)
@@ -70,10 +76,21 @@ void CodeRunner::releaseData()
  */
 bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
 {
+    // 判断是否是自定义编程语言
+    if (msg.startsWith("js:"))
+    {
+        QString code = msg.mid(3);
+        QString result = jsEngine->runCode(danmaku, code);
+        sendCdMsg(result, danmaku, 0, channel, true, false, manual);
+        return true;
+    }
+    
+    // 解析变量、条件
     QStringList msgs = getEditConditionStringList(msg, danmaku);
     if (!msgs.size())
         return false;
 
+    // 随机选择一条消息
     int r = qrand() % msgs.size();
     QString s = msgs.at(r);
     if (!s.trimmed().isEmpty())

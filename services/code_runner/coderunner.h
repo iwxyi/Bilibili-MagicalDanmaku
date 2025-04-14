@@ -10,6 +10,7 @@
 #include "orderplayerwindow.h"
 #include "web_server/webserver.h"
 #include "voice_service/voiceservice.h"
+#include "jsengine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,7 +52,6 @@ class CodeRunner : public QObject
     Q_OBJECT
 public:
     explicit CodeRunner(QObject *parent = nullptr);
-
 
     void setLiveService(LiveRoomService* service);
     void setMainUI(Ui::MainWindow *ui);
@@ -181,6 +181,9 @@ public:
 
     // bool (*execFuncCallback)(QString msg, LiveDanmaku &danmaku, CmdResponse &res, int &resVal) = nullptr;
     std::function<bool(QString, LiveDanmaku&, CmdResponse&, int&)> execFuncCallback;
+
+    // 编程引擎
+    JSEngine* jsEngine;
 };
 
 extern CodeRunner* cr;
