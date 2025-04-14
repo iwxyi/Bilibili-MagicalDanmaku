@@ -2932,7 +2932,17 @@ JSON 格式：
 >   - **部分 ES6 特性**：箭头函数、`let`/`const`、模板字符串、增强的对象字面量。
 >   - **不支持的 ES6+ 特性**：类 (`class`)、模块 (`import`/`export`)、`Promise`、`Proxy`、生成器（`function*`）等。
 
-**使用方式**：在代码框中
+**使用方式**：在代码框中使用 `js:` 开头，后面的代码就会视作 JavaScript 代码来执行，返回值（`return` 一个字符串）作为发送的字符串，或者要执行的命令。自动回复等所需数据的变量名为 `danmaku`。
+
+#### 示例：JS代码
+
+```js
+js:
+if (danmaku.getText() == "测试弹幕")
+    return "收到测试弹幕";
+else
+    return danmaku.getNickname() + ":" + danmaku.getText();
+```
 
 
 
