@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QJSEngine>
 #include "livedanmaku.h"
+#include "jsconsole.h"
 
 class JSEngine : public QObject
 {
@@ -18,9 +19,11 @@ private:
 
 signals:
     void signalError(const QString& err);
+    void signalLog(const QString& log);
 
 private:
     QJSEngine *engine = nullptr;
+    JsConsole *console = nullptr;
 };
 
 #endif // JSENGINE_H

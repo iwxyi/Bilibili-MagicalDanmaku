@@ -240,6 +240,7 @@ HEADERS += \
     services/fans_archives/fansarchivesservice.h \
     services/fans_archives/fansdanmakuwaitbean.h \
     services/language_service/jsarg.h \
+    services/language_service/jsconsole.h \
     services/language_service/jsengine.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \

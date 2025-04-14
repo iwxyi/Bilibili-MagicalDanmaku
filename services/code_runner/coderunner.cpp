@@ -29,6 +29,9 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(jsEngine, &JSEngine::signalError, this, [=](const QString& err){
         emit signalShowError("JS引擎", err);
     });
+    connect(jsEngine, &JSEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
 }
 
 void CodeRunner::setLiveService(LiveRoomService *service)

@@ -13,9 +13,12 @@ public:
     {}
 
     // 获取danmaku的属性
+    Q_INVOKABLE QJsonObject toJson()  const { return LiveDanmaku::toJson(); }
+    Q_INVOKABLE int getMsgType() const { return msgType; }
     Q_INVOKABLE QString getText() const { return text; }
     Q_INVOKABLE qint64 getUid() const { return uid; }
     Q_INVOKABLE QString getNickname() const { return nickname; }
+    Q_INVOKABLE QString getUname() const { return getNickname(); }
     Q_INVOKABLE QString getUnameColor() const { return uname_color; }
     Q_INVOKABLE QString getTextColor() const { return text_color; }
     Q_INVOKABLE QDateTime getTimeline() const { return timeline; }
