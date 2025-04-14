@@ -2944,6 +2944,8 @@ else
     return danmaku.getNickname() + ":" + danmaku.getText();
 ```
 
+> 如果要在 JS 代码中使用环境变量，可以将开头的 `js:` 改为 `var:js:`，会先替换变量，之后再运行 JS 代码。但如果在 JS 代码中再需要使用变量，则会替换为固定的值。
+
 
 
 ## QA

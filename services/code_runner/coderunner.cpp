@@ -87,6 +87,13 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
         sendVariantMsg(result, danmaku, channel, manual, delayMine);
         return true;
     }
+    if (msg.startsWith("var:"))
+    {
+        QString code = msg.mid(4);
+        code = processDanmakuVariants(code, danmaku);
+        sendVariantMsg(code, danmaku, channel, manual, delayMine);
+        return true;
+    }
     
     // 解析变量、条件
     QStringList msgs = getEditConditionStringList(msg, danmaku);
