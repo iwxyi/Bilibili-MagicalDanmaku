@@ -7732,6 +7732,11 @@ void MainWindow::openLink(QString link)
                                     background-position:center;\
                                     background-repeat:none;");
     }
+    else if (link == "copy_qq_group")
+    {
+        QApplication::clipboard()->setText("427436529");
+        QMessageBox::information(this, "复制QQ群号", "已复制QQ群号码“427436529”，赶紧入群吧~");
+    }
     else if (link == "gift_list")
     {
         on_actionShow_Gift_List_triggered();

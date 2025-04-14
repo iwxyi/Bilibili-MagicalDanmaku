@@ -131,6 +131,7 @@
         <file alias="at">icons/at.png</file>
         <file alias="fans">icons/fans.png</file>
         <file alias="big_data">icons/big_data.png</file>
+        <file alias="copy_small">icons/copy_small.png</file>
     </qresource>
     <qresource prefix="/musics">
         <file alias="netease">musics/netease-cloud-music.png</file>
