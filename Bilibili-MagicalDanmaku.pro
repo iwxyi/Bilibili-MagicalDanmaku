@@ -2,7 +2,7 @@ QT       += core gui network websockets multimedia multimediawidgets sql svg qml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 #TARGET = MagicalDanmaku
 
@@ -10,7 +10,7 @@ CONFIG += c++11
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H
+DEFINES += QT_DEPRECATED_WARNINGS QT_MESSAGELOGCONTEXT HAVE_CONFIG_H ENABLE_LUA
 DEFINES += ENABLE_TEXTTOSPEECH
 #DEFINES += ZUOQI_ENTRANCE
 
@@ -97,8 +97,7 @@ INCLUDEPATH += \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
-    third_party/brotli/include/ \
-    third_party/sol/ \
+    third_party/brotli/include/
 
 SOURCES += \
     mainwindow/run_cmd.cpp \
@@ -434,10 +433,7 @@ HEADERS += \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
     widgets/video_lyric_creator/videolyricscreator.h \
-    widgets/windowshwnd.h \
-    third_party/sol/sol.hpp \
-    third_party/sol/config.hpp \
-    third_party/sol/forward.hpp
+    widgets/windowshwnd.h
 
 FORMS += \
     order_player/importsongsdialog.ui \
@@ -460,29 +456,46 @@ FORMS += \
     widgets/video_lyric_creator/videolyricscreator.ui
 
 contains(DEFINES, ENABLE_HTTP_SERVER) {
-HEADERS += \
-    third_party/http-parser/http_parser.h \
-    third_party/qhttpserver/qhttpconnection.h \
-    third_party/qhttpserver/qhttprequest.h \
-    third_party/qhttpserver/qhttpresponse.h \
-    third_party/qhttpserver/qhttpserver.h \
-    third_party/qhttpserver/qhttpserverapi.h \
-    third_party/qhttpserver/qhttpserverfwd.h
+    INCLUDEPATH += third_party/qhttpserver/ \
+        third_party/http-parser/
+
+    HEADERS += \
+        third_party/http-parser/http_parser.h \
+        third_party/qhttpserver/qhttpconnection.h \
+        third_party/qhttpserver/qhttprequest.h \
+        third_party/qhttpserver/qhttpresponse.h \
+        third_party/qhttpserver/qhttpserver.h \
+        third_party/qhttpserver/qhttpserverapi.h \
+        third_party/qhttpserver/qhttpserverfwd.h
+
+        win32 {
+            # win版可以用lib，但是
+            LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
+        } else {
+            SOURCES += \
+                third_party/http-parser/http_parser.c \
+                third_party/qhttpserver/qhttpconnection.cpp \
+                third_party/qhttpserver/qhttprequest.cpp \
+                third_party/qhttpserver/qhttpresponse.cpp \
+                third_party/qhttpserver/qhttpserver.cpp
+        }
+}
+
+contains(DEFINES, ENABLE_LUA) {
+    INCLUDEPATH += \
+        third_party/sol/ \
+        third_party/lua/include/
+    HEADERS += \
+        third_party/sol/sol.hpp \
+        third_party/sol/config.hpp \
+        third_party/sol/forward.hpp
 
     win32 {
-        # win版可以用lib，但是
-        LIBS += -L$$PWD/third_party/libs/ -lqhttpserver
     } else {
-        SOURCES += \
-            third_party/http-parser/http_parser.c \
-            third_party/qhttpserver/qhttpconnection.cpp \
-            third_party/qhttpserver/qhttprequest.cpp \
-            third_party/qhttpserver/qhttpresponse.cpp \
-            third_party/qhttpserver/qhttpserver.cpp
+        # -llua 找的是 liblua.a
+        # MacOS的Qt是x84_64，但Brew安装的Lua是arm64，需要第三方下载
+        LIBS += -L$$PWD/third_party/lua/lib/ -llua52
     }
-
-INCLUDEPATH += third_party/qhttpserver/ \
-    third_party/http-parser/
 }
 
 # Default rules for deployment.

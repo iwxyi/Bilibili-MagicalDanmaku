@@ -6,3 +6,8 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
 {
     return QString();
 }
+
+void LuaEngine::init()
+{
+    
+}
