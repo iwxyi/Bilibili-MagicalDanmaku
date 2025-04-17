@@ -2892,7 +2892,7 @@ void MainWindow::slotNewGuardBuy(const LiveDanmaku &danmaku)
         }
     }
 
-    if (!danmaku.isFirst())
+    if (danmaku.isFirst())
     {
         triggerCmdEvent("FIRST_GUARD", danmaku, true);
     }
