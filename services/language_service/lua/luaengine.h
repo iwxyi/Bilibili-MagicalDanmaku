@@ -8,6 +8,7 @@
 
 class LuaEngine : public LanguageServiceBase
 {
+    Q_OBJECT
 public:
     explicit LuaEngine(QObject *parent = nullptr);
 

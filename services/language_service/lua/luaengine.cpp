@@ -13,6 +13,11 @@ void LuaEngine::init()
 
     lua = new sol::state();
     lua->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math);
+
+    lua->set_function("print", [&](const std::string& message) {
+        QString qMessage = QString::fromStdString(message);
+        emit signalLog(qMessage);
+    });
 #endif
 }
 
@@ -27,6 +32,7 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
         "toJson", &JSArg::toJson,
         "getMsgType", &JSArg::getMsgType,
         "getText", &JSArg::getText,
+        "getTextStd", &JSArg::getTextStd,
         "getUid", &JSArg::getUid,
         "getNickname", &JSArg::getNickname,
         "getUname", &JSArg::getUname,
