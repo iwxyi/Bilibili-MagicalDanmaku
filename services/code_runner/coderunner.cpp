@@ -32,6 +32,14 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(jsEngine, &JSEngine::signalLog, this, [=](const QString& log){
         localNotify(log);
     });
+
+    luaEngine = new LuaEngine(this);
+    connect(luaEngine, &LuaEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("Lua引擎", err);
+    });
+    connect(luaEngine, &LuaEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
 }
 
 void CodeRunner::setLiveService(LiveRoomService *service)
@@ -80,13 +88,6 @@ void CodeRunner::releaseData()
 bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
 {
     // 判断是否是自定义编程语言
-    if (msg.startsWith("js:"))
-    {
-        QString code = msg.mid(3);
-        QString result = jsEngine->runCode(danmaku, code);
-        sendVariantMsg(result, danmaku, channel, manual, delayMine);
-        return true;
-    }
     if (msg.startsWith("var:"))
     {
         QString code = msg.mid(4);
@@ -94,6 +95,22 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
         sendVariantMsg(code, danmaku, channel, manual, delayMine);
         return true;
     }
+    else if (msg.startsWith("js:"))
+    {
+        QString code = msg.mid(3);
+        QString result = jsEngine->runCode(danmaku, code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("lua:"))
+    {
+        QString code = msg.mid(4);
+        QString result = luaEngine->runCode(danmaku, code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    
+    
     
     // 解析变量、条件
     QStringList msgs = getEditConditionStringList(msg, danmaku);

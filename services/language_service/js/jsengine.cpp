@@ -30,15 +30,17 @@ QString JSEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     // 注入变量
     JSArg *jsArg = new JSArg(danmaku);
     QJSValue danmakuObj = engine->newQObject(jsArg);
-    engine->globalObject().setProperty("danmaku", danmakuObj);
+    engine->globalObject().setProperty("_danmaku", danmakuObj);
 
     // 组建function
     QString codeFrame;
-    codeFrame = "function _processDanmaku(danmaku) {\n" + code + "\n}\n\n_processDanmaku(danmaku)";
+    codeFrame = "function _processDanmaku(danmaku) {\n" + code + "\n}\n\n_processDanmaku(_danmaku)";
 
+    // 运行代码
     QJSValue result = engine->evaluate(codeFrame.toStdString().c_str());
     delete jsArg;
 
+    // 检查错误
     if (result.isError()) {
         qWarning() << "JS engine error:" << result.toString();
         emit signalError(result.toString());

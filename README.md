@@ -2939,12 +2939,84 @@ JSON 格式：
 ```js
 js:
 if (danmaku.getText() == "测试弹幕")
+    console.log("收到弹幕");
     return "收到测试弹幕";
 else
     return danmaku.getNickname() + ":" + danmaku.getText();
 ```
 
 > 如果要在 JS 代码中使用环境变量，可以将开头的 `js:` 改为 `var:js:`，会先替换变量，之后再运行 JS 代码。但如果在 JS 代码中再需要使用变量，则会替换为固定的值。
+
+#### 接口
+
+默认变量 `danmaku` 的所有参数如下（按消息类型，很多值都不一定有，务必先输出看看）：
+
+```C++
+int getMsgType() // 消息类型
+qint64 getUid() // UID，长数字类型
+QString getNickname()
+QString getUname() // Nickname和Uname是完全一样的，避免用错
+QString getUnameColor()
+QString getText()
+QString getTextColor()
+QDateTime getTimeline()
+int isAdmin()
+int getGuard() // 0无，1总督，2提督，3舰长
+int isVip()
+int isSvip()
+int isUidentity()
+int getLevel() // 用户等级
+int getWealthLevel() // 财富等级
+int getGiftId() // 礼物ID
+QString getGiftName() // 礼物名字
+int getNumber() // 礼物数量
+qint64 getTotalCoin() // 瓜子数量（旧单位，1000金瓜子=10电池=1元）
+bool isFirst() // 多用途。第一次上船、点歌等待的歌数量（例如下一首播放就是1）、高能榜排名、礼物连击的第一个礼物
+qint64 getReplyMid() // @用户的回复
+QString getReplyUname()
+QString getReplyUnameColor()
+bool isReplyMystery()
+int getReplyTypeEnum()
+QString getAIReply() // AI回复消息
+QString getFaceUrl() // 头像URL
+```
+
+其中 `MsgType` 用来判断是什么消息，枚举类型如下：
+
+| 值   | 描述       |
+| ---- | ---------- |
+| 1    | 弹幕       |
+| 2    | 送礼       |
+| 3    | 欢迎       |
+| 4    | 点歌       |
+| 5    | 上船       |
+| 6    | 欢迎舰长   |
+| 7    | 粉丝       |
+| 8    | 关注       |
+| 9    | 禁言       |
+| 10   | 普通消息   |
+| 11   | 分享直播间 |
+| 12   | PK最佳     |
+| 13   | 醒目留言   |
+| 14   | 其他       |
+
+
+
+### Lua语言支持
+
+> 同 JS，代码前缀为 `lua:`
+
+示例：
+
+```lua
+lua:
+if danmaku:getText() == "222" then
+	print("222")
+    return "is 222"
+else
+    return "not 222"
+end
+```
 
 
 

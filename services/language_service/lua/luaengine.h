@@ -2,7 +2,9 @@
 #define LUAENGINE_H
 
 #include "languageservicebase.h"
+#ifdef ENABLE_LUA
 #include "sol.hpp"
+#endif
 
 class LuaEngine : public LanguageServiceBase
 {
@@ -15,7 +17,9 @@ private:
     void init();
 
 private:
-    sol::state lua;
+#ifdef ENABLE_LUA
+    sol::state* lua = nullptr;
+#endif
 };
 
 #endif // LUAENGINE_H
