@@ -2,8 +2,7 @@
 #include "jsarg.h"
 #include <QDebug>
 
-JSEngine::JSEngine(QObject *parent)
-    : QObject{parent}
+JSEngine::JSEngine(QObject *parent) : LanguageServiceBase{parent}
 {}
 
 void JSEngine::init()

@@ -5,8 +5,9 @@
 #include <QJSEngine>
 #include "livedanmaku.h"
 #include "jsconsole.h"
+#include "languageservicebase.h"
 
-class JSEngine : public QObject
+class JSEngine : public LanguageServiceBase
 {
     Q_OBJECT
 public:

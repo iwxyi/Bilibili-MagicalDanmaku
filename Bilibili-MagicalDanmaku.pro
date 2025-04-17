@@ -69,6 +69,7 @@ INCLUDEPATH += \
     services/fans_archives/ \
     services/language_service/ \
     services/language_service/js/ \
+    services/language_service/lua/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -96,7 +97,8 @@ INCLUDEPATH += \
     third_party/linear_check_box/ \
     third_party/mfaudioendpointcontrol_fixed/ \
     third_party/m3u8_downloader/ \
-    third_party/brotli/include/
+    third_party/brotli/include/ \
+    third_party/sol/ \
 
 SOURCES += \
     mainwindow/run_cmd.cpp \
@@ -105,6 +107,7 @@ SOURCES += \
     services/code_runner/coderunner.cpp \
     services/fans_archives/fansarchivesservice.cpp \
     services/language_service/js/jsengine.cpp \
+    services/language_service/lua/luaengine.cpp \
     services/live_services/bili_livecmds.cpp \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
@@ -243,6 +246,8 @@ HEADERS += \
     services/language_service/js/jsarg.h \
     services/language_service/js/jsconsole.h \
     services/language_service/js/jsengine.h \
+    services/language_service/languageservicebase.h \
+    services/language_service/lua/luaengine.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
     services/live_services/liveroomservice.h \
@@ -429,7 +434,10 @@ HEADERS += \
     third_party/utils/textinputdialog.h \
     widgets/video_player/livevideoplayer.h \
     widgets/video_lyric_creator/videolyricscreator.h \
-    widgets/windowshwnd.h
+    widgets/windowshwnd.h \
+    third_party/sol/sol.hpp \
+    third_party/sol/config.hpp \
+    third_party/sol/forward.hpp
 
 FORMS += \
     order_player/importsongsdialog.ui \
