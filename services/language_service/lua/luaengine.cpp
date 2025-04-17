@@ -3,28 +3,19 @@
 
 LuaEngine::LuaEngine(QObject *parent) : LanguageServiceBase(parent) {}
 
-void LuaEngine::init()
+QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
 {
 #ifdef ENABLE_LUA
-    if (lua)
-    {
-        return;
-    }
-
-    lua = new sol::state();
+    // 每次运行都要重新创建一个实例
+    // 如果多线程共享一个实例，会导致线程安全问题，很容易报错
+    sol::state* lua = new sol::state();
     lua->open_libraries(sol::lib::base, sol::lib::package, sol::lib::string, sol::lib::table, sol::lib::math);
 
     lua->set_function("print", [&](const std::string& message) {
         QString qMessage = QString::fromStdString(message);
         emit signalLog(qMessage);
     });
-#endif
-}
 
-QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
-{
-    init();
-#ifdef ENABLE_LUA
     // 注入变量
     JSArg *jsArg = new JSArg(danmaku);
     lua->new_usertype<JSArg>("JSArg",
@@ -32,7 +23,6 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
         "toJson", &JSArg::toJson,
         "getMsgType", &JSArg::getMsgType,
         "getText", &JSArg::getText,
-        "getTextStd", &JSArg::getTextStd,
         "getUid", &JSArg::getUid,
         "getNickname", &JSArg::getNickname,
         "getUname", &JSArg::getUname,
@@ -65,7 +55,7 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     // 运行代码
     std::string result = lua->script(codeFrame.toStdString());
     delete jsArg;
-
+    delete lua;
     return QString::fromStdString(result);
 #else
     return "";

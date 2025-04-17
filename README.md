@@ -3010,8 +3010,8 @@ QString getFaceUrl() // 头像URL
 
 ```lua
 lua:
+print(danmaku:getText())
 if danmaku:getText() == "222" then
-	print("222")
     return "is 222"
 else
     return "not 222"

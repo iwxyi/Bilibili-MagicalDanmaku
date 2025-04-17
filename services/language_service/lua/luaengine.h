@@ -13,14 +13,6 @@ public:
     explicit LuaEngine(QObject *parent = nullptr);
 
     QString runCode(const LiveDanmaku &danmaku, const QString &code) override;
-
-private:
-    void init();
-
-private:
-#ifdef ENABLE_LUA
-    sol::state* lua = nullptr;
-#endif
 };
 
 #endif // LUAENGINE_H
