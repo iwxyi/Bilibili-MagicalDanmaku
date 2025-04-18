@@ -2934,33 +2934,38 @@ JSON 格式：
 
 **使用方式**：在代码框中使用 `js:` 开头，后面的代码就会视作 JavaScript 代码来执行，返回值（`return` 一个字符串）作为发送的字符串，或者要执行的命令。自动回复等所需数据的变量名为 `danmaku`。
 
-#### 示例：JS代码
+#### JS语法示例
 
 ```js
 js:
+// 打印日志（会在弹幕姬+日志文件显示出来，仅限string类型，其他类型需先转换）
+console.log(danmaku.getNickname() + ":" + danmaku.getText())
+// return的内容将会作为弹幕发送，或者神奇弹幕中支持的可执行命令
+// 如果return了空字符串，或者不进行return，那么不会回复弹幕
 if (danmaku.getText() == "测试弹幕")
-    console.log("收到弹幕");
     return "收到测试弹幕";
 else
-    return danmaku.getNickname() + ":" + danmaku.getText();
+    return "";
 ```
 
 > 如果要在 JS 代码中使用环境变量，可以将开头的 `js:` 改为 `var:js:`，会先替换变量，之后再运行 JS 代码。但如果在 JS 代码中再需要使用变量，则会替换为固定的值。
 
-#### 接口
+#### 弹幕接口列表
 
 默认变量 `danmaku` 的所有参数如下（按消息类型，很多值都不一定有，务必先输出看看）：
 
+> 其中字符串返回的是 `QString` 类型，这里简写为 `String` 以便观看（毕竟只要知道是字符串就好了）
+
 ```C++
 int getMsgType() // 消息类型
-qint64 getUid() // UID，长数字类型
-QString getNickname()
-QString getUname() // Nickname和Uname是完全一样的，避免用错
-QString getUnameColor()
-QString getText()
-QString getTextColor()
-QDateTime getTimeline()
-int isAdmin()
+long long getUid() // UID，长数字类型
+String getNickname()
+String getUname() // Nickname和Uname是完全一样的，避免用错
+String getUnameColor()
+String getText()
+String getTextColor()
+DateTime getTimeline()
+int isAdmin() // 是否是房管
 int getGuard() // 0无，1总督，2提督，3舰长
 int isVip()
 int isSvip()
@@ -2968,17 +2973,17 @@ int isUidentity()
 int getLevel() // 用户等级
 int getWealthLevel() // 财富等级
 int getGiftId() // 礼物ID
-QString getGiftName() // 礼物名字
+String getGiftName() // 礼物名字
 int getNumber() // 礼物数量
-qint64 getTotalCoin() // 瓜子数量（旧单位，1000金瓜子=10电池=1元）
+long long getTotalCoin() // 瓜子数量（旧单位，1000金瓜子=10电池=1元）
 bool isFirst() // 多用途。第一次上船、点歌等待的歌数量（例如下一首播放就是1）、高能榜排名、礼物连击的第一个礼物
-qint64 getReplyMid() // @用户的回复
-QString getReplyUname()
-QString getReplyUnameColor()
+long long getReplyMid() // @用户的回复
+String getReplyUname()
+String getReplyUnameColor()
 bool isReplyMystery()
 int getReplyTypeEnum()
-QString getAIReply() // AI回复消息
-QString getFaceUrl() // 头像URL
+String getAIReply() // AI回复消息
+String getFaceUrl() // 头像URL
 ```
 
 其中 `MsgType` 用来判断是什么消息，枚举类型如下：
@@ -3000,23 +3005,56 @@ QString getFaceUrl() // 头像URL
 | 13   | 醒目留言   |
 | 14   | 其他       |
 
+#### 处理配置文件
+
+默认嵌入了应用配置 `settings` 和用户变量 `heaps`，使用 `read` 和 `write` 函数来读写相应的数据。
+
+示例：
+
+```js
+js:
+heaps.write("test", "222")
+console.log(heaps.read("test"))
+```
+
 
 
 ### Lua语言支持
 
 > 同 JS，代码前缀为 `lua:`
 
+#### Lua语法示例
+
+```lua
+lua:
+-- 打印信息
+print(danmaku:getNickname() ..  ": " ..  danmaku:getText())
+-- 逻辑判断
+if danmaku:getText() == "111" then
+    return "is 111"
+else
+    return "not 111"
+end
+```
+
+#### 处理配置文件
+
+因为 Lua 使用了第三方库，仅支持标准类型的读写，且无法重载，`read` 和 `write` 必须指明类型，均添加了相应后缀，例如 `readString`、`writeInt` 等等。
+
 示例：
 
 ```lua
 lua:
-print(danmaku:getText())
-if danmaku:getText() == "222" then
-    return "is 222"
-else
-    return "not 222"
+heaps:writeString("test", "111")
+print(tostring(heaps:readInt("test")))
+
+if heaps:contains("test") then
+    local value = heaps:readString("test")
+    print(value)
 end
 ```
+
+
 
 
 

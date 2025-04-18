@@ -1,6 +1,6 @@
 #include "luaengine.h"
 #include "danmakuwrapperstd.h"
-#include "settingswrapper.h"
+#include "settingswrapperstd.h"
 #include "usersettings.h"
 
 LuaEngine::LuaEngine(QObject *parent) : LanguageServiceBase(parent) {}
@@ -51,22 +51,55 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     lua->set("_danmaku", danmakuWrapper);
 
     // 注入settings变量
-    lua->new_usertype<SettingsWrapper>("SettingsWrapper",
-        sol::constructors<SettingsWrapper(QSettings*) >(),
-        "read", &SettingsWrapper::read,
-        "write", &SettingsWrapper::write,
-        "contains", &SettingsWrapper::contains,
-        "remove", &SettingsWrapper::remove
+    lua->new_usertype<SettingsWrapperStd>("SettingsWrapperStd",
+        sol::constructors<SettingsWrapperStd(QSettings*) >(),
+        "read", &SettingsWrapperStd::read,
+        "readString", &SettingsWrapperStd::readString,
+        "readInt", &SettingsWrapperStd::readInt,
+        "readDouble", &SettingsWrapperStd::readDouble,
+        "readBool", &SettingsWrapperStd::readBool,
+        "readList", &SettingsWrapperStd::readList,
+        "readMap", &SettingsWrapperStd::readMap,
+        "readHash", &SettingsWrapperStd::readHash,
+        "readByteArray", &SettingsWrapperStd::readByteArray,
+        "readJson", &SettingsWrapperStd::readJson,
+        "write", &SettingsWrapperStd::write,
+        "writeString", &SettingsWrapperStd::writeString,
+        "writeInt", &SettingsWrapperStd::writeInt,
+        "writeDouble", &SettingsWrapperStd::writeDouble,
+        "writeBool", &SettingsWrapperStd::writeBool,
+        "writeList", &SettingsWrapperStd::writeList,
+        "writeMap", &SettingsWrapperStd::writeMap,
+        "writeHash", &SettingsWrapperStd::writeHash,
+        "contains", &SettingsWrapperStd::contains,
+        "remove", &SettingsWrapperStd::remove
     );
-    lua->set("settings", us);
-    lua->set("heaps", heaps);
+    lua->set("settings", new SettingsWrapperStd(us));
+    lua->set("heaps", new SettingsWrapperStd(heaps));
+    if (!us)
+    {
+        qWarning() << "Warning: SettingsWrapperStd initialized with a null QSettings pointer.";
+    }
+    if (!heaps)
+    {
+        qWarning() << "Warning: SettingsWrapperStd initialized with a null QSettings pointer.";
+    }
 
     // 组建function
     QString codeFrame;
-    codeFrame = "function _processDanmaku(danmaku) \n" + code + "\nend\n\nreturn _processDanmaku(_danmaku)";
+    codeFrame = "function _processDanmaku(danmaku) \n"
+                + code + "\n"
+                "return ''\n"
+                "end\n\n"
+                "return _processDanmaku(_danmaku)";
 
     // 运行代码
-    std::string result = lua->script(codeFrame.toStdString());
+    std::string result;
+    try {
+        result = lua->script(codeFrame.toStdString());
+    } catch (const sol::error& e) {
+        emit signalError(e.what());
+    }
     delete danmakuWrapper;
     delete lua;
     return QString::fromStdString(result);

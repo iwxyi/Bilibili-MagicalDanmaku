@@ -42,6 +42,51 @@ public:
         }
     }
 
+    Q_INVOKABLE void writeString(const QString &key, const QString &value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeInt(const QString &key, int value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeDouble(const QString &key, double value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeBool(const QString &key, bool value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeList(const QString &key, const QList<QVariant> &value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeMap(const QString &key, const QMap<QString, QVariant> &value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeHash(const QString &key, const QHash<QString, QVariant> &value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeByteArray(const QString &key, const QByteArray &value)
+    {
+        write(key, value);
+    }
+
+    Q_INVOKABLE void writeJson(const QString &key, const QJsonObject &value)
+    {
+        write(key, value);
+    }
+
     Q_INVOKABLE bool contains(const QString &key) const
     {
         if (m_settings)

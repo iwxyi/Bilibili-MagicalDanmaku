@@ -250,6 +250,7 @@ HEADERS += \
     services/language_service/lua/luaengine.h \
     services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
+    services/language_service/wrapper/settingswrapperstd.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
     services/live_services/liveroomservice.h \
