@@ -74,8 +74,11 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
         "contains", &SettingsWrapperStd::contains,
         "remove", &SettingsWrapperStd::remove
     );
-    lua->set("settings", new SettingsWrapperStd(us));
-    lua->set("heaps", new SettingsWrapperStd(heaps));
+    SettingsWrapperStd *settingsWrapper = new SettingsWrapperStd(us);
+    lua->set("settings", settingsWrapper);
+    SettingsWrapperStd *heapsWrapper = new SettingsWrapperStd(heaps);
+    heapsWrapper->setDefaultPrefix("heaps");
+    lua->set("heaps", heapsWrapper);
     if (!us)
     {
         qWarning() << "Warning: SettingsWrapperStd initialized with a null QSettings pointer.";
@@ -102,6 +105,8 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     }
     delete danmakuWrapper;
     delete lua;
+    delete settingsWrapper;
+    delete heapsWrapper;
     return QString::fromStdString(result);
 #else
     return "";

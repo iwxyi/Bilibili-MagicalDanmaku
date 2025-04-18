@@ -3009,6 +3009,10 @@ String getFaceUrl() // 头像URL
 
 默认嵌入了应用配置 `settings` 和用户变量 `heaps`，使用 `read` 和 `write` 函数来读写相应的数据。
 
+> settings 为应用配置，请谨慎修改；修改之后应用也不会立即读取。
+>
+> heaps 为用户配置，随意读写。默认读写的分组为 `heaps`，即 `write("test")` 等同于 `write("heaps/test")`，但 `write("my/test")` 属于另一个分组 `my` 下。
+
 示例：
 
 ```js
@@ -3021,7 +3025,7 @@ console.log(heaps.read("test"))
 
 ### Lua语言支持
 
-> 同 JS，代码前缀为 `lua:`
+> 同 JS，代码前缀为 `lua:`。建议使用前者，与本应用结合得更好。
 
 #### Lua语法示例
 

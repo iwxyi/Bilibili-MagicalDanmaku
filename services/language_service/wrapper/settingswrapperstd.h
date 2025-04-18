@@ -20,11 +20,21 @@ public:
         }
     }
 
+    void setDefaultPrefix(const QString &prefix)
+    {
+        m_defaultPrefix = prefix;
+    }
+
     Q_INVOKABLE QVariant read(const std::string &key) const
     {
         if (m_settings)
         {
-            return m_settings->value(QString::fromStdString(key));
+            QString useKey = QString::fromStdString(key);
+            if (!m_defaultPrefix.isEmpty() && !useKey.contains("/"))
+            {
+                useKey = m_defaultPrefix + "/" + useKey;
+            }
+            return m_settings->value(useKey);
         }
         return QVariant();
     }
@@ -78,7 +88,12 @@ public:
     {
         if (m_settings)
         {
-            m_settings->setValue(QString::fromStdString(key), value);
+            QString useKey = QString::fromStdString(key);
+            if (!m_defaultPrefix.isEmpty() && !useKey.contains("/"))
+            {
+                useKey = m_defaultPrefix + "/" + useKey;
+            }
+            m_settings->setValue(useKey, value);
             m_settings->sync(); // 确保立即写入
         }
         else
@@ -156,6 +171,7 @@ public:
 
 private:
     QSettings *m_settings;
+    QString m_defaultPrefix;
 };
 
 #endif // SETTINGSWRAPPERSTD_H

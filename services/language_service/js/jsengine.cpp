@@ -16,8 +16,11 @@ void JSEngine::init()
     // 设置控制台
     console = new JsConsole(engine, this);
     engine->globalObject().setProperty("console", engine->newQObject(console));
-    engine->globalObject().setProperty("settings", engine->newQObject(new SettingsWrapper(us)));
-    engine->globalObject().setProperty("heaps", engine->newQObject(new SettingsWrapper(heaps)));
+    SettingsWrapper *settingsWrapper = new SettingsWrapper(us);
+    engine->globalObject().setProperty("settings", engine->newQObject(settingsWrapper));
+    SettingsWrapper *heapsWrapper = new SettingsWrapper(heaps);
+    heapsWrapper->setDefaultPrefix("heaps");
+    engine->globalObject().setProperty("heaps", engine->newQObject(heapsWrapper));
 
     connect(console, &JsConsole::signalLog, this, [this](const QString &log) {
         emit signalLog(log);
