@@ -1,5 +1,5 @@
 #include "jsengine.h"
-#include "jsarg.h"
+#include "danmakuwrapper.h"
 #include <QDebug>
 
 JSEngine::JSEngine(QObject *parent) : LanguageServiceBase{parent}
@@ -28,7 +28,7 @@ QString JSEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     init();
 
     // 注入变量
-    JSArg *jsArg = new JSArg(danmaku);
+    DanmakuWrapper *jsArg = new DanmakuWrapper(danmaku);
     QJSValue danmakuObj = engine->newQObject(jsArg);
     engine->globalObject().setProperty("_danmaku", danmakuObj);
 

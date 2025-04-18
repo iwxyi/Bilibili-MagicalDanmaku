@@ -1,5 +1,5 @@
 #include "luaengine.h"
-#include "jsarg.h"
+#include "danmakuwrapper.h"
 
 LuaEngine::LuaEngine(QObject *parent) : LanguageServiceBase(parent) {}
 
@@ -17,34 +17,34 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     });
 
     // 注入变量
-    JSArg *jsArg = new JSArg(danmaku);
-    lua->new_usertype<JSArg>("JSArg",
-        sol::constructors<JSArg(const LiveDanmaku&) >(),
-        "toJson", &JSArg::toJson,
-        "getMsgType", &JSArg::getMsgType,
-        "getText", &JSArg::getText,
-        "getUid", &JSArg::getUid,
-        "getNickname", &JSArg::getNickname,
-        "getUname", &JSArg::getUname,
-        "getUnameColor", &JSArg::getUnameColor,
-        "getTextColor", &JSArg::getTextColor,
-        "getTimeline", &JSArg::getTimeline,
-        "isAdmin", &JSArg::isAdmin,
-        "getGuard", &JSArg::getGuard,
-        "isVip", &JSArg::isVip,
-        "isSvip", &JSArg::isSvip,
-        "isUidentity", &JSArg::isUidentity,
-        "getLevel", &JSArg::getLevel,
-        "getWealthLevel", &JSArg::getWealthLevel,
-        "getGiftId", &JSArg::getGiftId,
-        "getGiftName", &JSArg::getGiftName,
-        "getNumber", &JSArg::getNumber,
-        "getTotalCoin", &JSArg::getTotalCoin,
-        "isFirst", &JSArg::isFirst,
-        "isReplyMystery", &JSArg::isReplyMystery,
-        "getReplyTypeEnum", &JSArg::getReplyTypeEnum,
-        "getAIReply", &JSArg::getAIReply,
-        "getFaceUrl", &JSArg::getFaceUrl
+    DanmakuWrapper *jsArg = new DanmakuWrapper(danmaku);
+    lua->new_usertype<DanmakuWrapper>("JSArg",
+        sol::constructors<DanmakuWrapper(const LiveDanmaku&) >(),
+        "toJson", &DanmakuWrapper::toJson,
+        "getMsgType", &DanmakuWrapper::getMsgType,
+        "getText", &DanmakuWrapper::getText,
+        "getUid", &DanmakuWrapper::getUid,
+        "getNickname", &DanmakuWrapper::getNickname,
+        "getUname", &DanmakuWrapper::getUname,
+        "getUnameColor", &DanmakuWrapper::getUnameColor,
+        "getTextColor", &DanmakuWrapper::getTextColor,
+        "getTimeline", &DanmakuWrapper::getTimeline,
+        "isAdmin", &DanmakuWrapper::isAdmin,
+        "getGuard", &DanmakuWrapper::getGuard,
+        "isVip", &DanmakuWrapper::isVip,
+        "isSvip", &DanmakuWrapper::isSvip,
+        "isUidentity", &DanmakuWrapper::isUidentity,
+        "getLevel", &DanmakuWrapper::getLevel,
+        "getWealthLevel", &DanmakuWrapper::getWealthLevel,
+        "getGiftId", &DanmakuWrapper::getGiftId,
+        "getGiftName", &DanmakuWrapper::getGiftName,
+        "getNumber", &DanmakuWrapper::getNumber,
+        "getTotalCoin", &DanmakuWrapper::getTotalCoin,
+        "isFirst", &DanmakuWrapper::isFirst,
+        "isReplyMystery", &DanmakuWrapper::isReplyMystery,
+        "getReplyTypeEnum", &DanmakuWrapper::getReplyTypeEnum,
+        "getAIReply", &DanmakuWrapper::getAIReply,
+        "getFaceUrl", &DanmakuWrapper::getFaceUrl
     );
     lua->set("_danmaku", jsArg);
 

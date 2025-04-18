@@ -70,6 +70,7 @@ INCLUDEPATH += \
     services/language_service/ \
     services/language_service/js/ \
     services/language_service/lua/ \
+    services/language_service/wrapper/ \
     third_party/utils/ \
     mainwindow/list_items/ \
     mainwindow/live_danmaku/ \
@@ -242,7 +243,7 @@ HEADERS += \
     services/entities/entities.h \
     services/fans_archives/fansarchivesservice.h \
     services/fans_archives/fansdanmakuwaitbean.h \
-    services/language_service/js/jsarg.h \
+    services/language_service/wrapper/danmakuwrapper.h \
     services/language_service/js/jsconsole.h \
     services/language_service/js/jsengine.h \
     services/language_service/languageservicebase.h \

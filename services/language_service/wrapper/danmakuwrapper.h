@@ -1,18 +1,18 @@
-#ifndef JSARG_H
-#define JSARG_H
+#ifndef DANMAKUWRAPPER_H
+#define DANMAKUWRAPPER_H
 
 #include <QObject>
 #include "livedanmaku.h"
 
-class JSArg : public QObject
+class DanmakuWrapper : public QObject
 {
     Q_OBJECT
 public:
-    JSArg(const LiveDanmaku &danmaku, QObject *parent = nullptr)
+    DanmakuWrapper(const LiveDanmaku &danmaku, QObject *parent = nullptr)
         : QObject(parent), danmaku(danmaku)
     {}
 
-    JSArg(const JSArg& other)
+    DanmakuWrapper(const DanmakuWrapper& other)
         : QObject(other.parent()), danmaku(other.danmaku)
     {}
 
@@ -47,15 +47,15 @@ public:
     Q_INVOKABLE std::string getFaceUrl() const { return danmaku.getFaceUrl().toStdString()  ; }
 
     // 重载运算符，注册Lua对象要用到
-    bool operator<(const JSArg& other) const {
+    bool operator<(const DanmakuWrapper& other) const {
         return danmaku.getTimeline() < other.danmaku.getTimeline();
     }
 
-    bool operator==(const JSArg& other) const {
+    bool operator==(const DanmakuWrapper& other) const {
         return danmaku.getTimeline() == other.danmaku.getTimeline();
     }
 
-    bool operator<=(const JSArg& other) const {
+    bool operator<=(const DanmakuWrapper& other) const {
         return danmaku.getTimeline() <= other.danmaku.getTimeline();
     }
 
@@ -63,4 +63,4 @@ private:
     LiveDanmaku danmaku;
 };
 
-#endif // JSARG_H
+#endif // DANMAKUWRAPPER_H
