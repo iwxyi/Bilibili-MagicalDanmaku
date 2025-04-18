@@ -1,5 +1,7 @@
 #include "luaengine.h"
 #include "danmakuwrapper.h"
+#include "settingswrapper.h"
+#include "usersettings.h"
 
 LuaEngine::LuaEngine(QObject *parent) : LanguageServiceBase(parent) {}
 
@@ -17,8 +19,8 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     });
 
     // 注入变量
-    DanmakuWrapper *jsArg = new DanmakuWrapper(danmaku);
-    lua->new_usertype<DanmakuWrapper>("JSArg",
+    DanmakuWrapper *danmakuWrapper = new DanmakuWrapper(danmaku);
+    lua->new_usertype<DanmakuWrapper>("DanmakuWrapper",
         sol::constructors<DanmakuWrapper(const LiveDanmaku&) >(),
         "toJson", &DanmakuWrapper::toJson,
         "getMsgType", &DanmakuWrapper::getMsgType,
@@ -46,7 +48,18 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
         "getAIReply", &DanmakuWrapper::getAIReply,
         "getFaceUrl", &DanmakuWrapper::getFaceUrl
     );
-    lua->set("_danmaku", jsArg);
+    lua->set("_danmaku", danmakuWrapper);
+
+    // 注入settings变量
+    lua->new_usertype<SettingsWrapper>("SettingsWrapper",
+        sol::constructors<SettingsWrapper(QSettings*) >(),
+        "read", &SettingsWrapper::read,
+        "write", &SettingsWrapper::write,
+        "contains", &SettingsWrapper::contains,
+        "remove", &SettingsWrapper::remove
+    );
+    lua->set("settings", us);
+    lua->set("heaps", heaps);
 
     // 组建function
     QString codeFrame;
@@ -54,7 +67,7 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
 
     // 运行代码
     std::string result = lua->script(codeFrame.toStdString());
-    delete jsArg;
+    delete danmakuWrapper;
     delete lua;
     return QString::fromStdString(result);
 #else

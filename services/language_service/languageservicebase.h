@@ -1,6 +1,7 @@
 #ifndef LANGUAGESERVICEBASE_H
 #define LANGUAGESERVICEBASE_H
 
+#include <QSettings>
 #include "livedanmaku.h"
 
 class LanguageServiceBase : public QObject
@@ -9,11 +10,19 @@ class LanguageServiceBase : public QObject
 public:
     explicit LanguageServiceBase(QObject *parent = nullptr) : QObject(parent) {}
 
+    void setHeaps(QSettings* heaps)
+    {
+        this->heaps = heaps;
+    }
+
     virtual QString runCode(const LiveDanmaku &danmaku, const QString &code) = 0;
 
 signals:
     void signalError(const QString &error);
     void signalLog(const QString &log);
+
+protected:
+    QSettings* heaps = nullptr;
 };
 
 #endif // LANGUAGESERVICEBASE_H

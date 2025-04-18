@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJSEngine>
+#include <QSettings>
 #include "livedanmaku.h"
 #include "jsconsole.h"
 #include "languageservicebase.h"

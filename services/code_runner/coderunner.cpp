@@ -26,6 +26,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
 
     // 编程引擎
     jsEngine = new JSEngine(this);
+    jsEngine->setHeaps(heaps);
     connect(jsEngine, &JSEngine::signalError, this, [=](const QString& err){
         emit signalShowError("JS引擎", err);
     });
@@ -34,6 +35,7 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     });
 
     luaEngine = new LuaEngine(this);
+    luaEngine->setHeaps(heaps);
     connect(luaEngine, &LuaEngine::signalError, this, [=](const QString& err){
         emit signalShowError("Lua引擎", err);
     });

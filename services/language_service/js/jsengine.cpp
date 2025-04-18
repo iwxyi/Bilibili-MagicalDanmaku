@@ -1,6 +1,7 @@
 #include "jsengine.h"
 #include "danmakuwrapper.h"
-#include <QDebug>
+#include "settingswrapper.h"
+#include "usersettings.h"
 
 JSEngine::JSEngine(QObject *parent) : LanguageServiceBase{parent}
 {}
@@ -15,6 +16,8 @@ void JSEngine::init()
     // 设置控制台
     console = new JsConsole(engine, this);
     engine->globalObject().setProperty("console", engine->newQObject(console));
+    engine->globalObject().setProperty("settings", engine->newQObject(new SettingsWrapper(us)));
+    engine->globalObject().setProperty("heaps", engine->newQObject(heaps));
 
     connect(console, &JsConsole::signalLog, this, [this](const QString &log) {
         emit signalLog(log);
@@ -28,8 +31,8 @@ QString JSEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     init();
 
     // 注入变量
-    DanmakuWrapper *jsArg = new DanmakuWrapper(danmaku);
-    QJSValue danmakuObj = engine->newQObject(jsArg);
+    DanmakuWrapper *danmakuWrapper = new DanmakuWrapper(danmaku);
+    QJSValue danmakuObj = engine->newQObject(danmakuWrapper);
     engine->globalObject().setProperty("_danmaku", danmakuObj);
 
     // 组建function
@@ -38,7 +41,7 @@ QString JSEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
 
     // 运行代码
     QJSValue result = engine->evaluate(codeFrame.toStdString().c_str());
-    delete jsArg;
+    delete danmakuWrapper;
 
     // 检查错误
     if (result.isError()) {
