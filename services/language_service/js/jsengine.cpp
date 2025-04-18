@@ -17,7 +17,7 @@ void JSEngine::init()
     console = new JsConsole(engine, this);
     engine->globalObject().setProperty("console", engine->newQObject(console));
     engine->globalObject().setProperty("settings", engine->newQObject(new SettingsWrapper(us)));
-    engine->globalObject().setProperty("heaps", engine->newQObject(heaps));
+    engine->globalObject().setProperty("heaps", engine->newQObject(new SettingsWrapper(heaps)));
 
     connect(console, &JsConsole::signalLog, this, [this](const QString &log) {
         emit signalLog(log);

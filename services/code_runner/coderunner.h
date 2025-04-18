@@ -55,6 +55,7 @@ public:
     explicit CodeRunner(QObject *parent = nullptr);
 
     void setLiveService(LiveRoomService* service);
+    void setHeaps(MySettings *heaps);
     void setMainUI(Ui::MainWindow *ui);
     void setMusicWindow(OrderPlayerWindow* musicWindow);
     void setWebServer(WebServer* ws);
@@ -136,8 +137,8 @@ private:
 
 public:
     // 设置
-    MySettings* heaps;
-    MySettings* extSettings;
+    MySettings* heaps = nullptr;
+    MySettings* extSettings = nullptr;
     bool enableFilter = true; // 过滤器总开关
 
     // 过滤器（已废弃方案）

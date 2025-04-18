@@ -49,6 +49,13 @@ void CodeRunner::setLiveService(LiveRoomService *service)
     this->liveService = service;
 }
 
+void CodeRunner::setHeaps(MySettings *heaps)
+{
+    this->heaps = heaps;
+    jsEngine->setHeaps(heaps);
+    luaEngine->setHeaps(heaps);
+}
+
 void CodeRunner::setMainUI(Ui::MainWindow *ui)
 {
     this->ui = ui;

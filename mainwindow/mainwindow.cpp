@@ -601,7 +601,7 @@ void MainWindow::initObject()
     }
 
     us = new UserSettings(rt->dataPath + "settings.ini");
-    cr->heaps = new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
+    cr->setHeaps(new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat));
     cr->extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
 
     // 版本

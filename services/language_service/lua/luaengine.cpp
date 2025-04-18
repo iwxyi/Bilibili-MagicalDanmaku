@@ -1,5 +1,5 @@
 #include "luaengine.h"
-#include "danmakuwrapper.h"
+#include "danmakuwrapperstd.h"
 #include "settingswrapper.h"
 #include "usersettings.h"
 
@@ -19,34 +19,34 @@ QString LuaEngine::runCode(const LiveDanmaku &danmaku, const QString &code)
     });
 
     // 注入变量
-    DanmakuWrapper *danmakuWrapper = new DanmakuWrapper(danmaku);
-    lua->new_usertype<DanmakuWrapper>("DanmakuWrapper",
-        sol::constructors<DanmakuWrapper(const LiveDanmaku&) >(),
-        "toJson", &DanmakuWrapper::toJson,
-        "getMsgType", &DanmakuWrapper::getMsgType,
-        "getText", &DanmakuWrapper::getText,
-        "getUid", &DanmakuWrapper::getUid,
-        "getNickname", &DanmakuWrapper::getNickname,
-        "getUname", &DanmakuWrapper::getUname,
-        "getUnameColor", &DanmakuWrapper::getUnameColor,
-        "getTextColor", &DanmakuWrapper::getTextColor,
-        "getTimeline", &DanmakuWrapper::getTimeline,
-        "isAdmin", &DanmakuWrapper::isAdmin,
-        "getGuard", &DanmakuWrapper::getGuard,
-        "isVip", &DanmakuWrapper::isVip,
-        "isSvip", &DanmakuWrapper::isSvip,
-        "isUidentity", &DanmakuWrapper::isUidentity,
-        "getLevel", &DanmakuWrapper::getLevel,
-        "getWealthLevel", &DanmakuWrapper::getWealthLevel,
-        "getGiftId", &DanmakuWrapper::getGiftId,
-        "getGiftName", &DanmakuWrapper::getGiftName,
-        "getNumber", &DanmakuWrapper::getNumber,
-        "getTotalCoin", &DanmakuWrapper::getTotalCoin,
-        "isFirst", &DanmakuWrapper::isFirst,
-        "isReplyMystery", &DanmakuWrapper::isReplyMystery,
-        "getReplyTypeEnum", &DanmakuWrapper::getReplyTypeEnum,
-        "getAIReply", &DanmakuWrapper::getAIReply,
-        "getFaceUrl", &DanmakuWrapper::getFaceUrl
+    DanmakuWrapperStd *danmakuWrapper = new DanmakuWrapperStd(danmaku);
+    lua->new_usertype<DanmakuWrapperStd>("DanmakuWrapperStd",
+        sol::constructors<DanmakuWrapperStd(const LiveDanmaku&) >(),
+        "toJson", &DanmakuWrapperStd::toJson,
+        "getMsgType", &DanmakuWrapperStd::getMsgType,
+        "getText", &DanmakuWrapperStd::getText,
+        "getUid", &DanmakuWrapperStd::getUid,
+        "getNickname", &DanmakuWrapperStd::getNickname,
+        "getUname", &DanmakuWrapperStd::getUname,
+        "getUnameColor", &DanmakuWrapperStd::getUnameColor,
+        "getTextColor", &DanmakuWrapperStd::getTextColor,
+        "getTimeline", &DanmakuWrapperStd::getTimeline,
+        "isAdmin", &DanmakuWrapperStd::isAdmin,
+        "getGuard", &DanmakuWrapperStd::getGuard,
+        "isVip", &DanmakuWrapperStd::isVip,
+        "isSvip", &DanmakuWrapperStd::isSvip,
+        "isUidentity", &DanmakuWrapperStd::isUidentity,
+        "getLevel", &DanmakuWrapperStd::getLevel,
+        "getWealthLevel", &DanmakuWrapperStd::getWealthLevel,
+        "getGiftId", &DanmakuWrapperStd::getGiftId,
+        "getGiftName", &DanmakuWrapperStd::getGiftName,
+        "getNumber", &DanmakuWrapperStd::getNumber,
+        "getTotalCoin", &DanmakuWrapperStd::getTotalCoin,
+        "isFirst", &DanmakuWrapperStd::isFirst,
+        "isReplyMystery", &DanmakuWrapperStd::isReplyMystery,
+        "getReplyTypeEnum", &DanmakuWrapperStd::getReplyTypeEnum,
+        "getAIReply", &DanmakuWrapperStd::getAIReply,
+        "getFaceUrl", &DanmakuWrapperStd::getFaceUrl
     );
     lua->set("_danmaku", danmakuWrapper);
 

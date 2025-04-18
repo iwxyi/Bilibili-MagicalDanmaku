@@ -248,6 +248,7 @@ HEADERS += \
     services/language_service/js/jsengine.h \
     services/language_service/languageservicebase.h \
     services/language_service/lua/luaengine.h \
+    services/language_service/wrapper/danmakuwrapperstd.h \
     services/language_service/wrapper/settingswrapper.h \
     services/live_services/bili_liveopenservice.h \
     services/live_services/bili_liveservice.h \
