@@ -70,6 +70,8 @@ INCLUDEPATH += \
     services/language_service/ \
     services/language_service/js/ \
     services/language_service/lua/ \
+    services/language_service/python/ \
+    services/language_service/qml/ \
     services/language_service/wrapper/ \
     third_party/utils/ \
     mainwindow/list_items/ \
@@ -108,6 +110,7 @@ SOURCES += \
     services/fans_archives/fansarchivesservice.cpp \
     services/language_service/js/jsengine.cpp \
     services/language_service/lua/luaengine.cpp \
+    services/language_service/python/pythonengine.cpp \
     services/live_services/bili_livecmds.cpp \
     services/live_services/bili_liveopen_cmds.cpp \
     services/live_services/bili_liveopenservice.cpp \
@@ -243,6 +246,7 @@ HEADERS += \
     services/entities/entities.h \
     services/fans_archives/fansarchivesservice.h \
     services/fans_archives/fansdanmakuwaitbean.h \
+    services/language_service/python/pythonengine.h \
     services/language_service/wrapper/danmakuwrapper.h \
     services/language_service/js/jsconsole.h \
     services/language_service/js/jsengine.h \

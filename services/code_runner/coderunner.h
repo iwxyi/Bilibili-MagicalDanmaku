@@ -12,6 +12,7 @@
 #include "voice_service/voiceservice.h"
 #include "jsengine.h"
 #include "luaengine.h"
+#include "pythonengine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -187,6 +188,7 @@ public:
     // 编程引擎
     JSEngine* jsEngine;
     LuaEngine* luaEngine;
+    PythonEngine* pythonEngine;
 };
 
 extern CodeRunner* cr;

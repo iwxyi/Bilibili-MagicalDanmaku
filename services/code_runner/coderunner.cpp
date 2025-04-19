@@ -42,6 +42,15 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(luaEngine, &LuaEngine::signalLog, this, [=](const QString& log){
         localNotify(log);
     });
+
+    pythonEngine = new PythonEngine(this);
+    pythonEngine->setHeaps(heaps);
+    connect(pythonEngine, &PythonEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("Python引擎", err);
+    });
+    connect(pythonEngine, &PythonEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
 }
 
 void CodeRunner::setLiveService(LiveRoomService *service)
@@ -54,6 +63,7 @@ void CodeRunner::setHeaps(MySettings *heaps)
     this->heaps = heaps;
     jsEngine->setHeaps(heaps);
     luaEngine->setHeaps(heaps);
+    pythonEngine->setHeaps(heaps);
 }
 
 void CodeRunner::setMainUI(Ui::MainWindow *ui)
@@ -118,7 +128,27 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
         sendVariantMsg(result, danmaku, channel, manual, delayMine);
         return true;
     }
-    
+    else if (msg.startsWith("python:"))
+    {
+        QString code = msg.mid(7);
+        QString result = pythonEngine->runCode(danmaku, "python", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("python3:"))
+    {
+        QString code = msg.mid(8);
+        QString result = pythonEngine->runCode(danmaku, "python3", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("py:"))
+    {
+        QString code = msg.mid(3);
+        QString result = pythonEngine->runCode(danmaku, "python", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
     
     
     // 解析变量、条件

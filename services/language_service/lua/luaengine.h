@@ -12,7 +12,7 @@ class LuaEngine : public LanguageServiceBase
 public:
     explicit LuaEngine(QObject *parent = nullptr);
 
-    QString runCode(const LiveDanmaku &danmaku, const QString &code) override;
+    QString runCode(const LiveDanmaku &danmaku, const QString &code);
 };
 
 #endif // LUAENGINE_H

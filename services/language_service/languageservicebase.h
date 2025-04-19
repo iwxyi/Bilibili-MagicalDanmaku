@@ -15,8 +15,6 @@ public:
         this->heaps = heaps;
     }
 
-    virtual QString runCode(const LiveDanmaku &danmaku, const QString &code) = 0;
-
 signals:
     void signalError(const QString &error);
     void signalLog(const QString &log);
