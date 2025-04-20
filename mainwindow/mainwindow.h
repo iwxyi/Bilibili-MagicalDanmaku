@@ -736,6 +736,8 @@ private slots:
 
     void on_screenMonitorCombo_activated(int index);
 
+    void on_chatGPTModelNameCombo_editTextChanged(const QString &arg1);
+
 private:
     void initView();
     void initStyle();

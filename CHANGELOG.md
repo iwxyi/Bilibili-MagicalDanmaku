@@ -1,4 +1,13 @@
-### v5.0.0 [粉丝档案、数据库优化]
+### v5.0.0 [粉丝档案、数据库优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.0.1)
+
+- 新增GPT输入消息中添加UID，以便大模型识别
+- 新增模型名称可以自由输入
+
+
+
+
+
+### v5.0.0 [粉丝档案、数据库优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.0.0)
 
 - 新增粉丝档案功能，解析每一位观众的行为特征
 - 移动数据库至数据中心页面
@@ -17,7 +26,7 @@
 
 
 
-### v4.10.9 [发送表情命令]
+### v4.10.9 [发送表情命令](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v4.10.9)
 
 - 新增AI“回复自己”的开关，避免死循环（默认关闭，不会回复）
 - 新增发送表情命令：`>sendEmoji(emojiID)`、`>sendRoomEmoji(roomID, emojiID)`
