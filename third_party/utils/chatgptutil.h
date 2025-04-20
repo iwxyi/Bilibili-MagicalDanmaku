@@ -64,7 +64,7 @@ public:
         return waiting;
     }
 
-    void getResponse(const QString& paramText)
+    void getResponse(const QString& paramText, QJsonObject extraKey = QJsonObject())
     {
         QJsonObject json;
         json.insert("model", us->chatgpt_model_name);
@@ -75,10 +75,16 @@ public:
         array.append(rc);
         json.insert("messages", array);
         json.insert("temperature", 0.7);
+
+        foreach (QString key, extraKey.keys())
+        {
+            json.insert(key, extraKey.value(key));
+        }
+
         getResponse(json);
     }
 
-    void getResponse(QList<ChatBean> chats)
+    void getResponse(QList<ChatBean> chats, QJsonObject extraKey = QJsonObject())
     {
         QJsonObject json;
         json.insert("model", us->chatgpt_model_name);
@@ -93,6 +99,12 @@ public:
         json.insert("messages", array);
         json.insert("temperature", 0.7);
         // json.insert("max_tokens", us->chatgpt_max_token_count);
+
+        foreach (QString key, extraKey.keys())
+        {
+            json.insert(key, extraKey.value(key));
+        }
+
         getResponse(json);
     }
 

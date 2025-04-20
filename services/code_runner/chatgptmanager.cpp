@@ -46,6 +46,7 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
     userChats.append(ChatBean("user", text));
 
     QList<ChatBean> chats;
+    // 提示词
     if (us->chatgpt_analysis)
     {
         if (!us->chatgpt_analysis_prompt.isEmpty())
@@ -65,6 +66,10 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
         }
     }
 
+    // 用户信息
+    chats.append(ChatBean("system", QString("用户信息：\nUID=%1").arg(uid)));
+
+    // 历史弹幕
     int count = us->chatgpt_max_context_count;
     for (int i = userChats.size() - 1; i >= 0; i--)
     {
@@ -84,7 +89,10 @@ void ChatGPTManager::chat(qint64 uid, QString text, NetStringFunc func)
     if (us->chatgpt_analysis && !us->chatgpt_analysis_format.isEmpty())
         chats.last().message = us->chatgpt_analysis_format + "\n" + chats.last().message;
 
-    chatgpt->getResponse(chats);
+    QJsonObject extraKey;
+    extraKey.insert("uid", uid);
+
+    chatgpt->getResponse(chats, extraKey);
 }
 
 void ChatGPTManager::clear()
