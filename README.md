@@ -3058,7 +3058,119 @@ if heaps:contains("test") then
 end
 ```
 
+### Python语言支持
 
+前缀为`python`（允许简写为 `py`）、`python3`，分别调用对应的命令。
+
+需要自己**本地安装 Python 环境**，并且命令行可以直接调用。
+
+传递的 JSON 格式：
+
+```json
+{
+    "danmaku":
+    {
+        "uid": [xxx],
+        "nickname": "[xxx]",
+        "text": "[xxx]",
+        ...
+    },
+    "settings_path": "[应用数据路径]/settings.ini",
+    "heaps_path": "[应用数据路径]/heaps.ini"
+}
+```
+
+> `应用数据路径` 如果是绿色版，那么就是安装路径；如果是单文件版，那么按照系统设置会不同。
+
+#### Python示例
+
+```python
+python:
+import sys
+import json
+
+json_data_str = sys.argv[1]
+
+# 这个是弹幕JSON
+danmaku = json.loads(json_data_str)["danmaku"]
+name = danmaku["nickname"]
+text = danmaku["text"]
+
+# 在这里使用传入弹幕数据进行你的 Python 逻辑
+danmu = f"{name}: {text}"
+
+# 返回要发送的弹幕内容
+print(danmu)
+```
+
+完整的代码，带有一些报错，但不是很有必要。
+
+```python
+python3:
+import sys
+import json
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        try:
+            json_data_str = sys.argv[1]
+
+            # 这个是弹幕JSON
+            danmaku = json.loads(json_data_str)["danmaku"]
+            name = danmaku["nickname"]
+            text = danmaku["text"]
+
+            # 在这里使用传入弹幕数据进行你的 Python 逻辑
+            danmu = f"{name}: {text}"
+
+            # 返回要发送的弹幕内容
+            print(danmu)
+
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON data received.")
+        except Exception as e:
+            print(f"Python script error: {e}")
+    else:
+        print("Error: No data received from C++.")
+```
+
+#### 处理配置文件
+
+通过本地命令行的方式将弹幕的 JSON 传入 Python，不同于前面的 JavaScript 和 Lua 是直接嵌入到应用程序中，也因此无法直接共享配置文件等信息，而是通过 ini 配置文件来修改，并同步回去。
+
+```python
+python3:
+import sys
+import json
+import configparser
+
+json_data_str = sys.argv[1]
+
+# 这个是JSON中的配置文件路径
+data = json.loads(json_data_str)
+settings_path = data["settings_path"]  # 应用配置
+heaps_path = data["heaps_path"]  # 用户配置
+
+# 读取配置文件
+config = configparser.ConfigParser()
+try:
+    # 以 heaps 为例，不建议修改 settings
+    config.read(heaps_path)
+    # 读取配置
+    test_value = config.get("General", "test", fallback="default_value")
+    print(">localNotify(" + test_value + ")")
+
+    # 修改或添加配置
+    if not config.has_section("General"):
+        config.add_section("General")
+    config.set("General", "test2", "value222")  # 分组, key, value
+
+    # 写入配置文件
+    with open(heaps_path, 'w') as configfile:
+        config.write(configfile)
+except configparser.Error as e:
+    print(f"Error Settings INI file: {e}")
+```
 
 
 
