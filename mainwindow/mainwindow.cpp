@@ -10839,7 +10839,7 @@ void MainWindow::on_closeGuiCheck_clicked()
 
 void MainWindow::on_chatGPTEndpointEdit_textEdited(const QString &arg1)
 {
-    us->setValue("chatgpt/endpoin", us->chatgpt_endpiont = arg1);
+    us->setValue("chatgpt/endpoint", us->chatgpt_endpiont = arg1);
 }
 
 void MainWindow::on_chatGPTKeyEdit_textEdited(const QString &arg1)
@@ -11077,4 +11077,3 @@ void MainWindow::on_chatGPTModelNameCombo_editTextChanged(const QString &arg1)
 {
     on_chatGPTModelNameCombo_activated(arg1);
 }
-
