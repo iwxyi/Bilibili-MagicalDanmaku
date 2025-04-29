@@ -1,6 +1,6 @@
 ### v5.1.0 [代码支持多种编程语言](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.1.0)
 
-- 新增代码支持 JavaScript、Python、Lua 三种编程语言，并且支持参与读写配置数据
+- 新增代码支持 JavaScript、Python、Lua 三种编程语言，并且可参与读写配置数据
 - 新增模型名称可以自由输入
 - 新增GPT输入消息JSON中添加键值对UID，以便大模型识别
 - 优化远程开关粉丝档案时忽略未改变的情况
