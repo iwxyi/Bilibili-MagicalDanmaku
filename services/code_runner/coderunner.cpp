@@ -23,11 +23,47 @@ CodeRunner::CodeRunner(QObject *parent) : QObject(parent)
     connect(autoMsgTimer, &QTimer::timeout, this, [=]{
         slotSendAutoMsg(true);
     });
+
+    // 编程引擎
+    jsEngine = new JSEngine(this);
+    jsEngine->setHeaps(heaps);
+    connect(jsEngine, &JSEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("JS引擎", err);
+    });
+    connect(jsEngine, &JSEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
+
+    luaEngine = new LuaEngine(this);
+    luaEngine->setHeaps(heaps);
+    connect(luaEngine, &LuaEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("Lua引擎", err);
+    });
+    connect(luaEngine, &LuaEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
+
+    pythonEngine = new PythonEngine(this);
+    pythonEngine->setHeaps(heaps);
+    connect(pythonEngine, &PythonEngine::signalError, this, [=](const QString& err){
+        emit signalShowError("Python引擎", err);
+    });
+    connect(pythonEngine, &PythonEngine::signalLog, this, [=](const QString& log){
+        localNotify(log);
+    });
 }
 
 void CodeRunner::setLiveService(LiveRoomService *service)
 {
     this->liveService = service;
+}
+
+void CodeRunner::setHeaps(MySettings *heaps)
+{
+    this->heaps = heaps;
+    jsEngine->setHeaps(heaps);
+    luaEngine->setHeaps(heaps);
+    pythonEngine->setHeaps(heaps);
 }
 
 void CodeRunner::setMainUI(Ui::MainWindow *ui)
@@ -70,10 +106,57 @@ void CodeRunner::releaseData()
  */
 bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int channel, bool manual, bool delayMine)
 {
+    // 判断是否是自定义编程语言
+    if (msg.startsWith("var:"))
+    {
+        QString code = msg.mid(4);
+        code = processDanmakuVariants(code, danmaku);
+        sendVariantMsg(code, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("js:"))
+    {
+        QString code = msg.mid(3);
+        QString result = jsEngine->runCode(danmaku, code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("lua:"))
+    {
+        QString code = msg.mid(4);
+        QString result = luaEngine->runCode(danmaku, code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("python:"))
+    {
+        QString code = msg.mid(7);
+        QString result = pythonEngine->runCode(danmaku, "python", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("python3:"))
+    {
+        QString code = msg.mid(8);
+        QString result = pythonEngine->runCode(danmaku, "python3", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    else if (msg.startsWith("py:"))
+    {
+        QString code = msg.mid(3);
+        QString result = pythonEngine->runCode(danmaku, "python", code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
+    
+    
+    // 解析变量、条件
     QStringList msgs = getEditConditionStringList(msg, danmaku);
     if (!msgs.size())
         return false;
 
+    // 随机选择一条消息
     int r = qrand() % msgs.size();
     QString s = msgs.at(r);
     if (!s.trimmed().isEmpty())

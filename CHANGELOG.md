@@ -1,8 +1,13 @@
-### v5.0.0 [粉丝档案、数据库优化](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.0.1)
+### v5.1.0 [代码支持多种编程语言](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.1.0)
 
-- 新增GPT输入消息中添加UID，以便大模型识别
+- 新增代码支持 JavaScript、Python、Lua 三种编程语言，并且支持参与读写配置数据
 - 新增模型名称可以自由输入
+- 新增GPT输入消息JSON中添加键值对UID，以便大模型识别
+- 优化远程开关粉丝档案时忽略未改变的情况
+- 优化代码编辑器的tab宽度为4个空格宽度
 - 修复模型自定义API无法保存的问题
+- 修复初次上船FIRST_GUARD反过来的问题
+- 修复代码页切换无法保存的问题
 
 
 
@@ -19,6 +24,8 @@
 - 新增数据库路径可自定义：setting.ini中 `[custom]` 下添加 `databasePath=xxxx(需包含文件名)`
 - 新增全屏弹幕的显示器选择
 - 新增发送常规的@符号，使用"\@"代替
+- 新增远程控制命令“开启粉丝档案/关闭粉丝档案”
+    > 结合定时任务，可以实现DeepSeek错峰使用
 - 修复SQL浏览器无法执行多行的问题
     > 因为该文本格式中，换行符使用的是特殊的 Unicode 字符 U+2029 (Paragraph Separator)，而不是常规的 \n 字符
 - 修复弹幕在失败重发时丢失@用户的问题

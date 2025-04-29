@@ -543,6 +543,11 @@ public:
         this->admin = admin;
     }
 
+    void setLevel(int level)
+    {
+        this->level = level;
+    }
+
     void setArgs(QStringList args)
     {
         this->args = args;
@@ -931,7 +936,7 @@ public:
         return wealth_level;
     }
 
-private:
+protected:
     MessageType msgType = MSG_DANMAKU;
 
     QString text;
@@ -990,7 +995,7 @@ private:
 
     bool robot = false;
     qint64 prev_timestamp = 0;
-    int first = 0; // 初次：1；新的：2
+    int first = 0; // 初次：1；新的：2；礼物合并：>0
     int special = 0;
 
     QString roomId;

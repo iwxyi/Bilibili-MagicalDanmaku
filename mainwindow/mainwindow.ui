@@ -1871,8 +1871,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>935</width>
-             <height>1790</height>
+             <width>100</width>
+             <height>30</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -9927,7 +9927,7 @@ QTabBar::tab:selected
 </string>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabTimer">
            <attribute name="title">
@@ -10923,6 +10923,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
+     <height>37</height>
      <height>37</height>
     </rect>
    </property>

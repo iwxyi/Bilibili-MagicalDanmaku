@@ -2920,6 +2920,260 @@ JSON 格式：
 }
 ```
 
+### JS语言支持
+
+本程序的代码框中均支持 `JavaScript`  编程语言的语法。
+
+支持的 JS 特性依赖于 Qt 版本，当前发布的版本为 Qt5.x，对 JS 的支持概况如下：
+
+> - **核心标准**：基于 **ECMAScript 5 (ES5)**，并部分支持 **ES6（ES2015）** 的特性。
+> - **支持的关键特性**：
+>   - **ES5 特性**：严格模式 (`"use strict"`)、`JSON` 对象、数组迭代方法（如 `map`、`filter`）。
+>   - **部分 ES6 特性**：箭头函数、`let`/`const`、模板字符串、增强的对象字面量。
+>   - **不支持的 ES6+ 特性**：类 (`class`)、模块 (`import`/`export`)、`Promise`、`Proxy`、生成器（`function*`）等。
+
+**使用方式**：在代码框中使用 `js:` 开头，后面的代码就会视作 JavaScript 代码来执行，返回值（`return` 一个字符串）作为发送的字符串，或者要执行的命令。自动回复等所需数据的变量名为 `danmaku`。
+
+#### JS语法示例
+
+```js
+js:
+// 打印日志（会在弹幕姬+日志文件显示出来，仅限string类型，其他类型需先转换）
+console.log(danmaku.getNickname() + ":" + danmaku.getText())
+// return的内容将会作为弹幕发送，或者神奇弹幕中支持的可执行命令
+// 如果return了空字符串，或者不进行return，那么不会回复弹幕
+if (danmaku.getText() == "测试弹幕")
+    return "收到测试弹幕";
+else
+    return "";
+```
+
+> 如果要在 JS 代码中使用环境变量，可以将开头的 `js:` 改为 `var:js:`，会先替换变量，之后再运行 JS 代码。但如果在 JS 代码中再需要使用变量，则会替换为固定的值。
+
+#### 弹幕接口列表
+
+默认变量 `danmaku` 的所有参数如下（按消息类型，很多值都不一定有，务必先输出看看）：
+
+> 其中字符串返回的是 `QString` 类型，这里简写为 `String` 以便观看（毕竟只要知道是字符串就好了）
+
+```C++
+int getMsgType() // 消息类型
+long long getUid() // UID，长数字类型
+String getNickname()
+String getUname() // Nickname和Uname是完全一样的，避免用错
+String getUnameColor()
+String getText()
+String getTextColor()
+DateTime getTimeline()
+int isAdmin() // 是否是房管
+int getGuard() // 0无，1总督，2提督，3舰长
+int isVip()
+int isSvip()
+int isUidentity()
+int getLevel() // 用户等级
+int getWealthLevel() // 财富等级
+int getGiftId() // 礼物ID
+String getGiftName() // 礼物名字
+int getNumber() // 礼物数量
+long long getTotalCoin() // 瓜子数量（旧单位，1000金瓜子=10电池=1元）
+bool isFirst() // 多用途。第一次上船、点歌等待的歌数量（例如下一首播放就是1）、高能榜排名、礼物连击的第一个礼物
+long long getReplyMid() // @用户的回复
+String getReplyUname()
+String getReplyUnameColor()
+bool isReplyMystery()
+int getReplyTypeEnum()
+String getAIReply() // AI回复消息
+String getFaceUrl() // 头像URL
+```
+
+其中 `MsgType` 用来判断是什么消息，枚举类型如下：
+
+| 值   | 描述       |
+| ---- | ---------- |
+| 1    | 弹幕       |
+| 2    | 送礼       |
+| 3    | 欢迎       |
+| 4    | 点歌       |
+| 5    | 上船       |
+| 6    | 欢迎舰长   |
+| 7    | 粉丝       |
+| 8    | 关注       |
+| 9    | 禁言       |
+| 10   | 普通消息   |
+| 11   | 分享直播间 |
+| 12   | PK最佳     |
+| 13   | 醒目留言   |
+| 14   | 其他       |
+
+#### 处理配置文件
+
+默认嵌入了应用配置 `settings` 和用户变量 `heaps`，使用 `read` 和 `write` 函数来读写相应的数据。
+
+> settings 为应用配置，请谨慎修改；修改之后应用也不会立即读取。
+>
+> heaps 为用户配置，随意读写。默认读写的分组为 `heaps`，即 `write("test")` 等同于 `write("heaps/test")`，但 `write("my/test")` 属于另一个分组 `my` 下。
+
+示例：
+
+```js
+js:
+heaps.write("test", "222")
+console.log(heaps.read("test"))
+```
+
+
+
+### Lua语言支持
+
+> 同 JS，代码前缀为 `lua:`。建议使用前者，与本应用结合得更好。
+
+#### Lua语法示例
+
+```lua
+lua:
+-- 打印信息
+print(danmaku:getNickname() ..  ": " ..  danmaku:getText())
+-- 逻辑判断
+if danmaku:getText() == "111" then
+    return "is 111"
+else
+    return "not 111"
+end
+```
+
+#### 处理配置文件
+
+因为 Lua 使用了第三方库，仅支持标准类型的读写，且无法重载，`read` 和 `write` 必须指明类型，均添加了相应后缀，例如 `readString`、`writeInt` 等等。
+
+示例：
+
+```lua
+lua:
+heaps:writeString("test", "111")
+print(tostring(heaps:readInt("test")))
+
+if heaps:contains("test") then
+    local value = heaps:readString("test")
+    print(value)
+end
+```
+
+### Python语言支持
+
+前缀为`python`（允许简写为 `py`）、`python3`，分别调用对应的命令。
+
+需要自己**本地安装 Python 环境**，并且命令行可以直接调用。
+
+传递的 JSON 格式：
+
+```json
+{
+    "danmaku":
+    {
+        "uid": [xxx],
+        "nickname": "[xxx]",
+        "text": "[xxx]",
+        ...
+    },
+    "settings_path": "[应用数据路径]/settings.ini",
+    "heaps_path": "[应用数据路径]/heaps.ini"
+}
+```
+
+> `应用数据路径` 如果是绿色版，那么就是安装路径；如果是单文件版，那么按照系统设置会不同。
+
+#### Python示例
+
+```python
+python:
+import sys
+import json
+
+json_data_str = sys.argv[1]
+
+# 这个是弹幕JSON
+danmaku = json.loads(json_data_str)["danmaku"]
+name = danmaku["nickname"]
+text = danmaku["text"]
+
+# 在这里使用传入弹幕数据进行你的 Python 逻辑
+danmu = f"{name}: {text}"
+
+# 返回要发送的弹幕内容
+print(danmu)
+```
+
+完整的代码，带有一些报错，但不是很有必要。
+
+```python
+python3:
+import sys
+import json
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        try:
+            json_data_str = sys.argv[1]
+
+            # 这个是弹幕JSON
+            danmaku = json.loads(json_data_str)["danmaku"]
+            name = danmaku["nickname"]
+            text = danmaku["text"]
+
+            # 在这里使用传入弹幕数据进行你的 Python 逻辑
+            danmu = f"{name}: {text}"
+
+            # 返回要发送的弹幕内容
+            print(danmu)
+
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON data received.")
+        except Exception as e:
+            print(f"Python script error: {e}")
+    else:
+        print("Error: No data received from C++.")
+```
+
+#### 处理配置文件
+
+通过本地命令行的方式将弹幕的 JSON 传入 Python，不同于前面的 JavaScript 和 Lua 是直接嵌入到应用程序中，也因此无法直接共享配置文件等信息，而是通过 ini 配置文件来修改，并同步回去。
+
+```python
+python3:
+import sys
+import json
+import configparser
+
+json_data_str = sys.argv[1]
+
+# 这个是JSON中的配置文件路径
+data = json.loads(json_data_str)
+settings_path = data["settings_path"]  # 应用配置
+heaps_path = data["heaps_path"]  # 用户配置
+
+# 读取配置文件
+config = configparser.ConfigParser()
+try:
+    # 以 heaps 为例，不建议修改 settings
+    config.read(heaps_path)
+    # 读取配置
+    test_value = config.get("General", "test", fallback="default_value")
+    print(">localNotify(" + test_value + ")")
+
+    # 修改或添加配置
+    if not config.has_section("General"):
+        config.add_section("General")
+    config.set("General", "test2", "value222")  # 分组, key, value
+
+    # 写入配置文件
+    with open(heaps_path, 'w') as configfile:
+        config.write(configfile)
+except configparser.Error as e:
+    print(f"Error Settings INI file: {e}")
+```
+
+
+
 ## QA
 
 ### 为什么不发送弹幕？

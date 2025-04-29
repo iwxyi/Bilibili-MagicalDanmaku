@@ -488,6 +488,10 @@ void MainWindow::initView()
         menu->exec();
     });
 
+    // 默认的on_tabWidget_tabBarClicked()莫名失效，只能手动连接
+    connect(ui->tabWidget, &QTabWidget::tabBarClicked,
+                    this, &MainWindow::onExtensionTabWidgetBarClicked);
+
     appendListItemButton = new AppendButton(ui->tabWidget);
     appendListItemButton->setFixedSize(rt->widgetSizeL, rt->widgetSizeL);
     appendListItemButton->setRadius(rt->widgetSizeL);
@@ -601,7 +605,7 @@ void MainWindow::initObject()
     }
 
     us = new UserSettings(rt->dataPath + "settings.ini");
-    cr->heaps = new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat);
+    cr->setHeaps(new MySettings(rt->dataPath + "heaps.ini", QSettings::Format::IniFormat));
     cr->extSettings = new MySettings(rt->dataPath + "ext_settings.ini", QSettings::Format::IniFormat);
 
     // 版本
@@ -2892,7 +2896,7 @@ void MainWindow::slotNewGuardBuy(const LiveDanmaku &danmaku)
         }
     }
 
-    if (!danmaku.isFirst())
+    if (danmaku.isFirst())
     {
         triggerCmdEvent("FIRST_GUARD", danmaku, true);
     }
@@ -3730,7 +3734,7 @@ void MainWindow::on_languageAutoTranslateCheck_stateChanged(int)
         danmakuWindow->setAutoTranslate(trans);
 }
 
-void MainWindow::on_tabWidget_tabBarClicked(int index)
+void MainWindow::onExtensionTabWidgetBarClicked(int index)
 {
     us->setValue("mainwindow/tabIndex", index);
     if (index > 2)

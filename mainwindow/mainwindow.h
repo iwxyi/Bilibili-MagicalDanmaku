@@ -144,7 +144,7 @@ private slots:
 
     void on_languageAutoTranslateCheck_stateChanged(int);
 
-    void on_tabWidget_tabBarClicked(int index);
+    void onExtensionTabWidgetBarClicked(int index);
 
     void on_SendMsgButton_clicked();
 

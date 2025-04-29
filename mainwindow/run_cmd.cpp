@@ -306,17 +306,34 @@ void MainWindow::processRemoteCmd(QString msg, bool response)
     }
     else if (msg == "开启粉丝档案")
     {
-        ui->fansArchivesCheck->setChecked(true);
-        on_fansArchivesCheck_clicked();
-        if (response)
-            cr->sendNotifyMsg(">已开启粉丝档案");
+        if (!us->fansArchives)
+        {
+            on_actionBuy_VIP_triggered();
+            ui->fansArchivesCheck->setChecked(true);
+            on_fansArchivesCheck_clicked();
+            if (response)
+                cr->sendNotifyMsg(">已开启粉丝档案");
+        }
+        else
+        {
+            if (response)
+                cr->sendNotifyMsg(">已开启粉丝档案（无变动）");
+        }
     }
     else if (msg == "关闭粉丝档案")
     {
-        ui->fansArchivesCheck->setChecked(false);
-        on_fansArchivesCheck_clicked();
-        if (response)
-            cr->sendNotifyMsg(">已关闭粉丝档案");
+        if (us->fansArchives)
+        {
+            ui->fansArchivesCheck->setChecked(false);
+            on_fansArchivesCheck_clicked();
+            if (response)
+                cr->sendNotifyMsg(">已关闭粉丝档案");
+        }
+        else
+        {
+            if (response)
+                cr->sendNotifyMsg(">已关闭粉丝档案（无变动）");
+        }
     }
     else
         return ;

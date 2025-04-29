@@ -10,6 +10,9 @@
 #include "orderplayerwindow.h"
 #include "web_server/webserver.h"
 #include "voice_service/voiceservice.h"
+#include "jsengine.h"
+#include "luaengine.h"
+#include "pythonengine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -52,8 +55,8 @@ class CodeRunner : public QObject
 public:
     explicit CodeRunner(QObject *parent = nullptr);
 
-
     void setLiveService(LiveRoomService* service);
+    void setHeaps(MySettings *heaps);
     void setMainUI(Ui::MainWindow *ui);
     void setMusicWindow(OrderPlayerWindow* musicWindow);
     void setWebServer(WebServer* ws);
@@ -135,8 +138,8 @@ private:
 
 public:
     // 设置
-    MySettings* heaps;
-    MySettings* extSettings;
+    MySettings* heaps = nullptr;
+    MySettings* extSettings = nullptr;
     bool enableFilter = true; // 过滤器总开关
 
     // 过滤器（已废弃方案）
@@ -181,6 +184,11 @@ public:
 
     // bool (*execFuncCallback)(QString msg, LiveDanmaku &danmaku, CmdResponse &res, int &resVal) = nullptr;
     std::function<bool(QString, LiveDanmaku&, CmdResponse&, int&)> execFuncCallback;
+
+    // 编程引擎
+    JSEngine* jsEngine;
+    LuaEngine* luaEngine;
+    PythonEngine* pythonEngine;
 };
 
 extern CodeRunner* cr;
