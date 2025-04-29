@@ -36,6 +36,27 @@ ConditionEditor::ConditionEditor(QWidget *parent) : QPlainTextEdit(parent)
 
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &ConditionEditor::customContextMenuRequested, this, &ConditionEditor::showContextMenu);
+
+    // 设置tab的宽度
+    // 1. 获取当前使用的字体
+    QFont font = this->font();
+    // 2. 使用 QFontMetrics 计算当前字体下一个空格的宽度
+    QFontMetrics fm(font);
+    // 使用 horizontalAdvance 来获取字符的宽度，特别是对于单个字符，它比 width() 更准确
+    int spaceWidth = fm.horizontalAdvance(QLatin1Char(' '));
+    // 3. 计算 4 个空格的总宽度，作为制表位距离
+    int tabStopDistance = 4 * spaceWidth;
+    // 4. 获取 QPlainTextEdit 关联的 QTextDocument
+    QTextDocument *document = this->document();
+    // 5. 获取文档当前的默认文本选项
+    // 注意：defaultTextOption() 返回的是一个副本，需要修改后再设置回去
+    QTextOption textOption = document->defaultTextOption();
+    // 6. 设置文本选项的制表位距离
+    textOption.setTabStopDistance(tabStopDistance);
+    // 7. 将修改后的文本选项设置回文档
+    document->setDefaultTextOption(textOption);
+    // 如果 QPlainTextEdit 中已经有内容，可能需要触发一次更新以应用新的制表位
+    // this->update();
 }
 
 void ConditionEditor::updateCompleterModel()
