@@ -2949,6 +2949,8 @@ else
 ```
 
 > 如果要在 JS 代码中使用环境变量，可以将开头的 `js:` 改为 `var:js:`，会先替换变量，之后再运行 JS 代码。但如果在 JS 代码中再需要使用变量，则会替换为固定的值。
+>
+> 本质上是定义了一个 function，其返回值就是要发送的弹幕，所以直接 `return 弹幕` 即可。
 
 #### 弹幕接口列表
 
@@ -3026,12 +3028,14 @@ console.log(heaps.read("test"))
 ### Lua语言支持
 
 > 同 JS，代码前缀为 `lua:`。建议使用前者，与本应用结合得更好。
+>
+> 使用的版本为 Lua 5.2.4。
 
 #### Lua语法示例
 
 ```lua
 lua:
--- 打印信息
+-- 打印信息，会在弹幕姬显示出来，仅限字符串类型
 print(danmaku:getNickname() ..  ": " ..  danmaku:getText())
 -- 逻辑判断
 if danmaku:getText() == "111" then
@@ -3058,6 +3062,8 @@ if heaps:contains("test") then
 end
 ```
 
+
+
 ### Python语言支持
 
 前缀为`python`（允许简写为 `py`）、`python3`，分别调用对应的命令。
@@ -3083,6 +3089,10 @@ end
 > `应用数据路径` 如果是绿色版，那么就是安装路径；如果是单文件版，那么按照系统设置会不同。
 
 #### Python示例
+
+与 js 和 lua 不同的是，使用 `print()` 的输出来作为返回的弹幕。
+
+同时并不支持调试，无法打印一些数据，但是可以使用 `print(">localNotify(要打印的文字)")` 来使文字显示在弹幕姬上，而非输出弹幕。
 
 ```python
 python:

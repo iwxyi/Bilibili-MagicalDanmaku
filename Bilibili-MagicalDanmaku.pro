@@ -499,10 +499,11 @@ contains(DEFINES, ENABLE_LUA) {
         third_party/sol/forward.hpp
 
     win32 {
+        LIBS += -L$$PWD/third_party/lua/lib/win64/ -llua52
     } else {
         # -llua 找的是 liblua.a
         # MacOS的Qt是x84_64，但Brew安装的Lua是arm64，需要第三方下载
-        LIBS += -L$$PWD/third_party/lua/lib/ -llua52
+        LIBS += -L$$PWD/third_party/lua/lib/mac/ -llua52
     }
 }
 

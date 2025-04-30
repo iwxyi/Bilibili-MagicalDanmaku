@@ -121,6 +121,13 @@ bool CodeRunner::sendVariantMsg(QString msg, const LiveDanmaku &danmaku, int cha
         sendVariantMsg(result, danmaku, channel, manual, delayMine);
         return true;
     }
+    else if (msg.startsWith("javascript:"))
+    {
+        QString code = msg.mid(11);
+        QString result = jsEngine->runCode(danmaku, code);
+        sendVariantMsg(result, danmaku, channel, manual, delayMine);
+        return true;
+    }
     else if (msg.startsWith("lua:"))
     {
         QString code = msg.mid(4);

@@ -398,6 +398,12 @@ void BiliLiveService::getRoomInfo(bool reconnect, int reconnectCount)
             emit signalRoomCoverChanged(QPixmap(":/bg/bg"));
             emit signalConnectionStateTextChanged("连接失败" + snum(reconnectCount+1));
 
+            qint64 code = json.value("code").toInt();
+            if (code == -352) // 登录后就可以获取房间信息了
+            {
+                emit signalShowError("登录失败", "错误码 -352，需登录后再连接直播间");
+            }
+
             if (reconnectCount >= 5)
             {
                 emit signalConnectionStateTextChanged("无法连接");
