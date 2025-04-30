@@ -202,7 +202,7 @@
             "action": "/// <大乱斗·尊严票>：被碾压时送个吃瓜……（非主播可用）\n[%pk_my_votes%=0, %pk_match_votes%>1000]>sendGift(20004, 1)",
             "anchor_key": "神奇弹幕:EventAction",
             "enabled": false,
-            "event": "PK_FINAL"
+            "event": "PK_ENDING"
         },
         {
             "action": "/// <大乱斗·对面主播来串门发送弹幕>\n[%pking%, %uid%=%pk_uid%]>sendRoomMsg(%pk_room_id%, 我也来串门啦~)",
