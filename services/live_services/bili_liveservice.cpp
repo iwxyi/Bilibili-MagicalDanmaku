@@ -3240,29 +3240,31 @@ void BiliLiveService::getPkMatchInfo()
         MyJson data = json.data();
         pkRoomInfo = LiveDanmaku();
         pkRoomInfo.with(data);
+        // 这里的接口不能用了 online_gold_rank_info_v2数据变成null了
+        // 尝试直接按照直播间人数超过7人的情况处理，也就是直接调用getPkOnlineGoldPage
+        getPkOnlineGoldPage();
 
         // 计算高能榜综合
-        int number = data.o("online_gold_rank_info_v2").a("list").size();
-        qint64 sum = 0;
-        data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
-            sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
-        });
-        pkRoomInfo.setTotalCoin(sum); // 高能榜总积分
-        pkRoomInfo.setNumber(number); // 高能榜总人数
-
-        // B站房间信息里上限就是7个
-        if (number >= 7)
-        {
-            // 继续加载高能榜
-            getPkOnlineGoldPage();
-        }
-        else
-        {
-            qInfo() << "对面高能榜积分总和：" << sum;
-            // qDebug() << data.o("online_gold_rank_info_v2").a("list");
-            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
-        }
-    });
+//        int number = data.o("online_gold_rank_info_v2").a("list").size();
+//        qint64 sum = 0;
+//        data.o("online_gold_rank_info_v2").each("list", [&](MyJson usr){
+//            sum += usr.s("score").toLongLong(); // 这是String类型， 不是int
+//        });
+//        pkRoomInfo.setTotalCoin(sum); // 高能榜总积分
+//        pkRoomInfo.setNumber(number); // 高能榜总人数
+//
+//        // B站房间信息里上限就是7个
+//        if (number >= 7)
+//        {
+//            // 继续加载高能榜
+//            getPkOnlineGoldPage();
+//        }
+//        else
+//        {
+//            qInfo() << "对面高能榜积分总和：" << sum;
+//            // qDebug() << data.o("online_gold_rank_info_v2").a("list");
+//            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
+//        }
 }
 
 void BiliLiveService::getPkOnlineGoldPage(int page)
