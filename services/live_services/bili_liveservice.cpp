@@ -1357,7 +1357,9 @@ void BiliLiveService::getPkOnlineGuardPageNew2(int page)
 
 void BiliLiveService::getGiftList()
 {
-    get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId,
+
+//  get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/giftConfig?platform=pc&room_id=" + ac->roomId,
+    get("https://api.live.bilibili.com/xlive/web-room/v1/giftPanel/roomGiftList?platform=pc&room_id=" + ac->roomId,
         [=](MyJson json)
         {
             if (json.code() != 0)
@@ -1367,25 +1369,61 @@ void BiliLiveService::getGiftList()
             }
 
             pl->allGiftMap.clear();
-            auto list = json.data().a("list");
-            for (QJsonValue val : list)
+            auto list = json.data().o("gift_config").o("base_config").a("list");
+            for (const QJsonValueRef val : list)
             {
                 MyJson info = val.toObject();
                 int id = info.i("id");
                 int bag = info.i("bag_gift");
-                if (!bag)
+                if (bag)
                     continue;
                 QString name = info.s("name");
                 QString coinType = info.s("coin_type");
                 int coin = info.i("price");
                 QString desc = info.s("desc");
                 QString img = info.s("img_basic");
-
                 LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
                 gift.setFaceUrl(img);
                 gift.with(info);
                 pl->allGiftMap[id] = gift;
             }
+            auto roomConfig = json.data().o("gift_config").a("room_config");
+            for (const QJsonValueRef val : roomConfig)
+            {
+                MyJson info = val.toObject();
+                int id = info.i("id");
+                int bag = info.i("bag_gift");
+                if (bag)
+                    continue;
+                QString name = info.s("name");
+                QString coinType = info.s("coin_type");
+                int coin = info.i("price");
+                QString desc = info.s("desc");
+                QString img = info.s("img_basic");
+                LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
+                gift.setFaceUrl(img);
+                gift.with(info);
+                pl->allGiftMap[id] = gift;
+            }
+//            auto list = json.data().a("list");
+//            for (QJsonValue val : list)
+//            {
+//                MyJson info = val.toObject();
+//                int id = info.i("id");
+//                int bag = info.i("bag_gift");
+//                if (!bag)
+//                    continue;
+//                QString name = info.s("name");
+//                QString coinType = info.s("coin_type");
+//                int coin = info.i("price");
+//                QString desc = info.s("desc");
+//                QString img = info.s("img_basic");
+//
+//                LiveDanmaku gift("", id, name, 1, 0, QDateTime(), coinType, coin);
+//                gift.setFaceUrl(img);
+//                gift.with(info);
+//                pl->allGiftMap[id] = gift;
+//            }
             // qInfo() << "直播间礼物数量：" << pl->allGiftMap.size();
         });
 }
