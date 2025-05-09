@@ -3586,6 +3586,7 @@ void BiliLiveService::pkEnd(QJsonObject json)
     emit signalBattleFinished();
 
     QString bestName = "";
+    qint64 bestUid = 0;
     int winnerType = 0;
     if (snum(thisRoomId) == ac->roomId) // init是自己
     {
@@ -3593,6 +3594,18 @@ void BiliLiveService::pkEnd(QJsonObject json)
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("init_info").toObject().value("best_uname").toString();
         winnerType = winnerType1;
+        QJsonArray assist_info = data.value("init_info").toObject().value("assist_info").toArray();
+        for(const QJsonValueRef& one_assist_info : assist_info)
+        {
+            const QJsonValue& one_assist_info_object = one_assist_info.toObject();
+            qint32 rank = one_assist_info_object["rank"].toInt();
+            if (rank == 1)
+            {
+                bestUid = one_assist_info_object["uid"].toInt();
+//                bestName = one_assist_info_object["uname"].toString();
+                break;
+            }
+        }
     }
     else // match是自己
     {
@@ -3600,23 +3613,34 @@ void BiliLiveService::pkEnd(QJsonObject json)
         myVotes = data.value("match_info").toObject().value("votes").toInt();
         bestName = data.value("match_info").toObject().value("best_uname").toString();
         winnerType = winnerType2;
+        QJsonArray assist_info = data.value("match_info").toObject().value("assist_info").toArray();
+        for(const QJsonValueRef& one_assist_info : assist_info)
+        {
+            const QJsonValue& one_assist_info_object = one_assist_info.toObject();
+            qint32 rank = one_assist_info_object["rank"].toInt();
+            if (rank == 1)
+            {
+                bestUid = one_assist_info_object["uid"].toInt();
+//                bestName = one_assist_info_object["uname"].toString();
+                break;
+            }
+        }
     }
 
     bool ping = winnerType1 == winnerType2;
     bool result = winnerType > 0;
 
-    qint64 bestUid = 0;
     int winCode = 0;
     if (!ping)
         winCode = winnerType;
     if (myVotes > 0)
     {
-        for (int i = pkGifts.size()-1; i >= 0; i--)
-            if (pkGifts.at(i).getNickname() == bestName)
-            {
-                bestUid = pkGifts.at(i).getUid();
-                break;
-            }
+//        for (int i = pkGifts.size()-1; i >= 0; i--)
+//            if (pkGifts.at(i).getNickname() == bestName)
+//            {
+//                bestUid = pkGifts.at(i).getUid();
+//                break;
+//            }
         LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
     }
