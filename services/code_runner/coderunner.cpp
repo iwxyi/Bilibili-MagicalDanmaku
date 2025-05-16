@@ -1319,7 +1319,8 @@ QString CodeRunner::replaceDanmakuVariants(const LiveDanmaku& danmaku, const QSt
     else if (key == "%room_id%")
         return ac->roomId;
     else if (key == "%room_name%" || key == "%room_title%")
-        return ac->roomTitle;
+        return toSingleLine(ac->roomTitle);
+//        return ac->roomTitle;
     else if (key == "%up_name%" || key == "%up_uname%")
         return ac->upName;
     else if (key == "%up_uid%")
@@ -2780,6 +2781,13 @@ QString CodeRunner::toSingleLine(QString text) const
 QString CodeRunner::toMultiLine(QString text) const
 {
     return text.replace("%n%", "\n").replace("%m%", "\\n").replace("\\\"", "\"");
+}
+/**
+ * postJson中  数据来源不管怎么回事 但是json中的转义 不能直接把%n%转义为\n 得转义为\\n
+ */
+QString CodeRunner::toMultiLineForJson(QString text) const
+{
+    return text.replace("%n%", "\\n").replace("%m%", "\\n").replace("\\\"", "\"");
 }
 
 QString CodeRunner::toRunableCode(QString text) const

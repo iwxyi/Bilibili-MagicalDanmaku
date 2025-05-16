@@ -1203,7 +1203,8 @@ bool MainWindow::execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse &res, i
             qInfo() << "执行命令：" << caps;
             QString url = caps.at(1);
             QString data = caps.at(2);
-            data = cr->toMultiLine(data);
+            // json里的换行 不能直接把%n%转义为\n，而是应该转义为\\n
+            data = cr->toMultiLineForJson(data);
             QString callback = caps.size() > 3 ? caps.at(3) : "";
             postJson(url, data.toStdString().data(), [=](QNetworkReply* reply){
                 QByteArray ba(reply->readAll());
