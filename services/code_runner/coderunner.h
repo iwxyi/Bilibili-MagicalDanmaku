@@ -121,6 +121,7 @@ public:
     QString toFilePath(const QString& fileName) const;
     QString toSingleLine(QString text) const;
     QString toMultiLine(QString text) const;
+    QString toMultiLineForJson(QString text) const;
     QString toRunableCode(QString text) const;
     qint64 unameToUid(QString text);
     QString uidToName(qint64 uid);
