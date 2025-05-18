@@ -1871,8 +1871,8 @@ margin: 6px;</string>
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>30</height>
+             <width>935</width>
+             <height>1803</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -4139,6 +4139,9 @@ margin: 40px;</string>
                </property>
                <item>
                 <widget class="CheckBox1" name="acquireHeartCheck">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
                  </property>
@@ -4152,6 +4155,9 @@ margin: 40px;</string>
                </item>
                <item>
                 <widget class="QSpinBox" name="heartTimeSpin">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="contextMenuPolicy">
                   <enum>Qt::NoContextMenu</enum>
                  </property>
@@ -4940,7 +4946,7 @@ margin: 40px;</string>
               <x>370</x>
               <y>660</y>
               <width>161</width>
-              <height>111</height>
+              <height>171</height>
              </rect>
             </property>
             <property name="styleSheet">
@@ -5017,6 +5023,39 @@ margin: 40px;</string>
                </property>
                <property name="text">
                 <string>打印日志</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="UAButton">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
+{
+	background: transparent;
+	border: 1px solid lightgray;
+	padding: 2px 4px 2px 4px;
+}
+
+QPushButton:hover
+{
+	background: #eeeeee;
+}
+
+QPushButton:pressed
+{
+	background: #cccccc;
+}
+
+</string>
+               </property>
+               <property name="text">
+                <string>自定义UserAgent</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -6782,6 +6821,9 @@ margin: 40px;</string>
             </layout>
            </widget>
            <widget class="QWidget" name="feedbackCard" native="true">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="geometry">
              <rect>
               <x>189</x>
@@ -10923,8 +10965,7 @@ font-weight: 500;</string>
      <x>0</x>
      <y>0</y>
      <width>1017</width>
-     <height>37</height>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_2">

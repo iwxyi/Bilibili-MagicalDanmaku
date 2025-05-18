@@ -11,6 +11,7 @@
 #include <QDesktopServices>
 #include "guardonlinedialog.h"
 #include "ui_guardonlinedialog.h"
+#include "usersettings.h"
 
 GuardOnlineDialog::GuardOnlineDialog(QSettings *settings, QString roomId, QString upUid, QWidget *parent) :
     QDialog(parent),
@@ -71,7 +72,8 @@ void GuardOnlineDialog::refreshOnlineGuards(int page)
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString ua = us->value("debug/userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36").toString();
+    request->setHeader(QNetworkRequest::UserAgentHeader, ua);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){
         QByteArray ba = reply->readAll();
         manager->deleteLater();

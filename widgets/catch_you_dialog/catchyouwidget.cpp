@@ -19,6 +19,7 @@
 #include "catchyouwidget.h"
 #include "ui_catchyouwidget.h"
 #include "livevideoplayer.h"
+#include "usersettings.h"
 
 CatchYouWidget::CatchYouWidget(QSettings *settings, QString dataPath, QWidget *parent) :
     QWidget(parent),
@@ -348,7 +349,8 @@ void CatchYouWidget::get(QString url, std::function<void(QJsonObject)> const fun
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    QString ua = us->value("debug/userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36").toString();
+    request->setHeader(QNetworkRequest::UserAgentHeader, ua);
     if (url.contains("bilibili.com"))
         request->setHeader(QNetworkRequest::CookieHeader, ac->userCookies);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply){

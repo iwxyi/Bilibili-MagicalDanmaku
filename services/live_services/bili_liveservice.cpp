@@ -4688,7 +4688,7 @@ void BiliLiveService::showFollowCountInAction(qint64 uid, QLabel* statusLabel, Q
     QNetworkAccessManager* manager = new QNetworkAccessManager;
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
     connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
         QByteArray data = reply->readAll();
         manager->deleteLater();
@@ -4737,7 +4737,7 @@ void BiliLiveService::showViewCountInAction(qint64 uid, QLabel* statusLabel, QAc
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
     connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
         QByteArray ba = reply->readAll();
         manager->deleteLater();
@@ -4803,7 +4803,7 @@ void BiliLiveService::showGuardInAction(qint64 roomId, qint64 uid, QLabel* statu
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
     connect(manager, &QNetworkAccessManager::finished, action, [=](QNetworkReply* reply){
         QByteArray ba = reply->readAll();
         manager->deleteLater();
@@ -4842,7 +4842,7 @@ void BiliLiveService::showPkLevelInAction(qint64 roomId, QLabel* statusLabel, QA
     QNetworkRequest* request = new QNetworkRequest(url);
     request->setHeader(QNetworkRequest::CookieHeader, getCookies());
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-    request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+    request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent().toLocal8Bit());
     connect(manager, &QNetworkAccessManager::finished, actionUser, [=](QNetworkReply* reply){
         QByteArray ba = reply->readAll();
         manager->deleteLater();
