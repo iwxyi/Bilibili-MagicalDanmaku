@@ -109,7 +109,7 @@ public:
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-        //request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
             request->setHeader(QNetworkRequest::CookieHeader, cookies);
 
@@ -175,7 +175,7 @@ public:
         QNetworkRequest* request = new QNetworkRequest(url + "?" +data);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
             request->setHeader(QNetworkRequest::CookieHeader, cookies);
         QObject::connect(manager, &QNetworkAccessManager::finished, me, [=](QNetworkReply* reply){
@@ -238,7 +238,7 @@ public:
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
-        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
             request->setHeader(QNetworkRequest::CookieHeader, cookies);
 
@@ -259,7 +259,7 @@ public:
         QNetworkRequest* request = new QNetworkRequest(url);
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=UTF-8");
-        request->setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
         if (cookies.isValid())
             request->setHeader(QNetworkRequest::CookieHeader, cookies);
 
@@ -307,8 +307,22 @@ public:
         return var;
     }
 
+    void setUserAgent(const QString& ua)
+    {
+        qInfo() << "设置UA：" << ua;
+        userAgent = ua;
+    }
+
+    QString getUserAgent() const
+    {
+        if (userAgent.isEmpty())
+            return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36";
+        return userAgent;
+    }
+
 protected:
     QObject* me = nullptr;
+    QString userAgent;
 };
 
 #endif // NETINTERFACE_H

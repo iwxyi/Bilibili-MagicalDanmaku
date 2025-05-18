@@ -738,6 +738,8 @@ private slots:
 
     void on_chatGPTModelNameCombo_editTextChanged(const QString &arg1);
 
+    void on_UAButton_clicked();
+
 private:
     void initView();
     void initStyle();

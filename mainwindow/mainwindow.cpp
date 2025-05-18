@@ -798,6 +798,9 @@ void MainWindow::initLiveService()
     cr->setLiveService(liveService);
     liveService->setSqlService(&sqlService);
 
+    /// 配置
+    liveService->setUserAgent(us->value("debug/userAgent", "").toString());
+    
     /// 账号操作
     connect(liveService, &LiveRoomService::signalRobotAccountChanged, this, [=]{
         ui->robotNameButton->setText(ac->cookieUname);
@@ -11081,3 +11084,14 @@ void MainWindow::on_chatGPTModelNameCombo_editTextChanged(const QString &arg1)
 {
     on_chatGPTModelNameCombo_activated(arg1);
 }
+
+void MainWindow::on_UAButton_clicked()
+{
+    bool ok = false;
+    QString ua = QInputDialog::getText(this, "UA", "请输入UA", QLineEdit::Normal, liveService->getUserAgent(), &ok);
+    if (!ok)
+        return ;
+    liveService->setUserAgent(ua);
+    us->setValue("debug/userAgent", ua);
+}
+
