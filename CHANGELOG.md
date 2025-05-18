@@ -1,3 +1,20 @@
+### v5.2.0 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
+
+- 新增自定义UserAgent
+- 修复部分网络连接UA的问题
+以下感谢用户 @TiAmoPlus 的PR：
+- 修复直播间标题多行时的情况
+- 优化PostJson函数中换行的处理
+- 修复PK时无法获取到最佳助攻的问题
+- 修改礼物ID列表接口，适配直播间礼物列表
+- 修复默认代码中PK_FINAL的遗留问题
+- 修复README中下播事件写作PREPARE的问题
+
+
+
+
+
+
 ### v5.1.0 [代码支持多种编程语言](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.1.0)
 
 - 新增代码支持 JavaScript、Python、Lua 三种编程语言，并且可参与读写配置数据
