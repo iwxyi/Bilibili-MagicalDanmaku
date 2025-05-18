@@ -3788,30 +3788,45 @@ void BiliLiveService::pkSettle(QJsonObject json)
 
     QString bestName = "";
     int winCode = 0;
+    qint64 bestUid = 0;
     if (snum(thisRoomId) == ac->roomId) // init是自己
     {
         myVotes = data.value("init_info").toObject().value("votes").toInt();
         matchVotes = data.value("match_info").toObject().value("votes").toInt();
-        bestName = data.value("init_info").toObject().value("best_uname").toString();
         winCode = winnerType1;
+        QJsonArray assist_info = data.value("init_info").toObject().value("assist_info").toArray();
+        for(const QJsonValueRef& one_assist_info : assist_info)
+        {
+            const QJsonValue& one_assist_info_object = one_assist_info.toObject();
+            qint32 rank = one_assist_info_object["rank"].toInt();
+            if (rank == 1)
+            {
+                bestUid = one_assist_info_object["uid"].toInt();
+                bestName = one_assist_info_object["uname"].toString();
+                break;
+            }
+        }
     }
     else // match是自己
     {
         matchVotes = data.value("init_info").toObject().value("votes").toInt();
         myVotes = data.value("match_info").toObject().value("votes").toInt();
-        bestName = data.value("match_info").toObject().value("best_uname").toString();
         winCode = winnerType2;
-    }
-
-    qint64 bestUid = 0;
-    if (myVotes > 0)
-    {
-        for (int i = pkGifts.size()-1; i >= 0; i--)
-            if (pkGifts.at(i).getNickname() == bestName)
+        QJsonArray assist_info = data.value("match_info").toObject().value("assist_info").toArray();
+        for(const QJsonValueRef& one_assist_info : assist_info)
+        {
+            const QJsonValue& one_assist_info_object = one_assist_info.toObject();
+            qint32 rank = one_assist_info_object["rank"].toInt();
+            if (rank == 1)
             {
-                bestUid = pkGifts.at(i).getUid();
+                bestUid = one_assist_info_object["uid"].toInt();
+                bestName = one_assist_info_object["uname"].toString();
                 break;
             }
+        }
+    }
+    if (myVotes > 0)
+    {
         LiveDanmaku danmaku(bestName, bestUid, winCode, myVotes);
         triggerCmdEvent("PK_BEST_UNAME", danmaku.with(data), true);
     }
