@@ -134,6 +134,7 @@ signals:
     void signalNewHour();
     void signalNewDay();
     void signalUpdatePermission();
+    void signalUnblockControl(); // 尝试解除风控
 
 public slots:
     virtual void startConnect() {}

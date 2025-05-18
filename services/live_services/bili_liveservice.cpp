@@ -590,9 +590,15 @@ void BiliLiveService::getDanmuInfo()
 {
     QString url = "https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id="+ac->roomId+"&type=0";
     get(url, [=](QJsonObject json) {
-        if (json.value("code").toInt() != 0)
+        int code = json.value("code").toInt();
+        if (code != 0)
         {
             qCritical() << s8("获取弹幕信息返回结果不为0：") << json.value("message").toString();
+            // -352尝试触发封控解除
+            if (code == -352)
+            {
+                
+            }
             return ;
         }
 
