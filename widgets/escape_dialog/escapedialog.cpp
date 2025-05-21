@@ -154,8 +154,6 @@ int EscapeDialog::getRandom(int min, int max)
 {
 #if defined (Q_OS_WIN) || defined(Q_OS_LINUX)
     return static_cast<int>(mt() % static_cast<unsigned long>((max-min+1))) + min;
-#elif defined(Q_OS_MAC)
-
 #else
     return rand() % (max-min+1) + min;
 #endif
