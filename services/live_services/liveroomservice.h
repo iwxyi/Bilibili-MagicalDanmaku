@@ -67,6 +67,7 @@ signals:
     void signalNewGuardBuy(const LiveDanmaku& danmaku); // 有人上舰长
 
     void signalRobotAccountChanged();
+    void signalSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
     void signalRoomIdChanged(const QString &roomId); // 房间号改变，例如通过解析身份码导致的房间ID变更
     void signalUpUidChanged(const QString &uid);
     void signalUpFaceChanged(const QPixmap& pixmap);
@@ -178,6 +179,7 @@ public slots:
 public:
     /// 获取机器人账号信息
     virtual void getCookieAccount() = 0;
+    virtual void getAccountByCookie(const QString& cookie) = 0;
     QVariant getCookies() const;
     /// 获取机器人账号信息
     virtual void getRobotInfo() = 0;

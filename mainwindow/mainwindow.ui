@@ -10475,7 +10475,7 @@ QTabBar::tab:selected
              </widget>
             </item>
             <item>
-             <widget class="QTreeWidget" name="subAccountTreeWidget">
+             <widget class="QTableWidget" name="subAccountTableWidget">
               <property name="styleSheet">
                <string notr="true">#subAccountTreeWidget
 {
@@ -10484,21 +10484,6 @@ QTabBar::tab:selected
 	border-radius: 5px;
 }</string>
               </property>
-              <column>
-               <property name="text">
-                <string>ID</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>UID</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>昵称</string>
-               </property>
-              </column>
              </widget>
             </item>
            </layout>

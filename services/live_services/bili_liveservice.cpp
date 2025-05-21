@@ -211,6 +211,29 @@ void BiliLiveService::getCookieAccount()
     });
 }
 
+void BiliLiveService::getAccountByCookie(const QString& cookie)
+{
+    get("https://api.bilibili.com/x/member/web/account", [=](QJsonObject json){
+        if (json.value("code").toInt() != 0)
+        {
+            showError("子账号登录返回不为0", json.value("message").toString());
+            return ;
+        }
+
+        // 获取用户信息
+        QJsonObject dataObj = json.value("data").toObject();
+        ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
+        ac->cookieUname = dataObj.value("uname").toString();
+        qInfo() << "子账号：" << ac->cookieUid << ac->cookieUname;
+        
+        SubAccount subAccount;
+        subAccount.uid = ac->cookieUid;
+        subAccount.nickname = ac->cookieUname;
+        subAccount.cookie = cookie;
+        emit signalSubAccountChanged(cookie, subAccount);
+    }, cookie);
+}
+
 void BiliLiveService::getNavInfo(NetVoidFunc finalFunc)
 {
     get("https://api.bilibili.com/x/web-interface/nav", [=](QJsonObject json){

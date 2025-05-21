@@ -740,6 +740,14 @@ private slots:
 
     void on_UAButton_clicked();
 
+    void on_addSubAccountButton_clicked();
+
+    void on_refreshSubAccountButton_clicked();
+
+    void on_subAccountDescButton_clicked();
+
+    void on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos);
+
 private:
     void initView();
     void initStyle();
@@ -792,6 +800,7 @@ private:
     QVariant getCookies() const;
     void saveSubAccount();
     void restoreSubAccount();
+    void updateSubAccount();
     QString getDomainPort() const;
     void startConnectIdentityCode();
     void startConnectRoom();

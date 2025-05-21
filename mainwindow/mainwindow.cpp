@@ -1269,6 +1269,33 @@ void MainWindow::initLiveService()
         ui->positiveVoteCheck->setChecked(like);
     });
 
+    // 子账号
+    connect(liveService, &LiveRoomService::signalSubAccountChanged, this, [=](const QString& cookie, const SubAccount& subAccount) {
+        // 如果有cookie，那么进行更新
+        int index = -1;
+        for (int i = 0; i < us->subAccounts.size(); i++)
+        {
+            if (us->subAccounts[i].cookie == cookie)
+            {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1)
+        {
+            us->subAccounts.append(subAccount);
+            qInfo() << "添加子账号：" << subAccount.uid << subAccount.nickname;
+        }
+        else
+        {
+            us->subAccounts[index] = subAccount;
+            qInfo() << "设置子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
+        }
+        saveSubAccount();
+        updateSubAccount();
+    });
+
 }
 
 /// 读取 settings 中的变量，并进行一系列初始化操作
@@ -4511,11 +4538,11 @@ void MainWindow::saveSubAccount()
         us->setValue("subAccount/r" + QString::number(i) + "/cookie", subAccount.cookie);
         us->setValue("subAccount/r" + QString::number(i) + "/loginTime", subAccount.loginTime);
     }
+    qInfo() << "保存子账号" << us->subAccounts.size() << "个";
 }
 
 void MainWindow::restoreSubAccount()
 {
-    us->subAccounts.clear();
     int count = us->value("subAccount/count", 0).toInt();
     for (int i = 0; i < count; i++)
     {
@@ -4526,8 +4553,26 @@ void MainWindow::restoreSubAccount()
         subAccount.loginTime = us->value("subAccount/r" + QString::number(i) + "/loginTime").toLongLong();
         us->subAccounts.append(subAccount);
     }
+    qInfo() << "恢复子账号" << us->subAccounts.size() << "个";
+    updateSubAccount();
 }
 
+void MainWindow::updateSubAccount()
+{
+    ui->subAccountTableWidget->clear();
+    ui->subAccountTableWidget->setColumnCount(3);
+    ui->subAccountTableWidget->setHorizontalHeaderLabels(QStringList() << "序号" << "UID" << "昵称");
+    ui->subAccountTableWidget->setRowCount(us->subAccounts.size());
+    ui->subAccountTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        auto subAccount = us->subAccounts[i];
+        ui->subAccountTableWidget->setItem(i, 0, new QTableWidgetItem(snum(i + 1)));
+        ui->subAccountTableWidget->setItem(i, 1, new QTableWidgetItem(subAccount.uid));
+        ui->subAccountTableWidget->setItem(i, 2, new QTableWidgetItem(subAccount.nickname));
+        qDebug() << "更新子账号" << (i+1) << "：" << subAccount.uid << subAccount.nickname;
+    }
+}
 QString MainWindow::getDomainPort() const
 {
     QString domain = ui->domainEdit->text().trimmed();
@@ -11142,5 +11187,67 @@ void MainWindow::on_UAButton_clicked()
         return ;
     liveService->setUserAgent(ua);
     us->setValue("debug/userAgent", ua);
+}
+
+
+void MainWindow::on_addSubAccountButton_clicked()
+{
+    newFacileMenu;
+    menu->addAction("通过Cookie添加", [=]{
+        menu->close();
+        bool ok;
+        QString cookie = QInputDialog::getText(this, "Cookie", "请输入Cookie", QLineEdit::Normal, "", &ok);
+        if (!ok || cookie.isEmpty())
+            return ;
+        
+        // 检查账号信息
+        qInfo() << "添加子账号Cookie：" << cookie;
+        if (cookie.contains("bili_jct="))
+        {
+            // 通过Cookie添加
+            QString jct = cookie.split("bili_jct=").last().split(";").first();
+            if (jct.isEmpty())
+            {
+                QMessageBox::warning(this, "错误", "Cookie格式错误，无法获取 bili_jct，请检查");
+                return ;
+            }
+            
+            // 联网判断账号
+            liveService->getAccountByCookie(cookie);
+        }
+        else
+        {
+            QMessageBox::warning(this, "错误", "Cookie格式错误，请检查");
+        }
+    });
+    menu->addAction("通过二维码添加", [=]{
+        menu->close();
+
+        // 显示二维码窗口
+        QRCodeLoginDialog* dialog = new QRCodeLoginDialog(this);
+        connect(dialog, &QRCodeLoginDialog::logined, this, [=](QString s){
+            liveService->getAccountByCookie(s);
+        });
+        dialog->exec();
+    });
+    menu->exec();
+}
+
+
+void MainWindow::on_refreshSubAccountButton_clicked()
+{
+
+}
+
+
+void MainWindow::on_subAccountDescButton_clicked()
+{
+
+}
+
+
+void MainWindow::on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos)
+{
+
 }
 
