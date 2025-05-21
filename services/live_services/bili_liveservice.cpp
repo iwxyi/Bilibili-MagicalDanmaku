@@ -3309,6 +3309,7 @@ void BiliLiveService::getPkMatchInfo()
 //            // qDebug() << data.o("online_gold_rank_info_v2").a("list");
 //            triggerCmdEvent("PK_MATCH_INFO", pkRoomInfo, true);
 //        }
+    });
 }
 
 void BiliLiveService::getPkOnlineGoldPage(int page)

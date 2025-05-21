@@ -1,4 +1,4 @@
-### v5.2.0 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.2.0)
+### v5.1.1 [修复bug](https://github.com/iwxyi/Bilibili-MagicalDanmaku/releases/tag/v5.1.1)
 
 - 新增自定义UserAgent
 - 修复部分网络连接UA的问题

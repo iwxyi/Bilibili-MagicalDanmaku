@@ -7,7 +7,7 @@
 #include <QDir>
 
 #define APP_ID 0
-#define APP_VERSION "5.2.0"
+#define APP_VERSION "5.1.1"
 #define LOCAL_MODE 0
 
 #if true
