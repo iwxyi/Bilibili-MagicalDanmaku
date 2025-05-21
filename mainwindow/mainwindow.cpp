@@ -512,6 +512,24 @@ void MainWindow::initView()
     ui->vipDatabaseButton->setBgColor(Qt::white);
     ui->vipDatabaseButton->setRadius(rt->fluentRadius);
 
+    // 子账号系统
+    QList<InteractiveButtonBase*> subAccountButtons = {
+        ui->addSubAccountButton,
+        ui->refreshSubAccountButton,
+        ui->subAccountDescButton
+    };
+    foreach (auto btn, subAccountButtons)
+    {
+        btn->setAttribute(Qt::WA_LayoutUsesWidgetRect);
+        btn->setBorderColor(Qt::lightGray);
+        btn->setSquareSize();
+        btn->setRadius(0);
+        btn->setFixedForePos();
+        btn->setCursor(Qt::PointingHandCursor);
+        btn->setBgColor(Qt::white);
+    }
+    ui->horizontalLayout_8->activate();
+    
     // 数据中心页面
 
 
@@ -1874,6 +1892,9 @@ void MainWindow::readConfig()
     // 恢复游戏数据
     restoreGameNumbers();
     restoreGameTexts();
+
+    // 子账号系统
+    restoreSubAccount();
 }
 
 /**
@@ -4477,6 +4498,34 @@ QVariant MainWindow::getCookies() const
     QVariant var;
     var.setValue(cookies);
     return var;
+}
+
+void MainWindow::saveSubAccount()
+{
+    us->setValue("subAccount/count", us->subAccounts.size());
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        auto subAccount = us->subAccounts[i];
+        us->setValue("subAccount/r" + QString::number(i) + "/uid", subAccount.uid);
+        us->setValue("subAccount/r" + QString::number(i) + "/nickname", subAccount.nickname);
+        us->setValue("subAccount/r" + QString::number(i) + "/cookie", subAccount.cookie);
+        us->setValue("subAccount/r" + QString::number(i) + "/loginTime", subAccount.loginTime);
+    }
+}
+
+void MainWindow::restoreSubAccount()
+{
+    us->subAccounts.clear();
+    int count = us->value("subAccount/count", 0).toInt();
+    for (int i = 0; i < count; i++)
+    {
+        SubAccount subAccount;
+        subAccount.uid = us->value("subAccount/r" + QString::number(i) + "/uid").toString();
+        subAccount.nickname = us->value("subAccount/r" + QString::number(i) + "/nickname").toString();
+        subAccount.cookie = us->value("subAccount/r" + QString::number(i) + "/cookie").toString();
+        subAccount.loginTime = us->value("subAccount/r" + QString::number(i) + "/loginTime").toLongLong();
+        us->subAccounts.append(subAccount);
+    }
 }
 
 QString MainWindow::getDomainPort() const

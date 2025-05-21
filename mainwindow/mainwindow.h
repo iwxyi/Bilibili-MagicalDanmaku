@@ -790,6 +790,8 @@ private:
 
     void autoSetCookie(const QString &s);
     QVariant getCookies() const;
+    void saveSubAccount();
+    void restoreSubAccount();
     QString getDomainPort() const;
     void startConnectIdentityCode();
     void startConnectRoom();
