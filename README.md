@@ -1183,7 +1183,9 @@ tips：
 | `(ac:开始序号-结束序号)` | 账号的序号范围，在其中随机使用一个   |
 | `(ac:UID)`               | 使用指定UID的账号                    |
 
-##### 示例：使用子账号来欢迎舰长
+如果使用了 `sendRoomMsg(roomId, msg)` 等发送弹幕，那么同样将支持子账号功能。
+
+##### 示例：使用子账号
 
 ```
 [%guard%=1]*(ac:1,cd10:5)欢迎舰长~
@@ -1223,9 +1225,9 @@ tips：
 | execRemoteCommand(cmd)                             | 执行远程命令     | 执行远程控制（见下面）                                       |
 | execRemoteCommand(cmd, 0)                          | 执行远程命令     | 执行远程控制，不发送回馈通知                                 |
 | sendPrivateMsg(uid, msg)                           | 发送私信         | 向指定用户发送私信                                           |
-| sendRoomMsg(roomId, msg)                           | 发送直播间弹幕   | 向指定直播间发送弹幕（注意：该操作不参与发送的队列，频繁使用可能导致发送过快） |
-| sendRoomEmoji(roomId, emojiId)                     | 发送直播间表情   | 向指定直播间发送表情（注意：同上）                           |
-| sendEmoji(emojiId)                                 | 发送表情         | 上面命令的省略房号版（注意：同上）                           |
+| sendRoomMsg(roomId, msg)                           | 发送直播间弹幕   | 向指定直播间发送弹幕。如果使用了“子账号”选项，那么将使用指定账号发送。（注意：该操作不参与发送的队列，频繁使用可能导致发送过快） |
+| sendRoomEmoji(roomId, emojiId)                     | 发送直播间表情   | 向指定直播间发送表情，支持子账号（注意：同上）               |
+| sendEmoji(emojiId)                                 | 发送表情         | 上面命令的省略房号版，支持子账号（注意：同上）               |
 | showScreenDanmu(text)                              | 显示全屏弹幕     | 将text作为本地全屏移动的弹幕显示，受相关设置影响，需打开“全屏弹幕” |
 | timerShot(msecond, msg)                            | 延迟发送         | 定时多少**毫秒**后发送弹幕msg（msg允许为另一命令，多个命令使用 `%m%` 分隔） |
 | localNotify(msg)                                   | 本地通知         | 发送本地消息通知（非弹幕，只有自己看得到）                   |
