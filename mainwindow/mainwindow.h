@@ -801,6 +801,7 @@ private:
     void saveSubAccount();
     void restoreSubAccount();
     void updateSubAccount();
+    void refreshUndetectedSubAccount();
     QString getDomainPort() const;
     void startConnectIdentityCode();
     void startConnectRoom();
@@ -1019,6 +1020,9 @@ private:
 
     // 粉丝档案
     FansArchivesService* fansArchivesService = nullptr;
+
+    // 子账号
+    bool _flag_detectingAllSubAccount = false;
 };
 
 class RequestBodyHelper : public QObject

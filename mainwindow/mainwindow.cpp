@@ -1282,18 +1282,26 @@ void MainWindow::initLiveService()
             }
         }
 
+        SubAccount sa = subAccount;
+        sa.loginTime = QDateTime::currentSecsSinceEpoch();
+        sa.hasDetected = true;
         if (index == -1)
         {
-            us->subAccounts.append(subAccount);
+            sa.status = "已登录";
+            us->subAccounts.append(sa);
             qInfo() << "添加子账号：" << subAccount.uid << subAccount.nickname;
         }
         else
         {
-            us->subAccounts[index] = subAccount;
+            sa.status = "可用";
+            us->subAccounts[index] = sa;
             qInfo() << "设置子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
         }
         saveSubAccount();
         updateSubAccount();
+
+        if (_flag_detectingAllSubAccount)
+            refreshUndetectedSubAccount();
     });
 
 }
@@ -4560,8 +4568,8 @@ void MainWindow::restoreSubAccount()
 void MainWindow::updateSubAccount()
 {
     ui->subAccountTableWidget->clear();
-    ui->subAccountTableWidget->setColumnCount(3);
-    ui->subAccountTableWidget->setHorizontalHeaderLabels(QStringList() << "序号" << "UID" << "昵称");
+    ui->subAccountTableWidget->setColumnCount(5);
+    ui->subAccountTableWidget->setHorizontalHeaderLabels(QStringList() << "序号" << "UID" << "昵称" << "时间" << "状态");
     ui->subAccountTableWidget->setRowCount(us->subAccounts.size());
     ui->subAccountTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     for (int i = 0; i < us->subAccounts.size(); i++)
@@ -4570,9 +4578,39 @@ void MainWindow::updateSubAccount()
         ui->subAccountTableWidget->setItem(i, 0, new QTableWidgetItem(snum(i + 1)));
         ui->subAccountTableWidget->setItem(i, 1, new QTableWidgetItem(subAccount.uid));
         ui->subAccountTableWidget->setItem(i, 2, new QTableWidgetItem(subAccount.nickname));
-        qDebug() << "更新子账号" << (i+1) << "：" << subAccount.uid << subAccount.nickname;
+        ui->subAccountTableWidget->setItem(i, 3, new QTableWidgetItem(QDateTime::fromSecsSinceEpoch(subAccount.loginTime).toString("yyyy-MM-dd HH:mm:ss")));
+        ui->subAccountTableWidget->setItem(i, 4, new QTableWidgetItem(subAccount.status));
+        qDebug() << "更新子账号界面" << (i+1) << "：" << subAccount.uid << subAccount.nickname;
     }
 }
+
+/**
+ * 按顺序更新账号的信息
+ */
+void MainWindow::refreshUndetectedSubAccount()
+{
+    // 查找第一个没有检测过的
+    int firstIndex = -1;
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        if (!us->subAccounts[i].hasDetected)
+        {
+            firstIndex = i;
+            break;
+        }
+    }
+
+    if (firstIndex == -1)
+    {
+        qInfo() << "没有需要检测的子账号";
+        _flag_detectingAllSubAccount = false;
+        return ;
+    }
+
+    // 更新账号信息
+    liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
+}
+
 QString MainWindow::getDomainPort() const
 {
     QString domain = ui->domainEdit->text().trimmed();
@@ -11233,10 +11271,24 @@ void MainWindow::on_addSubAccountButton_clicked()
     menu->exec();
 }
 
-
+/**
+ * 刷新所有子账号
+ * 通过已有Cookie更新信息，主要是判断Cookie有没有过期
+ * 主要信息的UID、昵称依旧保留
+ */
 void MainWindow::on_refreshSubAccountButton_clicked()
 {
+    // 清空已有状态
+    for (int i = 0; i < us->subAccounts.size(); i++)
+    {
+        us->subAccounts[i].hasDetected = false;
+        us->subAccounts[i].status = "";
+    }
+    updateSubAccount();
+    _flag_detectingAllSubAccount = true;
 
+    // 刷新所有子账号
+    refreshUndetectedSubAccount();
 }
 
 
@@ -11248,6 +11300,24 @@ void MainWindow::on_subAccountDescButton_clicked()
 
 void MainWindow::on_subAccountTableWidget_customContextMenuRequested(const QPoint &pos)
 {
+    int index = ui->subAccountTableWidget->currentRow();
+    if (index == -1)
+        return ;
 
+    newFacileMenu;
+    menu->addAction("设置Cookie", [=]{
+        bool ok;
+        const QString cookie = QInputDialog::getText(this, "Cookie", "请输入Cookie", QLineEdit::Normal, us->subAccounts[index].cookie, &ok);
+        if (!ok || cookie.isEmpty())
+            return ;
+        us->subAccounts[index].cookie = cookie;
+        us->setValue("subAccount/r" + QString::number(index) + "/cookie", cookie);
+        liveService->getAccountByCookie(cookie);
+    });
+    menu->addAction("删除", [=]{
+        us->subAccounts.removeAt(index);
+        saveSubAccount();
+        updateSubAccount();
+    });
+    menu->exec();
 }
-

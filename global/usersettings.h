@@ -12,6 +12,7 @@ struct SubAccount
     qint64 loginTime;
 
     bool hasDetected = false; // 是否检测过有效
+    QString status; // 状态
 };
 
 class UserSettings : public MySettings

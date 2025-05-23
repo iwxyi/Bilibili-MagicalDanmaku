@@ -10414,6 +10414,9 @@ QTabBar::tab:selected
                  </property>
                  <item>
                   <widget class="InteractiveButtonBase" name="addSubAccountButton">
+                   <property name="toolTip">
+                    <string>添加子账号</string>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -10425,6 +10428,10 @@ QTabBar::tab:selected
                  </item>
                  <item>
                   <widget class="InteractiveButtonBase" name="refreshSubAccountButton">
+                   <property name="toolTip">
+                    <string>检查所有子账号的登录状态
+用来判断哪些账号已过期</string>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>
@@ -10451,6 +10458,9 @@ QTabBar::tab:selected
                   <widget class="InteractiveButtonBase" name="subAccountDescButton">
                    <property name="enabled">
                     <bool>false</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>子账号功能的说明</string>
                    </property>
                    <property name="text">
                     <string/>
