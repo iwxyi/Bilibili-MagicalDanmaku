@@ -4,6 +4,9 @@
 
 QString UserSettings::getSubAccountCookie(const QString &arg) const
 {
+    if (arg.isEmpty())
+        return "";
+    
     auto findIndex = [&](int index) -> QString {
         if (index == 0)
             return "";
@@ -12,6 +15,8 @@ QString UserSettings::getSubAccountCookie(const QString &arg) const
             qDebug() << "通过Index找到子账号" << subAccounts[index - 1].nickname << subAccounts[index - 1].uid;
             return subAccounts[index - 1].cookie;
         }
+
+        qWarning() << "子账号Index超出范围" << index;
         return "";
     };
     
@@ -43,6 +48,11 @@ QString UserSettings::getSubAccountCookie(const QString &arg) const
     QRegularExpressionMatch match;
     if (arg.indexOf(re, 0, &match) >= 0)
     {
+        if (subAccounts.size() == 0)
+        {
+            qWarning() << "没有子账号";
+            return "";
+        }
         int start = match.captured(1).toInt();
         int end = match.captured(2).toInt();
         if (start >= 0 && end >= 0 && start <= end && end <= subAccounts.size())
@@ -50,6 +60,8 @@ QString UserSettings::getSubAccountCookie(const QString &arg) const
             int r = qrand() % (end - start + 1) + start;
             return findIndex(r);
         }
+        qWarning() << "子账号Index范围超出范围" << start << "~" << end;
+        return "";
     }
 
     // 判断 UID 或者 nickname 全匹配
@@ -61,5 +73,8 @@ QString UserSettings::getSubAccountCookie(const QString &arg) const
             return sub.cookie;
         }
     }
+
+    // 没有找到的格式
+    qWarning() << "没有找到子账号" << arg;
     return "";
 }
