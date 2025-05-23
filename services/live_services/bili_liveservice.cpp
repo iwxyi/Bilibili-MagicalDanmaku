@@ -217,6 +217,9 @@ void BiliLiveService::getAccountByCookie(const QString& cookie)
         if (json.value("code").toInt() != 0)
         {
             showError("子账号登录返回不为0", json.value("message").toString());
+            SubAccount sa;
+            sa.status = json.value("message").toString();
+            emit signalSubAccountChanged(cookie, sa);
             return ;
         }
 

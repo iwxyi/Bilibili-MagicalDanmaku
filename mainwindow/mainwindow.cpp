@@ -1282,21 +1282,37 @@ void MainWindow::initLiveService()
             }
         }
 
-        SubAccount sa = subAccount;
-        sa.loginTime = QDateTime::currentSecsSinceEpoch();
-        sa.hasDetected = true;
-        if (index == -1)
+        if (subAccount.uid.isEmpty()) // 失效的
         {
-            sa.status = "已登录";
-            us->subAccounts.append(sa);
-            qInfo() << "添加子账号：" << subAccount.uid << subAccount.nickname;
+            if (index == -1)
+            {
+                showError("添加子账号", subAccount.status);
+            }
+            else
+            {
+                us->subAccounts[index].status = subAccount.status;
+                qInfo() << "检测到失效的子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
+            }
         }
-        else
+        else // 可用
         {
-            sa.status = "可用";
-            us->subAccounts[index] = sa;
-            qInfo() << "设置子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
+            SubAccount sa = subAccount;
+            sa.loginTime = QDateTime::currentSecsSinceEpoch();
+            sa.hasDetected = true;
+            if (index == -1)
+            {
+                sa.status = "已登录";
+                us->subAccounts.append(sa);
+                qInfo() << "添加子账号：" << subAccount.uid << subAccount.nickname;
+            }
+            else
+            {
+                sa.status = "可用";
+                us->subAccounts[index] = sa;
+                qInfo() << "设置子账号" << (index+1) << "：" << subAccount.uid << subAccount.nickname;
+            }
         }
+        
         saveSubAccount();
         updateSubAccount();
 
