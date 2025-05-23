@@ -10486,6 +10486,9 @@ QTabBar::tab:selected
             </item>
             <item>
              <widget class="QTableWidget" name="subAccountTableWidget">
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
               <property name="styleSheet">
                <string notr="true">#subAccountTreeWidget
 {
@@ -10493,6 +10496,12 @@ QTabBar::tab:selected
 	border: none;
 	border-radius: 5px;
 }</string>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
               </property>
              </widget>
             </item>

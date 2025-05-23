@@ -103,6 +103,7 @@ INCLUDEPATH += \
     third_party/brotli/include/
 
 SOURCES += \
+    global/usersetting.cpp \
     mainwindow/run_cmd.cpp \
     services/chat_service/chatservice.cpp \
     services/code_runner/chatgptmanager.cpp \

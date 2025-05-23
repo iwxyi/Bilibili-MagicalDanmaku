@@ -95,6 +95,8 @@ public:
             return localNicknames.value(uid);
         return "";
     }
+
+    QString getSubAccountCookie(const QString& arg) const;
 };
 
 extern UserSettings *us;

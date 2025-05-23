@@ -4506,7 +4506,7 @@ void BiliLiveService::processNewDayData()
 /**
  * 发送单条弹幕的原子操作
  */
-void BiliLiveService::sendMsg(const QString& msg)
+void BiliLiveService::sendMsg(const QString& msg, const QString& cookie)
 {
     if (us->localMode)
     {
@@ -4514,13 +4514,13 @@ void BiliLiveService::sendMsg(const QString& msg)
         return ;
     }
 
-    sendRoomMsg(ac->roomId, msg);
+    sendRoomMsg(ac->roomId, msg, cookie);
 }
 
 /**
  * 向指定直播间发送弹幕
  */
-void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
+void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg, const QString& cookie)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
@@ -4681,7 +4681,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
                 localNotify("[错误]" + errorMsg);
             }
         }
-    });
+    }, cookie);
 }
 
 /**
@@ -4689,7 +4689,7 @@ void BiliLiveService::sendRoomMsg(QString roomId, const QString& _msg)
  * 示例：https://api.live.bilibili.com/msg/send,
  * bubble=0&msg=official_147&color=16777215&mode=1&dm_type=1&fontsize=25&rnd=1657851774&roomid=%room_id%&csrf=%csrf%&csrf_token=%csrf%
  */
-void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
+void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id, const QString& cookie)
 {
     if (ac->browserCookie.isEmpty() || ac->browserData.isEmpty())
     {
@@ -4747,7 +4747,7 @@ void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id)
                 localNotify("[错误]" + errorMsg);
             }
         }
-    });
+    }, cookie);
 }
 
 void BiliLiveService::pullLiveDanmaku()

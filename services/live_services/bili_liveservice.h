@@ -147,9 +147,9 @@ public slots:
     void slotPkBinaryMessageReceived(const QByteArray &message) override;
 
     /// 弹幕
-    void sendMsg(const QString& msg) override;
-    void sendRoomMsg(QString roomId, const QString& msg) override;
-    void sendRoomEmoji(QString roomId, const QString& id) override;
+    void sendMsg(const QString& msg, const QString& cookie = "") override;
+    void sendRoomMsg(QString roomId, const QString& msg, const QString& cookie = "") override;
+    void sendRoomEmoji(QString roomId, const QString& id, const QString& cookie = "") override;
     void pullLiveDanmaku() override;
     
     /// 用户管理

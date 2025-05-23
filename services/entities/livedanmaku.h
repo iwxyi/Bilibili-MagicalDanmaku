@@ -594,6 +594,11 @@ public:
         this->wealth_level = level;
     }
 
+    void setSubAccount(QString sub)
+    {
+        this->sub_account = sub;
+    }
+
     QString getText() const
     {
         return text;
@@ -936,6 +941,11 @@ public:
         return wealth_level;
     }
 
+    QString getSubAccount() const
+    {
+        return sub_account;
+    }
+
 protected:
     MessageType msgType = MSG_DANMAKU;
 
@@ -1008,6 +1018,8 @@ protected:
     QString reply_uname_color;
     bool reply_is_mystery = false;
     int reply_type_enum = 0;
+
+    QString sub_account;
 
 public:
     QStringList args;

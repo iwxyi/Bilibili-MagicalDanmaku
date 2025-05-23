@@ -273,6 +273,11 @@ void CodeRunner::slotSendAutoMsg(bool timeout)
     if (!autoMsgQueues.size())
         autoMsgTimer->stop();
 
+    // 判断是否有子账号信息，并提取相关Cookie
+    QString subAccountArg = danmaku->getSubAccount();
+    QString accountCookie = us->getSubAccountCookie(subAccountArg);
+
+    // 弹幕纯文本，或者命令
     CmdResponse res = NullRes;
     int resVal = 0;
     bool exec = execFuncCallback(msg, *danmaku, res, resVal);
@@ -281,9 +286,9 @@ void CodeRunner::slotSendAutoMsg(bool timeout)
         msg = msgToShort(msg);
         addNoReplyDanmakuText(msg);
         if (danmaku->isRetry())
-            liveService->sendRoomMsg(danmaku->getRoomId(), msg);
+            liveService->sendRoomMsg(danmaku->getRoomId(), msg, accountCookie);
         else
-            liveService->sendMsg(msg);
+            liveService->sendMsg(msg, accountCookie);
         inDanmakuCd = true;
         us->setValue("danmaku/robotTotalSend", ++robotTotalSendMsg);
         ui->robotSendCountLabel->setText(snum(robotTotalSendMsg));
@@ -401,6 +406,15 @@ void CodeRunner::sendCdMsg(QString msg, LiveDanmaku danmaku, int cd, int channel
             {
                 forceAdmin = true;
                 continue;
+            }
+
+            // 发送Cookie
+            re.setPattern("^(?:ac|account)\\s*[=:]\\s*(\\S+)$");
+            if (option.indexOf(re, 0, &match) > -1)
+            {
+                caps = match.capturedTexts();
+                QString sub = caps.at(1);
+                danmaku.setSubAccount(sub);
             }
         }
 

@@ -513,6 +513,8 @@ void MainWindow::initView()
     ui->vipDatabaseButton->setRadius(rt->fluentRadius);
 
     // 子账号系统
+    ui->subAccountTableWidget->verticalHeader()->hide();
+    ui->addSubAccountButton->setLeaveAfterClick(true);
     QList<InteractiveButtonBase*> subAccountButtons = {
         ui->addSubAccountButton,
         ui->refreshSubAccountButton,
@@ -4618,13 +4620,17 @@ void MainWindow::refreshUndetectedSubAccount()
 
     if (firstIndex == -1)
     {
-        qInfo() << "没有需要检测的子账号";
+        qInfo() << "所有子账号可用性检查完毕";
         _flag_detectingAllSubAccount = false;
+        ui->refreshSubAccountButton->setEnabled(true);
         return ;
     }
 
     // 更新账号信息
-    liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
+    // 延迟，避免太快遭到屏蔽
+    QTimer::singleShot(2000, this, [=]{
+        liveService->getAccountByCookie(us->subAccounts[firstIndex].cookie);
+    });
 }
 
 QString MainWindow::getDomainPort() const
@@ -11246,6 +11252,12 @@ void MainWindow::on_UAButton_clicked()
 
 void MainWindow::on_addSubAccountButton_clicked()
 {
+    if (!hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        return ;
+    }
+
     newFacileMenu;
     menu->addAction("通过Cookie添加", [=]{
         menu->close();
@@ -11294,6 +11306,12 @@ void MainWindow::on_addSubAccountButton_clicked()
  */
 void MainWindow::on_refreshSubAccountButton_clicked()
 {
+    if (!hasPermission())
+    {
+        on_actionBuy_VIP_triggered();
+        return ;
+    }
+    
     // 清空已有状态
     for (int i = 0; i < us->subAccounts.size(); i++)
     {
@@ -11302,6 +11320,7 @@ void MainWindow::on_refreshSubAccountButton_clicked()
     }
     updateSubAccount();
     _flag_detectingAllSubAccount = true;
+    ui->refreshSubAccountButton->setEnabled(false);
 
     // 刷新所有子账号
     refreshUndetectedSubAccount();

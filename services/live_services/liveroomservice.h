@@ -148,9 +148,9 @@ public slots:
     virtual void slotPkBinaryMessageReceived(const QByteArray& message) {}
 
     /// 发送弹幕
-    virtual void sendMsg(const QString& msg) {}
-    virtual void sendRoomMsg(QString roomId, const QString& msg) {}
-    virtual void sendRoomEmoji(QString roomId, const QString& id) {}
+    virtual void sendMsg(const QString& msg, const QString& cookie = "") {}
+    virtual void sendRoomMsg(QString roomId, const QString& msg, const QString& cookie = "") {}
+    virtual void sendRoomEmoji(QString roomId, const QString& id, const QString& cookie = "") {}
     /// 恢复之前的弹幕
     virtual void pullLiveDanmaku() { }
     /// 设置为管理员
