@@ -1872,7 +1872,7 @@ margin: 6px;</string>
              <x>0</x>
              <y>0</y>
              <width>831</width>
-             <height>655</height>
+             <height>560</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -2303,7 +2303,8 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要显示实时弹幕&lt;/p&gt;&lt;p&gt;开启后，发送AI回复的弹幕&lt;/p&gt;&lt;p&gt;否则只是本地显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>是否回复自己的弹幕（不包含自动发送的，但是可能会误识别）
+开启后，容易导致机器人不断回复自己</string>
                </property>
                <property name="text">
                 <string>回复自己</string>
@@ -7555,14 +7556,7 @@ margin: 40px;</string>
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
                <property name="toolTip">
-                <string>保存以下交互操作到数据库，随时查询与统计：
-- 弹幕
-- 礼物
-- 舰长
-- 进入
-- 点歌
-
-数据库默认位置：安装目录/database.db</string>
+                <string>为所有活跃粉丝自动生成档案记录</string>
                </property>
                <property name="text">
                 <string>启用【捐赠版】</string>

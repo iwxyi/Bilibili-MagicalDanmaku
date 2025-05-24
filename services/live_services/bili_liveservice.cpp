@@ -4721,7 +4721,7 @@ void BiliLiveService::sendRoomEmoji(QString roomId, const QString &id, const QSt
                 errorDesc = "包含直播间屏蔽词";
             }
 
-            showError("发送弹幕失败", errorDesc);
+            showError("发送表情失败", errorDesc);
             localNotify(errorDesc + " -> " + id);
 
             // 重试

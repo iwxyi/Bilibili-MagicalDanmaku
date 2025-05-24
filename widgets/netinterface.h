@@ -114,7 +114,11 @@ public:
         {
             // 如果是字符串
             if (cookies.type() == QVariant::String)
-                request->setRawHeader("Cookie", cookies.toString().toUtf8());
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
             else
                 request->setHeader(QNetworkRequest::CookieHeader, cookies);
         }
@@ -186,7 +190,11 @@ public:
         {
             // 如果是字符串
             if (cookies.type() == QVariant::String)
-                request->setRawHeader("Cookie", cookies.toString().toUtf8());
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
             else
                 request->setHeader(QNetworkRequest::CookieHeader, cookies);
         }
@@ -251,11 +259,15 @@ public:
         setUrlCookie(url, request);
         request->setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded; charset=UTF-8");
         request->setHeader(QNetworkRequest::UserAgentHeader, getUserAgent());
-        if (cookies.isValid())
+        if (cookies.isValid() && !cookies.isNull())
         {
             // 如果是字符串
             if (cookies.type() == QVariant::String)
-                request->setRawHeader("Cookie", cookies.toString().toUtf8());
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
             else
                 request->setHeader(QNetworkRequest::CookieHeader, cookies);
         }
@@ -282,7 +294,11 @@ public:
         {
             // 如果是字符串
             if (cookies.type() == QVariant::String)
-                request->setRawHeader("Cookie", cookies.toString().toUtf8());
+            {
+                QString c = cookies.toString();
+                if (!c.isEmpty())
+                    request->setRawHeader("Cookie", c.toUtf8());
+            }
             else
                 request->setHeader(QNetworkRequest::CookieHeader, cookies);
         }

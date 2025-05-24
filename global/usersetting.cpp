@@ -7,6 +7,8 @@ QString UserSettings::getSubAccountCookie(const QString &arg) const
     if (arg.isEmpty())
         return "";
     
+    // 主账号索引为0，返回空即可
+    // 子账号索引从1开始
     auto findIndex = [&](int index) -> QString {
         if (index == 0)
             return "";
