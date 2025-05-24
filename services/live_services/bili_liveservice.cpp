@@ -227,7 +227,7 @@ void BiliLiveService::getAccountByCookie(const QString& cookie)
         QJsonObject dataObj = json.value("data").toObject();
         ac->cookieUid = snum(static_cast<qint64>(dataObj.value("mid").toDouble()));
         ac->cookieUname = dataObj.value("uname").toString();
-        qInfo() << "子账号：" << ac->cookieUid << ac->cookieUname;
+        qInfo() << "获取子账号信息：" << ac->cookieUid << ac->cookieUname;
         
         SubAccount subAccount;
         subAccount.uid = ac->cookieUid;

@@ -133,6 +133,8 @@ public slots:
     void processRemoteCmd(QString msg, bool response = true);
     bool execFunc(QString msg, LiveDanmaku &danmaku, CmdResponse& res, int& resVal);
 
+    void slotSubAccountChanged(const QString& cookie, const SubAccount& subAccount);
+
 private slots:
     void on_DiangeAutoCopyCheck_stateChanged(int);
 
