@@ -28,16 +28,15 @@ void BiliLiveService::slotBinaryMessageReceived(const QByteArray &message)
             qCritical() << s8("认证出错");
         }
     }
-    else if (operation == OP_HEARTBEAT_REPLY) // 心跳包回复（人气值）
+    else if (operation == OP_HEARTBEAT_REPLY) // 心跳包回复（以前是人气值，现在就只是个1）
     {
+        qDebug() << body;
+        qDebug() << body[0] << body[1] << body[2] << body[3];
         qint32 popularity = ((uchar)body[0] << 24)
                 + ((uchar)body[1] << 16)
                 + ((uchar)body[2] << 8)
                 + (uchar)body[3];
-        SOCKET_DEB << "人气值=" << popularity;
-        popularVal = ac->currentPopul = popularity;
-        if (isLiving())
-            emit signalPopularChanged(popularity);
+        SOCKET_DEB << "心跳包回复（以前是人气值）=" << popularity;
     }
     else if (operation == OP_SEND_MSG_REPLY) // 普通包
     {
